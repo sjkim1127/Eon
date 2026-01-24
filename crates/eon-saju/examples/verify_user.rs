@@ -115,6 +115,43 @@ fn main() {
     // Destiny Complexity 분석 실행
     println!("\n{}", DestinyComplexity::analyze(&report.frames));
 
+    // Destiny TTD (Time Travel Debugging)
+    println!("\n【Destiny TTD: 리버스 디버깅 & Root Cause Analysis】");
+    use eon_saju::DestinyDebugger;
+    
+    // 1. Backtrace: 최저점(Valley)의 근본 원인 분석
+    if let Some(rc) = DestinyDebugger::backtrace(&report, report.valley_age, "") {
+        println!("🔍 Backtrace (Valley Root Cause):");
+        println!("   Target: {}세 (Critical State)", rc.target_age);
+        println!("   Origin: {}세 (Entry Point Identified)", rc.root_cause_age);
+        println!("   Reason: {}", rc.reason);
+    }
+
+    // 2. Breakpoints: 특정 조건(성공 시그니처)이 발생하는 지점 탐색
+    let breakpoints = DestinyDebugger::find_breakpoints(&report, |f| {
+        f.signatures.iter().any(|s| s.severity == eon_saju::SignatureSeverity::Success)
+    });
+    println!("\n📍 Hidden Breakpoints (Success Events):");
+    println!("   Points: {:?}", breakpoints);
+
+    // 3. Life Diff: 환경 변동에 따른 델타 분석 (시뮬레이션: 시간을 1시간 조정했을 때)
+    let mut input_alt = input.clone();
+    input_alt.hour = (input_alt.hour + 1) % 24;
+    let pillars_alt = FourPillars::calculate(&input_alt).unwrap();
+    let emulator_alt = LifePathEmulator::new(pillars_alt, Gender::Male, input_alt.year);
+    let report_alt = emulator_alt.emulate();
+    
+    let diffs = DestinyDebugger::diff(&report, &report_alt);
+    println!("\n⚖️ Life Path Diff (Timezone/Environment Correction):");
+    if diffs.is_empty() {
+        println!("   No significant delta found.");
+    } else {
+        for d in diffs.iter().take(3) {
+            println!("   [{}세] Score Delta: {:+.1} | Impact: {:?}", d.age, d.score_delta, d.added_tags);
+        }
+        println!("   ... total {} diff segments detected.", diffs.len());
+    }
+
     println!("\n[인생 에너지 그래프 (10년 단위 요약)]");
     for frame in report.frames {
         let bar_len = (frame.score / 5.0) as usize;
