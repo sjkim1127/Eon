@@ -1,75 +1,111 @@
-//! 사용자 사주 데이터 검증 테스트 (지역시 보정 포함)
+//! 사용자 사주 데이터 검증 테스트 (십성 분석 포함)
 
 use eon_core::{BirthInfo, Gender, Location};
-use eon_saju::{FourPillars, SajuInput, HeavenlyStem, EarthlyBranch};
+use eon_saju::{FourPillars, SajuInput, TenGodAnalysis, TenGod};
 
 fn main() {
-    println!("===========================================");
-    println!("  김성주님 사주 검증 (지역시 보정 포함)");
-    println!("===========================================\n");
+    println!("╔═══════════════════════════════════════════════════╗");
+    println!("║     김성주님 사주 분석 (四柱 + 十神)              ║");
+    println!("╚═══════════════════════════════════════════════════╝\n");
 
-    // 방법 1: 기존 SajuInput 사용 (표준시 기준)
-    println!("【방법 1】 표준시 기준 (22:00)");
-    println!("---------------------------------------------");
-    let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
-    let pillars = FourPillars::calculate(&input).unwrap();
-    println!("{}", pillars);
-    println!("한글: {}", pillars.hangul());
-    println!();
-
-    // 방법 2: BirthInfo 사용 (지역시 보정)
-    println!("【방법 2】 진태양시 기준 (안산, -33분 보정)");
-    println!("---------------------------------------------");
+    // 출생 정보
     let birth = BirthInfo::solar(2004, 11, 27, 22, 0)
         .with_location(Location::ansan())
         .with_true_solar_time(true)
         .with_gender(Gender::Male);
 
-    println!("출생 정보: {}", birth);
-    println!("지역시 보정: {:+}분", birth.time_offset_minutes());
-    
-    let (hour, minute) = birth.corrected_time();
-    println!("보정된 시간: {:02}:{:02}", hour, minute);
-    
-    // 보정된 시간으로 사주 계산
-    let (year, month, day, hour) = birth.for_saju();
-    let corrected_input = SajuInput::new_solar(year, month, day, hour, 0);
-    let corrected_pillars = FourPillars::calculate(&corrected_input).unwrap();
-    
-    println!();
-    println!("{}", corrected_pillars);
-    println!("한글: {}", corrected_pillars.hangul());
+    println!("【출생 정보】");
+    println!("─────────────────────────────────────────────────────");
+    println!("{}", birth);
     println!();
 
-    // 시주 비교
-    println!("【시주 비교】");
-    println!("---------------------------------------------");
-    println!("표준시(22:00)  시주: {} ({}시)", pillars.hour, pillars.hour.branch.zodiac());
-    println!("진태양시(21:27) 시주: {} ({}시)", corrected_pillars.hour, corrected_pillars.hour.branch.zodiac());
+    // 사주 계산
+    let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
+    let pillars = FourPillars::calculate(&input).unwrap();
+
+    println!("【사주 팔자】 甲申年 乙亥月 庚戌日 丁亥時");
+    println!("─────────────────────────────────────────────────────");
+    println!("{}", pillars);
+    println!("한글: {}", pillars.hangul());
+    println!("일간(日干): {} ({}, {})", 
+        pillars.day_master(), 
+        pillars.day_master().hangul(),
+        pillars.day_master_element()
+    );
+    println!();
+
+    // 십성 분석
+    let analysis = TenGodAnalysis::from_pillars(&pillars);
     
-    if pillars.hour == corrected_pillars.hour {
-        println!("\n✓ 시주가 동일합니다 (같은 시진 내)");
-    } else {
-        println!("\n⚠ 시주가 다릅니다! 지역시 보정이 시주에 영향을 미칩니다.");
+    println!("【십성 분석】");
+    println!("─────────────────────────────────────────────────────");
+    println!("{}", analysis);
+    println!();
+
+    // 상세 십성 표시
+    println!("【상세 십성】");
+    println!("─────────────────────────────────────────────────────");
+    println!("      │ 천간    │ 지지(정기)");
+    println!("──────┼─────────┼────────────");
+    println!("년주  │ {} {:6} │ {} {:6}", 
+        pillars.year.stem.hanja(), analysis.year_stem.hangul(),
+        pillars.year.branch.hanja(), analysis.year_branch.hangul()
+    );
+    println!("월주  │ {} {:6} │ {} {:6}", 
+        pillars.month.stem.hanja(), analysis.month_stem.hangul(),
+        pillars.month.branch.hanja(), analysis.month_branch.hangul()
+    );
+    println!("일주  │ {} {:6} │ {} {:6}", 
+        pillars.day.stem.hanja(), analysis.day_stem.hangul(),
+        pillars.day.branch.hanja(), analysis.day_branch.hangul()
+    );
+    println!("시주  │ {} {:6} │ {} {:6}", 
+        pillars.hour.stem.hanja(), analysis.hour_stem.hangul(),
+        pillars.hour.branch.hanja(), analysis.hour_branch.hangul()
+    );
+    println!();
+
+    // 십성 집계
+    println!("【십성 집계】");
+    println!("─────────────────────────────────────────────────────");
+    let counts = analysis.counts();
+    for (god, count) in counts.iter() {
+        if *count > 0 {
+            let bar = "█".repeat(*count as usize);
+            println!("{:6} │ {} ({}개)", god.hangul(), bar, count);
+        }
     }
-    
-    println!("\n===========================================");
-    println!("  한국 주요 도시 지역시 보정값");
-    println!("===========================================");
-    let cities = [
-        Location::seoul(),
-        Location::ansan(),
-        Location::incheon(),
-        Location::busan(),
-        Location::daegu(),
-        Location::daejeon(),
-        Location::gwangju(),
-        Location::ulsan(),
-        Location::suwon(),
-        Location::jeju(),
-    ];
-    
-    for city in cities {
-        println!("{:8}: {:+3}분 ({:.2}°E)", city.name, city.time_offset_minutes(), city.longitude);
-    }
+    println!();
+
+    // 기대값과 비교 (사용자 제공 데이터 기준)
+    println!("【검증 - 사용자 만세력과 비교】");
+    println!("─────────────────────────────────────────────────────");
+    println!("년간: 甲 → {} (기대: 편재) {}", 
+        analysis.year_stem.hangul(),
+        if analysis.year_stem == TenGod::Piancai { "✓" } else { "✗" }
+    );
+    println!("월간: 乙 → {} (기대: 정재) {}", 
+        analysis.month_stem.hangul(),
+        if analysis.month_stem == TenGod::Zhengcai { "✓" } else { "✗" }
+    );
+    println!("시간: 丁 → {} (기대: 정관) {}", 
+        analysis.hour_stem.hangul(),
+        if analysis.hour_stem == TenGod::Zhengguan { "✓" } else { "✗" }
+    );
+    println!("년지: 申 → {} (기대: 비견) {}", 
+        analysis.year_branch.hangul(),
+        if analysis.year_branch == TenGod::Bijian { "✓" } else { "✗" }
+    );
+    println!("월지: 亥 → {} (기대: 식신) {}", 
+        analysis.month_branch.hangul(),
+        if analysis.month_branch == TenGod::Shishen { "✓" } else { "✗" }
+    );
+    println!("일지: 戌 → {} (기대: 편인) {}", 
+        analysis.day_branch.hangul(),
+        if analysis.day_branch == TenGod::Pianyin { "✓" } else { "✗" }
+    );
+    println!("시지: 亥 → {} (기대: 식신) {}", 
+        analysis.hour_branch.hangul(),
+        if analysis.hour_branch == TenGod::Shishen { "✓" } else { "✗" }
+    );
 }
