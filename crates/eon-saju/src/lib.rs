@@ -36,6 +36,7 @@ pub mod ganzi;
 pub mod pillars;
 pub mod calendar;
 pub mod ten_gods;
+pub mod major_luck;
 
 pub use stem::HeavenlyStem;
 pub use branch::EarthlyBranch;
@@ -43,3 +44,4 @@ pub use element::{Element, Polarity, ElementRelation};
 pub use ganzi::GanZi;
 pub use pillars::{FourPillars, SajuInput};
 pub use ten_gods::{TenGod, TenGodAnalysis};
+pub use major_luck::{MajorLuck, MajorLuckAnalysis, LuckDirection};
