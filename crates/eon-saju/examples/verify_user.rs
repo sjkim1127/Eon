@@ -22,6 +22,10 @@ fn main() {
 
     println!("【사주 팔자】: {}\n", pillars.hangul());
 
+    // Destiny It Easy (DIE) Quick Scan
+    use eon_saju::DestinyItEasy;
+    println!("{}", DestinyItEasy::scan(&pillars));
+
     // 격국 분석
     println!("{}", pillars.structure());
     println!();

@@ -59,6 +59,7 @@ pub mod load_balancer;
 pub mod complexity;
 pub mod ttd;
 pub mod entropy;
+pub mod die;
 
 pub use stem::HeavenlyStem;
 pub use branch::EarthlyBranch;
@@ -89,3 +90,4 @@ pub use load_balancer::{KarmaLoadBalancer, LoadBalanceDiagnostic, TrafficStatus}
 pub use complexity::{DestinyComplexity, ComplexityAnalysis};
 pub use ttd::{DestinyDebugger, RootCause, LifeDiff};
 pub use entropy::{DestinyEntropy, EntropyAnalysis, ObfuscationLevel};
+pub use die::{DestinyItEasy, DieAnalysis};

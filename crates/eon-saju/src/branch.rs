@@ -179,6 +179,25 @@ impl EarthlyBranch {
             Self::Hai => Ren,
         }
     }
+
+    /// 계절(Season) 반환
+    pub fn season(self) -> Season {
+        match self {
+            Self::Yin | Self::Mao | Self::Chen => Season::Spring,
+            Self::Si | Self::Wu | Self::Wei => Season::Summer,
+            Self::Shen | Self::You | Self::Xu => Season::Autumn,
+            Self::Hai | Self::Zi | Self::Chou => Season::Winter,
+        }
+    }
+}
+
+/// 계절(Season)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Season {
+    Spring,
+    Summer,
+    Autumn,
+    Winter,
 }
 
 impl std::fmt::Display for EarthlyBranch {
