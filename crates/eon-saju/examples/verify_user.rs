@@ -27,6 +27,10 @@ fn main() {
     println!();
 
     // 2. 사주 분석 및 요약
+    use eon_saju::DestinyEntropy;
+    println!("{}", DestinyEntropy::analyze(&pillars));
+    println!();
+
     let info = pillars.analyze();
     println!("【사주 정적 분석 (Static Analysis)】");
     println!("{}", info);

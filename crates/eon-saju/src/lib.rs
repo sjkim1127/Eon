@@ -58,6 +58,7 @@ pub mod topology;
 pub mod load_balancer;
 pub mod complexity;
 pub mod ttd;
+pub mod entropy;
 
 pub use stem::HeavenlyStem;
 pub use branch::EarthlyBranch;
@@ -87,3 +88,4 @@ pub use topology::{QiTopology, TopologyAnalysis, QiNode};
 pub use load_balancer::{KarmaLoadBalancer, LoadBalanceDiagnostic, TrafficStatus};
 pub use complexity::{DestinyComplexity, ComplexityAnalysis};
 pub use ttd::{DestinyDebugger, RootCause, LifeDiff};
+pub use entropy::{DestinyEntropy, EntropyAnalysis, ObfuscationLevel};
