@@ -232,11 +232,31 @@ impl SpiritMarkerAnalysis {
             (pillars.hour.branch, PillarPosition::Hour),
         ];
 
+        let stems = [
+            (pillars.year.stem, PillarPosition::Year),
+            (pillars.month.stem, PillarPosition::Month),
+            (pillars.day.stem, PillarPosition::Day),
+            (pillars.hour.stem, PillarPosition::Hour),
+        ];
+
         let day_branch = pillars.day.branch;
         let day_stem = pillars.day.stem;
+        let year_branch = pillars.year.branch;
+        let month_branch = pillars.month.branch;
+
+        // === 천을귀인 (天乙貴人) ===
+        let tianyi_branches = Self::get_tianyi_branches(day_stem);
+        for (branch, pos) in &branches {
+            if tianyi_branches.contains(branch) {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Tianyi,
+                    position: *pos,
+                    is_stem: false,
+                });
+            }
+        }
 
         // === 역마살 (驛馬煞) ===
-        // 寅午戌 → 申, 申子辰 → 寅, 巳酉丑 → 亥, 亥卯未 → 巳
         let yima_branch = Self::get_yima_branch(day_branch);
         for (branch, pos) in &branches {
             if *branch == yima_branch {
@@ -249,7 +269,6 @@ impl SpiritMarkerAnalysis {
         }
 
         // === 화개살 (華蓋煞) ===
-        // 寅午戌 → 戌, 申子辰 → 辰, 巳酉丑 → 丑, 亥卯未 → 未
         let huagai_branch = Self::get_huagai_branch(day_branch);
         for (branch, pos) in &branches {
             if *branch == huagai_branch {
@@ -262,7 +281,6 @@ impl SpiritMarkerAnalysis {
         }
 
         // === 괴강살 (魁罡煞) ===
-        // 庚辰, 庚戌, 壬辰, 戊戌 일주
         if Self::is_kuigang(pillars.day) {
             markers.push(FoundMarker {
                 marker: SpiritMarker::Kuigang,
@@ -272,7 +290,6 @@ impl SpiritMarkerAnalysis {
         }
 
         // === 도화살 (桃花煞) ===
-        // 寅午戌 → 卯, 申子辰 → 酉, 巳酉丑 → 午, 亥卯未 → 子
         let taohua_branch = Self::get_taohua_branch(day_branch);
         for (branch, pos) in &branches {
             if *branch == taohua_branch {
@@ -285,7 +302,6 @@ impl SpiritMarkerAnalysis {
         }
 
         // === 문창귀인 (文昌貴人) ===
-        // 甲→巳, 乙→午, 丙→申, 丁→酉, 戊→申, 己→酉, 庚→亥, 辛→子, 壬→寅, 癸→卯
         let wenchang_branch = Self::get_wenchang_branch(day_stem);
         for (branch, pos) in &branches {
             if *branch == wenchang_branch {
@@ -309,8 +325,45 @@ impl SpiritMarkerAnalysis {
             }
         }
 
+        // === 월덕귀인 (月德貴人) ===
+        let yuede_stem = Self::get_yuede_stem(month_branch);
+        for (stem, pos) in &stems {
+            if *stem == yuede_stem {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Yuede,
+                    position: *pos,
+                    is_stem: true,
+                });
+            }
+        }
+
+        // === 천덕귀인 (天德貴人) ===
+        if let Some(tiande_stem) = Self::get_tiande_stem(month_branch) {
+            for (stem, pos) in &stems {
+                if *stem == tiande_stem {
+                    markers.push(FoundMarker {
+                        marker: SpiritMarker::Tiande,
+                        position: *pos,
+                        is_stem: true,
+                    });
+                }
+            }
+        }
+
+        // === 정록 (正祿) ===
+        let zhenglu_branch = Self::get_zhenglu_branch(day_stem);
+        for (branch, pos) in &branches {
+            if *branch == zhenglu_branch {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Zhenglu,
+                    position: *pos,
+                    is_stem: false,
+                });
+            }
+        }
+
         // === 고신살 (孤辰煞) ===
-        let guchen_branch = Self::get_guchen_branch(day_branch);
+        let guchen_branch = Self::get_guchen_branch(year_branch);
         for (branch, pos) in &branches {
             if *branch == guchen_branch {
                 markers.push(FoundMarker {
@@ -321,9 +374,20 @@ impl SpiritMarkerAnalysis {
             }
         }
 
+        // === 과숙살 (寡宿煞) ===
+        let guasu_branch = Self::get_guasu_branch(year_branch);
+        for (branch, pos) in &branches {
+            if *branch == guasu_branch {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Guasu,
+                    position: *pos,
+                    is_stem: false,
+                });
+            }
+        }
+
         // === 홍염살 (紅艶煞) ===
-        let hongyan_branch_opt = Self::get_hongyan_branch(day_stem);
-        if let Some(hongyan_branch) = hongyan_branch_opt {
+        if let Some(hongyan_branch) = Self::get_hongyan_branch(day_stem) {
             for (branch, pos) in &branches {
                 if *branch == hongyan_branch {
                     markers.push(FoundMarker {
@@ -335,9 +399,18 @@ impl SpiritMarkerAnalysis {
             }
         }
 
+        // === 현침살 (懸針煞) ===
+        // 甲, 申, 卯, 午 글자에 세로획이 관통하는 형태
+        if Self::is_xuanzhen_stem(day_stem) {
+            markers.push(FoundMarker {
+                marker: SpiritMarker::Xuanzhen,
+                position: PillarPosition::Day,
+                is_stem: true,
+            });
+        }
+
         // === 천의성 (天醫星) ===
-        // 월지를 기준으로 계산
-        let tianyi_branch = Self::get_tianyi_medical_branch(pillars.month.branch);
+        let tianyi_branch = Self::get_tianyi_medical_branch(month_branch);
         for (branch, pos) in &branches {
             if *branch == tianyi_branch {
                 markers.push(FoundMarker {
@@ -348,9 +421,20 @@ impl SpiritMarkerAnalysis {
             }
         }
 
+        // === 천문성 (天文星) ===
+        // 亥가 있으면 천문성
+        for (branch, pos) in &branches {
+            if *branch == EarthlyBranch::Hai {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Tianwen,
+                    position: *pos,
+                    is_stem: false,
+                });
+            }
+        }
+
         // === 금여록 (金輿祿) ===
-        let jinyu_branch_opt = Self::get_jinyu_branch(day_stem);
-        if let Some(jinyu_branch) = jinyu_branch_opt {
+        if let Some(jinyu_branch) = Self::get_jinyu_branch(day_stem) {
             for (branch, pos) in &branches {
                 if *branch == jinyu_branch {
                     markers.push(FoundMarker {
@@ -362,16 +446,44 @@ impl SpiritMarkerAnalysis {
             }
         }
 
-        // 길신/흉살 분류
-        let auspicious: Vec<_> = markers.iter()
+        // === 망신살 (亡身煞) ===
+        let wangshen_branch = Self::get_wangshen_branch(year_branch);
+        for (branch, pos) in &branches {
+            if *branch == wangshen_branch {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Wangshen,
+                    position: *pos,
+                    is_stem: false,
+                });
+            }
+        }
+
+        // === 겁살 (劫煞) ===
+        let jiesha_branch = Self::get_jiesha_branch(year_branch);
+        for (branch, pos) in &branches {
+            if *branch == jiesha_branch {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Jiesha,
+                    position: *pos,
+                    is_stem: false,
+                });
+            }
+        }
+
+        // 길신/흉살 분류 (중복 제거)
+        let mut auspicious: Vec<_> = markers.iter()
             .filter(|m| m.marker.is_auspicious())
             .map(|m| m.marker)
             .collect();
+        auspicious.sort_by_key(|m| m.hangul());
+        auspicious.dedup();
         
-        let inauspicious: Vec<_> = markers.iter()
+        let mut inauspicious: Vec<_> = markers.iter()
             .filter(|m| !m.marker.is_auspicious())
             .map(|m| m.marker)
             .collect();
+        inauspicious.sort_by_key(|m| m.hangul());
+        inauspicious.dedup();
 
         Self {
             markers,
@@ -481,6 +593,98 @@ impl SpiritMarkerAnalysis {
             HeavenlyStem::Xin => Some(EarthlyBranch::Hai),
             HeavenlyStem::Ren => Some(EarthlyBranch::Chou),
             HeavenlyStem::Gui => Some(EarthlyBranch::Yin),
+        }
+    }
+
+    /// 천을귀인 (天乙貴人) - 일간 기준
+    fn get_tianyi_branches(day_stem: HeavenlyStem) -> Vec<EarthlyBranch> {
+        match day_stem {
+            HeavenlyStem::Jia | HeavenlyStem::Wu => vec![EarthlyBranch::Chou, EarthlyBranch::Wei],
+            HeavenlyStem::Yi | HeavenlyStem::Ji => vec![EarthlyBranch::Zi, EarthlyBranch::Shen],
+            HeavenlyStem::Bing | HeavenlyStem::Ding => vec![EarthlyBranch::Hai, EarthlyBranch::You],
+            HeavenlyStem::Geng | HeavenlyStem::Xin => vec![EarthlyBranch::Chou, EarthlyBranch::Wei],
+            HeavenlyStem::Ren | HeavenlyStem::Gui => vec![EarthlyBranch::Mao, EarthlyBranch::Si],
+        }
+    }
+
+    /// 월덕귀인 (月德貴人) - 월지 기준으로 천간 결정
+    fn get_yuede_stem(month_branch: EarthlyBranch) -> HeavenlyStem {
+        match month_branch {
+            // 寅午戌月 → 丙
+            EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => HeavenlyStem::Bing,
+            // 申子辰月 → 壬
+            EarthlyBranch::Shen | EarthlyBranch::Zi | EarthlyBranch::Chen => HeavenlyStem::Ren,
+            // 亥卯未月 → 甲
+            EarthlyBranch::Hai | EarthlyBranch::Mao | EarthlyBranch::Wei => HeavenlyStem::Jia,
+            // 巳酉丑月 → 庚
+            EarthlyBranch::Si | EarthlyBranch::You | EarthlyBranch::Chou => HeavenlyStem::Geng,
+        }
+    }
+
+    /// 천덕귀인 (天德貴人) - 월지 기준으로 천간 결정
+    fn get_tiande_stem(month_branch: EarthlyBranch) -> Option<HeavenlyStem> {
+        match month_branch {
+            EarthlyBranch::Yin => Some(HeavenlyStem::Ding),
+            EarthlyBranch::Mao => Some(HeavenlyStem::Xin),
+            EarthlyBranch::Chen => Some(HeavenlyStem::Ren),
+            EarthlyBranch::Si => Some(HeavenlyStem::Xin),
+            EarthlyBranch::Wu => Some(HeavenlyStem::Jia),
+            EarthlyBranch::Wei => Some(HeavenlyStem::Gui),
+            EarthlyBranch::Shen => Some(HeavenlyStem::Ren),
+            EarthlyBranch::You => Some(HeavenlyStem::Geng),
+            EarthlyBranch::Xu => Some(HeavenlyStem::Bing),
+            EarthlyBranch::Hai => Some(HeavenlyStem::Yi),
+            EarthlyBranch::Zi => Some(HeavenlyStem::Gui),
+            EarthlyBranch::Chou => Some(HeavenlyStem::Geng),
+        }
+    }
+
+    /// 정록 (正祿) - 일간 기준
+    fn get_zhenglu_branch(day_stem: HeavenlyStem) -> EarthlyBranch {
+        match day_stem {
+            HeavenlyStem::Jia => EarthlyBranch::Yin,
+            HeavenlyStem::Yi => EarthlyBranch::Mao,
+            HeavenlyStem::Bing | HeavenlyStem::Wu => EarthlyBranch::Si,
+            HeavenlyStem::Ding | HeavenlyStem::Ji => EarthlyBranch::Wu,
+            HeavenlyStem::Geng => EarthlyBranch::Shen,
+            HeavenlyStem::Xin => EarthlyBranch::You,
+            HeavenlyStem::Ren => EarthlyBranch::Hai,
+            HeavenlyStem::Gui => EarthlyBranch::Zi,
+        }
+    }
+
+    /// 과숙살 (寡宿煞) - 년지 기준
+    fn get_guasu_branch(year_branch: EarthlyBranch) -> EarthlyBranch {
+        match year_branch {
+            EarthlyBranch::Yin | EarthlyBranch::Mao | EarthlyBranch::Chen => EarthlyBranch::Chou,
+            EarthlyBranch::Si | EarthlyBranch::Wu | EarthlyBranch::Wei => EarthlyBranch::Chen,
+            EarthlyBranch::Shen | EarthlyBranch::You | EarthlyBranch::Xu => EarthlyBranch::Wei,
+            EarthlyBranch::Hai | EarthlyBranch::Zi | EarthlyBranch::Chou => EarthlyBranch::Xu,
+        }
+    }
+
+    /// 현침살 (懸針煞) - 甲, 辛, 申, 午 글자
+    fn is_xuanzhen_stem(stem: HeavenlyStem) -> bool {
+        matches!(stem, HeavenlyStem::Jia | HeavenlyStem::Xin)
+    }
+
+    /// 망신살 (亡身煞) - 년지 기준
+    fn get_wangshen_branch(year_branch: EarthlyBranch) -> EarthlyBranch {
+        match year_branch {
+            EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => EarthlyBranch::Si,
+            EarthlyBranch::Shen | EarthlyBranch::Zi | EarthlyBranch::Chen => EarthlyBranch::Hai,
+            EarthlyBranch::Si | EarthlyBranch::You | EarthlyBranch::Chou => EarthlyBranch::Yin,
+            EarthlyBranch::Hai | EarthlyBranch::Mao | EarthlyBranch::Wei => EarthlyBranch::Shen,
+        }
+    }
+
+    /// 겁살 (劫煞) - 년지 기준
+    fn get_jiesha_branch(year_branch: EarthlyBranch) -> EarthlyBranch {
+        match year_branch {
+            EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => EarthlyBranch::Hai,
+            EarthlyBranch::Shen | EarthlyBranch::Zi | EarthlyBranch::Chen => EarthlyBranch::Si,
+            EarthlyBranch::Si | EarthlyBranch::You | EarthlyBranch::Chou => EarthlyBranch::Yin,
+            EarthlyBranch::Hai | EarthlyBranch::Mao | EarthlyBranch::Wei => EarthlyBranch::Shen,
         }
     }
 }
