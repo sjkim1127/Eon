@@ -1,0 +1,13 @@
+[package]
+name = "eon-data"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Static data for Eon destiny platform (Manseryuk calendar, etc.)"
+
+[dependencies]
+eon-core = { path = "../eon-core" }
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
