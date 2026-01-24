@@ -40,6 +40,7 @@ pub mod major_luck;
 pub mod periodic_luck;
 pub mod spirit_markers;
 pub mod relationships;
+pub mod twelve_stages;
 
 pub use stem::HeavenlyStem;
 pub use branch::EarthlyBranch;
@@ -51,3 +52,4 @@ pub use major_luck::{MajorLuck, MajorLuckAnalysis, LuckDirection};
 pub use periodic_luck::{YearlyLuck, MonthlyLuck, LuckAnalysis};
 pub use spirit_markers::{SpiritMarker, SpiritMarkerAnalysis};
 pub use relationships::RelationshipAnalysis;
+pub use twelve_stages::{TwelveStage, TwelveStageAnalysis};
