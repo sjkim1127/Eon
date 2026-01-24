@@ -281,12 +281,15 @@ impl SpiritMarkerAnalysis {
         }
 
         // === 괴강살 (魁罡煞) ===
-        if Self::is_kuigang(pillars.day) {
-            markers.push(FoundMarker {
-                marker: SpiritMarker::Kuigang,
-                position: PillarPosition::Day,
-                is_stem: false,
-            });
+        // 일주 기준이 기본이나 년주에 있어도 작용함
+        for (ganzi, pos) in &[(pillars.year, PillarPosition::Year), (pillars.day, PillarPosition::Day)] {
+            if Self::is_kuigang(*ganzi) {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Kuigang,
+                    position: *pos,
+                    is_stem: false,
+                });
+            }
         }
 
         // === 도화살 (桃花煞) ===
@@ -400,13 +403,42 @@ impl SpiritMarkerAnalysis {
         }
 
         // === 현침살 (懸針煞) ===
-        // 甲, 申, 卯, 午 글자에 세로획이 관통하는 형태
-        if Self::is_xuanzhen_stem(day_stem) {
-            markers.push(FoundMarker {
-                marker: SpiritMarker::Xuanzhen,
-                position: PillarPosition::Day,
-                is_stem: true,
-            });
+        // 甲, 辛, 卯, 午, 申 글자에 세로획이 관통하는 형태
+        for (stem, pos) in &stems {
+            if Self::is_xuanzhen_stem(*stem) {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Xuanzhen,
+                    position: *pos,
+                    is_stem: true,
+                });
+            }
+        }
+        for (branch, pos) in &branches {
+            if Self::is_xuanzhen_branch(*branch) {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Xuanzhen,
+                    position: *pos,
+                    is_stem: false,
+                });
+            }
+        }
+
+        // === 백호살 (白虎煞) ===
+        // 甲辰, 乙未, 丙戌, 丁丑, 戊辰, 壬戌, 癸丑
+        let pillars_ganzi = [
+            (pillars.year, PillarPosition::Year),
+            (pillars.month, PillarPosition::Month),
+            (pillars.day, PillarPosition::Day),
+            (pillars.hour, PillarPosition::Hour),
+        ];
+        for (ganzi, pos) in &pillars_ganzi {
+            if Self::is_baihu(*ganzi) {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Baihu,
+                    position: *pos,
+                    is_stem: false,
+                });
+            }
         }
 
         // === 천의성 (天醫星) ===
@@ -663,9 +695,28 @@ impl SpiritMarkerAnalysis {
         }
     }
 
-    /// 현침살 (懸針煞) - 甲, 辛, 申, 午 글자
+    /// 현침살 (懸針煞) - 甲, 辛
     fn is_xuanzhen_stem(stem: HeavenlyStem) -> bool {
         matches!(stem, HeavenlyStem::Jia | HeavenlyStem::Xin)
+    }
+
+    /// 현침살 (懸針煞) - 卯, 午, 申
+    fn is_xuanzhen_branch(branch: EarthlyBranch) -> bool {
+        matches!(branch, EarthlyBranch::Mao | EarthlyBranch::Wu | EarthlyBranch::Shen)
+    }
+
+    /// 백호살 (白虎煞) - 甲辰, 乙未, 丙戌, 丁丑, 戊辰, 壬戌, 癸丑
+    fn is_baihu(ganzi: GanZi) -> bool {
+        matches!(
+            (ganzi.stem, ganzi.branch),
+            (HeavenlyStem::Jia, EarthlyBranch::Chen) |
+            (HeavenlyStem::Yi, EarthlyBranch::Wei) |
+            (HeavenlyStem::Bing, EarthlyBranch::Xu) |
+            (HeavenlyStem::Ding, EarthlyBranch::Chou) |
+            (HeavenlyStem::Wu, EarthlyBranch::Chen) |
+            (HeavenlyStem::Ren, EarthlyBranch::Xu) |
+            (HeavenlyStem::Gui, EarthlyBranch::Chou)
+        )
     }
 
     /// 망신살 (亡身煞) - 년지 기준

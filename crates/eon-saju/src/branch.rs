@@ -140,6 +140,45 @@ impl EarthlyBranch {
     pub const fn prev(self) -> Self {
         Self::from_index(self.index() as i32 - 1)
     }
+
+    /// 지장간(地藏干, Hidden Stems) 정보를 반환합니다.
+    /// 여기(餘氣), 중기(中氣), 정기(正氣) 순서로 반환됩니다.
+    pub fn jijanggan(self) -> Vec<crate::stem::HeavenlyStem> {
+        use crate::stem::HeavenlyStem::*;
+        match self {
+            Self::Zi => vec![Ren, Gui],
+            Self::Chou => vec![Gui, Xin, Ji],
+            Self::Yin => vec![Wu, Bing, Jia],
+            Self::Mao => vec![Jia, Yi],
+            Self::Chen => vec![Yi, Gui, Wu],
+            Self::Si => vec![Wu, Geng, Bing],
+            Self::Wu => vec![Bing, Ji, Ding],
+            Self::Wei => vec![Ding, Yi, Ji],
+            Self::Shen => vec![Wu, Ren, Geng],
+            Self::You => vec![Geng, Xin],
+            Self::Xu => vec![Xin, Ding, Wu],
+            Self::Hai => vec![Wu, Jia, Ren],
+        }
+    }
+
+    /// 지장간의 정기(正氣, Main Stem)를 반환합니다.
+    pub fn junggi(self) -> crate::stem::HeavenlyStem {
+        use crate::stem::HeavenlyStem::*;
+        match self {
+            Self::Zi => Gui,
+            Self::Chou => Ji,
+            Self::Yin => Jia,
+            Self::Mao => Yi,
+            Self::Chen => Wu,
+            Self::Si => Bing,
+            Self::Wu => Ding,
+            Self::Wei => Ji,
+            Self::Shen => Geng,
+            Self::You => Xin,
+            Self::Xu => Wu,
+            Self::Hai => Ren,
+        }
+    }
 }
 
 impl std::fmt::Display for EarthlyBranch {

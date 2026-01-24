@@ -49,6 +49,14 @@ impl GanZi {
         Self { stem, branch }
     }
 
+    /// 서기 연도로부터 해당 연도의 세운(歲運) 간지 생성
+    /// 
+    /// 기준: 서기 4년 = 甲子년 (index 0)
+    #[inline]
+    pub const fn from_year(year: i32) -> Self {
+        Self::from_index(year - 4)
+    }
+
     /// 60갑자 내에서의 인덱스 반환 (0-59)
     /// 
     /// 간지가 60갑자 중 몇 번째인지 계산합니다.

@@ -15,8 +15,7 @@
 use serde::{Deserialize, Serialize};
 use crate::stem::HeavenlyStem;
 use crate::branch::EarthlyBranch;
-use crate::element::{Element, ElementRelation, Polarity};
-use crate::ganzi::GanZi;
+use crate::element::ElementRelation;
 use crate::pillars::FourPillars;
 
 /// 십성(十神)

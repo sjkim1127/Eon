@@ -17,14 +17,12 @@
 //!    - 월주를 기준으로 순행 또는 역행하여 간지 결정
 
 use serde::{Deserialize, Serialize};
-use eon_core::{BirthInfo, Gender};
+use eon_core::Gender;
 use crate::stem::HeavenlyStem;
-use crate::branch::EarthlyBranch;
 use crate::element::Polarity;
 use crate::ganzi::GanZi;
 use crate::pillars::FourPillars;
-use crate::ten_gods::{TenGod, TenGodAnalysis};
-use crate::calendar::SolarTerm;
+use crate::ten_gods::TenGod;
 
 /// 대운 진행 방향
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -61,7 +59,6 @@ impl std::fmt::Display for LuckDirection {
     }
 }
 
-/// 단일 대운 (10년 주기)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MajorLuck {
     /// 대운 간지
@@ -74,17 +71,25 @@ pub struct MajorLuck {
     pub stem_god: TenGod,
     /// 지지 십성 (정기 기준)
     pub branch_god: TenGod,
+    /// 실제 대운 시작 날짜 (초정밀 교운기)
+    pub start_date: chrono::DateTime<chrono::Utc>,
 }
 
 impl MajorLuck {
     /// 새 대운 생성
-    pub fn new(ganzi: GanZi, start_age: u32, day_master: HeavenlyStem) -> Self {
+    pub fn new(
+        ganzi: GanZi, 
+        start_age: u32, 
+        day_master: HeavenlyStem,
+        start_date: chrono::DateTime<chrono::Utc>,
+    ) -> Self {
         Self {
             ganzi,
             start_age,
             end_age: start_age + 9, // 10년 주기
             stem_god: TenGod::from_stems(day_master, ganzi.stem),
             branch_god: TenGod::from_stem_and_branch(day_master, ganzi.branch),
+            start_date,
         }
     }
 
@@ -96,11 +101,12 @@ impl MajorLuck {
 
 impl std::fmt::Display for MajorLuck {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}세~{}세: {} ({}/{})",
+        write!(f, "{:2}세~{:2}세: {} ({}/{}) | 시작: {}",
             self.start_age, self.end_age,
             self.ganzi,
             self.stem_god.hangul(),
-            self.branch_god.hangul()
+            self.branch_god.hangul(),
+            self.start_date.format("%Y-%m-%d %H:%M")
         )
     }
 }
@@ -116,6 +122,8 @@ pub struct MajorLuckAnalysis {
     pub start_months: u32,
     /// 대운 시작 일 (0~30)
     pub start_days: u32,
+    /// 실제 대운 시작 날짜 (교운기 연월일시)
+    pub start_date: chrono::DateTime<chrono::Utc>,
     /// 대운 목록 (보통 8~10개)
     pub cycles: Vec<MajorLuck>,
     /// 일간 (기준)
@@ -164,17 +172,31 @@ impl MajorLuckAnalysis {
             birth_time, target_term_time, direction
         );
         
+        // 실제 대운 시작 날짜 (교운기 확정)
+        // 3일 = 1년 법칙: (초)로 환산하면 (10일 diff = 1217일 실제 시간)
+        // diff_seconds * (365.2425 / 3)
+        let diff = if direction == LuckDirection::Forward {
+            target_term_time - birth_time
+        } else {
+            birth_time - target_term_time
+        };
+        let offset_seconds = (diff.num_seconds() as f64 * (365.2425 / 3.0)) as i64;
+        let start_date = birth_time + chrono::Duration::seconds(offset_seconds);
+
         // 대운 간지 계산 (월주 기준으로 순행/역행)
         let mut cycles = Vec::new();
         let mut current_ganzi = pillars.month;
         
         for i in 0..10 {
             let age = start_age + (i * 10);
+            // 각 대운은 이전 대운 + 10년 (대략 365.2425 * 10일)
+            let cycle_start_date = start_date + chrono::Duration::seconds((i as f64 * 10.0 * 365.2425 * 86400.0) as i64);
+            
             current_ganzi = match direction {
                 LuckDirection::Forward => current_ganzi.next(),
                 LuckDirection::Reverse => current_ganzi.prev(),
             };
-            cycles.push(MajorLuck::new(current_ganzi, age, day_master));
+            cycles.push(MajorLuck::new(current_ganzi, age, day_master, cycle_start_date));
         }
 
         Self {
@@ -182,6 +204,7 @@ impl MajorLuckAnalysis {
             start_age,
             start_months,
             start_days,
+            start_date,
             cycles,
             day_master,
         }
@@ -213,20 +236,28 @@ impl MajorLuckAnalysis {
             birth_time, term_time, direction
         );
         
+        let diff = if direction == LuckDirection::Forward {
+            term_time - birth_time
+        } else {
+            birth_time - term_time
+        };
+        let offset_seconds = (diff.num_seconds() as f64 * (365.2425 / 3.0)) as i64;
+        let start_date = birth_time + chrono::Duration::seconds(offset_seconds);
+
         // 대운 간지 계산 (월주 기준으로 순행/역행)
         let mut cycles = Vec::new();
         let mut current_ganzi = pillars.month;
         
         for i in 0..10 {
             let age = start_age + (i * 10);
-            
-            // 대운 간지 결정
+            let cycle_start_date = start_date + chrono::Duration::seconds((i as f64 * 10.0 * 365.2425 * 86400.0) as i64);
+
             current_ganzi = match direction {
                 LuckDirection::Forward => current_ganzi.next(),
                 LuckDirection::Reverse => current_ganzi.prev(),
             };
             
-            cycles.push(MajorLuck::new(current_ganzi, age, day_master));
+            cycles.push(MajorLuck::new(current_ganzi, age, day_master, cycle_start_date));
         }
 
         Self {
@@ -234,6 +265,7 @@ impl MajorLuckAnalysis {
             start_age,
             start_months,
             start_days,
+            start_date,
             cycles,
             day_master,
         }

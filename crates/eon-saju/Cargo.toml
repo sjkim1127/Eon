@@ -13,5 +13,6 @@ eon-astro = { path = "../eon-astro" }
 chrono.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+rand = "0.8"
 
 [dev-dependencies]

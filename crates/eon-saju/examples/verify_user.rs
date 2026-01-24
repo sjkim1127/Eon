@@ -26,6 +26,34 @@ fn main() {
     println!("{}", pillars.structure());
     println!();
 
+    // 2. 사주 분석 및 요약
+    let info = pillars.analyze();
+    println!("【사주 정적 분석 (Static Analysis)】");
+    println!("{}", info);
+
+    // Destiny Linter (saju-clippy) 실행
+    println!("【Destiny Linter: 사주 린트 결과 (Diagnostics)】");
+    use eon_saju::{DestinyLinter, QiTopology};
+    let lints = DestinyLinter::lint(&pillars);
+    if lints.is_empty() {
+        println!("No issues found. Perfect structure!");
+    } else {
+        for lint in lints {
+            let label = match lint.severity {
+                eon_saju::LintSeverity::Error => "\x1b[31m[ERROR]\x1b[0m",
+                eon_saju::LintSeverity::Warning => "\x1b[33m[WARN ]\x1b[0m",
+                eon_saju::LintSeverity::Info => "\x1b[34m[INFO ]\x1b[0m",
+            };
+            println!("{} {}: {}", label, lint.code, lint.message);
+            println!("       └─ Advice: {}", lint.advice);
+        }
+    }
+    println!();
+
+    // Qi Topology 분석 실행
+    println!("{}", QiTopology::analyze(&pillars));
+    println!();
+
     // 용신 분석
     println!("{}", pillars.yongshin());
     println!();
@@ -38,14 +66,87 @@ fn main() {
     println!("{}", pillars.saryeong(27));
     println!();
 
-    // 대운 정밀 분석 (2004년 대설 절입 시각: 12월 7일 03:48)
-    println!("【대운 정밀 분석】");
-    let luck = pillars.major_luck_precise(
-        Gender::Male, 
-        2004, 11, 27, 22, 0, // 출생
-        2004, 12, 7, 3, 48   // 다음 절입 (대설)
-    );
+    // 12운성 분석
+    println!("{}", pillars.twelve_stages());
+    println!();
+
+    // 신살 분석
+    println!("{}", pillars.spirit_markers());
+    println!();
+
+    // 대운 정밀 분석 (천문 엔진 자동 계산)
+    println!("【대운 정밀 분석 (Swiss Ephemeris 기반)】");
+    // 2004-11-27 22:00 KST = 2004-11-27 13:00 UTC
+    let luck = pillars.major_luck(Gender::Male, 2004, 11, 27, 13, 0);
     println!("{}", luck);
+    println!();
+
+    // 동적 합충 및 암합 분석 (2026년 丙午年 기준)
+    use eon_saju::{GanZi, HeavenlyStem, EarthlyBranch, DynamicLuckAnalysis};
+    let major_2nd = luck.cycles[1].ganzi; // 丁丑 대운
+    let yearly_2026 = GanZi::new(HeavenlyStem::Bing, EarthlyBranch::Wu); // 2026년 丙午年
+
+    println!("{}", DynamicLuckAnalysis::analyze(&pillars, Some(major_2nd), Some(yearly_2026)));
+    println!();
+
+    // Saju-VM 인생 경로 에뮬레이션 시뮬레이션
+    println!("【Saju-VM 인생 경로 에뮬레이션 (100년 시뮬레이션)】");
+    use eon_saju::LifePathEmulator;
+    let emulator = LifePathEmulator::new(pillars.clone(), Gender::Male, 2004);
+    let report = emulator.emulate();
+
+    println!("인생의 최정점: {}세 (에너지 점수: {:.1})", report.peak_age, report.frames[report.peak_age as usize].score);
+    println!("인생의 최저점: {}세 (에너지 점수: {:.1})", report.valley_age, report.frames[report.valley_age as usize].score);
+
+    // Karma LoadBalancer 진단
+    println!("\n【Karma LoadBalancer: 인생 트래픽 진단】");
+    use eon_saju::{KarmaLoadBalancer, DestinyComplexity};
+    let diagnostics = KarmaLoadBalancer::diagnose(&report.frames);
+    for diag in diagnostics.iter().take(5) { // 상위 5개 주요 변동 사항만 출력
+        let icon = match diag.status {
+            eon_saju::TrafficStatus::Overloaded => "🔥",
+            eon_saju::TrafficStatus::SystemDown => "🚫",
+            _ => "ℹ️",
+        };
+        println!("{} [{}세] {}", icon, diag.age, diag.reason);
+        println!("   └─ Strategy: {}", diag.strategy);
+    }
+
+    // Destiny Complexity 분석 실행
+    println!("\n{}", DestinyComplexity::analyze(&report.frames));
+
+    println!("\n[인생 에너지 그래프 (10년 단위 요약)]");
+    for frame in report.frames {
+        let bar_len = (frame.score / 5.0) as usize;
+        let bar = "■".repeat(bar_len);
+        let mut tags = frame.tags.join(",");
+        if !frame.signatures.is_empty() {
+            let sig_names: Vec<String> = frame.signatures.iter().map(|s| format!("[{}]", s.name)).collect();
+            tags = format!("{} {}", tags, sig_names.join(" "));
+        }
+        println!("{:>3}세 ({}): {:<20} ({:.1}){}", frame.age, frame.ganzi.hanja(), bar, frame.score, tags);
+    }
+    println!();
+
+    // Destiny Fuzzer (운명 취약점 분석)
+    println!("【Destiny Fuzzer: 운명 보안 감사 (Vulnerability Audit)】");
+    use eon_saju::{DestinyFuzzer, SajuVM};
+    let fuzzer = DestinyFuzzer::new(SajuVM::new(pillars.clone()));
+    
+    println!("1. 현재 대운(戊寅) 기준 세운 감사(Audit)...");
+    let major_2027 = pillars.major_luck(Gender::Male, 2004, 11, 27, 13, 0).cycles[2].ganzi;
+    let audit_report = fuzzer.audit(major_2027);
+    println!("발견된 취약점: {}개", audit_report.total_crashes);
+    for v in audit_report.critical_vectors {
+        println!("{}", v);
+    }
+
+    println!("\n2. 무작위 대운/세운 조합 10,000건 퍼징(Fuzzing)...");
+    let fuzz_report = fuzzer.fuzz_random(10000);
+    println!("발견된 잠재적 크래시: {}건 (상위 5개 위험 벡터 추출)", fuzz_report.total_crashes);
+    for v in fuzz_report.critical_vectors {
+        println!("{}", v);
+    }
     println!();
 
     // 3. 4가지 모드 분석 실행

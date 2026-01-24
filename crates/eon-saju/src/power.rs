@@ -72,7 +72,7 @@ impl IntegratedAnalysis {
 
         // 2-1. 천간 처리
         for i in 0..4 {
-            let mut stem = stems[i];
+            let stem = stems[i];
             let mut element = stem.element();
             let weight = weights[i];
 
@@ -247,5 +247,10 @@ impl FourPillars {
     /// 통합 정밀 분석
     pub fn integrated_analysis(&self, options: AnalysisOptions) -> IntegratedAnalysis {
         IntegratedAnalysis::calculate(self, options)
+    }
+
+    /// 기본 옵션으로 분석 수행
+    pub fn analyze(&self) -> IntegratedAnalysis {
+        self.integrated_analysis(AnalysisOptions::default())
     }
 }

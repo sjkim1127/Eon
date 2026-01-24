@@ -217,16 +217,25 @@ pub fn calculate_twelve_stage(day_stem: HeavenlyStem, branch: EarthlyBranch) -> 
 pub struct TwelveStageAnalysis {
     /// 일간 (기준)
     pub day_master: HeavenlyStem,
-    /// 년지 12운성
+    /// 년지 12운성 (일간 기준)
     pub year_stage: TwelveStage,
-    /// 월지 12운성
+    /// 월지 12운성 (일간 기준)
     pub month_stage: TwelveStage,
-    /// 일지 12운성
+    /// 일지 12운성 (일간 기준)
     pub day_stage: TwelveStage,
-    /// 시지 12운성
+    /// 시지 12운성 (일간 기준)
     pub hour_stage: TwelveStage,
     /// 전체 에너지 수준 (평균)
     pub total_energy: u8,
+    /// --- 자좌(Self) 12운성 ---
+    /// 년간이 년지에서 가지는 상태
+    pub year_self: TwelveStage,
+    /// 월간이 월지에서 가지는 상태
+    pub month_self: TwelveStage,
+    /// 일간이 일지에서 가지는 상태
+    pub day_self: TwelveStage,
+    /// 시간이 시지에서 가지는 상태
+    pub hour_self: TwelveStage,
 }
 
 impl TwelveStageAnalysis {
@@ -238,6 +247,12 @@ impl TwelveStageAnalysis {
         let month_stage = calculate_twelve_stage(day_master, pillars.month.branch);
         let day_stage = calculate_twelve_stage(day_master, pillars.day.branch);
         let hour_stage = calculate_twelve_stage(day_master, pillars.hour.branch);
+        
+        // 자좌 12운성 (각 기둥의 천간 vs 지지)
+        let year_self = calculate_twelve_stage(pillars.year.stem, pillars.year.branch);
+        let month_self = calculate_twelve_stage(pillars.month.stem, pillars.month.branch);
+        let day_self = calculate_twelve_stage(pillars.day.stem, pillars.day.branch);
+        let hour_self = calculate_twelve_stage(pillars.hour.stem, pillars.hour.branch);
         
         let total_energy = (
             year_stage.energy_level() as u32 +
@@ -252,6 +267,10 @@ impl TwelveStageAnalysis {
             month_stage,
             day_stage,
             hour_stage,
+            year_self,
+            month_self,
+            day_self,
+            hour_self,
             total_energy: total_energy as u8,
         }
     }
@@ -315,6 +334,11 @@ impl std::fmt::Display for TwelveStageAnalysis {
             self.hour_stage.hangul(), 
             self.hour_stage.hanja(),
             self.hour_stage.description())?;
+        writeln!(f)?;
+        writeln!(f, "【자좌 12운성 (각 기둥 내부 에너지)】")?;
+        writeln!(f, "  년주: {} | 월주: {} | 일주: {} | 시주: {}",
+            self.year_self.hangul(), self.month_self.hangul(), 
+            self.day_self.hangul(), self.hour_self.hangul())?;
         writeln!(f)?;
         writeln!(f, "총 에너지: {}%", self.total_energy)?;
         

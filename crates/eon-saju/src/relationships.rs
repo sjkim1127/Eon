@@ -499,8 +499,23 @@ impl BranchHarm {
 }
 
 // ============================================
-// 합충형해 분석 결과
+// 암합 (暗合) 및 명암합 (明暗合)
 // ============================================
+
+/// 암합 (暗合, 지장간끼리의 합)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Amhap {
+    pub branches: (EarthlyBranch, EarthlyBranch),
+    pub combination: StemCombination,
+}
+
+/// 명암합 (明暗合, 천간과 지지 속 지장간의 합)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MyungAmHap {
+    pub stem: HeavenlyStem,
+    pub branch: EarthlyBranch,
+    pub combination: StemCombination,
+}
 
 /// 발견된 관계 정보
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -530,6 +545,10 @@ pub struct RelationshipAnalysis {
     pub branch_punishments: Vec<(BranchPunishment, String, String)>,
     /// 지지해
     pub branch_harms: Vec<(BranchHarm, String, String)>,
+    /// 암합 (지장간 사이의 합)
+    pub am_combinations: Vec<(Amhap, String, String)>,
+    /// 명암합 (드러난 천간과 지장간 사이의 합)
+    pub myung_am_combinations: Vec<(MyungAmHap, String, String)>,
 }
 
 impl RelationshipAnalysis {
@@ -558,6 +577,8 @@ impl RelationshipAnalysis {
         let mut branch_clashes = Vec::new();
         let mut branch_punishments = Vec::new();
         let mut branch_harms = Vec::new();
+        let mut am_combinations = Vec::new();
+        let mut myung_am_combinations = Vec::new();
 
         // 천간 분석 (모든 쌍)
         for i in 0..4 {
@@ -612,6 +633,28 @@ impl RelationshipAnalysis {
             triple_combinations.push(triple);
         }
 
+        // 암합 분석 (지지 간의 지장간 합)
+        for i in 0..4 {
+            for j in (i + 1)..4 {
+                let (pos1, b1) = branches[i];
+                let (pos2, b2) = branches[j];
+                let combinations = Self::check_am_combinations(b1, b2);
+                for comb in combinations {
+                    am_combinations.push((Amhap { branches: (b1, b2), combination: comb }, pos1.to_string(), pos2.to_string()));
+                }
+            }
+        }
+
+        // 명암합 분석 (천간과 지지 지장간의 합)
+        for (stem_pos, stem) in &stems {
+            for (branch_pos, branch) in &branches {
+                let combinations = Self::check_myung_am_combinations(*stem, *branch);
+                for comb in combinations {
+                    myung_am_combinations.push((MyungAmHap { stem: *stem, branch: *branch, combination: comb }, stem_pos.to_string(), branch_pos.to_string()));
+                }
+            }
+        }
+
         // 방합 분석
         if let Some(seasonal) = SeasonalCombination::check(&all_branches) {
             seasonal_combinations.push(seasonal);
@@ -627,7 +670,40 @@ impl RelationshipAnalysis {
             branch_clashes,
             branch_punishments,
             branch_harms,
+            am_combinations,
+            myung_am_combinations,
         }
+    }
+
+    /// 지지 간의 암합(지장간 합) 체크
+    pub fn check_am_combinations(b1: EarthlyBranch, b2: EarthlyBranch) -> Vec<StemCombination> {
+        let jj1 = b1.jijanggan();
+        let jj2 = b2.jijanggan();
+        let mut results = Vec::new();
+        for s1 in &jj1 {
+            for s2 in &jj2 {
+                if let Some(comb) = StemCombination::check(*s1, *s2) {
+                    results.push(comb);
+                }
+            }
+        }
+        results.sort_by_key(|c| c.hangul());
+        results.dedup();
+        results
+    }
+
+    /// 천간과 지지 지장간 사이의 명암합 체크
+    pub fn check_myung_am_combinations(stem: HeavenlyStem, branch: EarthlyBranch) -> Vec<StemCombination> {
+        let jj = branch.jijanggan();
+        let mut results = Vec::new();
+        for s in &jj {
+            if let Some(comb) = StemCombination::check(stem, *s) {
+                results.push(comb);
+            }
+        }
+        results.sort_by_key(|c| c.hangul());
+        results.dedup();
+        results
     }
 
     /// 합이 있는지 확인
@@ -727,6 +803,24 @@ impl std::fmt::Display for RelationshipAnalysis {
             for (i, (harm, p1, p2)) in self.branch_harms.iter().enumerate() {
                 if i > 0 { write!(f, ", ")?; }
                 write!(f, "{} ({}-{})", harm.hangul(), p1, p2)?;
+            }
+            writeln!(f)?;
+        }
+
+        if !self.am_combinations.is_empty() {
+            write!(f, "암합: ")?;
+            for (i, (am, p1, p2)) in self.am_combinations.iter().enumerate() {
+                if i > 0 { write!(f, ", ")?; }
+                write!(f, "{} ({}-{})", am.combination.hangul(), p1, p2)?;
+            }
+            writeln!(f)?;
+        }
+
+        if !self.myung_am_combinations.is_empty() {
+            write!(f, "명암합: ")?;
+            for (i, (ma, p1, p2)) in self.myung_am_combinations.iter().enumerate() {
+                if i > 0 { write!(f, ", ")?; }
+                write!(f, "{} ({}-{})", ma.combination.hangul(), p1, p2)?;
             }
             writeln!(f)?;
         }
