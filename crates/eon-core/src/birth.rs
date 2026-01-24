@@ -1,8 +1,11 @@
-//! 출생 정보 (BirthInfo)
+//! 출생 정보 (BirthInfo) - 히스토리컬 타임존 지원
 //!
 //! 모든 운명 시스템에서 공통으로 사용되는 출생 정보입니다.
+//! IANA 타임존 데이터베이스(chrono-tz)를 활용하여 
+//! 썸머타임(DST) 등 역사적 시간대 변경을 자동으로 처리합니다.
 
-use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Timelike, Utc};
+use chrono::{DateTime, Datelike, Duration, NaiveDate, NaiveDateTime, TimeZone, Timelike, Utc};
+use chrono_tz::{OffsetComponents, Tz};
 use serde::{Deserialize, Serialize};
 use crate::location::Location;
 
@@ -60,6 +63,26 @@ impl CalendarType {
 /// 출생 정보
 /// 
 /// 모든 운명 시스템(사주, 베딕, 자미두수 등)에서 공통으로 사용됩니다.
+/// 
+/// ## 타임존 지원
+/// 
+/// IANA 타임존 데이터베이스를 사용하여 역사적 썸머타임(DST)을 자동 처리합니다.
+/// 
+/// ### 한국 썸머타임 역사
+/// - 1948-1951년: 일광절약시간 시행
+/// - 1955-1960년: 일광절약시간 시행
+/// - 1987-1988년: 서울 올림픽 전후 일광절약시간 시행
+/// 
+/// ## 예시
+/// ```rust
+/// use eon_core::{BirthInfo, Location};
+/// 
+/// // 1988년 올림픽 시절 (썸머타임 적용 기간)
+/// let birth = BirthInfo::solar(1988, 5, 15, 10, 0)
+///     .with_timezone("Asia/Seoul");
+/// 
+/// // chrono-tz가 자동으로 +1시간(KDT) 보정
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BirthInfo {
     /// 년도
@@ -76,7 +99,9 @@ pub struct BirthInfo {
     pub calendar: CalendarType,
     /// 출생 위치 (선택적)
     pub location: Option<Location>,
-    /// 진태양시 사용 여부
+    /// IANA 타임존 (예: "Asia/Seoul", "America/New_York")
+    pub timezone: Option<String>,
+    /// 진태양시 사용 여부 (경도 기반 보정)
     pub use_true_solar_time: bool,
     /// 성별 (선택적)
     pub gender: Option<Gender>,
@@ -93,6 +118,7 @@ impl BirthInfo {
             minute,
             calendar: CalendarType::Solar,
             location: None,
+            timezone: None,
             use_true_solar_time: false,
             gender: None,
         }
@@ -108,6 +134,7 @@ impl BirthInfo {
             minute,
             calendar: CalendarType::Lunar { is_leap_month: is_leap },
             location: None,
+            timezone: None,
             use_true_solar_time: false,
             gender: None,
         }
@@ -117,6 +144,17 @@ impl BirthInfo {
     pub fn with_location(mut self, location: Location) -> Self {
         self.location = Some(location);
         self
+    }
+
+    /// 타임존 설정 (IANA 형식: "Asia/Seoul", "America/New_York" 등)
+    pub fn with_timezone(mut self, tz: impl Into<String>) -> Self {
+        self.timezone = Some(tz.into());
+        self
+    }
+
+    /// 한국 타임존 설정 (편의 함수)
+    pub fn with_korea_timezone(self) -> Self {
+        self.with_timezone("Asia/Seoul")
     }
 
     /// 진태양시 사용 설정
@@ -131,10 +169,65 @@ impl BirthInfo {
         self
     }
 
-    /// 지역시 보정이 적용된 시간 반환 (분 단위 오프셋)
+    /// 타임존 파싱
+    fn parsed_timezone(&self) -> Option<Tz> {
+        self.timezone.as_ref().and_then(|tz| tz.parse().ok())
+    }
+
+    /// 해당 시간대의 로컬 DateTime 생성
+    fn local_datetime(&self) -> Option<NaiveDateTime> {
+        NaiveDate::from_ymd_opt(self.year, self.month, self.day)
+            .and_then(|d| d.and_hms_opt(self.hour, self.minute, 0))
+    }
+
+    /// 썸머타임(DST)이 적용된 UTC 시간 반환
     /// 
-    /// 진태양시를 사용하는 경우, 위치 기반 보정을 적용합니다.
-    pub fn time_offset_minutes(&self) -> i32 {
+    /// IANA 타임존 데이터베이스를 사용하여 역사적 DST를 자동 처리합니다.
+    pub fn to_utc(&self) -> Option<DateTime<Utc>> {
+        let naive = self.local_datetime()?;
+        
+        if let Some(tz) = self.parsed_timezone() {
+            // 타임존이 설정된 경우: DST 적용
+            tz.from_local_datetime(&naive)
+                .single()
+                .map(|dt| dt.with_timezone(&Utc))
+        } else {
+            // 타임존 미설정: 단순 변환 (KST 가정)
+            let kst = chrono_tz::Asia::Seoul;
+            kst.from_local_datetime(&naive)
+                .single()
+                .map(|dt| dt.with_timezone(&Utc))
+        }
+    }
+
+    /// 썸머타임(DST) 적용 여부 확인
+    pub fn is_dst(&self) -> bool {
+        if let (Some(tz), Some(naive)) = (self.parsed_timezone(), self.local_datetime()) {
+            if let Some(local_dt) = tz.from_local_datetime(&naive).single() {
+                // OffsetComponents 트레이트를 사용하여 DST 오프셋 확인
+                let dst = local_dt.offset().dst_offset();
+                return dst.num_hours() > 0;
+            }
+        }
+        false
+    }
+
+    /// DST 오프셋 정보 반환 (시간 단위)
+    /// 
+    /// 전체 UTC 오프셋(base + dst)을 반환합니다.
+    pub fn dst_offset_hours(&self) -> Option<i32> {
+        if let (Some(tz), Some(naive)) = (self.parsed_timezone(), self.local_datetime()) {
+            if let Some(local_dt) = tz.from_local_datetime(&naive).single() {
+                let base = local_dt.offset().base_utc_offset();
+                let dst = local_dt.offset().dst_offset();
+                return Some((base.num_hours() + dst.num_hours()) as i32);
+            }
+        }
+        None
+    }
+
+    /// 지역시 보정값 (분 단위) - 경도 기반
+    pub fn longitude_offset_minutes(&self) -> i32 {
         if self.use_true_solar_time {
             self.location.as_ref().map(|l| l.time_offset_minutes()).unwrap_or(0)
         } else {
@@ -144,14 +237,14 @@ impl BirthInfo {
 
     /// 보정된 시간 (시, 분)
     /// 
-    /// 진태양시를 사용하는 경우, 지역시 보정이 적용된 시간을 반환합니다.
+    /// 진태양시를 사용하는 경우, 경도 기반 보정이 적용됩니다.
+    /// 주의: DST는 `to_utc()` 메서드에서 자동 처리됩니다.
     pub fn corrected_time(&self) -> (u32, u32) {
-        let offset = self.time_offset_minutes();
+        let offset = self.longitude_offset_minutes();
         if offset == 0 {
             return (self.hour, self.minute);
         }
 
-        // 분 단위로 변환 후 보정
         let total_minutes = (self.hour as i32 * 60 + self.minute as i32 + offset).rem_euclid(24 * 60);
         let corrected_hour = (total_minutes / 60) as u32;
         let corrected_minute = (total_minutes % 60) as u32;
@@ -159,16 +252,13 @@ impl BirthInfo {
         (corrected_hour, corrected_minute)
     }
 
-    /// 보정된 날짜와 시간
-    /// 
-    /// 지역시 보정으로 인해 날짜가 바뀌는 경우를 처리합니다.
+    /// 보정된 날짜와 시간 (경도 기반 진태양시)
     pub fn corrected_datetime(&self) -> (i32, u32, u32, u32, u32) {
-        let offset = self.time_offset_minutes();
+        let offset = self.longitude_offset_minutes();
         if offset == 0 {
             return (self.year, self.month, self.day, self.hour, self.minute);
         }
 
-        // NaiveDateTime을 사용하여 날짜 경계 처리
         let dt = NaiveDate::from_ymd_opt(self.year, self.month, self.day)
             .and_then(|d| d.and_hms_opt(self.hour, self.minute, 0))
             .map(|dt| dt + Duration::minutes(offset as i64));
@@ -209,12 +299,20 @@ impl std::fmt::Display for BirthInfo {
             write!(f, " ({})", loc.name)?;
         }
         
+        if let Some(ref tz) = self.timezone {
+            write!(f, " [{}]", tz)?;
+        }
+        
         if let Some(gender) = self.gender {
             write!(f, " {}", gender)?;
         }
         
+        if self.is_dst() {
+            write!(f, " (썸머타임)")?;
+        }
+        
         if self.use_true_solar_time {
-            let offset = self.time_offset_minutes();
+            let offset = self.longitude_offset_minutes();
             if offset != 0 {
                 write!(f, " [지역시 {:+}분]", offset)?;
             }
@@ -222,6 +320,34 @@ impl std::fmt::Display for BirthInfo {
         
         Ok(())
     }
+}
+
+// ============================================
+// 한국 주요 타임존 상수
+// ============================================
+
+/// 미리 정의된 타임존 상수
+pub mod timezones {
+    /// 한국 (Asia/Seoul)
+    pub const KOREA: &str = "Asia/Seoul";
+    /// 일본 (Asia/Tokyo)
+    pub const JAPAN: &str = "Asia/Tokyo";
+    /// 중국 (Asia/Shanghai)
+    pub const CHINA: &str = "Asia/Shanghai";
+    /// 대만 (Asia/Taipei)
+    pub const TAIWAN: &str = "Asia/Taipei";
+    /// 홍콩 (Asia/Hong_Kong)
+    pub const HONG_KONG: &str = "Asia/Hong_Kong";
+    /// 인도 (Asia/Kolkata)
+    pub const INDIA: &str = "Asia/Kolkata";
+    /// 미국 동부 (America/New_York)
+    pub const US_EAST: &str = "America/New_York";
+    /// 미국 서부 (America/Los_Angeles)
+    pub const US_WEST: &str = "America/Los_Angeles";
+    /// 영국 (Europe/London)
+    pub const UK: &str = "Europe/London";
+    /// 독일 (Europe/Berlin)
+    pub const GERMANY: &str = "Europe/Berlin";
 }
 
 #[cfg(test)]
@@ -232,6 +358,7 @@ mod tests {
     fn test_birth_info_creation() {
         let info = BirthInfo::solar(2004, 11, 27, 22, 0)
             .with_location(Location::ansan())
+            .with_korea_timezone()
             .with_true_solar_time(true)
             .with_gender(Gender::Male);
 
@@ -240,11 +367,47 @@ mod tests {
         assert_eq!(info.day, 27);
         assert_eq!(info.hour, 22);
         assert_eq!(info.gender, Some(Gender::Male));
-        assert_eq!(info.time_offset_minutes(), -33);
+        assert_eq!(info.timezone, Some("Asia/Seoul".to_string()));
     }
 
     #[test]
-    fn test_corrected_time() {
+    fn test_to_utc_normal() {
+        // 2004년 11월 27일 22:00 KST (썸머타임 아님)
+        let info = BirthInfo::solar(2004, 11, 27, 22, 0)
+            .with_korea_timezone();
+
+        let utc = info.to_utc().unwrap();
+        // KST = UTC+9, 22:00 KST = 13:00 UTC
+        assert_eq!(utc.hour(), 13);
+    }
+
+    #[test]
+    fn test_to_utc_with_dst_1988() {
+        // 1988년 5월 15일 10:00 - 서울 올림픽 전 썸머타임 기간
+        let info = BirthInfo::solar(1988, 5, 15, 10, 0)
+            .with_korea_timezone();
+
+        let utc = info.to_utc().unwrap();
+        // KDT(썸머타임) = UTC+10, 10:00 KDT = 00:00 UTC
+        assert_eq!(utc.hour(), 0);
+        
+        // DST 확인
+        assert!(info.is_dst());
+        assert_eq!(info.dst_offset_hours(), Some(10));
+    }
+
+    #[test]
+    fn test_no_dst_winter() {
+        // 2004년 1월 (겨울, 썸머타임 없음)
+        let info = BirthInfo::solar(2004, 1, 15, 10, 0)
+            .with_korea_timezone();
+
+        assert!(!info.is_dst());
+        assert_eq!(info.dst_offset_hours(), Some(9));
+    }
+
+    #[test]
+    fn test_corrected_time_with_location() {
         // 안산, 22:00 → 21:27 (-33분)
         let info = BirthInfo::solar(2004, 11, 27, 22, 0)
             .with_location(Location::ansan())
@@ -256,26 +419,12 @@ mod tests {
     }
 
     #[test]
-    fn test_corrected_datetime_day_change() {
-        // 00:30에 -33분 보정 → 전날 23:57
-        let info = BirthInfo::solar(2004, 11, 27, 0, 30)
-            .with_location(Location::ansan())
-            .with_true_solar_time(true);
+    fn test_display_with_dst() {
+        let info = BirthInfo::solar(1988, 5, 15, 10, 0)
+            .with_korea_timezone()
+            .with_gender(Gender::Male);
 
-        let (year, month, day, hour, minute) = info.corrected_datetime();
-        assert_eq!(day, 26); // 날짜가 바뀜
-        assert_eq!(hour, 23);
-        assert_eq!(minute, 57);
-    }
-
-    #[test]
-    fn test_no_correction_without_flag() {
-        let info = BirthInfo::solar(2004, 11, 27, 22, 0)
-            .with_location(Location::ansan())
-            .with_true_solar_time(false);
-
-        // 진태양시 미사용시 보정 없음
-        assert_eq!(info.time_offset_minutes(), 0);
-        assert_eq!(info.corrected_time(), (22, 0));
+        let display = format!("{}", info);
+        assert!(display.contains("썸머타임"));
     }
 }

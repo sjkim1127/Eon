@@ -8,5 +8,6 @@ description = "Core types and utilities for Eon destiny platform"
 
 [dependencies]
 chrono.workspace = true
+chrono-tz.workspace = true
 serde.workspace = true
 thiserror.workspace = true
