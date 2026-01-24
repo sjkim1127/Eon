@@ -262,6 +262,59 @@ impl SemiCombination {
 }
 
 // ============================================
+// 지지 방합 (方合)
+// ============================================
+
+/// 방합의 종류 (계절의 결합)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum SeasonalCombination {
+    /// 寅卯辰 → 木局 (봄)
+    YinMaoChen,
+    /// 巳午未 → 火局 (여름)
+    SiWuWei,
+    /// 申酉戌 → 金局 (가을)
+    ShenYouXu,
+    /// 亥子丑 → 水局 (겨울)
+    HaiZiChou,
+}
+
+impl SeasonalCombination {
+    /// 세 지지가 방합인지 확인
+    pub fn check(branches: &[EarthlyBranch]) -> Option<Self> {
+        use EarthlyBranch::*;
+        
+        let has_all = |b1, b2, b3| {
+            branches.contains(&b1) && branches.contains(&b2) && branches.contains(&b3)
+        };
+
+        if has_all(Yin, Mao, Chen) { return Some(Self::YinMaoChen); }
+        if has_all(Si, Wu, Wei) { return Some(Self::SiWuWei); }
+        if has_all(Shen, You, Xu) { return Some(Self::ShenYouXu); }
+        if has_all(Hai, Zi, Chou) { return Some(Self::HaiZiChou); }
+        None
+    }
+
+    /// 방합에 의한 오행
+    pub const fn element(&self) -> Element {
+        match self {
+            Self::YinMaoChen => Element::Wood,
+            Self::SiWuWei => Element::Fire,
+            Self::ShenYouXu => Element::Metal,
+            Self::HaiZiChou => Element::Water,
+        }
+    }
+
+    pub const fn hangul(&self) -> &'static str {
+        match self {
+            Self::YinMaoChen => "인묘진 목방",
+            Self::SiWuWei => "사오미 화방",
+            Self::ShenYouXu => "신유술 금방",
+            Self::HaiZiChou => "해자축 수방",
+        }
+    }
+}
+
+// ============================================
 // 지지 육합 (六合)
 // ============================================
 
@@ -465,6 +518,8 @@ pub struct RelationshipAnalysis {
     pub stem_clashes: Vec<(StemClash, String, String)>,
     /// 삼합
     pub triple_combinations: Vec<TripleCombination>,
+    /// 방합
+    pub seasonal_combinations: Vec<SeasonalCombination>,
     /// 반합
     pub semi_combinations: Vec<(SemiCombination, String, String)>,
     /// 육합
@@ -497,6 +552,7 @@ impl RelationshipAnalysis {
         let mut stem_combinations = Vec::new();
         let mut stem_clashes = Vec::new();
         let mut triple_combinations = Vec::new();
+        let mut seasonal_combinations = Vec::new();
         let mut semi_combinations = Vec::new();
         let mut six_combinations = Vec::new();
         let mut branch_clashes = Vec::new();
@@ -556,10 +612,16 @@ impl RelationshipAnalysis {
             triple_combinations.push(triple);
         }
 
+        // 방합 분석
+        if let Some(seasonal) = SeasonalCombination::check(&all_branches) {
+            seasonal_combinations.push(seasonal);
+        }
+
         Self {
             stem_combinations,
             stem_clashes,
             triple_combinations,
+            seasonal_combinations,
             semi_combinations,
             six_combinations,
             branch_clashes,
@@ -572,6 +634,7 @@ impl RelationshipAnalysis {
     pub fn has_combinations(&self) -> bool {
         !self.stem_combinations.is_empty()
             || !self.triple_combinations.is_empty()
+            || !self.seasonal_combinations.is_empty()
             || !self.semi_combinations.is_empty()
             || !self.six_combinations.is_empty()
     }
@@ -610,6 +673,15 @@ impl std::fmt::Display for RelationshipAnalysis {
             for (i, triple) in self.triple_combinations.iter().enumerate() {
                 if i > 0 { write!(f, ", ")?; }
                 write!(f, "{}", triple.hangul())?;
+            }
+            writeln!(f)?;
+        }
+
+        if !self.seasonal_combinations.is_empty() {
+            write!(f, "방합: ")?;
+            for (i, seasonal) in self.seasonal_combinations.iter().enumerate() {
+                if i > 0 { write!(f, ", ")?; }
+                write!(f, "{}", seasonal.hangul())?;
             }
             writeln!(f)?;
         }

@@ -276,6 +276,17 @@ impl TenGodAnalysis {
     }
 }
 
+// ============================================
+// FourPillars 편의 메서드
+// ============================================
+
+impl FourPillars {
+    /// 십성 분석
+    pub fn ten_gods(&self) -> TenGodAnalysis {
+        TenGodAnalysis::from_pillars(self)
+    }
+}
+
 impl std::fmt::Display for TenGodAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "┌────────┬────────┬────────┬────────┐")?;

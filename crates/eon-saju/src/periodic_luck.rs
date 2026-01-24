@@ -167,13 +167,21 @@ impl LuckAnalysis {
         birth_year: i32,
         birth_month: u32,
         birth_day: u32,
+        birth_hour: u32,
+        birth_min: u32,
+        term_year: i32,
+        term_month: u32,
+        term_day: u32,
+        term_hour: u32,
+        term_min: u32,
         current_year: i32,
     ) -> Self {
         let day_master = pillars.day_master();
         
         // 대운 계산
         let major_luck = MajorLuckAnalysis::calculate(
-            pillars, gender, birth_year, birth_month, birth_day
+            pillars, gender, birth_year, birth_month, birth_day, birth_hour, birth_min,
+            term_year, term_month, term_day, term_hour, term_min
         );
 
         // 연운 계산 (현재 년도 기준 ±5년)
@@ -244,17 +252,18 @@ impl FourPillars {
         MonthlyLuck::calculate(year, month, self.day_master())
     }
 
-    /// 전체 운세 분석
-    pub fn full_luck_analysis(
+    /// 전체 운세 분석 (정밀 대운 포함)
+    pub fn analyze_luck_precise(
         &self,
         gender: Gender,
-        birth_year: i32,
-        birth_month: u32,
-        birth_day: u32,
+        b_year: i32, b_month: u32, b_day: u32, b_hour: u32, b_min: u32,
+        t_year: i32, t_month: u32, t_day: u32, t_hour: u32, t_min: u32,
         current_year: i32,
     ) -> LuckAnalysis {
         LuckAnalysis::calculate(
-            self, gender, birth_year, birth_month, birth_day, current_year
+            self, gender, b_year, b_month, b_day, b_hour, b_min,
+            t_year, t_month, t_day, t_hour, t_min,
+            current_year
         )
     }
 }
@@ -306,8 +315,11 @@ mod tests {
         let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
         let pillars = FourPillars::calculate(&input).unwrap();
 
-        let analysis = pillars.full_luck_analysis(
-            Gender::Male, 2004, 11, 27, 2026
+        let analysis = pillars.analyze_luck_precise(
+            Gender::Male, 
+            2004, 11, 27, 22, 0, // 출생
+            2004, 12, 7, 3, 48,  // 대설
+            2026                 // 기준년도
         );
 
         println!("{}", analysis);

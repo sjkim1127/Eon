@@ -4,6 +4,7 @@ members = [
     "crates/eon-core",
     "crates/eon-saju",
     "crates/eon-data",
+    "crates/eon-astro",
 ]
 
 [workspace.package]
@@ -19,3 +20,4 @@ chrono-tz = "0.10"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
+swiss-eph = "0.2"
