@@ -7,7 +7,7 @@ use crate::core::stem::HeavenlyStem;
 use crate::core::branch::EarthlyBranch;
 use crate::core::element::Element;
 use crate::core::pillars::FourPillars;
-use crate::analysis::relationships::{StemCombination, TripleCombination, SeasonalCombination};
+use crate::analysis::relationships::{StemCombination, TripleCombination, SeasonalCombination, SemiCombination};
 
 /// 합화 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -105,6 +105,25 @@ impl TransformationAnalysis {
             let reason = format!("{}에 의한 합화", sea.hangul());
             apply_seasonal_transform(pillars, sea, transformed, &reason,
                                    &mut year_branch, &mut month_branch, &mut day_branch, &mut hour_branch);
+        }
+
+        // 4. 지지 반합 처리
+        for (semi, p1, p2) in &rel.semi_combinations {
+            // 왕지(子午卯酉)를 포함한 유력한 반합만 오행 변환 인정
+            if semi.is_dominant() {
+                // 오행 변환 (삼합과 동일 오행)
+                let transformed = match semi {
+                    SemiCombination::YinWu | SemiCombination::WuXu => Element::Fire,
+                    SemiCombination::ShenZi | SemiCombination::ZiChen => Element::Water,
+                    SemiCombination::SiYou | SemiCombination::YouChou => Element::Metal,
+                    SemiCombination::HaiMao | SemiCombination::MaoWei => Element::Wood,
+                    _ => continue, // 무력 반합은 변환 안함
+                };
+
+                let reason = format!("{}에 의한 합화", semi.hangul());
+                apply_semi_transform(pillars, semi, transformed, &reason,
+                                   &mut year_branch, &mut month_branch, &mut day_branch, &mut hour_branch);
+            }
         }
 
         Self {
@@ -216,6 +235,30 @@ fn apply_seasonal_transform(
         SeasonalCombination::SiWuWei => vec![EarthlyBranch::Si, EarthlyBranch::Wu, EarthlyBranch::Wei],
         SeasonalCombination::ShenYouXu => vec![EarthlyBranch::Shen, EarthlyBranch::You, EarthlyBranch::Xu],
         SeasonalCombination::HaiZiChou => vec![EarthlyBranch::Hai, EarthlyBranch::Zi, EarthlyBranch::Chou],
+    };
+    if branches.contains(&pillars.year.branch) { y.effective = target; y.reason = Some(reason.to_string()); }
+    if branches.contains(&pillars.month.branch) { m.effective = target; m.reason = Some(reason.to_string()); }
+    if branches.contains(&pillars.day.branch) { d.effective = target; d.reason = Some(reason.to_string()); }
+    if branches.contains(&pillars.hour.branch) { h.effective = target; h.reason = Some(reason.to_string()); }
+}
+
+fn apply_semi_transform(
+    pillars: &FourPillars,
+    semi: &SemiCombination,
+    target: Element,
+    reason: &str,
+    y: &mut EffectiveElement, m: &mut EffectiveElement, d: &mut EffectiveElement, h: &mut EffectiveElement
+) {
+    let branches = match semi {
+        SemiCombination::YinWu => vec![EarthlyBranch::Yin, EarthlyBranch::Wu],
+        SemiCombination::WuXu => vec![EarthlyBranch::Wu, EarthlyBranch::Xu],
+        SemiCombination::ShenZi => vec![EarthlyBranch::Shen, EarthlyBranch::Zi],
+        SemiCombination::ZiChen => vec![EarthlyBranch::Zi, EarthlyBranch::Chen],
+        SemiCombination::SiYou => vec![EarthlyBranch::Si, EarthlyBranch::You],
+        SemiCombination::YouChou => vec![EarthlyBranch::You, EarthlyBranch::Chou],
+        SemiCombination::HaiMao => vec![EarthlyBranch::Hai, EarthlyBranch::Mao],
+        SemiCombination::MaoWei => vec![EarthlyBranch::Mao, EarthlyBranch::Wei],
+        _ => return,
     };
     if branches.contains(&pillars.year.branch) { y.effective = target; y.reason = Some(reason.to_string()); }
     if branches.contains(&pillars.month.branch) { m.effective = target; m.reason = Some(reason.to_string()); }

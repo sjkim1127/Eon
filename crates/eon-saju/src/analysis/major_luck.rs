@@ -24,7 +24,7 @@ use crate::core::element::Polarity;
 use crate::core::ganzi::GanZi;
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
-use chrono::{DateTime, Utc, TimeZone, NaiveDate, Duration};
+use chrono::{DateTime, Utc, TimeZone, NaiveDate, Duration, Datelike};
 
 /// 대운 진행 방향
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -99,11 +99,17 @@ impl MajorLuck {
     pub fn contains_age(&self, age: u32) -> bool {
         age >= self.start_age && age <= self.end_age
     }
+
+    /// 한국식 나이 (태어나자마자 1세)
+    pub fn korean_age(&self, birth_year: i32) -> u32 {
+        // 대운 시작 날짜의 연도 - 출생 연도 + 1
+        (self.start_date.naive_utc().year() - birth_year + 1) as u32
+    }
 }
 
 impl std::fmt::Display for MajorLuck {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:2}세~{:2}세: {} ({}/{}) | 시작: {}",
+        write!(f, "만 {:2}세~{:2}세: {} ({}/{}) | 시작: {}",
             self.start_age, self.end_age,
             self.ganzi,
             self.stem_god.hangul(),

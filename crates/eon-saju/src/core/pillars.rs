@@ -107,8 +107,14 @@ impl FourPillars {
             return Err(SajuError::InvalidDateTime(format!("Invalid month: {}", solar_month)));
         }
 
-        // 지역 시차 보정 (True Solar Time 계산)
-        let (adj_year, adj_month, adj_day, adj_hour, adj_minute) = if input.longitude_offset_m != 0 {
+        // 1. 절기 계산용 UTC (보정 없는 실제 시간)
+        let dt_absolute_utc = NaiveDate::from_ymd_opt(solar_year, solar_month, solar_day)
+            .and_then(|d| d.and_hms_opt(input.hour, input.minute, 0))
+            .map(|dt| Utc.from_utc_datetime(&(dt - Duration::hours(9)))) // KST 9시간 차이 가정
+            .ok_or_else(|| SajuError::InvalidDateTime(format!("Absolute DT error: {}-{}-{}", solar_year, solar_month, solar_day)))?;
+
+        // 2. 지역 시차 보정 (True Solar Time 계산) - 일주/시주용
+        let (adj_year, adj_month, adj_day, adj_hour, _adj_minute) = if input.longitude_offset_m != 0 {
             let dt = NaiveDate::from_ymd_opt(solar_year, solar_month, solar_day)
                 .and_then(|d| d.and_hms_opt(input.hour, input.minute, 0))
                 .ok_or_else(|| SajuError::InvalidDateTime(format!("{}-{}-{} {}:{}", solar_year, solar_month, solar_day, input.hour, input.minute)))?;
@@ -119,15 +125,12 @@ impl FourPillars {
             (solar_year, solar_month, solar_day, input.hour, input.minute)
         };
 
-        // 천문 계산용 UTC 변환 (KST 9시간 차이 가정)
-        let dt_local = NaiveDate::from_ymd_opt(adj_year, adj_month, adj_day)
-            .and_then(|d| d.and_hms_opt(adj_hour, adj_minute, 0))
-            .ok_or_else(|| SajuError::InvalidDateTime(format!("Local DT error: {}-{}-{}", adj_year, adj_month, adj_day)))?;
-        let dt_utc = Utc.from_utc_datetime(&(dt_local - Duration::hours(9)));
-
         // 각 주(Pillar) 계산
-        let year_pillar = Self::calculate_year_pillar(dt_utc);
-        let month_pillar = Self::calculate_month_pillar(dt_utc);
+        // 연주, 월주는 절대 시간(dt_absolute_utc) 사용
+        let year_pillar = Self::calculate_year_pillar(dt_absolute_utc);
+        let month_pillar = Self::calculate_month_pillar(dt_absolute_utc);
+
+        // 일주, 시주는 보정된 날짜/시간(adj_...) 사용 (진태양시 기준)
         let day_pillar = Self::calculate_day_pillar(adj_year, adj_month, adj_day);
         let hour_pillar = Self::calculate_hour_pillar(&day_pillar, adj_hour);
 
@@ -136,7 +139,7 @@ impl FourPillars {
             month: month_pillar,
             day: day_pillar,
             hour: hour_pillar,
-            birth_time: dt_utc,
+            birth_time: dt_absolute_utc,
         })
     }
 

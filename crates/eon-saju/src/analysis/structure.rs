@@ -33,6 +33,10 @@ pub enum StructureType {
     YangIn,
     /// 비견/겁재 (정격 외)
     Special,
+    /// 종격 (從格) - 한쪽 세력을 따름
+    Follower,
+    /// 전왕격 (專旺格) - 자신의 기운이 극도로 강함
+    SpecialTransformation,
 }
 
 impl StructureType {
@@ -48,7 +52,9 @@ impl StructureType {
             Self::ZhengYin => "정인격",
             Self::JianLu => "건록격",
             Self::YangIn => "양인격",
-            Self::Special => "특수격",
+            Self::Special => "비겁격",
+            Self::Follower => "종격(從格)",
+            Self::SpecialTransformation => "전왕격(專旺格)",
         }
     }
 
@@ -65,6 +71,8 @@ impl StructureType {
             Self::JianLu => "建祿格",
             Self::YangIn => "陽刃格",
             Self::Special => "特殊格",
+            Self::Follower => "從格",
+            Self::SpecialTransformation => "專旺格",
         }
     }
 
@@ -108,6 +116,28 @@ impl StructureAnalysis {
             ("월간", pillars.month.stem),
             ("시간", pillars.hour.stem),
         ];
+
+        // 0. 특수 격국(종격/전왕격) 우선 판정
+        let strength = pillars.strength();
+        let is_polarized = strength.deuk_se.support_ratio >= 80.0 || strength.deuk_se.support_ratio <= 20.0;
+        
+        if is_polarized {
+            if strength.deuk_se.support_ratio >= 80.0 {
+                return Self {
+                    structure: StructureType::SpecialTransformation,
+                    projected_stem: None,
+                    projection_path: None,
+                    reason: format!("일간의 세력({:.1}%)이 극단적으로 강하여 자신의 기운을 따르는 전왕격(專旺格)에 해당함", strength.deuk_se.support_ratio),
+                };
+            } else {
+                return Self {
+                    structure: StructureType::Follower,
+                    projected_stem: None,
+                    projection_path: None,
+                    reason: format!("일간의 세력({:.1}%)이 극단적으로 약하여 월지의 강한 세력을 따르는 종격(從格)에 해당함", strength.deuk_se.support_ratio),
+                };
+            }
+        }
 
         // 1. 건록격/양인격 우선 판정
         let stage = crate::core::twelve_stages::calculate_twelve_stage(dm, month_branch);

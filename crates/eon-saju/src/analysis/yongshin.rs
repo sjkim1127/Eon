@@ -65,37 +65,48 @@ impl YongshinAnalysis {
         }
 
         // 2. 억부용신(抑扶) 판단
-        let eokbu_element = match strength.strength_type {
-            StrengthType::Weak => {
-                // 신약하면 인성이나 비겁이 필요한데, 인성이 더 안정적인 경우가 많음
-                // 하지만 주변 오행 상황에 따라 비겁이 필요할 수도 있음
-                if strength.deuk_se.yinxing_count == 0 {
-                    day_master_el.generated_by() // 인성
-                } else {
-                    day_master_el // 비겁
-                }
-            },
-            StrengthType::Strong => {
-                // 신강하면 식재관 중 선택
-                // 관성(나를 극함) -> 재성(내가 극함) -> 식상(내가 생함) 순으로 고려
-                let controller = day_master_el.controlled_by();
-                let _controlled = day_master_el.controls();
-                let _generating = day_master_el.generates();
-                
-                // 원국에 있는 오행을 우선하는 경향이 있음 (단순화)
-                controller
-            },
-            StrengthType::Balanced => day_master_el,
+        // 종격(Follower Structure) 판단: 기운이 극단적으로 쏠린 경우 (80% 이상 또는 20% 이하)
+        let is_polarized = strength.deuk_se.support_ratio >= 80.0 || strength.deuk_se.support_ratio <= 20.0;
+        
+        let eokbu_element = if is_polarized {
+            if strength.deuk_se.support_ratio >= 80.0 {
+                // 종왕격/종강격: 너무 강해서 억제할 수 없으므로 강한 기운을 따름
+                day_master_el
+            } else {
+                // 종아격/종재격/종살격: 너무 약해서 대항할 수 없으므로 월지의 강한 세력을 따름
+                pillars.month.branch.element()
+            }
+        } else {
+            match strength.strength_type {
+                StrengthType::Weak => {
+                    if strength.deuk_se.yinxing_count == 0 {
+                        day_master_el.generated_by() // 인성
+                    } else {
+                        day_master_el // 비겁
+                    }
+                },
+                StrengthType::Strong => {
+                    day_master_el.controlled_by() // 관성 (단순화)
+                },
+                StrengthType::Balanced => day_master_el,
+            }
         };
         
         recommendations.push(RecommendedYongshin {
             yongshin_type: YongshinType::Eokbu,
             element: eokbu_element,
-            reason: format!("일간이 {}하여 이를 {}하는 {}가 필요함", 
-                strength.strength_type.hangul(),
-                if strength.strength_type == StrengthType::Weak { "돕는" } else { "누르는" },
-                eokbu_element.hangul()
-            ),
+            reason: if is_polarized {
+                format!("기운이 {} 기운으로 극단적으로 쏠린 종격(從格) 사주로, 강한 세력을 따르는 {}가 필요함", 
+                    if strength.deuk_se.support_ratio >= 80.0 { "자신" } else { "월지" },
+                    eokbu_element.hangul()
+                )
+            } else {
+                format!("일간이 {}하여 이를 {}하는 {}가 필요함", 
+                    strength.strength_type.hangul(),
+                    if strength.strength_type == StrengthType::Weak { "돕는" } else { "누르는" },
+                    eokbu_element.hangul()
+                )
+            },
         });
 
         // 3. 통관용신(通關) 판단 (대립 해소)
@@ -166,10 +177,10 @@ pub fn calculate_thermal_index(pillars: &FourPillars) -> i32 {
     }
     
     for b in branches {
-        match b.element() {
-            Element::Fire | Element::Wood => score += 10,
-            Element::Water | Element::Metal => score -= 10,
-            Element::Earth => {}
+        use EarthlyBranch as EB;
+        match b {
+            EB::Si | EB::Wu | EB::Wei | EB::Xu | EB::Yin | EB::Mao => score += 10,
+            EB::Hai | EB::Zi | EB::Chou | EB::Chen | EB::Shen | EB::You => score -= 10,
         }
     }
     

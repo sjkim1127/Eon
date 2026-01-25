@@ -150,7 +150,12 @@ pub fn get_solar_term_time(dt: DateTime<Utc>, term: SolarTerm) -> DateTime<Utc> 
 /// 절기를 기준으로 월주의 지지를 결정합니다.
 pub fn get_month_branch_index(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> u8 {
     use chrono::TimeZone;
-    let dt = Utc.with_ymd_and_hms(year, month, day, hour, minute, 0).unwrap();
+    // 안전한 날짜 생성: 유효하지 않은 날짜인 경우 기본값 처리
+    let dt = match Utc.with_ymd_and_hms(year, month, day, hour, minute, 0) {
+        chrono::LocalResult::Single(d) => d,
+        chrono::LocalResult::Ambiguous(d, _) => d,
+        _ => Utc.with_ymd_and_hms(year, month, 1, hour, minute, 0).unwrap(), // 월의 1일은 항상 유효함
+    };
     get_month_branch_index_from_dt(dt)
 }
 

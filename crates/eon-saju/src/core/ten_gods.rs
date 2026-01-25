@@ -145,6 +145,16 @@ impl TenGod {
             Self::Shishen | Self::Zhengcai | Self::Zhengguan | Self::Zhengyin
         )
     }
+
+    /// 일간을 돕는 기운(비겁, 인성) 여부
+    pub const fn is_supportive(self) -> bool {
+        matches!(self, Self::Bijian | Self::Jiecai | Self::Pianyin | Self::Zhengyin)
+    }
+
+    /// 일간의 힘을 빼는 기운(식상, 재성, 관성) 여부
+    pub const fn is_exhausting(self) -> bool {
+        !self.is_supportive()
+    }
 }
 
 impl std::fmt::Display for TenGod {

@@ -259,6 +259,17 @@ impl SemiCombination {
             Self::HaiWei => "해미반합",
         }
     }
+
+    /// 왕지(子午卯酉)를 포함한 유력한 반합인지 확인
+    pub fn is_dominant(&self) -> bool {
+        use EarthlyBranch::*;
+        matches!(self, 
+            Self::YinWu | Self::WuXu | 
+            Self::ShenZi | Self::ZiChen | 
+            Self::SiYou | Self::YouChou | 
+            Self::HaiMao | Self::MaoWei
+        )
+    }
 }
 
 // ============================================
@@ -441,10 +452,22 @@ impl BranchPunishment {
         }
     }
 
+    /// 삼형살(寅巳申) 체크
+    pub fn check_triple(branches: &[EarthlyBranch]) -> bool {
+        use EarthlyBranch::*;
+        branches.contains(&Yin) && branches.contains(&Si) && branches.contains(&Shen)
+    }
+
+    /// 상형살(丑戌未) 체크
+    pub fn check_mutual(branches: &[EarthlyBranch]) -> bool {
+        use EarthlyBranch::*;
+        branches.contains(&Chou) && branches.contains(&Xu) && branches.contains(&Wei)
+    }
+
     pub fn hangul(&self) -> String {
         match self {
-            Self::TriplePunishment => "삼형(무은지형)".to_string(),
-            Self::MutualPunishment => "상형(무례지형)".to_string(),
+            Self::TriplePunishment => "삼형(인사신)".to_string(),
+            Self::MutualPunishment => "상형(축술미)".to_string(),
             Self::SelfPunishment(b) => format!("{}자형", b.hangul()),
         }
     }
@@ -679,6 +702,15 @@ impl RelationshipAnalysis {
                     branch_punishments.push((pun, pos1.to_string(), pos2.to_string()));
                 }
             }
+        }
+
+        // 삼형살 및 상형살 분석
+        let all_branches: Vec<_> = branches.iter().map(|(_, b)| *b).collect();
+        if BranchPunishment::check_triple(&all_branches) {
+            branch_punishments.push((BranchPunishment::TriplePunishment, "삼형".to_string(), "인사신".to_string()));
+        }
+        if BranchPunishment::check_mutual(&all_branches) {
+            branch_punishments.push((BranchPunishment::MutualPunishment, "상형".to_string(), "축술미".to_string()));
         }
 
         // 삼합 분석

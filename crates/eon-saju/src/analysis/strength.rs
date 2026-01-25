@@ -22,6 +22,13 @@ use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
 use crate::core::twelve_stages::TwelveStage;
 
+/// 위치별 가중치 (110점법)
+pub const WEIGHT_MONTH_BRANCH: f32 = 3.5; // 월지 (35점)
+pub const WEIGHT_DAY_BRANCH: f32 = 1.5;   // 일지 (15점)
+pub const WEIGHT_STEM: f32 = 1.0;         // 천간 (각 10점, 일간 포함)
+pub const WEIGHT_OTHER_BRANCH: f32 = 1.0; // 연지, 시지 (각 10점)
+pub const TOTAL_WEIGHT: f32 = 11.0;       // 총합 (110점)
+
 /// 강약 유형
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum StrengthType {
@@ -147,10 +154,12 @@ impl DeukJi {
         let mut strong_stage_count = 0;
         
         for (name, branch) in &branches {
-            let branch_element = branch.element();
+            // 지장간(Hidden Stems) 전체를 확인하여 통근 여부 판단 (학술적 고도화)
+            let has_root = branch.hidden_stems().iter().any(|stem| 
+                stem.element() == day_element
+            );
             
-            // 같은 오행이거나 생하는 오행이면 통근
-            if branch_element == day_element || branch_element.generates() == day_element {
+            if has_root {
                 root_count += 1;
                 root_positions.push(name.to_string());
             }
@@ -275,15 +284,26 @@ impl DeukSe {
             pillars.hour.branch,
         ];
         
+        let mut support_score = 0.0f32;
+        let mut exhaust_score = 0.0f32;
         let mut bijie_count = 0u8;
         let mut yinxing_count = 0u8;
         let mut shishang_count = 0u8;
         let mut caisheng_count = 0u8;
         let mut guanxing_count = 0u8;
-        
-        // 천간 분석
+
+        // 천간 가중치 적용 (일간 포함 4개 각 10점)
+        let day_master_god = TenGod::Bijian; // 일간 자신은 비견
+        support_score += WEIGHT_STEM; // 일간 자신 점수
+
         for stem in &stems {
             let god = TenGod::from_stems(day_master, *stem);
+            if god.is_supportive() {
+                support_score += WEIGHT_STEM;
+            } else {
+                exhaust_score += WEIGHT_STEM;
+            }
+            
             match god {
                 TenGod::Bijian | TenGod::Jiecai => bijie_count += 1,
                 TenGod::Zhengyin | TenGod::Pianyin => yinxing_count += 1,
@@ -293,9 +313,22 @@ impl DeukSe {
             }
         }
         
-        // 지지 분석 (정기 기준)
-        for branch in &branches {
+        // 지지 가중치 적용 (정기 기준 십성)
+        let branch_configs = [
+            (pillars.year.branch, WEIGHT_OTHER_BRANCH),
+            (pillars.month.branch, WEIGHT_MONTH_BRANCH),
+            (pillars.day.branch, WEIGHT_DAY_BRANCH),
+            (pillars.hour.branch, WEIGHT_OTHER_BRANCH),
+        ];
+
+        for (branch, weight) in &branch_configs {
             let god = TenGod::from_stem_and_branch(day_master, *branch);
+            if god.is_supportive() {
+                support_score += *weight;
+            } else {
+                exhaust_score += *weight;
+            }
+
             match god {
                 TenGod::Bijian | TenGod::Jiecai => bijie_count += 1,
                 TenGod::Zhengyin | TenGod::Pianyin => yinxing_count += 1,
@@ -305,18 +338,11 @@ impl DeukSe {
             }
         }
         
-        let support = bijie_count + yinxing_count;
-        let exhaust = shishang_count + caisheng_count + guanxing_count;
-        let total = support + exhaust;
+        // 비겁+인성 비율 (%) - 가중 점수 기반
+        let support_ratio = (support_score / TOTAL_WEIGHT) * 100.0;
         
-        let support_ratio = if total > 0 {
-            (support as f32 / total as f32) * 100.0
-        } else {
-            50.0
-        };
-        
-        // 비겁+인성이 50% 이상이면 득세
-        let acquired = support >= exhaust;
+        // 비겁+인성 점수가 50% 이상(5.5점 이상)이면 득세
+        let acquired = support_score >= 5.5;
         
         Self {
             acquired,
