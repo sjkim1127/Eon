@@ -12,6 +12,8 @@ use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
 use crate::core::pillars::SajuError;
 use crate::analysis::major_luck::{MajorLuck, MajorLuckAnalysis};
+use crate::analysis::dynamic_luck::{LuckInfluence, DynamicLuckAnalysis};
+use crate::analysis::relationships::{StemClash, BranchClash};
 
 /// 연운 (해당 연도의 운세)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,20 +26,39 @@ pub struct YearlyLuck {
     pub stem_god: TenGod,
     /// 지지 십성
     pub branch_god: TenGod,
+    /// 원국과의 상호작용 (합충형해)
+    pub influence: Option<LuckInfluence>,
+    /// 특수 사건 (천전지충 등)
+    pub special_events: Vec<String>,
     /// 12운성 (선택적)
     pub twelve_stage: Option<String>,
 }
 
 impl YearlyLuck {
     /// 특정 연도의 연운 계산
-    pub fn calculate(year: i32, day_master: HeavenlyStem) -> Self {
+    pub fn calculate(year: i32, pillars: &FourPillars) -> Self {
         let ganzi = Self::year_ganzi(year);
+        let day_master = pillars.day_master();
         
+        let influence = Some(DynamicLuckAnalysis::get_influence(ganzi, "세운", pillars));
+        
+        // 천전지충(天戦地沖) 체크
+        let mut special_events = Vec::new();
+        // 일주와 세운 간의 천충지충 확인
+        let day_stem_clash = StemClash::check(ganzi.stem, pillars.day.stem).is_some();
+        let day_branch_clash = BranchClash::check(ganzi.branch, pillars.day.branch).is_some();
+        
+        if day_stem_clash && day_branch_clash {
+            special_events.push("천전지충(天戦地沖)".to_string());
+        }
+
         Self {
             year,
             ganzi,
             stem_god: TenGod::from_stems(day_master, ganzi.stem),
             branch_god: TenGod::from_stem_and_branch(day_master, ganzi.branch),
+            influence,
+            special_events,
             twelve_stage: None, // TODO: 12운성 계산
         }
     }
@@ -60,7 +81,18 @@ impl std::fmt::Display for YearlyLuck {
             self.ganzi,
             self.stem_god.hangul(),
             self.branch_god.hangul()
-        )
+        )?;
+
+        if let Some(inf) = &self.influence {
+            if !inf.relations_with_natal.is_empty() {
+                write!(f, " | {}", inf.relations_with_natal.join(", "))?;
+            }
+        }
+        for event in &self.special_events {
+             write!(f, " | ⚠️ {}", event)?;
+        }
+        
+        Ok(())
     }
 }
 
@@ -77,19 +109,25 @@ pub struct MonthlyLuck {
     pub stem_god: TenGod,
     /// 지지 십성
     pub branch_god: TenGod,
+    /// 원국과의 상호작용
+    pub influence: Option<LuckInfluence>,
 }
 
 impl MonthlyLuck {
     /// 특정 연월의 월운 계산
-    pub fn calculate(year: i32, month: u32, day_master: HeavenlyStem) -> Self {
+    pub fn calculate(year: i32, month: u32, pillars: &FourPillars) -> Self {
         let ganzi = Self::month_ganzi(year, month);
+        let day_master = pillars.day_master();
         
+        let influence = Some(DynamicLuckAnalysis::get_influence(ganzi, "월운", pillars));
+
         Self {
             year,
             month,
             ganzi,
             stem_god: TenGod::from_stems(day_master, ganzi.stem),
             branch_god: TenGod::from_stem_and_branch(day_master, ganzi.branch),
+            influence,
         }
     }
 
@@ -135,7 +173,14 @@ impl std::fmt::Display for MonthlyLuck {
             self.ganzi,
             self.stem_god.hangul(),
             self.branch_god.hangul()
-        )
+        )?;
+
+        if let Some(inf) = &self.influence {
+            if !inf.relations_with_natal.is_empty() {
+                write!(f, " | {}", inf.relations_with_natal.join(", "))?;
+            }
+        }
+        Ok(())
     }
 }
 
@@ -187,12 +232,12 @@ impl LuckAnalysis {
 
         // 연운 계산 (현재 년도 기준 ±5년)
         let yearly_lucks: Vec<YearlyLuck> = (current_year - 5..=current_year + 5)
-            .map(|y| YearlyLuck::calculate(y, day_master))
+            .map(|y| YearlyLuck::calculate(y, pillars))
             .collect();
 
         // 월운 계산 (현재 연도 12개월)
         let monthly_lucks: Vec<MonthlyLuck> = (1..=12)
-            .map(|m| MonthlyLuck::calculate(current_year, m, day_master))
+            .map(|m| MonthlyLuck::calculate(current_year, m, pillars))
             .collect();
 
         Ok(Self {
@@ -245,12 +290,12 @@ impl std::fmt::Display for LuckAnalysis {
 impl FourPillars {
     /// 특정 연도의 연운 계산
     pub fn yearly_luck(&self, year: i32) -> YearlyLuck {
-        YearlyLuck::calculate(year, self.day_master())
+        YearlyLuck::calculate(year, self)
     }
 
     /// 특정 연월의 월운 계산
     pub fn monthly_luck(&self, year: i32, month: u32) -> MonthlyLuck {
-        MonthlyLuck::calculate(year, month, self.day_master())
+        MonthlyLuck::calculate(year, month, self)
     }
 
     /// 전체 운세 분석 (정밀 대운 포함)
@@ -293,7 +338,7 @@ mod tests {
         let pillars = FourPillars::calculate(&input).unwrap();
 
         // 2026년 연운
-        let luck_2026 = pillars.yearly_luck(2026);
+        let luck_2026 = YearlyLuck::calculate(2026, &pillars);
         println!("2026년 연운: {}", luck_2026);
         
         assert_eq!(luck_2026.ganzi.stem, HeavenlyStem::Bing);  // 丙
@@ -307,8 +352,30 @@ mod tests {
         let pillars = FourPillars::calculate(&input).unwrap();
 
         // 2026년 1월 월운
-        let luck = pillars.monthly_luck(2026, 1);
+        let luck = MonthlyLuck::calculate(2026, 1, &pillars);
         println!("2026년 1월 월운: {}", luck);
+    }
+
+    #[test]
+    fn test_yearly_luck_interactions() {
+        let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
+        let pillars = FourPillars::calculate(&input).unwrap();
+        
+        // 2026년 병오(丙午)년 vs 병자(丙子)일주 (가정)
+        // 실제 김성주님 일주는 경인(庚寅)이나, 충 충돌 테스트를 위해 로직 검증형으로 호출
+        
+        // 2026년(병오) -> 지지 오화(午)
+        // 만약 일지가 자수(子)라면 자오충 발생
+        
+        let luck = pillars.yearly_luck(2026);
+        println!("2026년 연운 상호작용: {:?}", luck.influence);
+        
+        // 김성주(2004)는 경인일주. 2026년 병오년. 
+        // 인오(寅午) 반합 화국 발생 예상
+        
+        if let Some(inf) = luck.influence {
+            assert!(inf.relations_with_natal.iter().any(|r| r.contains("합") || r.contains("충")));
+        }
     }
 
     #[test]
@@ -327,5 +394,28 @@ mod tests {
         
         assert!(!analysis.yearly_lucks.is_empty());
         assert_eq!(analysis.monthly_lucks.len(), 12);
+    }
+
+    #[test]
+    fn test_clash_detection() {
+        // 경인(庚寅)일주 생성 (김성주님 사주)
+        let input = SajuInput::new_solar(2004, 11, 27, 22, 0); 
+        let pillars = FourPillars::calculate(&input).unwrap();
+        println!("Test Subject Day Pillar: {}", pillars.day);
+        
+        // 동적으로 천전지충이 발생하는 연도를 탐색 (200년 범위)
+        // 60갑자 주기 내에 반드시 최소 1번은 천전지충(천충지충)이 돌아옴
+        let mut found_year = None;
+        
+        for year in 2020..2100 {
+            let luck = YearlyLuck::calculate(year, &pillars);
+            if luck.special_events.iter().any(|e| e.contains("천전지충")) {
+                println!("천전지충 감지됨: {}년 {}", year, luck.ganzi);
+                found_year = Some(year);
+                break;
+            }
+        }
+        
+        assert!(found_year.is_some(), "천전지충이 감지되는 연도를 찾을 수 없습니다. (로직 확인 필요)");
     }
 }

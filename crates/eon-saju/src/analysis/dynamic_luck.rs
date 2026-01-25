@@ -204,29 +204,56 @@ impl DynamicLuckAnalysis {
         analysis
     }
 
-    fn get_influence(luck: GanZi, label: &str, natal: &FourPillars) -> LuckInfluence {
+    pub fn get_influence(luck: GanZi, label: &str, natal: &FourPillars) -> LuckInfluence {
         let mut relations = Vec::new();
         // 원국과의 관계 정리
-        // (간략히 combined_relations에서 추출하는 것도 방법이지만 명시적 표현을 위해)
         let n_stems = [natal.year.stem, natal.month.stem, natal.day.stem, natal.hour.stem];
         let n_branches = [natal.year.branch, natal.month.branch, natal.day.branch, natal.hour.branch];
         
         use crate::analysis::relationships::*;
+        
+        // 1. 천간 관계
         for s in &n_stems {
             if let Some(_c) = StemCombination::check(luck.stem, *s) {
                 relations.push(format!("천간합: {} - {}", luck.stem.hanja(), s.hanja()));
             }
+            if let Some(_c) = StemClash::check(luck.stem, *s) {
+                relations.push(format!("천간충: {} - {}", luck.stem.hanja(), s.hanja()));
+            }
         }
+        
+        // 2. 지지 관계
         for b in &n_branches {
+            // 육합
+            if let Some(_c) = SixCombination::check(luck.branch, *b) {
+                relations.push(format!("육합: {} - {}", luck.branch.hanja(), b.hanja()));
+            }
+            // 반합 (왕지 포함 여부 등은 check 함수가 처리한다고 가정)
+            if let Some(semi) = SemiCombination::check(luck.branch, *b) {
+                relations.push(format!("반합: {} ({}-{})", semi.hangul(), luck.branch.hanja(), b.hanja()));
+            }
+            // 충
             if let Some(_c) = BranchClash::check(luck.branch, *b) {
                 relations.push(format!("지지충: {} - {}", luck.branch.hanja(), b.hanja()));
+            }
+            // 형
+            if let Some(p) = BranchPunishment::check_self(luck.branch, *b) {
+                relations.push(format!("지지형: {}", p.hangul()));
+            }
+            // 해
+            if let Some(_h) = BranchHarm::check(luck.branch, *b) {
+                relations.push(format!("지지해: {} - {}", luck.branch.hanja(), b.hanja()));
+            }
+            // 파
+            if let Some(_d) = BranchDestruction::check(luck.branch, *b) {
+                relations.push(format!("지지파: {} - {}", luck.branch.hanja(), b.hanja()));
             }
         }
 
         LuckInfluence {
             ganzi: luck,
             label: label.to_string(),
-            relations_with_natal: relations,
+            relations_with_natal: relations, // 중복 제거는 하지 않음 (어느 주와 합인지 알기 위해)
         }
     }
 }
