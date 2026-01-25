@@ -14,5 +14,6 @@ chrono.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 rand = "0.8"
+rayon = "1.10"
 
 [dev-dependencies]
