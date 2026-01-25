@@ -17,7 +17,7 @@ fn main() {
         &pillars, 
         Gender::Male, 
         2004, 11, 27, 22, 0
-    );
+    ).unwrap();
 
     let simulator = BatchSimulator::new(pillars);
     

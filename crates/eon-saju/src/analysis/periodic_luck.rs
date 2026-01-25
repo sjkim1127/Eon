@@ -10,6 +10,7 @@ use crate::core::branch::EarthlyBranch;
 use crate::core::ganzi::GanZi;
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
+use crate::core::pillars::SajuError;
 use crate::analysis::major_luck::{MajorLuck, MajorLuckAnalysis};
 
 /// 연운 (해당 연도의 운세)
@@ -175,14 +176,14 @@ impl LuckAnalysis {
         term_hour: u32,
         term_min: u32,
         current_year: i32,
-    ) -> Self {
+    ) -> Result<Self, SajuError> {
         let day_master = pillars.day_master();
         
         // 대운 계산
         let major_luck = MajorLuckAnalysis::calculate(
             pillars, gender, birth_year, birth_month, birth_day, birth_hour, birth_min,
             term_year, term_month, term_day, term_hour, term_min
-        );
+        )?;
 
         // 연운 계산 (현재 년도 기준 ±5년)
         let yearly_lucks: Vec<YearlyLuck> = (current_year - 5..=current_year + 5)
@@ -194,12 +195,12 @@ impl LuckAnalysis {
             .map(|m| MonthlyLuck::calculate(current_year, m, day_master))
             .collect();
 
-        Self {
+        Ok(Self {
             day_master,
             major_luck,
             yearly_lucks,
             monthly_lucks,
-        }
+        })
     }
 
     /// 특정 연도의 연운 조회
@@ -259,7 +260,7 @@ impl FourPillars {
         b_year: i32, b_month: u32, b_day: u32, b_hour: u32, b_min: u32,
         t_year: i32, t_month: u32, t_day: u32, t_hour: u32, t_min: u32,
         current_year: i32,
-    ) -> LuckAnalysis {
+    ) -> Result<LuckAnalysis, SajuError> {
         LuckAnalysis::calculate(
             self, gender, b_year, b_month, b_day, b_hour, b_min,
             t_year, t_month, t_day, t_hour, t_min,
@@ -320,7 +321,7 @@ mod tests {
             2004, 11, 27, 22, 0, // 출생
             2004, 12, 7, 3, 48,  // 대설
             2026                 // 기준년도
-        );
+        ).unwrap();
 
         println!("{}", analysis);
         

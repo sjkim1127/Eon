@@ -85,7 +85,7 @@ fn main() {
     // 대운 정밀 분석 (천문 엔진 자동 계산)
     println!("【대운 정밀 분석 (Swiss Ephemeris 기반)】");
     // 2004-11-27 22:00 KST = 2004-11-27 13:00 UTC
-    let luck = pillars.major_luck(Gender::Male, 2004, 11, 27, 13, 0);
+    let luck = pillars.major_luck(Gender::Male, 2004, 11, 27, 13, 0).unwrap();
     println!("{}", luck);
     println!();
 
@@ -101,7 +101,7 @@ fn main() {
     println!("【Saju-VM 인생 경로 에뮬레이션 (100년 시뮬레이션)】");
     use eon_saju::LifePathEmulator;
     let emulator = LifePathEmulator::new(pillars.clone(), Gender::Male, 2004);
-    let report = emulator.emulate();
+    let report = emulator.emulate().unwrap();
 
     println!("인생의 최정점: {}세 (에너지 점수: {:.1})", report.peak_age, report.frames[report.peak_age as usize].score);
     println!("인생의 최저점: {}세 (에너지 점수: {:.1})", report.valley_age, report.frames[report.valley_age as usize].score);
@@ -147,7 +147,7 @@ fn main() {
     input_alt.hour = (input_alt.hour + 1) % 24;
     let pillars_alt = FourPillars::calculate(&input_alt).unwrap();
     let emulator_alt = LifePathEmulator::new(pillars_alt, Gender::Male, input_alt.year);
-    let report_alt = emulator_alt.emulate();
+    let report_alt = emulator_alt.emulate().unwrap();
     
     let diffs = DestinyDebugger::diff(&report, &report_alt);
     println!("\n⚖️ Life Path Diff (Timezone/Environment Correction):");
@@ -179,7 +179,7 @@ fn main() {
     let fuzzer = DestinyFuzzer::new(SajuVM::new(pillars.clone()));
     
     println!("1. 현재 대운(戊寅) 기준 세운 감사(Audit)...");
-    let major_2027 = pillars.major_luck(Gender::Male, 2004, 11, 27, 13, 0).cycles[2].ganzi;
+    let major_2027 = pillars.major_luck(Gender::Male, 2004, 11, 27, 13, 0).unwrap().cycles[2].ganzi;
     let audit_report = fuzzer.audit(major_2027);
     println!("발견된 취약점: {}개", audit_report.total_crashes);
     for v in audit_report.critical_vectors {

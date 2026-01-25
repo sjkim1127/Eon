@@ -24,7 +24,8 @@ use crate::core::element::Polarity;
 use crate::core::ganzi::GanZi;
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
-use chrono::{DateTime, Utc, TimeZone, NaiveDate, Duration, Datelike};
+use crate::core::pillars::SajuError;
+use chrono::{Utc, TimeZone, NaiveDate, Duration, Datelike};
 
 /// 대운 진행 방향
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -148,7 +149,7 @@ impl MajorLuckAnalysis {
         birth_day: u32,
         birth_hour: u32,
         birth_min: u32,
-    ) -> Self {
+    ) -> Result<Self, SajuError> {
         use eon_astro::AstroEngine;
 
         let day_master = pillars.day_master();
@@ -158,7 +159,9 @@ impl MajorLuckAnalysis {
         // KST 9시간 차이 가정하여 UTC로 변환하여 천문 계산 수행
         let dt_local = NaiveDate::from_ymd_opt(birth_year, birth_month, birth_day)
             .and_then(|d| d.and_hms_opt(birth_hour, birth_min, 0))
-            .unwrap_or_else(|| NaiveDate::from_ymd_opt(2000, 1, 1).unwrap().and_hms_opt(0, 0, 0).unwrap());
+            .ok_or_else(|| SajuError::InvalidDateTime(format!(
+                "대운 계산용 날짜 오류: {}-{}-{} {}:{}", birth_year, birth_month, birth_day, birth_hour, birth_min
+            )))?;
         
         let birth_time = Utc.from_utc_datetime(&(dt_local - Duration::hours(9)));
         
@@ -178,7 +181,7 @@ impl MajorLuckAnalysis {
         };
 
         let target_term_time = astro.find_solar_term_time(birth_time, target_term_idx)
-            .unwrap_or(birth_time);
+            .map_err(|e| SajuError::CalculationError(format!("절기 시각 계산 실패: {}", e)))?;
 
         // 대운 시작 정밀 계산 (년, 월, 일 단위)
         let (start_age, start_months, start_days) = Self::calculate_precise_start_with_times(
@@ -210,7 +213,7 @@ impl MajorLuckAnalysis {
             cycles.push(MajorLuck::new(current_ganzi, age, day_master, cycle_start_date));
         }
 
-        Self {
+        Ok(Self {
             direction,
             start_age,
             start_months,
@@ -218,7 +221,7 @@ impl MajorLuckAnalysis {
             start_date,
             cycles,
             day_master,
-        }
+        })
     }
 
     pub fn calculate(
@@ -234,16 +237,16 @@ impl MajorLuckAnalysis {
         term_day: u32,
         term_hour: u32,
         term_min: u32,
-    ) -> Self {
+    ) -> Result<Self, SajuError> {
         let day_master = pillars.day_master();
         let direction = LuckDirection::from_year_and_gender(pillars.year.stem, gender);
         
         let birth_time = Utc.with_ymd_and_hms(birth_year, birth_month, birth_day, birth_hour, birth_min, 0)
             .earliest()
-            .unwrap_or_else(|| Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap());
+            .ok_or_else(|| SajuError::InvalidDateTime(format!("생년월일시 오류: {}-{}-{} {}:{}", birth_year, birth_month, birth_day, birth_hour, birth_min)))?;
         let term_time = Utc.with_ymd_and_hms(term_year, term_month, term_day, term_hour, term_min, 0)
             .earliest()
-            .unwrap_or_else(|| birth_time);
+            .ok_or_else(|| SajuError::InvalidDateTime(format!("절기 날짜시간 오류: {}-{}-{} {}:{}", term_year, term_month, term_day, term_hour, term_min)))?;
 
         // 대운 시작 정밀 계산 (년, 월, 일 단위)
         let (start_age, start_months, start_days) = Self::calculate_precise_start_with_times(
@@ -274,7 +277,7 @@ impl MajorLuckAnalysis {
             cycles.push(MajorLuck::new(current_ganzi, age, day_master, cycle_start_date));
         }
 
-        Self {
+        Ok(Self {
             direction,
             start_age,
             start_months,
@@ -282,7 +285,7 @@ impl MajorLuckAnalysis {
             start_date,
             cycles,
             day_master,
-        }
+        })
     }
 
     fn calculate_precise_start_with_times(
@@ -341,7 +344,7 @@ impl FourPillars {
         &self, 
         gender: Gender, 
         b_year: i32, b_month: u32, b_day: u32, b_hour: u32, b_min: u32,
-    ) -> MajorLuckAnalysis {
+    ) -> Result<MajorLuckAnalysis, SajuError> {
         MajorLuckAnalysis::calculate_astro(self, gender, b_year, b_month, b_day, b_hour, b_min)
     }
 
@@ -350,7 +353,7 @@ impl FourPillars {
         gender: Gender, 
         b_year: i32, b_month: u32, b_day: u32, b_hour: u32, b_min: u32,
         t_year: i32, t_month: u32, t_day: u32, t_hour: u32, t_min: u32
-    ) -> MajorLuckAnalysis {
+    ) -> Result<MajorLuckAnalysis, SajuError> {
         MajorLuckAnalysis::calculate(self, gender, b_year, b_month, b_day, b_hour, b_min, t_year, t_month, t_day, t_hour, t_min)
     }
 }
@@ -393,7 +396,7 @@ mod tests {
             Gender::Male, 
             2004, 11, 27, 22, 0, // 출생
             2004, 12, 7, 3, 48   // 대설
-        );
+        ).unwrap();
         
         assert_eq!(luck.direction, LuckDirection::Forward);
         assert!(luck.cycles.len() >= 8);
@@ -407,7 +410,7 @@ mod tests {
             Gender::Male, 
             2004, 11, 27, 22, 0, // 출생
             2004, 12, 7, 3, 48   // 대설
-        );
+        ).unwrap();
 
         let current = luck.at_age(22);
         assert!(current.is_some());
@@ -419,7 +422,7 @@ mod tests {
         let pillars = FourPillars::calculate(&input).unwrap();
         
         // KST 22:00 -> UTC 13:00 (calculate_astro 내부에서 변환됨)
-        let luck = pillars.major_luck(Gender::Male, 2004, 11, 27, 22, 0);
+        let luck = pillars.major_luck(Gender::Male, 2004, 11, 27, 22, 0).unwrap();
         
         // 11월 27일 22:00 KST ~ 12월 7일 03:48 KST (대설)
         // 약 9일 5시간 -> 3년

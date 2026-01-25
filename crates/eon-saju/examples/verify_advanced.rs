@@ -26,7 +26,7 @@ fn main() {
     println!("【Step 1: ESIL Trace Analysis (Reversing)】");
     // 2026년 丙午년 1월(庚寅) 11일(乙丑) 10시(辛巳)의 기운 유입 분석
     use eon_saju::{GanZi, HeavenlyStem, EarthlyBranch};
-    let major = pillars_a.major_luck(Gender::Male, 2004, 11, 27, 13, 0).cycles[2].ganzi; // 戊寅 대운
+    let major = pillars_a.major_luck(Gender::Male, 2004, 11, 27, 13, 0).unwrap().cycles[2].ganzi; // 戊寅 대운
     let yearly = GanZi::new(HeavenlyStem::Bing, EarthlyBranch::Wu);    // 丙午년
     let monthly = GanZi::new(HeavenlyStem::Geng, EarthlyBranch::Yin); // 庚寅월
     let daily = GanZi::new(HeavenlyStem::Yi, EarthlyBranch::Chou);    // 乙丑일
@@ -63,7 +63,7 @@ fn main() {
     // 3. 단계 2 테스트: 100년 전수 조사 (Full Spectrum Audit)
     println!("【Step 2: Full Spectrum Timeline Audit (100 Years)】");
     let fuzzer = DestinyFuzzer::new(vm_a.clone());
-    let luck_all = pillars_a.major_luck(Gender::Male, 2004, 11, 27, 13, 0);
+    let luck_all = pillars_a.major_luck(Gender::Male, 2004, 11, 27, 13, 0).unwrap();
     
     println!("Auditing ~43,200 time slots for potential system crashes...");
     let report = fuzzer.audit_high_res(2004, &luck_all);
