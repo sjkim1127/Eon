@@ -5,6 +5,7 @@
 pub mod core;
 pub mod analysis;
 pub mod engine;
+pub mod report;
 
 // Re-exports for convenience
 pub use core::stem::HeavenlyStem;
