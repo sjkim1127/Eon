@@ -606,8 +606,10 @@ pub struct RelationshipAnalysis {
     pub triple_combinations: Vec<TripleCombination>,
     /// 방합
     pub seasonal_combinations: Vec<SeasonalCombination>,
-    /// 반합
-    pub semi_combinations: Vec<(SemiCombination, String, String)>,
+    /// 유력한 반합 (왕지 포함, 眞合)
+    pub dominant_semi_combinations: Vec<(SemiCombination, String, String)>,
+    /// 무력한 반합 (왕지 미포함, 假合)
+    pub weak_semi_combinations: Vec<(SemiCombination, String, String)>,
     /// 육합
     pub six_combinations: Vec<(SixCombination, String, String)>,
     /// 지지충
@@ -645,7 +647,8 @@ impl RelationshipAnalysis {
         let mut stem_clashes = Vec::new();
         let mut triple_combinations = Vec::new();
         let mut seasonal_combinations = Vec::new();
-        let mut semi_combinations = Vec::new();
+        let mut dominant_semi_combinations = Vec::new();
+        let mut weak_semi_combinations = Vec::new();
         let mut six_combinations = Vec::new();
         let mut branch_clashes = Vec::new();
         let mut branch_punishments = Vec::new();
@@ -676,7 +679,11 @@ impl RelationshipAnalysis {
                 let (pos2, branch2) = branches[j];
 
                 if let Some(semi) = SemiCombination::check(branch1, branch2) {
-                    semi_combinations.push((semi, pos1.to_string(), pos2.to_string()));
+                    if semi.is_dominant() {
+                        dominant_semi_combinations.push((semi, pos1.to_string(), pos2.to_string()));
+                    } else {
+                        weak_semi_combinations.push((semi, pos1.to_string(), pos2.to_string()));
+                    }
                 }
                 if let Some(six) = SixCombination::check(branch1, branch2) {
                     six_combinations.push((six, pos1.to_string(), pos2.to_string()));
@@ -751,7 +758,8 @@ impl RelationshipAnalysis {
             stem_clashes,
             triple_combinations,
             seasonal_combinations,
-            semi_combinations,
+            dominant_semi_combinations,
+            weak_semi_combinations,
             six_combinations,
             branch_clashes,
             branch_punishments,
@@ -798,7 +806,8 @@ impl RelationshipAnalysis {
         !self.stem_combinations.is_empty()
             || !self.triple_combinations.is_empty()
             || !self.seasonal_combinations.is_empty()
-            || !self.semi_combinations.is_empty()
+            || !self.dominant_semi_combinations.is_empty()
+            || !self.weak_semi_combinations.is_empty()
             || !self.six_combinations.is_empty()
     }
 
@@ -849,9 +858,18 @@ impl std::fmt::Display for RelationshipAnalysis {
             writeln!(f)?;
         }
 
-        if !self.semi_combinations.is_empty() {
-            write!(f, "반합: ")?;
-            for (i, (semi, p1, p2)) in self.semi_combinations.iter().enumerate() {
+        if !self.dominant_semi_combinations.is_empty() {
+            write!(f, "반합(眞): ")?;
+            for (i, (semi, p1, p2)) in self.dominant_semi_combinations.iter().enumerate() {
+                if i > 0 { write!(f, ", ")?; }
+                write!(f, "{} ({}-{})", semi.hangul(), p1, p2)?;
+            }
+            writeln!(f)?;
+        }
+
+        if !self.weak_semi_combinations.is_empty() {
+            write!(f, "반합(假): ")?;
+            for (i, (semi, p1, p2)) in self.weak_semi_combinations.iter().enumerate() {
                 if i > 0 { write!(f, ", ")?; }
                 write!(f, "{} ({}-{})", semi.hangul(), p1, p2)?;
             }

@@ -28,6 +28,8 @@ pub struct SajuInput {
     pub is_leap_month: bool,
     /// 경도 시차 (분 단위, 예: 안산 -33)
     pub longitude_offset_m: i32,
+    /// 시간대 오프셋 (시간 단위, 예: KST = 9.0)
+    pub timezone_offset_h: f32,
 }
 
 impl SajuInput {
@@ -42,6 +44,7 @@ impl SajuInput {
             is_lunar: false,
             is_leap_month: false,
             longitude_offset_m: 0,
+            timezone_offset_h: 9.0, // 기본값 KST
         }
     }
 
@@ -56,6 +59,7 @@ impl SajuInput {
             is_lunar: false,
             is_leap_month: false,
             longitude_offset_m: offset_m,
+            timezone_offset_h: 9.0, // 기본값 KST
         }
     }
 
@@ -70,6 +74,7 @@ impl SajuInput {
             is_lunar: true,
             is_leap_month: is_leap,
             longitude_offset_m: 0,
+            timezone_offset_h: 9.0, // 기본값 KST
         }
     }
 }
@@ -110,7 +115,10 @@ impl FourPillars {
         // 1. 절기 계산용 UTC (보정 없는 실제 시간)
         let dt_absolute_utc = NaiveDate::from_ymd_opt(solar_year, solar_month, solar_day)
             .and_then(|d| d.and_hms_opt(input.hour, input.minute, 0))
-            .map(|dt| Utc.from_utc_datetime(&(dt - Duration::hours(9)))) // KST 9시간 차이 가정
+            .map(|dt| {
+                let offset_ms = (input.timezone_offset_h * 3600.0 * 1000.0) as i64;
+                Utc.from_utc_datetime(&(dt - Duration::milliseconds(offset_ms)))
+            })
             .ok_or_else(|| SajuError::InvalidDateTime(format!("Absolute DT error: {}-{}-{}", solar_year, solar_month, solar_day)))?;
 
         // 2. 지역 시차 보정 (True Solar Time 계산) - 일주/시주용

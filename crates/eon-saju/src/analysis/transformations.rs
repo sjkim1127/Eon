@@ -108,22 +108,19 @@ impl TransformationAnalysis {
         }
 
         // 4. 지지 반합 처리
-        for (semi, p1, p2) in &rel.semi_combinations {
-            // 왕지(子午卯酉)를 포함한 유력한 반합만 오행 변환 인정
-            if semi.is_dominant() {
-                // 오행 변환 (삼합과 동일 오행)
-                let transformed = match semi {
-                    SemiCombination::YinWu | SemiCombination::WuXu => Element::Fire,
-                    SemiCombination::ShenZi | SemiCombination::ZiChen => Element::Water,
-                    SemiCombination::SiYou | SemiCombination::YouChou => Element::Metal,
-                    SemiCombination::HaiMao | SemiCombination::MaoWei => Element::Wood,
-                    _ => continue, // 무력 반합은 변환 안함
-                };
+        for (semi, _p1, _p2) in &rel.dominant_semi_combinations {
+            // 오행 변환 (삼합과 동일 오행)
+            let transformed = match semi {
+                SemiCombination::YinWu | SemiCombination::WuXu => Element::Fire,
+                SemiCombination::ShenZi | SemiCombination::ZiChen => Element::Water,
+                SemiCombination::SiYou | SemiCombination::YouChou => Element::Metal,
+                SemiCombination::HaiMao | SemiCombination::MaoWei => Element::Wood,
+                _ => continue, // 혹시 모를 안전장치
+            };
 
-                let reason = format!("{}에 의한 합화", semi.hangul());
-                apply_semi_transform(pillars, semi, transformed, &reason,
-                                   &mut year_branch, &mut month_branch, &mut day_branch, &mut hour_branch);
-            }
+            let reason = format!("{}에 의한 합화", semi.hangul());
+            apply_semi_transform(pillars, semi, transformed, &reason,
+                               &mut year_branch, &mut month_branch, &mut day_branch, &mut hour_branch);
         }
 
         Self {

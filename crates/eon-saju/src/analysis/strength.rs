@@ -131,6 +131,8 @@ pub struct DeukJi {
     pub acquired: bool,
     /// 통근(通根) 개수
     pub root_count: u8,
+    /// 통근(通根) 가중치 점수 합계
+    pub root_score: f32,
     /// 통근 위치들
     pub root_positions: Vec<String>,
     /// 강한 12운성 개수 (장생, 관대, 건록, 제왕)
@@ -150,10 +152,18 @@ impl DeukJi {
         ];
         
         let mut root_count = 0;
+        let mut root_score = 0.0;
         let mut root_positions = Vec::new();
         let mut strong_stage_count = 0;
         
         for (name, branch) in &branches {
+            // 위치별 가중치 결정
+            let weight = match *name {
+                "월지" => WEIGHT_MONTH_BRANCH,
+                "일지" => WEIGHT_DAY_BRANCH,
+                _ => WEIGHT_OTHER_BRANCH, // 년지, 시지
+            };
+
             // 지장간(Hidden Stems) 전체를 확인하여 통근 여부 판단 (학술적 고도화)
             let has_root = branch.hidden_stems().iter().any(|stem| 
                 stem.element() == day_element
@@ -161,6 +171,7 @@ impl DeukJi {
             
             if has_root {
                 root_count += 1;
+                root_score += weight;
                 root_positions.push(name.to_string());
             }
             
@@ -180,12 +191,13 @@ impl DeukJi {
             }
         }
         
-        // 통근이 2개 이상이거나 강한 12운성이 있으면 득지
-        let acquired = root_count >= 2 || strong_stage_count >= 1;
+        // 득지 판정: 가중치 점수 합계가 3.0점 이상이거나, 강한 12운성(건록, 제왕 등)이 하나 이상 있으면 득지
+        let acquired = root_score >= 3.0 || strong_stage_count >= 1;
         
         Self {
             acquired,
             root_count,
+            root_score,
             root_positions,
             strong_stage_count,
         }
@@ -285,7 +297,7 @@ impl DeukSe {
         ];
         
         let mut support_score = 0.0f32;
-        let mut exhaust_score = 0.0f32;
+        let mut _exhaust_score = 0.0f32;
         let mut bijie_count = 0u8;
         let mut yinxing_count = 0u8;
         let mut shishang_count = 0u8;
@@ -301,7 +313,7 @@ impl DeukSe {
             if god.is_supportive() {
                 support_score += WEIGHT_STEM;
             } else {
-                exhaust_score += WEIGHT_STEM;
+                _exhaust_score += WEIGHT_STEM;
             }
             
             match god {
@@ -326,7 +338,7 @@ impl DeukSe {
             if god.is_supportive() {
                 support_score += *weight;
             } else {
-                exhaust_score += *weight;
+                _exhaust_score += *weight;
             }
 
             match god {

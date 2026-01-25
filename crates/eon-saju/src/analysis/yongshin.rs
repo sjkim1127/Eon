@@ -58,13 +58,6 @@ impl YongshinAnalysis {
         let strength = pillars.strength();
         let day_master_el = pillars.day_master_element();
 
-        // 1. 조후용신(調候) 판단 (급한 것 우선)
-        let thermal_index = calculate_thermal_index(pillars);
-        if let Some(johu) = get_johu_analysis(pillars, thermal_index) {
-            recommendations.push(johu);
-        }
-
-        // 2. 억부용신(抑扶) 판단
         // 종격(Follower Structure) 판단: 기운이 극단적으로 쏠린 경우 (80% 이상 또는 20% 이하)
         let is_polarized = strength.deuk_se.support_ratio >= 80.0 || strength.deuk_se.support_ratio <= 20.0;
         
@@ -91,23 +84,41 @@ impl YongshinAnalysis {
                 StrengthType::Balanced => day_master_el,
             }
         };
-        
-        recommendations.push(RecommendedYongshin {
-            yongshin_type: YongshinType::Eokbu,
-            element: eokbu_element,
-            reason: if is_polarized {
-                format!("기운이 {} 기운으로 극단적으로 쏠린 종격(從格) 사주로, 강한 세력을 따르는 {}가 필요함", 
+
+        // 종격/전왕격인 경우 억부(격국) 용신을 최우선으로 배치하고 조후는 참고로만 제시
+        if is_polarized {
+            recommendations.push(RecommendedYongshin {
+                yongshin_type: YongshinType::Eokbu,
+                element: eokbu_element,
+                reason: format!("기운이 {} 기운으로 극단적으로 쏠린 종격(從格) 사주로, 강한 세력을 따르는 {}가 최우선 용신임", 
                     if strength.deuk_se.support_ratio >= 80.0 { "자신" } else { "월지" },
                     eokbu_element.hangul()
-                )
-            } else {
-                format!("일간이 {}하여 이를 {}하는 {}가 필요함", 
+                ),
+            });
+
+            // 조후(調候) 판단 (종격에서는 조후보다 격국이 우선임)
+            let thermal_index = calculate_thermal_index(pillars);
+            if let Some(mut johu) = get_johu_analysis(pillars, thermal_index) {
+                johu.reason = format!("{} 단, 종격 사주이므로 조후보다 격국의 기세를 따르는 것이 안전함", johu.reason);
+                recommendations.push(johu);
+            }
+        } else {
+            // 일반적인 경우 조후가 급하면 조후 우선
+            let thermal_index = calculate_thermal_index(pillars);
+            if let Some(johu) = get_johu_analysis(pillars, thermal_index) {
+                recommendations.push(johu);
+            }
+
+            recommendations.push(RecommendedYongshin {
+                yongshin_type: YongshinType::Eokbu,
+                element: eokbu_element,
+                reason: format!("일간이 {}하여 이를 {}하는 {}가 필요함", 
                     strength.strength_type.hangul(),
                     if strength.strength_type == StrengthType::Weak { "돕는" } else { "누르는" },
                     eokbu_element.hangul()
-                )
-            },
-        });
+                ),
+            });
+        }
 
         // 3. 통관용신(通關) 판단 (대립 해소)
         if let Some(tonggwan) = get_tonggwan_analysis(pillars) {
@@ -121,7 +132,8 @@ impl YongshinAnalysis {
 
         // 제1용신 결정 로직
         // 조후가 극단적이거나(절기 영향) 억부 균형보다 시급할 때 조후 우선
-        let is_extreme_thermal = thermal_index.abs() >= 40 || (thermal_index.abs() >= 25 && strength.strength_score.abs() < 10.0);
+        let thermal_index_for_primary = calculate_thermal_index(pillars);
+        let is_extreme_thermal = thermal_index_for_primary.abs() >= 40 || (thermal_index_for_primary.abs() >= 25 && strength.strength_score.abs() < 10.0);
         let primary = if is_extreme_thermal && recommendations.iter().any(|r| r.yongshin_type == YongshinType::Johu) {
             recommendations.iter()
                 .find(|r| r.yongshin_type == YongshinType::Johu)

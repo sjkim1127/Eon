@@ -47,7 +47,8 @@ impl SignatureScanner {
 
         // 3. 재공귀인 (Gong-Gwi - 가상 패턴: 복합적인 합의 중첩)
         let branch_hap_count = dynamic.combined_relations.six_combinations.iter().filter(|(_, p1, p2)| p1.contains("운") || p2.contains("운")).count() + 
-                              dynamic.combined_relations.semi_combinations.iter().filter(|(_, p1, p2)| p1.contains("운") || p2.contains("운")).count();
+                               dynamic.combined_relations.dominant_semi_combinations.iter().filter(|(_, p1, p2)| p1.contains("운") || p2.contains("운")).count() +
+                               dynamic.combined_relations.weak_semi_combinations.iter().filter(|(_, p1, p2)| p1.contains("운") || p2.contains("운")).count();
 
         if branch_hap_count >= 2 && frame.score > 65.0 {
             detected.push(LuckSignature {
@@ -77,7 +78,8 @@ impl SignatureScanner {
             .any(|(_, p1, p2)| p1.contains("운") || p2.contains("운"));
         
         let has_dynamic_branch_hap = dynamic.combined_relations.six_combinations.iter().any(|(_, p1, p2)| p1.contains("운") || p2.contains("운")) ||
-                                    dynamic.combined_relations.semi_combinations.iter().any(|(_, p1, p2)| p1.contains("운") || p2.contains("운")) ||
+                                    dynamic.combined_relations.dominant_semi_combinations.iter().any(|(_, p1, p2)| p1.contains("운") || p2.contains("운")) ||
+                                    dynamic.combined_relations.weak_semi_combinations.iter().any(|(_, p1, p2)| p1.contains("운") || p2.contains("운")) ||
                                     !dynamic.combined_relations.triple_combinations.is_empty() ||
                                     !dynamic.combined_relations.seasonal_combinations.is_empty();
         

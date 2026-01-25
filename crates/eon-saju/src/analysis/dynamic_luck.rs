@@ -117,7 +117,8 @@ impl DynamicLuckAnalysis {
             stem_clashes: Vec::new(),
             triple_combinations: Vec::new(),
             seasonal_combinations: Vec::new(),
-            semi_combinations: Vec::new(),
+            dominant_semi_combinations: Vec::new(),
+            weak_semi_combinations: Vec::new(),
             six_combinations: Vec::new(),
             branch_clashes: Vec::new(),
             branch_punishments: Vec::new(),
@@ -154,7 +155,11 @@ impl DynamicLuckAnalysis {
                 let (p1, b1) = branches[i];
                 let (p2, b2) = branches[j];
                 if let Some(s) = SemiCombination::check(b1, b2) {
-                    analysis.semi_combinations.push((s, p1.to_string(), p2.to_string()));
+                    if s.is_dominant() {
+                        analysis.dominant_semi_combinations.push((s, p1.to_string(), p2.to_string()));
+                    } else {
+                        analysis.weak_semi_combinations.push((s, p1.to_string(), p2.to_string()));
+                    }
                 }
                 if let Some(s) = SixCombination::check(b1, b2) {
                     analysis.six_combinations.push((s, p1.to_string(), p2.to_string()));

@@ -158,7 +158,8 @@ impl MajorLuckAnalysis {
         // KST 9시간 차이 가정하여 UTC로 변환하여 천문 계산 수행
         let dt_local = NaiveDate::from_ymd_opt(birth_year, birth_month, birth_day)
             .and_then(|d| d.and_hms_opt(birth_hour, birth_min, 0))
-            .unwrap();
+            .unwrap_or_else(|| NaiveDate::from_ymd_opt(2000, 1, 1).unwrap().and_hms_opt(0, 0, 0).unwrap());
+        
         let birth_time = Utc.from_utc_datetime(&(dt_local - Duration::hours(9)));
         
         // 현재 24절기 인덱스 확인 (0: 입춘 ~ 23: 대한)
@@ -176,7 +177,8 @@ impl MajorLuckAnalysis {
             }
         };
 
-        let target_term_time = astro.find_solar_term_time(birth_time, target_term_idx).unwrap();
+        let target_term_time = astro.find_solar_term_time(birth_time, target_term_idx)
+            .unwrap_or(birth_time);
 
         // 대운 시작 정밀 계산 (년, 월, 일 단위)
         let (start_age, start_months, start_days) = Self::calculate_precise_start_with_times(
@@ -236,8 +238,12 @@ impl MajorLuckAnalysis {
         let day_master = pillars.day_master();
         let direction = LuckDirection::from_year_and_gender(pillars.year.stem, gender);
         
-        let birth_time = Utc.with_ymd_and_hms(birth_year, birth_month, birth_day, birth_hour, birth_min, 0).unwrap();
-        let term_time = Utc.with_ymd_and_hms(term_year, term_month, term_day, term_hour, term_min, 0).unwrap();
+        let birth_time = Utc.with_ymd_and_hms(birth_year, birth_month, birth_day, birth_hour, birth_min, 0)
+            .earliest()
+            .unwrap_or_else(|| Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap());
+        let term_time = Utc.with_ymd_and_hms(term_year, term_month, term_day, term_hour, term_min, 0)
+            .earliest()
+            .unwrap_or_else(|| birth_time);
 
         // 대운 시작 정밀 계산 (년, 월, 일 단위)
         let (start_age, start_months, start_days) = Self::calculate_precise_start_with_times(
