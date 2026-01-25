@@ -31,6 +31,19 @@ fn main() {
     println!("Duration: {:?} for 1,000 yearly frames", duration);
     println!("Throughput: {:.2} frames/sec", 1000.0 / duration.as_secs_f32());
 
+    // 10만년 스트레스 테스트
+    println!("\n[1-2. Stress Test: 100,000 Years]");
+    let start_stress = Instant::now();
+    // 10만년 시뮬레이션 (2004 ~ 102004)
+    let _frames_stress = simulator.simulate_range(2004, 102004, &major_luck);
+    let duration_stress = start_stress.elapsed();
+    println!("Stress Test Complete.");
+    println!("Duration: {:?} for 100,000 yearly frames", duration_stress);
+    println!("Throughput: {:.2} frames/sec", 100000.0 / duration_stress.as_secs_f32());
+    
+    // 메모리 해제 (골든 타임 분석은 앞서 계산한 1000년 데이터로 진행)
+    drop(_frames_stress);
+
     // 골든 타임 추출 (10년 윈도우)
     println!("\n[2. Golden Time Extraction (Sliding Window: 10 Years)]");
     let start_anal = Instant::now();
@@ -45,12 +58,14 @@ fn main() {
         // 해당 구간의 구체적인 세운 점수 확인
         println!("\n[Detail for Golden Time Period]");
         let start_idx = golden.start_age as usize;
+        /*
         for j in 0..10 {
             if let Some(f) = frames.get(start_idx + j) {
                 println!("  Age {:2}: {:5} 년 - Score: {:.1} (Tags: {:?})", 
                     f.age, f.ganzi.hangul(), f.score, f.tags);
             }
         }
+        */
     } else {
         println!("No Golden Time found with the given criteria.");
     }
