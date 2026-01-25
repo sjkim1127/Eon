@@ -109,12 +109,17 @@ impl YongshinAnalysis {
         }
 
         // 제1용신 결정 로직
-        // 조후가 극단적이면 조후 우선, 아니면 억부 우선
-        let is_extreme_thermal = thermal_index.abs() >= 30;
-        let primary = if is_extreme_thermal && !recommendations.is_empty() {
-            // 조후용신이 0번에 있도록 정렬하거나 명시적으로 찾음
+        // 조후가 극단적이거나(절기 영향) 억부 균형보다 시급할 때 조후 우선
+        let is_extreme_thermal = thermal_index.abs() >= 40 || (thermal_index.abs() >= 25 && strength.strength_score.abs() < 10.0);
+        let primary = if is_extreme_thermal && recommendations.iter().any(|r| r.yongshin_type == YongshinType::Johu) {
             recommendations.iter()
                 .find(|r| r.yongshin_type == YongshinType::Johu)
+                .map(|r| r.element)
+                .unwrap_or(recommendations[0].element)
+        } else if recommendations.iter().any(|r| r.yongshin_type == YongshinType::Byeongyak) {
+            // 병약용신이 있으면 약을 우선으로 쓰는 경우가 많음
+            recommendations.iter()
+                .find(|r| r.yongshin_type == YongshinType::Byeongyak)
                 .map(|r| r.element)
                 .unwrap_or(recommendations[0].element)
         } else {
@@ -220,6 +225,33 @@ fn get_tonggwan_analysis(pillars: &FourPillars) -> Option<RecommendedYongshin> {
             yongshin_type: YongshinType::Tonggwan,
             element: Element::Wood,
             reason: "수(水)와 화(火)가 대립하고 있어 이를 유통시키는 목(木)이 필요함".to_string(),
+        });
+    }
+
+    // 목토상쟁 (Wood vs Earth)
+    if counts[Element::Wood.index() as usize] >= 2 && counts[Element::Earth.index() as usize] >= 2 {
+        return Some(RecommendedYongshin {
+            yongshin_type: YongshinType::Tonggwan,
+            element: Element::Fire,
+            reason: "목(木)과 토(土)가 대립하고 있어 이를 유통시키는 화(火)가 필요함".to_string(),
+        });
+    }
+
+    // 화금상쟁 (Fire vs Metal)
+    if counts[Element::Fire.index() as usize] >= 2 && counts[Element::Metal.index() as usize] >= 2 {
+        return Some(RecommendedYongshin {
+            yongshin_type: YongshinType::Tonggwan,
+            element: Element::Earth,
+            reason: "화(火)와 금(金)이 대립하고 있어 이를 유통시키는 토(土)가 필요함".to_string(),
+        });
+    }
+
+    // 토수상쟁 (Earth vs Water)
+    if counts[Element::Earth.index() as usize] >= 2 && counts[Element::Water.index() as usize] >= 2 {
+        return Some(RecommendedYongshin {
+            yongshin_type: YongshinType::Tonggwan,
+            element: Element::Metal,
+            reason: "토(土)와 수(水)가 대립하고 있어 이를 유통시키는 금(金)이 필요함".to_string(),
         });
     }
 

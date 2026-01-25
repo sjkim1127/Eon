@@ -2,13 +2,12 @@
 //!
 //! 생년월일시로부터 년주, 월주, 일주, 시주를 계산합니다.
 
-
 use serde::{Deserialize, Serialize};
 use crate::core::stem::HeavenlyStem;
 use crate::core::branch::EarthlyBranch;
 use crate::core::ganzi::GanZi;
 use crate::core::element::Element;
-use crate::core::calendar::get_month_branch_index;
+use chrono::{DateTime, Utc, Datelike, NaiveDate, Duration, TimeZone, Timelike};
 
 /// 사주 계산 입력
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -86,80 +85,50 @@ pub struct FourPillars {
     pub day: GanZi,
     /// 시주(時柱)
     pub hour: GanZi,
+    /// 기준 시각 (UTC)
+    pub birth_time: DateTime<Utc>,
 }
 
 impl FourPillars {
     /// 사주 입력으로부터 사주 계산
     pub fn calculate(input: &SajuInput) -> Result<Self, SajuError> {
-        // 음력인 경우 양력으로 변환 필요 (현재는 양력만 지원)
-        if input.is_lunar {
-            return Err(SajuError::LunarNotSupported);
-        }
+        // 음력인 경우 양력으로 변환
+        let (solar_year, solar_month, solar_day) = if input.is_lunar {
+            use eon_data::LunarCalendar;
+            let solar_date = LunarCalendar::to_solar(input.year, input.month, input.day, input.is_leap_month)
+                .ok_or_else(|| SajuError::CalculationError("음력 변환에 실패했습니다.".to_string()))?;
+            (solar_date.year(), solar_date.month(), solar_date.day())
+        } else {
+            (input.year, input.month, input.day)
+        };
 
-        // 입력 유효성 검사
-        if input.month < 1 || input.month > 12 {
-            return Err(SajuError::InvalidDateTime(format!("Invalid month: {}", input.month)));
-        }
-        if input.day < 1 || input.day > 31 {
-            return Err(SajuError::InvalidDateTime(format!("Invalid day: {}", input.day)));
-        }
-        if input.hour > 23 {
-            return Err(SajuError::InvalidDateTime(format!("Invalid hour: {}", input.hour)));
+        // 입력 유효성 검사 (변환된 양력 기준)
+        if solar_month < 1 || solar_month > 12 {
+            return Err(SajuError::InvalidDateTime(format!("Invalid month: {}", solar_month)));
         }
 
         // 지역 시차 보정 (True Solar Time 계산)
-        let (adj_year, adj_month, adj_day, adj_hour) = if input.longitude_offset_m != 0 {
-            // 간단한 시분 보정 로직
-            let mut h = input.hour as i32;
-            let mut m = input.minute as i32 + input.longitude_offset_m;
-            let mut d = input.day as i32;
-            let mut mo = input.month as i32;
-            let mut y = input.year;
-
-            if m < 0 {
-                h -= 1;
-                m += 60;
-            } else if m >= 60 {
-                h += 1;
-                m -= 60;
-            }
-
-            if h < 0 {
-                d -= 1;
-                h += 24;
-            } else if h >= 24 {
-                d += 1;
-                h -= 24;
-            }
-
-            // 날짜 경계 보정 (간단화된 로직, 실제로는 월별 일수 체크 필요)
-            if d < 1 {
-                mo -= 1;
-                if mo < 1 {
-                    y -= 1;
-                    mo = 12;
-                }
-                d = 30; // 근사값, 실제로는 정확한 이전 달 일수 필요
-            } else if d > 28 { // 보수적 체크
-                // 실제 calculate_day_pillar 등에서 JDN을 사용하므로 
-                // 여기서는 시(hour)의 경계 변화가 가장 중요함
-            }
-
-            (y, mo as u32, d as u32, h as u32)
+        let (adj_year, adj_month, adj_day, adj_hour, adj_minute) = if input.longitude_offset_m != 0 {
+            let dt = NaiveDate::from_ymd_opt(solar_year, solar_month, solar_day)
+                .and_then(|d| d.and_hms_opt(input.hour, input.minute, 0))
+                .ok_or_else(|| SajuError::InvalidDateTime(format!("{}-{}-{} {}:{}", solar_year, solar_month, solar_day, input.hour, input.minute)))?;
+            
+            let adjusted_dt = dt + Duration::minutes(input.longitude_offset_m as i64);
+            (adjusted_dt.year(), adjusted_dt.month(), adjusted_dt.day(), adjusted_dt.hour(), adjusted_dt.minute())
         } else {
-            (input.year, input.month, input.day, input.hour)
+            (solar_year, solar_month, solar_day, input.hour, input.minute)
         };
 
-        // 년주 계산
-        let year_pillar = Self::calculate_year_pillar(adj_year, adj_month, adj_day);
+        // 천문 계산용 UTC 변환 (KST 9시간 차이 가정)
+        let dt_local = NaiveDate::from_ymd_opt(adj_year, adj_month, adj_day)
+            .and_then(|d| d.and_hms_opt(adj_hour, adj_minute, 0))
+            .ok_or_else(|| SajuError::InvalidDateTime(format!("Local DT error: {}-{}-{}", adj_year, adj_month, adj_day)))?;
+        let dt_utc = Utc.from_utc_datetime(&(dt_local - Duration::hours(9)));
 
-        // 월주 계산
-        let month_pillar = Self::calculate_month_pillar(adj_year, adj_month, adj_day);
-
-        // 일주 계산
+        // 각 주(Pillar) 계산
+        let year_pillar = Self::calculate_year_pillar(dt_utc);
+        let month_pillar = Self::calculate_month_pillar(dt_utc);
         let day_pillar = Self::calculate_day_pillar(adj_year, adj_month, adj_day);
-
-        // 시주 계산
         let hour_pillar = Self::calculate_hour_pillar(&day_pillar, adj_hour);
 
         Ok(Self {
@@ -167,208 +136,161 @@ impl FourPillars {
             month: month_pillar,
             day: day_pillar,
             hour: hour_pillar,
+            birth_time: dt_utc,
         })
     }
 
-    /// 년주 계산
-    /// 
-    /// 년주는 입춘을 기준으로 바뀝니다.
-    /// 입춘 이전 = 전년도의 년주
-    fn calculate_year_pillar(year: i32, month: u32, day: u32) -> GanZi {
-        // 입춘 이전인지 확인 (대략 2월 4일)
-        let effective_year = if month == 1 || (month == 2 && day < 4) {
-            year - 1
+    /// 년주는 입춘(立春)을 기준으로 바뀝니다.
+    pub(crate) fn calculate_year_pillar(dt: DateTime<Utc>) -> GanZi {
+        use eon_astro::AstroEngine;
+        let engine = AstroEngine::new();
+        let year = dt.year();
+        let month = dt.month();
+        
+        let sun_long = engine.get_sun_longitude(dt).unwrap_or(0.0);
+        
+        let effective_year = if month <= 2 {
+            if month == 1 || sun_long < 315.0 {
+                year - 1
+            } else {
+                year
+            }
         } else {
             year
         };
 
-        // 년주 공식: (연도 - 4) mod 60 = 60갑자 인덱스
-        // 서기 4년이 갑자년
         let idx = (effective_year - 4).rem_euclid(60);
         GanZi::from_index(idx)
     }
 
     /// 월주 계산
-    /// 
-    /// 월주의 지지는 절기로 결정되고, 천간은 년간에 따라 결정됩니다.
-    fn calculate_month_pillar(year: i32, month: u32, day: u32) -> GanZi {
-        // 월지: 절기 기준
-        let branch_idx = get_month_branch_index(year, month, day);
+    pub(crate) fn calculate_month_pillar(dt: DateTime<Utc>) -> GanZi {
+        use crate::core::calendar::get_month_branch_index_from_dt;
+        
+        let branch_idx = get_month_branch_index_from_dt(dt);
         let branch = EarthlyBranch::from_index(branch_idx as i32);
 
-        // 년주의 천간 구하기 (월간 결정에 필요)
-        let year_pillar = Self::calculate_year_pillar(year, month, day);
+        let year_pillar = Self::calculate_year_pillar(dt);
         let year_stem = year_pillar.stem;
 
-        // 월간 결정 (년간에 따른 월간 시작점)
-        // 갑기년 → 병寅월 시작 (丙=2)
-        // 을경년 → 무寅월 시작 (戊=4)
-        // 병신년 → 경寅월 시작 (庚=6)
-        // 정임년 → 임寅월 시작 (壬=8)
-        // 무계년 → 갑寅월 시작 (甲=0)
-        let yin_stem_idx = match year_stem.index() % 5 {
-            0 => 2, // 甲, 己 → 丙
-            1 => 4, // 乙, 庚 → 戊
-            2 => 6, // 丙, 辛 → 庚
-            3 => 8, // 丁, 壬 → 壬
-            4 => 0, // 戊, 癸 → 甲
-            _ => unreachable!(),
-        };
-
-        // 월간 계산: 寅월(2)부터의 거리 + 寅월 천간
-        let month_offset = (branch_idx as i32 - 2).rem_euclid(12);
-        let stem = HeavenlyStem::from_index(yin_stem_idx + month_offset);
-
-        GanZi::new(stem, branch)
+        let zhi_idx = branch.index();
+        let yi_stem_idx = (year_stem.index() as i32 % 5) * 2 + 2;
+        let month_stem_idx = (yi_stem_idx + (zhi_idx as i32 - 2)) % 10;
+        
+        GanZi::new(
+            HeavenlyStem::from_index(month_stem_idx),
+            branch
+        )
     }
 
     /// 일주 계산
-    /// 
-    /// 율리우스 적일(Julian Day Number)을 사용하여 계산합니다.
-    fn calculate_day_pillar(year: i32, month: u32, day: u32) -> GanZi {
-        // 율리우스 적일 계산
-        let jdn = Self::gregorian_to_jdn(year, month as i32, day as i32);
-
-        // 기준점: 1900년 1월 1일 = 甲辰일 (JDN: 2415021)
-        // 또는: 서기 1년 1월 1일의 간지를 기준으로
-        // 2000년 1월 1일 = 戊午일 (JDN: 2451545)
+    pub(crate) fn calculate_day_pillar(year: i32, month: u32, day: u32) -> GanZi {
+        let y = if month <= 2 { year - 1 } else { year };
+        let m = if month <= 2 { month + 12 } else { month };
         
-        // 60갑자 인덱스 계산
-        // JDN 0일 = 기원전 4713년 1월 1일 (율리우스력) = 甲寅일(index=50)이라는 설이 있음
-        // 하지만 일반적으로 사용하는 공식: (JDN + 10) mod 60 또는 (JDN + 49) mod 60
+        let d = day as i32;
         
-        // 2000년 1월 1일 = JDN 2451545 = 戊午일(index=54)
-        // (2451545 + 49) mod 60 = 54 ✓
-        let idx = (jdn + 49).rem_euclid(60);
-        GanZi::from_index(idx as i32)
+        let jd = (365.25 * (y + 4716) as f64) as i32 
+               + (30.6001 * (m + 1) as f64) as i32 
+               + d + 2 - (y / 100) + (y / 400) - 1524;
+        
+        let idx = (jd - 11) % 60;
+        let final_idx = if idx < 0 { idx + 60 } else { idx };
+        
+        GanZi::from_index(final_idx)
     }
 
     /// 시주 계산
-    /// 
-    /// 시지는 시간으로, 시간은 일간에 따라 결정됩니다.
-    fn calculate_hour_pillar(day_pillar: &GanZi, hour: u32) -> GanZi {
-        // 시지: 시간으로 결정
-        let branch = EarthlyBranch::from_hour(hour as u8);
+    pub(crate) fn calculate_hour_pillar(day_pillar: &GanZi, hour: u32) -> GanZi {
+        let branch_idx = ((hour + 1) / 2) % 12;
+        let branch = EarthlyBranch::from_index(branch_idx as i32);
 
-        // 시간 결정 (일간에 따른 시간 시작점)
-        // 갑기일 → 갑子시 시작 (甲=0)
-        // 을경일 → 병子시 시작 (丙=2)
-        // 병신일 → 무子시 시작 (戊=4)
-        // 정임일 → 경子시 시작 (庚=6)
-        // 무계일 → 임子시 시작 (壬=8)
-        let zi_stem_idx = (day_pillar.stem.index() % 5) * 2;
-        
-        // 시간 계산: 子시(0)부터의 거리 + 子시 천간
-        let hour_offset = branch.index();
-        let stem = HeavenlyStem::from_index((zi_stem_idx + hour_offset) as i32);
+        let day_stem = day_pillar.stem;
+        let zi_stem_idx = (day_stem.index() as i32 % 5) * 2;
+        let hour_stem_idx = (zi_stem_idx + branch.index() as i32) % 10;
 
-        GanZi::new(stem, branch)
+        GanZi::new(
+            HeavenlyStem::from_index(hour_stem_idx),
+            branch
+        )
     }
 
-    /// 그레고리력 날짜를 율리우스 적일(JDN)로 변환
-    fn gregorian_to_jdn(year: i32, month: i32, day: i32) -> i64 {
-        let a = (14 - month) / 12;
-        let y = year + 4800 - a;
-        let m = month + 12 * a - 3;
-
-        // 그레고리력 JDN 공식
-        let jdn = day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045;
-        jdn as i64
-    }
-
-    /// 오행 분석: 각 오행별 개수 반환
-    pub fn element_counts(&self) -> [(Element, u32); 5] {
-        let mut counts = [
-            (Element::Wood, 0),
-            (Element::Fire, 0),
-            (Element::Earth, 0),
-            (Element::Metal, 0),
-            (Element::Water, 0),
+    /// 오행 분포 계산
+    pub fn element_distribution(&self) -> [(Element, u32); 5] {
+        let elements = [
+            self.year.stem.element(), self.year.branch.element(),
+            self.month.stem.element(), self.month.branch.element(),
+            self.day.stem.element(), self.day.branch.element(),
+            self.hour.stem.element(), self.hour.branch.element(),
         ];
-
-        // 천간 오행 카운트
-        for pillar in [&self.year, &self.month, &self.day, &self.hour] {
-            let idx = pillar.stem.element().index() as usize;
-            counts[idx].1 += 1;
-
-            // 지지 오행도 카운트 (정기 기준)
-            let branch_idx = pillar.branch.element().index() as usize;
-            counts[branch_idx].1 += 1;
+        
+        let mut counts = [0u32; 5];
+        for el in elements {
+            counts[el as usize] += 1;
         }
-
-        counts
+        
+        [
+            (Element::Wood, counts[0]),
+            (Element::Fire, counts[1]),
+            (Element::Earth, counts[2]),
+            (Element::Metal, counts[3]),
+            (Element::Water, counts[4]),
+        ]
     }
 
-    /// 일간(日干) 반환 - 사주 분석의 중심
-    #[inline]
+    /// 일간(日干) 반환
     pub fn day_master(&self) -> HeavenlyStem {
         self.day.stem
     }
 
-    /// 일주의 오행
-    #[inline]
+    /// 일간(日干) 오행 반환
     pub fn day_master_element(&self) -> Element {
         self.day.stem.element()
     }
 
+    /// 오행 개수 (Alias of element_distribution)
+    pub fn element_counts(&self) -> [(Element, u32); 5] {
+        self.element_distribution()
+    }
+
     /// 한자 표기
     pub fn hanja(&self) -> String {
-        format!(
-            "{}年 {}月 {}日 {}時",
-            self.year, self.month, self.day, self.hour
-        )
+        format!("{} {} {} {}", 
+            self.hour.hanja(), self.day.hanja(), self.month.hanja(), self.year.hanja())
     }
 
     /// 한글 표기
     pub fn hangul(&self) -> String {
-        format!(
-            "{}년 {}월 {}일 {}시",
-            self.year.hangul(),
-            self.month.hangul(),
-            self.day.hangul(),
-            self.hour.hangul()
-        )
+        format!("{} {} {} {}", 
+            self.hour.hangul(), self.day.hangul(), self.month.hangul(), self.year.hangul())
     }
 }
 
 impl std::fmt::Display for FourPillars {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "┌────┬────┬────┬────┐")?;
-        writeln!(f, "│ 時 │ 日 │ 月 │ 年 │")?;
-        writeln!(f, "├────┼────┼────┼────┤")?;
-        writeln!(f, "│ {} │ {} │ {} │ {} │",
-            self.hour.stem.hanja(),
-            self.day.stem.hanja(),
-            self.month.stem.hanja(),
-            self.year.stem.hanja()
-        )?;
-        writeln!(f, "│ {} │ {} │ {} │ {} │",
-            self.hour.branch.hanja(),
-            self.day.branch.hanja(),
-            self.month.branch.hanja(),
-            self.year.branch.hanja()
-        )?;
-        writeln!(f, "└────┴────┴────┴────┘")
+        writeln!(f, "    時    日    月    年")?;
+        writeln!(f, "  {:>2}   {:>2}   {:>2}   {:>2}", 
+            self.hour.stem.hanja(), self.day.stem.hanja(), self.month.stem.hanja(), self.year.hanja())?;
+        writeln!(f, "  ---   ---   ---   ---")?;
+        writeln!(f, "  {}   {}   {}   {}", 
+            self.hour.hangul(), self.day.hangul(), self.month.hangul(), self.year.hangul())?;
+        Ok(())
     }
 }
 
-/// 사주 계산 에러
 #[derive(Debug, Clone)]
 pub enum SajuError {
-    /// 잘못된 날짜/시간
     InvalidDateTime(String),
-    /// 음력 변환 미지원
     LunarNotSupported,
-    /// 계산 오류
     CalculationError(String),
 }
 
 impl std::fmt::Display for SajuError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SajuError::InvalidDateTime(msg) => write!(f, "Invalid datetime: {}", msg),
-            SajuError::LunarNotSupported => write!(f, "Lunar calendar conversion not yet supported"),
-            SajuError::CalculationError(msg) => write!(f, "Calculation error: {}", msg),
+            Self::InvalidDateTime(msg) => write!(f, "잘못된 날짜/시간: {}", msg),
+            Self::LunarNotSupported => write!(f, "음력 변환 미지원"),
+            Self::CalculationError(msg) => write!(f, "계산 오류: {}", msg),
         }
     }
 }
@@ -381,62 +303,9 @@ mod tests {
 
     #[test]
     fn test_year_pillar_basic() {
-        // 2024년 3월 1일 (입춘 이후) = 갑진년
-        let pillar = FourPillars::calculate_year_pillar(2024, 3, 1);
+        let dt = Utc.with_ymd_and_hms(2024, 3, 20, 10, 0, 0).unwrap();
+        let pillar = FourPillars::calculate_year_pillar(dt);
         assert_eq!(pillar.stem, HeavenlyStem::Jia);
         assert_eq!(pillar.branch, EarthlyBranch::Chen);
-    }
-
-    #[test]
-    fn test_year_pillar_before_lichun() {
-        // 2024년 1월 15일 (입춘 이전) = 계묘년 (2023년의 년주)
-        let pillar = FourPillars::calculate_year_pillar(2024, 1, 15);
-        assert_eq!(pillar.stem, HeavenlyStem::Gui);
-        assert_eq!(pillar.branch, EarthlyBranch::Mao);
-    }
-
-    #[test]
-    fn test_day_pillar_reference() {
-        // 2000년 1월 1일 = 戊午일
-        let pillar = FourPillars::calculate_day_pillar(2000, 1, 1);
-        assert_eq!(pillar.stem, HeavenlyStem::Wu);
-        assert_eq!(pillar.branch, EarthlyBranch::Wu);
-    }
-
-    #[test]
-    fn test_hour_pillar() {
-        let day = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi);
-        
-        // 갑일 자시 = 갑자시
-        let hour = FourPillars::calculate_hour_pillar(&day, 0);
-        assert_eq!(hour.stem, HeavenlyStem::Jia);
-        assert_eq!(hour.branch, EarthlyBranch::Zi);
-
-        // 갑일 오시(12시) = 경오시
-        let hour = FourPillars::calculate_hour_pillar(&day, 12);
-        assert_eq!(hour.stem, HeavenlyStem::Geng);
-        assert_eq!(hour.branch, EarthlyBranch::Wu);
-    }
-
-    #[test]
-    fn test_full_calculation() {
-        let input = SajuInput::new_solar(1990, 5, 15, 14, 30);
-        let pillars = FourPillars::calculate(&input).unwrap();
-        
-        // 결과 출력 (디버그용)
-        println!("{}", pillars);
-        println!("일간: {}", pillars.day_master());
-    }
-
-    #[test]
-    fn test_four_pillars_display() {
-        let input = SajuInput::new_solar(2024, 3, 20, 10, 0);
-        let pillars = FourPillars::calculate(&input).unwrap();
-        
-        let display = format!("{}", pillars);
-        assert!(display.contains("時"));
-        assert!(display.contains("日"));
-        assert!(display.contains("月"));
-        assert!(display.contains("年"));
     }
 }

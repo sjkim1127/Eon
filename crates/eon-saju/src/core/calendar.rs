@@ -97,6 +97,12 @@ impl SolarTerm {
         (self.index() + 2) % 12
     }
 
+    /// 지지 인덱스로부터 해당 월의 시작 절기 반환
+    #[inline]
+    pub const fn from_month_branch_index(branch_idx: u8) -> Self {
+        Self::from_index((branch_idx as i32 - 2).rem_euclid(12))
+    }
+
     /// 한자 표기
     #[inline]
     pub const fn hanja(self) -> &'static str {
@@ -123,61 +129,46 @@ pub struct SolarTermTime {
     pub datetime: DateTime<Utc>,
 }
 
-/// 특정 연도와 월을 기준으로 대략적인 절기 시작일 계산
-/// 
-/// 주의: 이 함수는 근사값을 반환합니다. 정확한 절기 시각은
-/// 만세력 데이터(`eon-data` 크레이트)를 사용해야 합니다.
-pub fn approximate_solar_term_day(_year: i32, term: SolarTerm) -> (u32, u32) {
-    // 각 절기의 대략적인 월/일 (평균값)
-    match term {
-        SolarTerm::Xiaohan => (1, 6),   // 소한: 1월 6일경
-        SolarTerm::Lichun => (2, 4),    // 입춘: 2월 4일경
-        SolarTerm::Jingzhe => (3, 6),   // 경칩: 3월 6일경
-        SolarTerm::Qingming => (4, 5),  // 청명: 4월 5일경
-        SolarTerm::Lixia => (5, 6),     // 입하: 5월 6일경
-        SolarTerm::Mangzhong => (6, 6), // 망종: 6월 6일경
-        SolarTerm::Xiaoshu => (7, 7),   // 소서: 7월 7일경
-        SolarTerm::Liqiu => (8, 8),     // 입추: 8월 8일경
-        SolarTerm::Bailu => (9, 8),     // 백로: 9월 8일경
-        SolarTerm::Hanlu => (10, 8),    // 한로: 10월 8일경
-        SolarTerm::Lidong => (11, 7),   // 입동: 11월 7일경
-        SolarTerm::Daxue => (12, 7),    // 대설: 12월 7일경
-    }
+/// 특정 시점을 기준으로 해당 절기의 정확한 시작 시각 계산 (eon-astro 활용)
+pub fn get_solar_term_time(dt: DateTime<Utc>, term: SolarTerm) -> DateTime<Utc> {
+    use eon_astro::AstroEngine;
+    let engine = AstroEngine::new();
+    
+    // AstroEngine의 term_idx: 0=입춘(315도), 1=우수, 2=경칩...
+    // SolarTerm::index: 0=입춘, 1=경칩...
+    // 월의 시작 절기는 짝수 인덱스
+    engine.find_solar_term_time(dt, (term.index() * 2) as u8).unwrap_or(dt)
 }
 
-/// 양력 날짜로부터 해당 월의 절기 지지 인덱스 계산at
+
+/// 양력 날짜로부터 해당 월의 절기 지지 인덱스 계산
 /// 
 /// 절기를 기준으로 월주의 지지를 결정합니다.
 /// 예: 2월 4일(입춘) 이전은 丑월, 이후는 寅월
-pub fn get_month_branch_index(year: i32, month: u32, day: u32) -> u8 {
-    // 현재 월에 해당하는 절기 찾기
-    let term_idx = match month {
-        1 => 11,  // 1월: 소한(丑월) 또는 대설(子월)
-        2 => 0,   // 2월: 입춘(寅월) 또는 소한(丑월)
-        3 => 1,   // 3월: 경칩(卯월) 또는 입춘(寅월)
-        4 => 2,   // 4월: 청명(辰월) 또는 경칩(卯월)
-        5 => 3,   // 5월: 입하(巳월) 또는 청명(辰월)
-        6 => 4,   // 6월: 망종(午월) 또는 입하(巳월)
-        7 => 5,   // 7월: 소서(未월) 또는 망종(午월)
-        8 => 6,   // 8월: 입추(申월) 또는 소서(未월)
-        9 => 7,   // 9월: 백로(酉월) 또는 입추(申월)
-        10 => 8,  // 10월: 한로(戌월) 또는 백로(酉월)
-        11 => 9,  // 11월: 입동(亥월) 또는 한로(戌월)
-        12 => 10, // 12월: 대설(子월) 또는 입동(亥월)
-        _ => 0,
-    };
+/// 양력 날짜/시각으로부터 해당 월의 절기 지지 인덱스 계산
+/// 
+/// 절기를 기준으로 월주의 지지를 결정합니다.
+pub fn get_month_branch_index(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> u8 {
+    use chrono::TimeZone;
+    let dt = Utc.with_ymd_and_hms(year, month, day, hour, minute, 0).unwrap();
+    get_month_branch_index_from_dt(dt)
+}
 
-    let term = SolarTerm::from_index(term_idx);
-    let (_, term_day) = approximate_solar_term_day(year, term);
-
-    // 절기일 이전이면 이전 월의 지지, 이후면 현재 월의 지지
-    if day < term_day {
-        // 이전 절기의 월 지지
-        SolarTerm::from_index(term_idx - 1).month_branch_index()
-    } else {
-        // 현재 절기의 월 지지
-        term.month_branch_index()
-    }
+/// DateTime으로부터 해당 월의 절기 지지 인덱스 계산
+pub fn get_month_branch_index_from_dt(dt: DateTime<Utc>) -> u8 {
+    use eon_astro::AstroEngine;
+    
+    let engine = AstroEngine::new();
+    
+    // 태양 황경으로부터 현재 어떤 절기권에 있는지 계산
+    // AstroEngine::get_solar_term_index는 24절기(0~23)를 반환
+    let term_24_idx = engine.get_solar_term_index(dt);
+    
+    // 12절기(월 구분용) 인덱스로 변환 (0: 입춘, 1: 경칩, 2: 청명...)
+    let term_12_idx = term_24_idx / 2;
+    
+    // 해당 절기가 시작하는 월의 지지 인덱스 (寅=2부터)
+    SolarTerm::from_index(term_12_idx as i32).month_branch_index()
 }
 
 #[cfg(test)]
@@ -199,8 +190,8 @@ mod tests {
     #[test]
     fn test_get_month_branch_index() {
         // 2월 3일 = 입춘 전 = 丑월(1)
-        assert_eq!(get_month_branch_index(2024, 2, 3), 1);
+        assert_eq!(get_month_branch_index(2024, 2, 3, 12, 0), 1);
         // 2월 5일 = 입춘 후 = 寅월(2)
-        assert_eq!(get_month_branch_index(2024, 2, 5), 2);
+        assert_eq!(get_month_branch_index(2024, 2, 5, 12, 0), 2);
     }
 }

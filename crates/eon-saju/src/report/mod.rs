@@ -10,6 +10,7 @@ use crate::analysis::{
     spirit_markers::SpiritMarkerAnalysis,
     major_luck::MajorLuckAnalysis,
     analytics::GoldenTime,
+    structure::StructureAnalysis,
 };
 use crate::engine::vm::LifeFrame;
 
@@ -19,6 +20,7 @@ pub struct SajuReport {
     pub strength: StrengthAnalysis,
     pub yongshin: YongshinAnalysis,
     pub spirit_markers: SpiritMarkerAnalysis,
+    pub structure: StructureAnalysis,
     pub major_luck: Option<MajorLuckAnalysis>,
     pub golden_time: Option<GoldenTime>,
     pub vm_summary: Option<String>,
@@ -29,12 +31,14 @@ impl SajuReport {
         let strength = pillars.strength();
         let yongshin = pillars.yongshin();
         let spirit_markers = pillars.spirit_markers();
+        let structure = pillars.structure();
 
         Self {
             pillars,
             strength,
             yongshin,
             spirit_markers,
+            structure,
             major_luck: None,
             golden_time: None,
             vm_summary: None,
@@ -86,7 +90,11 @@ impl SajuReport {
         md.push_str(&format!("- **Deuk-Si**: {}\n", if self.strength.deuk_si.acquired { "Yes" } else { "No" }));
         md.push_str(&format!("- **Deuk-Se**: {}\n", if self.strength.deuk_se.acquired { "Yes" } else { "No" }));
 
-        md.push_str("\n## 3. Spirit Markers (Shensha)\n");
+        md.push_str("\n## 3. Structure Analysis (Gyeokguk)\n");
+        md.push_str(&format!("- **Structure**: {} ({})\n", self.structure.structure.hangul(), self.structure.structure.hanja()));
+        md.push_str(&format!("- **Reason**: {}\n", self.structure.reason));
+
+        md.push_str("\n## 4. Spirit Markers (Shensha)\n");
         if self.spirit_markers.markers.is_empty() {
             md.push_str("- None detected.\n");
         } else {
@@ -101,7 +109,7 @@ impl SajuReport {
         md.push_str("\n");
 
         if let Some(major) = &self.major_luck {
-            md.push_str("## 4. Major Luck Cycles (Daeyun)\n");
+            md.push_str("## 5. Major Luck Cycles (Daeyun)\n");
             md.push_str(&format!("- **Direction**: {}\n", major.direction));
             md.push_str(&format!("- **Start Age**: {}\n", major.start_age));
             md.push_str("\n| Order | Age | GanZi | Start Date |\n");
@@ -118,7 +126,7 @@ impl SajuReport {
         }
 
         if let Some(golden) = &self.golden_time {
-            md.push_str("## 5. Golden Time Analysis (AI/VM)\n");
+            md.push_str("## 6. Golden Time Analysis (AI/VM)\n");
             md.push_str(&format!("- **Period**: Age {} - {}\n", golden.start_age, golden.end_age));
             md.push_str(&format!("- **Avg Score**: {:.2}\n", golden.average_score));
             md.push_str(&format!("- **Description**: {}\n", golden.description));
@@ -126,7 +134,7 @@ impl SajuReport {
         }
 
         if let Some(summary) = &self.vm_summary {
-            md.push_str("## 6. Simulation Summary\n");
+            md.push_str("## 7. Simulation Summary\n");
             md.push_str(summary);
             md.push_str("\n");
         }

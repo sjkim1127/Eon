@@ -146,38 +146,51 @@ impl EarthlyBranch {
     pub fn jijanggan(self) -> Vec<crate::core::stem::HeavenlyStem> {
         use crate::core::stem::HeavenlyStem::*;
         match self {
-            Self::Zi => vec![Ren, Gui],
-            Self::Chou => vec![Gui, Xin, Ji],
-            Self::Yin => vec![Wu, Bing, Jia],
-            Self::Mao => vec![Jia, Yi],
-            Self::Chen => vec![Yi, Gui, Wu],
-            Self::Si => vec![Wu, Geng, Bing],
-            Self::Wu => vec![Bing, Ji, Ding],
-            Self::Wei => vec![Ding, Yi, Ji],
-            Self::Shen => vec![Wu, Ren, Geng],
-            Self::You => vec![Geng, Xin],
-            Self::Xu => vec![Xin, Ding, Wu],
-            Self::Hai => vec![Wu, Jia, Ren],
+            Self::Zi => vec![Ren, Gui],        // 壬, 癸 (여기, 정기)
+            Self::Chou => vec![Gui, Xin, Ji],   // 癸, 辛, 己 (여기, 중기, 정기)
+            Self::Yin => vec![Wu, Bing, Jia],   // 戊, 丙, 甲 (여기, 중기, 정기)
+            Self::Mao => vec![Jia, Yi],         // 甲, 乙 (여기, 정기)
+            Self::Chen => vec![Yi, Gui, Wu],    // 乙, 癸, 戊 (여기, 중기, 정기)
+            Self::Si => vec![Wu, Geng, Bing],   // 戊, 庚, 丙 (여기, 중기, 정기)
+            Self::Wu => vec![Bing, Ji, Ding],   // 丙, 己, 丁 (여기, 중기, 정기)
+            Self::Wei => vec![Ding, Yi, Ji],    // 丁, 乙, 己 (여기, 중기, 정기)
+            Self::Shen => vec![Wu, Ren, Geng],  // 戊, 壬, 庚 (여기, 중기, 정기)
+            Self::You => vec![Geng, Xin],       // 庚, Xin (여기, 정기)
+            Self::Xu => vec![Xin, Ding, Wu],    // 辛, 丁, 戊 (여기, 중기, 정기)
+            Self::Hai => vec![Wu, Jia, Ren],    // 戊, 甲, 壬 (여기, 중기, 정기)
+        }
+    }
+
+    /// 지장간(地藏干) 정보를 반환합니다. (Alias of jijanggan)
+    pub fn hidden_stems(self) -> Vec<crate::core::stem::HeavenlyStem> {
+        self.jijanggan()
+    }
+
+    /// 지장간의 여기(餘氣, Remnant Stem)를 반환합니다.
+    pub fn yeogi(self) -> crate::core::stem::HeavenlyStem {
+        self.jijanggan()[0]
+    }
+
+    /// 지장간의 중기(中氣, Middle Stem)를 반환합니다.
+    /// 중기가 없는 경우(자, 묘, 유) 정기를 반환하거나 처리 필요.
+    pub fn junggi(self) -> crate::core::stem::HeavenlyStem {
+        let stems = self.jijanggan();
+        if stems.len() == 3 {
+            stems[1]
+        } else {
+            stems[stems.len() - 1] // 사실상 정기
         }
     }
 
     /// 지장간의 정기(正氣, Main Stem)를 반환합니다.
-    pub fn junggi(self) -> crate::core::stem::HeavenlyStem {
-        use crate::core::stem::HeavenlyStem::*;
-        match self {
-            Self::Zi => Gui,
-            Self::Chou => Ji,
-            Self::Yin => Jia,
-            Self::Mao => Yi,
-            Self::Chen => Wu,
-            Self::Si => Bing,
-            Self::Wu => Ding,
-            Self::Wei => Ji,
-            Self::Shen => Geng,
-            Self::You => Xin,
-            Self::Xu => Wu,
-            Self::Hai => Ren,
-        }
+    pub fn jeonggi(self) -> crate::core::stem::HeavenlyStem {
+        let stems = self.jijanggan();
+        stems[stems.len() - 1]
+    }
+
+    /// 지장간의 정기(正氣, Main Stem)를 반환합니다. (Alias of jeonggi)
+    pub fn primary_stem(self) -> crate::core::stem::HeavenlyStem {
+        self.jeonggi()
     }
 
     /// 계절(Season) 반환

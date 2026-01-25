@@ -540,6 +540,43 @@ impl SpiritMarkerAnalysis {
             }
         }
 
+        // === 암록 (暗祿) ===
+        if let Some(anlu_branch) = Self::get_anlu_branch(day_stem) {
+            for (branch, pos) in &branches {
+                if *branch == anlu_branch {
+                    markers.push(FoundMarker {
+                        marker: SpiritMarker::Anlu,
+                        position: *pos,
+                        is_stem: false,
+                    });
+                }
+            }
+        }
+
+        // === 학당귀인 (學堂貴인) ===
+        if let Some(xuetang_branch) = Self::get_xuetang_branch(day_stem) {
+            for (branch, pos) in &branches {
+                if *branch == xuetang_branch {
+                    markers.push(FoundMarker {
+                        marker: SpiritMarker::Xuetang,
+                        position: *pos,
+                        is_stem: false,
+                    });
+                }
+            }
+        }
+
+        // === 원진살 (怨嗔煞) ===
+        for (branch, pos) in &branches {
+            if Self::is_yuanzhen(year_branch, *branch) {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Yuanzhen,
+                    position: *pos,
+                    is_stem: false,
+                });
+            }
+        }
+
         // 길신/흉살 분류 (중복 제거)
         let mut auspicious: Vec<_> = markers.iter()
             .filter(|m| m.marker.is_auspicious())
@@ -802,6 +839,48 @@ impl SpiritMarkerAnalysis {
             EarthlyBranch::Si | EarthlyBranch::You | EarthlyBranch::Chou => EarthlyBranch::Yin,
             EarthlyBranch::Hai | EarthlyBranch::Mao | EarthlyBranch::Wei => EarthlyBranch::Shen,
         }
+    }
+
+    /// 암록 (暗祿) - 일간 기준
+    fn get_anlu_branch(day_stem: HeavenlyStem) -> Option<EarthlyBranch> {
+        match day_stem {
+            HeavenlyStem::Jia => Some(EarthlyBranch::Hai),
+            HeavenlyStem::Yi => Some(EarthlyBranch::Xu),
+            HeavenlyStem::Bing | HeavenlyStem::Wu => Some(EarthlyBranch::Shen),
+            HeavenlyStem::Ding | HeavenlyStem::Ji => Some(EarthlyBranch::Wei),
+            HeavenlyStem::Geng => Some(EarthlyBranch::Si),
+            HeavenlyStem::Xin => Some(EarthlyBranch::Chen),
+            HeavenlyStem::Ren => Some(EarthlyBranch::Yin),
+            HeavenlyStem::Gui => Some(EarthlyBranch::Chou),
+        }
+    }
+
+    /// 학당귀인 (學堂貴人) - 일간 기준 (장생지)
+    fn get_xuetang_branch(day_stem: HeavenlyStem) -> Option<EarthlyBranch> {
+        match day_stem {
+            HeavenlyStem::Jia => Some(EarthlyBranch::Hai),
+            HeavenlyStem::Yi => Some(EarthlyBranch::Wu),
+            HeavenlyStem::Bing | HeavenlyStem::Wu => Some(EarthlyBranch::Yin),
+            HeavenlyStem::Ding | HeavenlyStem::Ji => Some(EarthlyBranch::You),
+            HeavenlyStem::Geng => Some(EarthlyBranch::Si),
+            HeavenlyStem::Xin => Some(EarthlyBranch::Zi),
+            HeavenlyStem::Ren => Some(EarthlyBranch::Shen),
+            HeavenlyStem::Gui => Some(EarthlyBranch::Mao),
+        }
+    }
+
+    /// 원진살 (怨嗔煞) - 지지 간 관계 (보통 년지 기준)
+    fn is_yuanzhen(b1: EarthlyBranch, b2: EarthlyBranch) -> bool {
+        use EarthlyBranch::*;
+        matches!(
+            (b1, b2),
+            (Zi, Wei) | (Wei, Zi) |
+            (Chou, Wu) | (Wu, Chou) |
+            (Yin, You) | (You, Yin) |
+            (Mao, Shen) | (Shen, Mao) |
+            (Chen, Hai) | (Hai, Chen) |
+            (Si, Xu) | (Xu, Si)
+        )
     }
 }
 

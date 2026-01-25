@@ -15,6 +15,7 @@
 //!
 //! 3. **대운 간지** 계산
 //!    - 월주를 기준으로 순행 또는 역행하여 간지 결정
+//! 
 
 use serde::{Deserialize, Serialize};
 use eon_core::Gender;
@@ -23,6 +24,7 @@ use crate::core::element::Polarity;
 use crate::core::ganzi::GanZi;
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
+use chrono::{DateTime, Utc, TimeZone, NaiveDate, Duration};
 
 /// 대운 진행 방향
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -142,13 +144,16 @@ impl MajorLuckAnalysis {
         birth_min: u32,
     ) -> Self {
         use eon_astro::AstroEngine;
-        use chrono::{TimeZone, Utc};
 
         let day_master = pillars.day_master();
         let direction = LuckDirection::from_year_and_gender(pillars.year.stem, gender);
         let astro = AstroEngine::new();
         
-        let birth_time = Utc.with_ymd_and_hms(birth_year, birth_month, birth_day, birth_hour, birth_min, 0).unwrap();
+        // KST 9시간 차이 가정하여 UTC로 변환하여 천문 계산 수행
+        let dt_local = NaiveDate::from_ymd_opt(birth_year, birth_month, birth_day)
+            .and_then(|d| d.and_hms_opt(birth_hour, birth_min, 0))
+            .unwrap();
+        let birth_time = Utc.from_utc_datetime(&(dt_local - Duration::hours(9)));
         
         // 현재 24절기 인덱스 확인 (0: 입춘 ~ 23: 대한)
         let term_idx = astro.get_solar_term_index(birth_time);
@@ -174,7 +179,6 @@ impl MajorLuckAnalysis {
         
         // 실제 대운 시작 날짜 (교운기 확정)
         // 3일 = 1년 법칙: (초)로 환산하면 (10일 diff = 1217일 실제 시간)
-        // diff_seconds * (365.2425 / 3)
         let diff = if direction == LuckDirection::Forward {
             target_term_time - birth_time
         } else {
@@ -189,7 +193,6 @@ impl MajorLuckAnalysis {
         
         for i in 0..10 {
             let age = start_age + (i * 10);
-            // 각 대운은 이전 대운 + 10년 (대략 365.2425 * 10일)
             let cycle_start_date = start_date + chrono::Duration::seconds((i as f64 * 10.0 * 365.2425 * 86400.0) as i64);
             
             current_ganzi = match direction {
@@ -227,7 +230,6 @@ impl MajorLuckAnalysis {
         let day_master = pillars.day_master();
         let direction = LuckDirection::from_year_and_gender(pillars.year.stem, gender);
         
-        use chrono::{TimeZone, Utc};
         let birth_time = Utc.with_ymd_and_hms(birth_year, birth_month, birth_day, birth_hour, birth_min, 0).unwrap();
         let term_time = Utc.with_ymd_and_hms(term_year, term_month, term_day, term_hour, term_min, 0).unwrap();
 
@@ -271,7 +273,6 @@ impl MajorLuckAnalysis {
         }
     }
 
-    /// DateTime을 인자로 받는 대운 시작 정밀 계산
     fn calculate_precise_start_with_times(
         birth_time: chrono::DateTime<chrono::Utc>,
         term_time: chrono::DateTime<chrono::Utc>,
@@ -299,12 +300,10 @@ impl MajorLuckAnalysis {
         (years as u32, months as u32, days as u32)
     }
 
-    /// 특정 나이의 대운 조회
     pub fn at_age(&self, age: u32) -> Option<&MajorLuck> {
         self.cycles.iter().find(|luck| luck.contains_age(age))
     }
 
-    /// 현재 나이 기준 대운 조회
     pub fn current(&self, current_age: u32) -> Option<&MajorLuck> {
         self.at_age(current_age)
     }
@@ -325,12 +324,7 @@ impl std::fmt::Display for MajorLuckAnalysis {
     }
 }
 
-// ============================================
-// 편의 함수
-// ============================================
-
 impl FourPillars {
-    /// 대운 분석 (천문 엔진 사용)
     pub fn major_luck(
         &self, 
         gender: Gender, 
@@ -339,7 +333,6 @@ impl FourPillars {
         MajorLuckAnalysis::calculate_astro(self, gender, b_year, b_month, b_day, b_hour, b_min)
     }
 
-    /// 대운 분석 (특정 절입 시각 지정)
     pub fn major_luck_precise(
         &self, 
         gender: Gender, 
@@ -357,39 +350,33 @@ mod tests {
 
     #[test]
     fn test_luck_direction_yang_male() {
-        // 甲(양목) + 남자 = 순행
         let direction = LuckDirection::from_year_and_gender(HeavenlyStem::Jia, Gender::Male);
         assert_eq!(direction, LuckDirection::Forward);
     }
 
     #[test]
     fn test_luck_direction_yang_female() {
-        // 甲(양목) + 여자 = 역행
         let direction = LuckDirection::from_year_and_gender(HeavenlyStem::Jia, Gender::Female);
         assert_eq!(direction, LuckDirection::Reverse);
     }
 
     #[test]
     fn test_luck_direction_yin_male() {
-        // 乙(음목) + 남자 = 역행
         let direction = LuckDirection::from_year_and_gender(HeavenlyStem::Yi, Gender::Male);
         assert_eq!(direction, LuckDirection::Reverse);
     }
 
     #[test]
     fn test_luck_direction_yin_female() {
-        // 乙(음목) + 여자 = 순행
         let direction = LuckDirection::from_year_and_gender(HeavenlyStem::Yi, Gender::Female);
         assert_eq!(direction, LuckDirection::Forward);
     }
 
     #[test]
     fn test_user_major_luck() {
-        // 김성주님 사주: 甲申年 乙亥月 庚戌日 丁亥時 (남자)
         let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
         let pillars = FourPillars::calculate(&input).unwrap();
         
-        // 甲(양목) + 남자 = 순행 (대설까지의 거리 계산)
         let luck = pillars.major_luck_precise(
             Gender::Male, 
             2004, 11, 27, 22, 0, // 출생
@@ -397,11 +384,6 @@ mod tests {
         );
         
         assert_eq!(luck.direction, LuckDirection::Forward);
-        
-        println!("=== 김성주님 대운 ===");
-        println!("{}", luck);
-        
-        // 첫 번째 대운 확인
         assert!(luck.cycles.len() >= 8);
     }
 
@@ -415,27 +397,19 @@ mod tests {
             2004, 12, 7, 3, 48   // 대설
         );
 
-        // 현재 나이 (2026년 기준)로 대운 조회
         let current = luck.at_age(22);
         assert!(current.is_some());
-        println!("22세 대운: {}", current.unwrap());
     }
 
     #[test]
     fn test_major_luck_astro() {
-        // 김성주님 사주를 천문 엔진(AstroEngine)으로 자동 계산
-        // 2004-11-27 22:00 KST = 2004-11-27 13:00 UTC
         let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
         let pillars = FourPillars::calculate(&input).unwrap();
         
-        // Astro 엔진은 내부적으로 UTC를 기대하므로, KST 22:00 대신 UTC 13:00을 전달하거나
-        // 여기서는 엔진의 정밀도를 확인하기 위해 수동 보정된 시각을 넣음
-        let luck = pillars.major_luck(Gender::Male, 2004, 11, 27, 13, 0);
+        // KST 22:00 -> UTC 13:00 (calculate_astro 내부에서 변환됨)
+        let luck = pillars.major_luck(Gender::Male, 2004, 11, 27, 22, 0);
         
-        println!("=== 천문 엔진(Swiss Ephemeris) 기반 대운 ===");
-        println!("{}", luck);
-        
-        // 11월 27일 13:00 UTC ~ 12월 6일 18:48 UTC (대설)
+        // 11월 27일 22:00 KST ~ 12월 7일 03:48 KST (대설)
         // 약 9일 5시간 -> 3년
         assert_eq!(luck.start_age, 3);
     }

@@ -49,10 +49,33 @@ impl TransformationAnalysis {
         let mut hour_stem = EffectiveElement::new(pillars.hour.stem.element());
 
         // 1. 천간 합화 처리
-        for (combo, _, _) in &rel.stem_combinations {
+        // 쟁합(争合) 및 투합(妬合) 분석: 한 천간이 여러 합에 관여하는지 확인
+        let mut stem_usage = [0u8; 4]; // 년, 월, 일, 시 순서
+        for (_combo, p1, p2) in &rel.stem_combinations {
+            let idx1 = match p1.as_str() { "년간" => 0, "월간" => 1, "일간" => 2, "시간" => 3, _ => 99 };
+            let idx2 = match p2.as_str() { "년간" => 0, "월간" => 1, "일간" => 2, "시간" => 3, _ => 99 };
+            if idx1 < 4 { stem_usage[idx1] += 1; }
+            if idx2 < 4 { stem_usage[idx2] += 1; }
+        }
+
+        for (combo, p1, p2) in &rel.stem_combinations {
+            let idx1 = match p1.as_str() { "년간" => 0, "월간" => 1, "일간" => 2, "시간" => 3, _ => 99 };
+            let idx2 = match p2.as_str() { "년간" => 0, "월간" => 1, "일간" => 2, "시간" => 3, _ => 99 };
+            
+            // 쟁합/투합 발생 시 합화 불성립 (또는 약화되나 보통 불성립으로 간주)
+            let is_competed = (idx1 < 4 && stem_usage[idx1] > 1) || (idx2 < 4 && stem_usage[idx2] > 1);
+            
+            if is_competed {
+                let reason = format!("{} 발생으로 합화 불성립", if stem_usage[idx1.min(3)] > 1 { "쟁합(争合)" } else { "투합(妬合)" });
+                // 실질 오행에 기록은 하되 원인은 "불성립"으로 명시
+                apply_stem_transform_failure(pillars, combo, &reason, 
+                                   &mut year_stem, &mut month_stem, &mut day_stem, &mut hour_stem);
+                continue;
+            }
+
             let transformed_element = combo.transformed_element();
 
-            // 월지가 합화되는 오행을 돕거나 같을 때만 화(화)하는 것으로 간주
+            // 월지가 합화되는 오행을 돕거나 같을 때만 화(化)하는 것으로 간주
             let is_supported = month_branch_element == transformed_element || 
                              transformed_element.generated_by() == month_branch_element;
 
@@ -140,6 +163,26 @@ fn apply_stem_transform(
     if pillars.month.stem == s1 || pillars.month.stem == s2 { m.effective = target; m.reason = Some(reason.to_string()); }
     if pillars.day.stem == s1 || pillars.day.stem == s2 { d.effective = target; d.reason = Some(reason.to_string()); }
     if pillars.hour.stem == s1 || pillars.hour.stem == s2 { h.effective = target; h.reason = Some(reason.to_string()); }
+}
+
+fn apply_stem_transform_failure(
+    pillars: &FourPillars, 
+    combo: &StemCombination, 
+    reason: &str,
+    y: &mut EffectiveElement, m: &mut EffectiveElement, d: &mut EffectiveElement, h: &mut EffectiveElement
+) {
+    let (s1, s2) = match combo {
+        StemCombination::JiaJi => (HeavenlyStem::Jia, HeavenlyStem::Ji),
+        StemCombination::YiGeng => (HeavenlyStem::Yi, HeavenlyStem::Geng),
+        StemCombination::BingXin => (HeavenlyStem::Bing, HeavenlyStem::Xin),
+        StemCombination::DingRen => (HeavenlyStem::Ding, HeavenlyStem::Ren),
+        StemCombination::WuGui => (HeavenlyStem::Wu, HeavenlyStem::Gui),
+    };
+    // 원인은 남기되 effective element는 원래 오행 유지
+    if (pillars.year.stem == s1 || pillars.year.stem == s2) && y.reason.is_none() { y.reason = Some(reason.to_string()); }
+    if (pillars.month.stem == s1 || pillars.month.stem == s2) && m.reason.is_none() { m.reason = Some(reason.to_string()); }
+    if (pillars.day.stem == s1 || pillars.day.stem == s2) && d.reason.is_none() { d.reason = Some(reason.to_string()); }
+    if (pillars.hour.stem == s1 || pillars.hour.stem == s2) && h.reason.is_none() { h.reason = Some(reason.to_string()); }
 }
 
 fn apply_triple_transform(

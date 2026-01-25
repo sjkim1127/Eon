@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 use crate::core::branch::EarthlyBranch;
 use crate::core::stem::HeavenlyStem;
 use crate::core::pillars::FourPillars;
-use crate::core::calendar::{SolarTerm, approximate_solar_term_day};
+use crate::core::calendar::{SolarTerm, get_solar_term_time};
+use chrono::{DateTime, Utc};
 
 /// 지장간 사령(司令) 정보
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,35 +25,22 @@ pub struct SaryeongAnalysis {
 }
 
 impl SaryeongAnalysis {
-    /// 사주 팔자와 출생 정보로부터 사령 분석
-    pub fn from_pillars(pillars: &FourPillars, birth_day: u32) -> Self {
+    /// 사주 팔자로부터 사령 분석
+    pub fn from_pillars(pillars: &FourPillars) -> Self {
         let branch = pillars.month.branch;
         
-        // 해당 월의 절기 찾기
-        let term = match branch {
-            EarthlyBranch::Yin => SolarTerm::Lichun,
-            EarthlyBranch::Mao => SolarTerm::Jingzhe,
-            EarthlyBranch::Chen => SolarTerm::Qingming,
-            EarthlyBranch::Si => SolarTerm::Lixia,
-            EarthlyBranch::Wu => SolarTerm::Mangzhong,
-            EarthlyBranch::Wei => SolarTerm::Xiaoshu,
-            EarthlyBranch::Shen => SolarTerm::Liqiu,
-            EarthlyBranch::You => SolarTerm::Bailu,
-            EarthlyBranch::Xu => SolarTerm::Hanlu,
-            EarthlyBranch::Hai => SolarTerm::Lidong,
-            EarthlyBranch::Zi => SolarTerm::Daxue,
-            EarthlyBranch::Chou => SolarTerm::Xiaohan,
-        };
-
-        let (_, term_day) = approximate_solar_term_day(0, term); // 연도는 현재 무시 (근사치)
+        // 해당 월의 시작 절기 찾기
+        let term = SolarTerm::from_month_branch_index(branch.index());
         
-        // 경과 일수 계산 (간단화: 30일 주기 기준)
-        let days_passed = if birth_day >= term_day {
-            birth_day - term_day + 1
-        } else {
-            // 이전 달에서 넘어온 경우 (보통은 pillars 계산 시 이미 조정되지만 안전책)
-            birth_day + 30 - term_day + 1
-        };
+        // 해당 절기의 정확한 시작 시각 계산
+        let term_time = get_solar_term_time(pillars.birth_time, term);
+        
+        // 경과 일수 계산 (실제 시간차 기준)
+        let diff = pillars.birth_time - term_time;
+        let diff_seconds = diff.num_seconds().abs();
+        
+        // 1일 = 86400초. 0.5일 이상이면 올림하는 방식이 아닌, 단순히 며칠째인지 계산 (1일차부터 시작)
+        let days_passed = (diff_seconds as f64 / 86400.0) as u32 + 1;
 
         let (stem, duration, part) = get_saryeong_data(branch, days_passed);
 
@@ -147,7 +135,7 @@ impl std::fmt::Display for SaryeongAnalysis {
 
 impl FourPillars {
     /// 월령분금(사령) 분석
-    pub fn saryeong(&self, birth_day: u32) -> SaryeongAnalysis {
-        SaryeongAnalysis::from_pillars(self, birth_day)
+    pub fn saryeong(&self) -> SaryeongAnalysis {
+        SaryeongAnalysis::from_pillars(self)
     }
 }

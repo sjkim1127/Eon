@@ -153,50 +153,7 @@ impl std::fmt::Display for TenGod {
     }
 }
 
-// ============================================
-// 지지의 정기(正氣) - 지지에 숨겨진 천간
-// ============================================
-
-impl EarthlyBranch {
-    /// 지지의 정기(正氣) 천간 반환
-    /// 
-    /// 각 지지에는 1~3개의 장간(藏干)이 있으며,
-    /// 여기서는 가장 강한 정기만 반환합니다.
-    pub const fn primary_stem(self) -> HeavenlyStem {
-        match self {
-            Self::Zi => HeavenlyStem::Gui,   // 子 → 癸 (계수)
-            Self::Chou => HeavenlyStem::Ji,  // 丑 → 己 (기토)
-            Self::Yin => HeavenlyStem::Jia,  // 寅 → 甲 (갑목)
-            Self::Mao => HeavenlyStem::Yi,   // 卯 → 乙 (을목)
-            Self::Chen => HeavenlyStem::Wu,  // 辰 → 戊 (무토)
-            Self::Si => HeavenlyStem::Bing,  // 巳 → 丙 (병화)
-            Self::Wu => HeavenlyStem::Ding,  // 午 → 丁 (정화)
-            Self::Wei => HeavenlyStem::Ji,   // 未 → 己 (기토)
-            Self::Shen => HeavenlyStem::Geng,// 申 → 庚 (경금)
-            Self::You => HeavenlyStem::Xin,  // 酉 → 辛 (신금)
-            Self::Xu => HeavenlyStem::Wu,    // 戌 → 戊 (무토)
-            Self::Hai => HeavenlyStem::Ren,  // 亥 → 壬 (임수)
-        }
-    }
-
-    /// 지지의 모든 장간(藏干) 반환 (정기, 중기, 여기 순)
-    pub fn hidden_stems(self) -> Vec<HeavenlyStem> {
-        match self {
-            Self::Zi => vec![HeavenlyStem::Gui],
-            Self::Chou => vec![HeavenlyStem::Ji, HeavenlyStem::Gui, HeavenlyStem::Xin],
-            Self::Yin => vec![HeavenlyStem::Jia, HeavenlyStem::Bing, HeavenlyStem::Wu],
-            Self::Mao => vec![HeavenlyStem::Yi],
-            Self::Chen => vec![HeavenlyStem::Wu, HeavenlyStem::Yi, HeavenlyStem::Gui],
-            Self::Si => vec![HeavenlyStem::Bing, HeavenlyStem::Geng, HeavenlyStem::Wu],
-            Self::Wu => vec![HeavenlyStem::Ding, HeavenlyStem::Ji],
-            Self::Wei => vec![HeavenlyStem::Ji, HeavenlyStem::Ding, HeavenlyStem::Yi],
-            Self::Shen => vec![HeavenlyStem::Geng, HeavenlyStem::Ren, HeavenlyStem::Wu],
-            Self::You => vec![HeavenlyStem::Xin],
-            Self::Xu => vec![HeavenlyStem::Wu, HeavenlyStem::Xin, HeavenlyStem::Ding],
-            Self::Hai => vec![HeavenlyStem::Ren, HeavenlyStem::Jia],
-        }
-    }
-}
+// EarthlyBranch implementation moved to branch.rs for consistency.
 
 // ============================================
 // 사주 십성 분석
@@ -376,6 +333,6 @@ mod tests {
         // 寅 = 甲(정기), 丙(중기), 戊(여기)
         let stems = EarthlyBranch::Yin.hidden_stems();
         assert_eq!(stems.len(), 3);
-        assert_eq!(stems[0], HeavenlyStem::Jia);
+        assert_eq!(stems[2], HeavenlyStem::Jia); // 정기(Primary) is usually last
     }
 }

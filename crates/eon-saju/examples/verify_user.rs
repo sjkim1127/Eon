@@ -71,7 +71,7 @@ fn main() {
     println!();
 
     // 월령분금(사령) 분석
-    println!("{}", pillars.saryeong(27));
+    println!("{}", pillars.saryeong());
     println!();
 
     // 12운성 분석
@@ -94,7 +94,7 @@ fn main() {
     let major_2nd = luck.cycles[1].ganzi; // 丁丑 대운
     let yearly_2026 = GanZi::new(HeavenlyStem::Bing, EarthlyBranch::Wu); // 2026년 丙午年
 
-    println!("{}", DynamicLuckAnalysis::analyze(&pillars, Some(major_2nd), Some(yearly_2026)));
+    println!("{}", DynamicLuckAnalysis::analyze(&pillars, Some(major_2nd), Some(yearly_2026), None, None, None));
     println!();
 
     // Saju-VM 인생 경로 에뮬레이션 시뮬레이션

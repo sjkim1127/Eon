@@ -21,9 +21,14 @@
 - **Deuk-Ryeong**: No
 - **Deuk-Ji**: Yes
 - **Deuk-Si**: No
+- **Deuk-Si**: No
 - **Deuk-Se**: No
 
-## 3. Spirit Markers (Shensha)
+## 3. Structure Analysis (Gyeokguk)
+- **Structure**: 편재격 (偏財格)
+- **Reason**: 월지 지지 亥의 지장간 甲이 년간에 투출함
+
+## 4. Spirit Markers (Shensha)
 - **지살** (년주): 지리적 이동과 활동 영역의 변화
 - **월살** (일주): 불우한 환경 속에서 피어나는 결실
 - **망신살** (월주): 실수나 치부의 노출, 그러나 화려한 변신
@@ -49,7 +54,7 @@
 - **망신살** (월주): 실수나 치부의 노출, 그러나 화려한 변신
 - **망신살** (시주): 실수나 치부의 노출, 그러나 화려한 변신
 
-## 4. Major Luck Cycles (Daeyun)
+## 5. Major Luck Cycles (Daeyun)
 - **Direction**: 순행
 - **Start Age**: 2
 
@@ -66,10 +71,10 @@
 | 9 | 82 | 갑신 | 2087-11-11 |
 | 10 | 92 | 을유 | 2097-11-11 |
 
-## 5. Golden Time Analysis (AI/VM)
+## 6. Golden Time Analysis (AI/VM)
 - **Period**: Age 8 - 17
 - **Avg Score**: 63.10
 - **Description**: 8세부터 17세까지 가장 운의 밀도가 높은 골든 타임입니다.
 
-## 6. Simulation Summary
+## 7. Simulation Summary
 Simulation performed over 1000 years (2004-3004). Hardware accelerated analysis confirmed optimal energy flow periods.
