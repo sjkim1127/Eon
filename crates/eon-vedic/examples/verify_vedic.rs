@@ -63,6 +63,18 @@ fn main() {
          );
     }
 
+    println!("\n[4] Ashtakavarga (SAV) Points");
+    print!("Points: ");
+    for (i, p) in chart.sav.points.iter().enumerate() {
+        print!("H{}:{} ", i+1, p);
+    }
+    println!();
+
+    println!("\n[5] Planetary Aspects (Drishti)");
+    for rel in &chart.aspects {
+        println!("  {:<12} aspects Houses: {:?}", format!("{:?}", rel.aspecting_planet), rel.aspected_houses);
+    }
+
     // 3. Yoga Check
     println!("\n[2] Yoga Analysis");
     let yogas = YogaEngine::check_yogas(&chart);

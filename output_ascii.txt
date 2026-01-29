@@ -1,0 +1,56 @@
+=== Eon Vedic Engine Verification ===
+Birth Time: 2000-01-01 03:00:00 UTC
+Location: 37.5665, 126.978
+
+[1] Planetary Positions, Nature & Strength
+Ascendant (Lagna): 339.52? (Rasi: 12)
+Sun          | H: 10 | Sid: 256.13? | Nature: Malefic      | Str:  82.0 (Strong)
+Moon         | H:  8 | Sid: 194.95? | Nature: Benefic      | Str:  26.0 (Debilitated)
+Mars         | H: 12 | Sid: 303.82? | Nature: Benefic      | Str:  98.1 (Exalted)
+Mercury      | H: 10 | Sid: 247.45? | Nature: Maraka       | Str:  62.5 (Neutral)
+Jupiter      | H:  2 | Sid:   1.38? | Nature: Yogakaraka   | Str:  78.8 (Neutral)
+Venus        | H:  9 | Sid: 217.26? | Nature: Malefic      | Str:  23.4 (Weak)
+Saturn       | H:  2 | Sid:  16.55? | Nature: Malefic      | Str:  11.2 (Debilitated)
+Rahu         | H:  5 | Sid: 100.12? | Nature: Malefic      | Str:  60.0 (Neutral)
+Ketu         | H: 11 | Sid: 280.12? | Nature: Malefic      | Str:  60.0 (Neutral)
+
+[Deep Varga Scan]
+Sun          | D60:  5 | D144:  9 | D30:  9
+Moon         | D60: 12 | D144:  6 | D30:  9
+Mars         | D60:  6 | D144:  6 | D30:  1
+Mercury      | D60: 11 | D144:  5 | D30: 11
+Jupiter      | D60:  3 | D144:  7 | D30:  1
+Venus        | D60: 10 | D144:  4 | D30:  6
+Saturn       | D60: 10 | D144:  1 | D30:  9
+Rahu         | D60: 12 | D144:  2 | D30:  6
+Ketu         | D60:  6 | D144:  8 | D30:  6
+
+[4] Ashtakavarga (SAV) Points
+Points: H1:24 H2:29 H3:26 H4:26 H5:22 H6:25 H7:23 H8:27 H9:27 H10:28 H11:21 H12:23 
+
+[5] Planetary Aspects (Drishti)
+  Sun          aspects Houses: [4]
+  Moon         aspects Houses: [2]
+  Mars         aspects Houses: [3, 6, 7]
+  Mercury      aspects Houses: [4]
+  Jupiter      aspects Houses: [6, 8, 10]
+  Venus        aspects Houses: [3]
+  Saturn       aspects Houses: [4, 8, 11]
+  Rahu         aspects Houses: [1, 9, 11]
+  Ketu         aspects Houses: [3, 5, 7]
+
+[2] Yoga Analysis
+  ??Gaja Kesari Yoga (GajaKesari): Jupiter in Kendra from Moon. Wisdom, virtue, reputation.
+  ??Budhaditya Yoga (Budhaditya): Sun and Mercury conjunction. Intelligence and communication skills.
+  ??Dhana Yoga (11 in 2) (DhanaYoga): 11th Lord in 2nd House. Financial gains.
+  ??Sunapha Yoga (Sunapha): Planets in 2nd from Moon. Wealth and intelligence.
+
+[3] Vimshottari Dasha Timeline
+???? Rahu Mahadasha: 6.8 years (2000-01-01 ~ 2006-10-27)
+???? Jupiter Mahadasha: 16.0 years (2006-10-27 ~ 2022-10-27)
+???? Saturn Mahadasha: 19.0 years (2022-10-27 ~ 2041-10-26)
+???? Mercury Mahadasha: 17.0 years (2041-10-26 ~ 2058-10-26)
+???? Ketu Mahadasha: 7.0 years (2058-10-26 ~ 2065-10-26)
+???? Venus Mahadasha: 20.0 years (2065-10-26 ~ 2085-10-26)
+???? Sun Mahadasha: 6.0 years (2085-10-26 ~ 2091-10-26)
+???? Moon Mahadasha: 10.0 years (2091-10-26 ~ 2101-10-27)

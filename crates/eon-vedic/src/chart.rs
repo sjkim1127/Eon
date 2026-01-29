@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use crate::planets::VedicPlanet;
 use crate::ayanamsa::get_lahiri_ayanamsa;
-use crate::config::{VedicConfig, NodeCalculation};
+use crate::config::VedicConfig;
 use eon_astro::AstroEngine;
 use chrono::{DateTime, Utc};
 
@@ -45,7 +45,8 @@ pub struct VedicPosition {
 pub struct VedicChart {
     pub ascendant: VedicPosition,
     pub planets: Vec<VedicPosition>,
-    pub houses: Vec<f64>, // Cusps (start degrees) - typically 12
+    pub aspects: Vec<crate::analysis::aspects::AspectRelation>,
+    pub sav: crate::analysis::ashtakavarga::Sarvashtakavarga,
 }
 
 pub struct VedicChartCalculator {
@@ -71,37 +72,26 @@ impl VedicChartCalculator {
     pub fn calculate(&self, time: DateTime<Utc>, latitude: f64, longitude: f64) -> VedicChart {
         let ayanamsa = get_lahiri_ayanamsa(&self.engine, time);
         
-        // Calculate Ascendant (Lagna)
-        let (cusps, ascmc) = self.engine.get_houses(time, latitude, longitude, 'P' as i32)
+        let (_, ascmc) = self.engine.get_houses(time, latitude, longitude, 'W' as i32)
             .unwrap_or((vec![], [0.0; 10]));
             
-        let asc_trop = ascmc[0];
-        let asc_sidereal = (asc_trop - ayanamsa + 360.0) % 360.0;
-        
-        // --- Output Chart Data ---
-        let mut planets_vec = Vec::new();
+        let asc_sidereal = (ascmc[0] - ayanamsa + 360.0) % 360.0;
+        let asc_rasi = (asc_sidereal / 30.0).floor() as u8 + 1;
         
         // Helper to Create Position
-        let create_position = |planet: VedicPlanet, sidereal: f64, tropical: f64, _is_ascendant: bool, lagna_rasi: Option<u8>| -> VedicPosition {
+        let create_position = |planet: VedicPlanet, sidereal: f64, tropical: f64| -> VedicPosition {
              let nak_pos = sidereal / (360.0 / 27.0);
              let nakshatra = (nak_pos.floor() as u8) + 1;
              
              let pada_pos = (sidereal % (360.0 / 27.0)) / (360.0 / 108.0);
              let pada = (pada_pos.floor() as u8) + 1;
              let rasi = (sidereal / 30.0).floor() as u8 + 1;
-
-             // House Index Calculation (Whole Sign)
-             // If this IS Lagna, it is House 1.
-             // If this is a planet, House = (Planet Rasi - Lagna Rasi + 1 + 12) % 12
-             // Actually: (Planet Rasi - Lagna Rasi + 1)
-             // Example: Lagna Aries(1), Sun Taurus(2) -> 2 - 1 + 1 = 2nd House
-             // Example: Lagna Pisces(12), Sun Aries(1) -> 1 - 12 + 1 = -10 -> +12 = 2nd House
-             let house_index = if let Some(l_rasi) = lagna_rasi {
-                 let diff = (rasi as i32 - l_rasi as i32);
-                 let h = if diff >= 0 { diff + 1 } else { diff + 13 };
-                 h as u8
+             
+             // Whole Sign House Index
+             let house_index = if rasi >= asc_rasi {
+                 rasi - asc_rasi + 1
              } else {
-                 1 // Default for Lagna itself (House 1)
+                 (12 - asc_rasi) + rasi + 1
              };
 
              VedicPosition {
@@ -137,43 +127,40 @@ impl VedicChartCalculator {
         };
 
         // 1. Create Ascendant Position
-        let asc_position = create_position(VedicPlanet::Ascendant, asc_sidereal, asc_trop, true, None);
-        let lagna_rasi = asc_position.rasi;
+        let asc_position = create_position(VedicPlanet::Ascendant, asc_sidereal, ascmc[0]);
 
-        // 2. Planets
-        let planets_list = [
+        let planets_names = [
             VedicPlanet::Sun, VedicPlanet::Moon, VedicPlanet::Mars,
             VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus,
             VedicPlanet::Saturn, VedicPlanet::Rahu
         ];
 
-        for p in planets_list {
-            let flag = 256 | 2;
-            let mut planet_id = p.se_id();
-            if p == VedicPlanet::Rahu {
-                match self.config.node_calc {
-                    NodeCalculation::MeanNode => planet_id = 10,
-                    NodeCalculation::TrueNode => planet_id = 11,
-                }
-            }
+        let mut planets = Vec::new();
+        for p in &planets_names {
+            let flag = 256 | 2; // SEFLG_SPEED | SEFLG_SIDEREAL (or just standard)
+            let trop = self.engine.get_planet_position(time, p.se_id(), flag).unwrap_or(0.0);
+            let sidereal = (trop - ayanamsa + 360.0) % 360.0;
+            planets.push(create_position(*p, sidereal, trop));
 
-            let trop_long = self.engine.get_planet_position(time, planet_id, flag).unwrap_or(0.0);
-            let sidereal_long = (trop_long - ayanamsa + 360.0) % 360.0;
-            
-            planets_vec.push(create_position(p, sidereal_long, trop_long, false, Some(lagna_rasi)));
-
-            // Ketu
-            if p == VedicPlanet::Rahu {
-                let ketu_long = (sidereal_long + 180.0) % 360.0;
-                let ketu_trop = (trop_long + 180.0) % 360.0;
-                planets_vec.push(create_position(VedicPlanet::Ketu, ketu_long, ketu_trop, false, Some(lagna_rasi)));
+            // Add Ketu opposite to Rahu
+            if *p == VedicPlanet::Rahu {
+                let ketu_sidereal = (sidereal + 180.0) % 360.0;
+                let ketu_tropical = (trop + 180.0) % 360.0;
+                planets.push(create_position(VedicPlanet::Ketu, ketu_sidereal, ketu_tropical));
             }
         }
-        
-        VedicChart {
+
+        let mut chart = VedicChart {
             ascendant: asc_position,
-            planets: planets_vec,
-            houses: cusps,
-        }
+            planets,
+            aspects: Vec::new(),
+            sav: crate::analysis::ashtakavarga::Sarvashtakavarga { points: [0; 12] },
+        };
+
+        // Post-calculation analysis
+        chart.aspects = crate::analysis::aspects::AspectEngine::calculate_aspects(&chart);
+        chart.sav = crate::analysis::ashtakavarga::AshtakavargaEngine::calculate_sav(&chart);
+
+        chart
     }
 }
