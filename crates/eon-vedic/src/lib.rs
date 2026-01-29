@@ -9,6 +9,7 @@ pub mod names;
 pub mod config;
 pub mod varga;
 pub mod dasha;
+pub mod yogas;
 
 use serde::{Deserialize, Serialize};
 

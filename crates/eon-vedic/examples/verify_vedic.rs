@@ -1,6 +1,7 @@
 use eon_vedic::chart::VedicChartCalculator;
 use eon_vedic::dasha::Vimshottari;
 use eon_vedic::planets::VedicPlanet;
+use eon_vedic::yogas::YogaEngine;
 use chrono::{TimeZone, Utc};
 
 fn main() {
@@ -14,49 +15,46 @@ fn main() {
     println!("Birth Time: {}", birth_time);
     println!("Location: {}, {}", lat, lon);
 
-    // 2. Calculate Chart (Lagna + Planets)
+    // 2. Calculate Chart
     let calculator = VedicChartCalculator::new();
-    let positions = calculator.calculate(birth_time, lat, lon);
+    let chart = calculator.calculate(birth_time, lat, lon);
 
-    println!("\n[1] Planetary Positions Check");
+    println!("\n[1] Planetary Positions (Whole Sign House)");
+    println!("Ascendant (Lagna): {:.2}° (Rasi: {})", chart.ascendant.sidereal_deg, chart.ascendant.rasi);
+    
     let mut moon_long = 0.0;
     
-    for pos in &positions {
-        let planet_name = match pos.planet {
-            VedicPlanet::Ascendant => "Lagna(ASC)",
-            _ => {
-               // derive Debug is available
-               &format!("{:?}", pos.planet)
-            }
-        };
-        
-        println!("{:<12} | Sidereal: {:>6.2}° | Rasi: {:>2} | Nak: {:>2} | Pada: {}", 
-            planet_name, pos.sidereal_deg, pos.rasi, pos.nakshatra, pos.pada);
+    for pos in &chart.planets {
+        println!("{:<12} | House: {:>2} | Sidereal: {:>6.2}° | Rasi: {:>2} | Nak: {:>2}", 
+            format!("{:?}", pos.planet), 
+            pos.house_index,
+            pos.sidereal_deg, 
+            pos.rasi, 
+            pos.nakshatra
+        );
 
         if pos.planet == VedicPlanet::Moon {
             moon_long = pos.sidereal_deg;
         }
     }
 
-    // 3. Verify Ayanamsa (Indirectly checked via positions, but let's see if we can expose it via calculator if needed, 
-    // or just trust the positions are sidereal).
-    // The calculator uses get_lahiri_ayanamsa internally.
-    
-    // 4. Verify Vimshottari Dasha
-    println!("\n[2] Vimshottari Dasha Timeline (Moon Long: {:.2}°)", moon_long);
-    let dashas = Vimshottari::calculate(moon_long, birth_time, 2); // Depth 2 for Antardasha
+    // 3. Yoga Check
+    println!("\n[2] Yoga Analysis");
+    let yogas = YogaEngine::check_yogas(&chart);
+    if yogas.is_empty() {
+        println!("  No major Yogas found (in this basic check).");
+    } else {
+        for yoga in yogas {
+            println!("  ▶ {} ({:?}): {}", yoga.name, yoga.yoga_type, yoga.description);
+        }
+    }
+
+    // 4. Vimshottari Dasha
+    println!("\n[3] Vimshottari Dasha Timeline (Moon Long: {:.2}°)", moon_long);
+    let dashas = Vimshottari::calculate(moon_long, birth_time, 2);
     
     for d in dashas {
-        println!("▶ {:?} Mahadasha: {:.1} years", d.planet, d.duration_years);
-        println!("  Start: {}", d.start_date.format("%Y-%m-%d"));
-        println!("  End:   {}", d.end_date.format("%Y-%m-%d"));
-        
-        // Print first few Antardashas
-        for sub in d.sub_periods.iter().take(3) {
-             println!("    - {:?} Antardasha: {} ~ {}", sub.planet, sub.start_date.format("%Y-%m-%d"), sub.end_date.format("%Y-%m-%d"));
-        }
-        if d.sub_periods.len() > 3 {
-            println!("    - ...");
-        }
+        println!("▶ {:?} Mahadasha: {:.1} years ({} ~ {})", 
+            d.planet, d.duration_years, d.start_date.format("%Y-%m-%d"), d.end_date.format("%Y-%m-%d"));
     }
 }
