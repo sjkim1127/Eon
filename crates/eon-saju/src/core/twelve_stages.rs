@@ -114,6 +114,41 @@ impl TwelveStage {
         }
     }
 
+    /// 통근(通根) 가중치 - 득지 판정용
+    /// 
+    /// 12운성을 세 등급으로 분류하여 차등 가중치 적용:
+    /// - **A급 (왕성)**: 건록, 제왕, 관대 → 1.0 (완전한 통근)
+    /// - **B급 (생조)**: 장생, 목욕 → 0.5 (생조는 받지만 뿌리 약함)
+    /// - **C급 (쇠약)**: 쇠, 병, 사, 묘, 절, 태, 양 → 0.0 (통근 없음)
+    /// 
+    /// # 이론적 배경
+    /// 
+    /// 장생(長生)은 지지가 일간을 '생(生)'해주는 것이지, 
+    /// 일간이 지지에 '뿌리(根)'를 내린 것과는 다릅니다.
+    /// 예: 甲일간이 亥월(장생)에 태어나면, 水가 木을 생하지만
+    /// 甲목의 뿌리는 亥 속 甲목 지장간이 약하여 '부목(浮木)'이 될 수 있습니다.
+    pub const fn root_weight(&self) -> f32 {
+        match self {
+            // A급: 완전한 통근 (건록, 제왕, 관대)
+            Self::Jianlu | Self::Diwang | Self::Guandai => 1.0,
+            
+            // B급: 생조는 받지만 뿌리 약함 (장생, 목욕)
+            Self::Changsheng | Self::Muyu => 0.5,
+            
+            // C급: 통근 없음 (나머지)
+            Self::Shuai | Self::Bing | Self::Si | 
+            Self::Mu | Self::Jue | Self::Tai | Self::Yang => 0.0,
+        }
+    }
+
+    /// 강한 12운성인지 확인 (A급 또는 B급)
+    pub const fn is_strong(&self) -> bool {
+        matches!(self, 
+            Self::Jianlu | Self::Diwang | Self::Guandai | 
+            Self::Changsheng | Self::Muyu
+        )
+    }
+
     /// 길흉 판단
     /// true = 길(吉), false = 흉(凶), None = 중립
     pub const fn is_auspicious(&self) -> Option<bool> {

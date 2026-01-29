@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 use crate::core::element::Element;
 use crate::core::pillars::FourPillars;
-use crate::analysis::strength::StrengthType;
+use crate::analysis::strength::{StrengthAnalysis, StrengthType};
 use crate::core::branch::EarthlyBranch;
 
 /// 용신의 종류
@@ -79,7 +79,20 @@ impl YongshinAnalysis {
                     }
                 },
                 StrengthType::Strong => {
-                    day_master_el.controlled_by() // 관성 (단순화)
+                    // 신강의 원인을 분석하여 용신 세분화
+                    let yinxing = strength.deuk_se.yinxing_count as f32;
+                    let bijie = strength.deuk_se.bijie_count as f32;
+                    
+                    if yinxing > bijie * 1.5 {
+                        // 인성 과다로 신강: 재성으로 인성 극복 (용재파인)
+                        day_master_el.generates() // 재성 = 일간이 생하는 오행
+                    } else if bijie > yinxing * 1.5 {
+                        // 비겁 과다로 신강: 관성으로 비겁 제어 (관살제겁)
+                        day_master_el.controlled_by() // 관성 = 일간을 극하는 오행
+                    } else {
+                        // 인성/비겁 균형: 식상으로 설기 (설기생재)
+                        day_master_el.generates() // 식상 = 일간이 생하는 오행
+                    }
                 },
                 StrengthType::Balanced => day_master_el,
             }
@@ -112,11 +125,7 @@ impl YongshinAnalysis {
             recommendations.push(RecommendedYongshin {
                 yongshin_type: YongshinType::Eokbu,
                 element: eokbu_element,
-                reason: format!("일간이 {}하여 이를 {}하는 {}가 필요함", 
-                    strength.strength_type.hangul(),
-                    if strength.strength_type == StrengthType::Weak { "돕는" } else { "누르는" },
-                    eokbu_element.hangul()
-                ),
+                reason: get_eokbu_reason(&strength, eokbu_element),
             });
         }
 
@@ -223,61 +232,63 @@ fn get_johu_analysis(pillars: &FourPillars, index: i32) -> Option<RecommendedYon
 }
 
 /// 통관 분석 (서로 싸우는 강한 두 기운 중재)
+/// 
+/// 개수가 아닌 **세력 점수**를 기준으로 판단합니다.
+/// 두 상충 오행의 세력이 비등할 때(차이 20% 이내)만 통관용신을 적용합니다.
 fn get_tonggwan_analysis(pillars: &FourPillars) -> Option<RecommendedYongshin> {
-    // 오행별 개수 계산
-    let mut counts = [0u8; 5];
-    for s in [pillars.year.stem, pillars.month.stem, pillars.day.stem, pillars.hour.stem] {
-        counts[s.element().index() as usize] += 1;
-    }
-    for b in [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch] {
-        counts[b.element().index() as usize] += 1;
+    use crate::analysis::power::{IntegratedAnalysis, AnalysisOptions};
+    
+    // 세력 점수 계산 (기본 보정 적용)
+    let options = AnalysisOptions {
+        apply_transform: false,  // 합화는 적용하지 않음 (원국 기준)
+        apply_correction: false,
+    };
+    let analysis = IntegratedAnalysis::calculate(pillars, options);
+    
+    // 오행별 세력 점수 추출 (0~100)
+    let mut scores: [f32; 5] = [0.0; 5];
+    for (elem, pct, _) in &analysis.element_scores {
+        scores[elem.index() as usize] = *pct;
     }
     
-    // 금목상쟁 (Metal vs Wood)
-    if counts[Element::Metal.index() as usize] >= 2 && counts[Element::Wood.index() as usize] >= 2 {
-        return Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Tonggwan,
-            element: Element::Water,
-            reason: "금(金)과 목(木)이 대립하고 있어 이를 유통시키는 수(水)가 필요함".to_string(),
-        });
+    // 상충 관계 쌍과 통관 오행 정의
+    // (오행1, 오행2, 통관 오행, 설명)
+    let conflicts: [(Element, Element, Element, &str); 5] = [
+        (Element::Metal, Element::Wood, Element::Water, 
+         "금(金)과 목(木)이 대립하고 있어 이를 유통시키는 수(水)가 필요함"),
+        (Element::Water, Element::Fire, Element::Wood,
+         "수(水)와 화(火)가 대립하고 있어 이를 유통시키는 목(木)이 필요함"),
+        (Element::Wood, Element::Earth, Element::Fire,
+         "목(木)과 토(土)가 대립하고 있어 이를 유통시키는 화(火)가 필요함"),
+        (Element::Fire, Element::Metal, Element::Earth,
+         "화(火)와 금(金)이 대립하고 있어 이를 유통시키는 토(土)가 필요함"),
+        (Element::Earth, Element::Water, Element::Metal,
+         "토(土)와 수(水)가 대립하고 있어 이를 유통시키는 금(金)이 필요함"),
+    ];
+    
+    for (elem1, elem2, mediator, reason) in conflicts {
+        let score1 = scores[elem1.index() as usize];
+        let score2 = scores[elem2.index() as usize];
+        
+        // 두 오행의 세력이 모두 15% 이상이고, 차이가 20% 이내일 때 통관 적용
+        let min_threshold = 15.0;  // 최소 세력
+        let max_diff = 20.0;       // 세력 차이 허용 범위
+        
+        if score1 >= min_threshold && score2 >= min_threshold {
+            let diff = (score1 - score2).abs();
+            if diff <= max_diff {
+                return Some(RecommendedYongshin {
+                    yongshin_type: YongshinType::Tonggwan,
+                    element: mediator,
+                    reason: format!("{} ({}:{:.1}% vs {}:{:.1}%)", 
+                        reason, 
+                        elem1.hangul(), score1,
+                        elem2.hangul(), score2),
+                });
+            }
+        }
     }
     
-    // 수화상쟁 (Water vs Fire)
-    if counts[Element::Water.index() as usize] >= 2 && counts[Element::Fire.index() as usize] >= 2 {
-        return Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Tonggwan,
-            element: Element::Wood,
-            reason: "수(水)와 화(火)가 대립하고 있어 이를 유통시키는 목(木)이 필요함".to_string(),
-        });
-    }
-
-    // 목토상쟁 (Wood vs Earth)
-    if counts[Element::Wood.index() as usize] >= 2 && counts[Element::Earth.index() as usize] >= 2 {
-        return Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Tonggwan,
-            element: Element::Fire,
-            reason: "목(木)과 토(土)가 대립하고 있어 이를 유통시키는 화(火)가 필요함".to_string(),
-        });
-    }
-
-    // 화금상쟁 (Fire vs Metal)
-    if counts[Element::Fire.index() as usize] >= 2 && counts[Element::Metal.index() as usize] >= 2 {
-        return Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Tonggwan,
-            element: Element::Earth,
-            reason: "화(火)와 금(金)이 대립하고 있어 이를 유통시키는 토(土)가 필요함".to_string(),
-        });
-    }
-
-    // 토수상쟁 (Earth vs Water)
-    if counts[Element::Earth.index() as usize] >= 2 && counts[Element::Water.index() as usize] >= 2 {
-        return Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Tonggwan,
-            element: Element::Metal,
-            reason: "토(土)와 수(水)가 대립하고 있어 이를 유통시키는 금(金)이 필요함".to_string(),
-        });
-    }
-
     None
 }
 
@@ -328,5 +339,29 @@ impl FourPillars {
     /// 용신 분석
     pub fn yongshin(&self) -> YongshinAnalysis {
         YongshinAnalysis::from_pillars(self)
+    }
+}
+
+/// 억부용신 결정 이유 상세화
+fn get_eokbu_reason(strength: &StrengthAnalysis, eokbu_element: Element) -> String {
+    match strength.strength_type {
+        StrengthType::Weak => {
+            format!("일간이 신약하여 이를 돕는 인성/비겁인 {}가 필요함", eokbu_element.hangul())
+        },
+        StrengthType::Strong => {
+            let yinxing = strength.deuk_se.yinxing_count as f32;
+            let bijie = strength.deuk_se.bijie_count as f32;
+            
+            if yinxing > bijie * 1.5 {
+                format!("인성(印星) 과다로 신강하므로, 인성을 극하는 재성({})을 쓰는 용재파인(用財破印)이 필요함", eokbu_element.hangul())
+            } else if bijie > yinxing * 1.5 {
+                format!("비겁(比劫) 과다로 신강하므로, 비겁을 제어하는 관성({})을 쓰는 관살제겁(官殺制劫)이 필요함", eokbu_element.hangul())
+            } else {
+                format!("일간이 신강하여 그 기운을 설기(泄氣)시키는 식상({})이 필요함 (설기생재)", eokbu_element.hangul())
+            }
+        },
+        StrengthType::Balanced => {
+            format!("일간이 중화되어 균형을 유지하는 {}가 필요함", eokbu_element.hangul())
+        }
     }
 }

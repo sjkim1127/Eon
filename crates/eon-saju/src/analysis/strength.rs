@@ -20,7 +20,7 @@ use crate::core::branch::EarthlyBranch;
 use crate::core::element::Element;
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
-use crate::core::twelve_stages::TwelveStage;
+use crate::analysis::relationships::RelationshipAnalysis;
 
 /// 위치별 가중치 (110점법)
 pub const WEIGHT_MONTH_BRANCH: f32 = 3.5; // 월지 (35점)
@@ -135,8 +135,10 @@ pub struct DeukJi {
     pub root_score: f32,
     /// 통근 위치들
     pub root_positions: Vec<String>,
-    /// 강한 12운성 개수 (장생, 관대, 건록, 제왕)
+    /// 강한 12운성 개수 (A급 또는 B급)
     pub strong_stage_count: u8,
+    /// 12운성 가중치 합계 (A급=1.0, B급=0.5, C급=0.0)
+    pub stage_weight_sum: f32,
 }
 
 impl DeukJi {
@@ -161,11 +163,15 @@ impl DeukJi {
         let mut root_score = 0.0;
         let mut root_positions = Vec::new();
         let mut strong_stage_count = 0;
+        let mut stage_weight_sum = 0.0_f32;
         
-        // 충돌이 발생한 위치 목록 추출
-        let clashed_positions: Vec<&String> = relations.branch_clashes.iter()
-            .flat_map(|(_, p1, p2)| vec![p1, p2])
-            .collect();
+        // 충돌 정보를 위치별로 매핑 (충 종류 포함)
+        use std::collections::HashMap;
+        let mut clash_info: HashMap<&str, &crate::analysis::relationships::BranchClash> = HashMap::new();
+        for (clash, pos1, pos2) in &relations.branch_clashes {
+            clash_info.insert(pos1.as_str(), clash);
+            clash_info.insert(pos2.as_str(), clash);
+        }
         
         for (name, branch) in &branches {
             // 위치별 기본 가중치
@@ -175,12 +181,16 @@ impl DeukJi {
                 _ => WEIGHT_OTHER_BRANCH, // 년지, 시지
             };
             
-            // 충(Clash) 발생 시 가중치 반감 (뿌리 손상)
-            let is_clashed = clashed_positions.iter().any(|pos| *pos == *name);
-            let weight = if is_clashed {
-                base_weight * 0.5
+            // 충(Clash) 발생 시 충 종류에 따른 차등 감산율 적용
+            // - 왕지충(子午, 卯酉): 70% 손상
+            // - 생지충(寅申, 巳亥): 50% 손상
+            // - 고지충(丑未, 辰戌): 20% 손상 (붕토 효과)
+            let (weight, clash_label) = if let Some(clash) = clash_info.get(*name) {
+                let damage = clash.damage_ratio();
+                let adjusted = base_weight * (1.0 - damage);
+                (adjusted, Some(format!("{} ({})", name, clash.clash_type().hangul())))
             } else {
-                base_weight
+                (base_weight, None)
             };
 
             // 지장간(Hidden Stems) 전체를 확인하여 통근 여부 판단
@@ -191,32 +201,32 @@ impl DeukJi {
             if has_root {
                 root_count += 1;
                 root_score += weight;
-                if is_clashed {
-                    root_positions.push(format!("{} (충)", name));
+                if let Some(label) = clash_label {
+                    root_positions.push(label);
                 } else {
                     root_positions.push(name.to_string());
                 }
             }
             
-            // 12운성 확인
+            // 12운성 확인 및 가중치 계산
             let stage = crate::core::twelve_stages::calculate_twelve_stage(
                 pillars.day_master(), 
                 *branch
             );
             
-            if matches!(stage, 
-                TwelveStage::Changsheng | 
-                TwelveStage::Guandai | 
-                TwelveStage::Jianlu | 
-                TwelveStage::Diwang
-            ) {
+            // 12운성 가중치 누적 (A급=1.0, B급=0.5, C급=0.0)
+            stage_weight_sum += stage.root_weight();
+            
+            // 강한 12운성 개수 (A급 또는 B급)
+            if stage.is_strong() {
                 strong_stage_count += 1;
             }
         }
         
-        // 득지 판정: 가중치 점수 합계가 3.0점 이상이거나, 강한 12운성이 하나 이상 있으면 득지
-        // (충으로 인해 점수가 깎여서 득지 실패할 수 있음)
-        let acquired = root_score >= 3.0 || strong_stage_count >= 1;
+        // 득지 판정: 
+        // 1) 12운성 가중치 합이 1.0 이상 (A급 1개 또는 B급 2개 이상)
+        // 2) 또는 통근 점수가 3.0 이상
+        let acquired = stage_weight_sum >= 1.0 || root_score >= 3.0;
         
         Self {
             acquired,
@@ -224,6 +234,7 @@ impl DeukJi {
             root_score,
             root_positions,
             strong_stage_count,
+            stage_weight_sum,
         }
     }
 }
@@ -310,14 +321,6 @@ impl DeukSe {
             pillars.year.stem,
             pillars.month.stem,
             pillars.hour.stem,
-        ];
-        
-        // 지지
-        let branches = [
-            pillars.year.branch,
-            pillars.month.branch,
-            pillars.day.branch,
-            pillars.hour.branch,
         ];
         
         let mut support_score = 0.0f32;
@@ -412,8 +415,6 @@ pub struct StrengthAnalysis {
     /// 신강/신약 점수 (0-100, 50 기준)
     pub strength_score: f32,
 }
-
-use crate::analysis::relationships::RelationshipAnalysis;
 
 impl StrengthAnalysis {
     /// 사주로부터 신강신약 분석

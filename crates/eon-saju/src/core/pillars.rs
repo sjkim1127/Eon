@@ -155,9 +155,14 @@ impl FourPillars {
         // [야자시 처리]
         // use_night_rat_hour == false 이고 시간이 23시 이상이면 다음날로 간주하여 일주 계산
         let (calc_year, calc_month, calc_day) = if !input.use_night_rat_hour && adj_hour >= 23 {
-            let dt = NaiveDate::from_ymd_opt(adj_year, adj_month, adj_day)
-                .unwrap_or_else(|| NaiveDate::from_ymd_opt(adj_year, 1, 1).unwrap()); // Fallback
-            let next_day = dt + Duration::days(1);
+            // 안전한 날짜 생성: 유효하지 않으면 월초로 fallback
+            let base_date = NaiveDate::from_ymd_opt(adj_year, adj_month, adj_day)
+                .or_else(|| NaiveDate::from_ymd_opt(adj_year, adj_month, 1))
+                .or_else(|| NaiveDate::from_ymd_opt(adj_year, 1, 1))
+                .ok_or_else(|| SajuError::InvalidDateTime(
+                    format!("Cannot create date: {}-{}-{}", adj_year, adj_month, adj_day)
+                ))?;
+            let next_day = base_date + Duration::days(1);
             (next_day.year(), next_day.month(), next_day.day())
         } else {
             (adj_year, adj_month, adj_day)

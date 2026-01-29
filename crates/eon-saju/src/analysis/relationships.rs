@@ -376,6 +376,41 @@ impl SixCombination {
 // 지지 충 (沖)
 // ============================================
 
+/// 충(沖)의 종류에 따른 분류
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum ClashType {
+    /// 왕지충(旺地沖) - 子午, 卯酉
+    /// 순수 오행 충돌로 뿌리 손상이 가장 큼
+    Cardinal,
+    /// 생지충(生地沖) - 寅申, 巳亥
+    /// 복합 지장간으로 일부만 손상
+    Growth,
+    /// 고지충(庫地沖/붕충) - 丑未, 辰戌
+    /// 토(土)끼리 충, 붕토 효과로 손상 적음
+    Storage,
+}
+
+impl ClashType {
+    /// 한글 이름
+    pub const fn hangul(&self) -> &'static str {
+        match self {
+            Self::Cardinal => "왕지충",
+            Self::Growth => "생지충",
+            Self::Storage => "고지충",
+        }
+    }
+
+    /// 뿌리 손상율 (0.0 ~ 1.0)
+    /// 이 비율만큼 통근 가중치가 감산됨
+    pub const fn damage_ratio(&self) -> f32 {
+        match self {
+            Self::Cardinal => 0.70,  // 왕지충: 70% 손상
+            Self::Growth => 0.50,    // 생지충: 50% 손상
+            Self::Storage => 0.20,   // 고지충: 20% 손상 (붕토 효과)
+        }
+    }
+}
+
 /// 지지충의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum BranchClash {
@@ -406,6 +441,23 @@ impl BranchClash {
             (Si, Hai) | (Hai, Si) => Some(Self::SiHai),
             _ => None,
         }
+    }
+
+    /// 충의 종류 (왕지충, 생지충, 고지충)
+    pub const fn clash_type(&self) -> ClashType {
+        match self {
+            // 왕지충: 子午(수화), 卯酉(목금) - 순수 오행 정충
+            Self::ZiWu | Self::MaoYou => ClashType::Cardinal,
+            // 생지충: 寅申(목금), 巳亥(화수) - 복합 지장간
+            Self::YinShen | Self::SiHai => ClashType::Growth,
+            // 고지충: 丑未, 辰戌 - 토끼리 붕충
+            Self::ChouWei | Self::ChenXu => ClashType::Storage,
+        }
+    }
+
+    /// 뿌리 손상율 (충 종류에 따른 차등 감산)
+    pub const fn damage_ratio(&self) -> f32 {
+        self.clash_type().damage_ratio()
     }
 
     pub const fn hangul(&self) -> &'static str {

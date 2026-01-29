@@ -2,7 +2,7 @@
 //!
 //! 24절기 중 12절기를 사용하여 월주를 결정합니다.
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, FixedOffset, TimeZone};
 use serde::{Deserialize, Serialize};
 
 /// 12절기 (월 구분용)
@@ -141,25 +141,57 @@ pub fn get_solar_term_time(dt: DateTime<Utc>, term: SolarTerm) -> DateTime<Utc> 
 }
 
 
-/// 양력 날짜로부터 해당 월의 절기 지지 인덱스 계산
+/// 양력 날짜/시각 + Timezone offset으로부터 해당 월의 절기 지지 인덱스 계산
 /// 
-/// 절기를 기준으로 월주의 지지를 결정합니다.
-/// 예: 2월 4일(입춘) 이전은 丑월, 이후는 寅월
-/// 양력 날짜/시각으로부터 해당 월의 절기 지지 인덱스 계산
+/// # Arguments
+/// * `year` - 양력 년도
+/// * `month` - 양력 월 (1-12)
+/// * `day` - 양력 일 (1-31)
+/// * `hour` - 시 (0-23)
+/// * `minute` - 분 (0-59)
+/// * `tz_offset_hours` - 시간대 오프셋 (예: KST=9, JST=9, CST=8, UTC=0)
 /// 
-/// 절기를 기준으로 월주의 지지를 결정합니다.
-pub fn get_month_branch_index(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> u8 {
-    use chrono::TimeZone;
-    // 안전한 날짜 생성: 유효하지 않은 날짜인 경우 기본값 처리
-    let dt = match Utc.with_ymd_and_hms(year, month, day, hour, minute, 0) {
-        chrono::LocalResult::Single(d) => d,
-        chrono::LocalResult::Ambiguous(d, _) => d,
-        _ => Utc.with_ymd_and_hms(year, month, 1, hour, minute, 0).unwrap(), // 월의 1일은 항상 유효함
+/// # Returns
+/// 월지 인덱스 (0=子, 1=丑, 2=寅, ...)
+pub fn get_month_branch_index(
+    year: i32, 
+    month: u32, 
+    day: u32, 
+    hour: u32, 
+    minute: u32,
+    tz_offset_hours: i32,
+) -> Result<u8, CalendarError> {
+    // Timezone offset 적용하여 FixedOffset 생성
+    let offset_secs = tz_offset_hours * 3600;
+    let tz = FixedOffset::east_opt(offset_secs)
+        .ok_or_else(|| CalendarError::InvalidTimezone(tz_offset_hours))?;
+    
+    // 로컬 시간 생성 후 UTC로 변환
+    let local_dt = tz.with_ymd_and_hms(year, month, day, hour, minute, 0);
+    let dt_utc = match local_dt {
+        chrono::LocalResult::Single(d) => d.with_timezone(&Utc),
+        chrono::LocalResult::Ambiguous(d, _) => d.with_timezone(&Utc),
+        chrono::LocalResult::None => {
+            return Err(CalendarError::InvalidDateTime { year, month, day, hour, minute });
+        }
     };
-    get_month_branch_index_from_dt(dt)
+    
+    Ok(get_month_branch_index_from_dt(dt_utc))
 }
 
-/// DateTime으로부터 해당 월의 절기 지지 인덱스 계산
+/// 양력 날짜/시각으로부터 해당 월의 절기 지지 인덱스 계산 (KST 기본값)
+/// 
+/// **⚠️ Deprecated:** 명시적 timezone 지정을 위해 `get_month_branch_index()`를 사용하세요.
+/// 
+/// 이 함수는 입력값을 **KST(UTC+9)**로 간주합니다.
+#[deprecated(since = "0.2.0", note = "Use get_month_branch_index() with explicit timezone")]
+pub fn get_month_branch_index_kst(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> u8 {
+    get_month_branch_index(year, month, day, hour, minute, 9).unwrap_or(2) // 기본값 寅월
+}
+
+/// DateTime<Utc>로부터 해당 월의 절기 지지 인덱스 계산
+/// 
+/// 이 함수는 이미 UTC로 변환된 시간을 받으므로 timezone 문제가 없습니다.
 pub fn get_month_branch_index_from_dt(dt: DateTime<Utc>) -> u8 {
     use eon_astro::AstroEngine;
     
@@ -175,6 +207,30 @@ pub fn get_month_branch_index_from_dt(dt: DateTime<Utc>) -> u8 {
     // 해당 절기가 시작하는 월의 지지 인덱스 (寅=2부터)
     SolarTerm::from_index(term_12_idx as i32).month_branch_index()
 }
+
+/// 달력 관련 에러
+#[derive(Debug, Clone)]
+pub enum CalendarError {
+    /// 유효하지 않은 날짜/시간
+    InvalidDateTime { year: i32, month: u32, day: u32, hour: u32, minute: u32 },
+    /// 유효하지 않은 시간대
+    InvalidTimezone(i32),
+}
+
+impl std::fmt::Display for CalendarError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidDateTime { year, month, day, hour, minute } => {
+                write!(f, "Invalid datetime: {}-{:02}-{:02} {:02}:{:02}", year, month, day, hour, minute)
+            }
+            Self::InvalidTimezone(offset) => {
+                write!(f, "Invalid timezone offset: {} hours", offset)
+            }
+        }
+    }
+}
+
+impl std::error::Error for CalendarError {}
 
 #[cfg(test)]
 mod tests {
@@ -193,10 +249,34 @@ mod tests {
     }
 
     #[test]
-    fn test_get_month_branch_index() {
-        // 2월 3일 = 입춘 전 = 丑월(1)
-        assert_eq!(get_month_branch_index(2024, 2, 3, 12, 0), 1);
-        // 2월 5일 = 입춘 후 = 寅월(2)
-        assert_eq!(get_month_branch_index(2024, 2, 5, 12, 0), 2);
+    fn test_get_month_branch_index_kst() {
+        // 2024년 2월 3일 KST 12:00 = 입춘 전 = 丑월(1)
+        let result = get_month_branch_index(2024, 2, 3, 12, 0, 9).unwrap();
+        assert_eq!(result, 1);
+        
+        // 2024년 2월 5일 KST 12:00 = 입춘 후 = 寅월(2)
+        let result = get_month_branch_index(2024, 2, 5, 12, 0, 9).unwrap();
+        assert_eq!(result, 2);
+    }
+
+    #[test]
+    fn test_timezone_boundary() {
+        // 2024년 2월 4일 입춘 시각: 17:27 KST (08:27 UTC)
+        
+        // KST 17:00 (입춘 전) = 丑월
+        let before = get_month_branch_index(2024, 2, 4, 17, 0, 9).unwrap();
+        assert_eq!(before, 1, "입춘 직전(17:00)은 丑월이어야 함");
+        
+        // KST 18:00 (입춘 후) = 寅월
+        let after = get_month_branch_index(2024, 2, 4, 18, 0, 9).unwrap();
+        assert_eq!(after, 2, "입춘 직후(18:00)는 寅월이어야 함");
+        
+        // UTC로 같은 시각 테스트 (08:00 UTC = 17:00 KST, 입춘 전)
+        let utc_before = get_month_branch_index(2024, 2, 4, 8, 0, 0).unwrap();
+        assert_eq!(utc_before, 1, "UTC 08:00 (입춘 전)은 丑월이어야 함");
+        
+        // UTC 09:00 = KST 18:00 (입춘 후)
+        let utc_after = get_month_branch_index(2024, 2, 4, 9, 0, 0).unwrap();
+        assert_eq!(utc_after, 2, "UTC 09:00 (입춘 후)은 寅월이어야 함");
     }
 }

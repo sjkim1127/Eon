@@ -60,9 +60,7 @@ fn test_case_2_midnight_boundary_hai() {
 
 #[test]
 fn test_case_2_midnight_boundary_zi_early() {
-    // 현재 구현: 23:00부터 자시(子時)
-    // 참고: "야자시" 방식에서는 23:30부터를 다음날 자시로 봄
-    //       "조자시" 방식에서는 23:00부터를 자시로 봄 (현재 구현)
+    // 현재 구현: 기본값 use_night_rat_hour = false → 23시에 일주 변경(조자시)
     let input = SajuInput::new_solar(2023, 1, 1, 23, 0);
     let pillars = FourPillars::calculate(&input).unwrap();
     
@@ -70,8 +68,8 @@ fn test_case_2_midnight_boundary_zi_early() {
         pillars.hour.branch.hanja(), 
         pillars.day.branch.hanja());
     
-    // 현재 from_hour 구현: 23시는 子時
-    assert_eq!(pillars.hour.branch, EarthlyBranch::Zi, "23:00는 子時여야 함 (조자시 방식)");
+    // 23시는 子時
+    assert_eq!(pillars.hour.branch, EarthlyBranch::Zi, "23:00는 子時여야 함");
 }
 
 #[test]
@@ -86,6 +84,44 @@ fn test_case_2_midnight_boundary_zi_late() {
     
     // 00:00-00:59는 자시(子)
     assert_eq!(pillars.hour.branch, EarthlyBranch::Zi, "00:01는 子時여야 함");
+}
+
+/// 야자시(夜子時) vs 조자시(朝子時) 모드 비교 테스트
+/// 
+/// - 야자시(夜子時): 23:00~23:59를 당일 늦은 밤으로 보아 일주 유지
+/// - 조자시(朝子時): 23:00~23:59를 다음날 자시로 보아 일주 변경 (기본값)
+#[test]
+fn test_case_2_night_rat_hour_comparison() {
+    // 2023-01-01 23:30
+    
+    // 1) 조자시 모드 (기본값) - 일주가 다음날(1/2일)로 변경
+    let jojasiinput = SajuInput::new_solar(2023, 1, 1, 23, 30);
+    let jojasi_pillars = FourPillars::calculate(&jojasiinput).unwrap();
+    
+    // 2) 야자시 모드 - 일주 유지(1/1일 그대로)
+    let yajasi_input = SajuInput::new_solar(2023, 1, 1, 23, 30)
+        .with_night_rat_hour(true);
+    let yajasi_pillars = FourPillars::calculate(&yajasi_input).unwrap();
+    
+    println!("=== 23:30 야자시 vs 조자시 비교 ===");
+    println!("조자시(기본): 일주 {} 시주 {}", 
+        jojasi_pillars.day.hangul(), jojasi_pillars.hour.hangul());
+    println!("야자시: 일주 {} 시주 {}", 
+        yajasi_pillars.day.hangul(), yajasi_pillars.hour.hangul());
+    
+    // 두 모드 모두 시주는 子時
+    assert_eq!(jojasi_pillars.hour.branch, EarthlyBranch::Zi, "조자시: 시주 子");
+    assert_eq!(yajasi_pillars.hour.branch, EarthlyBranch::Zi, "야자시: 시주 子");
+    
+    // 일주는 두 모드에서 다름 (조자시는 하루 뒤)
+    assert_ne!(jojasi_pillars.day, yajasi_pillars.day, 
+        "23시에 야자시/조자시 모드의 일주가 달라야 함");
+    
+    // 조자시의 일주가 야자시보다 1일 늦음 (60갑자에서 다음 간지)
+    let yajasi_day_idx = yajasi_pillars.day.index();
+    let jojasi_day_idx = jojasi_pillars.day.index();
+    assert_eq!((yajasi_day_idx + 1) % 60, jojasi_day_idx, 
+        "조자시 일주는 야자시 일주의 다음 간지여야 함");
 }
 
 // ============================================
@@ -301,4 +337,37 @@ fn test_user_saju_complete() {
     assert_eq!(pillars.day.branch, EarthlyBranch::Xu, "일지 戌");
     assert_eq!(pillars.hour.stem, HeavenlyStem::Ding, "시간 丁");
     assert_eq!(pillars.hour.branch, EarthlyBranch::Hai, "시지 亥");
+}
+#[test]
+fn test_case_6_advanced_analysis_refinements() {
+    // 1. 충(Clash) 가중치 세분화 테스트
+    let cardinal_input = SajuInput::new_solar(2020, 6, 21, 0, 0);
+    let _cardinal_strength = FourPillars::calculate(&cardinal_input).unwrap().strength();
+    
+    let storage_input = SajuInput::new_solar(2021, 7, 15, 0, 0);
+    let storage_strength = FourPillars::calculate(&storage_input).unwrap().strength();
+    
+    // 고지충(丑未) 발생 시 라벨 확인
+    assert!(storage_strength.deuk_ji.root_positions.iter().any(|p| p.contains("고지충")));
+    
+    // 2. 신강 사주 가중치 및 억부용신 세분화 테스트
+    let strong_input = SajuInput::new_solar(1978, 6, 3, 12, 0); 
+    let s_pillars = FourPillars::calculate(&strong_input).unwrap();
+    let s_strength = s_pillars.strength();
+    let s_yongshin = s_pillars.yongshin();
+    
+    // 득지 가중치 합계 확인 (A급=1.0, B급=0.5 등 누적)
+    assert!(s_strength.deuk_ji.stage_weight_sum >= 2.0);
+    
+    // 억부용신 상세 이유 확인
+    let eokbu = s_yongshin.recommendations.iter()
+        .find(|r| r.yongshin_type == eon_saju::analysis::yongshin::YongshinType::Eokbu)
+        .expect("억부용신이 있어야 함");
+        
+    assert!(
+        eokbu.reason.contains("용재파인") || 
+        eokbu.reason.contains("관살제겁") || 
+        eokbu.reason.contains("설기"),
+        "억부 이유에 전문 용어가 포함되어야 함: {}", eokbu.reason
+    );
 }

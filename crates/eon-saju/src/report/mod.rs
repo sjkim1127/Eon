@@ -12,7 +12,6 @@ use crate::analysis::{
     analytics::GoldenTime,
     structure::StructureAnalysis,
 };
-use crate::engine::vm::LifeFrame;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SajuReport {
