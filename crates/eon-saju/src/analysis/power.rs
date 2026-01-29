@@ -48,7 +48,6 @@ pub struct IntegratedAnalysis {
 impl IntegratedAnalysis {
     pub fn calculate(pillars: &FourPillars, options: AnalysisOptions) -> Self {
         let dm = pillars.day_master();
-        let rel = pillars.relationships();
         let month_branch = pillars.month.branch;
 
         // 1. 가중치 설정
@@ -66,93 +65,61 @@ impl IntegratedAnalysis {
         let mut el_scores = [0.0f32; 5];
         let mut tg_scores = [0.0f32; 10];
 
-        // 기둥 데이터 배열화
-        let stems = [pillars.year.stem, pillars.month.stem, pillars.day.stem, pillars.hour.stem];
-        let branches = [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch];
+        // 실질 오행 맵 (합화 반영 여부에 따라 결정)
+        let eff_map = if options.apply_transform {
+            pillars.effective_elements()
+        } else {
+            let mut map = [(Element::Wood, Element::Wood); 8];
+            let stems = [pillars.year.stem, pillars.month.stem, pillars.day.stem, pillars.hour.stem];
+            let branches = [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch];
+            for i in 0..4 {
+                map[i] = (stems[i].element(), stems[i].element());
+                map[i+4] = (branches[i].element(), branches[i].element());
+            }
+            map
+        };
 
-        // 2-1. 천간 처리
+        // 2-1. 천간 처리 (0~3)
+        let stems = [pillars.year.stem, pillars.month.stem, pillars.day.stem, pillars.hour.stem];
         for i in 0..4 {
             let stem = stems[i];
-            let mut element = stem.element();
+            let (_, effective_el) = eff_map[i];
             let weight = weights[i];
 
-            // 합화 적용
-            if options.apply_transform {
-                for (combo, p1, p2) in &rel.stem_combinations {
-                    if (i == 0 && (p1 == "년간" || p2 == "년간")) ||
-                       (i == 1 && (p1 == "월간" || p2 == "월간")) ||
-                       (i == 2 && (p1 == "일간" || p2 == "일간")) ||
-                       (i == 3 && (p1 == "시간" || p2 == "시간")) {
-                        // 합화 조건 (월령 득함) 확인은 생략하거나 이미 transformations에서 계산된 결과 사용
-                        // 여기서는 단순 합화 오행을 바로 적용
-                        element = combo.transformed_element();
-                    }
-                }
-            }
-
-            el_scores[element.index() as usize] += weight;
+            el_scores[effective_el.index() as usize] += weight;
             
             // 십성 계산
-            let god = if options.apply_transform && element != stem.element() {
-                // 합화된 경우, 변한 오행과 일간의 관계 (음양은 원본 유지 또는 합화 오행 특징 적용)
-                // 만세력 로직에 따라 합화된 오행을 직접 십성으로 변환
-                TenGod::from_stems(dm, get_dummy_stem(element, stem.polarity()))
+            let god = if effective_el != stem.element() {
+                // 합화된 경우
+                TenGod::from_stems(dm, get_dummy_stem(effective_el, stem.polarity()))
             } else {
                 TenGod::from_stems(dm, stem)
             };
             tg_scores[god.index()] += weight;
         }
 
-        // 2-2. 지지 처리
+        // 2-2. 지지 처리 (4~7)
+        let branches = [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch];
         for i in 0..4 {
             let branch = branches[i];
-            let mut element = branch.element();
+            let (_, mut effective_el) = eff_map[i + 4];
             let weight = weights[i + 4];
 
-            // 조후 보정 (Climate) - 예: 여름의 미토는 화로 취급
+            // 조후 보정 (Climate) - 예: 여름의 미토는 화로 취급 (합화되지 않은 경우에만 또는 보정이 우선일 수 있음)
+            // 여기서는 보정이 합화보다 시급한 물리적 변동으로 간주함
             if options.apply_correction {
-                element = apply_climate_correction(branch, month_branch);
+                effective_el = apply_climate_correction(branch, month_branch);
             }
 
-            // 지지 합화 (삼합 및 방합)
-            if options.apply_transform {
-                // 삼합 체크
-                for tri in &rel.triple_combinations {
-                    let combo_branches = match tri {
-                        crate::analysis::relationships::TripleCombination::YinWuXu => vec![EarthlyBranch::Yin, EarthlyBranch::Wu, EarthlyBranch::Xu],
-                        crate::analysis::relationships::TripleCombination::ShenZiChen => vec![EarthlyBranch::Shen, EarthlyBranch::Zi, EarthlyBranch::Chen],
-                        crate::analysis::relationships::TripleCombination::SiYouChou => vec![EarthlyBranch::Si, EarthlyBranch::You, EarthlyBranch::Chou],
-                        crate::analysis::relationships::TripleCombination::HaiMaoWei => vec![EarthlyBranch::Hai, EarthlyBranch::Mao, EarthlyBranch::Wei],
-                    };
-                    if combo_branches.contains(&branch) {
-                        element = tri.element();
-                    }
-                }
-                // 방합 체크
-                for sea in &rel.seasonal_combinations {
-                    let combo_branches = match sea {
-                        crate::analysis::relationships::SeasonalCombination::YinMaoChen => vec![EarthlyBranch::Yin, EarthlyBranch::Mao, EarthlyBranch::Chen],
-                        crate::analysis::relationships::SeasonalCombination::SiWuWei => vec![EarthlyBranch::Si, EarthlyBranch::Wu, EarthlyBranch::Wei],
-                        crate::analysis::relationships::SeasonalCombination::ShenYouXu => vec![EarthlyBranch::Shen, EarthlyBranch::You, EarthlyBranch::Xu],
-                        crate::analysis::relationships::SeasonalCombination::HaiZiChou => vec![EarthlyBranch::Hai, EarthlyBranch::Zi, EarthlyBranch::Chou],
-                    };
-                    if combo_branches.contains(&branch) {
-                        element = sea.element();
-                    }
-                }
-            }
-
-            el_scores[element.index() as usize] += weight;
+            el_scores[effective_el.index() as usize] += weight;
             
             // 지지 십성
-            let god = TenGod::from_stems(dm, branch.primary_stem()); // 정기 기준
-            // 만약 합화되었다면 십성도 변경
-            let final_tg = if element != branch.element() {
-                TenGod::from_stems(dm, get_dummy_stem(element, branch.primary_stem().polarity()))
+            let god = if effective_el != branch.element() {
+                TenGod::from_stems(dm, get_dummy_stem(effective_el, branch.primary_stem().polarity()))
             } else {
-                god
+                TenGod::from_stems(dm, branch.primary_stem())
             };
-            tg_scores[final_tg.index()] += weight;
+            tg_scores[god.index()] += weight;
         }
 
         // 3. 결과 포맷팅

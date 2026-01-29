@@ -1,3 +1,4 @@
+pub mod config;
 pub mod stem;
 pub mod branch;
 pub mod element;

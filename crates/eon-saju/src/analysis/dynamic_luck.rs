@@ -194,12 +194,8 @@ impl DynamicLuckAnalysis {
 
         // 삼합/방합 완성 체크
         let all_b: Vec<_> = branches.iter().map(|(_, b)| *b).collect();
-        if let Some(t) = TripleCombination::check(&all_b) {
-            analysis.triple_combinations.push(t);
-        }
-        if let Some(s) = SeasonalCombination::check(&all_b) {
-            analysis.seasonal_combinations.push(s);
-        }
+        analysis.triple_combinations = TripleCombination::check(&all_b);
+        analysis.seasonal_combinations = SeasonalCombination::check(&all_b);
 
         analysis
     }

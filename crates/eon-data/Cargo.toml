@@ -11,3 +11,8 @@ eon-core = { path = "../eon-core" }
 chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+bincode = "1.3"
+once_cell = "1.18"
+
+[dev-dependencies]
+eon-astro = { path = "../eon-astro" }

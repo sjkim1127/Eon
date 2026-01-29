@@ -22,3 +22,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
 swiss-eph = "0.2"
+bincode = "1.3"
+once_cell = "1.18"

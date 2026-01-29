@@ -10,7 +10,7 @@ use crate::core::element::Element;
 use chrono::{DateTime, Utc, Datelike, NaiveDate, Duration, TimeZone, Timelike};
 
 /// 사주 계산 입력
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SajuInput {
     /// 년도 (양력)
     pub year: i32,
@@ -28,12 +28,18 @@ pub struct SajuInput {
     pub is_leap_month: bool,
     /// 경도 시차 (분 단위, 예: 안산 -33)
     pub longitude_offset_m: i32,
+    /// 경도 (Longitude, 진태양시 계산용, 예: 서울 127.0)
+    pub longitude: Option<f64>,
+    /// 위도 (Latitude, 조후 보정용)
+    pub latitude: Option<f64>,
     /// 시간대 오프셋 (시간 단위, 예: KST = 9.0)
     pub timezone_offset_h: f32,
     /// 야자시(夜子時) 적용 여부
     /// - true: 23:00~24:00를 당일의 야자시로 인정 (일주 유지)
     /// - false: 23:00~24:00를 다음 날의 자시(명자시)로 간주 (일주 변경) - 기본값
     pub use_night_rat_hour: bool,
+    /// 성별 (대운 순역 방향 결정용)
+    pub gender: eon_core::Gender,
 }
 
 impl SajuInput {
@@ -48,8 +54,30 @@ impl SajuInput {
             is_lunar: false,
             is_leap_month: false,
             longitude_offset_m: 0,
+            longitude: None,
+            latitude: None,
             timezone_offset_h: 9.0, // 기본값 KST
             use_night_rat_hour: false, // 기본적으로 자시=새날 적용
+            gender: eon_core::Gender::Male, // 기본값 남성
+        }
+    }
+
+    /// 경도와 위도를 포함한 입력 생성 (진태양시 보정용)
+    pub fn new_solar_at(year: i32, month: u32, day: u32, hour: u32, minute: u32, lon: f64, lat: f64) -> Self {
+        Self {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            is_lunar: false,
+            is_leap_month: false,
+            longitude_offset_m: 0,
+            longitude: Some(lon),
+            latitude: Some(lat),
+            timezone_offset_h: 9.0,
+            use_night_rat_hour: false,
+            gender: eon_core::Gender::Male,
         }
     }
 
@@ -64,8 +92,22 @@ impl SajuInput {
             is_lunar: false,
             is_leap_month: false,
             longitude_offset_m: offset_m,
+            longitude: None,
+            latitude: None,
             timezone_offset_h: 9.0, // 기본값 KST
             use_night_rat_hour: false,
+            gender: eon_core::Gender::Male,
+        }
+    }
+
+    /// 인성적인 경도 기반 시차(분) 반환
+    /// 한국 표준시(135도) 기준, 서울(127도)은 -8도 차이 -> -32분
+    pub fn get_longitude_correction_minutes(&self) -> i32 {
+        if let Some(lon) = self.longitude {
+            let std_meridian = self.timezone_offset_h as f64 * 15.0;
+            ((lon - std_meridian) * 4.0).round() as i32
+        } else {
+            self.longitude_offset_m
         }
     }
 
@@ -80,9 +122,18 @@ impl SajuInput {
             is_lunar: true,
             is_leap_month: is_leap,
             longitude_offset_m: 0,
+            longitude: None,
+            latitude: None,
             timezone_offset_h: 9.0, // 기본값 KST
             use_night_rat_hour: false,
+            gender: eon_core::Gender::Male,
         }
+    }
+    
+    /// 성별 설정
+    pub fn with_gender(mut self, gender: eon_core::Gender) -> Self {
+        self.gender = gender;
+        self
     }
     
     /// 야자시 옵션 설정
@@ -93,7 +144,7 @@ impl SajuInput {
 }
 
 /// 사주 팔자(四柱八字)
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FourPillars {
     /// 년주(年柱)
     pub year: GanZi,
@@ -105,6 +156,10 @@ pub struct FourPillars {
     pub hour: GanZi,
     /// 기준 시각 (UTC)
     pub birth_time: DateTime<Utc>,
+    /// 성별
+    pub gender: eon_core::Gender,
+    /// 원시 입력 데이터 (운세 재계산용)
+    pub raw_input: SajuInput,
 }
 
 impl FourPillars {
@@ -135,12 +190,13 @@ impl FourPillars {
             .ok_or_else(|| SajuError::InvalidDateTime(format!("Absolute DT error: {}-{}-{}", solar_year, solar_month, solar_day)))?;
 
         // 2. 지역 시차 보정 (True Solar Time 계산) - 일주/시주용
-        let (adj_year, adj_month, adj_day, adj_hour, _adj_minute) = if input.longitude_offset_m != 0 {
+        let lon_correction = input.get_longitude_correction_minutes();
+        let (adj_year, adj_month, adj_day, adj_hour, _adj_minute) = if lon_correction != 0 {
             let dt = NaiveDate::from_ymd_opt(solar_year, solar_month, solar_day)
                 .and_then(|d| d.and_hms_opt(input.hour, input.minute, 0))
                 .ok_or_else(|| SajuError::InvalidDateTime(format!("{}-{}-{} {}:{}", solar_year, solar_month, solar_day, input.hour, input.minute)))?;
             
-            let adjusted_dt = dt + Duration::minutes(input.longitude_offset_m as i64);
+            let adjusted_dt = dt + Duration::minutes(lon_correction as i64);
             (adjusted_dt.year(), adjusted_dt.month(), adjusted_dt.day(), adjusted_dt.hour(), adjusted_dt.minute())
         } else {
             (solar_year, solar_month, solar_day, input.hour, input.minute)
@@ -177,6 +233,8 @@ impl FourPillars {
             day: day_pillar,
             hour: hour_pillar,
             birth_time: dt_absolute_utc,
+            gender: input.gender,
+            raw_input: input.clone(),
         })
     }
 

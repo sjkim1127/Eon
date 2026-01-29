@@ -10,6 +10,12 @@ use crate::analysis::dynamic_luck::DynamicLuckAnalysis;
 use crate::analysis::yongshin::YongshinAnalysis;
 use crate::core::element::Element;
 use crate::engine::signatures::{LuckSignature, SignatureScanner};
+use crate::analysis::major_luck::MajorLuckAnalysis;
+use crate::analysis::periodic_luck::YearlyLuck;
+use crate::analysis::void::VoidAnalysis;
+use crate::analysis::shinsal::{TwelveShinsal, Gilsin, EvilSpirit};
+use crate::core::twelve_stages::TwelveStage;
+use crate::core::ten_gods::TenGod;
 
 /// Saju Interrupt (하드웨어 예외/인터럽트)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,6 +65,27 @@ impl QiRegisters {
             Element::Water => self.r4_water += value,
         }
     }
+
+    /// 기운의 감쇠 (시간 흐름에 따른 기전 상실 표현)
+    pub fn apply_decay(&mut self, factor: f32) {
+        self.r0_wood *= factor;
+        self.r1_fire *= factor;
+        self.r2_earth *= factor;
+        self.r3_metal *= factor;
+        self.r4_water *= factor;
+    }
+
+    /// 기운의 정규화 (전체 합을 100%로 유지하여 상대적 균형 분석)
+    pub fn normalize(&mut self) {
+        let total = self.r0_wood + self.r1_fire + self.r2_earth + self.r3_metal + self.r4_water;
+        if total > 0.1 {
+            self.r0_wood = (self.r0_wood / total) * 100.0;
+            self.r1_fire = (self.r1_fire / total) * 100.0;
+            self.r2_earth = (self.r2_earth / total) * 100.0;
+            self.r3_metal = (self.r3_metal / total) * 100.0;
+            self.r4_water = (self.r4_water / total) * 100.0;
+        }
+    }
 }
 
 /// 인생의 한 지점(1년 단위)의 시뮬레이션 결과
@@ -84,12 +111,15 @@ pub struct SajuVM {
     pub natal: FourPillars,
     /// 용신 분석 결과 (고정 기준)
     pub yongshin: YongshinAnalysis,
+    /// 공망 분석 결과 (고정 기준)
+    pub void: VoidAnalysis,
 }
 
 impl SajuVM {
     pub fn new(natal: FourPillars) -> Self {
         let yongshin = natal.yongshin();
-        Self { natal, yongshin }
+        let void = natal.void_analysis();
+        Self { natal, yongshin, void }
     }
 
     pub fn step(
@@ -155,15 +185,223 @@ impl SajuVM {
         let assistant_yongshin = self.yongshin.assistant;
         let thermal_index = crate::analysis::yongshin::calculate_thermal_index(&self.natal);
 
+        // 2. 공망(Void) 동적 감지 및 탈공(Escaping Void) 분석
+        // 운에서 들어온 지지가 공망인지 확인
+        for (luck_branch, label) in [
+            (dynamic.major_influence.as_ref().map(|i| i.ganzi.branch), "대운"),
+            (dynamic.yearly_influence.as_ref().map(|i| i.ganzi.branch), "세운"),
+        ] {
+            if let Some(b) = luck_branch {
+                if self.void.void_branches.contains(&b) {
+                    // 공망 발생! 기본적으로 흉(비효율, 헛됨)으로 간주
+                    // 하지만 합(육합, 삼합, 방합)이나 충이 발생하면 '탈공(전실)'되어 공망이 해소됨
+                    
+                    let mut is_escaped = false;
+                    let _b_hangul = b.hangul();
+                    
+                    // 탈공 조건 1: 지지 충
+                    for (_, p1, p2) in &dynamic.combined_relations.branch_clashes {
+                        if p1.contains(label) || p2.contains(label) {
+                            if (p1.contains(label) && self.get_branch_by_path(p1, dynamic) == Some(b)) ||
+                               (p2.contains(label) && self.get_branch_by_path(p2, dynamic) == Some(b)) {
+                                is_escaped = true;
+                                tags.push(format!("탈공:충({})", label));
+                                esil_trace.push_str(&format!("void_escape:{}_clash,restore:10.0; ", label));
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // 탈공 조건 2: 합 (육합, 삼합, 방합)
+                    if !is_escaped {
+                         // 육합 체크
+                        for (_, p1, p2) in &dynamic.combined_relations.six_combinations {
+                            if p1.contains(label) || p2.contains(label) {
+                                is_escaped = true; 
+                                tags.push(format!("탈공:육합({})", label));
+                                break;
+                            }
+                        }
+                        // 삼합/방합 체크 (이미 combined_relations에 포함됨)
+                        if !is_escaped {
+                            for trip in &dynamic.combined_relations.triple_combinations {
+                                if trip.branches().contains(&b) {
+                                    is_escaped = true;
+                                    tags.push(format!("탈공:삼합({})", label));
+                                    break;
+                                }
+                            }
+                        }
+                        if !is_escaped {
+                            for season in &dynamic.combined_relations.seasonal_combinations {
+                                if season.branches().contains(&b) {
+                                    is_escaped = true;
+                                    tags.push(format!("탈공:방합({})", label));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if is_escaped {
+                        // 탈공됨 (전실): 전화위복
+                        score += 5.0; // 오히려 좋아질 수 있음
+                    } else {
+                        // 진공(眞空): 공망의 흉의가 그대로 작용
+                        let penalty = 10.0;
+                        score -= penalty;
+                        tags.push(format!("운성공망:{}", label));
+                        esil_trace.push_str(&format!("void_luck:{},penalty:-{:.1}; ", label, penalty));
+                    }
+                }
+            }
+        }
+
+        // 2.5 신살(Shinsal) 동적 분석 (Phase 12)
+        // 12신살, 길신(천을/문창), 흉살(원진/귀문) 체크
+        
+        let natal_day_branch = self.natal.day.branch;
+        let natal_year_branch = self.natal.year.branch;
+        let day_master = self.natal.day_master();
+
+        for (luck_branch, label) in [
+            (dynamic.major_influence.as_ref().map(|i| i.ganzi.branch), "대운"),
+            (dynamic.yearly_influence.as_ref().map(|i| i.ganzi.branch), "세운"),
+        ] {
+            if let Some(b) = luck_branch {
+                // A. 12신살 (일지 기준)
+                let shinsal_day = TwelveShinsal::calculate(natal_day_branch, b);
+                let (s_score, _s_tag) = match shinsal_day {
+                    TwelveShinsal::Jangseongsal | TwelveShinsal::Banansal => (5.0, "길신"),
+                    TwelveShinsal::Geopsal | TwelveShinsal::Jaesal | TwelveShinsal::Cheonsal => (-5.0, "흉신"),
+                    TwelveShinsal::Yeokmasal | TwelveShinsal::Jisal => (2.0, "이동"), // 역마/지살은 활동성 증가
+                    _ => (0.0, "평"),
+                };
+                if s_score != 0.0 {
+                    score += s_score;
+                    tags.push(format!("신살:{}({})", shinsal_day.hangul(), label));
+                    esil_trace.push_str(&format!("shinsal:{},score:{:.1}; ", shinsal_day.hangul(), s_score));
+                }
+
+                // B. 길신 (천을귀인, 문창귀인)
+                let cheoneul = Gilsin::cheoneul_branches(day_master);
+                if cheoneul.contains(&b) {
+                    let bonus = 15.0;
+                    score += bonus;
+                    tags.push(format!("길신:천을귀인({})", label));
+                    esil_trace.push_str(&format!("gilsin:cheoneul,bonus:{:.1}; ", bonus));
+                }
+                
+                // C. 흉살 (원진, 귀문) - 일지/년지와 관계
+                for (target, target_name) in [(natal_day_branch, "일지"), (natal_year_branch, "년지")] {
+                    if let Some(wonjin) = EvilSpirit::check_wonjin(target, b) {
+                        score -= 5.0;
+                        tags.push(format!("흉살:{}({}-{})", wonjin.hangul(), target_name, label));
+                    }
+                    if let Some(gwimun) = EvilSpirit::check_gwimun(target, b) {
+                        score -= 3.0;
+                        tags.push(format!("흉살:{}({}-{})", gwimun.hangul(), target_name, label));
+                    }
+                }
+            }
+        }
+
+        // 2.6 동적 12운성 (Lifecycle Analysis) - Phase 13
+        // 일간이 운에서 만나는 지지에 따라 에너지 상태 변화
+        for (luck_branch, label) in [
+            (dynamic.major_influence.as_ref().map(|i| i.ganzi.branch), "대운"),
+            (dynamic.yearly_influence.as_ref().map(|i| i.ganzi.branch), "세운"),
+        ] {
+            if let Some(b) = luck_branch {
+                let stage = crate::core::twelve_stages::calculate_twelve_stage(day_master, b);
+                
+                // 왕상휴수사(旺相休囚死)와 유사한 에너지 레벨
+                let (stage_score, _description) = match stage {
+                     TwelveStage::Changsheng | TwelveStage::Guandai | TwelveStage::Jianlu | TwelveStage::Diwang => (10.0, "왕성"),
+                     TwelveStage::Shuai | TwelveStage::Bing | TwelveStage::Si | TwelveStage::Mu => (-5.0, "쇠퇴"),
+                     TwelveStage::Jue | TwelveStage::Tai | TwelveStage::Yang => (-2.0, "불안/잉태"),
+                     TwelveStage::Muyu => (-2.0, "목욕/불안"),
+                };
+                
+                if stage_score != 0.0 {
+                    score += stage_score;
+                    esil_trace.push_str(&format!("lifecycle:{}({}),score:{:.1}; ", stage.hangul(), label, stage_score));
+                    tags.push(format!("운성:{}({})", stage.hangul(), label));
+                }
+            }
+        }
+
+        // 2.7 십신 복합 패턴 (Combinatorial Ten Gods) - Phase 13
+        // 예: 상관견관(Hurting Officer + Direct Officer) -> 위화백단
+        for (luck_stem, label) in [
+            (dynamic.major_influence.as_ref().map(|i| i.ganzi.stem), "대운"),
+            (dynamic.yearly_influence.as_ref().map(|i| i.ganzi.stem), "세운"),
+        ] {
+            if let Some(s) = luck_stem {
+                let ten_god = TenGod::from_stems(day_master, s);
+                
+                // A. 상관견관 (상관 운 + 원국 정관)
+                if ten_god == TenGod::Shangguan {
+                    // 원국 천간에 정관이 있는지 확인
+                    let has_zhengguan = [self.natal.year.stem, self.natal.month.stem, self.natal.hour.stem]
+                        .iter().any(|&hz| TenGod::from_stems(day_master, hz) == TenGod::Zhengguan);
+                        
+                    if has_zhengguan {
+                        let penalty = 15.0;
+                        score -= penalty;
+                        tags.push(format!("패턴:상관견관({})", label));
+                        esil_trace.push_str(&format!("pattern:shangguan_gyeongwan,penalty:-{:.1}; ", penalty));
+                    }
+                }
+                
+                // B. 식신생재 (식신 운 + 원국 재성)
+                if ten_god == TenGod::Shishen {
+                     let has_wealth = [self.natal.year.stem, self.natal.month.stem, self.natal.hour.stem]
+                        .iter().any(|&hz| {
+                            let god = TenGod::from_stems(day_master, hz);
+                            god == TenGod::Zhengcai || god == TenGod::Piancai
+                        });
+                        
+                    if has_wealth {
+                        let bonus = 10.0;
+                        score += bonus;
+                        tags.push(format!("패턴:식신생재({})", label));
+                        esil_trace.push_str(&format!("pattern:shishen_saengjae,bonus:{:.1}; ", bonus));
+                    }
+                }
+            }
+        }
+
         // 3. 지지 합충 분석 (Structural Stability)
         for (clash, p1, p2) in &dynamic.combined_relations.branch_clashes {
             if p1.contains("세운") || p2.contains("세운") || p1.contains("대운") || p2.contains("대운") {
-                // 용신을 치는 충은 페널티가 훨씬 큼
-                let is_yongshin_clash = self.is_involving_yongshin(p1, p2, primary_yongshin);
-                let penalty = if is_yongshin_clash { 20.0 } else { 8.0 };
-                score -= penalty;
+                let b1 = self.get_branch_by_path(p1, dynamic);
+                let b2 = self.get_branch_by_path(p2, dynamic);
                 
-                esil_trace.push_str(&format!("clash:{}-{},penalty:-{:.1}; ", p1, p2, penalty));
+                if let (Some(b1_obj), Some(b2_obj)) = (b1, b2) {
+                    let e1 = b1_obj.element();
+                    let e2 = b2_obj.element();
+                    
+                    let p1_priority = self.get_element_priority(e1, primary_yongshin, assistant_yongshin, thermal_index);
+                    let p2_priority = self.get_element_priority(e2, primary_yongshin, assistant_yongshin, thermal_index);
+                    
+                    // 정통 명리학: 희신(좋은 오행)을 충하면 흉, 기신(나쁜 오행)을 충하면 길
+                    // 가중치 합산: 우선순위가 높을수록(용신) 충돌 시 감점이 큼
+                    let total_impact = p1_priority + p2_priority;
+                    let score_change = if total_impact > 1.0 {
+                        // 희신/용신 충돌 (감점)
+                        -20.0
+                    } else if total_impact < -0.5 {
+                        // 기신/구신 충돌 (가점 - 개고 효과 등)
+                        10.0
+                    } else {
+                        // 일반적인 충돌 (약한 감점)
+                        -5.0
+                    };
+                    
+                    score += score_change;
+                    esil_trace.push_str(&format!("clash:{}-{},impact:{:.1}; ", p1, p2, score_change));
+                }
                 
                 // 지장간 메모리 덤프 (Memory Dump of Hidden Stems)
                 // 충돌이 발생한 지지의 지장간 기운을 해방하여 시스템에 반영
@@ -215,7 +453,39 @@ impl SajuVM {
             tags.push(dest.hangul().to_string());
         }
 
-        // 7. 신강/신약 태깅
+        // 6.5 육합 (Six Combinations) - Stable Connection
+        for (six, p1, p2) in &dynamic.combined_relations.six_combinations {
+            // 원국 내의 육합은 이미 정적 분석에 포함됨, 여기서는 운과의 결합을 중시
+            if p1.contains("운") || p2.contains("운") {
+                 let bonus = 8.0;
+                 score += bonus;
+                 
+                 // 합화 오행 기운 상승
+                 let element = six.transformed_element(); // 육합의 화기(예: 자축합토)
+                 if let Some(transformed_el) = element {
+                     let weight = self.get_element_priority(transformed_el, primary_yongshin, assistant_yongshin, thermal_index);
+                     score += weight * 3.0;
+                     registers.update(transformed_el, weight * 3.0);
+                 }
+
+                 esil_trace.push_str(&format!("six_combo:{}-{},bonus:{:.1}; ", p1, p2, bonus));
+                 tags.push(format!("육합:{}", six.hangul()));
+            }
+        }
+
+        // 6.6 천간충 (Stem Clashes) - Mental Stress
+        for (clash, p1, p2) in &dynamic.combined_relations.stem_clashes {
+             let penalty = 5.0;
+             score -= penalty;
+             esil_trace.push_str(&format!("stem_clash:{}-{},penalty:-{:.1}; ", p1, p2, penalty));
+             tags.push(format!("천간충:{}", clash.hangul()));
+        }
+
+        // 7. 동적 회합(Triple/Seasonal) 완성 분석 - Dynamic Combination Completion
+        // 원국에 없던 삼합/방합이 대운/세운에 의해 완성될 때 강력한 시너지 보너스 부여
+        self.evaluate_dynamic_combinations(dynamic, tags, esil_trace, registers, &mut score);
+
+        // 8. 신강/신약 태깅
         let strength = self.natal.strength();
         tags.push(format!("신강약:{}", strength.strength_type.hangul()));
         if strength.deuk_ryeong.acquired { tags.push("득령".to_string()); }
@@ -339,7 +609,12 @@ impl SajuVM {
 
                 let increment = base_weight * weight;
                 *score += increment;
+                
+                // VM 레지스터 업데이트 전 감쇠 및 후 정규화
+                registers.apply_decay(0.95);
                 registers.update(eff_el, increment);
+                registers.normalize();
+
                 esil_trace.push_str(&format!("{}_infl:{},weight:{:.1},score+={:.1}; ", 
                     label.to_lowercase(), eff_el.hangul(), weight, increment));
 
@@ -363,23 +638,6 @@ impl SajuVM {
         }
     }
 
-    /// 특정 간지가 용신에 해당하는지 체크
-    fn is_involving_yongshin(&self, p1: &str, p2: &str, yongshin: Element) -> bool {
-        let get_el = |p: &str| {
-            match p {
-                "년간" => Some(self.natal.year.stem.element()),
-                "년지" => Some(self.natal.year.branch.element()),
-                "월간" => Some(self.natal.month.stem.element()),
-                "월지" => Some(self.natal.month.branch.element()),
-                "일간" => Some(self.natal.day.stem.element()),
-                "일지" => Some(self.natal.day.branch.element()),
-                "시간" => Some(self.natal.hour.stem.element()),
-                "시지" => Some(self.natal.hour.branch.element()),
-                _ => None
-            }
-        };
-        get_el(p1) == Some(yongshin) || get_el(p2) == Some(yongshin)
-    }
 
     /// 합화에 의한 실질 천간 오행 추출
     fn get_effective_stem(&self, dynamic: &DynamicLuckAnalysis, target: &str) -> Option<Element> {
@@ -429,5 +687,86 @@ impl SajuVM {
             "시운지지" => dynamic.hourly_influence.as_ref().map(|i| i.ganzi.branch),
             _ => None,
         }
+    }
+
+    /// 동적 회합(삼합/방합) 완성 평가
+    fn evaluate_dynamic_combinations(
+        &self,
+        dynamic: &DynamicLuckAnalysis,
+        tags: &mut Vec<String>,
+        esil_trace: &mut String,
+        registers: &mut QiRegisters,
+        score: &mut f32,
+    ) {
+        let natal_triples = &dynamic.natal_relations.triple_combinations;
+        let natal_seasonals = &dynamic.natal_relations.seasonal_combinations;
+
+        // 1. 삼합 완성 체크
+        for triple in &dynamic.combined_relations.triple_combinations {
+            if !natal_triples.contains(triple) {
+                // 원국에는 없던 삼합이 완성됨!
+                let element = triple.element();
+                let priority = self.get_element_priority(element, self.yongshin.primary, self.yongshin.assistant, 0);
+                
+                let bonus = 15.0 * priority;
+                *score += bonus;
+                registers.update(element, bonus.abs());
+                
+                let label = if priority > 0.0 { "삼합완성(吉)" } else { "삼합완성(凶)" };
+                tags.push(label.to_string());
+                esil_trace.push_str(&format!("dynamic_triple:{},bonus:{:.1}; ", triple.hangul(), bonus));
+            }
+        }
+
+        // 2. 방합 완성 체크
+        for seasonal in &dynamic.combined_relations.seasonal_combinations {
+            if !natal_seasonals.contains(seasonal) {
+                let element = seasonal.element();
+                let priority = self.get_element_priority(element, self.yongshin.primary, self.yongshin.assistant, 0);
+                
+                let bonus = 20.0 * priority; // 방합은 세력이 더 강력함
+                *score += bonus;
+                registers.update(element, bonus.abs());
+                
+                let label = if priority > 0.0 { "방합완성(吉)" } else { "방합완성(凶)" };
+                tags.push(label.to_string());
+                esil_trace.push_str(&format!("dynamic_seasonal:{},bonus:{:.1}; ", seasonal.hangul(), bonus));
+            }
+        }
+    }
+
+    /// 인생 시뮬레이션 (Rayon 병렬 처리 지원)
+    pub fn simulate_life(&self, start_age: u32, end_age: u32) -> Vec<LifeFrame> {
+        use rayon::prelude::*;
+        
+        // 1. 대운 흐름 계산 (교운기 포함 정밀 분석)
+        let luck_analysis = MajorLuckAnalysis::calculate_astro(
+            &self.natal,
+            self.natal.gender,
+            self.natal.raw_input.year,
+            self.natal.raw_input.month,
+            self.natal.raw_input.day,
+            self.natal.raw_input.hour,
+            self.natal.raw_input.minute,
+        ).ok();
+
+        // 출생 연도 (세운 계산 기준)
+        let birth_year = self.natal.raw_input.year;
+
+        (start_age..=end_age).into_par_iter().map(|age| {
+            // 2. 해당 나이의 대운 간지 추출
+            let major_ganzi = luck_analysis.as_ref()
+                .and_then(|a| a.at_age(age))
+                .map(|m| m.ganzi)
+                .unwrap_or_else(|| GanZi::from_index(0));
+            
+            // 3. 해당 나이의 세운 간지 추출 (한국식 나이 또는 만 나이 기준 보정 필요)
+            // 여기서는 단순하게 생년 + (나이-1) 전후의 세운을 계산
+            let target_year = birth_year + (age as i32) - 1; // 대략적인 나이 보정
+            let yearly_ganzi = YearlyLuck::calculate(target_year, &self.natal).ganzi;
+            
+            // 4. 정밀한 step 수행
+            self.step(age, major_ganzi, yearly_ganzi, None, None, None)
+        }).collect()
     }
 }

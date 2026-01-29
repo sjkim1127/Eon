@@ -154,19 +154,20 @@ pub enum TripleCombination {
 }
 
 impl TripleCombination {
-    /// 세 지지가 삼합인지 확인
-    pub fn check(branches: &[EarthlyBranch]) -> Option<Self> {
+    /// 세 지지 목록에서 발견된 모든 삼합 확인
+    pub fn check(branches: &[EarthlyBranch]) -> Vec<Self> {
         use EarthlyBranch::*;
+        let mut results = Vec::new();
         
         let has_all = |b1, b2, b3| {
             branches.contains(&b1) && branches.contains(&b2) && branches.contains(&b3)
         };
 
-        if has_all(Yin, Wu, Xu) { return Some(Self::YinWuXu); }
-        if has_all(Shen, Zi, Chen) { return Some(Self::ShenZiChen); }
-        if has_all(Si, You, Chou) { return Some(Self::SiYouChou); }
-        if has_all(Hai, Mao, Wei) { return Some(Self::HaiMaoWei); }
-        None
+        if has_all(Yin, Wu, Xu) { results.push(Self::YinWuXu); }
+        if has_all(Shen, Zi, Chen) { results.push(Self::ShenZiChen); }
+        if has_all(Si, You, Chou) { results.push(Self::SiYouChou); }
+        if has_all(Hai, Mao, Wei) { results.push(Self::HaiMaoWei); }
+        results
     }
 
     /// 합화 오행
@@ -185,6 +186,17 @@ impl TripleCombination {
             Self::ShenZiChen => "신자진 수국",
             Self::SiYouChou => "사유축 금국",
             Self::HaiMaoWei => "해묘미 목국",
+        }
+    }
+
+    /// 구성 지지 반환
+    pub fn branches(&self) -> [EarthlyBranch; 3] {
+        use EarthlyBranch::*;
+        match self {
+            Self::YinWuXu => [Yin, Wu, Xu],
+            Self::ShenZiChen => [Shen, Zi, Chen],
+            Self::SiYouChou => [Si, You, Chou],
+            Self::HaiMaoWei => [Hai, Mao, Wei],
         }
     }
 }
@@ -289,19 +301,20 @@ pub enum SeasonalCombination {
 }
 
 impl SeasonalCombination {
-    /// 세 지지가 방합인지 확인
-    pub fn check(branches: &[EarthlyBranch]) -> Option<Self> {
+    /// 세 지지 목록에서 발견된 모든 방합 확인
+    pub fn check(branches: &[EarthlyBranch]) -> Vec<Self> {
         use EarthlyBranch::*;
+        let mut results = Vec::new();
         
         let has_all = |b1, b2, b3| {
             branches.contains(&b1) && branches.contains(&b2) && branches.contains(&b3)
         };
 
-        if has_all(Yin, Mao, Chen) { return Some(Self::YinMaoChen); }
-        if has_all(Si, Wu, Wei) { return Some(Self::SiWuWei); }
-        if has_all(Shen, You, Xu) { return Some(Self::ShenYouXu); }
-        if has_all(Hai, Zi, Chou) { return Some(Self::HaiZiChou); }
-        None
+        if has_all(Yin, Mao, Chen) { results.push(Self::YinMaoChen); }
+        if has_all(Si, Wu, Wei) { results.push(Self::SiWuWei); }
+        if has_all(Shen, You, Xu) { results.push(Self::ShenYouXu); }
+        if has_all(Hai, Zi, Chou) { results.push(Self::HaiZiChou); }
+        results
     }
 
     /// 방합에 의한 오행
@@ -320,6 +333,17 @@ impl SeasonalCombination {
             Self::SiWuWei => "사오미 화방",
             Self::ShenYouXu => "신유술 금방",
             Self::HaiZiChou => "해자축 수방",
+        }
+    }
+
+    /// 구성 지지 반환
+    pub fn branches(&self) -> [EarthlyBranch; 3] {
+        use EarthlyBranch::*;
+        match self {
+            Self::YinMaoChen => [Yin, Mao, Chen],
+            Self::SiWuWei => [Si, Wu, Wei],
+            Self::ShenYouXu => [Shen, You, Xu],
+            Self::HaiZiChou => [Hai, Zi, Chou],
         }
     }
 }
@@ -355,8 +379,19 @@ impl SixCombination {
             (Mao, Xu) | (Xu, Mao) => Some(Self::MaoXu),
             (Chen, You) | (You, Chen) => Some(Self::ChenYou),
             (Si, Shen) | (Shen, Si) => Some(Self::SiShen),
-            (Wu, Wei) | (Wei, Wu) => Some(Self::WuWei),
             _ => None,
+        }
+    }
+
+    /// 합화 오행 (육합으로 변하는 오행)
+    pub const fn transformed_element(&self) -> Option<Element> {
+        match self {
+            Self::ZiChou => Some(Element::Earth), // 자축합토
+            Self::YinHai => Some(Element::Wood),  // 인해합목
+            Self::MaoXu => Some(Element::Fire),   // 묘술합화
+            Self::ChenYou => Some(Element::Metal), // 진유합금
+            Self::SiShen => Some(Element::Water),  // 사신합수
+            Self::WuWei => Some(Element::Fire),   // 오미합화 (불의 세력)
         }
     }
 
@@ -696,8 +731,8 @@ impl RelationshipAnalysis {
 
         let mut stem_combinations = Vec::new();
         let mut stem_clashes = Vec::new();
-        let mut triple_combinations = Vec::new();
-        let mut seasonal_combinations = Vec::new();
+        let triple_combinations;
+        let seasonal_combinations;
         let mut dominant_semi_combinations = Vec::new();
         let mut weak_semi_combinations = Vec::new();
         let mut six_combinations = Vec::new();
@@ -771,11 +806,10 @@ impl RelationshipAnalysis {
             branch_punishments.push((BranchPunishment::MutualPunishment, "상형".to_string(), "축술미".to_string()));
         }
 
-        // 삼합 분석
+        // 삼합 및 방합 분석
         let all_branches: Vec<_> = branches.iter().map(|(_, b)| *b).collect();
-        if let Some(triple) = TripleCombination::check(&all_branches) {
-            triple_combinations.push(triple);
-        }
+        triple_combinations = TripleCombination::check(&all_branches);
+        seasonal_combinations = SeasonalCombination::check(&all_branches);
 
         // 암합 분석 (지지 간의 지장간 합)
         for i in 0..4 {
@@ -797,11 +831,6 @@ impl RelationshipAnalysis {
                     myung_am_combinations.push((MyungAmHap { stem: *stem, branch: *branch, combination: comb }, stem_pos.to_string(), branch_pos.to_string()));
                 }
             }
-        }
-
-        // 방합 분석
-        if let Some(seasonal) = SeasonalCombination::check(&all_branches) {
-            seasonal_combinations.push(seasonal);
         }
 
         Self {

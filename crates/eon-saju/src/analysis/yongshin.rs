@@ -7,7 +7,10 @@ use serde::{Deserialize, Serialize};
 use crate::core::element::Element;
 use crate::core::pillars::FourPillars;
 use crate::analysis::strength::{StrengthAnalysis, StrengthType};
+use crate::analysis::structure::StructureType;
 use crate::core::branch::EarthlyBranch;
+use crate::core::config::thresholds::*;
+
 
 /// 용신의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -57,55 +60,60 @@ impl YongshinAnalysis {
         let mut recommendations = Vec::new();
         let strength = pillars.strength();
         let day_master_el = pillars.day_master_element();
+        let structure_analysis = pillars.structure();
 
-        // 종격(Follower Structure) 판단: 기운이 극단적으로 쏠린 경우 (80% 이상 또는 20% 이하)
-        let is_polarized = strength.deuk_se.support_ratio >= 80.0 || strength.deuk_se.support_ratio <= 20.0;
-        
-        let eokbu_element = if is_polarized {
-            if strength.deuk_se.support_ratio >= 80.0 {
-                // 종왕격/종강격: 너무 강해서 억제할 수 없으므로 강한 기운을 따름
-                day_master_el
-            } else {
-                // 종아격/종재격/종살격: 너무 약해서 대항할 수 없으므로 월지의 강한 세력을 따름
-                pillars.month.branch.element()
-            }
-        } else {
-            match strength.strength_type {
-                StrengthType::Weak => {
-                    if strength.deuk_se.yinxing_count == 0 {
-                        day_master_el.generated_by() // 인성
-                    } else {
-                        day_master_el // 비겁
-                    }
-                },
-                StrengthType::Strong => {
-                    // 신강의 원인을 분석하여 용신 세분화
-                    let yinxing = strength.deuk_se.yinxing_count as f32;
-                    let bijie = strength.deuk_se.bijie_count as f32;
-                    
-                    if yinxing > bijie * 1.5 {
-                        // 인성 과다로 신강: 재성으로 인성 극복 (용재파인)
-                        day_master_el.generates() // 재성 = 일간이 생하는 오행
-                    } else if bijie > yinxing * 1.5 {
-                        // 비겁 과다로 신강: 관성으로 비겁 제어 (관살제겁)
-                        day_master_el.controlled_by() // 관성 = 일간을 극하는 오행
-                    } else {
-                        // 인성/비겁 균형: 식상으로 설기 (설기생재)
-                        day_master_el.generates() // 식상 = 일간이 생하는 오행
-                    }
-                },
-                StrengthType::Balanced => day_master_el,
+        let eokbu_element = match structure_analysis.structure {
+            StructureType::JongAh => day_master_el.generates(),
+            StructureType::JongJae => day_master_el.generates().generates(), // 재성
+            StructureType::JongSal => day_master_el.controlled_by(),
+            StructureType::JongGang => day_master_el.generated_by(),
+            StructureType::JongWang => day_master_el,
+            StructureType::Follower => pillars.month.branch.element(),
+            StructureType::SpecialTransformation => day_master_el,
+            _ => {
+                match strength.strength_type {
+                    StrengthType::Weak => {
+                        if strength.deuk_se.yinxing_count == 0 {
+                            day_master_el.generated_by() // 인성
+                        } else {
+                            day_master_el // 비겁
+                        }
+                    },
+                    StrengthType::Strong => {
+                        // 신강의 원인을 분석하여 용신 세분화
+                        let yinxing = strength.deuk_se.yinxing_count as f32;
+                        let bijie = strength.deuk_se.bijie_count as f32;
+                        
+                        if yinxing > bijie * 1.5 {
+                            // 인성 과다로 신강: 재성으로 인성 극복 (용재파인)
+                            day_master_el.generates() // 재성
+                        } else if bijie > yinxing * 1.5 {
+                            // 비겁 과다로 신강: 관성으로 비겁 제어 (관살제겁)
+                            day_master_el.controlled_by() // 관성
+                        } else {
+                            // 인성/비겁 균형: 식상으로 설기 (설기생재)
+                            day_master_el.generates() // 식상
+                        }
+                    },
+                    StrengthType::Balanced => day_master_el,
+                }
             }
         };
 
         // 종격/전왕격인 경우 억부(격국) 용신을 최우선으로 배치하고 조후는 참고로만 제시
+        let is_polarized = matches!(structure_analysis.structure, 
+            StructureType::JongAh | StructureType::JongJae | StructureType::JongSal | 
+            StructureType::JongGang | StructureType::JongWang | StructureType::Follower | 
+            StructureType::SpecialTransformation);
+
         if is_polarized {
             recommendations.push(RecommendedYongshin {
                 yongshin_type: YongshinType::Eokbu,
                 element: eokbu_element,
-                reason: format!("기운이 {} 기운으로 극단적으로 쏠린 종격(從格) 사주로, 강한 세력을 따르는 {}가 최우선 용신임", 
-                    if strength.deuk_se.support_ratio >= 80.0 { "자신" } else { "월지" },
-                    eokbu_element.hangul()
+                reason: format!("{} 사주로, 강한 세력을 따르는 {}가 최우선 용신임 (격국: {})", 
+                    if strength.deuk_se.support_ratio >= POLARIZED_RATIO_HIGH { "전왕" } else { "종" },
+                    eokbu_element.hangul(),
+                    structure_analysis.structure.hangul()
                 ),
             });
 
@@ -142,7 +150,7 @@ impl YongshinAnalysis {
         // 제1용신 결정 로직
         // 조후가 극단적이거나(절기 영향) 억부 균형보다 시급할 때 조후 우선
         let thermal_index_for_primary = calculate_thermal_index(pillars);
-        let is_extreme_thermal = thermal_index_for_primary.abs() >= 40 || (thermal_index_for_primary.abs() >= 25 && strength.strength_score.abs() < 10.0);
+        let is_extreme_thermal = thermal_index_for_primary.abs() >= THERMAL_EXTREME || (thermal_index_for_primary.abs() >= THERMAL_MODERATE && strength.strength_score.abs() < 10.0);
         let primary = if is_extreme_thermal && recommendations.iter().any(|r| r.yongshin_type == YongshinType::Johu) {
             recommendations.iter()
                 .find(|r| r.yongshin_type == YongshinType::Johu)
@@ -190,18 +198,27 @@ pub fn calculate_thermal_index(pillars: &FourPillars) -> i32 {
     let branches = [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch];
     
     for s in stems {
-        match s.element() {
-            Element::Fire | Element::Wood => score += 10,
-            Element::Water | Element::Metal => score -= 10,
-            Element::Earth => {}
+        use crate::core::stem::HeavenlyStem as S;
+        match s {
+            S::Bing => score += 15, // 태양 (가장 뜨거움)
+            S::Ding => score += 10, // 등촉 (따뜻함)
+            S::Ren => score -= 15,  // 강수 (가장 차가움)
+            S::Gui => score -= 10,  // 우로 (차갑고 습함)
+            S::Jia | S::Yi => score += 5,
+            S::Geng | S::Xin => score -= 5,
+            _ => {}
         }
     }
     
     for b in branches {
         use EarthlyBranch as EB;
         match b {
-            EB::Si | EB::Wu | EB::Wei | EB::Xu | EB::Yin | EB::Mao => score += 10,
-            EB::Hai | EB::Zi | EB::Chou | EB::Chen | EB::Shen | EB::You => score -= 10,
+            EB::Si | EB::Wu => score += 15,
+            EB::Wei | EB::Xu => score += 10, // 마른 흙
+            EB::Hai | EB::Zi => score -= 15,
+            EB::Chou | EB::Chen => score -= 10, // 습한 흙
+            EB::Yin | EB::Mao => score += 5,
+            EB::Shen | EB::You => score -= 5,
         }
     }
     

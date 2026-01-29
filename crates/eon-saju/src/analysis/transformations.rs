@@ -300,4 +300,20 @@ impl FourPillars {
     pub fn transformations(&self) -> TransformationAnalysis {
         TransformationAnalysis::from_pillars(self)
     }
+
+    /// 실질 오행 맵 추출 (년/월/일/시 간/지 순서)
+    /// 반환: [(원본, 실질); 8]
+    pub fn effective_elements(&self) -> [(Element, Element); 8] {
+        let trans = self.transformations();
+        [
+            (trans.year_stem.original, trans.year_stem.effective),
+            (trans.month_stem.original, trans.month_stem.effective),
+            (trans.day_stem.original, trans.day_stem.effective),
+            (trans.hour_stem.original, trans.hour_stem.effective),
+            (trans.year_branch.original, trans.year_branch.effective),
+            (trans.month_branch.original, trans.month_branch.effective),
+            (trans.day_branch.original, trans.day_branch.effective),
+            (trans.hour_branch.original, trans.hour_branch.effective),
+        ]
+    }
 }

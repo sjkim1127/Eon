@@ -12,6 +12,7 @@ use crate::analysis::{
     analytics::GoldenTime,
     structure::StructureAnalysis,
 };
+use crate::engine::vm::LifeFrame;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SajuReport {
@@ -23,6 +24,7 @@ pub struct SajuReport {
     pub major_luck: Option<MajorLuckAnalysis>,
     pub golden_time: Option<GoldenTime>,
     pub vm_summary: Option<String>,
+    pub simulation_frames: Vec<LifeFrame>,
 }
 
 impl SajuReport {
@@ -41,6 +43,7 @@ impl SajuReport {
             major_luck: None,
             golden_time: None,
             vm_summary: None,
+            simulation_frames: Vec::new(),
         }
     }
 
@@ -54,8 +57,8 @@ impl SajuReport {
         self
     }
 
-    pub fn with_vm_simulation(mut self, summary: String) -> Self {
-        self.vm_summary = Some(summary);
+    pub fn with_vm_simulation(mut self, frames: Vec<LifeFrame>) -> Self {
+        self.simulation_frames = frames;
         self
     }
 
@@ -132,8 +135,40 @@ impl SajuReport {
             md.push_str("\n");
         }
 
+        if !self.simulation_frames.is_empty() {
+            md.push_str("## 7. Life Simulation Details\n");
+            md.push_str("### 7.1 Energy Balance (Qi Registers)\n");
+            md.push_str("| Age | Year | Score | Wood | Fire | Earth | Metal | Water |\n");
+            md.push_str("|---|---|---|---|---|---|---|---|\n");
+            
+            // 10년 단위로 요약 출력
+            for frame in self.simulation_frames.iter().step_by(10) {
+                let r = &frame.register_state;
+                md.push_str(&format!("| {} | {} | {:.1} | {:.1}% | {:.1}% | {:.1}% | {:.1}% | {:.1}% |\n",
+                    frame.age, frame.ganzi.hangul(), frame.score,
+                    r.r0_wood, r.r1_fire, r.r2_earth, r.r3_metal, r.r4_water
+                ));
+            }
+
+            md.push_str("\n### 7.2 Key Life Events (ESIL Trace Summary)\n");
+            // 큰 변화가 있거나 상위 5개 프레임 추출
+            let mut key_frames: Vec<_> = self.simulation_frames.iter().collect();
+            key_frames.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+            
+            for frame in key_frames.iter().take(5) {
+                if !frame.tags.is_empty() {
+                    md.push_str(&format!("- **Age {} ({})**: Score {:.1} | {}\n", 
+                        frame.age, frame.ganzi.hangul(), frame.score, frame.tags.join(", ")));
+                    if !frame.esil_trace.is_empty() {
+                        md.push_str(&format!("  - `ESIL`: {}\n", frame.esil_trace));
+                    }
+                }
+            }
+            md.push_str("\n");
+        }
+
         if let Some(summary) = &self.vm_summary {
-            md.push_str("## 7. Simulation Summary\n");
+            md.push_str("## 8. Simulation Summary\n");
             md.push_str(summary);
             md.push_str("\n");
         }

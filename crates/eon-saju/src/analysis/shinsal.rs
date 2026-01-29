@@ -96,8 +96,39 @@ impl TwelveShinsal {
 }
 
 // ============================================
-// 기타 흉살 (Minor Evil Spirits)
+// 길신 (Auspicious Spirits)
 // ============================================
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Gilsin {
+    /// 천을귀인(天乙貴人) - 최고의 길신, 재해 예방, 도움
+    CheoneulGwiin,
+    /// 문창귀인(文昌貴人) - 학문, 지혜, 예술
+    MunchangGwiin,
+}
+
+impl Gilsin {
+    pub const fn hangul(&self) -> &'static str {
+        match self {
+            Self::CheoneulGwiin => "천을귀인",
+            Self::MunchangGwiin => "문창귀인",
+        }
+    }
+
+    /// 일간 기준 천을귀인 지지들 반환
+    pub fn cheoneul_branches(day_stem: crate::core::stem::HeavenlyStem) -> Vec<EarthlyBranch> {
+        use crate::core::stem::HeavenlyStem as S;
+        use EarthlyBranch as B;
+        match day_stem {
+            S::Jia | S::Wu | S::Geng => vec![B::Chou, B::Wei],
+            S::Yi | S::Ji => vec![B::Zi, B::Shen],
+            S::Bing | S::Ding => vec![B::Hai, B::You],
+            S::Xin => vec![B::Yin, B::Wu],
+            S::Ren | S::Gui => vec![B::Si, B::Mao],
+        }
+    }
+}
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EvilSpirit {
@@ -156,10 +187,13 @@ pub struct ShinsalAnalysis {
     pub twelve_shinsal_year: Vec<(String, TwelveShinsal)>,
     /// 원진/귀문 등 특수 신살
     pub special_shinsals: Vec<(String, String, EvilSpirit)>,
+    /// 길신 (천을귀인 등)
+    pub gilsin: Vec<(String, Gilsin)>,
 }
 
 impl ShinsalAnalysis {
     pub fn from_pillars(pillars: &FourPillars) -> Self {
+        let day_stem = pillars.day_master();
         let branches = [
             ("년지", pillars.year.branch),
             ("월지", pillars.month.branch),
@@ -198,10 +232,20 @@ impl ShinsalAnalysis {
             }
         }
 
+        // 4. 길신 (천을귀인 등)
+        let mut gilsin = Vec::new();
+        let cheoneul = Gilsin::cheoneul_branches(day_stem);
+        for (name, b) in &branches {
+            if cheoneul.contains(b) {
+                gilsin.push((name.to_string(), Gilsin::CheoneulGwiin));
+            }
+        }
+
         Self {
             twelve_shinsal_day,
             twelve_shinsal_year,
             special_shinsals,
+            gilsin,
         }
     }
 }
@@ -227,6 +271,13 @@ impl std::fmt::Display for ShinsalAnalysis {
             writeln!(f, "\n[특수 신살 (원진/귀문)]")?;
             for (p1, p2, spirit) in &self.special_shinsals {
                 writeln!(f, "  {} - {}: {}", p1, p2, spirit.hangul())?;
+            }
+        }
+
+        if !self.gilsin.is_empty() {
+            writeln!(f, "\n[길신 (Auspicious Spirits)]")?;
+            for (pos, spirit) in &self.gilsin {
+                writeln!(f, "  {}: {}", pos, spirit.hangul())?;
             }
         }
         

@@ -371,3 +371,233 @@ fn test_case_6_advanced_analysis_refinements() {
         "억부 이유에 전문 용어가 포함되어야 함: {}", eokbu.reason
     );
 }
+
+#[test]
+fn test_case_7_structure_yongshin_integration() {
+    use eon_saju::core::pillars::{SajuInput, FourPillars};
+    use eon_saju::analysis::structure::StructureType;
+    
+    // 1. 종격(종재격) 테스트 케이스: 일간이 매우 약하고 재성이 강한 경우
+    // 1995년 5월 27일 12:00 (예시: 을해년 신사월 무신일 무오시 -> 실제로는 아닐 수 있으나 로직 검증용)
+    let input = SajuInput::new_solar(1995, 5, 27, 12, 0);
+    let pillars = FourPillars::calculate(&input).unwrap();
+    let structure = pillars.structure();
+    let yongshin = pillars.yongshin();
+    
+    // 만약 종격으로 판정되었다면
+    if matches!(structure.structure, StructureType::JongAh | StructureType::JongJae | StructureType::JongSal) {
+        let eokbu = yongshin.recommendations.iter()
+            .find(|r| r.yongshin_type == eon_saju::analysis::yongshin::YongshinType::Eokbu)
+            .expect("종격이어도 억부(격국) 용신 분류로 추천되어야 함");
+            
+        assert!(eokbu.reason.contains("종"), "이유에 '종'이라는 단어가 포함되어야 함: {}", eokbu.reason);
+        assert!(eokbu.reason.contains(&structure.structure.hangul()), "이유에 격국 이름이 포함되어야 함: {}", eokbu.reason);
+    }
+}
+
+#[test]
+fn test_case_8_transformation_impact() {
+    use eon_saju::core::pillars::{SajuInput, FourPillars};
+    use eon_saju::analysis::strength::StrengthAnalysis;
+    
+    // 갑기합토(甲己合土)가 발생할 수 있는 사주 예시 (진월의 갑목 일간 등)
+    // 1984년 4월 15일 12:00 (갑자년 무진월 갑술일 경오시 -> 갑기합은 아니지만 예시용)
+    // 실제 갑기합이 발생하는 날짜를 찾아보거나, 인위적으로 생성된 시점 사용
+    let input = SajuInput::new_solar(1984, 4, 15, 12, 0); 
+    let pillars = FourPillars::calculate(&input).unwrap();
+    
+    // 1. 합화 미적용 분석 (기본 강약)
+    let strength_raw = StrengthAnalysis::from_pillars_with_options(&pillars, false);
+    
+    // 2. 합화 적용 분석 (변화된 강약)
+    let strength_transformed = StrengthAnalysis::from_pillars_with_options(&pillars, true);
+    
+    println!("Raw Strength: {:.1}%, Transformed Strength: {:.1}%", 
+        strength_raw.strength_score, strength_transformed.strength_score);
+    
+    // 합화가 발생한 경우 두 결과가 달라야 함
+    let trans = pillars.transformations();
+    let has_stem_transform = trans.year_stem.reason.is_some() || 
+                             trans.month_stem.reason.is_some() || 
+                             trans.day_stem.reason.is_some() || 
+                             trans.hour_stem.reason.is_some();
+                             
+    if has_stem_transform {
+        // 합화가 강약 점수에 영향을 주었는지 확인 (반드시 다르지 않을 수도 있으나 로직 전파 확인용)
+        // 여기서는 로직이 전파되는 환경 자체를 검증
+        assert!(strength_transformed.deuk_se.support_ratio != strength_raw.deuk_se.support_ratio ||
+                strength_transformed.strength_score != strength_raw.strength_score,
+                "합화가 발생했다면 강약 분석 결과에 변화가 있어야 함");
+    }
+}
+
+#[test]
+fn test_case_9_vm_dynamic_combination() {
+    use eon_saju::core::pillars::{SajuInput, FourPillars};
+    use eon_saju::engine::vm::SajuVM;
+    use eon_saju::core::ganzi::GanZi;
+    
+    // 원국에 申, 辰이 있는 사주 (申子辰 수국 완성 가능)
+    // 1980년 8월 11일 (경신년 갑신월 병진일 -> 지지에 신, 진 존재)
+    let input = SajuInput::new_solar(1980, 8, 11, 12, 0);
+    let pillars = FourPillars::calculate(&input).unwrap();
+    let vm = SajuVM::new(pillars);
+    
+    // 1. 삼합이 완성되지 않는 해 (예: 갑자년은 아니지만 자수가 없는 해)
+    // 1984년이 갑자년이므로, 1983년(계해) 테스트
+    let frame_no_triple = vm.step(4, GanZi::from_index(0), GanZi::from_index(59), None, None, None);
+    
+    // 2. 삼합(申子辰)이 완성되는 해 (갑자년, 1984년)
+    // 갑자(甲子)는 인덱스 0
+    let frame_triple = vm.step(5, GanZi::from_index(0), GanZi::from_index(0), None, None, None);
+    
+    println!("No Triple Score: {:.1}, Triple Score: {:.1}", frame_no_triple.score, frame_triple.score);
+    
+    // 삼합이 완성되면 '삼합완성' 태그가 있어야 함
+    let has_tag = frame_triple.tags.iter().any(|t| t.contains("삼합완성"));
+    assert!(has_tag, "삼합이 완성되는 해에는 관련 태그가 있어야 함. Tags: {:?}", frame_triple.tags);
+}
+
+#[test]
+fn test_case_10_vm_parallel_simulation() {
+    use eon_saju::core::pillars::{SajuInput, FourPillars};
+    use eon_saju::engine::vm::SajuVM;
+    
+    let input = SajuInput::new_solar(1984, 4, 15, 12, 0);
+    let pillars = FourPillars::calculate(&input).unwrap();
+    let vm = SajuVM::new(pillars);
+    
+    // 100년 시뮬레이션 수행 (Rayon 활용)
+    let start = std::time::Instant::now();
+    let frames = vm.simulate_life(1, 100);
+    let duration = start.elapsed();
+    
+    assert_eq!(frames.len(), 100);
+    println!("100 years simulation took: {:?}", duration);
+}
+
+#[test]
+fn test_case_11_vm_simulation_precision() {
+    use eon_saju::core::pillars::{SajuInput, FourPillars};
+    use eon_saju::engine::vm::SajuVM;
+    
+    // 2004년 11월 27일생 남자 (대운 시작 3세)
+    let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
+    let pillars = FourPillars::calculate(&input).unwrap();
+    let vm = SajuVM::new(pillars);
+    
+    let frames = vm.simulate_life(1, 20);
+    
+    // 1~2세 대운과 3세~ 대운이 달라야 함 (교운기 반영)
+    let luck_1 = frames.iter().find(|f| f.age == 1).unwrap().major_ganzi;
+    let luck_3 = frames.iter().find(|f| f.age == 3).unwrap().major_ganzi;
+    let luck_13 = frames.iter().find(|f| f.age == 13).unwrap().major_ganzi;
+    
+    println!("Age 1 Major Luck: {}, Age 3 Major Luck: {}, Age 13 Major Luck: {}", luck_1, luck_3, luck_13);
+    
+    // 대운 시작 전(1세)은 기본값(GanZi(0))이거나 초기 월주 기반일 수 있음 (현재 구현에서는 0 또는 첫 대운 전)
+    // 3세와 13세는 서로 다른 대운이어야 함
+    assert_ne!(luck_3, luck_13, "10년 주기로 대운이 바뀌어야 함");
+    assert_ne!(luck_1, luck_3, "대운 시작 나이(3세) 전후로 대운이 달라야 함");
+}
+
+#[test]
+fn test_case_12_vm_void_and_talgong() {
+    use eon_saju::core::pillars::{SajuInput, FourPillars};
+    use eon_saju::engine::vm::SajuVM;
+    
+    // 갑자 일주의 공망은 '술해(戌亥)'
+    // 1984년 11월 20일 12시 -> 갑자년 을해월 갑자일 경오시 (일주 갑자 -> 술해 공망)
+    let input = SajuInput::new_solar(1984, 11, 20, 12, 0); // 원국에 술(戌)이나 해(亥)가 있으면 안됨 (여기선 월지 해가 공망)
+    let pillars = FourPillars::calculate(&input).unwrap();
+    let vm = SajuVM::new(pillars);
+    
+    // 1. 공망인 세운 (술년/해년) 진입 테스트
+    // 1994년(갑술년) -> 술토 공망 대운 혹은 세운 가정
+    use eon_saju::core::ganzi::GanZi;
+    use eon_saju::core::branch::EarthlyBranch;
+    use eon_saju::core::stem::HeavenlyStem;
+
+    let gap_sul = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Xu); // 갑술 (술 공망)
+    // 인(寅)은 술(戌)과 인오술 합 -> 이것은 탈공 요인이 됨 (삼합)
+    // 따라서 순수 공망을 보기 위해 충/합이 없는 글자로 테스트해야 함
+    // 갑자 일주에게 경오시는 자오충.. 복잡함.
+    
+    // 단순화: step 메서드에 직접 공망 간지를 주입하여 점수 변화 관찰
+    
+    // A. 평범한 해 (무진년 등)
+    let frame_normal = vm.step(20, GanZi::from_index(0), GanZi::from_index(4), None, None, None); // 무진
+    
+    // B. 공망 해 (갑술년) - 술토는 갑자일주의 공망
+    let frame_void = vm.step(21, GanZi::from_index(0), gap_sul, None, None, None);
+    
+    println!("Normal Score: {:.1}, Void Score: {:.1}", frame_normal.score, frame_void.score);
+    
+    // 공망이면 점수가 깎여야 함 (단, 탈공 조건이 없어야 함)
+    // 원국: 자(子), 해(亥), 자(子), 오(午)
+    // 술(戌)이 들어오면... 오(午)와 인오술 반합? (인 없음), 신유술? (없음), 묘술?(합? 자묘형)..
+    // 오술 합화(O-Sul Semi-Fire)... 반합이 성립하면 탈공됨.
+    // 술해(戌亥) 천라지망...
+    
+    // 확실한 공망 테스트를 위해 원국 지지와 합이 안되는 공망 글자가 필요하지만
+    // 여기서는 공망 태그가 붙었는지 확인하는 것이 확실함
+    
+    let has_void_tag = frame_void.tags.iter().any(|t| t.contains("운성공망"));
+    let has_escape_tag = frame_void.tags.iter().any(|t| t.contains("탈공"));
+    
+    if has_escape_tag {
+        println!("Void escaped due to combination/clash. Tags: {:?}", frame_void.tags);
+    } else {
+        assert!(has_void_tag, "공망 해에는 '운성공망' 태그가 있어야 함");
+        assert!(frame_void.score < frame_normal.score - 5.0, "공망 시 점수가 유의미하게 하락해야 함");
+    }
+}
+
+#[test]
+fn test_case_13_vm_shinsal_and_patterns() {
+    use eon_saju::core::pillars::{SajuInput, FourPillars};
+    use eon_saju::engine::vm::SajuVM;
+    use eon_saju::core::ganzi::GanZi;
+    use eon_saju::core::branch::EarthlyBranch;
+    use eon_saju::core::stem::HeavenlyStem;
+
+    // 김성주님 사주: 갑신년 을해월 경인일 정해시
+    let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
+    let pillars = FourPillars::calculate(&input).unwrap();
+    let vm = SajuVM::new(pillars);
+
+    // 1. 신살 테스트: 역마살 (Yeokmasal)
+    // 일지 '인(寅)' 기준, 운에서 '신(申)'이 오면 역마 (인신충이기도 함)
+    let gyeong_shen = GanZi::new(HeavenlyStem::Geng, EarthlyBranch::Shen); // 경신
+    
+    // 2. 12운성 테스트: 왕지(JeWang/GeonRok)
+    // 일간 '경(庚)' 기준, '신(申)'은 건록(GeonRok) -> 에너지 강함
+    
+    let frame_shen = vm.step(20, GanZi::from_index(0), gyeong_shen, None, None, None);
+    
+    println!("Shen Year Tags: {:?}", frame_shen.tags);
+    
+    // 역마살 확인
+    let has_yeokma = frame_shen.tags.iter().any(|t| t.contains("신살:역마살"));
+    assert!(has_yeokma, "신년(申年)은 인일주에게 역마살이어야 함");
+    
+    // 12운성 왕성 확인
+    let has_geonrok = frame_shen.tags.iter().any(|t| t.contains("운성:건록"));
+    assert!(has_geonrok, "신년(申年)은 경일간에게 건록지여야 함");
+    
+    // 3. 십신 패턴 테스트: 상관견관
+    // 원국에 정관(丁화)가 있음 (시실).
+    // 운에서 상관(계수 癸)가 들어오면 상관견관 성립
+    let gui_you = GanZi::new(HeavenlyStem::Gui, EarthlyBranch::You); // 계유
+    let frame_gui = vm.step(21, GanZi::from_index(0), gui_you, None, None, None);
+    
+    println!("Gui Year Tags: {:?}", frame_gui.tags);
+    
+    let has_shangguan_gyeongwan = frame_gui.tags.iter().any(|t| t.contains("패턴:상관견관"));
+    assert!(has_shangguan_gyeongwan, "계수(상관) 운과 정화(정관)이 만나면 상관견관 패턴이 떠야 함");
+    
+    // 점수 하락 확인 (상관견관은 흉)
+    let frame_normal = vm.step(22, GanZi::from_index(0), GanZi::from_index(0), None, None, None);
+    println!("Gui Score: {:.1}, Normal Score: {:.1}", frame_gui.score, frame_normal.score);
+    assert!(frame_gui.score < frame_normal.score, "상관견관 시 점수가 낮아야 함");
+}

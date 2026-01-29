@@ -7,6 +7,7 @@ use crate::core::stem::HeavenlyStem;
 use crate::core::element::Polarity;
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
+use crate::core::config::thresholds::*;
 
 /// 격국의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -33,7 +34,20 @@ pub enum StructureType {
     YangIn,
     /// 비견/겁재 (정격 외)
     Special,
-    /// 종격 (從格) - 한쪽 세력을 따름
+    
+    // --- 종격 (從格) ---
+    /// 종아격 (從兒格) - 식상으로 종함
+    JongAh,
+    /// 종재격 (從財格) - 재성으로 종함
+    JongJae,
+    /// 종살격 (從殺格) - 관성으로 종함
+    JongSal,
+    /// 종강격 (從强格) - 인성으로 종함
+    JongGang,
+    /// 종왕격 (從旺格) - 비겁으로 종함
+    JongWang,
+    
+    /// 종격 (기타/일반)
     Follower,
     /// 전왕격 (專旺格) - 자신의 기운이 극도로 강함
     SpecialTransformation,
@@ -53,6 +67,11 @@ impl StructureType {
             Self::JianLu => "건록격",
             Self::YangIn => "양인격",
             Self::Special => "비겁격",
+            Self::JongAh => "종아격",
+            Self::JongJae => "종재격",
+            Self::JongSal => "종살격",
+            Self::JongGang => "종강격",
+            Self::JongWang => "종왕격",
             Self::Follower => "종격(從格)",
             Self::SpecialTransformation => "전왕격(專旺格)",
         }
@@ -71,6 +90,11 @@ impl StructureType {
             Self::JianLu => "建祿格",
             Self::YangIn => "陽刃格",
             Self::Special => "特殊格",
+            Self::JongAh => "從兒格",
+            Self::JongJae => "從財格",
+            Self::JongSal => "從殺格",
+            Self::JongGang => "從强格",
+            Self::JongWang => "從旺格",
             Self::Follower => "從格",
             Self::SpecialTransformation => "專旺格",
         }
@@ -119,22 +143,45 @@ impl StructureAnalysis {
 
         // 0. 특수 격국(종격/전왕격) 우선 판정
         let strength = pillars.strength();
-        let is_polarized = strength.deuk_se.support_ratio >= 80.0 || strength.deuk_se.support_ratio <= 20.0;
+        let is_polarized = strength.deuk_se.support_ratio >= POLARIZED_RATIO_HIGH || strength.deuk_se.support_ratio <= POLARIZED_RATIO_LOW;
         
         if is_polarized {
-            if strength.deuk_se.support_ratio >= 80.0 {
+            if strength.deuk_se.support_ratio >= POLARIZED_RATIO_HIGH {
+                // 비겁 vs 인성 비중 확인
+                let yinxing = strength.deuk_se.yinxing_count;
+                let bijie = strength.deuk_se.bijie_count;
+                
+                let (structure, name) = if bijie >= yinxing {
+                    (StructureType::JongWang, "종왕격(從旺格)")
+                } else {
+                    (StructureType::JongGang, "종강격(從强格)")
+                };
+
                 return Self {
-                    structure: StructureType::SpecialTransformation,
+                    structure,
                     projected_stem: None,
                     projection_path: None,
-                    reason: format!("일간의 세력({:.1}%)이 극단적으로 강하여 자신의 기운을 따르는 전왕격(專旺格)에 해당함", strength.deuk_se.support_ratio),
+                    reason: format!("일간의 세력({:.1}%)이 극단적으로 강하여 {}에 해당함", strength.deuk_se.support_ratio, name),
                 };
             } else {
+                // 식상 vs 재성 vs 관성 비중 확인
+                let shishang = strength.deuk_se.shishang_count;
+                let cai = strength.deuk_se.caisheng_count;
+                let guan = strength.deuk_se.guanxing_count;
+
+                let (structure, name) = if shishang >= cai && shishang >= guan {
+                    (StructureType::JongAh, "종아격(從兒格)")
+                } else if cai >= shishang && cai >= guan {
+                    (StructureType::JongJae, "종재격(從財格)")
+                } else {
+                    (StructureType::JongSal, "종살격(從殺格)")
+                };
+
                 return Self {
-                    structure: StructureType::Follower,
+                    structure,
                     projected_stem: None,
                     projection_path: None,
-                    reason: format!("일간의 세력({:.1}%)이 극단적으로 약하여 월지의 강한 세력을 따르는 종격(從格)에 해당함", strength.deuk_se.support_ratio),
+                    reason: format!("일간의 세력({:.1}%)이 극단적으로 약하여 월지 세력을 따르는 {}에 해당함", strength.deuk_se.support_ratio, name),
                 };
             }
         }
