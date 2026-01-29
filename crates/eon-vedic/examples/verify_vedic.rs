@@ -3,6 +3,7 @@ use eon_vedic::dasha::Vimshottari;
 use eon_vedic::planets::VedicPlanet;
 use eon_vedic::yogas::YogaEngine;
 use eon_vedic::analysis::nature::{FunctionalNature, FunctionalStatus};
+use eon_vedic::analysis::strength::StrengthEngine;
 use chrono::{TimeZone, Utc};
 
 fn main() {
@@ -20,7 +21,7 @@ fn main() {
     let calculator = VedicChartCalculator::new();
     let chart = calculator.calculate(birth_time, lat, lon);
 
-    println!("\n[1] Planetary Positions & Functional Nature");
+    println!("\n[1] Planetary Positions, Nature & Strength");
     let lagna_rasi = chart.ascendant.rasi;
     println!("Ascendant (Lagna): {:.2}° (Rasi: {})", chart.ascendant.sidereal_deg, lagna_rasi);
     
@@ -29,18 +30,22 @@ fn main() {
     for pos in &chart.planets {
         let nature = FunctionalNature::analyze(lagna_rasi, pos.planet);
         let nature_str = match nature {
-            FunctionalStatus::Yogakaraka => "Yogakaraka (Best)",
+            FunctionalStatus::Yogakaraka => "Yogakaraka",
             FunctionalStatus::FunctionalBenefic => "Benefic",
             FunctionalStatus::Neutral => "Neutral",
             FunctionalStatus::FunctionalMalefic => "Malefic",
-            FunctionalStatus::Maraka => "Maraka (Killer)",
+            FunctionalStatus::Maraka => "Maraka",
         };
 
-        println!("{:<12} | House: {:>2} | Sidereal: {:>6.2}° | Nature: {}", 
+        let strength = StrengthEngine::calculate(pos);
+
+        println!("{:<12} | H: {:>2} | Sid: {:>6.2}° | Nature: {:<12} | Str: {:>5.1} ({})", 
             format!("{:?}", pos.planet), 
             pos.house_index,
             pos.sidereal_deg, 
-            nature_str
+            nature_str,
+            strength.total_score,
+            strength.status
         );
 
         if pos.planet == VedicPlanet::Moon {
@@ -61,7 +66,7 @@ fn main() {
 
     // 4. Vimshottari Dasha
     println!("\n[3] Vimshottari Dasha Timeline");
-    let dashas = Vimshottari::calculate(moon_long, birth_time, 1); // Depth 1 for brevity
+    let dashas = Vimshottari::calculate(moon_long, birth_time, 1);
     
     for d in dashas {
          let nature = FunctionalNature::analyze(lagna_rasi, d.planet);
