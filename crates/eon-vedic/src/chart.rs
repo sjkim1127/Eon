@@ -50,6 +50,7 @@ pub struct VedicChart {
     pub planets: Vec<VedicPosition>,
     pub aspects: Vec<crate::analysis::aspects::AspectRelation>,
     pub sav: crate::analysis::ashtakavarga::Sarvashtakavarga,
+    pub house_cusps: Vec<f64>,
 }
 
 pub struct VedicChartCalculator {
@@ -75,10 +76,29 @@ impl VedicChartCalculator {
     pub fn calculate(&self, time: DateTime<Utc>, latitude: f64, longitude: f64) -> VedicChart {
         let ayanamsa = get_lahiri_ayanamsa(&self.engine, time);
         
-        let (_, ascmc) = self.engine.get_houses(time, latitude, longitude, 'W' as i32)
+        let hsys = match self.config.house_system {
+            crate::config::HouseSystem::WholeSign => b'W' as i32,
+            crate::config::HouseSystem::Sripati => b'S' as i32,
+        };
+
+        let (cusps, ascmc) = self.engine.get_houses(time, latitude, longitude, hsys)
             .unwrap_or((vec![], [0.0; 10]));
-            
+        
+        let sidereal_cusps: Vec<f64> = cusps.iter().map(|c| (c - ayanamsa + 360.0) % 360.0).collect();
         let asc_sidereal = (ascmc[0] - ayanamsa + 360.0) % 360.0;
+
+        // Calculate Sandhis (Junctions) for Bhava Chalit
+        let mut sandhis = Vec::new();
+        if self.config.house_system == crate::config::HouseSystem::Sripati && !sidereal_cusps.is_empty() {
+            for i in 0..12 {
+                let c1 = sidereal_cusps[i];
+                let c2 = sidereal_cusps[(i + 1) % 12];
+                let mut diff = c2 - c1;
+                if diff < 0.0 { diff += 360.0; }
+                sandhis.push((c1 + diff / 2.0) % 360.0);
+            }
+        }
+
         let asc_rasi = (asc_sidereal / 30.0).floor() as u8 + 1;
         
         // Helper to Create Position
@@ -92,11 +112,34 @@ impl VedicChartCalculator {
              let pada = (pada_pos.floor() as u8) + 1;
              let rasi = (sidereal / 30.0).floor() as u8 + 1;
              
-             // Whole Sign House Index
-             let house_index = if rasi >= asc_rasi {
-                 rasi - asc_rasi + 1
-             } else {
-                 (12 - asc_rasi) + rasi + 1
+             // House Index Calculation
+             let house_index = match self.config.house_system {
+                 crate::config::HouseSystem::WholeSign => {
+                     if rasi >= asc_rasi {
+                         rasi - asc_rasi + 1
+                     } else {
+                         (12 - asc_rasi) + rasi + 1
+                     }
+                 },
+                 crate::config::HouseSystem::Sripati => {
+                     let mut h = 0;
+                     for i in 0..12 {
+                         let s_start = sandhis[(i + 11) % 12];
+                         let s_end = sandhis[i];
+                         
+                         let in_house = if s_start < s_end {
+                             sidereal >= s_start && sidereal < s_end
+                         } else {
+                             sidereal >= s_start || sidereal < s_end
+                         };
+                         
+                         if in_house {
+                             h = i + 1;
+                             break;
+                         }
+                     }
+                     h as u8
+                 }
              };
 
              VedicPosition {
@@ -184,6 +227,7 @@ impl VedicChartCalculator {
             planets,
             aspects: Vec::new(),
             sav: crate::analysis::ashtakavarga::Sarvashtakavarga { points: [0; 12] },
+            house_cusps: sidereal_cusps,
         };
 
         // Post-calculation analysis

@@ -38,7 +38,7 @@ impl YogaEngine {
         // --- 1. Basic Yogas (Gajakesari, etc.) ---
         if let (Some(moon), Some(jupiter)) = (get_planet(VedicPlanet::Moon), get_planet(VedicPlanet::Jupiter)) {
             // Gajakesari: Jupiter in Kendra (1, 4, 7, 10) from Moon
-            let diff = (jupiter.rasi as i32 - moon.rasi as i32);
+            let diff = jupiter.rasi as i32 - moon.rasi as i32;
             let dist = if diff >= 0 { diff + 1 } else { diff + 13 };
             
             if [1, 4, 7, 10].contains(&dist) {

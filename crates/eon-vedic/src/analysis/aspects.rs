@@ -1,7 +1,7 @@
 use crate::planets::VedicPlanet;
 use crate::chart::VedicChart;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AspectRelation {
@@ -63,8 +63,8 @@ impl AspectEngine {
 
     fn get_target_house(start: u8, count: u8) -> u8 {
         // start is 1-12. count is distance (1=self, 7=opposite)
-        let target = (start as i32 + count as i32 - 1);
-        let mut r = (target % 12);
+        let target = start as i32 + count as i32 - 1;
+        let mut r = target % 12;
         if r == 0 { 12 } else { r as u8 }
     }
 }

@@ -10,6 +10,7 @@ pub struct PlanetStrength {
     pub chesta_score: f64,     // 0.0 ~ 60.0 (Chesta Bala - Motion)
     pub naisargika_score: f64, // 0.0 ~ 60.0 (Natural strength)
     pub kala_score: f64,       // 0.0 ~ 60.0 (Time strength - Day/Night)
+    pub drik_score: f64,       // Aspect strength (can be negative)
     pub total_score: f64,      // Aggregate for MVP
     pub status: String,        // "Exalted", "Debilitated", "Strong", "Weak", "Neutral"
 }
@@ -18,15 +19,19 @@ pub struct StrengthEngine;
 
 impl StrengthEngine {
     /// Calculate basic strength metrics (Shadbala Lite)
-    pub fn calculate(pos: &VedicPosition, sun_house: u8) -> PlanetStrength {
+    pub fn calculate(pos: &VedicPosition, chart: &crate::chart::VedicChart) -> PlanetStrength {
         let ex_score = Self::calculate_uchcha_bala(pos.planet, pos.sidereal_deg);
         let dig_score = Self::calculate_dig_bala(pos.planet, pos.house_index);
         let chesta_score = Self::calculate_chesta_bala(pos);
         let naisargika_score = Self::calculate_naisargika_bala(pos.planet);
+        
+        let sun_house = chart.planets.iter().find(|p| p.planet == VedicPlanet::Sun).map(|p| p.house_index).unwrap_or(1);
         let is_day = sun_house >= 7 && sun_house <= 12;
         let kala_score = Self::calculate_kala_bala(pos.planet, is_day);
         
-        let total = ex_score + dig_score + chesta_score + naisargika_score + kala_score;
+        let drik_score = Self::calculate_drik_bala(pos, chart);
+        
+        let total = ex_score + dig_score + chesta_score + naisargika_score + kala_score + drik_score;
         
         // Simple status determination
         let status = if ex_score >= 50.0 {
@@ -48,9 +53,71 @@ impl StrengthEngine {
             chesta_score,
             naisargika_score,
             kala_score,
+            drik_score,
             total_score: total,
             status,
         }
+    }
+
+    /// Drik Bala (Aspect Strength)
+    /// Calculates the sum of aspect values (Drishti) from all other planets.
+    fn calculate_drik_bala(pos: &VedicPosition, chart: &crate::chart::VedicChart) -> f64 {
+        let mut total_drik = 0.0;
+        
+        for aspector in &chart.planets {
+            if aspector.planet == pos.planet { continue; }
+            
+            let diff = (pos.sidereal_deg - aspector.sidereal_deg + 360.0) % 360.0;
+            let val = Self::get_aspect_value(aspector.planet, diff);
+            
+            // Influence of aspecting planet nature
+            let is_malefic = matches!(aspector.planet, VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Saturn | VedicPlanet::Rahu | VedicPlanet::Ketu);
+            
+            if is_malefic {
+                total_drik -= val / 4.0;
+            } else {
+                total_drik += val / 4.0;
+            }
+        }
+        
+        total_drik
+    }
+
+    fn get_aspect_value(planet: VedicPlanet, diff: f64) -> f64 {
+        let mut val = if diff > 30.0 && diff <= 60.0 {
+            diff - 30.0
+        } else if diff > 60.0 && diff <= 90.0 {
+            15.0 
+        } else if diff > 90.0 && diff <= 120.0 {
+            (diff - 90.0) + 15.0
+        } else if diff > 120.0 && diff <= 150.0 {
+            45.0
+        } else if diff > 150.0 && diff <= 180.0 {
+            (diff - 150.0) / 2.0 + 45.0
+        } else if diff > 180.0 && diff <= 300.0 {
+            (300.0 - diff) / 2.0
+        } else {
+            0.0
+        };
+
+        // Special Aspects
+        match planet {
+            VedicPlanet::Mars => {
+                 if (diff - 90.0).abs() < 15.0 { val = 60.0; }
+                 if (diff - 210.0).abs() < 15.0 { val = 60.0; }
+            },
+            VedicPlanet::Jupiter => {
+                 if (diff - 120.0).abs() < 15.0 { val = 60.0; }
+                 if (diff - 240.0).abs() < 15.0 { val = 60.0; }
+            },
+            VedicPlanet::Saturn => {
+                 if (diff - 60.0).abs() < 15.0 { val = 60.0; }
+                 if (diff - 270.0).abs() < 15.0 { val = 60.0; }
+            },
+            _ => {}
+        }
+
+        val.max(0.0).min(60.0)
     }
 
     /// Naisargika Bala (Natural Strength)

@@ -37,7 +37,7 @@ impl Vimshottari {
     /// Nakshatra 1 (Ashwini) -> Ketu (0)
     fn get_ruler_index(nakshatra: u8) -> usize {
         // (nakshatra - 1) % 9
-        ((nakshatra as usize - 1) % 9)
+        (nakshatra as usize - 1) % 9
     }
 
     pub fn calculate(

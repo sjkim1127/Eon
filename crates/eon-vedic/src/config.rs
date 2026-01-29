@@ -14,10 +14,17 @@ pub enum NodeCalculation {
     TrueNode, // SE_TRUE_NODE (11)
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum HouseSystem {
+    WholeSign,
+    Sripati,
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct VedicConfig {
     pub ayanamsa: AyanamsaSystem,
     pub node_calc: NodeCalculation,
+    pub house_system: HouseSystem,
     // Add Varga related config if needed, e.g. which vargas to calculate
     // For now, we will calculate all requested ones or default set.
 }
@@ -27,6 +34,7 @@ impl Default for VedicConfig {
         Self {
             ayanamsa: AyanamsaSystem::Lahiri,
             node_calc: NodeCalculation::MeanNode,
+            house_system: HouseSystem::WholeSign,
         }
     }
 }

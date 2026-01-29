@@ -5,8 +5,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AshtakavargaPoints {
     pub planet: VedicPlanet,
-    pub points: [u8; 12],         // Raw points
-    pub reduced_points: [u8; 12], // After Trikona Shodhana
+    pub points: [u8; 12],            // Raw points
+    pub trikona_points: [u8; 12],    // After Trikona Shodhana
+    pub shodhana_points: [u8; 12],   // After Ekadhipatya Shodhana
+    pub sodya_pinda: u32,            // Final Pinda score
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -70,12 +72,16 @@ impl AshtakavargaEngine {
             }
         }
 
-        let reduced_points = Self::apply_triangular_reduction(points);
+        let trikona_points = Self::apply_triangular_reduction(points);
+        let shodhana_points = Self::apply_ekadhipatya_reduction(trikona_points, chart);
+        let sodya_pinda = Self::calculate_pinda(target_planet, shodhana_points, chart);
 
         AshtakavargaPoints { 
             planet: target_planet, 
             points, 
-            reduced_points 
+            trikona_points,
+            shodhana_points,
+            sodya_pinda
         }
     }
 
@@ -117,6 +123,87 @@ impl AshtakavargaEngine {
             }
         }
         reduced
+    }
+
+    /// Ekadhipatya Shodhana (Reduction for planets owning two signs)
+    pub fn apply_ekadhipatya_reduction(points: [u8; 12], chart: &VedicChart) -> [u8; 12] {
+        let mut reduced = points;
+        let pairs = [
+            (0, 7),  // Mars: Aries (1) & Scorpio (8)
+            (1, 6),  // Venus: Taurus (2) & Libra (7)
+            (2, 5),  // Mercury: Gemini (3) & Virgo (6)
+            (8, 11), // Jupiter: Sag (9) & Pisces (12)
+            (9, 10), // Saturn: Cap (10) & Aqua (11)
+        ];
+
+        let is_occupied = |rasi_idx: usize| -> bool {
+            chart.planets.iter().any(|p| p.rasi == (rasi_idx as u8 + 1))
+        };
+
+        for (r1, r2) in pairs {
+            let p1 = reduced[r1];
+            let p2 = reduced[r2];
+            let occ1 = is_occupied(r1);
+            let occ2 = is_occupied(r2);
+
+            if p1 == 0 || p2 == 0 {
+                if p1 == 0 && p2 == 0 { continue; }
+                let (has_pts_idx, other_idx, other_occ) = if p1 == 0 { (r2, r1, occ1) } else { (r1, r2, occ2) };
+                if !is_occupied(has_pts_idx) {
+                    reduced[has_pts_idx] = 0;
+                }
+            } else {
+                // Both have points
+                if occ1 && occ2 {
+                    // Both occupied, no reduction
+                } else if !occ1 && !occ2 {
+                    // Neither occupied, both to lower value
+                    let min_val = p1.min(p2);
+                    reduced[r1] = min_val;
+                    reduced[r2] = min_val;
+                } else {
+                    // One occupied
+                    let (occ_idx, unocc_idx) = if occ1 { (r1, r2) } else { (r2, r1) };
+                    if reduced[unocc_idx] > reduced[occ_idx] {
+                        reduced[unocc_idx] = reduced[occ_idx];
+                    }
+                }
+            }
+        }
+        reduced
+    }
+
+    /// Calculate Sodya Pinda (Final sum of reduced points multiplied by rasi/planet factors)
+    pub fn calculate_pinda(_target: VedicPlanet, points: [u8; 12], chart: &VedicChart) -> u32 {
+        let rasi_multipliers = [7, 10, 8, 4, 10, 5, 7, 8, 9, 5, 11, 12];
+        let graha_multipliers = [
+            (VedicPlanet::Sun, 5),
+            (VedicPlanet::Moon, 5),
+            (VedicPlanet::Mars, 8),
+            (VedicPlanet::Mercury, 5),
+            (VedicPlanet::Jupiter, 10),
+            (VedicPlanet::Venus, 7),
+            (VedicPlanet::Saturn, 5),
+        ];
+
+        // 1. Rasi Pinda: Points in each rasi * Rasi multiplier
+        let mut rasi_pinda = 0u32;
+        for i in 0..12 {
+            rasi_pinda += (points[i] as u32) * rasi_multipliers[i];
+        }
+
+        // 2. Graha Pinda: Reduced points in rasis where planets are * Graha multiplier
+        let mut graha_pinda = 0u32;
+        for (p, mult) in graha_multipliers {
+            if let Some(pos) = chart.planets.iter().find(|pos| pos.planet == p) {
+                let rasi_idx = (pos.rasi as usize).wrapping_sub(1);
+                if rasi_idx < 12 {
+                    graha_pinda += (points[rasi_idx] as u32) * mult;
+                }
+            }
+        }
+
+        rasi_pinda + graha_pinda
     }
 
     fn get_offsets(target: VedicPlanet, from: VedicPlanet) -> &'static [u8] {

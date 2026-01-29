@@ -37,19 +37,23 @@ fn main() {
             FunctionalStatus::Maraka => "Maraka",
         };
 
-        let sun_house = chart.planets.iter().find(|p| p.planet == VedicPlanet::Sun).map(|p| p.house_index).unwrap_or(1);
-        let strength = StrengthEngine::calculate(pos, sun_house);
+        let strength = StrengthEngine::calculate(pos, &chart);
 
-        println!("{:<12} | H: {:>2} | Sid: {:>6.2}° | Nature: {:<12} | Str: {:>5.1} ({}){}{}", 
+        let avasthas = eon_vedic::analysis::avasthas::AvasthaEngine::calculate(pos);
+
+        println!("{:<12} | H: {:>2} | Sid: {:>6.2}° | Nature: {:<12} | Str: {:>5.1} (D:{:>4.1},K:{:>2.0}) ({}){}{}", 
             format!("{:?}", pos.planet), 
             pos.house_index,
             pos.sidereal_deg, 
             nature_str,
             strength.total_score,
+            strength.drik_score,
+            strength.kala_score,
             strength.status,
             if pos.is_retrograde { " (Rx)" } else { "" },
             if pos.is_combust { " (C)" } else { "" }
         );
+        println!("             | Avasthas: {:?}, {:?}", avasthas.baladi, avasthas.jagradadi);
 
         if pos.planet == VedicPlanet::Moon {
             moon_long = pos.sidereal_deg;
@@ -80,7 +84,8 @@ fn main() {
         .map(|_| eon_vedic::analysis::ashtakavarga::AshtakavargaEngine::calculate_bav(VedicPlanet::Sun, &chart)) 
     {
         println!("  Raw:     {:?}", sun_bav.points);
-        println!("  Reduced: {:?}", sun_bav.reduced_points);
+        println!("  Reduced: {:?}", sun_bav.shodhana_points);
+        println!("  Pinda:   {}", sun_bav.sodya_pinda);
     }
 
     println!("\n[5] Planetary Aspects (Drishti)");
