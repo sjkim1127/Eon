@@ -8,11 +8,10 @@ description = "Static data for Eon destiny platform (Manseryuk calendar, etc.)"
 
 [dependencies]
 eon-core = { path = "../eon-core" }
+eon-astro = { path = "../eon-astro" }
 chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 bincode = "1.3"
-once_cell = "1.18"
 
 [dev-dependencies]
-eon-astro = { path = "../eon-astro" }

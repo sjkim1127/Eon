@@ -32,11 +32,12 @@ fn main() {
         builder = builder.with_golden_time(gt);
     }
     
-    builder = builder.with_vm_simulation(
-        "Simulation performed over 1000 years (2004-3004). \
-         Hardware accelerated analysis confirmed optimal energy flow periods."
-        .to_string()
-    );
+    builder = builder.with_vm_simulation(frames)
+        .with_vm_summary(
+            "Simulation performed over 1000 years (2004-3004). \
+             Hardware accelerated analysis confirmed optimal energy flow periods."
+            .to_string()
+        );
 
     // Generate Markdown
     let markdown = builder.to_markdown();

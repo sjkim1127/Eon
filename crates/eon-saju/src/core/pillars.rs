@@ -162,6 +162,9 @@ pub struct FourPillars {
     pub raw_input: SajuInput,
 }
 
+/// 년주 계산용 기준 연도 (4년 = 甲子년)
+const GANZI_BASE_YEAR: i32 = 4;
+
 impl FourPillars {
     /// 사주 입력으로부터 사주 계산
     pub fn calculate(input: &SajuInput) -> Result<Self, SajuError> {
@@ -257,7 +260,7 @@ impl FourPillars {
             year
         };
 
-        let idx = (effective_year - 4).rem_euclid(60);
+        let idx = (effective_year - GANZI_BASE_YEAR).rem_euclid(60);
         GanZi::from_index(idx)
     }
 
@@ -283,19 +286,11 @@ impl FourPillars {
 
     /// 일주 계산
     pub(crate) fn calculate_day_pillar(year: i32, month: u32, day: u32) -> GanZi {
-        let y = if month <= 2 { year - 1 } else { year };
-        let m = if month <= 2 { month + 12 } else { month };
+        let date = NaiveDate::from_ymd_opt(year, month, day)
+            .unwrap_or(NaiveDate::from_ymd_opt(year, month, 1).unwrap());
         
-        let d = day as i32;
-        
-        let jd = (365.25 * (y + 4716) as f64) as i32 
-               + (30.6001 * (m + 1) as f64) as i32 
-               + d + 2 - (y / 100) + (y / 400) - 1524;
-        
-        let idx = (jd - 11) % 60;
-        let final_idx = if idx < 0 { idx + 60 } else { idx };
-        
-        GanZi::from_index(final_idx)
+        let idx = eon_data::manseryuk::get_day_ganzi_index(date);
+        GanZi::from_index(idx as i32)
     }
 
     /// 시주 계산

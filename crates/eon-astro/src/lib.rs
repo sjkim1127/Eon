@@ -149,6 +149,97 @@ impl AstroEngine {
             swiss_eph::swe_julday(year, month, day, hour, 1)
         }
     }
+
+    /// 특정 시점 이전 혹은 포함된 가장 가까운 합삭(New Moon) 시각을 찾습니다.
+    pub fn find_new_moon_before(&self, datetime: DateTime<Utc>) -> Result<DateTime<Utc>, String> {
+        self.find_relative_conjunction_backward(datetime, 0.0)
+    }
+
+    /// 특정 시점 이전의 가장 가까운 동지(Winter Solstice, 황경 270도)를 찾습니다.
+    /// 음력 연도를 동지 기준으로 정렬할 때 필요합니다.
+    pub fn find_winter_solstice_before(&self, datetime: DateTime<Utc>) -> Result<DateTime<Utc>, String> {
+        self.find_longitude_time_backward(datetime, 270.0)
+    }
+
+    /// 태양과 달의 상대적 위치(상대적 황경 차이)가 target_diff가 되는 시점을 역방향으로 찾습니다.
+    fn find_relative_conjunction_backward(
+        &self, 
+        start_time: DateTime<Utc>, 
+        target_diff: f64,
+    ) -> Result<DateTime<Utc>, String> {
+        use chrono::Duration;
+        
+        let mut t = start_time;
+        
+        // 1. 현재 시점의 차이 확인 (Newton-Raphson 근사 시작점)
+        let sun_l = self.get_sun_longitude(t)?;
+        let moon_l = self.get_planet_position(t, 1, 256)?;
+        let diff = (moon_l - sun_l + 360.0) % 360.0;
+        
+        // 달-태양 상대 속도 약 12.19도/일.
+        let days_back = diff / 12.19;
+        t = t - Duration::seconds((days_back * 86400.0) as i64);
+
+        // 2. 수렴
+        for _ in 0..10 {
+            let s = self.get_sun_longitude(t)?;
+            let m = self.get_planet_position(t, 1, 256)?;
+            let d = (m - s + 360.0) % 360.0;
+            
+            let mut err = target_diff - d;
+            while err > 180.0 { err -= 360.0; }
+            while err < -180.0 { err += 360.0; }
+            
+            if err.abs() < 0.000001 { break; }
+            
+            let days_adj = err / 12.19;
+            t = t + Duration::seconds((days_adj * 86400.0) as i64);
+        }
+        
+        // 3. 만약 결과가 start_time보다 미래라면 한 달 더 뒤로 가서 다시 찾기
+        if t > start_time + Duration::seconds(1) {
+            t = t - Duration::days(29);
+            return self.find_relative_conjunction_backward(t, target_diff);
+        }
+
+        Ok(t)
+    }
+
+    /// 태양 황경이 특정 target_long이 되는 시점을 역방향으로 찾습니다.
+    fn find_longitude_time_backward(
+        &self,
+        start_time: DateTime<Utc>,
+        target_long: f64,
+    ) -> Result<DateTime<Utc>, String> {
+        use chrono::Duration;
+        let mut t = start_time;
+        
+        let current_long = self.get_sun_longitude(t)?;
+        let mut diff = current_long - target_long;
+        while diff < 0.0 { diff += 360.0; }
+        
+        // 태양 속도 약 0.9856도/일
+        let days_back = diff / 0.9856;
+        t = t - Duration::seconds((days_back * 86400.0) as i64);
+        
+        for _ in 0..10 {
+            let c = self.get_sun_longitude(t)?;
+            let mut d = target_long - c;
+            while d > 180.0 { d -= 360.0; }
+            while d < -180.0 { d += 360.0; }
+            
+            if d.abs() < 0.000001 { break; }
+            
+            let days_adj = d / 0.9856;
+            t = t + Duration::seconds((days_adj * 86400.0) as i64);
+        }
+        
+        if t > start_time + Duration::seconds(1) {
+            t = t - Duration::days(360);
+            return self.find_longitude_time_backward(t, target_long);
+        }
+        Ok(t)
+    }
 }
 
 impl Drop for AstroEngine {

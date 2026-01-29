@@ -214,16 +214,16 @@ impl DeukJi {
                 if stem.element() == day_element {
                     // 기운의 종류에 따른 가중치 (정기: 1.0, 중기: 0.6, 여기: 0.3)
                     let part_weight = if idx == hidden_stems.len() - 1 { 
-                        1.0 // 정기
+                        crate::core::config::root_weights::MAIN_ROOT
                     } else if hidden_stems.len() == 3 && idx == 1 {
-                        0.6 // 중기
+                        crate::core::config::root_weights::MIDDLE_ROOT
                     } else {
-                        0.3 // 여기
+                        crate::core::config::root_weights::REMAIN_ROOT
                     };
 
                     // 사령(Commanding) 여부 확인 (월지만 해당, 가중치 20% 보정)
                     let saryeong_multiplier = if let Some(ref s) = saryeong {
-                        if s.commanding_stem == *stem { 1.2 } else { 1.0 }
+                        if s.commanding_stem == *stem { crate::core::config::root_weights::SARYEONG_BONUS } else { 1.0 }
                     } else { 1.0 };
 
                     branch_root_score += (weight * part_weight * saryeong_multiplier).min(weight);
@@ -258,7 +258,7 @@ impl DeukJi {
         // 득지 판정: 
         // 1) 12운성 가중치 합이 1.0 이상 (A급 1개 또는 B급 2개 이상)
         // 2) 또는 통근 점수가 3.0 이상
-        let acquired = stage_weight_sum >= 1.0 || root_score >= 3.0;
+        let acquired = stage_weight_sum >= 1.0 || root_score >= crate::core::config::root_weights::MIN_DEUK_JI_SCORE;
         
         Self {
             acquired,
@@ -462,7 +462,7 @@ impl DeukSe {
         }
         
         let support_ratio = (support_score / TOTAL_WEIGHT) * 100.0;
-        let acquired = support_score >= 5.5;
+        let acquired = support_score >= crate::core::config::strength_scores::DEUK_SE_THRESHOLD;
         
         Self {
             acquired,
@@ -541,10 +541,10 @@ impl StrengthAnalysis {
         };
         
         // 종합 점수 계산
-        let score_ryeong = if deuk_ryeong.acquired { 25.0 } else { 0.0 };
-        let score_ji = if deuk_ji.acquired { 25.0 } else { 0.0 };
-        let score_si = if deuk_si.acquired { 25.0 } else { 0.0 };
-        let score_se = deuk_se.support_ratio * 0.25;
+        let score_ryeong = if deuk_ryeong.acquired { crate::core::config::strength_scores::CRITERIA_SCORE } else { 0.0 };
+        let score_ji = if deuk_ji.acquired { crate::core::config::strength_scores::CRITERIA_SCORE } else { 0.0 };
+        let score_si = if deuk_si.acquired { crate::core::config::strength_scores::CRITERIA_SCORE } else { 0.0 };
+        let score_se = deuk_se.support_ratio * crate::core::config::strength_scores::DEUK_SE_WEIGHT;
         let strength_score = score_ryeong + score_ji + score_si + score_se;
         
         Self {
@@ -559,17 +559,27 @@ impl StrengthAnalysis {
         }
     }
 
-    /// 용신(用神) 추천
-    pub fn recommend_yongshin(&self) -> Vec<&'static str> {
+    /// 용신(用神) 추천 (오행 그룹 반환)
+    pub fn recommend_yongshin(&self) -> Vec<Element> {
+        let dm_element = self.day_master.element();
         match self.strength_type {
             StrengthType::Strong => {
-                vec!["식상(食傷)", "재성(財星)", "관성(官星)"]
+                // 식상 / 재성 / 관성 오행들
+                vec![
+                    dm_element.generates(),       // 식상
+                    dm_element.controls(),        // 재성
+                    dm_element.controlled_by(),   // 관성
+                ]
             }
             StrengthType::Weak => {
-                vec!["인성(印星)", "비겁(比劫)"]
+                // 인성 / 비겁 오행들
+                vec![
+                    dm_element.generated_by(),    // 인성
+                    dm_element,                   // 비겁
+                ]
             }
             StrengthType::Balanced => {
-                vec!["조화로운 오행"]
+                vec![]
             }
         }
     }
@@ -612,7 +622,10 @@ impl std::fmt::Display for StrengthAnalysis {
         writeln!(f, "  {}", self.strength_type.description())?;
         
         writeln!(f)?;
-        writeln!(f, "용신 추천: {:?}", self.recommend_yongshin())?;
+        let yongshin_names: Vec<String> = self.recommend_yongshin().iter()
+            .map(|e| e.hangul().to_string())
+            .collect();
+        writeln!(f, "용신(추천 오행): {}", yongshin_names.join(", "))?;
         
         Ok(())
     }

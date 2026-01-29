@@ -11,6 +11,22 @@ pub mod weights {
     pub const WEIGHT_STEM: f32 = 1.0;         // 각 천간 10점 (일간 포함 4개)
 }
 
+/// 신강신약 점수 산출 가중치
+pub mod strength_scores {
+    pub const CRITERIA_SCORE: f32 = 25.0;     // 득령, 득지, 득시 각각의 점수
+    pub const DEUK_SE_THRESHOLD: f32 = 5.5;   // 득세 판정 임계값
+    pub const DEUK_SE_WEIGHT: f32 = 0.25;     // 득세 점수 반영비율
+}
+
+/// 지장간 통근 가중치
+pub mod root_weights {
+    pub const MAIN_ROOT: f32 = 1.0;           // 정기
+    pub const MIDDLE_ROOT: f32 = 0.6;         // 중기
+    pub const REMAIN_ROOT: f32 = 0.3;         // 여기
+    pub const SARYEONG_BONUS: f32 = 1.2;      // 사령 보너스 (20%)
+    pub const MIN_DEUK_JI_SCORE: f32 = 3.0;   // 득지 판정 최소 점수
+}
+
 /// 분석 임계값 (Thresholds)
 pub mod thresholds {
     /// 종격(극단적 강약) 판단 비율 (%)

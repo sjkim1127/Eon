@@ -1,6 +1,6 @@
 use eon_astro::AstroEngine;
-use eon_data::cache::{ManseryukCache, SolarTermTable};
-use chrono::{DateTime, Utc, TimeZone};
+use eon_data::cache::{ManseryukCache, SolarTermTable, LunarMonthRecord};
+use chrono::{DateTime, Utc, TimeZone, Datelike};
 use std::fs::File;
 use std::io::Write;
 
@@ -11,13 +11,11 @@ fn main() {
     let start_year = 1950;
     let end_year = 2050;
     
-    println!("Generating solar terms from {} to {} using Swiss Ephemeris...", start_year, end_year);
+    println!("Generating solar terms/lunar from {} to {}...", start_year, end_year);
     
     for year in start_year..=end_year {
         let mut terms = Vec::new();
         for idx in 0..24 {
-            // 입춘(315도) 기준으로 순차적 탐색을 위한 대략적인 시각 설정
-            // 각 월별 절기(Jieqi)와 중기(Zhongqi)의 근사치
             let month = ((idx as i32 + 2) / 2) % 12;
             let actual_month = if month == 0 { 12 } else { month } as u32;
             let actual_year = if idx >= 22 && actual_month == 1 { year + 1 } else { year };
@@ -30,20 +28,51 @@ fn main() {
             }
         }
         
-        // 정렬 보장 (시간 순)
         terms.sort_by_key(|&(_, time)| time);
-        
         cache.years.insert(year, SolarTermTable { year, terms });
+        
+        // 2. 음력 데이터 생성
+        let mut lunar_records = Vec::new();
+        let year_start = Utc.with_ymd_and_hms(year, 1, 1, 0, 0, 0).unwrap();
+        let year_end = Utc.with_ymd_and_hms(year, 12, 31, 23, 59, 59).unwrap();
+        
+        let mut current_nm_t = engine.find_new_moon_before(year_start).unwrap();
+        
+        for _ in 0..15 {
+            let search_t = current_nm_t + chrono::Duration::days(31);
+            if let Ok(next_nm_t) = engine.find_new_moon_before(search_t) {
+                if next_nm_t <= current_nm_t { break; }
+                if next_nm_t > year_end { break; }
+                
+                let kst_offset = chrono::Duration::hours(9);
+                let nm_date_kst = (next_nm_t + kst_offset).date_naive();
+                
+                if let Some((ly, lm, _, il)) = eon_data::manseryuk::LunarCalendar::from_solar_internal(nm_date_kst) {
+                    if nm_date_kst.year() == year {
+                        lunar_records.push(LunarMonthRecord {
+                            new_moon_date: nm_date_kst,
+                            lunar_year: ly,
+                            lunar_month: lm,
+                            is_leap: il,
+                        });
+                    }
+                }
+                current_nm_t = next_nm_t;
+            } else {
+                break;
+            }
+        }
+        lunar_records.sort_by_key(|r| r.new_moon_date);
+        cache.lunar_months.insert(year, lunar_records);
+
         if year % 10 == 0 {
             println!("Processed year: {}", year);
         }
     }
     
     let binary = bincode::serialize(&cache).expect("Failed to serialize cache");
-    // eon-data 소스 디렉토리에 직접 저장 (build 시 include_bytes!로 포함시키기 위함)
     let mut file = File::create("crates/eon-data/src/manseryuk.bin").expect("Failed to create file");
     file.write_all(&binary).expect("Failed to write binary");
     
     println!("Successfully generated 'manseryuk.bin' ({} bytes)", binary.len());
-    println!("Path: crates/eon-data/src/manseryuk.bin");
 }

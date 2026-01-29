@@ -41,7 +41,11 @@ impl LifePathEmulator {
         // 대운 흐름 계산
         // 정확한 시작 시점을 위해 원국 생성시의 데이터를 가져오는 것이 좋으나, 
         // 여기서는 에뮬레이션의 목적상 간단히 분석용 대운 객체 생성
-        let major_luck = self.vm.natal.major_luck(self.gender, self.birth_year, 1, 1, 0, 0)?;
+        let input = &self.vm.natal.raw_input;
+        let major_luck = self.vm.natal.major_luck(
+            self.gender, 
+            input.year, input.month, input.day, input.hour, input.minute
+        )?;
         
         // 0세부터 100세까지 매년 시뮬레이션
         for age in 0..=100 {
@@ -55,10 +59,19 @@ impl LifePathEmulator {
             frames.push(frame);
         }
 
-        let peak_age = frames.iter().max_by(|a, b| a.score.partial_cmp(&b.score).unwrap())
-            .map(|f| f.age).unwrap();
-        let valley_age = frames.iter().min_by(|a, b| a.score.partial_cmp(&b.score).unwrap())
-            .map(|f| f.age).unwrap();
+        if frames.is_empty() {
+            return Err(SajuError::CalculationError("No emulation frames generated".to_string()));
+        }
+
+        let peak_age = frames.iter()
+            .max_by(|a, b| a.score.partial_cmp(&b.score).unwrap_or(std::cmp::Ordering::Equal))
+            .map(|f| f.age)
+            .unwrap_or(0);
+
+        let valley_age = frames.iter()
+            .min_by(|a, b| a.score.partial_cmp(&b.score).unwrap_or(std::cmp::Ordering::Equal))
+            .map(|f| f.age)
+            .unwrap_or(0);
 
         Ok(LifePathReport {
             frames,

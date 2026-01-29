@@ -62,6 +62,11 @@ impl SajuReport {
         self
     }
 
+    pub fn with_vm_summary(mut self, summary: String) -> Self {
+        self.vm_summary = Some(summary);
+        self
+    }
+
     /// Generate a markdown formatted report
     pub fn to_markdown(&self) -> String {
         let mut md = String::new();

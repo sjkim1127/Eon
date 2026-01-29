@@ -59,7 +59,7 @@ impl YearlyLuck {
             branch_god: TenGod::from_stem_and_branch(day_master, ganzi.branch),
             influence,
             special_events,
-            twelve_stage: None, // TODO: 12운성 계산
+            twelve_stage: Some(crate::core::twelve_stages::calculate_twelve_stage(day_master, ganzi.branch).hangul().to_string()),
         }
     }
 
@@ -111,6 +111,8 @@ pub struct MonthlyLuck {
     pub branch_god: TenGod,
     /// 원국과의 상호작용
     pub influence: Option<LuckInfluence>,
+    /// 12운성
+    pub twelve_stage: Option<String>,
 }
 
 impl MonthlyLuck {
@@ -128,6 +130,7 @@ impl MonthlyLuck {
             stem_god: TenGod::from_stems(day_master, ganzi.stem),
             branch_god: TenGod::from_stem_and_branch(day_master, ganzi.branch),
             influence,
+            twelve_stage: Some(crate::core::twelve_stages::calculate_twelve_stage(day_master, ganzi.branch).hangul().to_string()),
         }
     }
 

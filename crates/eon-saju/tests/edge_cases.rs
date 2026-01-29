@@ -13,8 +13,7 @@ use eon_saju::{FourPillars, SajuInput, HeavenlyStem, EarthlyBranch};
 /// 입춘 시각: 2024-02-04 16:27 UTC (대략)
 /// KST = UTC + 9 = 17:27 직전/직후
 /// 
-/// 참고: 현재 구현은 절기의 시간을 고려하지 않고 날짜만 확인합니다.
-/// 더 정밀한 절기 계산을 위해서는 천문학적 계산 로직이 필요합니다.
+/// 참고: 현재 구현은 eon-astro 엔진을 통해 절기의 정확한 시각을 계산하여 반영합니다.
 #[test]
 fn test_case_1_lichun_boundary_before() {
     // 2024-02-03 - 입춘 전날 (확실히 癸卯년)
@@ -286,8 +285,7 @@ fn test_case_5_leap_month() {
 /// 음력 입력 테스트 (BirthInfo.lunar 사용)
 #[test]
 fn test_case_5_lunar_input() {
-    // TODO: 현재 음양력 변환 로직이 eon-data에 있지만 
-    // BirthInfo와 통합되지 않음. 향후 통합 필요.
+    // BirthInfo.lunar를 사용하여 입력된 정보가 올바르게 설정되는지 확인합니다.
     
     let birth = BirthInfo::lunar(2020, 4, 1, 10, 0, true); // 윤4월
     

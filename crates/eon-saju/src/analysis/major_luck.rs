@@ -163,7 +163,8 @@ impl MajorLuckAnalysis {
                 "대운 계산용 날짜 오류: {}-{}-{} {}:{}", birth_year, birth_month, birth_day, birth_hour, birth_min
             )))?;
         
-        let birth_time = Utc.from_utc_datetime(&(dt_local - Duration::hours(9)));
+        let tz_offset = chrono::Duration::minutes((pillars.raw_input.timezone_offset_h * 60.0) as i64);
+        let birth_time = Utc.from_utc_datetime(&(dt_local - tz_offset));
         
         // 현재 24절기 인덱스 확인 (0: 입춘 ~ 23: 대한)
         let term_idx = astro.get_solar_term_index(birth_time);
