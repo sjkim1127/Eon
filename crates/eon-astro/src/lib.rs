@@ -111,6 +111,32 @@ impl AstroEngine {
         self.find_time_for_longitude(approx_time, target_long)
     }
 
+    /// 행성, 달, 노드의 위치 계산 (Vedic 점성술 지원용)
+    pub fn get_planet_position(&self, datetime: DateTime<Utc>, planet_id: i32, flag: i32) -> Result<f64, String> {
+        let julian_day = self.to_julian_day(datetime);
+        let mut results = [0.0; 6];
+        let mut error = [0; 256];
+        
+        unsafe {
+            let ret = swiss_eph::swe_calc_ut(
+                julian_day,
+                planet_id,
+                flag,
+                results.as_mut_ptr(),
+                error.as_mut_ptr() as *mut i8
+            );
+            
+            if ret < 0 {
+                let err_msg = std::ffi::CStr::from_ptr(error.as_ptr() as *const i8)
+                    .to_string_lossy()
+                    .into_owned();
+                Err(format!("Astro Error: {}", err_msg))
+            } else {
+                Ok(results[0]) // Longitude
+            }
+        }
+    }
+
     /// Chrono DateTime을 Julian Day로 변환
     fn to_julian_day(&self, dt: DateTime<Utc>) -> f64 {
         let year = dt.year();

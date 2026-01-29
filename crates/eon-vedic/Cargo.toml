@@ -1,0 +1,13 @@
+[package]
+name = "eon-vedic"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+eon-astro = { path = "../eon-astro" }
