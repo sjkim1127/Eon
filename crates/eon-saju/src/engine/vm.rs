@@ -545,10 +545,10 @@ impl SajuVM {
         score: &mut f32,
     ) {
         let (penalty, tag) = match irq {
-            SajuInterrupt::CriticalException => (25.0, format!("IRQ_0x01:{}", marker_name)),
-            SajuInterrupt::ResourceOverflow => (-15.0, format!("IRQ_0x02:{}", marker_name)), // 괴강은 양면성, 일단 변동성으로 처리
-            SajuInterrupt::SystemStall => (10.0, format!("IRQ_0x03:{}", marker_name)),
-            SajuInterrupt::ServiceInterrupt => (7.0, format!("IRQ_0x04:{}", marker_name)),
+            SajuInterrupt::CriticalException => (self.config.vm.irq_critical, format!("IRQ_0x00:{}(CRITICAL)", marker_name)),
+            SajuInterrupt::ResourceOverflow => (self.config.vm.irq_overflow, format!("IRQ_0x02:{}", marker_name)),
+            SajuInterrupt::SystemStall => (self.config.vm.irq_stall, format!("IRQ_0x03:{}", marker_name)),
+            SajuInterrupt::ServiceInterrupt => (self.config.vm.irq_service, format!("IRQ_0x04:{}", marker_name)),
         };
 
         *score -= penalty;
@@ -557,7 +557,7 @@ impl SajuVM {
 
         // 인터럽트 발생 시 특정 레지스터 강제 변조 (Kernel Panic 효과)
         if matches!(irq, SajuInterrupt::CriticalException) {
-            registers.r2_earth += 20.0; // 토(Earth) 기운 급증으로 인한 시스템 정체
+            registers.r2_earth += self.config.vm.irq_critical; // 토(Earth) 기운 급증으로 인한 시스템 정체
             esil_trace.push_str("kernel_panic:earth_overflow; ");
         }
     }
@@ -577,11 +577,11 @@ impl SajuVM {
 
         // 스테이지 정의
         let stages = [
-            (dynamic.major_influence.as_ref().map(|i| i.ganzi), "대운", 10.0),
-            (dynamic.yearly_influence.as_ref().map(|i| i.ganzi), "세운", 15.0),
-            (dynamic.monthly_influence.as_ref().map(|i| i.ganzi), "월운", 5.0),
-            (dynamic.daily_influence.as_ref().map(|i| i.ganzi), "일운", 2.0),
-            (dynamic.hourly_influence.as_ref().map(|i| i.ganzi), "시운", 1.0),
+            (dynamic.major_influence.as_ref().map(|i| i.ganzi), "대운", self.config.vm.pipeline_major),
+            (dynamic.yearly_influence.as_ref().map(|i| i.ganzi), "세운", self.config.vm.pipeline_yearly),
+            (dynamic.monthly_influence.as_ref().map(|i| i.ganzi), "월운", self.config.vm.pipeline_monthly),
+            (dynamic.daily_influence.as_ref().map(|i| i.ganzi), "일운", self.config.vm.pipeline_daily),
+            (dynamic.hourly_influence.as_ref().map(|i| i.ganzi), "시운", self.config.vm.pipeline_hourly),
         ];
 
         let mut prev_el: Option<Element> = None;

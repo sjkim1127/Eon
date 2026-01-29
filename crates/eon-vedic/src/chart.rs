@@ -44,8 +44,20 @@ impl VedicChartCalculator {
         }
     }
 
-    pub fn calculate(&self, time: DateTime<Utc>) -> Vec<VedicPosition> {
+    pub fn calculate(&self, time: DateTime<Utc>, latitude: f64, longitude: f64) -> Vec<VedicPosition> {
         let ayanamsa = get_lahiri_ayanamsa(&self.engine, time);
+        
+        // Calculate Ascendant (Lagna)
+        // House System 'P' (Placidus) or 'W' (Whole Sign)? 
+        // For Ascendant calculation, system doesn't matter much (ASC is same), 
+        // but let's use 'P' as default standard.
+        let (_, ascmc) = self.engine.get_houses(time, latitude, longitude, 'P' as i32)
+            .unwrap_or((vec![], [0.0; 10]));
+            
+        let asc_trop = ascmc[0];
+        let asc_sidereal = (asc_trop - ayanamsa + 360.0) % 360.0;
+        
+        // --- Calculate planets including node ---
         let planets = [
             VedicPlanet::Sun, VedicPlanet::Moon, VedicPlanet::Mars,
             VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus,
@@ -53,10 +65,46 @@ impl VedicChartCalculator {
         ];
 
         let mut positions = Vec::new();
+        
+        // Add Ascendant
+        {
+             let sidereal_long = asc_sidereal;
+             let nak_pos = sidereal_long / (360.0 / 27.0);
+             let nakshatra = (nak_pos.floor() as u8) + 1;
+             
+             let pada_pos = (sidereal_long % (360.0 / 27.0)) / (360.0 / 108.0);
+             let pada = (pada_pos.floor() as u8) + 1;
+             let rasi = (sidereal_long / 30.0).floor() as u8 + 1;
+             
+             // Varga Calculations
+            let hora_rasi = crate::varga::VargaType::D2.calculate_rasi(sidereal_long);
+            let drekkana_rasi = crate::varga::VargaType::D3.calculate_rasi(sidereal_long);
+            let chaturthamsha_rasi = crate::varga::VargaType::D4.calculate_rasi(sidereal_long);
+            let saptamsa_rasi = crate::varga::VargaType::D7.calculate_rasi(sidereal_long);
+            let navamsa_rasi = crate::varga::VargaType::D9.calculate_rasi(sidereal_long);
+            let dasamsa_rasi = crate::varga::VargaType::D10.calculate_rasi(sidereal_long);
+            let dwadasamsa_rasi = crate::varga::VargaType::D12.calculate_rasi(sidereal_long);
+
+            positions.push(VedicPosition {
+                planet: VedicPlanet::Ascendant,
+                tropical_deg: asc_trop,
+                sidereal_deg: sidereal_long,
+                nakshatra,
+                pada,
+                rasi,
+                hora_rasi,
+                drekkana_rasi,
+                chaturthamsha_rasi,
+                saptamsa_rasi,
+                navamsa_rasi,
+                dasamsa_rasi,
+                dwadasamsa_rasi,
+            });
+        }
 
         for p in planets {
             // SEFLG_SPEED (256) | SEFLG_SWIEPH (2)
-            let mut flag = 256 | 2;
+            let flag = 256 | 2;
             let mut planet_id = p.se_id();
 
             // Override Node ID and flag base on config

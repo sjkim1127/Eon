@@ -8,6 +8,7 @@ pub mod chart;
 pub mod names;
 pub mod config;
 pub mod varga;
+pub mod dasha;
 
 use serde::{Deserialize, Serialize};
 
@@ -17,9 +18,4 @@ pub enum ZodiacSystem {
     Sidereal,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum AyanamsaMethod {
-    Lahiri,    // Most standard
-    Raman,
-    Krishnamurti,
-}
+pub use config::AyanamsaSystem as AyanamsaMethod;

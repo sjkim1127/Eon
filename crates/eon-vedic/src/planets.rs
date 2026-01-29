@@ -11,6 +11,7 @@ pub enum VedicPlanet {
     Saturn = 6,     // Shani
     Rahu = 11,      // North Node (True)
     Ketu = 12,      // South Node (True = Rahu + 180) - Need check SE ID
+    Ascendant = 100, // Lagna
 }
 
 impl VedicPlanet {
@@ -25,6 +26,7 @@ impl VedicPlanet {
             Self::Saturn => 6, // SE_SATURN
             Self::Rahu => 11, // SE_TRUE_NODE
             Self::Ketu => 11, // Handled as Node + 180 usually
+            Self::Ascendant => -1, // Not a body
         }
     }
 }

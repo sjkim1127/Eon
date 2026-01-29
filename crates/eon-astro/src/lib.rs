@@ -240,7 +240,59 @@ impl AstroEngine {
         }
         Ok(t)
     }
+    /// 특정 시점, 위치에서의 하우스(1~12) 및 ASC/MC를 계산합니다.
+    pub fn get_houses(
+        &self, 
+        datetime: DateTime<Utc>, 
+        latitude: f64, 
+        longitude: f64, 
+        house_system: i32 // 'P' as char as i32, etc.
+    ) -> Result<(Vec<f64>, [f64; 10]), String> {
+        let julian_day = self.to_julian_day(datetime);
+        let mut cusps = [0.0; 13]; // 1-based usually
+        let mut ascmc = [0.0; 10]; // ASC, MC, ARMC, Vertex...
+        
+        unsafe {
+            // 'P' as i32 for Placidus, 'W' for Whole Sign if supported, 
+            // but SE typically takes char byte.
+            // swe_houses(tjd_ut, lat, lon, hsys, cusps, ascmc)
+            let ret = swiss_eph::swe_houses(
+                julian_day,
+                latitude,
+                longitude,
+                house_system,
+                cusps.as_mut_ptr(),
+                ascmc.as_mut_ptr()
+            );
+            
+            if ret < 0 {
+                Err("Failed to calculate houses".to_string())
+            } else {
+                // Convert cusps to Vec (1..13) ignoring index 0
+                let cusps_vec = cusps[1..13].to_vec();
+                Ok((cusps_vec, ascmc))
+            }
+        }
+    }
+
+    /// 특정 시점의 아야남사(Ayanamsa) 값을 계산합니다.
+    /// flag: SE_SIDBIT_ELEM_PLAN (8) 등 옵션 설정 가능. 보통 0.
+    pub fn get_ayanamsa_ut(&self, datetime: DateTime<Utc>) -> f64 {
+        let julian_day = self.to_julian_day(datetime);
+        unsafe {
+            swiss_eph::swe_get_ayanamsa_ut(julian_day)
+        }
+    }
+
+    /// 아야남사 모드 설정 (예: Lahiri, Raman 등)
+    /// method_id: SE_SIDM_LAHIRI (1), SE_SIDM_RAMAN (3) 등
+    pub fn set_sidereal_mode(&self, method_id: i32, t0: f64, ayan_t0: f64) {
+        unsafe {
+            swiss_eph::swe_set_sid_mode(method_id, t0, ayan_t0);
+        }
+    }
 }
+
 
 impl Drop for AstroEngine {
     fn drop(&mut self) {
