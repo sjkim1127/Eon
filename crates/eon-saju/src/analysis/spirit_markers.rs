@@ -601,7 +601,7 @@ impl SpiritMarkerAnalysis {
 
     // === 신살 계산 헬퍼 함수들 ===
 
-    fn get_yima_branch(day_branch: EarthlyBranch) -> EarthlyBranch {
+    fn _get_yima_branch(day_branch: EarthlyBranch) -> EarthlyBranch {
         match day_branch {
             EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => EarthlyBranch::Shen,
             EarthlyBranch::Shen | EarthlyBranch::Zi | EarthlyBranch::Chen => EarthlyBranch::Yin,
@@ -610,7 +610,7 @@ impl SpiritMarkerAnalysis {
         }
     }
 
-    fn get_huagai_branch(day_branch: EarthlyBranch) -> EarthlyBranch {
+    fn _get_huagai_branch(day_branch: EarthlyBranch) -> EarthlyBranch {
         match day_branch {
             EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => EarthlyBranch::Xu,
             EarthlyBranch::Shen | EarthlyBranch::Zi | EarthlyBranch::Chen => EarthlyBranch::Chen,
@@ -629,7 +629,7 @@ impl SpiritMarkerAnalysis {
         )
     }
 
-    fn get_taohua_branch(day_branch: EarthlyBranch) -> EarthlyBranch {
+    fn _get_taohua_branch(day_branch: EarthlyBranch) -> EarthlyBranch {
         match day_branch {
             EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => EarthlyBranch::Mao,
             EarthlyBranch::Shen | EarthlyBranch::Zi | EarthlyBranch::Chen => EarthlyBranch::You,
@@ -967,7 +967,7 @@ mod tests {
     fn test_yima() {
         // 戌日 → 申이 역마
         assert_eq!(
-            SpiritMarkerAnalysis::get_yima_branch(EarthlyBranch::Xu),
+            SpiritMarkerAnalysis::_get_yima_branch(EarthlyBranch::Xu),
             EarthlyBranch::Shen
         );
     }

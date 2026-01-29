@@ -7,7 +7,6 @@ use crate::core::branch::EarthlyBranch;
 use crate::core::stem::HeavenlyStem;
 use crate::core::pillars::FourPillars;
 use crate::core::calendar::{SolarTerm, get_solar_term_time};
-use chrono::{DateTime, Utc};
 
 /// 지장간 사령(司令) 정보
 #[derive(Debug, Clone, Serialize, Deserialize)]

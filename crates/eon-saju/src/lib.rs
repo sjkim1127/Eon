@@ -16,6 +16,7 @@ pub use core::pillars::{FourPillars, SajuInput};
 pub use core::ten_gods::{TenGod, TenGodAnalysis};
 pub use core::twelve_stages::{TwelveStage, TwelveStageAnalysis};
 pub use core::branch_days::{SaryeongAnalysis};
+pub use core::nayin::NayinType;
 
 pub use analysis::major_luck::{MajorLuck, MajorLuckAnalysis, LuckDirection};
 pub use analysis::periodic_luck::{YearlyLuck, MonthlyLuck, LuckAnalysis};

@@ -15,5 +15,6 @@ Thumbs.db
 # Logs
 *.log
 
-# source
+# External source / test
 /vendor
+/cross_test

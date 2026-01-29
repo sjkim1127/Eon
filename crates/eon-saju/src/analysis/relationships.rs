@@ -262,7 +262,6 @@ impl SemiCombination {
 
     /// 왕지(子午卯酉)를 포함한 유력한 반합인지 확인
     pub fn is_dominant(&self) -> bool {
-        use EarthlyBranch::*;
         matches!(self, 
             Self::YinWu | Self::WuXu | 
             Self::ShenZi | Self::ZiChen | 

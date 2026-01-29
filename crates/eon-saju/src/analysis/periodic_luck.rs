@@ -152,12 +152,12 @@ impl MonthlyLuck {
             HeavenlyStem::Wu | HeavenlyStem::Gui => 0,   // 甲
         };
 
-        // 월지는 고정 (1월=寅, 2월=卯, ...)
-        // 절기 기준 월: 1월(입춘~경칩)=寅, 2월(경칩~청명)=卯, ...
-        let month_branch_index = ((month as i32 + 1) % 12) as i32; // 1월=寅(2), 2월=卯(3)...
+        // 월지는 고정 (1월=丑(1), 2월=寅(2), ..., 12월=子(0))
+        let month_branch_index = (month % 12) as i32;
         
-        // 월간 계산: 첫 월 천간에서 월수만큼 진행
-        let month_stem_index = ((first_month_stem_index + (month as i32 - 1)) % 10) as i32;
+        // 월간 계산: 2월(寅)을 기준으로 상대적 거리(0-11) 계산하여 가산
+        let relative_idx = (month as i32 - 2).rem_euclid(12);
+        let month_stem_index = (first_month_stem_index + relative_idx) % 10;
 
         GanZi {
             stem: HeavenlyStem::from_index(month_stem_index),
@@ -350,10 +350,22 @@ mod tests {
     fn test_monthly_luck() {
         let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
         let pillars = FourPillars::calculate(&input).unwrap();
-
-        // 2026년 1월 월운
-        let luck = MonthlyLuck::calculate(2026, 1, &pillars);
-        println!("2026년 1월 월운: {}", luck);
+        
+        // 2026년 = 丙午년
+        // 1월 (Jan) -> Chou (1)
+        let luck1 = MonthlyLuck::calculate(2026, 1, &pillars);
+        assert_eq!(luck1.ganzi.branch, EarthlyBranch::Chou);
+        
+        // 2월 (Feb) -> Yin (2)
+        let luck2 = MonthlyLuck::calculate(2026, 2, &pillars);
+        assert_eq!(luck2.ganzi.branch, EarthlyBranch::Yin);
+        // Bing year Yin month is Geng Yin? 
+        // Jia: Bing, Yi: Wu, Bing: Geng. YES.
+        assert_eq!(luck2.ganzi.stem, HeavenlyStem::Geng); 
+        
+        // 12월 (Dec) -> Zi (0)
+        let luck12 = MonthlyLuck::calculate(2026, 12, &pillars);
+        assert_eq!(luck12.ganzi.branch, EarthlyBranch::Zi);
     }
 
     #[test]

@@ -30,6 +30,10 @@ pub struct SajuInput {
     pub longitude_offset_m: i32,
     /// 시간대 오프셋 (시간 단위, 예: KST = 9.0)
     pub timezone_offset_h: f32,
+    /// 야자시(夜子時) 적용 여부
+    /// - true: 23:00~24:00를 당일의 야자시로 인정 (일주 유지)
+    /// - false: 23:00~24:00를 다음 날의 자시(명자시)로 간주 (일주 변경) - 기본값
+    pub use_night_rat_hour: bool,
 }
 
 impl SajuInput {
@@ -45,6 +49,7 @@ impl SajuInput {
             is_leap_month: false,
             longitude_offset_m: 0,
             timezone_offset_h: 9.0, // 기본값 KST
+            use_night_rat_hour: false, // 기본적으로 자시=새날 적용
         }
     }
 
@@ -60,6 +65,7 @@ impl SajuInput {
             is_leap_month: false,
             longitude_offset_m: offset_m,
             timezone_offset_h: 9.0, // 기본값 KST
+            use_night_rat_hour: false,
         }
     }
 
@@ -75,7 +81,14 @@ impl SajuInput {
             is_leap_month: is_leap,
             longitude_offset_m: 0,
             timezone_offset_h: 9.0, // 기본값 KST
+            use_night_rat_hour: false,
         }
+    }
+    
+    /// 야자시 옵션 설정
+    pub fn with_night_rat_hour(mut self, use_night_rat: bool) -> Self {
+        self.use_night_rat_hour = use_night_rat;
+        self
     }
 }
 
@@ -139,7 +152,18 @@ impl FourPillars {
         let month_pillar = Self::calculate_month_pillar(dt_absolute_utc);
 
         // 일주, 시주는 보정된 날짜/시간(adj_...) 사용 (진태양시 기준)
-        let day_pillar = Self::calculate_day_pillar(adj_year, adj_month, adj_day);
+        // [야자시 처리]
+        // use_night_rat_hour == false 이고 시간이 23시 이상이면 다음날로 간주하여 일주 계산
+        let (calc_year, calc_month, calc_day) = if !input.use_night_rat_hour && adj_hour >= 23 {
+            let dt = NaiveDate::from_ymd_opt(adj_year, adj_month, adj_day)
+                .unwrap_or_else(|| NaiveDate::from_ymd_opt(adj_year, 1, 1).unwrap()); // Fallback
+            let next_day = dt + Duration::days(1);
+            (next_day.year(), next_day.month(), next_day.day())
+        } else {
+            (adj_year, adj_month, adj_day)
+        };
+
+        let day_pillar = Self::calculate_day_pillar(calc_year, calc_month, calc_day);
         let hour_pillar = Self::calculate_hour_pillar(&day_pillar, adj_hour);
 
         Ok(Self {
@@ -186,7 +210,7 @@ impl FourPillars {
 
         let zhi_idx = branch.index();
         let yi_stem_idx = (year_stem.index() as i32 % 5) * 2 + 2;
-        let month_stem_idx = (yi_stem_idx + (zhi_idx as i32 - 2)) % 10;
+        let month_stem_idx = (yi_stem_idx + (zhi_idx as i32 - 2).rem_euclid(12)) % 10;
         
         GanZi::new(
             HeavenlyStem::from_index(month_stem_idx),
@@ -318,5 +342,42 @@ mod tests {
         let pillar = FourPillars::calculate_year_pillar(dt);
         assert_eq!(pillar.stem, HeavenlyStem::Jia);
         assert_eq!(pillar.branch, EarthlyBranch::Chen);
+    }
+
+    #[test]
+    fn test_rat_hour_options() {
+        // 2024-03-20 23:30 (야자시/조자시 경계)
+        let input_base = SajuInput::new_solar(2024, 3, 20, 23, 30);
+        
+        // 1. 야자시 미사용 (기본값) -> 다음날 일주 사용
+        let pillars_no_night = FourPillars::calculate(&input_base).unwrap();
+        // 3월 20일은 癸卯, 21일은 甲辰. 23시 이후이므로 甲辰이 되어야 함.
+        assert_eq!(pillars_no_night.day.stem.index(), 0); // 甲
+        assert_eq!(pillars_no_night.hour.branch.index(), 0); // 子
+        
+        // 2. 야자시 사용 -> 오늘 일주 유지
+        let input_night = input_base.with_night_rat_hour(true);
+        let pillars_night = FourPillars::calculate(&input_night).unwrap();
+        assert_eq!(pillars_night.day.stem.index(), 9); // 癸
+        assert_eq!(pillars_night.hour.branch.index(), 0); // 子
+    }
+
+    #[test]
+    fn test_month_pillar_zi_chou() {
+        // 2014년 (甲午年) 12월 (丙子月) - 대설(12/7) 이후
+        let input = SajuInput::new_solar(2014, 12, 10, 12, 0);
+        let pillars = FourPillars::calculate(&input).unwrap();
+        
+        assert_eq!(pillars.year.stem.index(), 0); // 甲
+        assert_eq!(pillars.month.stem.index(), 2); // 丙 (Zi month of Jia year is Bing Zi)
+        assert_eq!(pillars.month.branch.index(), 0); // 子
+        
+        // 2015년 새해 ( still 甲午年 until Li Chun) 1월 (丁丑月) - 소한(1/6) 이후
+        let input2 = SajuInput::new_solar(2015, 1, 10, 12, 0);
+        let pillars2 = FourPillars::calculate(&input2).unwrap();
+        
+        assert_eq!(pillars2.year.stem.index(), 0); // 甲 (still Jia Wu until Feb)
+        assert_eq!(pillars2.month.stem.index(), 3); // 丁 (Chou month of Jia year is Ding Chou)
+        assert_eq!(pillars2.month.branch.index(), 1); // 丑
     }
 }

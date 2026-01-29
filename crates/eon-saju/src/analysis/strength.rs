@@ -140,8 +140,14 @@ pub struct DeukJi {
 }
 
 impl DeukJi {
-    /// 득지 판정
+    /// 득지 판정 (기존 호환성 유지)
     pub fn check(pillars: &FourPillars) -> Self {
+        let relations = RelationshipAnalysis::from_pillars(pillars);
+        Self::check_with_relations(pillars, &relations)
+    }
+
+    /// 득지 판정 (합충 관계 반영)
+    pub fn check_with_relations(pillars: &FourPillars, relations: &RelationshipAnalysis) -> Self {
         let day_element = pillars.day_master().element();
         
         let branches = [
@@ -156,15 +162,28 @@ impl DeukJi {
         let mut root_positions = Vec::new();
         let mut strong_stage_count = 0;
         
+        // 충돌이 발생한 위치 목록 추출
+        let clashed_positions: Vec<&String> = relations.branch_clashes.iter()
+            .flat_map(|(_, p1, p2)| vec![p1, p2])
+            .collect();
+        
         for (name, branch) in &branches {
-            // 위치별 가중치 결정
-            let weight = match *name {
+            // 위치별 기본 가중치
+            let base_weight = match *name {
                 "월지" => WEIGHT_MONTH_BRANCH,
                 "일지" => WEIGHT_DAY_BRANCH,
                 _ => WEIGHT_OTHER_BRANCH, // 년지, 시지
             };
+            
+            // 충(Clash) 발생 시 가중치 반감 (뿌리 손상)
+            let is_clashed = clashed_positions.iter().any(|pos| *pos == *name);
+            let weight = if is_clashed {
+                base_weight * 0.5
+            } else {
+                base_weight
+            };
 
-            // 지장간(Hidden Stems) 전체를 확인하여 통근 여부 판단 (학술적 고도화)
+            // 지장간(Hidden Stems) 전체를 확인하여 통근 여부 판단
             let has_root = branch.hidden_stems().iter().any(|stem| 
                 stem.element() == day_element
             );
@@ -172,7 +191,11 @@ impl DeukJi {
             if has_root {
                 root_count += 1;
                 root_score += weight;
-                root_positions.push(name.to_string());
+                if is_clashed {
+                    root_positions.push(format!("{} (충)", name));
+                } else {
+                    root_positions.push(name.to_string());
+                }
             }
             
             // 12운성 확인
@@ -191,7 +214,8 @@ impl DeukJi {
             }
         }
         
-        // 득지 판정: 가중치 점수 합계가 3.0점 이상이거나, 강한 12운성(건록, 제왕 등)이 하나 이상 있으면 득지
+        // 득지 판정: 가중치 점수 합계가 3.0점 이상이거나, 강한 12운성이 하나 이상 있으면 득지
+        // (충으로 인해 점수가 깎여서 득지 실패할 수 있음)
         let acquired = root_score >= 3.0 || strong_stage_count >= 1;
         
         Self {
@@ -305,7 +329,7 @@ impl DeukSe {
         let mut guanxing_count = 0u8;
 
         // 천간 가중치 적용 (일간 포함 4개 각 10점)
-        let day_master_god = TenGod::Bijian; // 일간 자신은 비견
+        let _day_master_god = TenGod::Bijian; // 일간 자신은 비견
         support_score += WEIGHT_STEM; // 일간 자신 점수
 
         for stem in &stems {
@@ -389,13 +413,23 @@ pub struct StrengthAnalysis {
     pub strength_score: f32,
 }
 
+use crate::analysis::relationships::RelationshipAnalysis;
+
 impl StrengthAnalysis {
     /// 사주로부터 신강신약 분석
     pub fn from_pillars(pillars: &FourPillars) -> Self {
+        // 정확한 뿌리 계산을 위해 합충 관계 분석
+        let relations = RelationshipAnalysis::from_pillars(pillars);
+        Self::from_pillars_with_relations(pillars, &relations)
+    }
+
+    /// 합충 관계를 포함한 신강신약 분석
+    pub fn from_pillars_with_relations(pillars: &FourPillars, relations: &RelationshipAnalysis) -> Self {
         let day_master = pillars.day_master();
         
         let deuk_ryeong = DeukRyeong::check(day_master, pillars.month.branch);
-        let deuk_ji = DeukJi::check(pillars);
+        // 득지 판정 시 충(Clash) 고려
+        let deuk_ji = DeukJi::check_with_relations(pillars, relations);
         let deuk_si = DeukSi::check(day_master, pillars.hour.branch);
         let deuk_se = DeukSe::check(pillars);
         

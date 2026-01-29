@@ -131,7 +131,7 @@ impl DynamicLuckAnalysis {
         // 모든 쌍에 대한 분석 로직 호출
         use crate::analysis::relationships::{
             StemCombination, StemClash, SemiCombination, SixCombination, 
-            BranchClash, BranchPunishment, BranchHarm, BranchDestruction, 
+            BranchClash, BranchPunishment, BranchHarm, 
             Amhap, MyungAmHap
         };
 

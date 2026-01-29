@@ -10,3 +10,4 @@ pub mod void;
 pub mod major_luck;
 pub mod periodic_luck;
 pub mod dynamic_luck;
+pub mod shinsal;

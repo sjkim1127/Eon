@@ -10,7 +10,6 @@ use crate::analysis::dynamic_luck::DynamicLuckAnalysis;
 use crate::analysis::yongshin::YongshinAnalysis;
 use crate::core::element::Element;
 use crate::engine::signatures::{LuckSignature, SignatureScanner};
-use crate::analysis::spirit_markers::{SpiritMarker, SpiritMarkerAnalysis};
 
 /// Saju Interrupt (하드웨어 예외/인터럽트)
 #[derive(Debug, Clone, Serialize, Deserialize)]
