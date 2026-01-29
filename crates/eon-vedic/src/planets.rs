@@ -29,4 +29,18 @@ impl VedicPlanet {
             Self::Ascendant => -1, // Not a body
         }
     }
+
+    /// Get the ruler of a given Rasi (1 = Aries, ..., 12 = Pisces)
+    pub fn get_ruler_of(rasi: u8) -> Self {
+        match rasi {
+            1 | 8 => VedicPlanet::Mars,    // Aries, Scorpio
+            2 | 7 => VedicPlanet::Venus,   // Taurus, Libra
+            3 | 6 => VedicPlanet::Mercury, // Gemini, Virgo
+            4 => VedicPlanet::Moon,        // Cancer
+            5 => VedicPlanet::Sun,         // Leo
+            9 | 12 => VedicPlanet::Jupiter,// Sagittarius, Pisces
+            10 | 11 => VedicPlanet::Saturn,// Capricorn, Aquarius
+            _ => VedicPlanet::Sun, // Fallback (should not happen for 1-12)
+        }
+    }
 }
