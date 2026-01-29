@@ -8,6 +8,8 @@ pub struct PlanetStrength {
     pub exaltation_score: f64, // 0.0 ~ 60.0 (Uchcha Bala)
     pub directional_score: f64,// 0.0 ~ 60.0 (Dig Bala)
     pub chesta_score: f64,     // 0.0 ~ 60.0 (Chesta Bala - Motion)
+    pub naisargika_score: f64, // 0.0 ~ 60.0 (Natural strength)
+    pub kala_score: f64,       // 0.0 ~ 60.0 (Time strength - Day/Night)
     pub total_score: f64,      // Aggregate for MVP
     pub status: String,        // "Exalted", "Debilitated", "Strong", "Weak", "Neutral"
 }
@@ -16,12 +18,15 @@ pub struct StrengthEngine;
 
 impl StrengthEngine {
     /// Calculate basic strength metrics (Shadbala Lite)
-    pub fn calculate(pos: &VedicPosition) -> PlanetStrength {
+    pub fn calculate(pos: &VedicPosition, sun_house: u8) -> PlanetStrength {
         let ex_score = Self::calculate_uchcha_bala(pos.planet, pos.sidereal_deg);
         let dig_score = Self::calculate_dig_bala(pos.planet, pos.house_index);
         let chesta_score = Self::calculate_chesta_bala(pos);
+        let naisargika_score = Self::calculate_naisargika_bala(pos.planet);
+        let is_day = sun_house >= 7 && sun_house <= 12;
+        let kala_score = Self::calculate_kala_bala(pos.planet, is_day);
         
-        let total = ex_score + dig_score + chesta_score;
+        let total = ex_score + dig_score + chesta_score + naisargika_score + kala_score;
         
         // Simple status determination
         let status = if ex_score >= 50.0 {
@@ -41,8 +46,40 @@ impl StrengthEngine {
             exaltation_score: ex_score,
             directional_score: dig_score,
             chesta_score,
+            naisargika_score,
+            kala_score,
             total_score: total,
             status,
+        }
+    }
+
+    /// Naisargika Bala (Natural Strength)
+    /// Fixed values from Sun (strongest) to Saturn (weakest)
+    fn calculate_naisargika_bala(planet: VedicPlanet) -> f64 {
+        match planet {
+            VedicPlanet::Sun => 60.0,
+            VedicPlanet::Moon => 51.43,
+            VedicPlanet::Venus => 42.86,
+            VedicPlanet::Jupiter => 34.29,
+            VedicPlanet::Mercury => 25.71,
+            VedicPlanet::Mars => 17.14,
+            VedicPlanet::Saturn => 8.57,
+            _ => 0.0,
+        }
+    }
+
+    /// Simple Kala Bala (Diva-Ratri Bala)
+    /// Day planets strong in Day, Night planets strong in Night.
+    fn calculate_kala_bala(planet: VedicPlanet, is_day: bool) -> f64 {
+        let is_day_planet = matches!(planet, VedicPlanet::Sun | VedicPlanet::Jupiter | VedicPlanet::Venus);
+        let is_night_planet = matches!(planet, VedicPlanet::Moon | VedicPlanet::Mars | VedicPlanet::Saturn);
+        
+        if planet == VedicPlanet::Mercury { return 60.0; } // Mercury always strong in time
+        
+        if is_day {
+            if is_day_planet { 60.0 } else { 0.0 }
+        } else {
+            if is_night_planet { 60.0 } else { 0.0 }
         }
     }
 

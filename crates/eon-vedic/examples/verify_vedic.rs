@@ -10,7 +10,7 @@ fn main() {
     println!("=== Eon Vedic Engine Verification ===");
 
     // 1. Setup Birth Info: Seoul, Korea at 2000-01-01 12:00 KST (03:00 UTC)
-    let birth_time = Utc.ymd(2000, 1, 1).and_hms(3, 0, 0);
+    let birth_time = Utc.with_ymd_and_hms(2000, 1, 1, 3, 0, 0).unwrap();
     let lat = 37.5665;
     let lon = 126.9780;
 
@@ -37,16 +37,18 @@ fn main() {
             FunctionalStatus::Maraka => "Maraka",
         };
 
-        let strength = StrengthEngine::calculate(pos);
+        let sun_house = chart.planets.iter().find(|p| p.planet == VedicPlanet::Sun).map(|p| p.house_index).unwrap_or(1);
+        let strength = StrengthEngine::calculate(pos, sun_house);
 
-        println!("{:<12} | H: {:>2} | Sid: {:>6.2}° | Nature: {:<12} | Str: {:>5.1} ({}){}", 
+        println!("{:<12} | H: {:>2} | Sid: {:>6.2}° | Nature: {:<12} | Str: {:>5.1} ({}){}{}", 
             format!("{:?}", pos.planet), 
             pos.house_index,
             pos.sidereal_deg, 
             nature_str,
             strength.total_score,
             strength.status,
-            if pos.is_retrograde { " (Rx)" } else { "" }
+            if pos.is_retrograde { " (Rx)" } else { "" },
+            if pos.is_combust { " (C)" } else { "" }
         );
 
         if pos.planet == VedicPlanet::Moon {
@@ -72,6 +74,14 @@ fn main() {
         sav_total += *p as u32;
     }
     println!("\nTotal SAV Points: {}", sav_total);
+
+    println!("\n[6] Trikona Shodhana (Sun Sample)");
+    if let Some(sun_bav) = chart.planets.iter().find(|p| p.planet == VedicPlanet::Sun)
+        .map(|_| eon_vedic::analysis::ashtakavarga::AshtakavargaEngine::calculate_bav(VedicPlanet::Sun, &chart)) 
+    {
+        println!("  Raw:     {:?}", sun_bav.points);
+        println!("  Reduced: {:?}", sun_bav.reduced_points);
+    }
 
     println!("\n[5] Planetary Aspects (Drishti)");
     for rel in &chart.aspects {

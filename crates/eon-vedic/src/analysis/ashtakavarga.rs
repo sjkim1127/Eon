@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AshtakavargaPoints {
     pub planet: VedicPlanet,
-    pub points: [u8; 12], // Points in each house 1-12
+    pub points: [u8; 12],         // Raw points
+    pub reduced_points: [u8; 12], // After Trikona Shodhana
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,7 +70,53 @@ impl AshtakavargaEngine {
             }
         }
 
-        AshtakavargaPoints { planet: target_planet, points }
+        let reduced_points = Self::apply_triangular_reduction(points);
+
+        AshtakavargaPoints { 
+            planet: target_planet, 
+            points, 
+            reduced_points 
+        }
+    }
+
+    /// Trikona Shodhana (Triangular Reduction)
+    /// Reduces points based on triplicities (Elements)
+    pub fn apply_triangular_reduction(points: [u8; 12]) -> [u8; 12] {
+        let mut reduced = points;
+        let triplicities = [
+            [0, 4, 8],  // Fire (1, 5, 9)
+            [1, 5, 9],  // Earth (2, 6, 10)
+            [2, 6, 10], // Air (3, 7, 11)
+            [3, 7, 11], // Water (4, 8, 12)
+        ];
+
+        for trip in &triplicities {
+            let p1 = reduced[trip[0]];
+            let p2 = reduced[trip[1]];
+            let p3 = reduced[trip[2]];
+
+            let zeros = (if p1 == 0 { 1 } else { 0 }) + 
+                        (if p2 == 0 { 1 } else { 0 }) + 
+                        (if p3 == 0 { 1 } else { 0 });
+
+            if zeros == 0 {
+                // All have points: subtract minimum
+                let min_val = p1.min(p2).min(p3);
+                reduced[trip[0]] -= min_val;
+                reduced[trip[1]] -= min_val;
+                reduced[trip[2]] -= min_val;
+            } else if zeros == 1 {
+                // One is zero: no reduction
+            } else if zeros == 2 {
+                // Two are zero: third becomes zero too
+                reduced[trip[0]] = 0;
+                reduced[trip[1]] = 0;
+                reduced[trip[2]] = 0;
+            } else {
+                // All are zero: already 0
+            }
+        }
+        reduced
     }
 
     fn get_offsets(target: VedicPlanet, from: VedicPlanet) -> &'static [u8] {
