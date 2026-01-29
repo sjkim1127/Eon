@@ -21,10 +21,24 @@ pub struct VedicPosition {
     pub hora_rasi: u8,         // D2
     pub drekkana_rasi: u8,     // D3
     pub chaturthamsha_rasi: u8,// D4
+    pub panchamsa_rasi: u8,     // D5
     pub saptamsa_rasi: u8,     // D7
+    pub ashtamsa_rasi: u8,      // D8
     pub navamsa_rasi: u8,      // D9
     pub dasamsa_rasi: u8,      // D10
+    pub rudramsa_rasi: u8,      // D11
     pub dwadasamsa_rasi: u8,   // D12
+    pub shodashamsa_rasi: u8,   // D16
+    pub vimsamsa_rasi: u8,      // D20
+    pub chaturvimshamsa_rasi: u8, // D24
+    pub saptavimsamsa_rasi: u8, // D27
+    pub trimsamsa_rasi: u8,     // D30
+    pub khavedamsa_rasi: u8,    // D40
+    pub akshavedamsa_rasi: u8,  // D45
+    pub shashtyamsa_rasi: u8,   // D60
+    pub navanavamsa_rasi: u8,   // D81
+    pub ashtottaramsa_rasi: u8, // D108
+    pub dwadasdwadasamsa_rasi: u8, // D144
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -101,10 +115,24 @@ impl VedicChartCalculator {
                 hora_rasi: crate::varga::VargaType::D2.calculate_rasi(sidereal),
                 drekkana_rasi: crate::varga::VargaType::D3.calculate_rasi(sidereal),
                 chaturthamsha_rasi: crate::varga::VargaType::D4.calculate_rasi(sidereal),
+                panchamsa_rasi: crate::varga::VargaType::D5.calculate_rasi(sidereal),
                 saptamsa_rasi: crate::varga::VargaType::D7.calculate_rasi(sidereal),
+                ashtamsa_rasi: crate::varga::VargaType::D8.calculate_rasi(sidereal),
                 navamsa_rasi: crate::varga::VargaType::D9.calculate_rasi(sidereal),
                 dasamsa_rasi: crate::varga::VargaType::D10.calculate_rasi(sidereal),
+                rudramsa_rasi: crate::varga::VargaType::D11.calculate_rasi(sidereal),
                 dwadasamsa_rasi: crate::varga::VargaType::D12.calculate_rasi(sidereal),
+                shodashamsa_rasi: crate::varga::VargaType::D16.calculate_rasi(sidereal),
+                vimsamsa_rasi: crate::varga::VargaType::D20.calculate_rasi(sidereal),
+                chaturvimshamsa_rasi: crate::varga::VargaType::D24.calculate_rasi(sidereal),
+                saptavimsamsa_rasi: crate::varga::VargaType::D27.calculate_rasi(sidereal),
+                trimsamsa_rasi: crate::varga::VargaType::D30.calculate_rasi(sidereal),
+                khavedamsa_rasi: crate::varga::VargaType::D40.calculate_rasi(sidereal),
+                akshavedamsa_rasi: crate::varga::VargaType::D45.calculate_rasi(sidereal),
+                shashtyamsa_rasi: crate::varga::VargaType::D60.calculate_rasi(sidereal),
+                navanavamsa_rasi: crate::varga::VargaType::D81.calculate_rasi(sidereal),
+                ashtottaramsa_rasi: crate::varga::VargaType::D108.calculate_rasi(sidereal),
+                dwadasdwadasamsa_rasi: crate::varga::VargaType::D144.calculate_rasi(sidereal),
              }
         };
 

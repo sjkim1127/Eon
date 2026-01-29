@@ -53,6 +53,16 @@ fn main() {
         }
     }
 
+    println!("\n[Deep Varga Scan]");
+    for pos in &chart.planets {
+         println!("{:<12} | D60: {:>2} | D144: {:>2} | D30: {:>2}", 
+            format!("{:?}", pos.planet),
+            pos.shashtyamsa_rasi,
+            pos.dwadasdwadasamsa_rasi,
+            pos.trimsamsa_rasi
+         );
+    }
+
     // 3. Yoga Check
     println!("\n[2] Yoga Analysis");
     let yogas = YogaEngine::check_yogas(&chart);
