@@ -39,13 +39,14 @@ fn main() {
 
         let strength = StrengthEngine::calculate(pos);
 
-        println!("{:<12} | H: {:>2} | Sid: {:>6.2}° | Nature: {:<12} | Str: {:>5.1} ({})", 
+        println!("{:<12} | H: {:>2} | Sid: {:>6.2}° | Nature: {:<12} | Str: {:>5.1} ({}){}", 
             format!("{:?}", pos.planet), 
             pos.house_index,
             pos.sidereal_deg, 
             nature_str,
             strength.total_score,
-            strength.status
+            strength.status,
+            if pos.is_retrograde { " (Rx)" } else { "" }
         );
 
         if pos.planet == VedicPlanet::Moon {
@@ -65,10 +66,12 @@ fn main() {
 
     println!("\n[4] Ashtakavarga (SAV) Points");
     print!("Points: ");
+    let mut sav_total = 0;
     for (i, p) in chart.sav.points.iter().enumerate() {
         print!("H{}:{} ", i+1, p);
+        sav_total += *p as u32;
     }
-    println!();
+    println!("\nTotal SAV Points: {}", sav_total);
 
     println!("\n[5] Planetary Aspects (Drishti)");
     for rel in &chart.aspects {

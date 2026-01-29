@@ -43,14 +43,13 @@ impl Vimshottari {
     pub fn calculate(
         moon_longitude: f64,
         birth_date: DateTime<Utc>,
-        depth: u8 // 1 for Mahadasha, 2 for Antardasha
+        max_level: u8 
     ) -> Vec<DashaPeriod> {
-        let nak_len = 360.0 / 27.0; // 13.3333...
+        let nak_len = 360.0 / 27.0;
         let nak_pos_val = moon_longitude / nak_len;
         let nak_idx = nak_pos_val.floor() as usize; // 0..26
         let nakshatra = (nak_idx + 1) as u8;
         
-        // Progression within the nakshatra (0.0 to 1.0)
         let progression = nak_pos_val - nak_idx as f64;
         let remaining_fraction = 1.0 - progression;
         
@@ -60,19 +59,22 @@ impl Vimshottari {
         let mut dashas = Vec::new();
         let mut current_date = birth_date;
         
-        // 1. First Dasha (Balance)
+        // 1. First Mahadasha (Balance)
         let (first_planet, full_duration) = sequence[start_ruler_idx];
         let balance_years = full_duration * remaining_fraction;
         let first_end_date = Self::add_years(current_date, balance_years);
         
+        // Theoretical start of this Mahadasha
+        let theoretical_start = Self::add_years(current_date, -(full_duration * (1.0 - remaining_fraction)));
+
         dashas.push(DashaPeriod {
             planet: first_planet,
             start_date: current_date,
             end_date: first_end_date,
             duration_years: balance_years,
             level: 1,
-            sub_periods: if depth > 1 {
-                Self::calculate_antardasha(first_planet, current_date, full_duration, Some(remaining_fraction))
+            sub_periods: if max_level > 1 {
+                Self::calculate_sub_periods(first_planet, theoretical_start, full_duration, 2, max_level, Some(birth_date))
             } else {
                 Vec::new()
             },
@@ -80,12 +82,11 @@ impl Vimshottari {
         
         current_date = first_end_date;
         
-        // 2. Subsequent Dashas (for 120 years total coverage usually, or just one full cycle)
-        // Let's generate for ~100 years lifespan
+        // 2. Subsequent Mahadashas (for ~120 years)
         let mut years_covered = balance_years;
         let mut idx = (start_ruler_idx + 1) % 9;
         
-        while years_covered < 100.0 {
+        while years_covered < 120.0 {
             let (planet, duration) = sequence[idx];
             let end_date = Self::add_years(current_date, duration);
             
@@ -95,8 +96,8 @@ impl Vimshottari {
                 end_date,
                 duration_years: duration,
                 level: 1,
-                sub_periods: if depth > 1 {
-                    Self::calculate_antardasha(planet, current_date, duration, None)
+                sub_periods: if max_level > 1 {
+                    Self::calculate_sub_periods(planet, current_date, duration, 2, max_level, None)
                 } else {
                     Vec::new()
                 },
@@ -110,69 +111,65 @@ impl Vimshottari {
         dashas
     }
     
-    fn calculate_antardasha(
+    fn calculate_sub_periods(
         lord: VedicPlanet, 
-        start_date: DateTime<Utc>, 
-        mahadasha_duration: f64,
-        balance_fraction: Option<f64>
+        theoretical_start: DateTime<Utc>, 
+        parent_duration: f64,
+        level: u8,
+        max_level: u8,
+        clip_start: Option<DateTime<Utc>>
     ) -> Vec<DashaPeriod> {
         let sequence = Self::get_dasha_sequence();
-        // Antardasha starts with the Mahadasha lord itself
         let start_idx = sequence.iter().position(|(p, _)| *p == lord).unwrap();
         
         let mut periods = Vec::new();
-        let mut current = start_date;
+        let mut current_start = theoretical_start;
         
-        let _loop_start = if balance_fraction.is_some() {
-             // If this is a balance dasha, we need to find where in the sub-period cycle we are.
-             // This is complex. Simplified: If balance, generate sub-periods strictly proportional 
-             // to the *remaining* balance.
-             // But technically, the sub-periods passed are passed.
-             // Implementation for precise balance sub-periods requires calculating which sub-period dominates.
-             // For implementation MVP, we will simplify: 
-             // Calculate full sub-periods and filter/clip based on start_date.
-             0 // Placeholder for full re-calc
-        } else {
-            0
-        };
-
-        // Standard Antardasha Calculation
-        // Sub-period duration = (Mahadasha Years * Antardasha Lord Years) / 120
         for i in 0..9 {
             let idx = (start_idx + i) % 9;
             let (sub_planet, sub_base_years) = sequence[idx];
-            let sub_duration = (mahadasha_duration * sub_base_years) / 120.0;
-            
-            if let Some(_fraction) = balance_fraction {
-                 // Simplified handling for balance: 
-                 // If we are in the middle of a Mahadasha, we might be in the middle of an Antardasha.
-                 // This requires locating the exact sub-period.
-                 // Let's defer complex balance logic for now and just handle full cycles for non-balance dashas.
-            }
+            // Vimshottari sub-period formula: (Parent Years * Sub Lord Years) / 120
+            let sub_duration = (parent_duration * sub_base_years) / 120.0;
+            let current_end = Self::add_years(current_start, sub_duration);
 
-            let end = Self::add_years(current, sub_duration);
+            // Check if this sub-period is within the clip range
+            let actual_start = if let Some(clip) = clip_start {
+                if current_end <= clip {
+                    current_start = current_end;
+                    continue; // Already passed
+                }
+                if current_start < clip { clip } else { current_start }
+            } else {
+                current_start
+            };
+
+            let actual_duration = if actual_start > current_start {
+                sub_duration - (actual_start.signed_duration_since(current_start).num_seconds() as f64 / (365.2425 * 86400.0))
+            } else {
+                sub_duration
+            };
+
             periods.push(DashaPeriod {
                 planet: sub_planet,
-                start_date: current,
-                end_date: end,
-                duration_years: sub_duration,
-                level: 2,
-                sub_periods: Vec::new(),
+                start_date: actual_start,
+                end_date: current_end,
+                duration_years: actual_duration,
+                level,
+                sub_periods: if level < max_level {
+                    Self::calculate_sub_periods(sub_planet, current_start, sub_duration, level + 1, max_level, clip_start)
+                } else {
+                    Vec::new()
+                },
             });
-            current = end;
-        }
-        
-        // Fix for balance case: Filter out periods that happened before start_date (strictly speaking logic above needs adjustment)
-        // For MVP, we only calculate proper Antar for full Mahadashas.
-        if balance_fraction.is_some() {
-            return Vec::new(); // Return empty for balance block to avoid confusion
+
+            current_start = current_end;
         }
 
         periods
     }
 
     fn add_years(date: DateTime<Utc>, years: f64) -> DateTime<Utc> {
-        let seconds = years * 365.2425 * 86400.0;
-        date + Duration::seconds(seconds as i64)
+        let seconds = (years * 365.2425 * 86400.0) as i64;
+        date + Duration::seconds(seconds)
     }
 }

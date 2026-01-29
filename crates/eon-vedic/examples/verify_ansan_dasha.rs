@@ -21,7 +21,7 @@ fn main() {
     
     println!("\n[Mahadasha Timeline]");
     for m in &mahadashas {
-        println!("{:?}: {} ~ {}", m.planet, m.start_date.format("%Y-%m-%d"), m.end_date.format("%Y-%m-%d"));
+        println!("{:?}: {} ~ {} (Antardashas: {})", m.planet, m.start_date.format("%Y-%m-%d"), m.end_date.format("%Y-%m-%d"), m.sub_periods.len());
         
         // Show Antardashas for current or first few
         if m.planet == eon_vedic::planets::VedicPlanet::Moon || m.planet == eon_vedic::planets::VedicPlanet::Mars {

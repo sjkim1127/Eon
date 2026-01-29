@@ -7,6 +7,7 @@ pub struct PlanetStrength {
     pub planet: VedicPlanet,
     pub exaltation_score: f64, // 0.0 ~ 60.0 (Uchcha Bala)
     pub directional_score: f64,// 0.0 ~ 60.0 (Dig Bala)
+    pub chesta_score: f64,     // 0.0 ~ 60.0 (Chesta Bala - Motion)
     pub total_score: f64,      // Aggregate for MVP
     pub status: String,        // "Exalted", "Debilitated", "Strong", "Weak", "Neutral"
 }
@@ -18,17 +19,18 @@ impl StrengthEngine {
     pub fn calculate(pos: &VedicPosition) -> PlanetStrength {
         let ex_score = Self::calculate_uchcha_bala(pos.planet, pos.sidereal_deg);
         let dig_score = Self::calculate_dig_bala(pos.planet, pos.house_index);
+        let chesta_score = Self::calculate_chesta_bala(pos);
         
-        let total = ex_score + dig_score;
+        let total = ex_score + dig_score + chesta_score;
         
         // Simple status determination
         let status = if ex_score >= 50.0 {
             "Exalted".to_string()
         } else if ex_score <= 10.0 {
             "Debilitated".to_string()
-        } else if total > 80.0 {
+        } else if total > 120.0 {
             "Strong".to_string()
-        } else if total < 40.0 {
+        } else if total < 60.0 {
             "Weak".to_string()
         } else {
             "Neutral".to_string()
@@ -38,9 +40,40 @@ impl StrengthEngine {
             planet: pos.planet,
             exaltation_score: ex_score,
             directional_score: dig_score,
+            chesta_score,
             total_score: total,
             status,
         }
+    }
+
+    /// Chesta Bala (Motion Strength)
+    /// Simplified: Planets gain strength when retrograde or moving slowly.
+    fn calculate_chesta_bala(pos: &VedicPosition) -> f64 {
+        if pos.planet == VedicPlanet::Sun || pos.planet == VedicPlanet::Moon {
+            // Luminaries gain strength from other factors (Ayana/Paksha), but here we return a neutral 30.
+            return 30.0;
+        }
+
+        if pos.is_retrograde {
+            // Retrograde planets are considered strong in Chesta Bala.
+            return 60.0;
+        }
+
+        // Stationary or very slow planets are also strong.
+        // Average speeds: Mars 0.5, Merc 1.4, Jup 0.1, Ven 1.2, Sat 0.03
+        let avg_speed = match pos.planet {
+            VedicPlanet::Mars => 0.5,
+            VedicPlanet::Mercury => 1.4,
+            VedicPlanet::Jupiter => 0.08,
+            VedicPlanet::Venus => 1.2,
+            VedicPlanet::Saturn => 0.03,
+            _ => 1.0,
+        };
+
+        let ratio = (pos.speed.abs() / avg_speed).min(2.0);
+        // Strength is inversely proportional to speed relative to average.
+        // Max 60 units.
+        (60.0 * (1.1 - (ratio / 2.0))).max(0.0).min(60.0)
     }
 
     /// Uchcha Bala (Exaltation Strength)

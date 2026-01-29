@@ -16,6 +16,8 @@ pub struct VedicPosition {
     
     // Additional Info
     pub house_index: u8, // 1~12 (Bhava) - Calculated from Lagna
+    pub speed: f64,      // Degrees per day
+    pub is_retrograde: bool,
 
     // Varga Positions (Sign Index 1~12)
     pub hora_rasi: u8,         // D2
@@ -79,7 +81,8 @@ impl VedicChartCalculator {
         let asc_rasi = (asc_sidereal / 30.0).floor() as u8 + 1;
         
         // Helper to Create Position
-        let create_position = |planet: VedicPlanet, sidereal: f64, tropical: f64| -> VedicPosition {
+        let create_position = |planet: VedicPlanet, sidereal: f64, tropical: f64, speed: f64| -> VedicPosition {
+             let nak_pos = sidereal / (360.0 / 27.0);
              let nak_pos = sidereal / (360.0 / 27.0);
              let nakshatra = (nak_pos.floor() as u8) + 1;
              
@@ -102,6 +105,8 @@ impl VedicChartCalculator {
                 pada,
                 rasi,
                 house_index,
+                speed,
+                is_retrograde: speed < 0.0,
                 hora_rasi: crate::varga::VargaType::D2.calculate_rasi(sidereal),
                 drekkana_rasi: crate::varga::VargaType::D3.calculate_rasi(sidereal),
                 chaturthamsha_rasi: crate::varga::VargaType::D4.calculate_rasi(sidereal),
@@ -127,7 +132,7 @@ impl VedicChartCalculator {
         };
 
         // 1. Create Ascendant Position
-        let asc_position = create_position(VedicPlanet::Ascendant, asc_sidereal, ascmc[0]);
+        let asc_position = create_position(VedicPlanet::Ascendant, asc_sidereal, ascmc[0], 0.0);
 
         let planets_names = [
             VedicPlanet::Sun, VedicPlanet::Moon, VedicPlanet::Mars,
@@ -138,15 +143,16 @@ impl VedicChartCalculator {
         let mut planets = Vec::new();
         for p in &planets_names {
             let flag = 256 | 2; // SEFLG_SPEED | SEFLG_SIDEREAL (or just standard)
-            let trop = self.engine.get_planet_position(time, p.se_id(), flag).unwrap_or(0.0);
+            let (trop, speed) = self.engine.get_planet_full(time, p.se_id(), flag).unwrap_or((0.0, 0.0));
             let sidereal = (trop - ayanamsa + 360.0) % 360.0;
-            planets.push(create_position(*p, sidereal, trop));
+            planets.push(create_position(*p, sidereal, trop, speed));
 
             // Add Ketu opposite to Rahu
             if *p == VedicPlanet::Rahu {
                 let ketu_sidereal = (sidereal + 180.0) % 360.0;
                 let ketu_tropical = (trop + 180.0) % 360.0;
-                planets.push(create_position(VedicPlanet::Ketu, ketu_sidereal, ketu_tropical));
+                // Ketu's speed is the same as Rahu's (since it's exactly opposite)
+                planets.push(create_position(VedicPlanet::Ketu, ketu_sidereal, ketu_tropical, speed));
             }
         }
 

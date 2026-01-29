@@ -111,8 +111,8 @@ impl AstroEngine {
         self.find_time_for_longitude(approx_time, target_long)
     }
 
-    /// 행성, 달, 노드의 위치 계산 (Vedic 점성술 지원용)
-    pub fn get_planet_position(&self, datetime: DateTime<Utc>, planet_id: i32, flag: i32) -> Result<f64, String> {
+    /// 행성, 달, 노드의 상세 데이터 (황경, 속도) 계산
+    pub fn get_planet_full(&self, datetime: DateTime<Utc>, planet_id: i32, flag: i32) -> Result<(f64, f64), String> {
         let julian_day = self.to_julian_day(datetime);
         let mut results = [0.0; 6];
         let mut error = [0; 256];
@@ -132,9 +132,14 @@ impl AstroEngine {
                     .into_owned();
                 Err(format!("Astro Error: {}", err_msg))
             } else {
-                Ok(results[0]) // Longitude
+                Ok((results[0], results[3])) // Longitude, Speed
             }
         }
+    }
+
+    /// 행성, 달, 노드의 위치 계산 (Vedic 점성술 지원용)
+    pub fn get_planet_position(&self, datetime: DateTime<Utc>, planet_id: i32, flag: i32) -> Result<f64, String> {
+        self.get_planet_full(datetime, planet_id, flag).map(|(long, _)| long)
     }
 
     /// Chrono DateTime을 Julian Day로 변환

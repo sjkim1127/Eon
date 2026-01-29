@@ -43,4 +43,26 @@ impl VedicPlanet {
             _ => VedicPlanet::Sun, // Fallback (should not happen for 1-12)
         }
     }
+
+    pub fn exaltation_rasi(&self) -> u8 {
+        match self {
+            Self::Sun => 1,      // Aries
+            Self::Moon => 2,     // Taurus
+            Self::Mars => 10,    // Capricorn
+            Self::Mercury => 6,  // Virgo
+            Self::Jupiter => 4,  // Cancer
+            Self::Venus => 12,   // Pisces
+            Self::Saturn => 7,   // Libra
+            Self::Rahu => 2,     // Taurus (common view) or 3
+            Self::Ketu => 8,     // Scorpio (common view) or 9
+            _ => 0,
+        }
+    }
+
+    pub fn debilitation_rasi(&self) -> u8 {
+        match self.exaltation_rasi() {
+            0 => 0,
+            n => (n + 5) % 12 + 1, // Opposite sign
+        }
+    }
 }

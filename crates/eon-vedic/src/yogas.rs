@@ -11,6 +11,9 @@ pub enum YogaType {
     DhanaYoga, // Wealth Yoga
     Budhaditya, // Sun + Mercury
     DharmaKarmaAdhipati, // 9th + 10th Lord
+    PanchaMahapurusha, // Special position for Mars, Mercury, Jupiter, Venus, or Saturn
+    NeechaBhanga, // Cancellation of debilitation
+    Parivartana, // Exchange of house lords
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -155,6 +158,79 @@ impl YogaEngine {
                     planets_involved: vec![VedicPlanet::Moon],
                 });
              }
+        }
+
+        // --- 3. Pancha Mahapurusha Yogas ---
+        let mahapurusha_planets = [
+            (VedicPlanet::Mars, "Ruchaka", "Courage and strength."),
+            (VedicPlanet::Mercury, "Bhadra", "Intelligence and longevity."),
+            (VedicPlanet::Jupiter, "Hamsa", "Wisdom and purity."),
+            (VedicPlanet::Venus, "Malavya", "Sensual pleasures and prosperity."),
+            (VedicPlanet::Saturn, "Sasa", "Authority and persistence."),
+        ];
+
+        for (p_type, name, desc) in mahapurusha_planets {
+            if let Some(pos) = get_planet(p_type) {
+                // In Kendra from Lagna
+                if [1, 4, 7, 10].contains(&pos.house_index) {
+                    let rasi = pos.rasi;
+                    let is_own = VedicPlanet::get_ruler_of(rasi) == p_type;
+                    let is_exalted = p_type.exaltation_rasi() == rasi;
+                    
+                    if is_own || is_exalted {
+                        results.push(YogaResult {
+                            name: format!("{} Yoga", name),
+                            yoga_type: YogaType::PanchaMahapurusha,
+                            description: format!("{} - {}", name, desc),
+                            planets_involved: vec![p_type],
+                        });
+                    }
+                }
+            }
+        }
+
+        // --- 4. Neecha Bhanga Raja Yoga (Simplified Cancellation) ---
+        for p_pos in &chart.planets {
+            let p_type = p_pos.planet;
+            if p_type.debilitation_rasi() == p_pos.rasi {
+                // Debilitated! Check for cancellation (Bhanga)
+                // Rule: Dispositor (Lord of the debilitated sign) is in Kendra from Lagna.
+                let dispositor = VedicPlanet::get_ruler_of(p_pos.rasi);
+                if let Some(disp_pos) = get_planet(dispositor) {
+                    if [1, 4, 7, 10].contains(&disp_pos.house_index) {
+                        results.push(YogaResult {
+                            name: "Neecha Bhanga Raja Yoga".to_string(),
+                            yoga_type: YogaType::NeechaBhanga,
+                            description: format!("Debilitation of {:?} cancelled by dispositor {:?} in Kendra.", p_type, dispositor),
+                            planets_involved: vec![p_type, dispositor],
+                        });
+                    }
+                }
+            }
+        }
+
+        // --- 5. Parivartana Yoga (Exchange of Lords) ---
+        for h1 in 1..=12 {
+            let lord1 = get_lord_of_house(h1);
+            if let Some(p1_pos) = get_planet(lord1) {
+                let h1_occupies = p1_pos.house_index;
+                if h1_occupies != h1 {
+                    let lord2 = get_lord_of_house(h1_occupies);
+                    if let Some(p2_pos) = get_planet(lord2) {
+                        if p2_pos.house_index == h1 {
+                            // Lord 1 is in House 2, and Lord 2 is in House 1
+                            if h1 < h1_occupies { // Avoid duplicate pairs
+                                results.push(YogaResult {
+                                    name: "Parivartana Yoga".to_string(),
+                                    yoga_type: YogaType::Parivartana,
+                                    description: format!("Exchange of lords between house {} and {}.", h1, h1_occupies),
+                                    planets_involved: vec![lord1, lord2],
+                                });
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         results
