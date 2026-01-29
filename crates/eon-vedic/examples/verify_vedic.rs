@@ -41,7 +41,7 @@ fn main() {
 
         let avasthas = eon_vedic::analysis::avasthas::AvasthaEngine::calculate(pos);
 
-        println!("{:<12} | H: {:>2} | Sid: {:>6.2}° | Nature: {:<12} | Str: {:>5.1} (D:{:>4.1},K:{:>2.0}) ({}){}{}", 
+        println!("{:<12} | H: {:>2} | Sid: {:>6.2}° | Nature: {:<12} | Str: {:>5.1} (D:{:>4.1},K:{:>2.0},A:{:>4.1},P:{:>4.1}) I/K:{:0>2.0}/{:0>2.0} ({}){}{}", 
             format!("{:?}", pos.planet), 
             pos.house_index,
             pos.sidereal_deg, 
@@ -49,6 +49,10 @@ fn main() {
             strength.total_score,
             strength.drik_score,
             strength.kala_score,
+            strength.ayana_score,
+            strength.paksha_score,
+            strength.ishta_phala,
+            strength.kashta_phala,
             strength.status,
             if pos.is_retrograde { " (Rx)" } else { "" },
             if pos.is_combust { " (C)" } else { "" }
@@ -91,6 +95,15 @@ fn main() {
     println!("\n[5] Planetary Aspects (Drishti)");
     for rel in &chart.aspects {
         println!("  {:<12} aspects Houses: {:?}", format!("{:?}", rel.aspecting_planet), rel.aspected_houses);
+    }
+
+    println!("\n[6] Graha Maitri (Relationships) - Moon's View");
+    if let Some(moon) = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon) {
+        let targets = [VedicPlanet::Sun, VedicPlanet::Mars, VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus, VedicPlanet::Saturn];
+        for target in &targets {
+            let rel = eon_vedic::analysis::relationships::RelationshipEngine::get_relationship(moon.planet, *target, &chart);
+            println!("  Moon vs {:<8} -> {:?}", format!("{:?}", target), rel);
+        }
     }
 
     // 3. Yoga Check

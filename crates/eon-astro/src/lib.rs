@@ -142,6 +142,33 @@ impl AstroEngine {
         self.get_planet_full(datetime, planet_id, flag).map(|(long, _)| long)
     }
 
+    /// 적도 좌표계 (Equatorial) 데이터 (RA, Declination) 계산
+    pub fn get_planet_equatorial(&self, datetime: DateTime<Utc>, planet_id: i32) -> Result<(f64, f64), String> {
+        let julian_day = self.to_julian_day(datetime);
+        let mut results = [0.0; 6];
+        let mut error = [0; 256];
+        let flag = 2048 | 2; // SEFLG_EQUATORIAL | SEFLG_SWIEPH
+
+        unsafe {
+            let ret = swiss_eph::swe_calc_ut(
+                julian_day,
+                planet_id,
+                flag,
+                results.as_mut_ptr(),
+                error.as_mut_ptr() as *mut i8
+            );
+            
+            if ret < 0 {
+                let err_msg = std::ffi::CStr::from_ptr(error.as_ptr() as *const i8)
+                    .to_string_lossy()
+                    .into_owned();
+                Err(format!("Astro Error: {}", err_msg))
+            } else {
+                Ok((results[0], results[1])) // RA, Declination
+            }
+        }
+    }
+
     /// Chrono DateTime을 Julian Day로 변환
     fn to_julian_day(&self, dt: DateTime<Utc>) -> f64 {
         let year = dt.year();
