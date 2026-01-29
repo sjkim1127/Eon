@@ -208,7 +208,7 @@ fn main() {
             apply_correction: correction,
         };
         
-        let result = pillars.integrated_analysis(options);
+        let result = pillars.integrated_analysis(options, &eon_saju::AnalysisConfig::default());
         
         println!("----------------------------------------------------");
         println!("{}", title);

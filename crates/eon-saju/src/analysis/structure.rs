@@ -7,7 +7,8 @@ use crate::core::stem::HeavenlyStem;
 use crate::core::element::Polarity;
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
-use crate::core::config::thresholds::*;
+use crate::core::config::AnalysisConfig;
+use crate::analysis::Analyzable;
 
 /// 격국의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -131,6 +132,10 @@ pub struct StructureAnalysis {
 
 impl StructureAnalysis {
     pub fn from_pillars(pillars: &FourPillars) -> Self {
+        Self::from_pillars_with_config(pillars, &AnalysisConfig::default())
+    }
+
+    pub fn from_pillars_with_config(pillars: &FourPillars, config: &AnalysisConfig) -> Self {
         let dm = pillars.day_master();
         let month_branch = pillars.month.branch;
         let hidden_stems = month_branch.hidden_stems();
@@ -142,11 +147,11 @@ impl StructureAnalysis {
         ];
 
         // 0. 특수 격국(종격/전왕격) 우선 판정
-        let strength = pillars.strength();
-        let is_polarized = strength.deuk_se.support_ratio >= POLARIZED_RATIO_HIGH || strength.deuk_se.support_ratio <= POLARIZED_RATIO_LOW;
+        let strength = pillars.strength_with_config(config);
+        let is_polarized = strength.deuk_se.support_ratio >= config.strength.polarized_high || strength.deuk_se.support_ratio <= config.strength.polarized_low;
         
         if is_polarized {
-            if strength.deuk_se.support_ratio >= POLARIZED_RATIO_HIGH {
+            if strength.deuk_se.support_ratio >= config.strength.polarized_high {
                 // 비겁 vs 인성 비중 확인
                 let yinxing = strength.deuk_se.yinxing_count;
                 let bijie = strength.deuk_se.bijie_count;
@@ -161,7 +166,8 @@ impl StructureAnalysis {
                     structure,
                     projected_stem: None,
                     projection_path: None,
-                    reason: format!("일간의 세력({:.1}%)이 극단적으로 강하여 {}에 해당함", strength.deuk_se.support_ratio, name),
+                    reason: format!("일간의 세력({:.1}%)이 극단적으로 강하여 {}에 해당함 (임계치: {:.1}%)", 
+                        strength.deuk_se.support_ratio, name, config.strength.polarized_high),
                 };
             } else {
                 // 식상 vs 재성 vs 관성 비중 확인
@@ -181,7 +187,8 @@ impl StructureAnalysis {
                     structure,
                     projected_stem: None,
                     projection_path: None,
-                    reason: format!("일간의 세력({:.1}%)이 극단적으로 약하여 월지 세력을 따르는 {}에 해당함", strength.deuk_se.support_ratio, name),
+                    reason: format!("일간의 세력({:.1}%)이 극단적으로 약하여 월지 세력을 따르는 {}에 해당함 (임계치: {:.1}%)", 
+                        strength.deuk_se.support_ratio, name, config.strength.polarized_low),
                 };
             }
         }
@@ -251,5 +258,17 @@ impl FourPillars {
     /// 격국 분석
     pub fn structure(&self) -> StructureAnalysis {
         StructureAnalysis::from_pillars(self)
+    }
+
+    /// 설정을 포함한 격국 분석
+    pub fn structure_with_config(&self, config: &AnalysisConfig) -> StructureAnalysis {
+        StructureAnalysis::from_pillars_with_config(self, config)
+    }
+}
+
+impl Analyzable for StructureAnalysis {
+    type Output = StructureAnalysis;
+    fn analyze(pillars: &FourPillars, config: &AnalysisConfig) -> Self::Output {
+        StructureAnalysis::from_pillars_with_config(pillars, config)
     }
 }

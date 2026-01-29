@@ -22,7 +22,7 @@ use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
 use crate::analysis::relationships::RelationshipAnalysis;
 
-use crate::core::config::weights::*;
+use crate::core::config::AnalysisConfig;
 
 /// 강약 유형
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -155,13 +155,13 @@ pub struct DeukJi {
 
 impl DeukJi {
     /// 득지 판정 (기존 호환성 유지)
-    pub fn check(pillars: &FourPillars) -> Self {
+    pub fn check(pillars: &FourPillars, config: &AnalysisConfig) -> Self {
         let relations = RelationshipAnalysis::from_pillars(pillars);
-        Self::check_with_relations(pillars, &relations)
+        Self::check_with_relations(pillars, &relations, config)
     }
 
     /// 득지 판정 (합충 관계 반영)
-    pub fn check_with_relations(pillars: &FourPillars, relations: &RelationshipAnalysis) -> Self {
+    pub fn check_with_relations(pillars: &FourPillars, relations: &RelationshipAnalysis, config: &AnalysisConfig) -> Self {
         let day_element = pillars.day_master().element();
         
         let branches = [
@@ -188,15 +188,12 @@ impl DeukJi {
         for (name, branch) in &branches {
             // 위치별 기본 가중치
             let base_weight = match *name {
-                "월지" => WEIGHT_MONTH_BRANCH,
-                "일지" => WEIGHT_DAY_BRANCH,
-                _ => WEIGHT_OTHER_BRANCH, // 년지, 시지
+                "월지" => config.weights.month_branch,
+                "일지" => config.weights.day_branch,
+                _ => config.weights.other_branch, // 년지, 시지
             };
             
             // 충(Clash) 발생 시 충 종류에 따른 차등 감산율 적용
-            // - 왕지충(子午, 卯酉): 70% 손상
-            // - 생지충(寅申, 巳亥): 50% 손상
-            // - 고지충(丑未, 辰戌): 20% 손상 (붕토 효과)
             let (weight, clash_label) = if let Some(clash) = clash_info.get(*name) {
                 let damage = clash.damage_ratio();
                 let adjusted = base_weight * (1.0 - damage);
@@ -214,16 +211,16 @@ impl DeukJi {
                 if stem.element() == day_element {
                     // 기운의 종류에 따른 가중치 (정기: 1.0, 중기: 0.6, 여기: 0.3)
                     let part_weight = if idx == hidden_stems.len() - 1 { 
-                        crate::core::config::root_weights::MAIN_ROOT
+                        config.root.main_root
                     } else if hidden_stems.len() == 3 && idx == 1 {
-                        crate::core::config::root_weights::MIDDLE_ROOT
+                        config.root.middle_root
                     } else {
-                        crate::core::config::root_weights::REMAIN_ROOT
+                        config.root.remain_root
                     };
 
                     // 사령(Commanding) 여부 확인 (월지만 해당, 가중치 20% 보정)
                     let saryeong_multiplier = if let Some(ref s) = saryeong {
-                        if s.commanding_stem == *stem { crate::core::config::root_weights::SARYEONG_BONUS } else { 1.0 }
+                        if s.commanding_stem == *stem { config.root.saryeong_bonus } else { 1.0 }
                     } else { 1.0 };
 
                     branch_root_score += (weight * part_weight * saryeong_multiplier).min(weight);
@@ -257,8 +254,8 @@ impl DeukJi {
         
         // 득지 판정: 
         // 1) 12운성 가중치 합이 1.0 이상 (A급 1개 또는 B급 2개 이상)
-        // 2) 또는 통근 점수가 3.0 이상
-        let acquired = stage_weight_sum >= 1.0 || root_score >= crate::core::config::root_weights::MIN_DEUK_JI_SCORE;
+        // 2) 또는 통근 점수가 설정된 최소 점수 이상
+        let acquired = stage_weight_sum >= 1.0 || root_score >= config.root.min_deuk_ji_score;
         
         Self {
             acquired,
@@ -362,58 +359,46 @@ pub struct DeukSe {
 impl DeukSe {
     /// 득세 판정
     /// 비겁+인성이 식상+재성+관성보다 많으면 득세
-    pub fn check(pillars: &FourPillars) -> Self {
-        Self::check_with_options(pillars, false)
+    pub fn check(pillars: &FourPillars, config: &AnalysisConfig) -> Self {
+        Self::check_with_options(pillars, false, config)
     }
 
-    /// 옵션에 따른 득세 판정
-    pub fn check_with_options(pillars: &FourPillars, apply_transform: bool) -> Self {
+    /// 옵션에 따른 득세 판정 (Input vs Output 에너지량 비교 추상화)
+    pub fn check_with_options(pillars: &FourPillars, apply_transform: bool, config: &AnalysisConfig) -> Self {
         let day_master = pillars.day_master();
+        let dm_element = day_master.element();
         let eff_map = if apply_transform { 
             Some(pillars.effective_elements()) 
         } else { None };
         
-        // 천간 (일간 제외)
-        let stems = [
-            (pillars.year.stem, 0),
-            (pillars.month.stem, 1),
-            (pillars.hour.stem, 3),
-        ];
-        
-        let mut support_score = 0.0f32;
+        let mut total_support_score = 0.0f32;
         let mut bijie_count = 0u8;
         let mut yinxing_count = 0u8;
         let mut shishang_count = 0u8;
         let mut caisheng_count = 0u8;
         let mut guanxing_count = 0u8;
 
-        support_score += WEIGHT_STEM; // 일간 자신 점수
+        // 일간 자신 점수 가산
+        total_support_score += config.weights.stem;
+
+        // 1. 천간 분석 (일간 제외)
+        let stems = [
+            (pillars.year.stem, 0),
+            (pillars.month.stem, 1),
+            (pillars.hour.stem, 3),
+        ];
 
         for (stem, idx) in &stems {
             let element = if let Some(map) = eff_map { map[*idx].1 } else { stem.element() };
+            let weight = config.weights.stem;
             
-            // 실질 오행과 일간의 관계를 십성으로 변환 (보조용)
-            // 정확한 명칭보다는 오행 성격(인성/비겁 등) 파악이 중요
-            let is_supportive = element == day_master.element() || element == day_master.element().generated_by();
-            
-            if is_supportive {
-                support_score += WEIGHT_STEM;
+            // 내 편(Input: 인성+비겁) 점수 합산
+            if element == dm_element || element == dm_element.generated_by() {
+                total_support_score += weight;
             }
             
-            // 십성 통계 (간단화된 로직)
-            let god = if stem.element() != element {
-                // 합화된 경우 임시 천간 생성
-                match (element, stem.polarity()) {
-                    (Element::Wood, p) => crate::core::ten_gods::TenGod::from_stems(day_master, crate::core::stem::HeavenlyStem::from_index(if p == crate::core::element::Polarity::Yang { 0 } else { 1 })),
-                    (Element::Fire, p) => crate::core::ten_gods::TenGod::from_stems(day_master, crate::core::stem::HeavenlyStem::from_index(if p == crate::core::element::Polarity::Yang { 2 } else { 3 })),
-                    (Element::Earth, p) => crate::core::ten_gods::TenGod::from_stems(day_master, crate::core::stem::HeavenlyStem::from_index(if p == crate::core::element::Polarity::Yang { 4 } else { 5 })),
-                    (Element::Metal, p) => crate::core::ten_gods::TenGod::from_stems(day_master, crate::core::stem::HeavenlyStem::from_index(if p == crate::core::element::Polarity::Yang { 6 } else { 7 })),
-                    (Element::Water, p) => crate::core::ten_gods::TenGod::from_stems(day_master, crate::core::stem::HeavenlyStem::from_index(if p == crate::core::element::Polarity::Yang { 8 } else { 9 })),
-                }
-            } else {
-                TenGod::from_stems(day_master, *stem)
-            };
-
+            // 십성 통계 (기존 로직 유지)
+            let god = TenGod::from_stems(day_master, *stem); // 통계는 원국 기준
             match god {
                 TenGod::Bijian | TenGod::Jiecai => bijie_count += 1,
                 TenGod::Zhengyin | TenGod::Pianyin => yinxing_count += 1,
@@ -423,35 +408,23 @@ impl DeukSe {
             }
         }
         
-        // 지지 가중치 적용
+        // 2. 지지 분석
         let branch_indices = [
-            (pillars.year.branch, WEIGHT_OTHER_BRANCH, 4),
-            (pillars.month.branch, WEIGHT_MONTH_BRANCH, 5),
-            (pillars.day.branch, WEIGHT_DAY_BRANCH, 6),
-            (pillars.hour.branch, WEIGHT_OTHER_BRANCH, 7),
+            (pillars.year.branch, config.weights.other_branch, 4),
+            (pillars.month.branch, config.weights.month_branch, 5),
+            (pillars.day.branch, config.weights.day_branch, 6),
+            (pillars.hour.branch, config.weights.other_branch, 7),
         ];
 
         for (branch, weight, idx) in &branch_indices {
             let element = if let Some(map) = eff_map { map[*idx].1 } else { branch.element() };
-            let is_supportive = element == day_master.element() || element == day_master.element().generated_by();
             
-            if is_supportive {
-                support_score += *weight;
+            // 내 편 점수 합산
+            if element == dm_element || element == dm_element.generated_by() {
+                total_support_score += *weight;
             }
 
-            let god = if branch.element() != element {
-                // 합화된 경우
-                match (element, branch.primary_stem().polarity()) {
-                    (Element::Wood, p) => crate::core::ten_gods::TenGod::from_stems(day_master, crate::core::stem::HeavenlyStem::from_index(if p == crate::core::element::Polarity::Yang { 0 } else { 1 })),
-                    (Element::Fire, p) => crate::core::ten_gods::TenGod::from_stems(day_master, crate::core::stem::HeavenlyStem::from_index(if p == crate::core::element::Polarity::Yang { 2 } else { 3 })),
-                    (Element::Earth, p) => crate::core::ten_gods::TenGod::from_stems(day_master, crate::core::stem::HeavenlyStem::from_index(if p == crate::core::element::Polarity::Yang { 4 } else { 5 })),
-                    (Element::Metal, p) => crate::core::ten_gods::TenGod::from_stems(day_master, crate::core::stem::HeavenlyStem::from_index(if p == crate::core::element::Polarity::Yang { 6 } else { 7 })),
-                    (Element::Water, p) => crate::core::ten_gods::TenGod::from_stems(day_master, crate::core::stem::HeavenlyStem::from_index(if p == crate::core::element::Polarity::Yang { 8 } else { 9 })),
-                }
-            } else {
-                TenGod::from_stem_and_branch(day_master, *branch)
-            };
-
+            let god = TenGod::from_stem_and_branch(day_master, *branch);
             match god {
                 TenGod::Bijian | TenGod::Jiecai => bijie_count += 1,
                 TenGod::Zhengyin | TenGod::Pianyin => yinxing_count += 1,
@@ -461,8 +434,8 @@ impl DeukSe {
             }
         }
         
-        let support_ratio = (support_score / TOTAL_WEIGHT) * 100.0;
-        let acquired = support_score >= crate::core::config::strength_scores::DEUK_SE_THRESHOLD;
+        let support_ratio = (total_support_score / config.weights.total_weight) * 100.0;
+        let acquired = total_support_score >= config.strength.deuk_se_threshold;
         
         Self {
             acquired,
@@ -501,11 +474,11 @@ impl StrengthAnalysis {
     /// 사주로부터 신강신약 분석
     pub fn from_pillars(pillars: &FourPillars) -> Self {
         // 기본적으로 합화 반영
-        Self::from_pillars_with_options(pillars, true)
+        Self::from_pillars_with_options(pillars, true, &AnalysisConfig::default())
     }
 
-    /// 옵션에 따른 신강신약 분석
-    pub fn from_pillars_with_options(pillars: &FourPillars, apply_transform: bool) -> Self {
+    /// 옵션 및 설정을 기반으로 한 신강신약 분석
+    pub fn from_pillars_with_options(pillars: &FourPillars, apply_transform: bool, config: &AnalysisConfig) -> Self {
         let day_master = pillars.day_master();
         let relations = RelationshipAnalysis::from_pillars(pillars);
         let eff_map = if apply_transform { Some(pillars.effective_elements()) } else { None };
@@ -516,7 +489,7 @@ impl StrengthAnalysis {
             DeukRyeong::check(day_master, pillars.month.branch)
         };
 
-        let deuk_ji = DeukJi::check_with_relations(pillars, &relations);
+        let deuk_ji = DeukJi::check_with_relations(pillars, &relations, config);
         
         let deuk_si = if let Some(map) = eff_map {
             DeukSi::check_effective(day_master, pillars.hour.branch, map[7].1)
@@ -524,7 +497,7 @@ impl StrengthAnalysis {
             DeukSi::check(day_master, pillars.hour.branch)
         };
 
-        let deuk_se = DeukSe::check_with_options(pillars, apply_transform);
+        let deuk_se = DeukSe::check_with_options(pillars, apply_transform, config);
         
         // 만족 조건 개수 (4가지)
         let acquired_count = 
@@ -541,10 +514,10 @@ impl StrengthAnalysis {
         };
         
         // 종합 점수 계산
-        let score_ryeong = if deuk_ryeong.acquired { crate::core::config::strength_scores::CRITERIA_SCORE } else { 0.0 };
-        let score_ji = if deuk_ji.acquired { crate::core::config::strength_scores::CRITERIA_SCORE } else { 0.0 };
-        let score_si = if deuk_si.acquired { crate::core::config::strength_scores::CRITERIA_SCORE } else { 0.0 };
-        let score_se = deuk_se.support_ratio * crate::core::config::strength_scores::DEUK_SE_WEIGHT;
+        let score_ryeong = if deuk_ryeong.acquired { config.strength.criteria_score } else { 0.0 };
+        let score_ji = if deuk_ji.acquired { config.strength.criteria_score } else { 0.0 };
+        let score_si = if deuk_si.acquired { config.strength.criteria_score } else { 0.0 };
+        let score_se = deuk_se.support_ratio * config.strength.deuk_se_weight;
         let strength_score = score_ryeong + score_ji + score_si + score_se;
         
         Self {
@@ -641,6 +614,11 @@ impl FourPillars {
         StrengthAnalysis::from_pillars(self)
     }
 
+    /// 설정을 포함한 신강/신약 분석
+    pub fn strength_with_config(&self, config: &AnalysisConfig) -> StrengthAnalysis {
+        StrengthAnalysis::from_pillars_with_options(self, true, config)
+    }
+
     /// 신강 여부
     pub fn is_strong(&self) -> bool {
         self.strength().strength_type == StrengthType::Strong
@@ -649,6 +627,15 @@ impl FourPillars {
     /// 신약 여부
     pub fn is_weak(&self) -> bool {
         self.strength().strength_type == StrengthType::Weak
+    }
+}
+
+use crate::analysis::Analyzable;
+
+impl Analyzable for StrengthAnalysis {
+    type Output = StrengthAnalysis;
+    fn analyze(pillars: &FourPillars, config: &AnalysisConfig) -> Self::Output {
+        StrengthAnalysis::from_pillars_with_options(pillars, true, config)
     }
 }
 

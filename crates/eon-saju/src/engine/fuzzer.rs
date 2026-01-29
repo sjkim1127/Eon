@@ -62,7 +62,7 @@ impl DestinyFuzzer {
 
         for i in 0..60 {
             let yearly = GanZi::from_index(i as i32);
-            let frame = self.vm.step(0, yearly, major_context, None, None, None);
+            let frame = self.vm.step(0, major_context, yearly, None, None, None);
 
             if frame.score <= self.crash_threshold {
                 vulnerabilities.push(Vulnerability {
@@ -105,7 +105,7 @@ impl DestinyFuzzer {
             // 현재 VM은 step에서 monthly를 받지 않으므로 
             // 분석을 위해 DynamicLuckAnalysis를 직접 호출하거나 VM을 확장해야 함
             // 일단은 세운 수준에서의 랜덤 퍼징 위주로 구현
-            let frame = self.vm.step(0, yearly, major, Some(monthly), None, None);
+            let frame = self.vm.step(0, major, yearly, Some(monthly), None, None);
 
             if frame.score <= self.crash_threshold {
                 vulnerabilities.push(Vulnerability {

@@ -1,50 +1,129 @@
 //! 사주 분석용 각종 가중치 및 임계값 설정
 //! 
-//! ML 기반 최적화나 사용자 튜닝을 용이하게 하기 위해 상수로 분리합니다.
+//! ML 기반 최적화나 사용자 튜닝을 용이하게 하기 위해 Struct로 관리합니다.
+
+use serde::{Deserialize, Serialize};
+
+/// 전역 분석 설정
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnalysisConfig {
+    pub weights: WeightsConfig,
+    pub strength: StrengthConfig,
+    pub root: RootConfig,
+    pub thermal: ThermalConfig,
+    pub vm: VmConfig,
+}
+
+impl Default for AnalysisConfig {
+    fn default() -> Self {
+        Self {
+            weights: WeightsConfig::default(),
+            strength: StrengthConfig::default(),
+            root: RootConfig::default(),
+            thermal: ThermalConfig::default(),
+            vm: VmConfig::default(),
+        }
+    }
+}
 
 /// 위치별 가중치 (110점법)
-pub mod weights {
-    pub const TOTAL_WEIGHT: f32 = 11.0;
-    pub const WEIGHT_MONTH_BRANCH: f32 = 3.5; // 35점
-    pub const WEIGHT_DAY_BRANCH: f32 = 1.5;   // 15점
-    pub const WEIGHT_OTHER_BRANCH: f32 = 1.0; // 년지, 시지 (각 10점)
-    pub const WEIGHT_STEM: f32 = 1.0;         // 각 천간 10점 (일간 포함 4개)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WeightsConfig {
+    pub total_weight: f32,
+    pub month_branch: f32,
+    pub day_branch: f32,
+    pub other_branch: f32,
+    pub stem: f32,
+}
+
+impl Default for WeightsConfig {
+    fn default() -> Self {
+        Self {
+            total_weight: 11.0,
+            month_branch: 3.5,
+            day_branch: 1.5,
+            other_branch: 1.0,
+            stem: 1.0,
+        }
+    }
 }
 
 /// 신강신약 점수 산출 가중치
-pub mod strength_scores {
-    pub const CRITERIA_SCORE: f32 = 25.0;     // 득령, 득지, 득시 각각의 점수
-    pub const DEUK_SE_THRESHOLD: f32 = 5.5;   // 득세 판정 임계값
-    pub const DEUK_SE_WEIGHT: f32 = 0.25;     // 득세 점수 반영비율
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StrengthConfig {
+    pub criteria_score: f32,
+    pub deuk_se_threshold: f32,
+    pub deuk_se_weight: f32,
+    pub polarized_high: f32,
+    pub polarized_low: f32,
+}
+
+impl Default for StrengthConfig {
+    fn default() -> Self {
+        Self {
+            criteria_score: 25.0,
+            deuk_se_threshold: 5.5,
+            deuk_se_weight: 0.25,
+            polarized_high: 80.0,
+            polarized_low: 20.0,
+        }
+    }
 }
 
 /// 지장간 통근 가중치
-pub mod root_weights {
-    pub const MAIN_ROOT: f32 = 1.0;           // 정기
-    pub const MIDDLE_ROOT: f32 = 0.6;         // 중기
-    pub const REMAIN_ROOT: f32 = 0.3;         // 여기
-    pub const SARYEONG_BONUS: f32 = 1.2;      // 사령 보너스 (20%)
-    pub const MIN_DEUK_JI_SCORE: f32 = 3.0;   // 득지 판정 최소 점수
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RootConfig {
+    pub main_root: f32,
+    pub middle_root: f32,
+    pub remain_root: f32,
+    pub saryeong_bonus: f32,
+    pub min_deuk_ji_score: f32,
 }
 
-/// 분석 임계값 (Thresholds)
-pub mod thresholds {
-    /// 종격(극단적 강약) 판단 비율 (%)
-    pub const POLARIZED_RATIO_HIGH: f32 = 80.0;
-    pub const POLARIZED_RATIO_LOW: f32 = 20.0;
-    
-    /// 조후 지수 임계값
-    pub const THERMAL_EXTREME: i32 = 40;
-    pub const THERMAL_MODERATE: i32 = 25;
+impl Default for RootConfig {
+    fn default() -> Self {
+        Self {
+            main_root: 1.0,
+            middle_root: 0.6,
+            remain_root: 0.3,
+            saryeong_bonus: 1.2,
+            min_deuk_ji_score: 3.0,
+        }
+    }
+}
+
+/// 조후 지수 임계값
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThermalConfig {
+    pub extreme: i32,
+    pub moderate: i32,
+}
+
+impl Default for ThermalConfig {
+    fn default() -> Self {
+        Self {
+            extreme: 40,
+            moderate: 25,
+        }
+    }
 }
 
 /// VM 시뮬레이션 파라미터
-pub mod vm_params {
-    /// 기본 시작 점수
-    pub const BASE_SCORE: f32 = 50.0;
-    
-    /// 충(Clash) 영향력
-    pub const CLASH_PENALTY_BAD: f32 = -20.0;
-    pub const CLASH_GAIN_GOOD: f32 = 10.0;
-    pub const CLASH_DEFAULT: f32 = -5.0;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VmConfig {
+    pub base_score: f32,
+    pub clash_bad: f32,
+    pub clash_good: f32,
+    pub clash_default: f32,
+}
+
+impl Default for VmConfig {
+    fn default() -> Self {
+        Self {
+            base_score: 50.0,
+            clash_bad: -20.0,
+            clash_good: 10.0,
+            clash_default: -5.0,
+        }
+    }
 }

@@ -113,13 +113,19 @@ pub struct SajuVM {
     pub yongshin: YongshinAnalysis,
     /// 공망 분석 결과 (고정 기준)
     pub void: VoidAnalysis,
+    /// 분석 설정
+    pub config: crate::core::config::AnalysisConfig,
 }
 
 impl SajuVM {
     pub fn new(natal: FourPillars) -> Self {
-        let yongshin = natal.yongshin();
+        Self::new_with_config(natal, crate::core::config::AnalysisConfig::default())
+    }
+
+    pub fn new_with_config(natal: FourPillars, config: crate::core::config::AnalysisConfig) -> Self {
+        let yongshin = natal.yongshin_with_config(&config);
         let void = natal.void_analysis();
-        Self { natal, yongshin, void }
+        Self { natal, yongshin, void, config }
     }
 
     pub fn step(
@@ -183,7 +189,7 @@ impl SajuVM {
 
         let primary_yongshin = self.yongshin.primary;
         let assistant_yongshin = self.yongshin.assistant;
-        let thermal_index = crate::analysis::yongshin::calculate_thermal_index(&self.natal);
+        let thermal_index = crate::analysis::yongshin::calculate_thermal_index(&self.natal, &self.config);
 
         // 2. 공망(Void) 동적 감지 및 탈공(Escaping Void) 분석
         // 운에서 들어온 지지가 공망인지 확인
@@ -567,7 +573,7 @@ impl SajuVM {
     ) {
         let primary_yongshin = self.yongshin.primary;
         let assistant_yongshin = self.yongshin.assistant;
-        let thermal_index = crate::analysis::yongshin::calculate_thermal_index(&self.natal);
+        let thermal_index = crate::analysis::yongshin::calculate_thermal_index(&self.natal, &self.config);
 
         // 스테이지 정의
         let stages = [

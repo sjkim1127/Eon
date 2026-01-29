@@ -8,6 +8,7 @@ pub mod engine;
 pub mod report;
 
 // Re-exports for convenience
+pub use core::config::AnalysisConfig;
 pub use core::stem::HeavenlyStem;
 pub use core::branch::EarthlyBranch;
 pub use core::element::{Element, Polarity, ElementRelation};

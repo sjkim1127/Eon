@@ -207,8 +207,8 @@ impl FourPillars {
 
         // 각 주(Pillar) 계산
         // 연주, 월주는 절대 시간(dt_absolute_utc) 사용
-        let year_pillar = Self::calculate_year_pillar(dt_absolute_utc);
-        let month_pillar = Self::calculate_month_pillar(dt_absolute_utc);
+        let year_pillar = Self::calculate_year_pillar(dt_absolute_utc)?;
+        let month_pillar = Self::calculate_month_pillar(dt_absolute_utc)?;
 
         // 일주, 시주는 보정된 날짜/시간(adj_...) 사용 (진태양시 기준)
         // [야자시 처리]
@@ -216,18 +216,14 @@ impl FourPillars {
         let (calc_year, calc_month, calc_day) = if !input.use_night_rat_hour && adj_hour >= 23 {
             // 안전한 날짜 생성: 유효하지 않으면 월초로 fallback
             let base_date = NaiveDate::from_ymd_opt(adj_year, adj_month, adj_day)
-                .or_else(|| NaiveDate::from_ymd_opt(adj_year, adj_month, 1))
-                .or_else(|| NaiveDate::from_ymd_opt(adj_year, 1, 1))
-                .ok_or_else(|| SajuError::InvalidDateTime(
-                    format!("Cannot create date: {}-{}-{}", adj_year, adj_month, adj_day)
-                ))?;
+                .ok_or_else(|| SajuError::InvalidDateTime(format!("Cannot create date: {}-{}-{}", adj_year, adj_month, adj_day)))?;
             let next_day = base_date + Duration::days(1);
             (next_day.year(), next_day.month(), next_day.day())
         } else {
             (adj_year, adj_month, adj_day)
         };
 
-        let day_pillar = Self::calculate_day_pillar(calc_year, calc_month, calc_day);
+        let day_pillar = Self::calculate_day_pillar(calc_year, calc_month, calc_day)?;
         let hour_pillar = Self::calculate_hour_pillar(&day_pillar, adj_hour);
 
         Ok(Self {
@@ -242,13 +238,14 @@ impl FourPillars {
     }
 
     /// 년주는 입춘(立春)을 기준으로 바뀝니다.
-    pub(crate) fn calculate_year_pillar(dt: DateTime<Utc>) -> GanZi {
+    pub(crate) fn calculate_year_pillar(dt: DateTime<Utc>) -> Result<GanZi, SajuError> {
         use eon_astro::AstroEngine;
         let engine = AstroEngine::new();
         let year = dt.year();
         let month = dt.month();
         
-        let sun_long = engine.get_sun_longitude(dt).unwrap_or(0.0);
+        let sun_long = engine.get_sun_longitude(dt)
+            .map_err(|e| SajuError::CalculationError(format!("Sun longitude error: {}", e)))?;
         
         let effective_year = if month <= 2 {
             if month == 1 || sun_long < 315.0 {
@@ -261,36 +258,36 @@ impl FourPillars {
         };
 
         let idx = (effective_year - GANZI_BASE_YEAR).rem_euclid(60);
-        GanZi::from_index(idx)
+        Ok(GanZi::from_index(idx))
     }
 
     /// 월주 계산
-    pub(crate) fn calculate_month_pillar(dt: DateTime<Utc>) -> GanZi {
+    pub(crate) fn calculate_month_pillar(dt: DateTime<Utc>) -> Result<GanZi, SajuError> {
         use crate::core::calendar::get_month_branch_index_from_dt;
         
         let branch_idx = get_month_branch_index_from_dt(dt);
         let branch = EarthlyBranch::from_index(branch_idx as i32);
 
-        let year_pillar = Self::calculate_year_pillar(dt);
+        let year_pillar = Self::calculate_year_pillar(dt)?;
         let year_stem = year_pillar.stem;
 
         let zhi_idx = branch.index();
         let yi_stem_idx = (year_stem.index() as i32 % 5) * 2 + 2;
         let month_stem_idx = (yi_stem_idx + (zhi_idx as i32 - 2).rem_euclid(12)) % 10;
         
-        GanZi::new(
+        Ok(GanZi::new(
             HeavenlyStem::from_index(month_stem_idx),
             branch
-        )
+        ))
     }
 
     /// 일주 계산
-    pub(crate) fn calculate_day_pillar(year: i32, month: u32, day: u32) -> GanZi {
+    pub(crate) fn calculate_day_pillar(year: i32, month: u32, day: u32) -> Result<GanZi, SajuError> {
         let date = NaiveDate::from_ymd_opt(year, month, day)
-            .unwrap_or(NaiveDate::from_ymd_opt(year, month, 1).unwrap());
+            .ok_or_else(|| SajuError::InvalidDateTime(format!("{}-{}-{}", year, month, day)))?;
         
         let idx = eon_data::manseryuk::get_day_ganzi_index(date);
-        GanZi::from_index(idx as i32)
+        Ok(GanZi::from_index(idx as i32))
     }
 
     /// 시주 계산
@@ -371,24 +368,15 @@ impl std::fmt::Display for FourPillars {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, thiserror::Error, Serialize, Deserialize)]
 pub enum SajuError {
+    #[error("잘못된 날짜/시간: {0}")]
     InvalidDateTime(String),
+    #[error("음력 변환 미지원")]
     LunarNotSupported,
+    #[error("계산 오류: {0}")]
     CalculationError(String),
 }
-
-impl std::fmt::Display for SajuError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::InvalidDateTime(msg) => write!(f, "잘못된 날짜/시간: {}", msg),
-            Self::LunarNotSupported => write!(f, "음력 변환 미지원"),
-            Self::CalculationError(msg) => write!(f, "계산 오류: {}", msg),
-        }
-    }
-}
-
-impl std::error::Error for SajuError {}
 
 #[cfg(test)]
 mod tests {
@@ -397,7 +385,7 @@ mod tests {
     #[test]
     fn test_year_pillar_basic() {
         let dt = Utc.with_ymd_and_hms(2024, 3, 20, 10, 0, 0).unwrap();
-        let pillar = FourPillars::calculate_year_pillar(dt);
+        let pillar = FourPillars::calculate_year_pillar(dt).unwrap();
         assert_eq!(pillar.stem, HeavenlyStem::Jia);
         assert_eq!(pillar.branch, EarthlyBranch::Chen);
     }

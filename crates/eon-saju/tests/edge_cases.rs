@@ -405,10 +405,10 @@ fn test_case_8_transformation_impact() {
     let pillars = FourPillars::calculate(&input).unwrap();
     
     // 1. 합화 미적용 분석 (기본 강약)
-    let strength_raw = StrengthAnalysis::from_pillars_with_options(&pillars, false);
+    let strength_raw = StrengthAnalysis::from_pillars_with_options(&pillars, false, &eon_saju::AnalysisConfig::default());
     
     // 2. 합화 적용 분석 (변화된 강약)
-    let strength_transformed = StrengthAnalysis::from_pillars_with_options(&pillars, true);
+    let strength_transformed = StrengthAnalysis::from_pillars_with_options(&pillars, true, &eon_saju::AnalysisConfig::default());
     
     println!("Raw Strength: {:.1}%, Transformed Strength: {:.1}%", 
         strength_raw.strength_score, strength_transformed.strength_score);

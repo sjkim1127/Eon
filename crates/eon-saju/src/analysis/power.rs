@@ -46,19 +46,30 @@ pub struct IntegratedAnalysis {
 }
 
 impl IntegratedAnalysis {
-    pub fn calculate(pillars: &FourPillars, options: AnalysisOptions) -> Self {
+    pub fn calculate(pillars: &FourPillars, options: AnalysisOptions, config: &crate::core::config::AnalysisConfig) -> Self {
         let dm = pillars.day_master();
         let month_branch = pillars.month.branch;
 
         // 1. 가중치 설정
-        // 궁성 보정 적용 시: 천간(10), 월지(35), 일지(15), 년/시지(10) = 총 110점
-        // 보정 미적용 시: 모든 기둥 동일 가중치 (각 1) = 총 8점
         let weights = if options.apply_correction {
-            [10.0, 10.0, 10.0, 10.0, 10.0, 35.0, 15.0, 10.0] // [년간, 월간, 일간, 시간, 년지, 월지, 일지, 시지]
+            [
+                config.weights.stem, 
+                config.weights.stem, 
+                config.weights.stem, 
+                config.weights.stem, 
+                config.weights.other_branch, 
+                config.weights.month_branch, 
+                config.weights.day_branch, 
+                config.weights.other_branch
+            ]
         } else {
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
         };
 
+        // 가중치 스케일링 (전체 합이 가중치 합이 되도록 함)
+        // 기존 110점법 호환을 위해, 만약 stem=1.0이면 10.0으로 취급하고 싶을 경우를 고려할 수 있으나
+        // 여기서는 config에 정의된 대로 사용함. (보통 stem 1.0, month 3.5 등)
+        
         let total_weight: f32 = weights.iter().sum();
 
         // 2. 각 위치별 실질 오행 및 십성 결정
@@ -212,12 +223,21 @@ impl std::fmt::Display for IntegratedAnalysis {
 
 impl FourPillars {
     /// 통합 정밀 분석
-    pub fn integrated_analysis(&self, options: AnalysisOptions) -> IntegratedAnalysis {
-        IntegratedAnalysis::calculate(self, options)
+    pub fn integrated_analysis(&self, options: AnalysisOptions, config: &crate::core::config::AnalysisConfig) -> IntegratedAnalysis {
+        IntegratedAnalysis::calculate(self, options, config)
     }
 
-    /// 기본 옵션으로 분석 수행
+    /// 기본 옵션 및 기본 설정으로 분석 수행
     pub fn analyze(&self) -> IntegratedAnalysis {
-        self.integrated_analysis(AnalysisOptions::default())
+        self.integrated_analysis(AnalysisOptions::default(), &crate::core::config::AnalysisConfig::default())
+    }
+}
+
+use crate::analysis::Analyzable;
+
+impl Analyzable for IntegratedAnalysis {
+    type Output = IntegratedAnalysis;
+    fn analyze(pillars: &FourPillars, config: &crate::core::config::AnalysisConfig) -> Self::Output {
+        IntegratedAnalysis::calculate(pillars, AnalysisOptions::default(), config)
     }
 }

@@ -9,7 +9,7 @@ use crate::core::pillars::FourPillars;
 use crate::analysis::strength::{StrengthAnalysis, StrengthType};
 use crate::analysis::structure::StructureType;
 use crate::core::branch::EarthlyBranch;
-use crate::core::config::thresholds::*;
+use crate::core::config::AnalysisConfig;
 
 
 /// 용신의 종류
@@ -57,8 +57,12 @@ pub struct YongshinAnalysis {
 
 impl YongshinAnalysis {
     pub fn from_pillars(pillars: &FourPillars) -> Self {
+        Self::from_pillars_with_config(pillars, &AnalysisConfig::default())
+    }
+
+    pub fn from_pillars_with_config(pillars: &FourPillars, config: &AnalysisConfig) -> Self {
         let mut recommendations = Vec::new();
-        let strength = pillars.strength();
+        let strength = pillars.strength_with_config(config);
         let day_master_el = pillars.day_master_element();
         let structure_analysis = pillars.structure();
 
@@ -111,22 +115,22 @@ impl YongshinAnalysis {
                 yongshin_type: YongshinType::Eokbu,
                 element: eokbu_element,
                 reason: format!("{} 사주로, 강한 세력을 따르는 {}가 최우선 용신임 (격국: {})", 
-                    if strength.deuk_se.support_ratio >= POLARIZED_RATIO_HIGH { "전왕" } else { "종" },
+                    if strength.deuk_se.support_ratio >= config.strength.polarized_high { "전왕" } else { "종" },
                     eokbu_element.hangul(),
                     structure_analysis.structure.hangul()
                 ),
             });
 
             // 조후(調候) 판단 (종격에서는 조후보다 격국이 우선임)
-            let thermal_index = calculate_thermal_index(pillars);
-            if let Some(mut johu) = get_johu_analysis(pillars, thermal_index) {
+            let thermal_index = calculate_thermal_index(pillars, config);
+            if let Some(mut johu) = get_johu_analysis(pillars, thermal_index, config) {
                 johu.reason = format!("{} 단, 종격 사주이므로 조후보다 격국의 기세를 따르는 것이 안전함", johu.reason);
                 recommendations.push(johu);
             }
         } else {
             // 일반적인 경우 조후가 급하면 조후 우선
-            let thermal_index = calculate_thermal_index(pillars);
-            if let Some(johu) = get_johu_analysis(pillars, thermal_index) {
+            let thermal_index = calculate_thermal_index(pillars, config);
+            if let Some(johu) = get_johu_analysis(pillars, thermal_index, config) {
                 recommendations.push(johu);
             }
 
@@ -138,7 +142,7 @@ impl YongshinAnalysis {
         }
 
         // 3. 통관용신(通關) 판단 (대립 해소)
-        if let Some(tonggwan) = get_tonggwan_analysis(pillars) {
+        if let Some(tonggwan) = get_tonggwan_analysis(pillars, config) {
             recommendations.push(tonggwan);
         }
 
@@ -149,8 +153,8 @@ impl YongshinAnalysis {
 
         // 제1용신 결정 로직
         // 조후가 극단적이거나(절기 영향) 억부 균형보다 시급할 때 조후 우선
-        let thermal_index_for_primary = calculate_thermal_index(pillars);
-        let is_extreme_thermal = thermal_index_for_primary.abs() >= THERMAL_EXTREME || (thermal_index_for_primary.abs() >= THERMAL_MODERATE && strength.strength_score.abs() < 10.0);
+        let thermal_index_for_primary = calculate_thermal_index(pillars, config);
+        let is_extreme_thermal = thermal_index_for_primary.abs() >= config.thermal.extreme || (thermal_index_for_primary.abs() >= config.thermal.moderate && strength.strength_score.abs() < 10.0);
         let primary = if is_extreme_thermal && recommendations.iter().any(|r| r.yongshin_type == YongshinType::Johu) {
             recommendations.iter()
                 .find(|r| r.yongshin_type == YongshinType::Johu)
@@ -183,7 +187,7 @@ impl YongshinAnalysis {
 /// 조후 지수 계산 (-100 ~ 100)
 /// - 음수: 춥고 습함 (Water, Metal, Yin-Earth)
 /// - 양수: 덥고 건조함 (Fire, Wood, Yang-Earth)
-pub fn calculate_thermal_index(pillars: &FourPillars) -> i32 {
+pub fn calculate_thermal_index(pillars: &FourPillars, _config: &AnalysisConfig) -> i32 {
     let mut score = 0;
     
     // 월지의 영향력이 가장 큼 (40%)
@@ -226,7 +230,7 @@ pub fn calculate_thermal_index(pillars: &FourPillars) -> i32 {
 }
 
 /// 조후 분석 
-fn get_johu_analysis(pillars: &FourPillars, index: i32) -> Option<RecommendedYongshin> {
+fn get_johu_analysis(pillars: &FourPillars, index: i32, _config: &AnalysisConfig) -> Option<RecommendedYongshin> {
     let month = pillars.month.branch;
     
     if index <= -30 || matches!(month, EarthlyBranch::Hai | EarthlyBranch::Zi | EarthlyBranch::Chou) {
@@ -252,7 +256,7 @@ fn get_johu_analysis(pillars: &FourPillars, index: i32) -> Option<RecommendedYon
 /// 
 /// 개수가 아닌 **세력 점수**를 기준으로 판단합니다.
 /// 두 상충 오행의 세력이 비등할 때(차이 20% 이내)만 통관용신을 적용합니다.
-fn get_tonggwan_analysis(pillars: &FourPillars) -> Option<RecommendedYongshin> {
+fn get_tonggwan_analysis(pillars: &FourPillars, config: &AnalysisConfig) -> Option<RecommendedYongshin> {
     use crate::analysis::power::{IntegratedAnalysis, AnalysisOptions};
     
     // 세력 점수 계산 (기본 보정 적용)
@@ -260,7 +264,7 @@ fn get_tonggwan_analysis(pillars: &FourPillars) -> Option<RecommendedYongshin> {
         apply_transform: false,  // 합화는 적용하지 않음 (원국 기준)
         apply_correction: false,
     };
-    let analysis = IntegratedAnalysis::calculate(pillars, options);
+    let analysis = IntegratedAnalysis::calculate(pillars, options, config);
     
     // 오행별 세력 점수 추출 (0~100)
     let mut scores: [f32; 5] = [0.0; 5];
@@ -356,6 +360,20 @@ impl FourPillars {
     /// 용신 분석
     pub fn yongshin(&self) -> YongshinAnalysis {
         YongshinAnalysis::from_pillars(self)
+    }
+
+    /// 설정을 포함한 용신 분석
+    pub fn yongshin_with_config(&self, config: &AnalysisConfig) -> YongshinAnalysis {
+        YongshinAnalysis::from_pillars_with_config(self, config)
+    }
+}
+
+use crate::analysis::Analyzable;
+
+impl Analyzable for YongshinAnalysis {
+    type Output = YongshinAnalysis;
+    fn analyze(pillars: &FourPillars, config: &AnalysisConfig) -> Self::Output {
+        YongshinAnalysis::from_pillars_with_config(pillars, config)
     }
 }
 

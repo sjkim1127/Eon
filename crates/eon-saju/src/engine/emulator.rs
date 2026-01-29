@@ -55,7 +55,7 @@ impl LifePathEmulator {
             // 현재 나이에 해당하는 대운 찾기
             let major_ganzi = self.get_major_at_age(&major_luck, age);
             
-            let frame = self.vm.step(age, yearly_ganzi, major_ganzi, None, None, None);
+            let frame = self.vm.step(age, major_ganzi, yearly_ganzi, None, None, None);
             frames.push(frame);
         }
 
