@@ -134,4 +134,33 @@ fn main() {
         println!("▶ {} {:?} Mahadasha: {:.1} years ({} ~ {})", 
             nature_icon, d.planet, d.duration_years, d.start_date.format("%Y-%m-%d"), d.end_date.format("%Y-%m-%d"));
     }
+
+    // 5. Final Polish Verification
+    println!("\n[7] Vimshopaka Bala (Varga Strength)");
+    println!("{:<10} | Shadvarga (20pt) | Shodashavarga (Avg)", "Planet");
+    println!("{}", "-".repeat(50));
+    for pos in &chart.planets {
+        let v_score = eon_vedic::analysis::vimshopaka::VimshopakaEngine::calculate(pos, &chart);
+        println!("{:<10} | {:>14.2} | {:>18.2}", 
+            format!("{:?}", pos.planet), 
+            v_score.shadvarga_score, 
+            v_score.shodashavarga_score
+        );
+    }
+
+    println!("\n[8] Gochara (Transits) - relative to Natal Moon");
+    if let Some(natal_moon) = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon) {
+        println!("Natal Moon Rasi: {}", natal_moon.rasi);
+        let transits = eon_vedic::analysis::gochara::GocharaEngine::analyze(natal_moon.rasi, &chart);
+        
+        for t in transits {
+            if matches!(t.planet, VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter | VedicPlanet::Saturn | VedicPlanet::Rahu) {
+                 println!("  {:<10} in House {:>2} from Moon -> {}", 
+                    format!("{:?}", t.planet), 
+                    t.house_from_moon,
+                    if t.is_benefic_transit { "Benefic (Good Result) 🟢" } else { "Malefic (Obstruction) 🔴" }
+                );
+            }
+        }
+    }
 }

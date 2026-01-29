@@ -22,6 +22,7 @@ pub struct YogaResult {
     pub yoga_type: YogaType,
     pub description: String,
     pub planets_involved: Vec<VedicPlanet>,
+    pub quality: String, // "High", "Medium", "Weak" (based on combustion/dignity)
 }
 
 pub struct YogaEngine;
@@ -42,11 +43,16 @@ impl YogaEngine {
             let dist = if diff >= 0 { diff + 1 } else { diff + 13 };
             
             if [1, 4, 7, 10].contains(&dist) {
+                let quality = if moon.is_combust || jupiter.is_combust { 
+                     "Weak (Combustion)".to_string() 
+                } else { "High".to_string() };
+
                 results.push(YogaResult {
                     name: "Gaja Kesari Yoga".to_string(),
                     yoga_type: YogaType::GajaKesari,
                     description: "Jupiter in Kendra from Moon. Wisdom, virtue, reputation.".to_string(),
                     planets_involved: vec![VedicPlanet::Moon, VedicPlanet::Jupiter],
+                    quality,
                 });
             }
         }
@@ -54,11 +60,13 @@ impl YogaEngine {
         if let (Some(sun), Some(mercury)) = (get_planet(VedicPlanet::Sun), get_planet(VedicPlanet::Mercury)) {
              // In same sign
              if sun.rasi == mercury.rasi {
+                 let quality = if mercury.is_combust { "Medium (Typical)".to_string() } else { "High (Rare)".to_string() };
                  results.push(YogaResult {
                     name: "Budhaditya Yoga".to_string(),
                     yoga_type: YogaType::Budhaditya,
                     description: "Sun and Mercury conjunction. Intelligence and communication skills.".to_string(),
                     planets_involved: vec![VedicPlanet::Sun, VedicPlanet::Mercury],
+                    quality,
                 });
              }
         }
@@ -83,11 +91,13 @@ impl YogaEngine {
         // Check Dharma-Karma Adhipati (Conjunction of 9th and 10th Lords)
         if let (Some(p9), Some(p10)) = (get_planet(lord_9), get_planet(lord_10)) {
             if p9.rasi == p10.rasi {
+                 let quality = if p9.is_combust || p10.is_combust { "Weak".to_string() } else { "High".to_string() };
                  results.push(YogaResult {
                     name: "Dharma-Karma Adhipati Yoga".to_string(),
                     yoga_type: YogaType::DharmaKarmaAdhipati,
                     description: "Conjunction of 9th and 10th Lords. Great success in career and life purpose.".to_string(),
                     planets_involved: vec![lord_9, lord_10],
+                    quality,
                 });
             }
         }
@@ -104,6 +114,7 @@ impl YogaEngine {
                     yoga_type: YogaType::DhanaYoga,
                     description: "2nd Lord in 11th House. Great wealth potential.".to_string(),
                     planets_involved: vec![lord_2],
+                    quality: "High".to_string(),
                 });
             }
         }
@@ -114,6 +125,7 @@ impl YogaEngine {
                     yoga_type: YogaType::DhanaYoga,
                     description: "11th Lord in 2nd House. Financial gains.".to_string(),
                     planets_involved: vec![lord_11],
+                    quality: "High".to_string(),
                 });
             }
         }
@@ -138,6 +150,7 @@ impl YogaEngine {
                     yoga_type: YogaType::Sunapha,
                     description: "Planets in 2nd from Moon. Wealth and intelligence.".to_string(),
                     planets_involved: vec![VedicPlanet::Moon], // Simplified list
+                    quality: "Medium".to_string(),
                 });
              }
              
@@ -156,6 +169,7 @@ impl YogaEngine {
                     yoga_type: YogaType::Anapha,
                     description: "Planets in 12th from Moon. Good health and character.".to_string(),
                     planets_involved: vec![VedicPlanet::Moon],
+                    quality: "Medium".to_string(),
                 });
              }
         }
@@ -183,6 +197,7 @@ impl YogaEngine {
                             yoga_type: YogaType::PanchaMahapurusha,
                             description: format!("{} - {}", name, desc),
                             planets_involved: vec![p_type],
+                            quality: "Very High".to_string(),
                         });
                     }
                 }
@@ -203,6 +218,7 @@ impl YogaEngine {
                             yoga_type: YogaType::NeechaBhanga,
                             description: format!("Debilitation of {:?} cancelled by dispositor {:?} in Kendra.", p_type, dispositor),
                             planets_involved: vec![p_type, dispositor],
+                            quality: "High (Cancellation)".to_string(),
                         });
                     }
                 }
@@ -225,6 +241,7 @@ impl YogaEngine {
                                     yoga_type: YogaType::Parivartana,
                                     description: format!("Exchange of lords between house {} and {}.", h1, h1_occupies),
                                     planets_involved: vec![lord1, lord2],
+                                    quality: "High".to_string(),
                                 });
                             }
                         }
