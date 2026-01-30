@@ -195,7 +195,7 @@ impl Yogini {
         ]
     }
 
-    pub fn calculate(moon_longitude: f64, birth_date: DateTime<Utc>) -> Vec<DashaPeriod> {
+    pub fn calculate(moon_longitude: f64, birth_date: DateTime<Utc>, max_level: u8) -> Vec<DashaPeriod> {
         let nak_len = 360.0 / 27.0;
         let nak_pos_val = moon_longitude / nak_len;
         let nak_idx = nak_pos_val.floor() as usize; // 0..26
@@ -226,6 +226,12 @@ impl Yogini {
                  full_duration
             };
 
+            let theoretical_start = if years_covered == 0.0 {
+                Vimshottari::add_years(current_date, -(full_duration * (1.0 - remaining_fraction)))
+            } else {
+                current_date
+            };
+
             let end_date = Vimshottari::add_years(current_date, duration);
             
             dashas.push(DashaPeriod {
@@ -235,7 +241,11 @@ impl Yogini {
                 duration_years: duration,
                 level: 1,
                 name: Some(name.to_string()),
-                sub_periods: Vec::new(), // Simplified
+                sub_periods: if max_level > 1 {
+                    Self::calculate_sub_periods(idx, theoretical_start, full_duration, 2, max_level, if years_covered == 0.0 { Some(birth_date) } else { None })
+                } else {
+                    Vec::new()
+                },
             });
 
             current_date = end_date;
@@ -244,5 +254,59 @@ impl Yogini {
         }
 
         dashas
+    }
+
+    fn calculate_sub_periods(
+        md_idx: usize,
+        theoretical_start: DateTime<Utc>,
+        parent_duration: f64,
+        level: u8,
+        max_level: u8,
+        clip_start: Option<DateTime<Utc>>
+    ) -> Vec<DashaPeriod> {
+        let sequence = Self::get_sequence();
+        let mut periods = Vec::new();
+        let mut current_start = theoretical_start;
+
+        for i in 0..8 {
+            let idx = (md_idx + i) % 8;
+            let (sub_planet, sub_base_years, name) = sequence[idx];
+            // Yogini sub-period formula: (MD Lord Years * AD Lord Years) / 36
+            let sub_duration = (parent_duration * sub_base_years) / 36.0;
+            let current_end = Vimshottari::add_years(current_start, sub_duration);
+
+            let actual_start = if let Some(clip) = clip_start {
+                if current_end <= clip {
+                    current_start = current_end;
+                    continue;
+                }
+                if current_start < clip { clip } else { current_start }
+            } else {
+                current_start
+            };
+
+            let actual_duration = if actual_start > current_start {
+                sub_duration - (actual_start.signed_duration_since(current_start).num_seconds() as f64 / (365.2425 * 86400.0))
+            } else {
+                sub_duration
+            };
+
+            periods.push(DashaPeriod {
+                planet: sub_planet,
+                start_date: actual_start,
+                end_date: current_end,
+                duration_years: actual_duration,
+                level,
+                name: Some(name.to_string()),
+                sub_periods: if level < max_level {
+                    Self::calculate_sub_periods(idx, current_start, sub_duration, level + 1, max_level, clip_start)
+                } else {
+                    Vec::new()
+                },
+            });
+
+            current_start = current_end;
+        }
+        periods
     }
 }

@@ -39,17 +39,14 @@ impl BhavaEngine {
         };
 
         // 2. Bhava Dig Bala
-        // Standard: 
-        // H1 (East): Mer, Jup increase
-        // H4 (North): Mon, Ven increase
-        // H7 (West): Sat increase
-        // H10 (South): Sun, Mar increase
-        // Simplified: Fixed bonus if Lagna belongs to certain groups? 
-        // No, Bhava Dig Bala is usually a score added.
-        // Let's use a simplified constant based on house index.
+        // BPHS: Strength depends on the Rasi (Sign) type at the house.
+        // House 1: Human, House 4: Watery, House 7: Insect/Keeta, House 10: Quadruped.
+        let sign_at_house = ((chart.ascendant.rasi as u8 + house - 2) % 12) + 1;
         let dig_score = match house {
-            1 | 10 => 30.0, // Major directions
-            4 | 7 => 20.0,
+            1 => if Self::is_human_sign(sign_at_house) { 60.0 } else { 30.0 }, // (Simplified weighting)
+            4 => if Self::is_watery_sign(sign_at_house) { 60.0 } else { 20.0 },
+            7 => if sign_at_house == 8 { 60.0 } else { 15.0 }, // Scorpio (Insect)
+            10 => if Self::is_quadruped_sign(sign_at_house) { 60.0 } else { 30.0 },
             _ => 10.0,
         };
 
@@ -126,5 +123,17 @@ impl BhavaEngine {
         } else {
             0.0
         }
+    }
+
+    fn is_human_sign(rasi: u8) -> bool {
+        matches!(rasi, 3 | 6 | 7 | 11) // Gemini, Virgo, Libra, Aquarius
+    }
+
+    fn is_watery_sign(rasi: u8) -> bool {
+        matches!(rasi, 4 | 12) // Cancer, Pisces (Also 2nd half Capricorn, but simplified)
+    }
+
+    fn is_quadruped_sign(rasi: u8) -> bool {
+        matches!(rasi, 1 | 2 | 5) // Aries, Taurus, Leo (Also part of Sag/Cap)
     }
 }

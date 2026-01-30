@@ -52,6 +52,9 @@ pub struct VedicChart {
     pub aspects: Vec<crate::analysis::aspects::AspectRelation>,
     pub sav: crate::analysis::ashtakavarga::Sarvashtakavarga,
     pub house_cusps: Vec<f64>,
+    pub karakas: Vec<crate::analysis::jaimini::KarakaAssignment>,
+    pub bhava_strengths: Vec<crate::analysis::bhava::BhavaStrength>,
+    pub vimshopaka_scores: Vec<(VedicPlanet, crate::analysis::vimshopaka::VimshopakaScore)>,
 }
 
 pub struct VedicChartCalculator {
@@ -234,11 +237,22 @@ impl VedicChartCalculator {
             aspects: Vec::new(),
             sav: crate::analysis::ashtakavarga::Sarvashtakavarga { points: [0; 12] },
             house_cusps: sidereal_cusps,
+            karakas: Vec::new(),
+            bhava_strengths: Vec::new(),
+            vimshopaka_scores: Vec::new(),
         };
 
         // Post-calculation analysis
         chart.aspects = crate::analysis::aspects::AspectEngine::calculate_aspects(&chart);
         chart.sav = crate::analysis::ashtakavarga::AshtakavargaEngine::calculate_sav(&chart);
+        chart.karakas = crate::analysis::jaimini::JaiminiEngine::calculate_karakas(&chart, true); // Default 8-karaka
+        chart.bhava_strengths = crate::analysis::bhava::BhavaEngine::calculate_all(&chart);
+        
+        let mut v_scores = Vec::new();
+        for p in &chart.planets {
+            v_scores.push((p.planet, crate::analysis::vimshopaka::VimshopakaEngine::calculate(p, &chart)));
+        }
+        chart.vimshopaka_scores = v_scores;
 
         chart
     }

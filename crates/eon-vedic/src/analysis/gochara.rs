@@ -2,6 +2,15 @@ use serde::{Deserialize, Serialize};
 use crate::planets::VedicPlanet;
 use crate::chart::VedicChart; // We might need Ayanamsa from chart or engine
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum MurtiType {
+    Gold,   // Suvarna
+    Silver, // Rajata
+    Copper, // Tamra
+    Iron,   // Loha
+    Unknown,
+}
+
 /// Transit Result for a single planet
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransitPosition {
@@ -10,7 +19,7 @@ pub struct TransitPosition {
     pub house_from_moon: u8, // 1~12
     pub is_benefic_transit: bool, // Simple check based on Gochara rules
     pub is_blocked: bool, // Blocked by Vedha (obstruction)
-    pub murti_type: String, // Murti Nirnaya (Suvarna, Rajata, Tamra, Loha)
+    pub murti: MurtiType, // Murti Nirnaya
 }
 
 pub struct GocharaEngine;
@@ -40,21 +49,21 @@ impl GocharaEngine {
             // 1. Murti Nirnaya (Form)
             // Based on Moon's position (in the current chart) relative to Natal Moon.
             let current_moon = current_chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon);
-            let murti_type = if let Some(m) = current_moon {
+            let murti = if let Some(m) = current_moon {
                 let moon_house = if m.rasi >= natal_moon_rasi {
                     m.rasi - natal_moon_rasi + 1
                 } else {
                     (12 - natal_moon_rasi) + m.rasi + 1
                 };
                 match moon_house {
-                    1 | 6 | 11 => "Gold (Suvarna) 🏆",
-                    2 | 5 | 9 => "Silver (Rajata) 🥈",
-                    3 | 7 | 10 => "Copper (Tamra) 🥉",
-                    4 | 8 | 12 => "Iron (Loha) 🔨",
-                    _ => "Unknown",
+                    1 | 6 | 11 => MurtiType::Gold,
+                    2 | 5 | 9 => MurtiType::Silver,
+                    3 | 7 | 10 => MurtiType::Copper,
+                    4 | 8 | 12 => MurtiType::Iron,
+                    _ => MurtiType::Unknown,
                 }
             } else {
-                "Unknown"
+                MurtiType::Unknown
             };
 
             let mut is_blocked = false;
@@ -89,7 +98,7 @@ impl GocharaEngine {
                 house_from_moon,
                 is_benefic_transit: is_benefic,
                 is_blocked,
-                murti_type: murti_type.to_string(),
+                murti,
             });
         }
         

@@ -98,8 +98,7 @@ fn main() {
     }
 
     println!("\n[9] Jaimini Chara Karakas (8-Karaka System)");
-    let karakas = eon_vedic::analysis::jaimini::JaiminiEngine::calculate_karakas(&chart, true);
-    for k in karakas {
+    for k in &chart.karakas {
         println!("  {:<12} -> {:?} ({:.2}°)", format!("{:?}", k.planet), k.role, k.degree_in_rasi);
     }
 
@@ -131,10 +130,13 @@ fn main() {
             nature_icon, d.planet, d.duration_years, d.start_date.format("%Y-%m-%d"), d.end_date.format("%Y-%m-%d"));
     }
 
-    println!("\n[10] Yogini Dasha Timeline");
-    let yd = eon_vedic::dasha::Yogini::calculate(moon_long, birth_time);
-    for d in yd.iter().take(8) {
+    println!("\n[10] Yogini Dasha Timeline (Sub-periods)");
+    let yd = eon_vedic::dasha::Yogini::calculate(moon_long, birth_time, 2);
+    for d in yd.iter().take(5) {
         println!("▶ {:<8} ({:?}) : {} ~ {}", d.name.as_ref().unwrap(), d.planet, d.start_date.format("%Y-%m-%d"), d.end_date.format("%Y-%m-%d"));
+        for sub in d.sub_periods.iter().take(3) {
+            println!("   - {:<8} ({:?}) : {} ~ {}", sub.name.as_ref().unwrap(), sub.planet, sub.start_date.format("%Y-%m-%d"), sub.end_date.format("%Y-%m-%d"));
+        }
     }
 
     // 5. Final Polish Verification
@@ -157,23 +159,22 @@ fn main() {
         
         for t in transits {
             if matches!(t.planet, VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter | VedicPlanet::Saturn | VedicPlanet::Rahu) {
-                 println!("  {:<10} in House {:>2} from Moon -> {}{} | Murti: {}", 
+                 println!("  {:<10} in House {:>2} from Moon -> {}{} | Murti: {:?}", 
                     format!("{:?}", t.planet), 
                     t.house_from_moon,
                     if t.is_benefic_transit { "Benefic 🟢" } else { "Malefic 🔴" },
                     if t.is_blocked { " (Blocked by Vedha ⚡)" } else { "" },
-                    t.murti_type
+                    t.murti
                 );
             }
         }
     }
 
     println!("\n[11] Bhava Bala (House Strength)");
-    let bhava_strengths = eon_vedic::analysis::bhava::BhavaEngine::calculate_all(&chart);
-    println!("{:<5} | {:>10} | {:>10} | {:>10} | {:>10}", "House", "Lord", "Dig", "Drishti", "Total");
-    println!("{}", "-".repeat(60));
-    for b in bhava_strengths {
-        println!("{:<5} | {:>10.1} | {:>10.1} | {:>10.1} | {:>10.1}", 
+    println!("House |       Lord |        Dig |    Drishti |      Total");
+    println!("------------------------------------------------------------");
+    for b in &chart.bhava_strengths {
+        println!("{:<6} | {:>10.1} | {:>10.1} | {:>10.1} | {:>10.1}", 
             b.house, b.lord_score, b.dig_score, b.drishti_score, b.total_score);
     }
 }
