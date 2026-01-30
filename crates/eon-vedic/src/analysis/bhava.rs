@@ -53,20 +53,24 @@ impl BhavaEngine {
             _ => 10.0,
         };
 
-        // 3. Bhava Drishti (Aspect Sum)
-        // Benefics (Jup, Ven, Mer, Mon) add power. Malefics substract.
+        // 3. Bhava Drishti (Aspect Sum with Virupa Score)
+        // Full aspect (60 Virupas = ~100% weight) when exact.
         let mut drishti_score = 0.0;
+        let house_center_deg = (chart.ascendant.sidereal_deg + (house as f64 - 1.0) * 30.0) % 360.0;
+
         for pos in &chart.planets {
-            if Self::is_planet_aspecting_house(pos, house, chart) {
+            let aspect_strength = Self::calculate_aspect_strength(pos, house_center_deg);
+            if aspect_strength > 0.0 {
                 let weight = match pos.planet {
-                    VedicPlanet::Jupiter => 30.0,
-                    VedicPlanet::Venus => 20.0,
-                    VedicPlanet::Mercury | VedicPlanet::Moon => 10.0,
-                    VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Saturn => -15.0,
-                    VedicPlanet::Rahu | VedicPlanet::Ketu => -10.0,
+                    VedicPlanet::Jupiter => 0.5, // Jupiter is most benefic
+                    VedicPlanet::Venus => 0.4,
+                    VedicPlanet::Mercury | VedicPlanet::Moon => 0.2,
+                    VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Saturn => -0.3,
+                    VedicPlanet::Rahu | VedicPlanet::Ketu => -0.2,
                     _ => 0.0,
                 };
-                drishti_score += weight;
+                // Score = logic (aspect_strength / 60.0) * weight * 100.0
+                drishti_score += (aspect_strength / 60.0) * weight * 100.0;
             }
         }
 
@@ -79,12 +83,48 @@ impl BhavaEngine {
         }
     }
 
-    fn is_planet_aspecting_house(pos: &VedicPosition, house: u8, chart: &VedicChart) -> bool {
-        // We can reuse aspects.rs logic here.
-        // For simplicity, check if the house is in AspectRelation for this planet.
-        if let Some(rel) = chart.aspects.iter().find(|a| a.aspecting_planet == pos.planet) {
-            return rel.aspected_houses.contains(&house);
+
+    fn calculate_aspect_strength(pos: &VedicPosition, house_center: f64) -> f64 {
+        // Simple Virupa-like scaling
+        // Distance between planet and target house center
+        let p_deg = pos.sidereal_deg;
+        let diff = (house_center - p_deg + 360.0) % 360.0;
+        
+        let mut max_strength = 0.0;
+        
+        // 7th House Aspect (All)
+        max_strength = f64::max(max_strength, Self::virupa_at(diff, 180.0));
+        
+        // Special Aspects
+        match pos.planet {
+            VedicPlanet::Mars => {
+                max_strength = f64::max(max_strength, Self::virupa_at(diff, 90.0));  // 4th
+                max_strength = f64::max(max_strength, Self::virupa_at(diff, 210.0)); // 8th
+            }
+            VedicPlanet::Jupiter | VedicPlanet::Rahu | VedicPlanet::Ketu => {
+                max_strength = f64::max(max_strength, Self::virupa_at(diff, 120.0)); // 5th
+                max_strength = f64::max(max_strength, Self::virupa_at(diff, 240.0)); // 9th
+            }
+            VedicPlanet::Saturn => {
+                max_strength = f64::max(max_strength, Self::virupa_at(diff, 60.0));  // 3rd
+                max_strength = f64::max(max_strength, Self::virupa_at(diff, 270.0)); // 10th
+            }
+            _ => {}
         }
-        false
+        
+        max_strength
+    }
+
+    fn virupa_at(diff: f64, target_angle: f64) -> f64 {
+        let orb = 15.0; // 15 degrees orb
+        let distance = (diff - target_angle).abs();
+        let distance = if distance > 180.0 { 360.0 - distance } else { distance };
+        
+        if distance < orb {
+            // Linear scale from 60 (at 0 distance) to 0 (at orb distance)
+            60.0 * (1.0 - distance / orb)
+        } else {
+            0.0
+        }
     }
 }

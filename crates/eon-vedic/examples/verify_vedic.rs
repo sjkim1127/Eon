@@ -97,8 +97,8 @@ fn main() {
         println!("  {:<12} aspects Houses: {:?}", format!("{:?}", rel.aspecting_planet), rel.aspected_houses);
     }
 
-    println!("\n[9] Jaimini Chara Karakas (7-Karaka System)");
-    let karakas = eon_vedic::analysis::jaimini::JaiminiEngine::calculate_karakas(&chart);
+    println!("\n[9] Jaimini Chara Karakas (8-Karaka System)");
+    let karakas = eon_vedic::analysis::jaimini::JaiminiEngine::calculate_karakas(&chart, true);
     for k in karakas {
         println!("  {:<12} -> {:?} ({:.2}°)", format!("{:?}", k.planet), k.role, k.degree_in_rasi);
     }
@@ -157,11 +157,12 @@ fn main() {
         
         for t in transits {
             if matches!(t.planet, VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter | VedicPlanet::Saturn | VedicPlanet::Rahu) {
-                 println!("  {:<10} in House {:>2} from Moon -> {}{}", 
+                 println!("  {:<10} in House {:>2} from Moon -> {}{} | Murti: {}", 
                     format!("{:?}", t.planet), 
                     t.house_from_moon,
                     if t.is_benefic_transit { "Benefic 🟢" } else { "Malefic 🔴" },
-                    if t.is_blocked { " (Blocked by Vedha ⚡)" } else { "" }
+                    if t.is_blocked { " (Blocked by Vedha ⚡)" } else { "" },
+                    t.murti_type
                 );
             }
         }

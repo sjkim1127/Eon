@@ -8,6 +8,7 @@ pub enum JaiminiKarakaRole {
     Amatyakaraka,    // AmK - Career/Minister
     Bhratrukaraka,   // BK - Siblings
     Matrukaraka,     // MK - Mother
+    Pitrikaraka,     // PiK - Father (Used in 8-Karaka)
     Putrakaraka,     // PK - Children
     Gnatikaraka,     // GK - Rivals/Cousins
     Darakaraka,      // DK - Spouse
@@ -23,45 +24,64 @@ pub struct KarakaAssignment {
 pub struct JaiminiEngine;
 
 impl JaiminiEngine {
-    /// Calculate 7 Chara Karakas (exclude Rahu/Ketu)
-    pub fn calculate_karakas(chart: &VedicChart) -> Vec<KarakaAssignment> {
-        let mut planets: Vec<&VedicPosition> = chart.planets.iter()
-            .filter(|p| matches!(p.planet, 
-                VedicPlanet::Sun | 
-                VedicPlanet::Moon | 
-                VedicPlanet::Mars | 
-                VedicPlanet::Mercury | 
-                VedicPlanet::Jupiter | 
-                VedicPlanet::Venus | 
-                VedicPlanet::Saturn
-            ))
+    /// Calculate 7 or 8 Chara Karakas
+    pub fn calculate_karakas(chart: &VedicChart, use_8_karakas: bool) -> Vec<KarakaAssignment> {
+        let mut planets_data: Vec<(VedicPlanet, f64)> = chart.planets.iter()
+            .filter(|p| {
+                let is_base = matches!(p.planet, 
+                    VedicPlanet::Sun | 
+                    VedicPlanet::Moon | 
+                    VedicPlanet::Mars | 
+                    VedicPlanet::Mercury | 
+                    VedicPlanet::Jupiter | 
+                    VedicPlanet::Venus | 
+                    VedicPlanet::Saturn
+                );
+                if use_8_karakas {
+                    is_base || p.planet == VedicPlanet::Rahu
+                } else {
+                    is_base
+                }
+            })
+            .map(|p| {
+                let mut deg = p.sidereal_deg % 30.0;
+                // Special Rule for Rahu in Jaimini: Reverse degree because Node is retrograde
+                if p.planet == VedicPlanet::Rahu {
+                    deg = 30.0 - deg;
+                }
+                (p.planet, deg)
+            })
             .collect();
 
-        // Sort by degree within the Rasi (ascending for easier role assignment)
-        // Degree in Rasi = sidereal_deg % 30.0
-        planets.sort_by(|a, b| {
-            let deg_a = a.sidereal_deg % 30.0;
-            let deg_b = b.sidereal_deg % 30.0;
-            deg_b.partial_cmp(&deg_a).unwrap_or(std::cmp::Ordering::Equal)
+        // Sort by degree within the Rasi (descending: AK first)
+        planets_data.sort_by(|a, b| {
+            b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal)
         });
 
-        let roles = [
+        let mut roles = vec![
             JaiminiKarakaRole::Atmakaraka,
             JaiminiKarakaRole::Amatyakaraka,
             JaiminiKarakaRole::Bhratrukaraka,
             JaiminiKarakaRole::Matrukaraka,
+        ];
+
+        if use_8_karakas {
+            roles.push(JaiminiKarakaRole::Pitrikaraka);
+        }
+
+        roles.extend([
             JaiminiKarakaRole::Putrakaraka,
             JaiminiKarakaRole::Gnatikaraka,
             JaiminiKarakaRole::Darakaraka,
-        ];
+        ]);
 
         let mut assignments = Vec::new();
-        for (idx, pos) in planets.iter().enumerate() {
+        for (idx, (planet, deg)) in planets_data.iter().enumerate() {
             if idx < roles.len() {
                 assignments.push(KarakaAssignment {
-                    planet: pos.planet,
+                    planet: *planet,
                     role: roles[idx].clone(),
-                    degree_in_rasi: pos.sidereal_deg % 30.0,
+                    degree_in_rasi: *deg,
                 });
             }
         }
