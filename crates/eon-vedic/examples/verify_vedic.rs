@@ -97,13 +97,10 @@ fn main() {
         println!("  {:<12} aspects Houses: {:?}", format!("{:?}", rel.aspecting_planet), rel.aspected_houses);
     }
 
-    println!("\n[6] Graha Maitri (Relationships) - Moon's View");
-    if let Some(moon) = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon) {
-        let targets = [VedicPlanet::Sun, VedicPlanet::Mars, VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus, VedicPlanet::Saturn];
-        for target in &targets {
-            let rel = eon_vedic::analysis::relationships::RelationshipEngine::get_relationship(moon.planet, *target, &chart);
-            println!("  Moon vs {:<8} -> {:?}", format!("{:?}", target), rel);
-        }
+    println!("\n[9] Jaimini Chara Karakas (7-Karaka System)");
+    let karakas = eon_vedic::analysis::jaimini::JaiminiEngine::calculate_karakas(&chart);
+    for k in karakas {
+        println!("  {:<12} -> {:?} ({:.2}°)", format!("{:?}", k.planet), k.role, k.degree_in_rasi);
     }
 
     // 3. Yoga Check
@@ -117,11 +114,10 @@ fn main() {
         }
     }
 
-    // 4. Vimshottari Dasha
     println!("\n[3] Vimshottari Dasha Timeline");
     let dashas = Vimshottari::calculate(moon_long, birth_time, 1);
     
-    for d in dashas {
+    for d in dashas.iter().take(5) {
          let nature = FunctionalNature::analyze(lagna_rasi, d.planet);
          let nature_icon = match nature {
             FunctionalStatus::Yogakaraka => "🌟",
@@ -133,6 +129,12 @@ fn main() {
          
         println!("▶ {} {:?} Mahadasha: {:.1} years ({} ~ {})", 
             nature_icon, d.planet, d.duration_years, d.start_date.format("%Y-%m-%d"), d.end_date.format("%Y-%m-%d"));
+    }
+
+    println!("\n[10] Yogini Dasha Timeline");
+    let yd = eon_vedic::dasha::Yogini::calculate(moon_long, birth_time);
+    for d in yd.iter().take(8) {
+        println!("▶ {:<8} ({:?}) : {} ~ {}", d.name.as_ref().unwrap(), d.planet, d.start_date.format("%Y-%m-%d"), d.end_date.format("%Y-%m-%d"));
     }
 
     // 5. Final Polish Verification
@@ -155,12 +157,22 @@ fn main() {
         
         for t in transits {
             if matches!(t.planet, VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter | VedicPlanet::Saturn | VedicPlanet::Rahu) {
-                 println!("  {:<10} in House {:>2} from Moon -> {}", 
+                 println!("  {:<10} in House {:>2} from Moon -> {}{}", 
                     format!("{:?}", t.planet), 
                     t.house_from_moon,
-                    if t.is_benefic_transit { "Benefic (Good Result) 🟢" } else { "Malefic (Obstruction) 🔴" }
+                    if t.is_benefic_transit { "Benefic 🟢" } else { "Malefic 🔴" },
+                    if t.is_blocked { " (Blocked by Vedha ⚡)" } else { "" }
                 );
             }
         }
+    }
+
+    println!("\n[11] Bhava Bala (House Strength)");
+    let bhava_strengths = eon_vedic::analysis::bhava::BhavaEngine::calculate_all(&chart);
+    println!("{:<5} | {:>10} | {:>10} | {:>10} | {:>10}", "House", "Lord", "Dig", "Drishti", "Total");
+    println!("{}", "-".repeat(60));
+    for b in bhava_strengths {
+        println!("{:<5} | {:>10.1} | {:>10.1} | {:>10.1} | {:>10.1}", 
+            b.house, b.lord_score, b.dig_score, b.drishti_score, b.total_score);
     }
 }

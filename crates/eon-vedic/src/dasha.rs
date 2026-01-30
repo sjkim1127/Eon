@@ -9,6 +9,7 @@ pub struct DashaPeriod {
     pub end_date: DateTime<Utc>,
     pub duration_years: f64,
     pub level: u8, // 1=Mahadasha, 2=Antardasha
+    pub name: Option<String>, // For Yogini Dasha names
     pub sub_periods: Vec<DashaPeriod>,
 }
 
@@ -73,6 +74,7 @@ impl Vimshottari {
             end_date: first_end_date,
             duration_years: balance_years,
             level: 1,
+            name: None,
             sub_periods: if max_level > 1 {
                 Self::calculate_sub_periods(first_planet, theoretical_start, full_duration, 2, max_level, Some(birth_date))
             } else {
@@ -96,6 +98,7 @@ impl Vimshottari {
                 end_date,
                 duration_years: duration,
                 level: 1,
+                name: None,
                 sub_periods: if max_level > 1 {
                     Self::calculate_sub_periods(planet, current_date, duration, 2, max_level, None)
                 } else {
@@ -155,6 +158,7 @@ impl Vimshottari {
                 end_date: current_end,
                 duration_years: actual_duration,
                 level,
+                name: None,
                 sub_periods: if level < max_level {
                     Self::calculate_sub_periods(sub_planet, current_start, sub_duration, level + 1, max_level, clip_start)
                 } else {
@@ -171,5 +175,74 @@ impl Vimshottari {
     fn add_years(date: DateTime<Utc>, years: f64) -> DateTime<Utc> {
         let seconds = (years * 365.2425 * 86400.0) as i64;
         date + Duration::seconds(seconds)
+    }
+}
+
+pub struct Yogini;
+
+impl Yogini {
+    /// Planetary periods in years for Yogini (Mangala to Sankata)
+    fn get_sequence() -> [(VedicPlanet, f64, &'static str); 8] {
+        [
+            (VedicPlanet::Moon, 1.0, "Mangala"),
+            (VedicPlanet::Sun, 2.0, "Pingala"),
+            (VedicPlanet::Jupiter, 3.0, "Dhanya"),
+            (VedicPlanet::Mars, 4.0, "Bhramari"),
+            (VedicPlanet::Mercury, 5.0, "Bhadrika"),
+            (VedicPlanet::Saturn, 6.0, "Ulka"),
+            (VedicPlanet::Venus, 7.0, "Siddha"),
+            (VedicPlanet::Rahu, 8.0, "Sankata"),
+        ]
+    }
+
+    pub fn calculate(moon_longitude: f64, birth_date: DateTime<Utc>) -> Vec<DashaPeriod> {
+        let nak_len = 360.0 / 27.0;
+        let nak_pos_val = moon_longitude / nak_len;
+        let nak_idx = nak_pos_val.floor() as usize; // 0..26
+        let nakshatra = (nak_idx + 1) as u8;
+        
+        let progression = nak_pos_val - nak_idx as f64;
+        let remaining_fraction = 1.0 - progression;
+        
+        // Starting Yogini: (Nakshatra + 3) / 8. Remainder 1=Mangala, ..., 0=Sankata.
+        let mut start_idx = ((nakshatra + 3) % 8) as usize;
+        if start_idx == 0 { start_idx = 8; }
+        start_idx -= 1; // 0-indexed
+
+        let sequence = Self::get_sequence();
+        let mut dashas = Vec::new();
+        let mut current_date = birth_date;
+        
+        let mut years_covered = 0.0;
+        let mut idx = start_idx;
+
+        // Calculate for at least 100 years or 3 cycles
+        while years_covered < 100.0 {
+            let (planet, full_duration, name) = sequence[idx];
+            
+            let duration = if years_covered == 0.0 {
+                 full_duration * remaining_fraction
+            } else {
+                 full_duration
+            };
+
+            let end_date = Vimshottari::add_years(current_date, duration);
+            
+            dashas.push(DashaPeriod {
+                planet,
+                start_date: current_date,
+                end_date,
+                duration_years: duration,
+                level: 1,
+                name: Some(name.to_string()),
+                sub_periods: Vec::new(), // Simplified
+            });
+
+            current_date = end_date;
+            years_covered += duration;
+            idx = (idx + 1) % 8;
+        }
+
+        dashas
     }
 }

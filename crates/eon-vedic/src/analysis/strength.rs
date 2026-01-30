@@ -118,7 +118,7 @@ impl StrengthEngine {
         let moon = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon);
         
         if let (Some(s), Some(m)) = (sun, moon) {
-            let mut angle = (m.sidereal_deg - s.sidereal_deg);
+            let mut angle = m.sidereal_deg - s.sidereal_deg;
             if angle < 0.0 { angle += 360.0; }
             
             // Paksha Point (0 to 60)

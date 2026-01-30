@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use crate::planets::VedicPlanet;
-use chrono::{DateTime, Utc};
 use crate::chart::VedicChart; // We might need Ayanamsa from chart or engine
 
 /// Transit Result for a single planet
@@ -10,6 +9,7 @@ pub struct TransitPosition {
     pub current_rasi: u8,
     pub house_from_moon: u8, // 1~12
     pub is_benefic_transit: bool, // Simple check based on Gochara rules
+    pub is_blocked: bool, // Blocked by Vedha (obstruction)
 }
 
 pub struct GocharaEngine;
@@ -36,11 +36,40 @@ impl GocharaEngine {
             
             let is_benefic = Self::check_benefic_transit(pos.planet, house_from_moon);
             
+            let mut is_blocked = false;
+            if is_benefic {
+                if let Some(vedha_house) = Self::get_vedha_house(pos.planet, house_from_moon) {
+                    // Check if any planet is in the vedha_house (relative to moon)
+                    for other in &current_chart.planets {
+                        let other_house = if other.rasi >= natal_moon_rasi {
+                            other.rasi - natal_moon_rasi + 1
+                        } else {
+                            (12 - natal_moon_rasi) + other.rasi + 1
+                        };
+
+                        if other_house == vedha_house {
+                            // Check exceptions
+                            let is_exception = match (pos.planet, other.planet) {
+                                (VedicPlanet::Sun, VedicPlanet::Saturn) | (VedicPlanet::Saturn, VedicPlanet::Sun) => true,
+                                (VedicPlanet::Moon, VedicPlanet::Mercury) | (VedicPlanet::Mercury, VedicPlanet::Moon) => true,
+                                _ => false,
+                            };
+                            
+                            if !is_exception {
+                                is_blocked = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             results.push(TransitPosition {
                 planet: pos.planet,
                 current_rasi: pos.rasi,
                 house_from_moon,
                 is_benefic_transit: is_benefic,
+                is_blocked,
             });
         }
         
@@ -69,6 +98,41 @@ impl GocharaEngine {
             VedicPlanet::Rahu => [3, 6, 11].contains(&house),
             VedicPlanet::Ketu => [3, 6, 11].contains(&house),
             _ => false,
+        }
+    }
+
+    /// Get Vedha House for a specific planet in a benefic house
+    fn get_vedha_house(planet: VedicPlanet, house: u8) -> Option<u8> {
+        match planet {
+            VedicPlanet::Sun => match house {
+                3 => Some(9), 6 => Some(12), 10 => Some(4), 11 => Some(5),
+                _ => None,
+            },
+            VedicPlanet::Moon => match house {
+                1 => Some(5), 3 => Some(9), 6 => Some(12), 7 => Some(2), 10 => Some(4), 11 => Some(8),
+                _ => None,
+            },
+            VedicPlanet::Mars => match house {
+                3 => Some(12), 6 => Some(9), 11 => Some(5),
+                _ => None,
+            },
+            VedicPlanet::Mercury => match house {
+                2 => Some(5), 4 => Some(3), 6 => Some(9), 8 => Some(1), 10 => Some(7), 11 => Some(12),
+                _ => None,
+            },
+            VedicPlanet::Jupiter => match house {
+                2 => Some(12), 5 => Some(4), 7 => Some(3), 9 => Some(10), 11 => Some(8),
+                _ => None,
+            },
+            VedicPlanet::Venus => match house {
+                1 => Some(8), 2 => Some(7), 3 => Some(1), 4 => Some(10), 5 => Some(9), 8 => Some(5), 9 => Some(11), 11 => Some(6), 12 => Some(3),
+                _ => None,
+            },
+            VedicPlanet::Saturn | VedicPlanet::Rahu | VedicPlanet::Ketu => match house {
+                3 => Some(12), 6 => Some(9), 11 => Some(5),
+                _ => None,
+            },
+            _ => None,
         }
     }
 }

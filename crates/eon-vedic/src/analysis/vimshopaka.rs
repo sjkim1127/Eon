@@ -18,7 +18,7 @@ impl VimshopakaEngine {
     /// Focus on Shadvarga (6-fold) which is most commonly used.
     /// Weights: Rasi(6), Hora(2), Drekkana(4), Navamsa(5), Dwadasamsa(2), Trimsamsa(1). Total 20.
     pub fn calculate(pos: &VedicPosition, chart: &VedicChart) -> VimshopakaScore {
-        let mut total_weighted_score = 0.0;
+        let _total_weighted_score = 0.0;
         let mut details = Vec::new();
         
         // Shadvarga Weights

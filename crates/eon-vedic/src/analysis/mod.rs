@@ -6,3 +6,5 @@ pub mod avasthas;
 pub mod relationships;
 pub mod vimshopaka;
 pub mod gochara;
+pub mod jaimini;
+pub mod bhava;

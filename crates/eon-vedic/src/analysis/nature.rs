@@ -13,6 +13,20 @@ pub enum FunctionalStatus {
 pub struct FunctionalNature;
 
 impl FunctionalNature {
+    /// Get Moolatrikona sign for a planet
+    pub fn moolatrikona_rasi(planet: VedicPlanet) -> Option<u8> {
+        match planet {
+            VedicPlanet::Sun => Some(5),      // Leo
+            VedicPlanet::Moon => Some(2),     // Taurus
+            VedicPlanet::Mars => Some(1),     // Aries
+            VedicPlanet::Mercury => Some(6),  // Virgo
+            VedicPlanet::Jupiter => Some(9),  // Sagittarius
+            VedicPlanet::Venus => Some(7),    // Libra
+            VedicPlanet::Saturn => Some(11),  // Aquarius
+            _ => None,
+        }
+    }
+
     /// Analyze a planet's functional nature for a given Lagna (Ascendant Sign)
     pub fn analyze(lagna_rasi: u8, planet: VedicPlanet) -> FunctionalStatus {
         // Sun/Moon own 1 sign, others own 2.
@@ -40,8 +54,16 @@ impl FunctionalNature {
         }
 
         if owned_houses.is_empty() {
-             return FunctionalStatus::Neutral; // Should not happen for main planets
+             return FunctionalStatus::Neutral;
         }
+
+        // Moolatrikona house
+        let mt_house = if let Some(mt_rasi) = Self::moolatrikona_rasi(planet) {
+             let diff = mt_rasi as i32 - lagna_rasi as i32;
+             Some(if diff >= 0 { diff + 1 } else { diff + 13 })
+        } else {
+             None
+        };
 
         // --- Classification Logic ---
         // 1. Yogakaraka: Owns Kendra (1,4,7,10) AND Trikona (1,5,9)
@@ -53,45 +75,38 @@ impl FunctionalNature {
         // If owns 2 signs, check combination.
         
         // Special Case: Yogakaraka (e.g. Mars for Cancer/Leo Lagna)
+        // Classification Logic refined by Moolatrikona
+        // 1. Yogakaraka
         if is_kendra_lord && is_trikona_lord {
-             // Exception: If also owns bad house? 
-             // Ideally Yogakaraka overrides.
              return FunctionalStatus::Yogakaraka;
         }
 
-        // 2. Benefic: Lord of Trikona (5, 9) is always auspicious.
-        // (Lord of 1 is Neutral/Benefic, usually Benefic)
-        if owned_houses.iter().any(|&h| [1, 5, 9].contains(&h)) {
-             // Provide benefit. 
-             // But if also owns 6, 8, 12? Moolatrikona matters (not impl yet).
-             // Simplified: Trikona lordship makes it benefic.
-             return FunctionalStatus::FunctionalBenefic;
+        // 2. Benefic
+        if is_trikona_lord {
+             // If Moolatrikona is in a good house (1, 5, 9 or 4, 7, 10)
+             if let Some(h) = mt_house {
+                 if [1, 4, 5, 7, 9, 10].contains(&h) {
+                     return FunctionalStatus::FunctionalBenefic;
+                 }
+                 // If MT in 3, 6, 8, 11, 12, it might be neutral or slightly malefic
+             } else {
+                 return FunctionalStatus::FunctionalBenefic;
+             }
         }
-        
-        // 3. Maraka: Lord of 2 and 7.
-        // Note: 7 is Kendra. If 7th lord does not own Trikona/Upachaya?
-        // Maraka rules are complex. Primary Marakas are 2nd and 7th lords.
-        // If a planet owns 2 or 7 and is NOT a Trikona lord, it has Maraka potential.
-        // Especially if it is a natural malefic.
+
+        // 3. Malefic / Dusthana
+        if let Some(h) = mt_house {
+             if [3, 6, 8, 11, 12].contains(&h) {
+                 return FunctionalStatus::FunctionalMalefic;
+             }
+        }
+
+        // 4. Maraka
         let is_maraka_house = owned_houses.iter().any(|&h| [2, 7].contains(&h));
-        if is_maraka_house {
-             // Check if it also owns good houses?
-             // Simple version: Tag as Maraka if primarily associated with death houses and no Trikona.
+        if is_maraka_house && !is_trikona_lord {
              return FunctionalStatus::Maraka;
         }
 
-        // 4. Malefic (Dusthana): Lord of 3, 6, 8, 11, 12.
-        // 3, 6, 11 are Upachaya (Improve w/ time) but functional malefics.
-        // 6, 8, 12 are Dusthana (Suffering).
-        // 8th is most malefic.
-        let is_dusthana = owned_houses.iter().any(|&h| [6, 8, 12].contains(&h));
-        let is_upachaya_bad = owned_houses.iter().any(|&h| [3, 11].contains(&h));
-        
-        if is_dusthana || is_upachaya_bad {
-            return FunctionalStatus::FunctionalMalefic;
-        }
-
-        // Default
         FunctionalStatus::Neutral
     }
 }
