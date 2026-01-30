@@ -65,4 +65,71 @@ impl VedicPlanet {
             n => (n + 5) % 12 + 1, // Opposite sign
         }
     }
+
+    /// Natural Friendship (Naisargika Maitri)
+    /// Returns: 1 (Friend), 0 (Neutral), -1 (Enemy)
+    pub fn naisargika_relation(&self, other: Self) -> i8 {
+        if *self == other { return 1; }
+        match self {
+            Self::Sun => match other {
+                Self::Moon | Self::Mars | Self::Jupiter => 1,
+                Self::Mercury => 0,
+                Self::Venus | Self::Saturn => -1,
+                _ => 0,
+            },
+            Self::Moon => match other {
+                Self::Sun | Self::Mercury => 1,
+                Self::Mars | Self::Jupiter | Self::Venus | Self::Saturn => 0,
+                _ => 0,
+            },
+            Self::Mars => match other {
+                Self::Sun | Self::Moon | Self::Jupiter => 1,
+                Self::Venus | Self::Saturn => 0,
+                Self::Mercury => -1,
+                _ => 0,
+            },
+            Self::Mercury => match other {
+                Self::Sun | Self::Venus => 1,
+                Self::Mars | Self::Jupiter | Self::Saturn => 0,
+                Self::Moon => -1,
+                _ => 0,
+            },
+            Self::Jupiter => match other {
+                Self::Sun | Self::Moon | Self::Mars => 1,
+                Self::Saturn => 0,
+                Self::Mercury | Self::Venus => -1,
+                _ => 0,
+            },
+            Self::Venus => match other {
+                Self::Mercury | Self::Saturn => 1,
+                Self::Mars | Self::Jupiter => 0,
+                Self::Sun | Self::Moon => -1,
+                _ => 0,
+            },
+            Self::Saturn => match other {
+                Self::Mercury | Self::Venus => 1,
+                Self::Jupiter => 0,
+                Self::Sun | Self::Moon | Self::Mars => -1,
+                _ => 0,
+            },
+            _ => 0,
+        }
+    }
+
+    /// Temporal Friendship (Tatkalika Maitri)
+    /// Rule: Planets in 2, 3, 4, 10, 11, 12 houses from each other are friends.
+    pub fn tatkalika_relation(b_house: u8, g_house: u8) -> i8 {
+        let diff = (g_house as i16 - b_house as i16 + 12) % 12;
+        match diff {
+            1 | 2 | 3 | 9 | 10 | 11 => 1, // 2nd, 3rd, 4th, 10th, 11th, 12th houses
+            _ => -1,
+        }
+    }
+
+    /// Combined Friendship (Panchadha Maitri)
+    /// Natural + Temporal
+    /// 2: Great Friend (Adhi Mitra), 1: Friend (Mitra), 0: Neutral (Sama), -1: Enemy (Shatru), -2: Great Enemy (Adhi Shatru)
+    pub fn panchadha_relation(&self, other: Self, b_house: u8, g_house: u8) -> i8 {
+        self.naisargika_relation(other) + Self::tatkalika_relation(b_house, g_house)
+    }
 }

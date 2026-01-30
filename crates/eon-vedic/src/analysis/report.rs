@@ -31,6 +31,11 @@ impl VedicAnalysisReport {
         let amk = chart.karakas.iter().find(|k| matches!(k.role, crate::analysis::jaimini::JaiminiKarakaRole::Amatyakaraka)).map(|k| k.planet).unwrap_or(VedicPlanet::Sun);
         let dk = chart.karakas.iter().find(|k| matches!(k.role, crate::analysis::jaimini::JaiminiKarakaRole::Darakaraka)).map(|k| k.planet).unwrap_or(VedicPlanet::Sun);
 
+        // Calculate Sade Sati if Moon and Saturn are present
+        let moon_rasi = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon).map(|p| p.rasi).unwrap_or(1);
+        let saturn_rasi = chart.planets.iter().find(|p| p.planet == VedicPlanet::Saturn).map(|p| p.rasi).unwrap_or(1);
+        let sade_sati = crate::analysis::gochara::GocharaEngine::calculate_sade_sati(moon_rasi, saturn_rasi);
+
         let mut house_summary = Vec::new();
         for h in &chart.bhava_strengths {
             let rating = if h.total_score > 400.0 { "Excellent" }
@@ -54,7 +59,7 @@ impl VedicAnalysisReport {
             house_summary,
             dasha_focus: "Focus on current Mahadasha".to_string(), // Placeholder for logic
             overall_strength_score: chart.bhava_strengths.iter().map(|h| h.total_score).sum::<f64>() / 12.0,
-            sade_sati: crate::analysis::gochara::SadeSatiPhase::None, // Requires natal moon + current saturn
+            sade_sati,
         }
     }
 

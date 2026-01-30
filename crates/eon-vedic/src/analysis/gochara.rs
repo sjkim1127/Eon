@@ -127,7 +127,7 @@ impl GocharaEngine {
         }
     }
 
-    fn calculate_sade_sati(natal_moon: u8, saturn_transit: u8) -> SadeSatiPhase {
+    pub fn calculate_sade_sati(natal_moon: u8, saturn_transit: u8) -> SadeSatiPhase {
         // Moon's 12th is (Moon - 1)
         // Sign index 1-12
         let prev = if natal_moon == 1 { 12 } else { natal_moon - 1 };

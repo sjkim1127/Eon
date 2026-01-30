@@ -25,7 +25,7 @@ impl PanchangaEngine {
         let vara = time.weekday().to_string();
 
         // 2. Tithi (Moon - Sun) / 12
-        let mut tithi_deg = (moon - sun + 360.0) % 360.0;
+        let tithi_deg = (moon - sun + 360.0) % 360.0;
         let tithi = (tithi_deg / 12.0).floor() as u8 + 1;
         let tithi_name = Self::get_tithi_name(tithi);
 

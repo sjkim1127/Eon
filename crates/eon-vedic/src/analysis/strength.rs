@@ -13,6 +13,7 @@ pub struct PlanetStrength {
     pub drik_score: f64,       // Aspect strength (can be negative)
     pub paksha_score: f64,     // Moon Phase strength
     pub ayana_score: f64,      // Declination strength
+    pub saptavargaja_score: f64,// 0.0 ~ 60.0 (Strength across 7 Vargas)
     pub ishta_phala: f64,      // Auspiciousness (0-60)
     pub kashta_phala: f64,     // Inauspiciousness (0-60)
     pub total_score: f64,      // Aggregate for MVP
@@ -37,19 +38,21 @@ impl StrengthEngine {
         let paksha_score = Self::calculate_paksha_bala(pos.planet, chart);
         let ayana_score = Self::calculate_ayana_bala(pos.planet, pos.declination);
         
+        let sapta_score = Self::calculate_saptavargaja_bala(pos);
+
         // Ishta & Kashta Phala based on Exaltation (Uchcha) and Motion (Chesta)
         let (ishta_phala, kashta_phala) = Self::calculate_ishta_kashta(ex_score, chesta_score);
 
-        let total = ex_score + dig_score + chesta_score + naisargika_score + kala_score + drik_score + paksha_score + ayana_score;
+        let total = ex_score + dig_score + chesta_score + naisargika_score + kala_score + drik_score + paksha_score + ayana_score + sapta_score;
         
         // Simple status determination
         let status = if ex_score >= 50.0 {
             "Exalted".to_string()
         } else if ex_score <= 10.0 {
             "Debilitated".to_string()
-        } else if total > 120.0 {
+        } else if total > 180.0 {
             "Strong".to_string()
-        } else if total < 60.0 {
+        } else if total < 90.0 {
             "Weak".to_string()
         } else {
             "Neutral".to_string()
@@ -65,6 +68,7 @@ impl StrengthEngine {
             drik_score,
             paksha_score,
             ayana_score,
+            saptavargaja_score: sapta_score,
             ishta_phala,
             kashta_phala,
             total_score: total,
@@ -321,5 +325,37 @@ impl StrengthEngine {
         
         // Score = (Houses Dist / 6) * 60 = Houses Dist * 10
         dist_houses as f64 * 10.0
+    }
+
+    /// Saptavargaja Bala (Strength across 7 Vargas)
+    /// D1, D2, D3, D7, D9, D12, D30
+    /// Points: Great Friend (45), Friend (30), Neutral (15), Enemy (10), Great Enemy (5) -> Normalize to 0~60 (sum / 7)
+    fn calculate_saptavargaja_bala(pos: &VedicPosition) -> f64 {
+        let vargas = [
+            pos.rasi,
+            pos.hora_rasi,
+            pos.drekkana_rasi,
+            pos.saptamsa_rasi,
+            pos.navamsa_rasi,
+            pos.dwadasamsa_rasi,
+            pos.trimsamsa_rasi,
+        ];
+
+        let mut total_v_points = 0.0;
+        for rasi in vargas {
+            let lord = VedicPlanet::get_ruler_of(rasi);
+            // We use Natural Friendship (Naisargika) for Saptavargaja usually
+            let relation = pos.planet.naisargika_relation(lord);
+            
+            let pts = if pos.planet == lord { 45.0 } // Own Sign
+                     else if relation == 1 { 30.0 }  // Friend
+                     else if relation == 0 { 15.0 }  // Neutral
+                     else { 5.0 };                   // Enemy
+            
+            total_v_points += pts;
+        }
+
+        // Normalize sum (max 45*7 = 315) to 60 units
+        (total_v_points / 315.0) * 60.0
     }
 }
