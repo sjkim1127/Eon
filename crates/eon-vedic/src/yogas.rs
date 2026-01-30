@@ -31,6 +31,8 @@ impl YogaEngine {
     pub fn check_yogas(chart: &VedicChart) -> Vec<YogaResult> {
         let mut results = Vec::new();
 
+        Self::check_raja_yogas(chart, &mut results);
+
         // Helper: Get planet position
         let get_planet = |p: VedicPlanet| -> Option<&crate::chart::VedicPosition> {
             chart.planets.iter().find(|pos| pos.planet == p)
@@ -251,5 +253,47 @@ impl YogaEngine {
         }
 
         results
+    }
+
+    fn check_raja_yogas(chart: &VedicChart, results: &mut Vec<YogaResult>) {
+        let lagna_rasi = chart.ascendant.rasi;
+        let get_lord_of_house = |house_idx: u8| -> VedicPlanet {
+            let rasi_idx = ((lagna_rasi as i32 + house_idx as i32 - 1 - 1) % 12 + 1) as u8;
+            VedicPlanet::get_ruler_of(rasi_idx)
+        };
+
+        let kendra_houses = [1, 4, 7, 10];
+        let trikona_houses = [1, 5, 9];
+
+        for &k_house in &kendra_houses {
+            for &t_house in &trikona_houses {
+                let k_lord = get_lord_of_house(k_house);
+                let t_lord = get_lord_of_house(t_house);
+                
+                if k_lord == t_lord { continue; }
+
+                if let (Some(pk), Some(pt)) = (
+                    chart.planets.iter().find(|p| p.planet == k_lord),
+                    chart.planets.iter().find(|p| p.planet == t_lord)
+                ) {
+                    let is_conjunction = pk.rasi == pt.rasi;
+                    let diff = (pk.rasi as i16 - pt.rasi as i16).abs();
+                    let is_mutual_aspect = diff == 6;
+
+                    if is_conjunction || is_mutual_aspect {
+                        let name = format!("Raja Yoga (L{} & L{})", k_house, t_house);
+                        if !results.iter().any(|r| r.name == name) {
+                             results.push(YogaResult {
+                                name,
+                                yoga_type: YogaType::RajaYoga,
+                                description: format!("Power generating combination of Kendra Lord ({}) and Trikona Lord ({}).", k_house, t_house),
+                                planets_involved: vec![k_lord, t_lord],
+                                quality: "High".to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -99,7 +99,7 @@ impl CompatibilityEngine {
     }
 
     /// Yoni (Max 4) - Biological affinity based on Animal archetypes
-    fn score_yoni(b_nak: u8, g_nak: u8) -> f64 {
+    pub fn score_yoni(b_nak: u8, g_nak: u8) -> f64 {
         let b_animal = Self::get_yoni_animal(b_nak);
         let g_animal = Self::get_yoni_animal(g_nak);
 
@@ -209,5 +209,24 @@ impl CompatibilityEngine {
     fn score_nadi(b_nak: u8, g_nak: u8) -> f64 {
         let get_n = |n: u8| n % 3;
         if get_n(b_nak) != get_n(g_nak) { 8.0 } else { 0.0 }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_yoni_index_safety() {
+        // Test all 27 nakshatras for Yoni animal mapping
+        for nak in 1..=27 {
+            let score = CompatibilityEngine::score_yoni(nak, nak);
+            assert_eq!(score, 4.0, "Same nakshatra {} should have max yoni score", nak);
+        }
+        
+        let ashwini = 1; // Horse
+        let bharani = 2; // Elephant
+        let score = CompatibilityEngine::score_yoni(ashwini, bharani);
+        assert!(score >= 0.0 && score <= 4.0);
     }
 }

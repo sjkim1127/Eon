@@ -23,7 +23,7 @@ fn test_verify_user_d1_chart() {
     // KST = UTC + 9
     // UTC = 13:00
     // Latitude: 37.3167 (37°19'N), Longitude: 126.8167 (126°49'E)
-    let time = Utc.ymd(2004, 11, 27).and_hms(13, 0, 0);
+    let time = Utc.with_ymd_and_hms(2004, 11, 27, 13, 0, 0).unwrap();
     
     // 2. Mean Node 설정으로 다시 계산 (Astro-Seek 기본값)
     use eon_vedic::config::{VedicConfig, NodeCalculation, AyanamsaSystem};
@@ -31,15 +31,16 @@ fn test_verify_user_d1_chart() {
     let config = VedicConfig {
         ayanamsa: AyanamsaSystem::Lahiri,
         node_calc: NodeCalculation::MeanNode,
+        ..Default::default()
     };
     let calculator = VedicChartCalculator::with_config(config);
-    let chart = calculator.calculate(time);
+    let chart = calculator.calculate(time, 37.3167, 126.8167);
 
     println!("\n=== Calculated Vedic Chart (Mean Node) for User ===");
     println!("D1(Rasi)  D2(Hora)  D3(Drekk) D4(Chatur) D7(Sapt)  D9(Navam) D10(Das)  D12(Dwada)");
     println!("--------------------------------------------------------------------------------");
     
-    for pos in &chart {
+    for pos in &chart.planets {
         println!("{:7} | {:9} | {:9} | {:9} | {:9} | {:9} | {:9} | {:9} | {:9}", 
             format!("{:?}", pos.planet),
             get_rasi_name(pos.rasi),
@@ -55,17 +56,17 @@ fn test_verify_user_d1_chart() {
     
     // 검증 포인트 (제공해주신 데이터와 비교 - Mean Node)
     // Rahu: Aswini (1) Pada 2
-    let rahu = chart.iter().find(|p| p.planet == VedicPlanet::Rahu).unwrap();
+    let rahu = chart.planets.iter().find(|p| p.planet == VedicPlanet::Rahu).unwrap();
     assert_eq!(get_nakshatra_name(rahu.nakshatra), "Ashwini", "Rahu should be in Ashwini");
     assert_eq!(rahu.pada, 2, "Rahu should be in Pada 2 (Mean Node)");
 
     // Ketu: Chitra (14) Pada 4
-    let ketu = chart.iter().find(|p| p.planet == VedicPlanet::Ketu).unwrap();
+    let ketu = chart.planets.iter().find(|p| p.planet == VedicPlanet::Ketu).unwrap();
     assert_eq!(get_nakshatra_name(ketu.nakshatra), "Chitra", "Ketu should be in Chitra");
     assert_eq!(ketu.pada, 4, "Ketu should be in Pada 4 (Mean Node)");
     
     // Saturn Vargottam Check (D1 Cancer, D9 Cancer) -> Previous Check Confirmed
-    let saturn = chart.iter().find(|p| p.planet == VedicPlanet::Saturn).unwrap();
+    let saturn = chart.planets.iter().find(|p| p.planet == VedicPlanet::Saturn).unwrap();
     assert_eq!(saturn.rasi, 4, "Saturn D1 Cancer");
     assert_eq!(saturn.navamsa_rasi, 4, "Saturn D9 Cancer (Vargottam)");
 }

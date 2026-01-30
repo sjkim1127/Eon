@@ -232,3 +232,26 @@ impl GocharaEngine {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sade_sati_boundaries() {
+        // Moon in Pisces (12)
+        let moon_pisces = 12;
+        
+        // Saturn in Aquarius (11) -> Rising
+        assert_eq!(GocharaEngine::calculate_sade_sati(moon_pisces, 11), SadeSatiPhase::Rising);
+        
+        // Saturn in Pisces (12) -> Peak
+        assert_eq!(GocharaEngine::calculate_sade_sati(moon_pisces, 12), SadeSatiPhase::Peak);
+        
+        // Saturn in Aries (1) -> Setting
+        assert_eq!(GocharaEngine::calculate_sade_sati(moon_pisces, 1), SadeSatiPhase::Setting);
+        
+        // Saturn in Taurus (2) -> None
+        assert_eq!(GocharaEngine::calculate_sade_sati(moon_pisces, 2), SadeSatiPhase::None);
+    }
+}

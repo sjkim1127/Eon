@@ -17,7 +17,7 @@ fn main() {
     println!("Moon Sidereal: {:.4}°", moon.sidereal_deg);
 
     // Calculate Mahadashas
-    let mahadashas = Vimshottari::calculate(moon.sidereal_deg, birth_time, 2);
+    let mahadashas = Vimshottari::calculate(moon.sidereal_deg, birth_time, 2, eon_vedic::config::VedicYearType::Gregorian);
     
     println!("\n[Mahadasha Timeline]");
     for m in &mahadashas {

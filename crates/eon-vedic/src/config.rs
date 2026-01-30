@@ -20,13 +20,19 @@ pub enum HouseSystem {
     Sripati,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum VedicYearType {
+    Savana,    // 360 days
+    Gregorian, // 365.2425 days
+    Sidereal,  // 365.256363 days
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct VedicConfig {
     pub ayanamsa: AyanamsaSystem,
     pub node_calc: NodeCalculation,
     pub house_system: HouseSystem,
-    // Add Varga related config if needed, e.g. which vargas to calculate
-    // For now, we will calculate all requested ones or default set.
+    pub year_type: VedicYearType,
 }
 
 impl Default for VedicConfig {
@@ -35,6 +41,7 @@ impl Default for VedicConfig {
             ayanamsa: AyanamsaSystem::Lahiri,
             node_calc: NodeCalculation::MeanNode,
             house_system: HouseSystem::WholeSign,
+            year_type: VedicYearType::Gregorian,
         }
     }
 }

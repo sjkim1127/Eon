@@ -114,7 +114,7 @@ fn main() {
     }
 
     println!("\n[3] Vimshottari Dasha Timeline");
-    let dashas = Vimshottari::calculate(moon_long, birth_time, 1);
+    let dashas = Vimshottari::calculate(moon_long, birth_time, 1, eon_vedic::config::VedicYearType::Gregorian);
     
     for d in dashas.iter().take(5) {
          let nature = FunctionalNature::analyze(lagna_rasi, d.planet);
@@ -131,7 +131,7 @@ fn main() {
     }
 
     println!("\n[10] Yogini Dasha Timeline (Sub-periods)");
-    let yd = eon_vedic::dasha::Yogini::calculate(moon_long, birth_time, 2);
+    let yd = eon_vedic::dasha::Yogini::calculate(moon_long, birth_time, 2, eon_vedic::config::VedicYearType::Gregorian);
     for d in yd.iter().take(5) {
         println!("▶ {:<8} ({:?}) : {} ~ {}", d.name.as_ref().unwrap(), d.planet, d.start_date.format("%Y-%m-%d"), d.end_date.format("%Y-%m-%d"));
         for sub in d.sub_periods.iter().take(3) {
