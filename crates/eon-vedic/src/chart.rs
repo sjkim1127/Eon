@@ -55,6 +55,7 @@ pub struct VedicChart {
     pub karakas: Vec<crate::analysis::jaimini::KarakaAssignment>,
     pub bhava_strengths: Vec<crate::analysis::bhava::BhavaStrength>,
     pub vimshopaka_scores: Vec<(VedicPlanet, crate::analysis::vimshopaka::VimshopakaScore)>,
+    pub analysis_report: Option<crate::analysis::report::VedicAnalysisReport>,
 }
 
 pub struct VedicChartCalculator {
@@ -240,6 +241,7 @@ impl VedicChartCalculator {
             karakas: Vec::new(),
             bhava_strengths: Vec::new(),
             vimshopaka_scores: Vec::new(),
+            analysis_report: None,
         };
 
         // Post-calculation analysis
@@ -253,6 +255,9 @@ impl VedicChartCalculator {
             v_scores.push((p.planet, crate::analysis::vimshopaka::VimshopakaEngine::calculate(p, &chart)));
         }
         chart.vimshopaka_scores = v_scores;
+
+        // Final High-level Report
+        chart.analysis_report = Some(crate::analysis::report::VedicAnalysisReport::generate(&chart));
 
         chart
     }
