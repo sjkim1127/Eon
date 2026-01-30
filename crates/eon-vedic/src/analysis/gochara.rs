@@ -11,6 +11,14 @@ pub enum MurtiType {
     Unknown,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum SadeSatiPhase {
+    None,
+    Rising,  // Saturn in 12th from Moon
+    Peak,    // Saturn in 1st from Moon
+    Setting, // Saturn in 2nd from Moon
+}
+
 /// Transit Result for a single planet
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransitPosition {
@@ -20,6 +28,12 @@ pub struct TransitPosition {
     pub is_benefic_transit: bool, // Simple check based on Gochara rules
     pub is_blocked: bool, // Blocked by Vedha (obstruction)
     pub murti: MurtiType, // Murti Nirnaya
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GocharaSummary {
+    pub transits: Vec<TransitPosition>,
+    pub sade_sati: SadeSatiPhase,
 }
 
 pub struct GocharaEngine;
@@ -34,8 +48,9 @@ impl GocharaEngine {
     /// Usage: 
     /// let transit_chart = calculator.calculate(current_time, lat, lon);
     /// let transits = GocharaEngine::analyze(natal_chart.moon.rasi, &transit_chart);
-    pub fn analyze(natal_moon_rasi: u8, current_chart: &VedicChart) -> Vec<TransitPosition> {
-        let mut results = Vec::new();
+    pub fn analyze(natal_moon_rasi: u8, current_chart: &VedicChart) -> GocharaSummary {
+        let mut transits = Vec::new();
+        let mut sade_sati = SadeSatiPhase::None;
         
         for pos in &current_chart.planets {
             let house_from_moon = if pos.rasi >= natal_moon_rasi {
@@ -92,7 +107,11 @@ impl GocharaEngine {
                 }
             }
 
-            results.push(TransitPosition {
+            if pos.planet == VedicPlanet::Saturn {
+                sade_sati = Self::calculate_sade_sati(natal_moon_rasi, pos.rasi);
+            }
+
+            transits.push(TransitPosition {
                 planet: pos.planet,
                 current_rasi: pos.rasi,
                 house_from_moon,
@@ -102,7 +121,27 @@ impl GocharaEngine {
             });
         }
         
-        results
+        GocharaSummary {
+            transits,
+            sade_sati,
+        }
+    }
+
+    fn calculate_sade_sati(natal_moon: u8, saturn_transit: u8) -> SadeSatiPhase {
+        // Moon's 12th is (Moon - 1)
+        // Sign index 1-12
+        let prev = if natal_moon == 1 { 12 } else { natal_moon - 1 };
+        let next = if natal_moon == 12 { 1 } else { natal_moon + 1 };
+
+        if saturn_transit == prev {
+            SadeSatiPhase::Rising
+        } else if saturn_transit == natal_moon {
+            SadeSatiPhase::Peak
+        } else if saturn_transit == next {
+            SadeSatiPhase::Setting
+        } else {
+            SadeSatiPhase::None
+        }
     }
     
     /// Standard Gochara Benefic Houses (from Moon)

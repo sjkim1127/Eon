@@ -74,11 +74,11 @@ impl StrengthEngine {
 
     /// Ishta & Kashta Phala
     /// Based on Uchcha Bala and Chesta Bala.
-    /// Simplified formula:
-    /// Ishta = sqrt(Uchcha * Chesta)
+    /// Formula:
+    /// Ishta = (Uchcha + Chesta) / 2
     /// Kashta = 60 - Ishta
     fn calculate_ishta_kashta(uchcha: f64, chesta: f64) -> (f64, f64) {
-        let ishta = (uchcha * chesta).sqrt();
+        let ishta = (uchcha + chesta) / 2.0;
         let kashta = (60.0 - ishta).max(0.0);
         (ishta, kashta)
     }

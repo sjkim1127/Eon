@@ -155,9 +155,10 @@ fn main() {
     println!("\n[8] Gochara (Transits) - relative to Natal Moon");
     if let Some(natal_moon) = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon) {
         println!("Natal Moon Rasi: {}", natal_moon.rasi);
-        let transits = eon_vedic::analysis::gochara::GocharaEngine::analyze(natal_moon.rasi, &chart);
-        
-        for t in transits {
+        let summary = eon_vedic::analysis::gochara::GocharaEngine::analyze(natal_moon.rasi, &chart);
+        println!("Sade Sati Status: {:?}", summary.sade_sati);
+
+        for t in summary.transits {
             if matches!(t.planet, VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter | VedicPlanet::Saturn | VedicPlanet::Rahu) {
                  println!("  {:<10} in House {:>2} from Moon -> {}{} | Murti: {:?}", 
                     format!("{:?}", t.planet), 
@@ -176,5 +177,10 @@ fn main() {
     for b in &chart.bhava_strengths {
         println!("{:<6} | {:>10.1} | {:>10.1} | {:>10.1} | {:>10.1}", 
             b.house, b.lord_score, b.dig_score, b.drishti_score, b.total_score);
+    }
+
+    if let Some(report) = &chart.analysis_report {
+        println!("\n[12] FINAL ANALYSIS SUMMARY");
+        println!("{}", report.to_text_summary());
     }
 }
