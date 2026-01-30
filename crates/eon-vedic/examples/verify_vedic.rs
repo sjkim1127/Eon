@@ -139,6 +139,22 @@ fn main() {
         }
     }
 
+    println!("\n[11] Panchanga (Time Elements)");
+    let panchanga = eon_vedic::panchanga::PanchangaEngine::calculate(&chart, birth_time);
+    println!("  Vara:      {}", panchanga.vara);
+    println!("  Tithi:     {} ({})", panchanga.tithi, panchanga.tithi_name);
+    println!("  Nakshatra: {}", panchanga.nakshatra);
+    println!("  Yoga:      {}", panchanga.yoga);
+    println!("  Karana:    {} ({})", panchanga.karana, panchanga.karana_name);
+
+    println!("\n[12] Compatibility (Ashta Kuta Sample)");
+    // Compare same chart with itself to see max score (or near max)
+    let comp = eon_vedic::analysis::compatibility::CompatibilityEngine::analyze(&chart, &chart);
+    println!("  Score:   {:.1}/36.0", comp.total_score);
+    println!("  Summary: {}", comp.message);
+    println!("  Breakdown: Nadi:{}, Bhakoot:{}, Gana:{}, Maitri:{}, Yoni:{}, Tara:{}, Vashya:{}, Varna:{}", 
+        comp.nadi, comp.bhakoot, comp.gana, comp.maitri, comp.yoni, comp.tara, comp.vashya, comp.varna);
+
     // 5. Final Polish Verification
     println!("\n[7] Vimshopaka Bala (Varga Strength)");
     println!("{:<10} | Shadvarga (20pt) | Shodashavarga (Avg)", "Planet");

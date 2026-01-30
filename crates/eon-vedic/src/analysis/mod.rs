@@ -9,3 +9,4 @@ pub mod gochara;
 pub mod jaimini;
 pub mod bhava;
 pub mod report;
+pub mod compatibility;

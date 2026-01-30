@@ -11,6 +11,7 @@ pub mod varga;
 pub mod dasha;
 pub mod yogas;
 pub mod analysis;
+pub mod panchanga;
 
 use serde::{Deserialize, Serialize};
 
