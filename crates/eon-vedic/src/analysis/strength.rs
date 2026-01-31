@@ -1,24 +1,41 @@
-use serde::{Deserialize, Serialize};
-use crate::planets::VedicPlanet;
 use crate::chart::VedicPosition;
+use crate::planets::VedicPlanet;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlanetStrength {
     pub planet: VedicPlanet,
-    pub exaltation_score: f64, // 0.0 ~ 60.0 (Uchcha Bala)
-    pub directional_score: f64,// 0.0 ~ 60.0 (Dig Bala)
-    pub chesta_score: f64,     // 0.0 ~ 60.0 (Chesta Bala - Motion)
-    pub naisargika_score: f64, // 0.0 ~ 60.0 (Natural strength)
-    pub kala_score: f64,       // 0.0 ~ 60.0 (Time strength - Day/Night)
-    pub drik_score: f64,       // Aspect strength (can be negative)
-    pub paksha_score: f64,     // Moon Phase strength
-    pub ayana_score: f64,      // Declination strength
-    pub saptavargaja_score: f64,// 0.0 ~ 60.0 (Strength across 7 Vargas)
-    pub ishta_phala: f64,      // Auspiciousness (0-60)
-    pub kashta_phala: f64,     // Inauspiciousness (0-60)
-    pub total_score: f64,      // Aggregate for MVP
-    pub status: String,        // "Exalted", "Debilitated", "Strong", "Weak", "Neutral"
+    pub exaltation_score: f64,   // 0.0 ~ 60.0 (Uchcha Bala)
+    pub directional_score: f64,  // 0.0 ~ 60.0 (Dig Bala)
+    pub chesta_score: f64,       // 0.0 ~ 60.0 (Chesta Bala - Motion)
+    pub naisargika_score: f64,   // 0.0 ~ 60.0 (Natural strength)
+    pub kala_score: f64,         // 0.0 ~ 60.0 (Time strength - Day/Night)
+    pub drik_score: f64,         // Aspect strength (can be negative)
+    pub paksha_score: f64,       // Moon Phase strength
+    pub ayana_score: f64,        // Declination strength
+    pub saptavargaja_score: f64, // 0.0 ~ 60.0 (Strength across 7 Vargas)
+    pub ishta_phala: f64,        // Auspiciousness (0-60)
+    pub kashta_phala: f64,       // Inauspiciousness (0-60)
+    pub total_score: f64,        // Aggregate for MVP
+    pub status: String,          // "Exalted", "Debilitated", "Strong", "Weak", "Neutral"
 }
+
+// --- Constants: Average Daily Motion (Degrees) ---
+const AVG_SPEED_MARS: f64 = 0.524; // Approx 31'27"
+const AVG_SPEED_MERCURY: f64 = 1.4; // Can vary greatly, approx 1d 23'
+const AVG_SPEED_JUPITER: f64 = 0.083; // Approx 4'59"
+const AVG_SPEED_VENUS: f64 = 1.2; // Approx 1d 12'
+const AVG_SPEED_SATURN: f64 = 0.033; // Approx 2'00"
+const AVG_SPEED_DEFAULT: f64 = 1.0;
+
+// --- Constants: Deep Exaltation Points (Sidereal Longitude) ---
+const DEEP_EXALT_SUN: f64 = 10.0; // Aries 10
+const DEEP_EXALT_MOON: f64 = 33.0; // Taurus 3
+const DEEP_EXALT_MARS: f64 = 298.0; // Capricorn 28
+const DEEP_EXALT_MERCURY: f64 = 165.0; // Virgo 15
+const DEEP_EXALT_JUPITER: f64 = 95.0; // Cancer 5
+const DEEP_EXALT_VENUS: f64 = 357.0; // Pisces 27
+const DEEP_EXALT_SATURN: f64 = 200.0; // Libra 20
 
 pub struct StrengthEngine;
 
@@ -29,22 +46,35 @@ impl StrengthEngine {
         let dig_score = Self::calculate_dig_bala(pos.planet, pos.house_index);
         let chesta_score = Self::calculate_chesta_bala(pos);
         let naisargika_score = Self::calculate_naisargika_bala(pos.planet);
-        
-        let sun_house = chart.planets.iter().find(|p| p.planet == VedicPlanet::Sun).map(|p| p.house_index).unwrap_or(1);
+
+        let sun_house = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Sun)
+            .map(|p| p.house_index)
+            .unwrap_or(1);
         let is_day = sun_house >= 7 && sun_house <= 12;
         let kala_score = Self::calculate_kala_bala(pos.planet, is_day);
-        
+
         let drik_score = Self::calculate_drik_bala(pos, chart);
         let paksha_score = Self::calculate_paksha_bala(pos.planet, chart);
         let ayana_score = Self::calculate_ayana_bala(pos.planet, pos.declination);
-        
+
         let sapta_score = Self::calculate_saptavargaja_bala(pos);
 
         // Ishta & Kashta Phala based on Exaltation (Uchcha) and Motion (Chesta)
         let (ishta_phala, kashta_phala) = Self::calculate_ishta_kashta(ex_score, chesta_score);
 
-        let total = ex_score + dig_score + chesta_score + naisargika_score + kala_score + drik_score + paksha_score + ayana_score + sapta_score;
-        
+        let total = ex_score
+            + dig_score
+            + chesta_score
+            + naisargika_score
+            + kala_score
+            + drik_score
+            + paksha_score
+            + ayana_score
+            + sapta_score;
+
         // Simple status determination
         let status = if ex_score >= 50.0 {
             "Exalted".to_string()
@@ -96,21 +126,21 @@ impl StrengthEngine {
     fn calculate_ayana_bala(planet: VedicPlanet, declination: f64) -> f64 {
         // Max declination ~24.0. Normalize to 0~60.
         // Formula: Score = 30 + (Dec / 24) * 30 * DirectionFactor
-        
+
         let direction_factor = match planet {
             VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter | VedicPlanet::Venus => 1.0,
             VedicPlanet::Moon | VedicPlanet::Saturn => -1.0,
             VedicPlanet::Mercury => 1.0, // Mercury follows Sun usually
             _ => 0.0,
         };
-        
+
         // Dec range -24 to +24
         // If Sun (North pref) has +24 Dec => 30 + 1 * 30 = 60.
         // If Sun has -24 Dec => 30 - 1 * 30 = 0.
-        
+
         let val = (declination / 24.0).max(-1.0).min(1.0); // Clamp -1 to 1
         let score = 30.0 + (val * 30.0 * direction_factor);
-        
+
         score.max(0.0).min(60.0)
     }
 
@@ -120,29 +150,34 @@ impl StrengthEngine {
     fn calculate_paksha_bala(planet: VedicPlanet, chart: &crate::chart::VedicChart) -> f64 {
         let sun = chart.planets.iter().find(|p| p.planet == VedicPlanet::Sun);
         let moon = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon);
-        
+
         if let (Some(s), Some(m)) = (sun, moon) {
             let mut angle = m.sidereal_deg - s.sidereal_deg;
-            if angle < 0.0 { angle += 360.0; }
-            
+            if angle < 0.0 {
+                angle += 360.0;
+            }
+
             // Paksha Point (0 to 60)
             // 0 (New Moon) -> 180 (Full Moon) -> 360 (New Moon)
             // Waxing: 0 to 180. Point increases.
             // Waning: 180 to 360. Point decreases.
-            
+
             let moon_strength_base = if angle <= 180.0 {
                 // Waxing: 0 -> 60 (at 180 deg)
                 angle / 3.0
             } else {
-                // Waning: 60 -> 0 
+                // Waning: 60 -> 0
                 (360.0 - angle) / 3.0
             };
-            
+
             let is_benefic = match planet {
-                VedicPlanet::Jupiter | VedicPlanet::Venus | VedicPlanet::Moon | VedicPlanet::Mercury => true,
+                VedicPlanet::Jupiter
+                | VedicPlanet::Venus
+                | VedicPlanet::Moon
+                | VedicPlanet::Mercury => true,
                 _ => false,
             };
-            
+
             if is_benefic {
                 moon_strength_base
             } else {
@@ -157,23 +192,32 @@ impl StrengthEngine {
     /// Calculates the sum of aspect values (Drishti) from all other planets.
     fn calculate_drik_bala(pos: &VedicPosition, chart: &crate::chart::VedicChart) -> f64 {
         let mut total_drik = 0.0;
-        
+
         for aspector in &chart.planets {
-            if aspector.planet == pos.planet { continue; }
-            
+            if aspector.planet == pos.planet {
+                continue;
+            }
+
             let diff = (pos.sidereal_deg - aspector.sidereal_deg + 360.0) % 360.0;
             let val = Self::get_aspect_value(aspector.planet, diff);
-            
+
             // Influence of aspecting planet nature
-            let is_malefic = matches!(aspector.planet, VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Saturn | VedicPlanet::Rahu | VedicPlanet::Ketu);
-            
+            let is_malefic = matches!(
+                aspector.planet,
+                VedicPlanet::Sun
+                    | VedicPlanet::Mars
+                    | VedicPlanet::Saturn
+                    | VedicPlanet::Rahu
+                    | VedicPlanet::Ketu
+            );
+
             if is_malefic {
                 total_drik -= val / 4.0;
             } else {
                 total_drik += val / 4.0;
             }
         }
-        
+
         total_drik
     }
 
@@ -181,7 +225,7 @@ impl StrengthEngine {
         let mut val = if diff > 30.0 && diff <= 60.0 {
             diff - 30.0
         } else if diff > 60.0 && diff <= 90.0 {
-            15.0 
+            15.0
         } else if diff > 90.0 && diff <= 120.0 {
             (diff - 90.0) + 15.0
         } else if diff > 120.0 && diff <= 150.0 {
@@ -197,17 +241,29 @@ impl StrengthEngine {
         // Special Aspects
         match planet {
             VedicPlanet::Mars => {
-                 if (diff - 90.0).abs() < 15.0 { val = 60.0; }
-                 if (diff - 210.0).abs() < 15.0 { val = 60.0; }
-            },
+                if (diff - 90.0).abs() < 15.0 {
+                    val = 60.0;
+                }
+                if (diff - 210.0).abs() < 15.0 {
+                    val = 60.0;
+                }
+            }
             VedicPlanet::Jupiter => {
-                 if (diff - 120.0).abs() < 15.0 { val = 60.0; }
-                 if (diff - 240.0).abs() < 15.0 { val = 60.0; }
-            },
+                if (diff - 120.0).abs() < 15.0 {
+                    val = 60.0;
+                }
+                if (diff - 240.0).abs() < 15.0 {
+                    val = 60.0;
+                }
+            }
             VedicPlanet::Saturn => {
-                 if (diff - 60.0).abs() < 15.0 { val = 60.0; }
-                 if (diff - 270.0).abs() < 15.0 { val = 60.0; }
-            },
+                if (diff - 60.0).abs() < 15.0 {
+                    val = 60.0;
+                }
+                if (diff - 270.0).abs() < 15.0 {
+                    val = 60.0;
+                }
+            }
             _ => {}
         }
 
@@ -232,15 +288,31 @@ impl StrengthEngine {
     /// Simple Kala Bala (Diva-Ratri Bala)
     /// Day planets strong in Day, Night planets strong in Night.
     fn calculate_kala_bala(planet: VedicPlanet, is_day: bool) -> f64 {
-        let is_day_planet = matches!(planet, VedicPlanet::Sun | VedicPlanet::Jupiter | VedicPlanet::Venus);
-        let is_night_planet = matches!(planet, VedicPlanet::Moon | VedicPlanet::Mars | VedicPlanet::Saturn);
-        
-        if planet == VedicPlanet::Mercury { return 60.0; } // Mercury always strong in time
-        
+        let is_day_planet = matches!(
+            planet,
+            VedicPlanet::Sun | VedicPlanet::Jupiter | VedicPlanet::Venus
+        );
+        let is_night_planet = matches!(
+            planet,
+            VedicPlanet::Moon | VedicPlanet::Mars | VedicPlanet::Saturn
+        );
+
+        if planet == VedicPlanet::Mercury {
+            return 60.0;
+        } // Mercury always strong in time
+
         if is_day {
-            if is_day_planet { 60.0 } else { 0.0 }
+            if is_day_planet {
+                60.0
+            } else {
+                0.0
+            }
         } else {
-            if is_night_planet { 60.0 } else { 0.0 }
+            if is_night_planet {
+                60.0
+            } else {
+                0.0
+            }
         }
     }
 
@@ -260,12 +332,12 @@ impl StrengthEngine {
         // Stationary or very slow planets are also strong.
         // Average speeds: Mars 0.5, Merc 1.4, Jup 0.1, Ven 1.2, Sat 0.03
         let avg_speed = match pos.planet {
-            VedicPlanet::Mars => 0.5,
-            VedicPlanet::Mercury => 1.4,
-            VedicPlanet::Jupiter => 0.08,
-            VedicPlanet::Venus => 1.2,
-            VedicPlanet::Saturn => 0.03,
-            _ => 1.0,
+            VedicPlanet::Mars => AVG_SPEED_MARS,
+            VedicPlanet::Mercury => AVG_SPEED_MERCURY,
+            VedicPlanet::Jupiter => AVG_SPEED_JUPITER,
+            VedicPlanet::Venus => AVG_SPEED_VENUS,
+            VedicPlanet::Saturn => AVG_SPEED_SATURN,
+            _ => AVG_SPEED_DEFAULT,
         };
 
         let ratio = (pos.speed.abs() / avg_speed).min(2.0);
@@ -278,24 +350,24 @@ impl StrengthEngine {
     /// Max 60 units at Deep Exaltation point, 0 units at Deep Debilitation point.
     fn calculate_uchcha_bala(planet: VedicPlanet, longitude: f64) -> f64 {
         let deep_exalt_deg = match planet {
-            VedicPlanet::Sun => 10.0,      // Aries 10
-            VedicPlanet::Moon => 33.0,     // Taurus 3
-            VedicPlanet::Mars => 298.0,    // Capricorn 28
-            VedicPlanet::Mercury => 165.0, // Virgo 15
-            VedicPlanet::Jupiter => 95.0,   // Cancer 5
-            VedicPlanet::Venus => 357.0,   // Pisces 27
-            VedicPlanet::Saturn => 200.0,  // Libra 20
+            VedicPlanet::Sun => DEEP_EXALT_SUN,
+            VedicPlanet::Moon => DEEP_EXALT_MOON,
+            VedicPlanet::Mars => DEEP_EXALT_MARS,
+            VedicPlanet::Mercury => DEEP_EXALT_MERCURY,
+            VedicPlanet::Jupiter => DEEP_EXALT_JUPITER,
+            VedicPlanet::Venus => DEEP_EXALT_VENUS,
+            VedicPlanet::Saturn => DEEP_EXALT_SATURN,
             _ => return 30.0, // Nodes/ASC default
         };
 
         let deep_debilit_deg = (deep_exalt_deg + 180.0) % 360.0;
-        
+
         // Arc distance from Deep Debilitation point
         let mut arc = (longitude - deep_debilit_deg).abs();
-        if arc > 180.0 { 
-            arc = 360.0 - arc; 
+        if arc > 180.0 {
+            arc = 360.0 - arc;
         }
-        
+
         // Score = Distance / 3 (since 180 degrees = 60 units)
         arc / 3.0
     }
@@ -310,7 +382,7 @@ impl StrengthEngine {
             VedicPlanet::Moon | VedicPlanet::Venus => 4,
             _ => return 30.0,
         };
-        
+
         let weak_house = match power_house {
             1 => 7,
             10 => 4,
@@ -318,11 +390,11 @@ impl StrengthEngine {
             4 => 10,
             _ => 1,
         };
-        
+
         // Shortest distance in houses (12 houses total)
         let diff = (house as i32 - weak_house as i32).abs();
         let dist_houses = if diff > 6 { 12 - diff } else { diff };
-        
+
         // Score = (Houses Dist / 6) * 60 = Houses Dist * 10
         dist_houses as f64 * 10.0
     }
@@ -346,12 +418,23 @@ impl StrengthEngine {
             let lord = VedicPlanet::get_ruler_of(rasi);
             // We use Natural Friendship (Naisargika) for Saptavargaja usually
             let relation = pos.planet.naisargika_relation(lord);
-            
-            let pts = if pos.planet == lord { 45.0 } // Own Sign
-                     else if relation == 1 { 30.0 }  // Friend
-                     else if relation == 0 { 15.0 }  // Neutral
-                     else { 5.0 };                   // Enemy
-            
+
+            let pts = if pos.planet == lord {
+                45.0
+            }
+            // Own Sign
+            else if relation == 1 {
+                30.0
+            }
+            // Friend
+            else if relation == 0 {
+                15.0
+            }
+            // Neutral
+            else {
+                5.0
+            }; // Enemy
+
             total_v_points += pts;
         }
 

@@ -1,14 +1,14 @@
-use crate::planets::VedicPlanet;
 use crate::chart::VedicChart;
+use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AshtakavargaPoints {
     pub planet: VedicPlanet,
-    pub points: [u8; 12],            // Raw points
-    pub trikona_points: [u8; 12],    // After Trikona Shodhana
-    pub shodhana_points: [u8; 12],   // After Ekadhipatya Shodhana
-    pub sodya_pinda: u32,            // Final Pinda score
+    pub points: [u8; 12],          // Raw points
+    pub trikona_points: [u8; 12],  // After Trikona Shodhana
+    pub shodhana_points: [u8; 12], // After Ekadhipatya Shodhana
+    pub sodya_pinda: u32,          // Final Pinda score
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,9 +22,13 @@ impl AshtakavargaEngine {
     /// Calculate Sarvashtakavarga (SAV) points for the chart
     pub fn calculate_sav(chart: &VedicChart) -> Sarvashtakavarga {
         let planets = [
-            VedicPlanet::Sun, VedicPlanet::Moon, VedicPlanet::Mars,
-            VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus,
-            VedicPlanet::Saturn
+            VedicPlanet::Sun,
+            VedicPlanet::Moon,
+            VedicPlanet::Mars,
+            VedicPlanet::Mercury,
+            VedicPlanet::Jupiter,
+            VedicPlanet::Venus,
+            VedicPlanet::Saturn,
         ];
 
         let mut total_points = [0u8; 12];
@@ -36,20 +40,57 @@ impl AshtakavargaEngine {
             }
         }
 
-        Sarvashtakavarga { points: total_points }
+        Sarvashtakavarga {
+            points: total_points,
+        }
     }
 
     /// Bhinnashtakavarga (BAV) for a specific planet using BPHS tables.
     pub fn calculate_bav(target_planet: VedicPlanet, chart: &VedicChart) -> AshtakavargaPoints {
         let mut points = [0u8; 12];
-        
-        let sun_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Sun).unwrap().rasi;
-        let moon_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon).unwrap().rasi;
-        let mars_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Mars).unwrap().rasi;
-        let merc_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Mercury).unwrap().rasi;
-        let jup_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Jupiter).unwrap().rasi;
-        let ven_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Venus).unwrap().rasi;
-        let sat_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Saturn).unwrap().rasi;
+
+        let sun_pos = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Sun)
+            .unwrap()
+            .rasi;
+        let moon_pos = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Moon)
+            .unwrap()
+            .rasi;
+        let mars_pos = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Mars)
+            .unwrap()
+            .rasi;
+        let merc_pos = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Mercury)
+            .unwrap()
+            .rasi;
+        let jup_pos = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Jupiter)
+            .unwrap()
+            .rasi;
+        let ven_pos = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Venus)
+            .unwrap()
+            .rasi;
+        let sat_pos = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Saturn)
+            .unwrap()
+            .rasi;
         let lagna_pos = chart.ascendant.rasi;
 
         let refs = [
@@ -76,12 +117,12 @@ impl AshtakavargaEngine {
         let shodhana_points = Self::apply_ekadhipatya_reduction(trikona_points, chart);
         let sodya_pinda = Self::calculate_pinda(target_planet, shodhana_points, chart);
 
-        AshtakavargaPoints { 
-            planet: target_planet, 
-            points, 
+        AshtakavargaPoints {
+            planet: target_planet,
+            points,
             trikona_points,
             shodhana_points,
-            sodya_pinda
+            sodya_pinda,
         }
     }
 
@@ -101,9 +142,9 @@ impl AshtakavargaEngine {
             let p2 = reduced[trip[1]];
             let p3 = reduced[trip[2]];
 
-            let zeros = (if p1 == 0 { 1 } else { 0 }) + 
-                        (if p2 == 0 { 1 } else { 0 }) + 
-                        (if p3 == 0 { 1 } else { 0 });
+            let zeros = (if p1 == 0 { 1 } else { 0 })
+                + (if p2 == 0 { 1 } else { 0 })
+                + (if p3 == 0 { 1 } else { 0 });
 
             if zeros == 0 {
                 // All have points: subtract minimum
@@ -147,8 +188,14 @@ impl AshtakavargaEngine {
             let occ2 = is_occupied(r2);
 
             if p1 == 0 || p2 == 0 {
-                if p1 == 0 && p2 == 0 { continue; }
-                let (has_pts_idx, other_idx, other_occ) = if p1 == 0 { (r2, r1, occ1) } else { (r1, r2, occ2) };
+                if p1 == 0 && p2 == 0 {
+                    continue;
+                }
+                let (has_pts_idx, _other_idx, _other_occ) = if p1 == 0 {
+                    (r2, r1, occ1)
+                } else {
+                    (r1, r2, occ2)
+                };
                 if !is_occupied(has_pts_idx) {
                     reduced[has_pts_idx] = 0;
                 }

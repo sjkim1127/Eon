@@ -1,17 +1,17 @@
-use serde::{Deserialize, Serialize};
+use crate::chart::VedicChart;
 use crate::planets::VedicPlanet;
-use crate::chart::{VedicChart, VedicPosition};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum JaiminiKarakaRole {
-    Atmakaraka,      // AK - Soul
-    Amatyakaraka,    // AmK - Career/Minister
-    Bhratrukaraka,   // BK - Siblings
-    Matrukaraka,     // MK - Mother
-    Pitrikaraka,     // PiK - Father (Used in 8-Karaka)
-    Putrakaraka,     // PK - Children
-    Gnatikaraka,     // GK - Rivals/Cousins
-    Darakaraka,      // DK - Spouse
+    Atmakaraka,    // AK - Soul
+    Amatyakaraka,  // AmK - Career/Minister
+    Bhratrukaraka, // BK - Siblings
+    Matrukaraka,   // MK - Mother
+    Pitrikaraka,   // PiK - Father (Used in 8-Karaka)
+    Putrakaraka,   // PK - Children
+    Gnatikaraka,   // GK - Rivals/Cousins
+    Darakaraka,    // DK - Spouse
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,16 +26,19 @@ pub struct JaiminiEngine;
 impl JaiminiEngine {
     /// Calculate 7 or 8 Chara Karakas
     pub fn calculate_karakas(chart: &VedicChart, use_8_karakas: bool) -> Vec<KarakaAssignment> {
-        let mut planets_data: Vec<(VedicPlanet, f64)> = chart.planets.iter()
+        let mut planets_data: Vec<(VedicPlanet, f64)> = chart
+            .planets
+            .iter()
             .filter(|p| {
-                let is_base = matches!(p.planet, 
-                    VedicPlanet::Sun | 
-                    VedicPlanet::Moon | 
-                    VedicPlanet::Mars | 
-                    VedicPlanet::Mercury | 
-                    VedicPlanet::Jupiter | 
-                    VedicPlanet::Venus | 
-                    VedicPlanet::Saturn
+                let is_base = matches!(
+                    p.planet,
+                    VedicPlanet::Sun
+                        | VedicPlanet::Moon
+                        | VedicPlanet::Mars
+                        | VedicPlanet::Mercury
+                        | VedicPlanet::Jupiter
+                        | VedicPlanet::Venus
+                        | VedicPlanet::Saturn
                 );
                 if use_8_karakas {
                     is_base || p.planet == VedicPlanet::Rahu
@@ -54,9 +57,7 @@ impl JaiminiEngine {
             .collect();
 
         // Sort by degree within the Rasi (descending: AK first)
-        planets_data.sort_by(|a, b| {
-            b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal)
-        });
+        planets_data.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         let mut roles = vec![
             JaiminiKarakaRole::Atmakaraka,

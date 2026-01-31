@@ -1,19 +1,20 @@
-use serde::{Deserialize, Serialize};
+use crate::analysis::nature::{FunctionalNature, FunctionalStatus};
 use crate::chart::VedicChart;
 use crate::planets::VedicPlanet;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum YogaType {
-    RajaYoga, // Generic Raja Yoga
-    GajaKesari, // Jupiter + Moon
-    Sunapha, // Planet in 2nd from Moon
-    Anapha, // Planet in 12th from Moon
-    DhanaYoga, // Wealth Yoga
-    Budhaditya, // Sun + Mercury
+    RajaYoga,            // Generic Raja Yoga
+    GajaKesari,          // Jupiter + Moon
+    Sunapha,             // Planet in 2nd from Moon
+    Anapha,              // Planet in 12th from Moon
+    DhanaYoga,           // Wealth Yoga
+    Budhaditya,          // Sun + Mercury
     DharmaKarmaAdhipati, // 9th + 10th Lord
-    PanchaMahapurusha, // Special position for Mars, Mercury, Jupiter, Venus, or Saturn
-    NeechaBhanga, // Cancellation of debilitation
-    Parivartana, // Exchange of house lords
+    PanchaMahapurusha,   // Special position for Mars, Mercury, Jupiter, Venus, or Saturn
+    NeechaBhanga,        // Cancellation of debilitation
+    Parivartana,         // Exchange of house lords
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,7 +23,15 @@ pub struct YogaResult {
     pub yoga_type: YogaType,
     pub description: String,
     pub planets_involved: Vec<VedicPlanet>,
-    pub quality: String, // "High", "Medium", "Weak" (based on combustion/dignity)
+    pub quality: YogaQuality, // Enum based quality
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum YogaQuality {
+    VeryHigh,
+    High,
+    Medium,
+    Weak(String), // Reason for weakness
 }
 
 pub struct YogaEngine;
@@ -33,44 +42,64 @@ impl YogaEngine {
 
         Self::check_raja_yogas(chart, &mut results);
 
+        // Pre-compute planet map for O(1) lookup
+        use std::collections::HashMap;
+        let planet_map: HashMap<VedicPlanet, &crate::chart::VedicPosition> =
+            chart.planets.iter().map(|p| (p.planet, p)).collect();
+
         // Helper: Get planet position
         let get_planet = |p: VedicPlanet| -> Option<&crate::chart::VedicPosition> {
-            chart.planets.iter().find(|pos| pos.planet == p)
+            planet_map.get(&p).copied()
         };
 
         // --- 1. Basic Yogas (Gajakesari, etc.) ---
-        if let (Some(moon), Some(jupiter)) = (get_planet(VedicPlanet::Moon), get_planet(VedicPlanet::Jupiter)) {
+        if let (Some(moon), Some(jupiter)) = (
+            get_planet(VedicPlanet::Moon),
+            get_planet(VedicPlanet::Jupiter),
+        ) {
             // Gajakesari: Jupiter in Kendra (1, 4, 7, 10) from Moon
             let diff = jupiter.rasi as i32 - moon.rasi as i32;
             let dist = if diff >= 0 { diff + 1 } else { diff + 13 };
-            
+
             if [1, 4, 7, 10].contains(&dist) {
-                let quality = if moon.is_combust || jupiter.is_combust { 
-                     "Weak (Combustion)".to_string() 
-                } else { "High".to_string() };
+                let quality = if moon.is_combust || jupiter.is_combust {
+                    YogaQuality::Weak("Combustion".to_string())
+                } else {
+                    YogaQuality::High
+                };
 
                 results.push(YogaResult {
                     name: "Gaja Kesari Yoga".to_string(),
                     yoga_type: YogaType::GajaKesari,
-                    description: "Jupiter in Kendra from Moon. Wisdom, virtue, reputation.".to_string(),
+                    description: "Jupiter in Kendra from Moon. Wisdom, virtue, reputation."
+                        .to_string(),
                     planets_involved: vec![VedicPlanet::Moon, VedicPlanet::Jupiter],
                     quality,
                 });
             }
         }
-        
-        if let (Some(sun), Some(mercury)) = (get_planet(VedicPlanet::Sun), get_planet(VedicPlanet::Mercury)) {
-             // In same sign
-             if sun.rasi == mercury.rasi {
-                 let quality = if mercury.is_combust { "Medium (Typical)".to_string() } else { "High (Rare)".to_string() };
-                 results.push(YogaResult {
+
+        if let (Some(sun), Some(mercury)) = (
+            get_planet(VedicPlanet::Sun),
+            get_planet(VedicPlanet::Mercury),
+        ) {
+            // In same sign
+            if sun.rasi == mercury.rasi {
+                let quality = if mercury.is_combust {
+                    YogaQuality::Medium
+                } else {
+                    YogaQuality::High
+                };
+                results.push(YogaResult {
                     name: "Budhaditya Yoga".to_string(),
                     yoga_type: YogaType::Budhaditya,
-                    description: "Sun and Mercury conjunction. Intelligence and communication skills.".to_string(),
+                    description:
+                        "Sun and Mercury conjunction. Intelligence and communication skills."
+                            .to_string(),
                     planets_involved: vec![VedicPlanet::Sun, VedicPlanet::Mercury],
                     quality,
                 });
-             }
+            }
         }
 
         // --- 2. Advanced Lordship Yogas ---
@@ -89,18 +118,22 @@ impl YogaEngine {
 
         let lord_9 = get_lord_of_house(9);
         let lord_10 = get_lord_of_house(10);
-        
+
         // Check Dharma-Karma Adhipati (Conjunction of 9th and 10th Lords)
         if let (Some(p9), Some(p10)) = (get_planet(lord_9), get_planet(lord_10)) {
             if p9.rasi == p10.rasi {
-                 let quality = if p9.is_combust || p10.is_combust { "Weak".to_string() } else { "High".to_string() };
-                 results.push(YogaResult {
-                    name: "Dharma-Karma Adhipati Yoga".to_string(),
-                    yoga_type: YogaType::DharmaKarmaAdhipati,
-                    description: "Conjunction of 9th and 10th Lords. Great success in career and life purpose.".to_string(),
-                    planets_involved: vec![lord_9, lord_10],
-                    quality,
-                });
+                let quality = if p9.is_combust || p10.is_combust {
+                    YogaQuality::Weak("Combustion".to_string())
+                } else {
+                    YogaQuality::High
+                };
+                results.push(YogaResult {
+                            name: "Dharma-Karma Adhipati Yoga".to_string(),
+                            yoga_type: YogaType::DharmaKarmaAdhipati,
+                            description: "Conjunction of 9th and 10th Lords. Great success in career and life purpose.".to_string(),
+                            planets_involved: vec![lord_9, lord_10],
+                            quality,
+                        });
             }
         }
 
@@ -108,80 +141,88 @@ impl YogaEngine {
         // Simpler check: Lord of 2 in 11, or Lord of 11 in 2.
         let lord_2 = get_lord_of_house(2);
         let lord_11 = get_lord_of_house(11);
-        
+
         if let Some(p2) = get_planet(lord_2) {
             if p2.house_index == 11 {
-                 results.push(YogaResult {
+                results.push(YogaResult {
                     name: "Dhana Yoga (2 in 11)".to_string(),
                     yoga_type: YogaType::DhanaYoga,
                     description: "2nd Lord in 11th House. Great wealth potential.".to_string(),
                     planets_involved: vec![lord_2],
-                    quality: "High".to_string(),
+                    quality: YogaQuality::High,
                 });
             }
         }
         if let Some(p11) = get_planet(lord_11) {
             if p11.house_index == 2 {
-                 results.push(YogaResult {
+                results.push(YogaResult {
                     name: "Dhana Yoga (11 in 2)".to_string(),
                     yoga_type: YogaType::DhanaYoga,
                     description: "11th Lord in 2nd House. Financial gains.".to_string(),
                     planets_involved: vec![lord_11],
-                    quality: "High".to_string(),
+                    quality: YogaQuality::High,
                 });
             }
         }
 
-
         // Sunapha / Anapha (Planets in 2nd / 12th from Moon, excluding Sun, Rahu, Ketu)
         if let Some(moon) = get_planet(VedicPlanet::Moon) {
-             let moon_rasi = moon.rasi;
-             
-             // 2nd from Moon
-             let next_rasi = if moon_rasi == 12 { 1 } else { moon_rasi + 1 };
-             let has_sunapha = chart.planets.iter().any(|p| 
-                 p.rasi == next_rasi && 
-                 p.planet != VedicPlanet::Sun && 
-                 p.planet != VedicPlanet::Rahu && 
-                 p.planet != VedicPlanet::Ketu
-             );
-             
-             if has_sunapha {
-                 results.push(YogaResult {
+            let moon_rasi = moon.rasi;
+
+            // 2nd from Moon
+            let next_rasi = if moon_rasi == 12 { 1 } else { moon_rasi + 1 };
+            let has_sunapha = chart.planets.iter().any(|p| {
+                p.rasi == next_rasi
+                    && p.planet != VedicPlanet::Sun
+                    && p.planet != VedicPlanet::Rahu
+                    && p.planet != VedicPlanet::Ketu
+            });
+
+            if has_sunapha {
+                results.push(YogaResult {
                     name: "Sunapha Yoga".to_string(),
                     yoga_type: YogaType::Sunapha,
                     description: "Planets in 2nd from Moon. Wealth and intelligence.".to_string(),
                     planets_involved: vec![VedicPlanet::Moon], // Simplified list
-                    quality: "Medium".to_string(),
+                    quality: YogaQuality::Medium,
                 });
-             }
-             
-             // 12th from Moon
-             let prev_rasi = if moon_rasi == 1 { 12 } else { moon_rasi - 1 };
-             let has_anapha = chart.planets.iter().any(|p| 
-                 p.rasi == prev_rasi && 
-                 p.planet != VedicPlanet::Sun && 
-                 p.planet != VedicPlanet::Rahu && 
-                 p.planet != VedicPlanet::Ketu
-             );
-             
-             if has_anapha {
-                 results.push(YogaResult {
+            }
+
+            // 12th from Moon
+            let prev_rasi = if moon_rasi == 1 { 12 } else { moon_rasi - 1 };
+            let has_anapha = chart.planets.iter().any(|p| {
+                p.rasi == prev_rasi
+                    && p.planet != VedicPlanet::Sun
+                    && p.planet != VedicPlanet::Rahu
+                    && p.planet != VedicPlanet::Ketu
+            });
+
+            if has_anapha {
+                results.push(YogaResult {
                     name: "Anapha Yoga".to_string(),
                     yoga_type: YogaType::Anapha,
-                    description: "Planets in 12th from Moon. Good health and character.".to_string(),
+                    description: "Planets in 12th from Moon. Good health and character."
+                        .to_string(),
                     planets_involved: vec![VedicPlanet::Moon],
-                    quality: "Medium".to_string(),
+                    quality: YogaQuality::Medium,
                 });
-             }
+            }
         }
 
         // --- 3. Pancha Mahapurusha Yogas ---
         let mahapurusha_planets = [
             (VedicPlanet::Mars, "Ruchaka", "Courage and strength."),
-            (VedicPlanet::Mercury, "Bhadra", "Intelligence and longevity."),
+            (
+                VedicPlanet::Mercury,
+                "Bhadra",
+                "Intelligence and longevity.",
+            ),
             (VedicPlanet::Jupiter, "Hamsa", "Wisdom and purity."),
-            (VedicPlanet::Venus, "Malavya", "Sensual pleasures and prosperity."),
+            (
+                VedicPlanet::Venus,
+                "Malavya",
+                "Sensual pleasures and prosperity.",
+            ),
             (VedicPlanet::Saturn, "Sasa", "Authority and persistence."),
         ];
 
@@ -192,14 +233,14 @@ impl YogaEngine {
                     let rasi = pos.rasi;
                     let is_own = VedicPlanet::get_ruler_of(rasi) == p_type;
                     let is_exalted = p_type.exaltation_rasi() == rasi;
-                    
+
                     if is_own || is_exalted {
                         results.push(YogaResult {
                             name: format!("{} Yoga", name),
                             yoga_type: YogaType::PanchaMahapurusha,
                             description: format!("{} - {}", name, desc),
                             planets_involved: vec![p_type],
-                            quality: "Very High".to_string(),
+                            quality: YogaQuality::VeryHigh,
                         });
                     }
                 }
@@ -218,9 +259,12 @@ impl YogaEngine {
                         results.push(YogaResult {
                             name: "Neecha Bhanga Raja Yoga".to_string(),
                             yoga_type: YogaType::NeechaBhanga,
-                            description: format!("Debilitation of {:?} cancelled by dispositor {:?} in Kendra.", p_type, dispositor),
+                            description: format!(
+                                "Debilitation of {:?} cancelled by dispositor {:?} in Kendra.",
+                                p_type, dispositor
+                            ),
                             planets_involved: vec![p_type, dispositor],
-                            quality: "High (Cancellation)".to_string(),
+                            quality: YogaQuality::High,
                         });
                     }
                 }
@@ -237,13 +281,17 @@ impl YogaEngine {
                     if let Some(p2_pos) = get_planet(lord2) {
                         if p2_pos.house_index == h1 {
                             // Lord 1 is in House 2, and Lord 2 is in House 1
-                            if h1 < h1_occupies { // Avoid duplicate pairs
+                            if h1 < h1_occupies {
+                                // Avoid duplicate pairs
                                 results.push(YogaResult {
                                     name: "Parivartana Yoga".to_string(),
                                     yoga_type: YogaType::Parivartana,
-                                    description: format!("Exchange of lords between house {} and {}.", h1, h1_occupies),
+                                    description: format!(
+                                        "Exchange of lords between house {} and {}.",
+                                        h1, h1_occupies
+                                    ),
                                     planets_involved: vec![lord1, lord2],
-                                    quality: "High".to_string(),
+                                    quality: YogaQuality::High,
                                 });
                             }
                         }
@@ -269,12 +317,14 @@ impl YogaEngine {
             for &t_house in &trikona_houses {
                 let k_lord = get_lord_of_house(k_house);
                 let t_lord = get_lord_of_house(t_house);
-                
-                if k_lord == t_lord { continue; }
+
+                if k_lord == t_lord {
+                    continue;
+                }
 
                 if let (Some(pk), Some(pt)) = (
                     chart.planets.iter().find(|p| p.planet == k_lord),
-                    chart.planets.iter().find(|p| p.planet == t_lord)
+                    chart.planets.iter().find(|p| p.planet == t_lord),
                 ) {
                     let is_conjunction = pk.rasi == pt.rasi;
                     let diff = (pk.rasi as i16 - pt.rasi as i16).abs();
@@ -283,12 +333,30 @@ impl YogaEngine {
                     if is_conjunction || is_mutual_aspect {
                         let name = format!("Raja Yoga (L{} & L{})", k_house, t_house);
                         if !results.iter().any(|r| r.name == name) {
-                             results.push(YogaResult {
+                            // Check Functional Nature for Quality
+                            let nature_k = FunctionalNature::analyze(lagna_rasi, k_lord);
+                            let nature_t = FunctionalNature::analyze(lagna_rasi, t_lord);
+
+                            let quality = if nature_k == FunctionalStatus::Yogakaraka
+                                || nature_t == FunctionalStatus::Yogakaraka
+                            {
+                                YogaQuality::VeryHigh
+                            } else if nature_k == FunctionalStatus::FunctionalBenefic
+                                && nature_t == FunctionalStatus::FunctionalBenefic
+                            {
+                                YogaQuality::High
+                            } else if pk.is_combust || pt.is_combust {
+                                YogaQuality::Weak("Combusted Planet Involved".to_string())
+                            } else {
+                                YogaQuality::Medium
+                            };
+
+                            results.push(YogaResult {
                                 name,
                                 yoga_type: YogaType::RajaYoga,
                                 description: format!("Power generating combination of Kendra Lord ({}) and Trikona Lord ({}).", k_house, t_house),
                                 planets_involved: vec![k_lord, t_lord],
-                                quality: "High".to_string(),
+                                quality,
                             });
                         }
                     }

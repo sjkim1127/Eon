@@ -1,7 +1,6 @@
-use crate::planets::VedicPlanet;
 use crate::chart::VedicChart;
+use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AspectRelation {
@@ -19,7 +18,7 @@ impl AspectEngine {
         for pos in &chart.planets {
             let house = pos.house_index;
             let aspects = Self::get_planet_aspects(pos.planet, house);
-            
+
             relations.push(AspectRelation {
                 aspecting_planet: pos.planet,
                 aspected_houses: aspects,
@@ -64,7 +63,11 @@ impl AspectEngine {
     fn get_target_house(start: u8, count: u8) -> u8 {
         // start is 1-12. count is distance (1=self, 7=opposite)
         let target = start as i32 + count as i32 - 1;
-        let mut r = target % 12;
-        if r == 0 { 12 } else { r as u8 }
+        let r = target % 12;
+        if r == 0 {
+            12
+        } else {
+            r as u8
+        }
     }
 }

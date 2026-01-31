@@ -223,7 +223,7 @@ impl VedicChartCalculator {
             .engine
             .get_planet_full(time, VedicPlanet::Sun.se_id(), 256 | 2)
             .unwrap_or((0.0, 0.0));
-        let (_, sun_dec) = self
+        let (_, _sun_dec) = self
             .engine
             .get_planet_equatorial(time, VedicPlanet::Sun.se_id())
             .unwrap_or((0.0, 0.0));
