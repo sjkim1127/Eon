@@ -28,7 +28,7 @@ fn main() {
     let mut moon_long = 0.0;
     
     for pos in &chart.planets {
-        let nature = FunctionalNature::analyze(lagna_rasi, pos.planet);
+        let nature = FunctionalNature::analyze(&chart, pos.planet);
         let nature_str = match nature {
             FunctionalStatus::Yogakaraka => "Yogakaraka",
             FunctionalStatus::FunctionalBenefic => "Benefic",
@@ -117,7 +117,7 @@ fn main() {
     let dashas = Vimshottari::calculate(moon_long, birth_time, 1, eon_vedic::config::VedicYearType::Gregorian);
     
     for d in dashas.iter().take(5) {
-         let nature = FunctionalNature::analyze(lagna_rasi, d.planet);
+         let nature = FunctionalNature::analyze(&chart, d.planet);
          let nature_icon = match nature {
             FunctionalStatus::Yogakaraka => "🌟",
             FunctionalStatus::FunctionalBenefic => "🟢",

@@ -427,6 +427,7 @@ impl YogaEngine {
         VedicPlanet::get_ruler_of(rasi_idx)
     }
 
+    // Updated assess_quality to pass 'chart' to FunctionalNature::analyze
     fn assess_quality(chart: &VedicChart, planets: &[VedicPlanet]) -> YogaQuality {
         let mut score = 0;
         let mut reasons = Vec::new();
@@ -439,7 +440,8 @@ impl YogaEngine {
                     reasons.push(format!("{:?} is Combust", pl));
                 }
 
-                match FunctionalNature::analyze(chart.ascendant.rasi, pl) {
+                // CHANGED: Passing 'chart' instead of just 'rasi'
+                match FunctionalNature::analyze(chart, pl) {
                     FunctionalStatus::Yogakaraka => {
                         score += 3; // Powerful boost
                     }
