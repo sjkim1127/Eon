@@ -13,6 +13,7 @@ pub struct Panchanga {
     pub karana_name: String,
 
     // New Fields for Kala Bala
+    pub current_time: DateTime<Utc>,
     pub sunrise: DateTime<Utc>,
     pub sunset: DateTime<Utc>,
     pub next_sunrise: DateTime<Utc>,
@@ -20,6 +21,7 @@ pub struct Panchanga {
     pub day_lord: VedicPlanet,
     pub hour_lord: VedicPlanet,
     pub daily_parts: [VedicPlanet; 8], // Tribhaga lords (Day: 3, Night: 3, Total usually handled as 8 yamas or parts)
+    pub is_night_birth: bool,
 }
 
 pub struct PanchangaEngine;
@@ -43,6 +45,7 @@ impl PanchangaEngine {
         // 2. Vara (Weekday) - Vedic Day starts at Sunrise
         // If born before sunrise, it belongs to previous day
         let is_day_birth = time >= sunrise && time < sunset;
+        let is_night_birth = !is_day_birth;
         let effective_date = if time < sunrise {
             time - chrono::Duration::days(1)
         } else {
@@ -89,10 +92,12 @@ impl PanchangaEngine {
             yoga,
             karana: (karana_idx % 11) as u8 + 1, // Simplified type
             karana_name,
+            current_time: time,
             sunrise,
             sunset,
             next_sunrise,
             is_day_birth,
+            is_night_birth,
             day_lord,
             hour_lord,
             daily_parts,

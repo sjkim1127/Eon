@@ -274,27 +274,58 @@ impl StrengthEngine {
         let p = &chart.panchanga;
 
         // 1. Nathonnata Bala (Diva-Ratri)
-        // Day Signs: Sun, Jup, Ven (+ Merc sometimes considered day strong?)
-        // Night: Moon, Mars, Sat
-        // Merc: Always strong (60)
+        // Precise calculation based on distance from Noon/Midnight.
+        // Sun, Jup, Ven -> Strong at Noon (Day).
+        // Moon, Mars, Sat -> Strong at Midnight (Night).
+        // Mercury -> Always 60.
         let div_ratri = if planet == VedicPlanet::Mercury {
             60.0
         } else {
+            let total_sec = if p.is_day_birth {
+                p.sunset.signed_duration_since(p.sunrise).num_seconds() as f64
+            } else {
+                p.next_sunrise.signed_duration_since(p.sunset).num_seconds() as f64
+            };
+
+            let elapsed_sec = if p.is_day_birth {
+                p.current_time
+                    .signed_duration_since(p.sunrise)
+                    .num_seconds() as f64
+            } else {
+                p.current_time.signed_duration_since(p.sunset).num_seconds() as f64
+            };
+
+            // Normalized 0.0 (Start) to 1.0 (End)
+            let ratio = (elapsed_sec / total_sec).max(0.0).min(1.0);
+
+            // Noon is at 0.5 of Day, Midnight is at 0.5 of Night
+            // Distance from center (0.0 at center, 0.5 at edges)
+            let dist = (ratio - 0.5).abs();
+
+            // Peak Strength (60) at Center (dist=0), 0 at Edges (dist=0.5)
+            // Score = 60 * (1 - (dist / 0.5)) -> 60 * (1 - 2*dist)
+            let center_strength = 60.0 * (1.0 - 2.0 * dist);
+
             let is_day_strong = matches!(
                 planet,
                 VedicPlanet::Sun | VedicPlanet::Jupiter | VedicPlanet::Venus
             );
-            let is_night_strong = matches!(
-                planet,
-                VedicPlanet::Moon | VedicPlanet::Mars | VedicPlanet::Saturn
-            );
 
-            if p.is_day_birth && is_day_strong {
-                60.0
-            } else if !p.is_day_birth && is_night_strong {
-                60.0
+            // If Day Birth: Center is Noon. Day Strong planets get `center_strength`. Night Strong get `60 - center_strength`.
+            // If Night Birth: Center is Midnight. Night Strong planets get `center_strength`. Day Strong get `60 - center_strength`.
+
+            if p.is_day_birth {
+                if is_day_strong {
+                    center_strength
+                } else {
+                    60.0 - center_strength
+                }
             } else {
-                0.0
+                if !is_day_strong {
+                    center_strength
+                } else {
+                    60.0 - center_strength
+                }
             }
         };
         score += div_ratri;
@@ -310,16 +341,42 @@ impl StrengthEngine {
         }
 
         // 4. Tribhaga Bala (Day/Night 3 Parts) -> 60
-        // Currently p.daily_parts is placeholder, so we approximate with simple logic if needed,
-        // OR rely on what's there.
-        // If p.daily_parts contains correct lord, we check.
-        // Since we didn't implement robust Tribhaga in panchanga yet (placeholder), let's implement local logic or skip?
-        // Let's implementation basic Tribhaga calculation locally since we have time/sunrise/sunset.
-        // Actually, just check if daily_parts has it (if I updated panchanga logic, but I left it as placeholder).
-        // Let's leave Tribhaga as 0 for now or duplicate Day Lord if placeholder.
-        if planet == p.day_lord {
-            // Placeholder: Give Tribhaga to Day Lord for now (Simplified)
-            // score += 60.0;
+        // Jupiter gets 60 always.
+        if planet == VedicPlanet::Jupiter {
+            score += 60.0;
+        }
+
+        let tribhaga_lord = if p.is_day_birth {
+            let duration = p.sunset.signed_duration_since(p.sunrise).num_seconds();
+            let elapsed = p
+                .current_time
+                .signed_duration_since(p.sunrise)
+                .num_seconds();
+            let part_dur = duration / 3;
+            let part = (elapsed / part_dur).min(2) as usize; // 0, 1, 2
+
+            // Day Lords: Mercury, Sun, Saturn
+            match part {
+                0 => VedicPlanet::Mercury,
+                1 => VedicPlanet::Sun,
+                _ => VedicPlanet::Saturn,
+            }
+        } else {
+            let duration = p.next_sunrise.signed_duration_since(p.sunset).num_seconds();
+            let elapsed = p.current_time.signed_duration_since(p.sunset).num_seconds();
+            let part_dur = duration / 3;
+            let part = (elapsed / part_dur).min(2) as usize; // 0, 1, 2
+
+            // Night Lords: Moon, Venus, Mars
+            match part {
+                0 => VedicPlanet::Moon,
+                1 => VedicPlanet::Venus,
+                _ => VedicPlanet::Mars,
+            }
+        };
+
+        if planet == tribhaga_lord {
+            score += 60.0;
         }
 
         // 5. Paksha Bala (Calculated Separately)
