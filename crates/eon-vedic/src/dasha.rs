@@ -1,7 +1,8 @@
-use serde::{Deserialize, Serialize};
-use chrono::{DateTime, Utc, Duration};
-use crate::planets::VedicPlanet;
 use crate::config::VedicYearType;
+use crate::constants::*;
+use crate::planets::VedicPlanet;
+use chrono::{DateTime, Duration, Utc};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DashaPeriod {
@@ -9,7 +10,7 @@ pub struct DashaPeriod {
     pub start_date: DateTime<Utc>,
     pub end_date: DateTime<Utc>,
     pub duration_years: f64,
-    pub level: u8, // 1=Mahadasha, 2=Antardasha
+    pub level: u8,            // 1=Mahadasha, 2=Antardasha
     pub name: Option<String>, // For Yogini Dasha names
     pub sub_periods: Vec<DashaPeriod>,
 }
@@ -20,18 +21,18 @@ impl Vimshottari {
     // Planetary periods in years (Sun to Venus sequence as per Vimshottari)
     // Sequence: Ketu, Venus, Sun, Moon, Mars, Rahu, Jupiter, Saturn, Mercury
     // Years:    7,    20,    6,   10,   7,    18,   16,      19,     17
-    
+
     fn get_dasha_sequence() -> [(VedicPlanet, f64); 9] {
         [
-            (VedicPlanet::Ketu, 7.0),
-            (VedicPlanet::Venus, 20.0),
-            (VedicPlanet::Sun, 6.0),
-            (VedicPlanet::Moon, 10.0),
-            (VedicPlanet::Mars, 7.0),
-            (VedicPlanet::Rahu, 18.0),
-            (VedicPlanet::Jupiter, 16.0),
-            (VedicPlanet::Saturn, 19.0),
-            (VedicPlanet::Mercury, 17.0),
+            (VedicPlanet::Ketu, DASHA_YEARS_KETU),
+            (VedicPlanet::Venus, DASHA_YEARS_VENUS),
+            (VedicPlanet::Sun, DASHA_YEARS_SUN),
+            (VedicPlanet::Moon, DASHA_YEARS_MOON),
+            (VedicPlanet::Mars, DASHA_YEARS_MARS),
+            (VedicPlanet::Rahu, DASHA_YEARS_RAHU),
+            (VedicPlanet::Jupiter, DASHA_YEARS_JUPITER),
+            (VedicPlanet::Saturn, DASHA_YEARS_SATURN),
+            (VedicPlanet::Mercury, DASHA_YEARS_MERCURY),
         ]
     }
 
@@ -46,29 +47,33 @@ impl Vimshottari {
         moon_longitude: f64,
         birth_date: DateTime<Utc>,
         max_level: u8,
-        year_type: VedicYearType
+        year_type: VedicYearType,
     ) -> Vec<DashaPeriod> {
         let nak_len = 360.0 / 27.0;
         let nak_pos_val = moon_longitude / nak_len;
         let nak_idx = nak_pos_val.floor() as usize; // 0..26
         let nakshatra = (nak_idx + 1) as u8;
-        
+
         let progression = nak_pos_val - nak_idx as f64;
         let remaining_fraction = 1.0 - progression;
-        
+
         let sequence = Self::get_dasha_sequence();
         let start_ruler_idx = Self::get_ruler_index(nakshatra);
-        
+
         let mut dashas = Vec::new();
         let mut current_date = birth_date;
-        
+
         // 1. First Mahadasha (Balance)
         let (first_planet, full_duration) = sequence[start_ruler_idx];
         let balance_years = full_duration * remaining_fraction;
         let first_end_date = Self::add_years(current_date, balance_years, year_type);
-        
+
         // Theoretical start of this Mahadasha
-        let theoretical_start = Self::add_years(current_date, -(full_duration * (1.0 - remaining_fraction)), year_type);
+        let theoretical_start = Self::add_years(
+            current_date,
+            -(full_duration * (1.0 - remaining_fraction)),
+            year_type,
+        );
 
         dashas.push(DashaPeriod {
             planet: first_planet,
@@ -78,22 +83,30 @@ impl Vimshottari {
             level: 1,
             name: None,
             sub_periods: if max_level > 1 {
-                Self::calculate_sub_periods(first_planet, theoretical_start, full_duration, 2, max_level, Some(birth_date), year_type)
+                Self::calculate_sub_periods(
+                    first_planet,
+                    theoretical_start,
+                    full_duration,
+                    2,
+                    max_level,
+                    Some(birth_date),
+                    year_type,
+                )
             } else {
                 Vec::new()
             },
         });
-        
+
         current_date = first_end_date;
-        
+
         // 2. Subsequent Mahadashas (for ~120 years)
         let mut years_covered = balance_years;
         let mut idx = (start_ruler_idx + 1) % 9;
-        
+
         while years_covered < 120.0 {
             let (planet, duration) = sequence[idx];
             let end_date = Self::add_years(current_date, duration, year_type);
-            
+
             dashas.push(DashaPeriod {
                 planet,
                 start_date: current_date,
@@ -102,35 +115,43 @@ impl Vimshottari {
                 level: 1,
                 name: None,
                 sub_periods: if max_level > 1 {
-                    Self::calculate_sub_periods(planet, current_date, duration, 2, max_level, None, year_type)
+                    Self::calculate_sub_periods(
+                        planet,
+                        current_date,
+                        duration,
+                        2,
+                        max_level,
+                        None,
+                        year_type,
+                    )
                 } else {
                     Vec::new()
                 },
             });
-            
+
             current_date = end_date;
             years_covered += duration;
             idx = (idx + 1) % 9;
         }
-        
+
         dashas
     }
-    
+
     fn calculate_sub_periods(
-        lord: VedicPlanet, 
-        theoretical_start: DateTime<Utc>, 
+        lord: VedicPlanet,
+        theoretical_start: DateTime<Utc>,
         parent_duration: f64,
         level: u8,
         max_level: u8,
         clip_start: Option<DateTime<Utc>>,
-        year_type: VedicYearType
+        year_type: VedicYearType,
     ) -> Vec<DashaPeriod> {
         let sequence = Self::get_dasha_sequence();
         let start_idx = sequence.iter().position(|(p, _)| *p == lord).unwrap();
-        
+
         let mut periods = Vec::new();
         let mut current_start = theoretical_start;
-        
+
         for i in 0..9 {
             let idx = (start_idx + i) % 9;
             let (sub_planet, sub_base_years) = sequence[idx];
@@ -144,18 +165,26 @@ impl Vimshottari {
                     current_start = current_end;
                     continue; // Already passed
                 }
-                if current_start < clip { clip } else { current_start }
+                if current_start < clip {
+                    clip
+                } else {
+                    current_start
+                }
             } else {
                 current_start
             };
 
             let actual_duration = if actual_start > current_start {
                 let days_per_year = match year_type {
-                    VedicYearType::Savana => 360.0,
-                    VedicYearType::Sidereal => 365.256363,
-                    VedicYearType::Gregorian => 365.2425,
+                    VedicYearType::Savana => SAVANA_YEAR_DAYS,
+                    VedicYearType::Sidereal => SIDEREAL_YEAR_DAYS,
+                    VedicYearType::Gregorian => GREGORIAN_YEAR_DAYS,
                 };
-                sub_duration - (actual_start.signed_duration_since(current_start).num_seconds() as f64 / (days_per_year * 86400.0))
+                sub_duration
+                    - (actual_start
+                        .signed_duration_since(current_start)
+                        .num_seconds() as f64
+                        / (days_per_year * 86400.0))
             } else {
                 sub_duration
             };
@@ -168,7 +197,15 @@ impl Vimshottari {
                 level,
                 name: None,
                 sub_periods: if level < max_level {
-                    Self::calculate_sub_periods(sub_planet, current_start, sub_duration, level + 1, max_level, clip_start, year_type)
+                    Self::calculate_sub_periods(
+                        sub_planet,
+                        current_start,
+                        sub_duration,
+                        level + 1,
+                        max_level,
+                        clip_start,
+                        year_type,
+                    )
                 } else {
                     Vec::new()
                 },
@@ -182,11 +219,11 @@ impl Vimshottari {
 
     fn add_years(date: DateTime<Utc>, years: f64, year_type: VedicYearType) -> DateTime<Utc> {
         let days_per_year = match year_type {
-            VedicYearType::Savana => 360.0,
-            VedicYearType::Sidereal => 365.256363,
-            VedicYearType::Gregorian => 365.2425,
+            VedicYearType::Savana => SAVANA_YEAR_DAYS,
+            VedicYearType::Sidereal => SIDEREAL_YEAR_DAYS,
+            VedicYearType::Gregorian => GREGORIAN_YEAR_DAYS,
         };
-        let seconds = (years * days_per_year * 86400.0) as i64;
+        let seconds = (years * days_per_year * SECONDS_PER_DAY) as i64;
         date + Duration::seconds(seconds)
     }
 }
@@ -208,45 +245,56 @@ impl Yogini {
         ]
     }
 
-    pub fn calculate(moon_longitude: f64, birth_date: DateTime<Utc>, max_level: u8, year_type: VedicYearType) -> Vec<DashaPeriod> {
+    pub fn calculate(
+        moon_longitude: f64,
+        birth_date: DateTime<Utc>,
+        max_level: u8,
+        year_type: VedicYearType,
+    ) -> Vec<DashaPeriod> {
         let nak_len = 360.0 / 27.0;
         let nak_pos_val = moon_longitude / nak_len;
         let nak_idx = nak_pos_val.floor() as usize; // 0..26
         let nakshatra = (nak_idx + 1) as u8;
-        
+
         let progression = nak_pos_val - nak_idx as f64;
         let remaining_fraction = 1.0 - progression;
-        
+
         // Starting Yogini: (Nakshatra + 3) / 8. Remainder 1=Mangala, ..., 0=Sankata.
         let mut start_idx = ((nakshatra + 3) % 8) as usize;
-        if start_idx == 0 { start_idx = 8; }
+        if start_idx == 0 {
+            start_idx = 8;
+        }
         start_idx -= 1; // 0-indexed
-        
+
         let sequence = Self::get_sequence();
         let mut dashas = Vec::new();
         let mut current_date = birth_date;
-        
+
         let mut years_covered = 0.0;
         let mut idx = start_idx;
 
         // Calculate for at least 100 years or 3 cycles
         while years_covered < 100.0 {
             let (planet, full_duration, name) = sequence[idx];
-            
+
             let duration = if years_covered == 0.0 {
-                 full_duration * remaining_fraction
+                full_duration * remaining_fraction
             } else {
-                 full_duration
+                full_duration
             };
 
             let theoretical_start = if years_covered == 0.0 {
-                Vimshottari::add_years(current_date, -(full_duration * (1.0 - remaining_fraction)), year_type)
+                Vimshottari::add_years(
+                    current_date,
+                    -(full_duration * (1.0 - remaining_fraction)),
+                    year_type,
+                )
             } else {
                 current_date
             };
 
             let end_date = Vimshottari::add_years(current_date, duration, year_type);
-            
+
             dashas.push(DashaPeriod {
                 planet,
                 start_date: current_date,
@@ -255,7 +303,19 @@ impl Yogini {
                 level: 1,
                 name: Some(name.to_string()),
                 sub_periods: if max_level > 1 {
-                    Self::calculate_sub_periods(idx, theoretical_start, full_duration, 2, max_level, if years_covered == 0.0 { Some(birth_date) } else { None }, year_type)
+                    Self::calculate_sub_periods(
+                        idx,
+                        theoretical_start,
+                        full_duration,
+                        2,
+                        max_level,
+                        if years_covered == 0.0 {
+                            Some(birth_date)
+                        } else {
+                            None
+                        },
+                        year_type,
+                    )
                 } else {
                     Vec::new()
                 },
@@ -276,7 +336,7 @@ impl Yogini {
         level: u8,
         max_level: u8,
         clip_start: Option<DateTime<Utc>>,
-        year_type: VedicYearType
+        year_type: VedicYearType,
     ) -> Vec<DashaPeriod> {
         let sequence = Self::get_sequence();
         let mut periods = Vec::new();
@@ -294,7 +354,11 @@ impl Yogini {
                     current_start = current_end;
                     continue;
                 }
-                if current_start < clip { clip } else { current_start }
+                if current_start < clip {
+                    clip
+                } else {
+                    current_start
+                }
             } else {
                 current_start
             };
@@ -305,7 +369,11 @@ impl Yogini {
                     VedicYearType::Sidereal => 365.256363,
                     VedicYearType::Gregorian => 365.2425,
                 };
-                sub_duration - (actual_start.signed_duration_since(current_start).num_seconds() as f64 / (days_per_year * 86400.0))
+                sub_duration
+                    - (actual_start
+                        .signed_duration_since(current_start)
+                        .num_seconds() as f64
+                        / (days_per_year * 86400.0))
             } else {
                 sub_duration
             };
@@ -318,7 +386,15 @@ impl Yogini {
                 level,
                 name: Some(name.to_string()),
                 sub_periods: if level < max_level {
-                    Self::calculate_sub_periods(idx, current_start, sub_duration, level + 1, max_level, clip_start, year_type)
+                    Self::calculate_sub_periods(
+                        idx,
+                        current_start,
+                        sub_duration,
+                        level + 1,
+                        max_level,
+                        clip_start,
+                        year_type,
+                    )
                 } else {
                     Vec::new()
                 },
@@ -334,17 +410,17 @@ impl Yogini {
 mod tests {
     use super::*;
     use crate::config::VedicYearType;
-    use chrono::{Utc, TimeZone};
+    use chrono::{TimeZone, Utc};
 
     #[test]
     fn test_dasha_year_length() {
         let birth = Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap();
-        
+
         // 10 years in Savana (360 days each) = 3600 days
         let end_savana = Vimshottari::add_years(birth, 10.0, VedicYearType::Savana);
         let diff_savana = end_savana.signed_duration_since(birth).num_days();
         assert_eq!(diff_savana, 3600);
-        
+
         // 10 years in Gregorian (~365.2425 days) = 3652 days (approx)
         let end_greg = Vimshottari::add_years(birth, 10.0, VedicYearType::Gregorian);
         let diff_greg = end_greg.signed_duration_since(birth).num_days();

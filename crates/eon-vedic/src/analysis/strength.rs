@@ -1,4 +1,5 @@
 use crate::chart::VedicPosition;
+use crate::constants::*;
 use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
 
@@ -19,23 +20,6 @@ pub struct PlanetStrength {
     pub total_score: f64,        // Aggregate for MVP
     pub status: String,          // "Exalted", "Debilitated", "Strong", "Weak", "Neutral"
 }
-
-// --- Constants: Average Daily Motion (Degrees) ---
-const AVG_SPEED_MARS: f64 = 0.524; // Approx 31'27"
-const AVG_SPEED_MERCURY: f64 = 1.4; // Can vary greatly, approx 1d 23'
-const AVG_SPEED_JUPITER: f64 = 0.083; // Approx 4'59"
-const AVG_SPEED_VENUS: f64 = 1.2; // Approx 1d 12'
-const AVG_SPEED_SATURN: f64 = 0.033; // Approx 2'00"
-const AVG_SPEED_DEFAULT: f64 = 1.0;
-
-// --- Constants: Deep Exaltation Points (Sidereal Longitude) ---
-const DEEP_EXALT_SUN: f64 = 10.0; // Aries 10
-const DEEP_EXALT_MOON: f64 = 33.0; // Taurus 3
-const DEEP_EXALT_MARS: f64 = 298.0; // Capricorn 28
-const DEEP_EXALT_MERCURY: f64 = 165.0; // Virgo 15
-const DEEP_EXALT_JUPITER: f64 = 95.0; // Cancer 5
-const DEEP_EXALT_VENUS: f64 = 357.0; // Pisces 27
-const DEEP_EXALT_SATURN: f64 = 200.0; // Libra 20
 
 pub struct StrengthEngine;
 
