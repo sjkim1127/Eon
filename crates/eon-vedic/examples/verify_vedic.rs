@@ -109,7 +109,7 @@ fn main() {
         println!("  No major Yogas found.");
     } else {
         for yoga in yogas {
-            println!("  ▶ {} ({:?}): {}", yoga.name, yoga.yoga_type, yoga.description);
+            println!("  ▶ {} ({:?}): {} - Quality: {:?}", yoga.name, yoga.yoga_type, yoga.description, yoga.quality);
         }
     }
 

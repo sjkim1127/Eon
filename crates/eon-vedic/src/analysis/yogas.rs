@@ -428,34 +428,50 @@ impl YogaEngine {
     }
 
     fn assess_quality(chart: &VedicChart, planets: &[VedicPlanet]) -> YogaQuality {
-        let mut has_combust = false;
-        let mut has_yogakaraka = false;
-        let mut has_benefic = false;
+        let mut score = 0;
+        let mut reasons = Vec::new();
+        let mut is_combust = false;
 
         for &pl in planets {
             if let Some(pos) = chart.planets.iter().find(|p| p.planet == pl) {
                 if pos.is_combust {
-                    has_combust = true;
+                    is_combust = true;
+                    reasons.push(format!("{:?} is Combust", pl));
                 }
 
-                let nature = FunctionalNature::analyze(chart.ascendant.rasi, pl);
-                if nature == FunctionalStatus::Yogakaraka {
-                    has_yogakaraka = true;
-                }
-                if nature == FunctionalStatus::FunctionalBenefic {
-                    has_benefic = true;
+                match FunctionalNature::analyze(chart.ascendant.rasi, pl) {
+                    FunctionalStatus::Yogakaraka => {
+                        score += 3; // Powerful boost
+                    }
+                    FunctionalStatus::FunctionalBenefic => {
+                        score += 1;
+                    }
+                    FunctionalStatus::FunctionalMalefic => {
+                        score -= 2; // Significant penalty
+                        reasons.push(format!("{:?} is Functional Malefic", pl));
+                    }
+                    FunctionalStatus::Maraka => {
+                        score -= 1;
+                        reasons.push(format!("{:?} is Maraka", pl));
+                    }
+                    FunctionalStatus::Neutral => {}
                 }
             }
         }
 
-        if has_combust {
-            YogaQuality::Weak("Combustion".to_string())
-        } else if has_yogakaraka {
-            YogaQuality::VeryHigh
-        } else if has_benefic {
-            YogaQuality::High
-        } else {
-            YogaQuality::Medium
+        if is_combust {
+            return YogaQuality::Weak(format!("Combustion: {}", reasons.join(", ")));
+        }
+
+        match score {
+            s if s >= 3 => YogaQuality::VeryHigh,
+            s if s >= 1 => YogaQuality::High,
+            s if s >= -1 => YogaQuality::Medium,
+            _ => YogaQuality::Weak(if reasons.is_empty() {
+                "Malefic Influence".to_string()
+            } else {
+                reasons.join(", ")
+            }),
         }
     }
 }
