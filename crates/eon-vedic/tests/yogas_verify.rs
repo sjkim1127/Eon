@@ -1,5 +1,7 @@
+use chrono::{DateTime, TimeZone, Utc};
 use eon_vedic::analysis::ashtakavarga::Sarvashtakavarga;
 use eon_vedic::chart::{VedicChart, VedicPosition};
+use eon_vedic::panchanga::{Panchanga, PanchangaEngine};
 use eon_vedic::planets::VedicPlanet;
 use eon_vedic::yogas::{YogaEngine, YogaQuality};
 
@@ -78,6 +80,8 @@ fn test_libra_lagna_saturn_yogakaraka() {
         planets.push(pos);
     }
 
+    let dummy_panchanga = PanchangaEngine::calculate(0.0, 0.0, Utc::now(), 0.0, 0.0);
+
     let chart = VedicChart {
         ascendant,
         planets,
@@ -87,6 +91,7 @@ fn test_libra_lagna_saturn_yogakaraka() {
         karakas: vec![],
         bhava_strengths: vec![],
         vimshopaka_scores: vec![],
+        panchanga: dummy_panchanga,
         analysis_report: None,
     };
 

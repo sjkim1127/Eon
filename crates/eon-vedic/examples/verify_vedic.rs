@@ -140,7 +140,7 @@ fn main() {
     }
 
     println!("\n[11] Panchanga (Time Elements)");
-    let panchanga = eon_vedic::panchanga::PanchangaEngine::calculate(&chart, birth_time);
+    let panchanga = &chart.panchanga;
     println!("  Vara:      {}", panchanga.vara);
     println!("  Tithi:     {} ({})", panchanga.tithi, panchanga.tithi_name);
     println!("  Nakshatra: {}", panchanga.nakshatra);

@@ -1,5 +1,5 @@
-use crate::ayanamsa::get_lahiri_ayanamsa;
-use crate::config::VedicConfig;
+use crate::calc::ayanamsa::get_lahiri_ayanamsa;
+use crate::core::config::VedicConfig;
 use crate::planets::VedicPlanet;
 use chrono::{DateTime, Utc};
 use eon_astro::AstroEngine;
@@ -55,6 +55,7 @@ pub struct VedicChart {
     pub karakas: Vec<crate::analysis::jaimini::KarakaAssignment>,
     pub bhava_strengths: Vec<crate::analysis::bhava::BhavaStrength>,
     pub vimshopaka_scores: Vec<(VedicPlanet, crate::analysis::vimshopaka::VimshopakaScore)>,
+    pub panchanga: crate::panchanga::Panchanga,
     pub analysis_report: Option<crate::analysis::report::VedicAnalysisReport>,
 }
 
@@ -82,8 +83,8 @@ impl VedicChartCalculator {
         let ayanamsa = get_lahiri_ayanamsa(&self.engine, time);
 
         let hsys = match self.config.house_system {
-            crate::config::HouseSystem::WholeSign => b'W' as i32,
-            crate::config::HouseSystem::Sripati => b'S' as i32,
+            crate::core::config::HouseSystem::WholeSign => b'W' as i32,
+            crate::core::config::HouseSystem::Sripati => b'S' as i32,
         };
 
         let (cusps, ascmc) = self
@@ -99,7 +100,7 @@ impl VedicChartCalculator {
 
         // Calculate Sandhis (Junctions) for Bhava Chalit
         let mut sandhis = Vec::new();
-        if self.config.house_system == crate::config::HouseSystem::Sripati
+        if self.config.house_system == crate::core::config::HouseSystem::Sripati
             && !sidereal_cusps.is_empty()
         {
             for i in 0..12 {
@@ -132,11 +133,11 @@ impl VedicChartCalculator {
 
             // House Index Calculation
             let house_index = match self.config.house_system {
-                crate::config::HouseSystem::WholeSign => {
+                crate::core::config::HouseSystem::WholeSign => {
                     // Simplified Modulo Arithmetic for Whole Sign
                     ((rasi as i32 - asc_rasi as i32 + 12) % 12) as u8 + 1
                 }
-                crate::config::HouseSystem::Sripati => {
+                crate::core::config::HouseSystem::Sripati => {
                     let mut h = 0;
                     for i in 0..12 {
                         let s_start = sandhis[(i + 11) % 12];
@@ -194,27 +195,27 @@ impl VedicChartCalculator {
                     false
                 },
                 declination,
-                hora_rasi: crate::varga::VargaType::D2.calculate_rasi(sidereal),
-                drekkana_rasi: crate::varga::VargaType::D3.calculate_rasi(sidereal),
-                chaturthamsha_rasi: crate::varga::VargaType::D4.calculate_rasi(sidereal),
-                panchamsa_rasi: crate::varga::VargaType::D5.calculate_rasi(sidereal),
-                saptamsa_rasi: crate::varga::VargaType::D7.calculate_rasi(sidereal),
-                ashtamsa_rasi: crate::varga::VargaType::D8.calculate_rasi(sidereal),
-                navamsa_rasi: crate::varga::VargaType::D9.calculate_rasi(sidereal),
-                dasamsa_rasi: crate::varga::VargaType::D10.calculate_rasi(sidereal),
-                rudramsa_rasi: crate::varga::VargaType::D11.calculate_rasi(sidereal),
-                dwadasamsa_rasi: crate::varga::VargaType::D12.calculate_rasi(sidereal),
-                shodashamsa_rasi: crate::varga::VargaType::D16.calculate_rasi(sidereal),
-                vimsamsa_rasi: crate::varga::VargaType::D20.calculate_rasi(sidereal),
-                chaturvimshamsa_rasi: crate::varga::VargaType::D24.calculate_rasi(sidereal),
-                saptavimsamsa_rasi: crate::varga::VargaType::D27.calculate_rasi(sidereal),
-                trimsamsa_rasi: crate::varga::VargaType::D30.calculate_rasi(sidereal),
-                khavedamsa_rasi: crate::varga::VargaType::D40.calculate_rasi(sidereal),
-                akshavedamsa_rasi: crate::varga::VargaType::D45.calculate_rasi(sidereal),
-                shashtyamsa_rasi: crate::varga::VargaType::D60.calculate_rasi(sidereal),
-                navanavamsa_rasi: crate::varga::VargaType::D81.calculate_rasi(sidereal),
-                ashtottaramsa_rasi: crate::varga::VargaType::D108.calculate_rasi(sidereal),
-                dwadasdwadasamsa_rasi: crate::varga::VargaType::D144.calculate_rasi(sidereal),
+                hora_rasi: crate::calc::varga::VargaType::D2.calculate_rasi(sidereal),
+                drekkana_rasi: crate::calc::varga::VargaType::D3.calculate_rasi(sidereal),
+                chaturthamsha_rasi: crate::calc::varga::VargaType::D4.calculate_rasi(sidereal),
+                panchamsa_rasi: crate::calc::varga::VargaType::D5.calculate_rasi(sidereal),
+                saptamsa_rasi: crate::calc::varga::VargaType::D7.calculate_rasi(sidereal),
+                ashtamsa_rasi: crate::calc::varga::VargaType::D8.calculate_rasi(sidereal),
+                navamsa_rasi: crate::calc::varga::VargaType::D9.calculate_rasi(sidereal),
+                dasamsa_rasi: crate::calc::varga::VargaType::D10.calculate_rasi(sidereal),
+                rudramsa_rasi: crate::calc::varga::VargaType::D11.calculate_rasi(sidereal),
+                dwadasamsa_rasi: crate::calc::varga::VargaType::D12.calculate_rasi(sidereal),
+                shodashamsa_rasi: crate::calc::varga::VargaType::D16.calculate_rasi(sidereal),
+                vimsamsa_rasi: crate::calc::varga::VargaType::D20.calculate_rasi(sidereal),
+                chaturvimshamsa_rasi: crate::calc::varga::VargaType::D24.calculate_rasi(sidereal),
+                saptavimsamsa_rasi: crate::calc::varga::VargaType::D27.calculate_rasi(sidereal),
+                trimsamsa_rasi: crate::calc::varga::VargaType::D30.calculate_rasi(sidereal),
+                khavedamsa_rasi: crate::calc::varga::VargaType::D40.calculate_rasi(sidereal),
+                akshavedamsa_rasi: crate::calc::varga::VargaType::D45.calculate_rasi(sidereal),
+                shashtyamsa_rasi: crate::calc::varga::VargaType::D60.calculate_rasi(sidereal),
+                navanavamsa_rasi: crate::calc::varga::VargaType::D81.calculate_rasi(sidereal),
+                ashtottaramsa_rasi: crate::calc::varga::VargaType::D108.calculate_rasi(sidereal),
+                dwadasdwadasamsa_rasi: crate::calc::varga::VargaType::D144.calculate_rasi(sidereal),
             }
         };
 
@@ -289,6 +290,25 @@ impl VedicChartCalculator {
             }
         }
 
+        // Initialize Report option
+        let analysis_report = None;
+
+        // Calculate Panchanga
+        let sun_deg = planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Sun)
+            .map(|p| p.sidereal_deg)
+            .unwrap_or(0.0);
+        let moon_deg = planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Moon)
+            .map(|p| p.sidereal_deg)
+            .unwrap_or(0.0);
+
+        let panchanga = crate::panchanga::PanchangaEngine::calculate(
+            sun_deg, moon_deg, time, latitude, longitude,
+        );
+
         let mut chart = VedicChart {
             ascendant: asc_position,
             planets,
@@ -298,7 +318,8 @@ impl VedicChartCalculator {
             karakas: Vec::new(),
             bhava_strengths: Vec::new(),
             vimshopaka_scores: Vec::new(),
-            analysis_report: None,
+            panchanga,
+            analysis_report,
         };
 
         // Post-calculation analysis

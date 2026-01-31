@@ -1,25 +1,16 @@
-//! Eon Vedic: Sidereal Astrology Calculation Engine
-//!
-//! Provides calculations based on the Sidereal Zodiac (Lahiri Ayanamsa by default).
-
-pub mod ayanamsa;
-pub mod planets;
-pub mod chart;
-pub mod names;
-pub mod config;
-pub mod varga;
-pub mod dasha;
-pub mod yogas;
 pub mod analysis;
-pub mod panchanga;
+pub mod calc;
+pub mod core;
+pub mod prediction;
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub enum ZodiacSystem {
-    Tropical,
-    Sidereal,
-}
-
-pub use config::AyanamsaSystem as AyanamsaMethod;
-pub mod constants;
+// Re-export common items for easier access
+pub use analysis::yogas;
+pub use calc::ayanamsa;
+pub use calc::panchanga;
+pub use calc::varga;
+pub use core::chart;
+pub use core::config;
+pub use core::constants;
+pub use core::names;
+pub use core::planets;
+pub use prediction::dasha;

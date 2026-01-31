@@ -1,13 +1,13 @@
-use serde::{Deserialize, Serialize};
-use crate::planets::VedicPlanet;
-use crate::chart::{VedicChart, VedicPosition};
-use crate::varga::VargaType;
 use crate::analysis::relationships::{RelationshipEngine, RelationshipType};
+use crate::calc::varga::VargaType;
+use crate::chart::{VedicChart, VedicPosition};
+use crate::planets::VedicPlanet;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VimshopakaScore {
-    pub shadvarga_score: f64,    // Out of 20
-    pub shodashavarga_score: f64, // Out of 20 (Simple average for now)
+    pub shadvarga_score: f64,           // Out of 20
+    pub shodashavarga_score: f64,       // Out of 20 (Simple average for now)
     pub details: Vec<(VargaType, f64)>, // Score per Varga
 }
 
@@ -20,7 +20,7 @@ impl VimshopakaEngine {
     pub fn calculate(pos: &VedicPosition, chart: &VedicChart) -> VimshopakaScore {
         let _total_weighted_score = 0.0;
         let mut details = Vec::new();
-        
+
         // Shadvarga Weights
         let shadvarga_weights = [
             (VargaType::D1, 6.0),
@@ -32,7 +32,7 @@ impl VimshopakaEngine {
         ];
 
         let mut shadvarga_sum = 0.0;
-        
+
         // 1. Calculate Shadvarga
         for (varga, weight) in &shadvarga_weights {
             let rasi = Self::get_varga_rasi(pos, *varga);
@@ -40,8 +40,8 @@ impl VimshopakaEngine {
             shadvarga_sum += point * (*weight as f64);
             details.push((*varga, point));
         }
-        
-        // Normalize: The sum of weights is 20. The max point is 20. 
+
+        // Normalize: The sum of weights is 20. The max point is 20.
         // So max weighted sum is 400. We want final score out of 20.
         // Formula: Sum(Point * Weight) / Sum(Weights)?? -> No, that gives average point (0-20).
         // BPHS Vimshopaka: The sum IS the score?? No.
@@ -54,18 +54,30 @@ impl VimshopakaEngine {
         // Or we can just use the Shadvarga score as the primary metric.
         // Let's calculate a simple average of dignity points across all implemented vargas for "Shodashavarga".
         let all_vargas = [
-            VargaType::D1, VargaType::D2, VargaType::D3, VargaType::D4, VargaType::D7, 
-            VargaType::D9, VargaType::D10, VargaType::D12, VargaType::D16, VargaType::D20,
-            VargaType::D24, VargaType::D27, VargaType::D30, VargaType::D40, VargaType::D45, VargaType::D60
+            VargaType::D1,
+            VargaType::D2,
+            VargaType::D3,
+            VargaType::D4,
+            VargaType::D7,
+            VargaType::D9,
+            VargaType::D10,
+            VargaType::D12,
+            VargaType::D16,
+            VargaType::D20,
+            VargaType::D24,
+            VargaType::D27,
+            VargaType::D30,
+            VargaType::D40,
+            VargaType::D45,
+            VargaType::D60,
         ];
-        
+
         let mut total_points = 0.0;
         for v in &all_vargas {
             let rasi = Self::get_varga_rasi(pos, *v);
             total_points += Self::get_dignity_point(pos.planet, rasi, chart);
         }
         let shodashavarga_final = total_points / all_vargas.len() as f64;
-
 
         VimshopakaScore {
             shadvarga_score: shadvarga_final,
@@ -106,12 +118,18 @@ impl VimshopakaEngine {
     /// Debilitated: 0
     fn get_dignity_point(planet: VedicPlanet, rasi: u8, chart: &VedicChart) -> f64 {
         // 1. Check Exaltation/Debilitation
-        if planet.exaltation_rasi() == rasi { return 20.0; }
-        if planet.debilitation_rasi() == rasi { return 0.0; } // Or 5? BPHS says Debilitated is lowest.
+        if planet.exaltation_rasi() == rasi {
+            return 20.0;
+        }
+        if planet.debilitation_rasi() == rasi {
+            return 0.0;
+        } // Or 5? BPHS says Debilitated is lowest.
 
         // 2. Check Own Sign
         let lord = VedicPlanet::get_ruler_of(rasi);
-        if lord == planet { return 20.0; }
+        if lord == planet {
+            return 20.0;
+        }
 
         // 3. Check Relationship with Lord
         let rel = RelationshipEngine::get_relationship(planet, lord, chart);
