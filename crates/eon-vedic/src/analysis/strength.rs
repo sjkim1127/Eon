@@ -328,7 +328,7 @@ impl StrengthEngine {
             };
 
             // Elapsed time from start of period
-            let mut elapsed = if bt_secs >= start_secs {
+            let elapsed = if bt_secs >= start_secs {
                 bt_secs - start_secs
             } else {
                 // Wrapped around midnight (e.g. Birth 2AM, Start 18PM)

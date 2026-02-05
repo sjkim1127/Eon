@@ -163,7 +163,7 @@ impl SajuReport {
             for frame in key_frames.iter().take(5) {
                 if !frame.tags.is_empty() {
                     md.push_str(&format!("- **Age {} ({})**: Score {:.1} | {}\n", 
-                        frame.age, frame.ganzi.hangul(), frame.score, frame.tags.join(", ")));
+                        frame.age, frame.ganzi.hangul(), frame.score, frame.tags_as_strings().join(", ")));
                     if !frame.esil_trace.is_empty() {
                         md.push_str(&format!("  - `ESIL`: {}\n", frame.esil_trace));
                     }

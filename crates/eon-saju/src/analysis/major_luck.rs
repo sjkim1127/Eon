@@ -25,7 +25,7 @@ use crate::core::ganzi::GanZi;
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
 use crate::core::pillars::SajuError;
-use chrono::{Utc, TimeZone, NaiveDate, Duration, Datelike};
+use chrono::{Utc, TimeZone, NaiveDate, Datelike};
 
 /// 대운 진행 방향
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

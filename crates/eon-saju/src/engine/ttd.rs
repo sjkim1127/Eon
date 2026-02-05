@@ -29,7 +29,7 @@ impl DestinyDebugger {
 
         // 현재 시점에 해당 태그가 없으면 분석 불가
         let current_frame = &frames[age as usize];
-        let exists = current_frame.tags.iter().any(|t| t.contains(target_tag)) || 
+        let exists = current_frame.tags.iter().any(|t| t.contains_pattern(target_tag)) || 
                      current_frame.signatures.iter().any(|s| s.name.contains(target_tag) || s.id.contains(target_tag));
         
         if !exists { return None; }
@@ -40,7 +40,7 @@ impl DestinyDebugger {
         // 역방향으로 탐색하며 해당 태그가 처음 나타난 시점(Entry Point)을 찾음
         while current_age >= 0 {
             let frame = &frames[current_age as usize];
-            let has_tag = frame.tags.iter().any(|t| t.contains(target_tag)) || 
+            let has_tag = frame.tags.iter().any(|t| t.contains_pattern(target_tag)) || 
                           frame.signatures.iter().any(|s| s.name.contains(target_tag) || s.id.contains(target_tag));
             
             if has_tag {
@@ -87,15 +87,15 @@ impl DestinyDebugger {
             
             let mut added_tags = Vec::new();
             for tag in &fb.tags {
-                if !fa.tags.contains(tag) {
-                    added_tags.push(tag.clone());
+                if !fa.tags.iter().any(|t| t == tag) {
+                    added_tags.push(tag.to_string());
                 }
             }
 
             let mut removed_tags = Vec::new();
             for tag in &fa.tags {
-                if !fb.tags.contains(tag) {
-                    removed_tags.push(tag.clone());
+                if !fb.tags.iter().any(|t| t == tag) {
+                    removed_tags.push(tag.to_string());
                 }
             }
 

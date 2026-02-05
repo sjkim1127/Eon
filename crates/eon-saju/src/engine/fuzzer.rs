@@ -75,7 +75,7 @@ impl DestinyFuzzer {
                         hourly: None,
                     },
                     vulnerability_type: self.determine_vuln_type(&frame),
-                    tags: frame.tags,
+                    tags: frame.tags_as_strings(),
                     timestamp: None,
                 });
             }
@@ -118,7 +118,7 @@ impl DestinyFuzzer {
                         hourly: None,
                     },
                     vulnerability_type: self.determine_vuln_type(&frame),
-                    tags: frame.tags,
+                    tags: frame.tags_as_strings(),
                     timestamp: None,
                 });
             }
@@ -175,7 +175,7 @@ impl DestinyFuzzer {
                                     hourly: Some(hourly_ganzi),
                                 },
                                 vulnerability_type: self.determine_vuln_type(&frame),
-                                tags: frame.tags.clone(),
+                                tags: frame.tags_as_strings(),
                                 timestamp: Some(format!("{}년 {}월 {}일 {}시", year, month, day, hour)),
                             });
                         }
@@ -192,48 +192,30 @@ impl DestinyFuzzer {
         }
     }
 
+    // === 간지 계산 함수들: 공통 유틸리티 모듈 위임 ===
+    // 중복 로직 제거를 위해 `core::ganzi_utils` 모듈을 사용합니다.
+    // 이로써 FourPillars와 동일한 로직을 사용하여 정합성이 보장됩니다.
+
     fn calculate_month_ganzi(&self, year: i32, month: i32) -> GanZi {
-        let year_ganzi = GanZi::from_year(year);
-        let first_month_stem_idx = match year_ganzi.stem.index() % 5 {
-            0 => 2, // 甲, 己 -> 丙
-            1 => 4, // 乙, 庚 -> 戊
-            2 => 6, // 丙, 辛 -> 庚
-            3 => 8, // 丁, 壬 -> 壬
-            4 => 0, // 戊, 癸 -> 甲
-            _ => 0,
-        };
-        let month_branch_idx = (month + 1) % 12; 
-        let month_stem_idx = (first_month_stem_idx + (month - 1)) % 10;
-        
-        GanZi::new(
-            crate::core::stem::HeavenlyStem::from_index(month_stem_idx),
-            crate::core::branch::EarthlyBranch::from_index(month_branch_idx),
-        )
+        crate::core::ganzi_utils::calculate_month_ganzi(year, month)
     }
 
     fn calculate_day_ganzi(&self, year: i32, month: u32, day: u32) -> GanZi {
-        let a = (14 - month as i32) / 12;
-        let y = year + 4800 - a;
-        let m = month as i32 + 12 * a - 3;
-        let jdn = day as i64 + (153 * m + 2) as i64 / 5 + 365 * y as i64 + y as i64 / 4 - y as i64 / 100 + y as i64 / 400 - 32045;
-        let idx = (jdn + 49).rem_euclid(60);
-        GanZi::from_index(idx as i32)
+        // 만세력 데이터 기반의 정확한 일간지 계산 사용
+        crate::core::ganzi_utils::calculate_day_ganzi(year, month, day)
     }
 
     fn calculate_hour_ganzi(&self, daily_ganzi: GanZi, hour: u32) -> GanZi {
-        let branch = crate::core::branch::EarthlyBranch::from_hour(hour as u8);
-        let zi_stem_idx = (daily_ganzi.stem.index() % 5) * 2;
-        let stem = crate::core::stem::HeavenlyStem::from_index((zi_stem_idx + branch.index()) as i32);
-        GanZi::new(stem, branch)
+        crate::core::ganzi_utils::calculate_hour_ganzi(daily_ganzi, hour)
     }
 
     /// 취약점 유형 판별 (Heuristics)
     fn determine_vuln_type(&self, frame: &LifeFrame) -> String {
-        if frame.tags.iter().any(|t| t.contains("충") && t.contains("용신")) {
+        if frame.tags.iter().any(|t| t.contains_pattern("충") && t.contains_pattern("용신")) {
             "Critical_Yongshin_Clash (용신 파괴)".to_string()
-        } else if frame.tags.iter().any(|t| t.contains("기신")) {
+        } else if frame.tags.iter().any(|t| t.contains_pattern("기신")) {
             "Elemental_Overflow (기신 과다)".to_string()
-        } else if frame.tags.iter().any(|t| t.contains("충")) {
+        } else if frame.tags.iter().any(|t| t.contains_pattern("충")) {
             "Structural_Instability (구조적 불안정)".to_string()
         } else {
             "Low_Energy_State (에너지 저하)".to_string()

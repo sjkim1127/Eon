@@ -36,7 +36,7 @@ impl SignatureScanner {
         }
 
         // 2. 용신 충극 (Fatal Yongshin Clash)
-        if frame.score < 30.0 && frame.tags.iter().any(|t| t.contains("충")) {
+        if frame.score < 30.0 && frame.tags.iter().any(|t| t.contains_pattern("충")) {
             detected.push(LuckSignature {
                 id: "FATAL_LUCK_CLASH".to_string(),
                 name: "용신충극 (用神沖剋)".to_string(),
@@ -60,7 +60,7 @@ impl SignatureScanner {
         }
 
         // 4. 등용문 (The Dragon Gate)
-        if frame.score > 85.0 && frame.tags.iter().any(|t| t.contains("핵심운")) {
+        if frame.score > 85.0 && frame.tags.iter().any(|t| t.contains_pattern("핵심운")) {
            detected.push(LuckSignature {
                 id: "DRAGON_GATE".to_string(),
                 name: "등용문 (登龍門)".to_string(),

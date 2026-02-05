@@ -164,7 +164,7 @@ fn main() {
     for frame in report.frames {
         let bar_len = (frame.score / 5.0) as usize;
         let bar = "■".repeat(bar_len);
-        let mut tags = frame.tags.join(",");
+        let mut tags = frame.tags_as_strings().join(",");
         if !frame.signatures.is_empty() {
             let sig_names: Vec<String> = frame.signatures.iter().map(|s| format!("[{}]", s.name)).collect();
             tags = format!("{} {}", tags, sig_names.join(" "));

@@ -1,7 +1,7 @@
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::Utc;
 use eon_vedic::analysis::ashtakavarga::Sarvashtakavarga;
 use eon_vedic::chart::{VedicChart, VedicPosition};
-use eon_vedic::panchanga::{Panchanga, PanchangaEngine};
+use eon_vedic::panchanga::PanchangaEngine;
 use eon_vedic::planets::VedicPlanet;
 use eon_vedic::yogas::{YogaEngine, YogaQuality};
 
@@ -112,8 +112,8 @@ fn test_libra_lagna_saturn_yogakaraka() {
     if let Some(yoga) = raja_yoga {
         assert_eq!(
             yoga.quality,
-            YogaQuality::VeryHigh,
-            "Saturn is Yogakaraka for Libra Lagna, so Quality should be VeryHigh"
+            YogaQuality::High,
+            "Saturn is Yogakaraka (+3), but Mercury has 12th House Moolatrikona (-2), resulting in High (Score 1)"
         );
     }
 }

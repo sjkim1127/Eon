@@ -1,5 +1,5 @@
-use eon_core::{Gender};
-use eon_saju::{FourPillars, SajuInput, SajuVM, LifeFrame};
+use eon_core::Gender;
+use eon_saju::{FourPillars, SajuInput, SajuVM};
 use eon_saju::report::SajuReport;
 use eon_saju::analysis::analytics::Analyzer;
 

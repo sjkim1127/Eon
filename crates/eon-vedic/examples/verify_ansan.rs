@@ -1,12 +1,11 @@
 use eon_vedic::chart::VedicChartCalculator;
-use eon_vedic::planets::VedicPlanet;
 use chrono::{TimeZone, Utc};
 
 fn main() {
     println!("=== Ansan Chart Verification ===");
 
     // 2004-11-27 22:00 KST = 13:00 UTC
-    let birth_time = Utc.ymd(2004, 11, 27).and_hms(13, 0, 0);
+    let birth_time = Utc.with_ymd_and_hms(2004, 11, 27, 13, 0, 0).unwrap();
     let lat = 37.3167; // 37°19'N
     let lon = 126.8167; // 126°49'E
 

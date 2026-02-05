@@ -11,3 +11,4 @@ pub mod entropy;
 pub mod die;
 pub mod signatures;
 pub mod interprocess;
+pub mod trace_tag;

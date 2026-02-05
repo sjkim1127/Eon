@@ -452,7 +452,7 @@ fn test_case_9_vm_dynamic_combination() {
     println!("No Triple Score: {:.1}, Triple Score: {:.1}", frame_no_triple.score, frame_triple.score);
     
     // 삼합이 완성되면 '삼합완성' 태그가 있어야 함
-    let has_tag = frame_triple.tags.iter().any(|t| t.contains("삼합완성"));
+    let has_tag = frame_triple.tags.iter().any(|t| t.contains_pattern("삼합완성"));
     assert!(has_tag, "삼합이 완성되는 해에는 관련 태그가 있어야 함. Tags: {:?}", frame_triple.tags);
 }
 
@@ -540,8 +540,8 @@ fn test_case_12_vm_void_and_talgong() {
     // 확실한 공망 테스트를 위해 원국 지지와 합이 안되는 공망 글자가 필요하지만
     // 여기서는 공망 태그가 붙었는지 확인하는 것이 확실함
     
-    let has_void_tag = frame_void.tags.iter().any(|t| t.contains("운성공망"));
-    let has_escape_tag = frame_void.tags.iter().any(|t| t.contains("탈공"));
+    let has_void_tag = frame_void.tags.iter().any(|t| t.contains_pattern("운성공망"));
+    let has_escape_tag = frame_void.tags.iter().any(|t| t.contains_pattern("탈공"));
     
     if has_escape_tag {
         println!("Void escaped due to combination/clash. Tags: {:?}", frame_void.tags);
@@ -576,11 +576,11 @@ fn test_case_13_vm_shinsal_and_patterns() {
     println!("Shen Year Tags: {:?}", frame_shen.tags);
     
     // 역마살 확인
-    let has_yeokma = frame_shen.tags.iter().any(|t| t.contains("신살:역마살"));
+    let has_yeokma = frame_shen.tags.iter().any(|t| t.contains_pattern("신살:역마살"));
     assert!(has_yeokma, "신년(申年)은 인일주에게 역마살이어야 함");
     
     // 12운성 왕성 확인
-    let has_geonrok = frame_shen.tags.iter().any(|t| t.contains("운성:건록"));
+    let has_geonrok = frame_shen.tags.iter().any(|t| t.contains_pattern("운성:건록"));
     assert!(has_geonrok, "신년(申年)은 경일간에게 건록지여야 함");
     
     // 3. 십신 패턴 테스트: 상관견관
@@ -591,7 +591,7 @@ fn test_case_13_vm_shinsal_and_patterns() {
     
     println!("Gui Year Tags: {:?}", frame_gui.tags);
     
-    let has_shangguan_gyeongwan = frame_gui.tags.iter().any(|t| t.contains("패턴:상관견관"));
+    let has_shangguan_gyeongwan = frame_gui.tags.iter().any(|t| t.contains_pattern("패턴:상관견관"));
     assert!(has_shangguan_gyeongwan, "계수(상관) 운과 정화(정관)이 만나면 상관견관 패턴이 떠야 함");
     
     // 점수 하락 확인 (상관견관은 흉)

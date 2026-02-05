@@ -1,5 +1,4 @@
 use eon_saju::{FourPillars, SajuInput};
-use eon_core::Gender;
 
 fn main() {
     // 김성주: 2004-11-27 22:00

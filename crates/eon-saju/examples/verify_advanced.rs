@@ -4,7 +4,7 @@
 //! 특정 시점의 ESIL 트레이스를 리버싱 관점에서 분석합니다.
 //! 또한 두 시스템 간의 IPC(궁합) 감사를 수행합니다.
 
-use eon_core::{BirthInfo, Gender, Location};
+use eon_core::{BirthInfo, Gender};
 use eon_saju::{FourPillars, SajuInput, SajuVM, DestinyFuzzer, CompatibilityAuditor};
 
 fn main() {

@@ -32,7 +32,7 @@ impl DestinyComplexity {
             // 1. 충격 및 형살 (Exception Handling)
             // 충(Clash)이나 형(Punishment)은 실행 흐름의 예외 상황인 분기점으로 간주
             let conflict_count = frame.tags.iter()
-                .filter(|t| t.contains("충") || t.contains("형") || t.contains("해")).count();
+                .filter(|t| t.contains_pattern("충") || t.contains_pattern("형") || t.contains_pattern("해")).count();
             
             if conflict_count > 0 {
                 is_decision_point = true;

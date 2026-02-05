@@ -57,7 +57,7 @@ fn main() {
         
         // 해당 구간의 구체적인 세운 점수 확인
         println!("\n[Detail for Golden Time Period]");
-        let start_idx = golden.start_age as usize;
+        let _start_idx = golden.start_age as usize;
         /*
         for j in 0..10 {
             if let Some(f) = frames.get(start_idx + j) {
