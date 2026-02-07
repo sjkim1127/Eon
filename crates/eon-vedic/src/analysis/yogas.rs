@@ -496,11 +496,26 @@ impl YogaEngine {
                 let mut cancellation_planets = vec![*planet];
                 let dispositor = VedicPlanet::get_ruler_of(pos.rasi);
 
-                // Rule 1: Dispositor (lord of debilitation sign) in Kendra from Lagna
+                // Get Moon position for Moon-based Kendra check
+                let moon_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon);
+
+                // Rule 1a: Dispositor (lord of debilitation sign) in Kendra from Lagna
                 if let Some(disp_pos) = chart.planets.iter().find(|p| p.planet == dispositor) {
                     if [1, 4, 7, 10].contains(&disp_pos.house_index) {
                         cancellation_planets.push(dispositor);
                         return Some(cancellation_planets);
+                    }
+
+                    // Rule 1b: Dispositor in Kendra from Moon (BPHS extension)
+                    if let Some(moon) = moon_pos {
+                        let moon_rasi = moon.rasi;
+                        let disp_rasi = disp_pos.rasi;
+                        let diff = ((disp_rasi as i32 - moon_rasi as i32 + 12) % 12) as u8;
+                        // Kendra from Moon: 0 (1st), 3 (4th), 6 (7th), 9 (10th) houses
+                        if [0, 3, 6, 9].contains(&diff) {
+                            cancellation_planets.push(dispositor);
+                            return Some(cancellation_planets);
+                        }
                     }
 
                     // Rule 5: Dispositor conjunct with debilitated planet
@@ -510,7 +525,7 @@ impl YogaEngine {
                     }
                 }
 
-                // Rule 2: Lord of exaltation sign in Kendra from Lagna
+                // Rule 2a: Lord of exaltation sign in Kendra from Lagna
                 let exalt_sign = planet.exaltation_rasi();
                 let exalt_lord = VedicPlanet::get_ruler_of(exalt_sign);
                 if let Some(exalt_lord_pos) = chart.planets.iter().find(|p| p.planet == exalt_lord)
@@ -518,6 +533,17 @@ impl YogaEngine {
                     if [1, 4, 7, 10].contains(&exalt_lord_pos.house_index) {
                         cancellation_planets.push(exalt_lord);
                         return Some(cancellation_planets);
+                    }
+
+                    // Rule 2b: Lord of exaltation sign in Kendra from Moon (BPHS extension)
+                    if let Some(moon) = moon_pos {
+                        let moon_rasi = moon.rasi;
+                        let exalt_lord_rasi = exalt_lord_pos.rasi;
+                        let diff = ((exalt_lord_rasi as i32 - moon_rasi as i32 + 12) % 12) as u8;
+                        if [0, 3, 6, 9].contains(&diff) {
+                            cancellation_planets.push(exalt_lord);
+                            return Some(cancellation_planets);
+                        }
                     }
                 }
 
@@ -610,15 +636,27 @@ impl YogaEngine {
                     p.rasi == second_from_moon || p.rasi == twelfth_from_moon
                 });
 
-                // If no flanking planets, Kemadruma Yoga exists
+                // If no flanking planets, Kemadruma Yoga may exist
                 if !has_flanking_planets {
-                    // Check for cancellation: Moon in Kendra (1,4,7,10)
-                    let is_in_kendra = [1, 4, 7, 10].contains(&moon_pos.house_index);
+                    // BPHS Cancellation conditions:
+                    // 1. Moon in Kendra (1,4,7,10) from Lagna
+                    let is_moon_in_kendra = [1, 4, 7, 10].contains(&moon_pos.house_index);
 
-                    if !is_in_kendra {
+                    // 2. Planets in Kendra from Moon (BPHS extension)
+                    let has_kendra_from_moon = chart.planets.iter().any(|p| {
+                        if p.planet == VedicPlanet::Moon || p.planet == VedicPlanet::Sun {
+                            return false;
+                        }
+                        let p_rasi = p.rasi;
+                        let diff = ((p_rasi as i32 - moon_rasi as i32 + 12) % 12) as u8;
+                        // Kendra from Moon: 0 (1st), 3 (4th), 6 (7th), 9 (10th) houses
+                        [0, 3, 6, 9].contains(&diff)
+                    });
+
+                    if !is_moon_in_kendra && !has_kendra_from_moon {
                         Some(vec![VedicPlanet::Moon])
                     } else {
-                        None // Cancelled by Kendra position
+                        None // Cancelled by Kendra position or Kendra planets
                     }
                 } else {
                     None
