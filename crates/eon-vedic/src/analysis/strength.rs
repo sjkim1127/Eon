@@ -16,16 +16,20 @@ pub struct PlanetStrength {
     pub paksha_score: f64,       // Moon Phase strength
     pub ayana_score: f64,        // Declination strength
     pub saptavargaja_score: f64, // 0.0 ~ 60.0 (Strength across 7 Vargas)
-    pub ishta_phala: f64,        // Auspiciousness (0-60)
-    pub kashta_phala: f64,       // Inauspiciousness (0-60)
-    pub total_score: f64,        // Aggregate for MVP
-    pub status: String,          // "Exalted", "Debilitated", "Strong", "Weak", "Neutral"
+    // Additional Sthana Bala components (BPHS)
+    pub kendra_bala: f64,           // 0.0 ~ 60.0 (Kendra house strength)
+    pub drekkana_bala: f64,         // 0.0 ~ 60.0 (Drekkana strength)
+    pub ojayugmarasyamsa_bala: f64, // 0.0 ~ 15.0 (Odd/Even sign strength)
+    pub ishta_phala: f64,           // Auspiciousness (0-60)
+    pub kashta_phala: f64,          // Inauspiciousness (0-60)
+    pub total_score: f64,           // Aggregate for MVP
+    pub status: String,             // "Exalted", "Debilitated", "Strong", "Weak", "Neutral"
 }
 
 pub struct StrengthEngine;
 
 impl StrengthEngine {
-    /// Calculate basic strength metrics (Shadbala Lite)
+    /// Calculate basic strength metrics (Shadbala with BPHS Sthana Bala)
     pub fn calculate(pos: &VedicPosition, chart: &crate::chart::VedicChart) -> PlanetStrength {
         let ex_score = Self::calculate_uchcha_bala(pos.planet, pos.sidereal_deg);
         let dig_score = Self::calculate_dig_bala(pos.planet, pos.house_index);
@@ -39,6 +43,11 @@ impl StrengthEngine {
 
         let sapta_score = Self::calculate_saptavargaja_bala(pos);
 
+        // Additional Sthana Bala components (BPHS)
+        let kendra_bala = Self::calculate_kendra_bala(pos.house_index);
+        let drekkana_bala = Self::calculate_drekkana_bala(pos);
+        let ojayugmarasyamsa_bala = Self::calculate_ojayugmarasyamsa_bala(pos);
+
         // Ishta & Kashta Phala based on Exaltation (Uchcha) and Motion (Chesta)
         let (ishta_phala, kashta_phala) = Self::calculate_ishta_kashta(ex_score, chesta_score);
 
@@ -50,16 +59,19 @@ impl StrengthEngine {
             + drik_score
             + paksha_score
             + ayana_score
-            + sapta_score;
+            + sapta_score
+            + kendra_bala
+            + drekkana_bala
+            + ojayugmarasyamsa_bala;
 
         // Simple status determination
         let status = if ex_score >= 50.0 {
             "Exalted".to_string()
         } else if ex_score <= 10.0 {
             "Debilitated".to_string()
-        } else if total > 180.0 {
+        } else if total > 240.0 {
             "Strong".to_string()
-        } else if total < 90.0 {
+        } else if total < 120.0 {
             "Weak".to_string()
         } else {
             "Neutral".to_string()
@@ -76,6 +88,9 @@ impl StrengthEngine {
             paksha_score,
             ayana_score,
             saptavargaja_score: sapta_score,
+            kendra_bala,
+            drekkana_bala,
+            ojayugmarasyamsa_bala,
             ishta_phala,
             kashta_phala,
             total_score: total,
@@ -494,5 +509,90 @@ impl StrengthEngine {
 
         // Normalize sum (max 45*7 = 315) to 60 units
         (total_v_points / 315.0) * 60.0
+    }
+
+    /// Kendra Bala (BPHS Sthana Bala component)
+    /// Planets in Kendra houses (1, 4, 7, 10) get full strength (60)
+    /// Planets in Panaphara houses (2, 5, 8, 11) get half strength (30)
+    /// Planets in Apoklima houses (3, 6, 9, 12) get quarter strength (15)
+    fn calculate_kendra_bala(house: u8) -> f64 {
+        match house {
+            1 | 4 | 7 | 10 => 60.0, // Kendra (Angular)
+            2 | 5 | 8 | 11 => 30.0, // Panaphara (Succedent)
+            3 | 6 | 9 | 12 => 15.0, // Apoklima (Cadent)
+            _ => 0.0,
+        }
+    }
+
+    /// Drekkana Bala (BPHS Sthana Bala component)
+    /// Based on masculine/feminine/neuter nature of planet and drekkana placement
+    /// Masculine planets: Sun, Mars, Jupiter
+    /// Feminine planets: Moon, Venus
+    /// Neuter planets: Mercury, Saturn
+    fn calculate_drekkana_bala(pos: &VedicPosition) -> f64 {
+        // Determine planet nature
+        let is_masculine = matches!(
+            pos.planet,
+            VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter
+        );
+        let is_feminine = matches!(pos.planet, VedicPlanet::Moon | VedicPlanet::Venus);
+
+        // Get drekkana sign (D3)
+        let drekk_rasi = pos.drekkana_rasi;
+
+        // Odd signs (1,3,5,7,9,11) are masculine
+        // Even signs (2,4,6,8,10,12) are feminine
+        let drekk_is_masculine = drekk_rasi % 2 == 1;
+
+        // BPHS: Matching nature gets 15 points
+        if is_masculine && drekk_is_masculine {
+            15.0
+        } else if is_feminine && !drekk_is_masculine {
+            15.0
+        } else if !is_masculine && !is_feminine {
+            // Neuter planets (Mercury, Saturn) get 7.5 always
+            7.5
+        } else {
+            0.0
+        }
+    }
+
+    /// Ojayugmarasyamsa Bala (BPHS Sthana Bala component)
+    /// Based on odd/even sign placement in D1 (Rasi) and D9 (Navamsa)
+    /// Masculine planets get strength in odd signs
+    /// Feminine planets get strength in even signs
+    /// Mercury gets strength in both (neuter)
+    fn calculate_ojayugmarasyamsa_bala(pos: &VedicPosition) -> f64 {
+        let is_masculine = matches!(
+            pos.planet,
+            VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter
+        );
+        let is_feminine = matches!(pos.planet, VedicPlanet::Moon | VedicPlanet::Venus);
+        let is_mercury = pos.planet == VedicPlanet::Mercury;
+
+        let rasi_is_odd = pos.rasi % 2 == 1;
+        let navamsa_is_odd = pos.navamsa_rasi % 2 == 1;
+
+        let mut score = 0.0;
+
+        // D1 (Rasi) strength: 7.5 points max
+        if is_mercury {
+            score += 7.5; // Mercury always gets points
+        } else if is_masculine && rasi_is_odd {
+            score += 7.5;
+        } else if is_feminine && !rasi_is_odd {
+            score += 7.5;
+        }
+
+        // D9 (Navamsa) strength: 7.5 points max
+        if is_mercury {
+            score += 7.5; // Mercury always gets points
+        } else if is_masculine && navamsa_is_odd {
+            score += 7.5;
+        } else if is_feminine && !navamsa_is_odd {
+            score += 7.5;
+        }
+
+        score
     }
 }

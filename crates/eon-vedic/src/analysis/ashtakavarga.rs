@@ -191,11 +191,8 @@ impl AshtakavargaEngine {
                 if p1 == 0 && p2 == 0 {
                     continue;
                 }
-                let (has_pts_idx, _other_idx, _other_occ) = if p1 == 0 {
-                    (r2, r1, occ1)
-                } else {
-                    (r1, r2, occ2)
-                };
+                // One has points, the other doesn't
+                let has_pts_idx = if p1 == 0 { r2 } else { r1 };
                 if !is_occupied(has_pts_idx) {
                     reduced[has_pts_idx] = 0;
                 }

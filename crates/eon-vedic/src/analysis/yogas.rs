@@ -18,7 +18,10 @@ pub enum YogaType {
     ParivartanaMaha,     // Great exchange (Kendra/Trikona with Kendra/Trikona)
     ParivartanaKhala,    // Mixed exchange (one dusthana)
     ParivartanaDainya,   // Difficult exchange (both dusthana 6,8,12)
-                         // Add more types as needed
+    // Negative Yogas (Arishta)
+    Kemadruma, // No planets flanking Moon (poverty/hardship)
+    VipareetaRajaYoga, // Lord of dusthana in dusthana (vice becomes virtue)
+               // Add more types as needed
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,6 +75,10 @@ pub enum YogaCondition {
     NeechaBhangaCheck(VedicPlanet),
     /// Special Check: Parivartana (Exchange of Lords)
     ParivartanaCheck,
+    /// Special Check: Kemadruma Yoga (No planets flanking Moon)
+    KemadrumaCheck,
+    /// Special Check: Vipareeta Raja Yoga (Dusthana lord in dusthana)
+    VipareetaRajaYogaCheck,
     /// Composite AND
     And(Vec<YogaCondition>),
 }
@@ -240,6 +247,25 @@ impl YogaEngine {
             yoga_type: YogaType::Parivartana,
             description: "Exchange of House Lords.".to_string(),
             condition: YogaCondition::ParivartanaCheck,
+        });
+
+        // 10. Kemadruma Yoga (No planets flanking Moon)
+        rules.push(YogaRule {
+            name: "Kemadruma Yoga".to_string(),
+            yoga_type: YogaType::Kemadruma,
+            description: "Moon isolated with no planets in 2nd or 12th houses. Poverty, hardship."
+                .to_string(),
+            condition: YogaCondition::KemadrumaCheck,
+        });
+
+        // 11. Vipareeta Raja Yoga (Lord of dusthana in another dusthana)
+        rules.push(YogaRule {
+            name: "Vipareeta Raja Yoga".to_string(),
+            yoga_type: YogaType::VipareetaRajaYoga,
+            description:
+                "Lord of 6th, 8th, or 12th house in another dusthana. Vice becomes virtue."
+                    .to_string(),
+            condition: YogaCondition::VipareetaRajaYogaCheck,
         });
 
         rules
@@ -558,6 +584,70 @@ impl YogaEngine {
                     exchanged_planets.sort();
                     exchanged_planets.dedup();
                     Some(exchanged_planets)
+                } else {
+                    None
+                }
+            }
+            YogaCondition::KemadrumaCheck => {
+                // Kemadruma Yoga: Moon with no planets in 2nd or 12th house from it
+                // Exception: If Moon is in Kendra or aspected by benefics (simplified check)
+
+                let moon_pos = chart
+                    .planets
+                    .iter()
+                    .find(|p| p.planet == VedicPlanet::Moon)?;
+                let moon_rasi = moon_pos.rasi;
+
+                // Calculate 2nd and 12th houses from Moon
+                let second_from_moon = ((moon_rasi % 12) + 1).max(1);
+                let twelfth_from_moon = if moon_rasi == 1 { 12 } else { moon_rasi - 1 };
+
+                // Check if any planet (except Sun/Moon) is in 2nd or 12th from Moon
+                let has_flanking_planets = chart.planets.iter().any(|p| {
+                    if p.planet == VedicPlanet::Moon || p.planet == VedicPlanet::Sun {
+                        return false;
+                    }
+                    p.rasi == second_from_moon || p.rasi == twelfth_from_moon
+                });
+
+                // If no flanking planets, Kemadruma Yoga exists
+                if !has_flanking_planets {
+                    // Check for cancellation: Moon in Kendra (1,4,7,10)
+                    let is_in_kendra = [1, 4, 7, 10].contains(&moon_pos.house_index);
+
+                    if !is_in_kendra {
+                        Some(vec![VedicPlanet::Moon])
+                    } else {
+                        None // Cancelled by Kendra position
+                    }
+                } else {
+                    None
+                }
+            }
+            YogaCondition::VipareetaRajaYogaCheck => {
+                // Vipareeta Raja Yoga: Lord of 6th, 8th, or 12th in another dusthana
+                let lagna_rasi = chart.ascendant.rasi;
+                let mut vipareeta_planets = Vec::new();
+
+                for dusthana_house in [6, 8, 12] {
+                    let lord = Self::get_lord_of_house(lagna_rasi, dusthana_house);
+
+                    // Find where this lord is positioned
+                    if let Some(lord_pos) = chart.planets.iter().find(|p| p.planet == lord) {
+                        // Check if lord is in another dusthana house (6, 8, or 12)
+                        let lord_house = lord_pos.house_index;
+
+                        if [6, 8, 12].contains(&lord_house) && lord_house != dusthana_house {
+                            // Vipareeta Raja Yoga found!
+                            vipareeta_planets.push(lord);
+                        }
+                    }
+                }
+
+                if !vipareeta_planets.is_empty() {
+                    vipareeta_planets.sort();
+                    vipareeta_planets.dedup();
+                    Some(vipareeta_planets)
                 } else {
                     None
                 }
