@@ -52,25 +52,18 @@ impl StrengthEngine {
         // Ishta & Kashta Phala based on Exaltation (Uchcha) and Motion (Chesta)
         let (ishta_phala, kashta_phala) = Self::calculate_ishta_kashta(ex_score, chesta_score);
 
-        // Yuddha Bala (Planetary War) - calculate once for the chart
-        // We'll compute this per-planet context within calculate for now
-        // Note: In production, this should be cached at chart level to avoid recalculation
-        let yuddha_scores = Self::calculate_yuddha_bala(chart);
+        // Compute provisional Shadbala for all planets to determine Yuddha Bala
+        let mut provisional_scores = std::collections::HashMap::new();
+        for p_pos in &chart.planets {
+            let p_total = Self::calculate_provisional_total(p_pos, chart);
+            provisional_scores.insert(p_pos.planet, p_total);
+        }
+
+        // Yuddha Bala (Planetary War) uses the difference between total provisional Shadbalas
+        let yuddha_scores = Self::calculate_yuddha_bala(chart, &provisional_scores);
         let yuddha_bala = *yuddha_scores.get(&pos.planet).unwrap_or(&0.0);
 
-        let total = ex_score
-            + dig_score
-            + chesta_score
-            + naisargika_score
-            + kala_score
-            + drik_score
-            + paksha_score
-            + ayana_score
-            + sapta_score
-            + kendra_bala
-            + drekkana_bala
-            + ojayugmarasyamsa_bala
-            + yuddha_bala; // Add planetary war adjustment
+        let total = provisional_scores.get(&pos.planet).cloned().unwrap_or(0.0) + yuddha_bala;
 
         // Simple status determination
         let status = if ex_score >= 50.0 {
@@ -107,16 +100,40 @@ impl StrengthEngine {
         }
     }
 
-    /// Ishta & Kashta Phala (BPHS Standard)
-    /// Based on Uchcha Bala and Chesta Bala.
-    /// Formula (BPHS):
-    /// Ishta = sqrt(Uchcha * Chesta) (Geometric Mean)
-    /// Kashta = 60 - Ishta
     fn calculate_ishta_kashta(uchcha: f64, chesta: f64) -> (f64, f64) {
         // BPHS: Use geometric mean instead of arithmetic mean
         let ishta = (uchcha * chesta).sqrt();
         let kashta = (60.0 - ishta).max(0.0);
         (ishta, kashta)
+    }
+
+    /// Calculates Shadbala components excluding Yuddha Bala
+    fn calculate_provisional_total(pos: &VedicPosition, chart: &crate::chart::VedicChart) -> f64 {
+        let ex_score = Self::calculate_uchcha_bala(pos.planet, pos.sidereal_deg);
+        let dig_score = Self::calculate_dig_bala(pos.planet, pos.house_index);
+        let chesta_score = Self::calculate_chesta_bala(pos, chart);
+        let naisargika_score = Self::calculate_naisargika_bala(pos.planet);
+        let kala_score = Self::calculate_kala_bala(pos.planet, chart);
+        let ayana_score = Self::calculate_ayana_bala(pos.planet, pos.sidereal_deg);
+        let drik_score = Self::calculate_drik_bala(pos, chart);
+        let paksha_score = Self::calculate_paksha_bala(pos.planet, chart);
+        let sapta_score = Self::calculate_saptavargaja_bala(pos);
+        let kendra_bala = Self::calculate_kendra_bala(pos.house_index);
+        let drekkana_bala = Self::calculate_drekkana_bala(pos);
+        let ojayugmarasyamsa_bala = Self::calculate_ojayugmarasyamsa_bala(pos);
+
+        ex_score
+            + dig_score
+            + chesta_score
+            + naisargika_score
+            + kala_score
+            + drik_score
+            + paksha_score
+            + ayana_score
+            + sapta_score
+            + kendra_bala
+            + drekkana_bala
+            + ojayugmarasyamsa_bala
     }
 
     /// Ayana Bala (Equinoctial/Declination Strength) - BPHS Standard
@@ -267,32 +284,45 @@ impl StrengthEngine {
         };
 
         // Special Aspects (these override the standard curve)
+        // BPHS: Special aspects peak at 60.0 and decrease linearly within ±15°
         match planet {
             VedicPlanet::Mars => {
                 // Mars has full aspect (60) at 4th (90°) and 8th (210°)
-                if (diff - 90.0).abs() < 15.0 {
-                    val = 60.0;
+                let diff_4th = (diff - 90.0).abs();
+                if diff_4th < 15.0 {
+                    let special_val = 60.0 * (1.0 - diff_4th / 15.0);
+                    val = val.max(special_val);
                 }
-                if (diff - 210.0).abs() < 15.0 {
-                    val = 60.0;
+                let diff_8th = (diff - 210.0).abs();
+                if diff_8th < 15.0 {
+                    let special_val = 60.0 * (1.0 - diff_8th / 15.0);
+                    val = val.max(special_val);
                 }
             }
             VedicPlanet::Jupiter => {
                 // Jupiter has full aspect (60) at 5th (120°) and 9th (240°)
-                if (diff - 120.0).abs() < 15.0 {
-                    val = 60.0;
+                let diff_5th = (diff - 120.0).abs();
+                if diff_5th < 15.0 {
+                    let special_val = 60.0 * (1.0 - diff_5th / 15.0);
+                    val = val.max(special_val);
                 }
-                if (diff - 240.0).abs() < 15.0 {
-                    val = 60.0;
+                let diff_9th = (diff - 240.0).abs();
+                if diff_9th < 15.0 {
+                    let special_val = 60.0 * (1.0 - diff_9th / 15.0);
+                    val = val.max(special_val);
                 }
             }
             VedicPlanet::Saturn => {
                 // Saturn has full aspect (60) at 3rd (60°) and 10th (270°)
-                if (diff - 60.0).abs() < 15.0 {
-                    val = 60.0;
+                let diff_3rd = (diff - 60.0).abs();
+                if diff_3rd < 15.0 {
+                    let special_val = 60.0 * (1.0 - diff_3rd / 15.0);
+                    val = val.max(special_val);
                 }
-                if (diff - 270.0).abs() < 15.0 {
-                    val = 60.0;
+                let diff_10th = (diff - 270.0).abs();
+                if diff_10th < 15.0 {
+                    let special_val = 60.0 * (1.0 - diff_10th / 15.0);
+                    val = val.max(special_val);
                 }
             }
             _ => {}
@@ -672,6 +702,7 @@ impl StrengthEngine {
     /// - Winner gains 60 Virupas, Loser loses 60 Virupas
     fn calculate_yuddha_bala(
         chart: &crate::chart::VedicChart,
+        provisional_scores: &std::collections::HashMap<VedicPlanet, f64>,
     ) -> std::collections::HashMap<VedicPlanet, f64> {
         let mut yuddha_scores = std::collections::HashMap::new();
 
@@ -729,9 +760,14 @@ impl StrengthEngine {
                         }
                     };
 
-                    // BPHS: Winner gains 60 Virupas, Loser loses 60 Virupas
-                    *yuddha_scores.entry(winner).or_insert(0.0) += 60.0;
-                    *yuddha_scores.entry(loser).or_insert(0.0) -= 60.0;
+                    // BPHS: Winner gains strength equal to the difference in their provisional Shadbalas
+                    // Loser loses the same amount.
+                    let total1 = *provisional_scores.get(&p1).unwrap_or(&0.0);
+                    let total2 = *provisional_scores.get(&p2).unwrap_or(&0.0);
+                    let diff = (total1 - total2).abs();
+
+                    *yuddha_scores.entry(winner).or_insert(0.0) += diff;
+                    *yuddha_scores.entry(loser).or_insert(0.0) -= diff;
                 }
             }
         }

@@ -201,10 +201,17 @@ impl AshtakavargaEngine {
                 if occ1 && occ2 {
                     // Both occupied, no reduction
                 } else if !occ1 && !occ2 {
-                    // Neither occupied, both to lower value
-                    let min_val = p1.min(p2);
-                    reduced[r1] = min_val;
-                    reduced[r2] = min_val;
+                    // Neither occupied
+                    if p1 == p2 {
+                        // BPHS: If both are equal and unoccupied, both become 0
+                        reduced[r1] = 0;
+                        reduced[r2] = 0;
+                    } else {
+                        // Both to lower value
+                        let min_val = p1.min(p2);
+                        reduced[r1] = min_val;
+                        reduced[r2] = min_val;
+                    }
                 } else {
                     // One occupied
                     let (occ_idx, unocc_idx) = if occ1 { (r1, r2) } else { (r2, r1) };
