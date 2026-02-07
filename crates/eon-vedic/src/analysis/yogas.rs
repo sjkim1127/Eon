@@ -14,7 +14,10 @@ pub enum YogaType {
     DharmaKarmaAdhipati, // 9th + 10th Lord
     PanchaMahapurusha,   // Special position for Mars, Mercury, Jupiter, Venus, or Saturn
     NeechaBhanga,        // Cancellation of debilitation
-    Parivartana,         // Exchange of house lords
+    Parivartana,         // Exchange of house lords (generic)
+    ParivartanaMaha,     // Great exchange (Kendra/Trikona with Kendra/Trikona)
+    ParivartanaKhala,    // Mixed exchange (one dusthana)
+    ParivartanaDainya,   // Difficult exchange (both dusthana 6,8,12)
                          // Add more types as needed
 }
 
@@ -230,7 +233,8 @@ impl YogaEngine {
             });
         }
 
-        // 9. Parivartana
+        // 9. Parivartana (with classification)
+        // This will be handled specially in check_yogas_extended
         rules.push(YogaRule {
             name: "Parivartana Yoga".to_string(),
             yoga_type: YogaType::Parivartana,
@@ -239,6 +243,97 @@ impl YogaEngine {
         });
 
         rules
+    }
+
+    /// Extended yoga check that classifies Parivartana yogas
+    pub fn check_yogas_extended(chart: &VedicChart) -> Vec<YogaResult> {
+        let mut results = Self::check_yogas(chart);
+
+        // Find and enhance Parivartana yogas with proper classification
+        let parivartana_yogas = Self::find_parivartana_exchanges(chart);
+
+        // Remove generic Parivartana entries and add classified ones
+        results.retain(|r| r.yoga_type != YogaType::Parivartana);
+        results.extend(parivartana_yogas);
+
+        results
+    }
+
+    /// Find and classify all Parivartana Yoga exchanges
+    fn find_parivartana_exchanges(chart: &VedicChart) -> Vec<YogaResult> {
+        let mut results = Vec::new();
+        let mut processed = std::collections::HashSet::new();
+
+        for h1 in 1..=12 {
+            let lord1 = Self::get_lord_of_house(chart.ascendant.rasi, h1);
+            if let Some(pos1) = chart.planets.iter().find(|p| p.planet == lord1) {
+                let h2 = pos1.house_index;
+                if h1 != h2 {
+                    let lord2 = Self::get_lord_of_house(chart.ascendant.rasi, h2);
+                    if let Some(pos2) = chart.planets.iter().find(|p| p.planet == lord2) {
+                        if pos2.house_index == h1 && !processed.contains(&(h1.min(h2), h1.max(h2)))
+                        {
+                            // This is a valid exchange
+                            processed.insert((h1.min(h2), h1.max(h2)));
+
+                            let (yoga_type, quality_desc) = Self::classify_parivartana(h1, h2);
+                            let planets = vec![lord1, lord2];
+                            let quality = Self::assess_quality(chart, &planets);
+
+                            results.push(YogaResult {
+                                name: format!("Parivartana Yoga: House {} ↔ House {}", h1, h2),
+                                yoga_type,
+                                description: format!(
+                                    "{} ({} exchange)",
+                                    quality_desc,
+                                    if h1 == h2 { "same house" } else { "cross" }
+                                ),
+                                planets_involved: planets,
+                                quality,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        results
+    }
+
+    /// Classify Parivartana Yoga type based on house types (BPHS Standard)
+    fn classify_parivartana(h1: u8, h2: u8) -> (YogaType, String) {
+        let is_kendra = |h: u8| matches!(h, 1 | 4 | 7 | 10);
+        let is_trikona = |h: u8| matches!(h, 1 | 5 | 9);
+        let is_dusthana = |h: u8| matches!(h, 6 | 8 | 12);
+
+        let d1 = is_dusthana(h1);
+        let d2 = is_dusthana(h2);
+
+        if d1 && d2 {
+            // Both dusthana - Dainya (Difficult)
+            (
+                YogaType::ParivartanaDainya,
+                "Dainya Parivartana - Exchange of difficult houses".to_string(),
+            )
+        } else if d1 || d2 {
+            // One dusthana - Khala (Mixed)
+            (
+                YogaType::ParivartanaKhala,
+                "Khala Parivartana - Mixed exchange with one difficult house".to_string(),
+            )
+        } else if (is_kendra(h1) || is_trikona(h1)) && (is_kendra(h2) || is_trikona(h2)) {
+            // Both auspicious - Maha (Great)
+            (
+                YogaType::ParivartanaMaha,
+                "Maha Parivartana - Great exchange of auspicious houses".to_string(),
+            )
+        } else {
+            // Mixed but not involving dusthana - Khala
+            (
+                YogaType::ParivartanaKhala,
+                "Khala Parivartana - Mixed exchange".to_string(),
+            )
+        }
     }
 
     fn evaluate_condition(cond: &YogaCondition, chart: &VedicChart) -> Option<Vec<VedicPlanet>> {
@@ -365,20 +460,69 @@ impl YogaEngine {
                     return None; // Not debilitated
                 }
 
-                // Cancellation Rules (Simplified):
+                // BPHS Neecha Bhanga Raja Yoga Cancellation Rules:
                 // 1. Lord of the sign where planet is debilitated is in Kendra from Lagna/Moon.
                 // 2. Lord of the exaltation sign of the debilitated planet is in Kendra from Lagna/Moon.
-                // We will check just Lagna Kendra for Dispositor for now as per previous logic
+                // 3. Exalted planet aspects the debilitated planet.
+                // 4. Debilitated planet is conjunct with an exalted planet.
+                // 5. Lord of debilitation sign is conjunct/aspecting debilitated planet.
 
+                let mut cancellation_planets = vec![*planet];
                 let dispositor = VedicPlanet::get_ruler_of(pos.rasi);
-                let disp_pos = chart.planets.iter().find(|p| p.planet == dispositor)?;
 
-                // Check if Dispositor is in Kendra (1,4,7,10)
-                if [1, 4, 7, 10].contains(&disp_pos.house_index) {
-                    Some(vec![*planet, dispositor])
-                } else {
-                    None
+                // Rule 1: Dispositor (lord of debilitation sign) in Kendra from Lagna
+                if let Some(disp_pos) = chart.planets.iter().find(|p| p.planet == dispositor) {
+                    if [1, 4, 7, 10].contains(&disp_pos.house_index) {
+                        cancellation_planets.push(dispositor);
+                        return Some(cancellation_planets);
+                    }
+
+                    // Rule 5: Dispositor conjunct with debilitated planet
+                    if disp_pos.rasi == pos.rasi {
+                        cancellation_planets.push(dispositor);
+                        return Some(cancellation_planets);
+                    }
                 }
+
+                // Rule 2: Lord of exaltation sign in Kendra from Lagna
+                let exalt_sign = planet.exaltation_rasi();
+                let exalt_lord = VedicPlanet::get_ruler_of(exalt_sign);
+                if let Some(exalt_lord_pos) = chart.planets.iter().find(|p| p.planet == exalt_lord)
+                {
+                    if [1, 4, 7, 10].contains(&exalt_lord_pos.house_index) {
+                        cancellation_planets.push(exalt_lord);
+                        return Some(cancellation_planets);
+                    }
+                }
+
+                // Rule 3 & 4: Check for exalted planets aspecting or conjunct
+                for other in &chart.planets {
+                    if other.planet == *planet {
+                        continue;
+                    }
+
+                    let other_exalt = other.planet.exaltation_rasi();
+                    if other.rasi == other_exalt {
+                        // This planet is exalted
+
+                        // Check conjunction
+                        if other.rasi == pos.rasi {
+                            cancellation_planets.push(other.planet);
+                            return Some(cancellation_planets);
+                        }
+
+                        // Check aspect (7th house opposition as basic aspect)
+                        let diff = (other.rasi as i32 - pos.rasi as i32).abs();
+                        if diff == 6 {
+                            // 7th house aspect
+                            cancellation_planets.push(other.planet);
+                            return Some(cancellation_planets);
+                        }
+                    }
+                }
+
+                // No cancellation found
+                None
             }
             YogaCondition::ParivartanaCheck => {
                 // Return generic success if ANY exchange found?

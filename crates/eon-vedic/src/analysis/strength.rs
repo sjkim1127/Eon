@@ -83,40 +83,41 @@ impl StrengthEngine {
         }
     }
 
-    /// Ishta & Kashta Phala
+    /// Ishta & Kashta Phala (BPHS Standard)
     /// Based on Uchcha Bala and Chesta Bala.
-    /// Formula:
-    /// Ishta = (Uchcha + Chesta) / 2
+    /// Formula (BPHS):
+    /// Ishta = sqrt(Uchcha * Chesta) (Geometric Mean)
     /// Kashta = 60 - Ishta
     fn calculate_ishta_kashta(uchcha: f64, chesta: f64) -> (f64, f64) {
-        let ishta = (uchcha + chesta) / 2.0;
+        // BPHS: Use geometric mean instead of arithmetic mean
+        let ishta = (uchcha * chesta).sqrt();
         let kashta = (60.0 - ishta).max(0.0);
         (ishta, kashta)
     }
 
-    /// Ayana Bala (Equinoctial/Declination Strength)
+    /// Ayana Bala (Equinoctial/Declination Strength) - BPHS Standard
     /// Based on planet's declination and nature.
-    /// Max Dec is approx 24 deg.
+    /// BPHS Formula: (Ecliptic Obliquity ± Declination) / (2 * Ecliptic Obliquity) * 60
+    /// Ecliptic Obliquity = 23°27' = 23.45°
     /// Sun, Mars, Jupiter, Venus: Strong in North (+).
     /// Moon, Saturn: Strong in South (-).
-    /// Mercury: Always strong (or neutral 30).
+    /// Mercury: Neutral (always 30).
     fn calculate_ayana_bala(planet: VedicPlanet, declination: f64) -> f64 {
-        // Max declination ~24.0. Normalize to 0~60.
-        // Formula: Score = 30 + (Dec / 24) * 30 * DirectionFactor
+        use crate::core::constants::ECLIPTIC_OBLIQUITY;
 
         let direction_factor = match planet {
             VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter | VedicPlanet::Venus => 1.0,
             VedicPlanet::Moon | VedicPlanet::Saturn => -1.0,
-            VedicPlanet::Mercury => 1.0, // Mercury follows Sun usually
-            _ => 0.0,
+            VedicPlanet::Mercury => return 30.0, // Mercury is always neutral
+            _ => return 30.0,
         };
 
-        // Dec range -24 to +24
-        // If Sun (North pref) has +24 Dec => 30 + 1 * 30 = 60.
-        // If Sun has -24 Dec => 30 - 1 * 30 = 0.
-
-        let val = (declination / 24.0).max(-1.0).min(1.0); // Clamp -1 to 1
-        let score = 30.0 + (val * 30.0 * direction_factor);
+        // BPHS Formula: (23.45 + direction * dec) / (2 * 23.45) * 60
+        // For north-strong planets with max north declination (+23.45): (23.45 + 23.45) / 46.9 * 60 = 60
+        // For north-strong planets with max south declination (-23.45): (23.45 - 23.45) / 46.9 * 60 = 0
+        let score = (ECLIPTIC_OBLIQUITY + direction_factor * declination)
+            / (2.0 * ECLIPTIC_OBLIQUITY)
+            * 60.0;
 
         score.max(0.0).min(60.0)
     }
@@ -165,8 +166,10 @@ impl StrengthEngine {
         }
     }
 
-    /// Drik Bala (Aspect Strength)
+    /// Drik Bala (Aspect Strength) - BPHS Standard
     /// Calculates the sum of aspect values (Drishti) from all other planets.
+    /// Benefic aspects add positive strength, malefic aspects subtract.
+    /// No arbitrary scaling - direct aspect values are used.
     fn calculate_drik_bala(pos: &VedicPosition, chart: &crate::chart::VedicChart) -> f64 {
         let mut total_drik = 0.0;
 
@@ -178,7 +181,7 @@ impl StrengthEngine {
             let diff = (pos.sidereal_deg - aspector.sidereal_deg + 360.0) % 360.0;
             let val = Self::get_aspect_value(aspector.planet, diff);
 
-            // Influence of aspecting planet nature
+            // Influence of aspecting planet nature (BPHS standard)
             let is_malefic = matches!(
                 aspector.planet,
                 VedicPlanet::Sun
@@ -188,10 +191,11 @@ impl StrengthEngine {
                     | VedicPlanet::Ketu
             );
 
+            // BPHS: Direct aspect values (no division by 4)
             if is_malefic {
-                total_drik -= val / 4.0;
+                total_drik -= val;
             } else {
-                total_drik += val / 4.0;
+                total_drik += val;
             }
         }
 
@@ -347,34 +351,53 @@ impl StrengthEngine {
         score
     }
 
-    /// Chesta Bala (Motion Strength)
-    /// Simplified: Planets gain strength when retrograde or moving slowly.
+    /// Chesta Bala (Motion Strength) - BPHS Standard
+    /// Planets gain strength based on their motion state classification.
+    /// BPHS defines 7-8 motion states with specific scores:
+    /// - Vakra (Retrograde): 60
+    /// - Anuvakra (Post-retrograde stationary): 30  
+    /// - Vikala (Very Slow): 15
+    /// - Mandatara (Slow): 7.5
+    /// - Manda (Medium): 15
+    /// - Sama (Average): 30
+    /// - Chara (Fast): 45
+    /// - Ati-chara (Very Fast): 60
     fn calculate_chesta_bala(pos: &VedicPosition) -> f64 {
+        use crate::core::constants::*;
+
+        // Sun and Moon use different strength factors (from Ayana/Paksha Bala)
+        // For Chesta Bala, they get neutral score
         if pos.planet == VedicPlanet::Sun || pos.planet == VedicPlanet::Moon {
-            // Luminaries gain strength from other factors (Ayana/Paksha), but here we return a neutral 30.
             return 30.0;
         }
 
-        if pos.is_retrograde {
-            // Retrograde planets are considered strong in Chesta Bala.
+        // Get speed in degrees per day
+        let speed = pos.speed;
+
+        // Retrograde planets always get maximum Chesta Bala
+        if pos.is_retrograde || speed < 0.0 {
             return 60.0;
         }
 
-        // Stationary or very slow planets are also strong.
-        // Average speeds: Mars 0.5, Merc 1.4, Jup 0.1, Ven 1.2, Sat 0.03
-        let avg_speed = match pos.planet {
-            VedicPlanet::Mars => AVG_SPEED_MARS,
-            VedicPlanet::Mercury => AVG_SPEED_MERCURY,
-            VedicPlanet::Jupiter => AVG_SPEED_JUPITER,
-            VedicPlanet::Venus => AVG_SPEED_VENUS,
-            VedicPlanet::Saturn => AVG_SPEED_SATURN,
-            _ => AVG_SPEED_DEFAULT,
+        // Select appropriate motion state thresholds based on planet
+        let motion_states: &[(&str, f64, f64, f64)] = match pos.planet {
+            VedicPlanet::Mars => &MARS_MOTION_STATES,
+            VedicPlanet::Mercury => &MERCURY_MOTION_STATES,
+            VedicPlanet::Jupiter => &JUPITER_MOTION_STATES,
+            VedicPlanet::Venus => &VENUS_MOTION_STATES,
+            VedicPlanet::Saturn => &SATURN_MOTION_STATES,
+            _ => return 30.0, // Rahu/Ketu get neutral
         };
 
-        let ratio = (pos.speed.abs() / avg_speed).min(2.0);
-        // Strength is inversely proportional to speed relative to average.
-        // Max 60 units.
-        (60.0 * (1.1 - (ratio / 2.0))).max(0.0).min(60.0)
+        // Find which motion state the planet is in based on its current speed
+        for &(_name, min_speed, max_speed, score) in motion_states {
+            if speed >= min_speed && speed < max_speed {
+                return score;
+            }
+        }
+
+        // Default to average if somehow no match (shouldn't happen with proper thresholds)
+        30.0
     }
 
     /// Uchcha Bala (Exaltation Strength)

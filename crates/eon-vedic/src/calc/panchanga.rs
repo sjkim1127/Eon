@@ -159,21 +159,29 @@ impl PanchangaEngine {
         hora_seq[final_idx]
     }
 
-    // Placeholder for Tribhaga Lords (Day/Night divided by 3)
+    /// Calculate Tribhaga Lords (BPHS Standard)
+    /// Day is divided into 3 parts: Mercury (1st), Sun (2nd), Saturn (3rd)
+    /// Night is divided into 3 parts: Moon (1st), Venus (2nd), Mars (3rd)
+    /// Returns array of 8 lords (3 day + 3 night + 2 padding for Kala Bala compatibility)
     fn calculate_tribhaga_lords(day_lord: VedicPlanet) -> [VedicPlanet; 8] {
-        // Tribhaga implies 3 parts of day and 3 parts of night.
-        // But often Kala Bala uses 8 parts (Yamas) logic or Lord of Day, Lord of Night etc.
-        // For Tribhaga (3 parts):
-        // Day Part 1/3, 2/3, 3/3 Lords?
-        // Usually:
-        // Day Part 1: Day Lord
-        // Day Part 2: Jupiter ?
-        // Day Part 3: ?
+        // BPHS Standard Tribhaga Lords:
+        // Day Parts (from sunrise to sunset): Mercury, Sun, Saturn
+        // Night Parts (from sunset to next sunrise): Moon, Venus, Mars
 
-        // Let's implement simpler: Just return Day Lord repeated for now until "Precise" specification is clarified.
-        // The user request said "Tribhaga Bala: day/night 3 parts".
-        // We will store just 8 placeholders.
-        [day_lord; 8]
+        // Return standard pattern (first 3 for day, next 3 for night)
+        [
+            // Day lords (used when is_day_birth == true)
+            VedicPlanet::Mercury, // 1st third of day
+            VedicPlanet::Sun,     // 2nd third of day
+            VedicPlanet::Saturn,  // 3rd third of day
+            // Night lords (used when is_day_birth == false)
+            VedicPlanet::Moon,  // 1st third of night
+            VedicPlanet::Venus, // 2nd third of night
+            VedicPlanet::Mars,  // 3rd third of night
+            // Padding for compatibility
+            day_lord,
+            day_lord,
+        ]
     }
 
     /// NOAA Sunrise/Sunset Algorithm (Simplified)
