@@ -19,9 +19,13 @@ pub enum YogaType {
     ParivartanaKhala,    // Mixed exchange (one dusthana)
     ParivartanaDainya,   // Difficult exchange (both dusthana 6,8,12)
     // Negative Yogas (Arishta)
-    Kemadruma, // No planets flanking Moon (poverty/hardship)
+    Kemadruma,         // No planets flanking Moon (poverty/hardship)
     VipareetaRajaYoga, // Lord of dusthana in dusthana (vice becomes virtue)
-               // Add more types as needed
+    // Dusthana Lord in Own House Yogas (Beneficial)
+    Harsha, // 6th lord in 6th house (victory over enemies)
+    Sarala, // 8th lord in 8th house (long life, fearlessness)
+    Vimala, // 12th lord in 12th house (spiritual liberation)
+            // Add more types as needed
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -79,6 +83,12 @@ pub enum YogaCondition {
     KemadrumaCheck,
     /// Special Check: Vipareeta Raja Yoga (Dusthana lord in dusthana)
     VipareetaRajaYogaCheck,
+    /// Special Check: Harsha Yoga (6th lord in 6th house)
+    HarshaYogaCheck,
+    /// Special Check: Sarala Yoga (8th lord in 8th house)
+    SaralaYogaCheck,
+    /// Special Check: Vimala Yoga (12th lord in 12th house)
+    VimalaYogaCheck,
     /// Composite AND
     And(Vec<YogaCondition>),
 }
@@ -266,6 +276,34 @@ impl YogaEngine {
                 "Lord of 6th, 8th, or 12th house in another dusthana. Vice becomes virtue."
                     .to_string(),
             condition: YogaCondition::VipareetaRajaYogaCheck,
+        });
+
+        // 12. Harsha Yoga (6th lord in 6th house)
+        rules.push(YogaRule {
+            name: "Harsha Yoga".to_string(),
+            yoga_type: YogaType::Harsha,
+            description: "Lord of 6th house in 6th house. Victory over enemies, good health."
+                .to_string(),
+            condition: YogaCondition::HarshaYogaCheck,
+        });
+
+        // 13. Sarala Yoga (8th lord in 8th house)
+        rules.push(YogaRule {
+            name: "Sarala Yoga".to_string(),
+            yoga_type: YogaType::Sarala,
+            description: "Lord of 8th house in 8th house. Long life, fearlessness, prosperity."
+                .to_string(),
+            condition: YogaCondition::SaralaYogaCheck,
+        });
+
+        // 14. Vimala Yoga (12th lord in 12th house)
+        rules.push(YogaRule {
+            name: "Vimala Yoga".to_string(),
+            yoga_type: YogaType::Vimala,
+            description:
+                "Lord of 12th house in 12th house. Spiritual liberation, charitable nature."
+                    .to_string(),
+            condition: YogaCondition::VimalaYogaCheck,
         });
 
         rules
@@ -727,6 +765,52 @@ impl YogaEngine {
                     None
                 }
             }
+            YogaCondition::HarshaYogaCheck => {
+                // Harsha Yoga: 6th lord in 6th house
+                let lagna_rasi = chart.ascendant.rasi;
+                let lord_6 = Self::get_lord_of_house(lagna_rasi, 6);
+
+                if let Some(lord_pos) = chart.planets.iter().find(|p| p.planet == lord_6) {
+                    if lord_pos.house_index == 6 {
+                        Some(vec![lord_6])
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            YogaCondition::SaralaYogaCheck => {
+                // Sarala Yoga: 8th lord in 8th house
+                let lagna_rasi = chart.ascendant.rasi;
+                let lord_8 = Self::get_lord_of_house(lagna_rasi, 8);
+
+                if let Some(lord_pos) = chart.planets.iter().find(|p| p.planet == lord_8) {
+                    if lord_pos.house_index == 8 {
+                        Some(vec![lord_8])
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+            YogaCondition::VimalaYogaCheck => {
+                // Vimala Yoga: 12th lord in 12th house
+                let lagna_rasi = chart.ascendant.rasi;
+                let lord_12 = Self::get_lord_of_house(lagna_rasi, 12);
+
+                if let Some(lord_pos) = chart.planets.iter().find(|p| p.planet == lord_12) {
+                    if lord_pos.house_index == 12 {
+                        Some(vec![lord_12])
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+
             _ => None, // Implement others if needed
         }
     }

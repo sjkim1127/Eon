@@ -48,12 +48,20 @@ impl StrengthEngine {
         let drekkana_bala = Self::calculate_drekkana_bala(pos);
         let ojayugmarasyamsa_bala = Self::calculate_ojayugmarasyamsa_bala(pos);
 
+        // BPHS: Moon's Chesta Bala equals its Paksha Bala
+        let final_chesta_score = if pos.planet == VedicPlanet::Moon {
+            paksha_score // Moon's motion strength is reflected in its phase
+        } else {
+            chesta_score
+        };
+
         // Ishta & Kashta Phala based on Exaltation (Uchcha) and Motion (Chesta)
-        let (ishta_phala, kashta_phala) = Self::calculate_ishta_kashta(ex_score, chesta_score);
+        let (ishta_phala, kashta_phala) =
+            Self::calculate_ishta_kashta(ex_score, final_chesta_score);
 
         let total = ex_score
             + dig_score
-            + chesta_score
+            + final_chesta_score  // Use final_chesta_score (Paksha for Moon, Chesta for others)
             + naisargika_score
             + kala_score
             + drik_score
@@ -81,7 +89,7 @@ impl StrengthEngine {
             planet: pos.planet,
             exaltation_score: ex_score,
             directional_score: dig_score,
-            chesta_score,
+            chesta_score: final_chesta_score, // Store the final value (Paksha for Moon)
             naisargika_score,
             kala_score,
             drik_score,
@@ -114,16 +122,18 @@ impl StrengthEngine {
     /// Based on planet's declination and nature.
     /// BPHS Formula: (Ecliptic Obliquity ± Declination) / (2 * Ecliptic Obliquity) * 60
     /// Ecliptic Obliquity = 23°27' = 23.45°
-    /// Sun, Mars, Jupiter, Venus: Strong in North (+).
+    /// Sun, Mars, Jupiter, Venus, Mercury: Strong in North (+).
     /// Moon, Saturn: Strong in South (-).
-    /// Mercury: Neutral (always 30).
     fn calculate_ayana_bala(planet: VedicPlanet, declination: f64) -> f64 {
         use crate::core::constants::ECLIPTIC_OBLIQUITY;
 
         let direction_factor = match planet {
-            VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter | VedicPlanet::Venus => 1.0,
+            VedicPlanet::Sun
+            | VedicPlanet::Mars
+            | VedicPlanet::Jupiter
+            | VedicPlanet::Venus
+            | VedicPlanet::Mercury => 1.0, // BPHS: Mercury is North-strong, not neutral
             VedicPlanet::Moon | VedicPlanet::Saturn => -1.0,
-            VedicPlanet::Mercury => return 30.0, // Mercury is always neutral
             _ => return 30.0,
         };
 
@@ -218,25 +228,47 @@ impl StrengthEngine {
     }
 
     fn get_aspect_value(planet: VedicPlanet, diff: f64) -> f64 {
+        // BPHS standard aspect strength in Virupas (1 Virupa = 1/60 of full strength)
+        // Fixed formula based on BPHS Chapter 27, Verse 23-25
         let mut val = if diff > 30.0 && diff <= 60.0 {
-            diff - 30.0
+            // 30° to 60°: (D - 30) / 2 → 0 to 15 Virupas
+            (diff - 30.0) / 2.0
         } else if diff > 60.0 && diff <= 90.0 {
-            15.0
+            // 60° to 90°: (D - 60) + 15 → 15 to 45 Virupas (increasing)
+            (diff - 60.0) + 15.0
         } else if diff > 90.0 && diff <= 120.0 {
-            (diff - 90.0) + 15.0
+            // 90° to 120°: 45 - (D - 90) / 2 → 45 to 30 Virupas (decreasing)
+            45.0 - (diff - 90.0) / 2.0
         } else if diff > 120.0 && diff <= 150.0 {
-            45.0
+            // 120° to 150°: 30 - (D - 120) → 30 to 0 Virupas (decreasing)
+            30.0 - (diff - 120.0)
         } else if diff > 150.0 && diff <= 180.0 {
-            (diff - 150.0) / 2.0 + 45.0
+            // 150° to 180°: (D - 150) * 2 → 0 to 60 Virupas (increasing to maximum)
+            (diff - 150.0) * 2.0
         } else if diff > 180.0 && diff <= 300.0 {
-            (300.0 - diff) / 2.0
+            // 180° to 300°: Mirror of 60° to 180° (decreasing from 60)
+            let reverse_diff = 360.0 - diff; // Convert to equivalent forward angle
+            if reverse_diff <= 30.0 {
+                0.0
+            } else if reverse_diff <= 60.0 {
+                (reverse_diff - 30.0) / 2.0
+            } else if reverse_diff <= 90.0 {
+                (reverse_diff - 60.0) + 15.0
+            } else if reverse_diff <= 120.0 {
+                45.0 - (reverse_diff - 90.0) / 2.0
+            } else if reverse_diff <= 150.0 {
+                30.0 - (reverse_diff - 120.0)
+            } else {
+                (reverse_diff - 150.0) * 2.0
+            }
         } else {
             0.0
         };
 
-        // Special Aspects
+        // Special Aspects (these override the standard curve)
         match planet {
             VedicPlanet::Mars => {
+                // Mars has full aspect (60) at 4th (90°) and 8th (210°)
                 if (diff - 90.0).abs() < 15.0 {
                     val = 60.0;
                 }
@@ -245,6 +277,7 @@ impl StrengthEngine {
                 }
             }
             VedicPlanet::Jupiter => {
+                // Jupiter has full aspect (60) at 5th (120°) and 9th (240°)
                 if (diff - 120.0).abs() < 15.0 {
                     val = 60.0;
                 }
@@ -253,6 +286,7 @@ impl StrengthEngine {
                 }
             }
             VedicPlanet::Saturn => {
+                // Saturn has full aspect (60) at 3rd (60°) and 10th (270°)
                 if (diff - 60.0).abs() < 15.0 {
                     val = 60.0;
                 }
