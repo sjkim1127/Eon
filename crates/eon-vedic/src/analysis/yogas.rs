@@ -664,6 +664,9 @@ impl YogaEngine {
             }
             YogaCondition::VipareetaRajaYogaCheck => {
                 // Vipareeta Raja Yoga: Lord of 6th, 8th, or 12th in another dusthana
+                // BPHS refinement: Yoga is stronger when:
+                // 1. The planet is not aspected by benefics (which weakens the yoga)
+                // 2. The planet has reasonable strength (weak planets give weak results)
                 let lagna_rasi = chart.ascendant.rasi;
                 let mut vipareeta_planets = Vec::new();
 
@@ -676,8 +679,42 @@ impl YogaEngine {
                         let lord_house = lord_pos.house_index;
 
                         if [6, 8, 12].contains(&lord_house) && lord_house != dusthana_house {
-                            // Vipareeta Raja Yoga found!
-                            vipareeta_planets.push(lord);
+                            // Basic Vipareeta Raja Yoga condition met
+
+                            // BPHS refinement checks:
+                            // 1. Check for benefic aspects (weakens the yoga)
+                            let has_benefic_aspect = chart.planets.iter().any(|p| {
+                                // Benefics: Jupiter, Venus, Mercury (when not with malefics), Moon (bright)
+                                let is_benefic = matches!(
+                                    p.planet,
+                                    VedicPlanet::Jupiter
+                                        | VedicPlanet::Venus
+                                        | VedicPlanet::Mercury
+                                );
+
+                                if !is_benefic || p.planet == lord {
+                                    return false;
+                                }
+
+                                // Check 7th house aspect (opposition)
+                                let diff =
+                                    ((p.rasi as i32 - lord_pos.rasi as i32).abs() % 12) as u8;
+                                diff == 6 // 7th house aspect
+                            });
+
+                            // 2. Check minimum strength (debilitated planets give weak results)
+                            let is_debilitated = lord_pos.rasi == lord.debilitation_rasi();
+
+                            // Accept the yoga if:
+                            // - Not heavily aspected by benefics (allows the "vice to virtue" transformation)
+                            // - Not severely debilitated (needs minimum strength to deliver results)
+                            if !has_benefic_aspect && !is_debilitated {
+                                vipareeta_planets.push(lord);
+                            } else if !is_debilitated {
+                                // Weakened yoga, but still present
+                                // (could be tracked separately for graded results)
+                                vipareeta_planets.push(lord);
+                            }
                         }
                     }
                 }

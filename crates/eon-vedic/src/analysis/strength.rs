@@ -377,13 +377,29 @@ impl StrengthEngine {
     /// - Sama (Average): 30
     /// - Chara (Fast): 45
     /// - Ati-chara (Very Fast): 60
+    ///
+    /// For Sun and Moon (which don't retrograde), BPHS uses Ayana-based calculation:
+    /// - Sun: Based on Uttarayana (northward) vs Dakshinayana (southward) movement
+    /// - Moon: Based on Paksha (waxing vs waning) already covered in Paksha Bala
     fn calculate_chesta_bala(pos: &VedicPosition) -> f64 {
         use crate::core::constants::*;
 
-        // Sun and Moon use different strength factors (from Ayana/Paksha Bala)
-        // For Chesta Bala, they get neutral score
-        if pos.planet == VedicPlanet::Sun || pos.planet == VedicPlanet::Moon {
-            return 30.0;
+        // Sun: BPHS Ayana-based Chesta Bala
+        // Maximum when moving North (increasing declination), minimum when moving South
+        if pos.planet == VedicPlanet::Sun {
+            // Sun's declination ranges from -23.45° to +23.45°
+            // Chesta Bala = [(Declination + 23.45) / (2 * 23.45)] * 60
+            // This gives 0 at minimum declination, 60 at maximum
+            let dec = pos.declination;
+            let chesta = ((dec + ECLIPTIC_OBLIQUITY) / (2.0 * ECLIPTIC_OBLIQUITY)) * 60.0;
+            return chesta.max(0.0).min(60.0);
+        }
+
+        // Moon: Paksha-based strength is already covered in Paksha Bala
+        // For Chesta Bala specifically, BPHS uses a neutral value
+        // since Moon's "motion strength" is reflected in its phase (Paksha Bala)
+        if pos.planet == VedicPlanet::Moon {
+            return 30.0; // Neutral, as Paksha Bala covers lunar variation
         }
 
         // Get speed in degrees per day
