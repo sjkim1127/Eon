@@ -42,7 +42,7 @@ impl StrengthEngine {
         let drik_score = Self::calculate_drik_bala(pos, chart);
         let paksha_score = Self::calculate_paksha_bala(pos.planet, chart);
 
-        let sapta_score = Self::calculate_saptavargaja_bala(pos);
+        let sapta_score = Self::calculate_saptavargaja_bala(pos, chart);
 
         // Additional Sthana Bala components (BPHS)
         let kendra_bala = Self::calculate_kendra_bala(pos.house_index);
@@ -101,8 +101,9 @@ impl StrengthEngine {
     }
 
     fn calculate_ishta_kashta(uchcha: f64, chesta: f64) -> (f64, f64) {
-        // BPHS: Ishta = (Uchcha Bala * Chesta Bala) / 60
-        let ishta = (uchcha * chesta) / 60.0;
+        // BPHS: Ishta = sqrt(Uchcha Bala * Chesta Bala)
+        // This geometric mean standard is used to determine auspiciousness.
+        let ishta = (uchcha * chesta).sqrt();
         let kashta = (60.0 - ishta).max(0.0);
         (ishta, kashta)
     }
@@ -117,7 +118,7 @@ impl StrengthEngine {
         let ayana_score = Self::calculate_ayana_bala(pos.planet, pos.sidereal_deg);
         let drik_score = Self::calculate_drik_bala(pos, chart);
         let paksha_score = Self::calculate_paksha_bala(pos.planet, chart);
-        let sapta_score = Self::calculate_saptavargaja_bala(pos);
+        let sapta_score = Self::calculate_saptavargaja_bala(pos, chart);
         let kendra_bala = Self::calculate_kendra_bala(pos.house_index);
         let drekkana_bala = Self::calculate_drekkana_bala(pos);
         let ojayugmarasyamsa_bala = Self::calculate_ojayugmarasyamsa_bala(pos);
@@ -547,10 +548,10 @@ impl StrengthEngine {
         dist_houses as f64 * 10.0
     }
 
-    /// Saptavargaja Bala (Strength across 7 Vargas)
+    /// Saptavargaja Bala (Strength across 7 Vargas) - Updated with Panchadha Maitri
     /// D1, D2, D3, D7, D9, D12, D30
-    /// Points: Great Friend (45), Friend (30), Neutral (15), Enemy (10), Great Enemy (5) -> Normalize to 0~60 (sum / 7)
-    fn calculate_saptavargaja_bala(pos: &VedicPosition) -> f64 {
+    /// Points: Great Friend/Own (45), Friend (30), Neutral (15), Enemy (10), Great Enemy (5) -> Normalize to 0~60 (sum / 7)
+    fn calculate_saptavargaja_bala(pos: &VedicPosition, chart: &crate::chart::VedicChart) -> f64 {
         let vargas = [
             pos.rasi,
             pos.hora_rasi,
@@ -561,27 +562,39 @@ impl StrengthEngine {
             pos.trimsamsa_rasi,
         ];
 
+        let p_house = pos.house_index;
+
         let mut total_v_points = 0.0;
         for rasi in vargas {
             let lord = VedicPlanet::get_ruler_of(rasi);
-            // We use Natural Friendship (Naisargika) for Saptavargaja usually
-            let relation = pos.planet.naisargika_relation(lord);
+
+            // Find lord's house in D1 for Temporal Friendship (Tatkalika)
+            let l_house = chart
+                .planets
+                .iter()
+                .find(|p| p.planet == lord)
+                .map(|p| p.house_index)
+                .unwrap_or(0);
+
+            // BPHS: Use Panchadha Maitri (Natural + Temporal Relationship)
+            let relation = if l_house == 0 {
+                pos.planet.naisargika_relation(lord)
+            } else {
+                pos.planet.panchadha_relation(lord, p_house, l_house)
+            };
 
             let pts = if pos.planet == lord {
-                45.0
-            }
-            // Own Sign
-            else if relation == 1 {
-                30.0
-            }
-            // Friend
-            else if relation == 0 {
-                15.0
-            }
-            // Neutral
-            else {
-                5.0
-            }; // Enemy
+                45.0 // Own Sign (Swakshetra)
+            } else {
+                match relation {
+                    2 => 45.0,  // Adhimitra (Great Friend)
+                    1 => 30.0,  // Mitra (Friend)
+                    0 => 15.0,  // Sama (Neutral)
+                    -1 => 10.0, // Shatru (Enemy)
+                    -2 => 5.0,  // Adhishatru (Great Enemy)
+                    _ => 15.0,
+                }
+            };
 
             total_v_points += pts;
         }
@@ -738,10 +751,11 @@ impl StrengthEngine {
                 // War occurs if within 1 degree
                 if long_diff <= 1.0 {
                     // Winner is the planet with higher latitude (farther from ecliptic)
-                    let dec1 = pos1.declination.abs();
-                    let dec2 = pos2.declination.abs();
+                    // BPHS: Higher latitude/declination (Northward) wins.
+                    let dec1 = pos1.declination;
+                    let dec2 = pos2.declination;
 
-                    // BPHS: Winner has higher declination (farther from ecliptic)
+                    // BPHS: Winner has higher declination (Northern wins)
                     // If declinations are close, use inherent size
                     let size1 = Self::get_planet_relative_size(p1);
                     let size2 = Self::get_planet_relative_size(p2);
