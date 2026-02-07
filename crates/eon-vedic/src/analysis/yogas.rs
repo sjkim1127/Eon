@@ -22,10 +22,14 @@ pub enum YogaType {
     Kemadruma,         // No planets flanking Moon (poverty/hardship)
     VipareetaRajaYoga, // Lord of dusthana in dusthana (vice becomes virtue)
     // Dusthana Lord in Own House Yogas (Beneficial)
-    Harsha, // 6th lord in 6th house (victory over enemies)
-    Sarala, // 8th lord in 8th house (long life, fearlessness)
-    Vimala, // 12th lord in 12th house (spiritual liberation)
-            // Add more types as needed
+    Harsha,    // 6th lord in 6th house (victory over enemies)
+    Sarala,    // 8th lord in 8th house (long life, fearlessness)
+    Vimala,    // 12th lord in 12th house (spiritual liberation)
+    KalaSarpa, // All planets hemmed between Rahu-Ketu axis (obstacles, delays)
+    Adhi,      // Benefics in 6, 7, 8 from Moon/Lagna
+    Vasumathi, // Benefics inUpachaya (3, 6, 10, 11) houses
+    Sakata,    // Moon in 6, 8, 12 from Jupiter
+               // Add more types as needed
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -89,6 +93,14 @@ pub enum YogaCondition {
     SaralaYogaCheck,
     /// Special Check: Vimala Yoga (12th lord in 12th house)
     VimalaYogaCheck,
+    /// Special Check: Kala Sarpa Yoga (All planets between Rahu-Ketu axis)
+    KalaSarpaCheck,
+    /// Special Check: Adhi Yoga (Benefics in 6, 7, 8 from Moon)
+    AdhiYogaCheck,
+    /// Special Check: Vasumathi Yoga (Benefics in Upachaya houses)
+    VasumathiYogaCheck,
+    /// Special Check: Sakata Yoga (Moon in 6, 8, 12 from Jupiter)
+    SakataYogaCheck,
     /// Composite AND
     And(Vec<YogaCondition>),
 }
@@ -108,6 +120,11 @@ impl YogaEngine {
         let mut results = Vec::new();
 
         for rule in rules {
+            // Parivartana is handled separately through classification logic
+            if rule.condition == YogaCondition::ParivartanaCheck {
+                continue;
+            }
+
             if let Some(mut planets) = Self::evaluate_condition(&rule.condition, chart) {
                 // Determine Quality
                 let quality = Self::assess_quality(chart, &planets);
@@ -125,6 +142,9 @@ impl YogaEngine {
                 });
             }
         }
+
+        // Include Parivartana Yogas with proper classification (Maha, Khala, Dainya)
+        results.extend(Self::find_parivartana_exchanges(chart));
 
         results
     }
@@ -251,7 +271,7 @@ impl YogaEngine {
         }
 
         // 9. Parivartana (with classification)
-        // This will be handled specially in check_yogas_extended
+        // This will be handled specially in check_yogas
         rules.push(YogaRule {
             name: "Parivartana Yoga".to_string(),
             yoga_type: YogaType::Parivartana,
@@ -306,21 +326,40 @@ impl YogaEngine {
             condition: YogaCondition::VimalaYogaCheck,
         });
 
+        // 15. Kala Sarpa Yoga
+        rules.push(YogaRule {
+            name: "Kala Sarpa Yoga".to_string(),
+            yoga_type: YogaType::KalaSarpa,
+            description: "All planets hemmed between Rahu and Ketu. Intense destiny.".to_string(),
+            condition: YogaCondition::KalaSarpaCheck,
+        });
+
+        // 16. Adhi Yoga
+        rules.push(YogaRule {
+            name: "Chandra Adhi Yoga".to_string(),
+            yoga_type: YogaType::Adhi,
+            description: "Benefics in 6th, 7th, 8th from Moon. Leadership and fame.".to_string(),
+            condition: YogaCondition::AdhiYogaCheck,
+        });
+
+        // 17. Vasumathi Yoga
+        rules.push(YogaRule {
+            name: "Vasumathi Yoga".to_string(),
+            yoga_type: YogaType::Vasumathi,
+            description: "Benefics in Upachaya houses (3, 6, 10, 11). Prosperity.".to_string(),
+            condition: YogaCondition::VasumathiYogaCheck,
+        });
+
+        // 18. Sakata Yoga
+        rules.push(YogaRule {
+            name: "Sakata Yoga".to_string(),
+            yoga_type: YogaType::Sakata,
+            description: "Moon in 6th, 8th, or 12th from Jupiter. Financial ups and downs."
+                .to_string(),
+            condition: YogaCondition::SakataYogaCheck,
+        });
+
         rules
-    }
-
-    /// Extended yoga check that classifies Parivartana yogas
-    pub fn check_yogas_extended(chart: &VedicChart) -> Vec<YogaResult> {
-        let mut results = Self::check_yogas(chart);
-
-        // Find and enhance Parivartana yogas with proper classification
-        let parivartana_yogas = Self::find_parivartana_exchanges(chart);
-
-        // Remove generic Parivartana entries and add classified ones
-        results.retain(|r| r.yoga_type != YogaType::Parivartana);
-        results.extend(parivartana_yogas);
-
-        results
     }
 
     /// Find and classify all Parivartana Yoga exchanges
@@ -722,35 +761,44 @@ impl YogaEngine {
                             // BPHS refinement checks:
                             // 1. Check for benefic aspects (weakens the yoga)
                             let has_benefic_aspect = chart.planets.iter().any(|p| {
-                                // Benefics: Jupiter, Venus, Mercury (when not with malefics), Moon (bright)
                                 let is_benefic = matches!(
                                     p.planet,
                                     VedicPlanet::Jupiter
                                         | VedicPlanet::Venus
                                         | VedicPlanet::Mercury
                                 );
-
                                 if !is_benefic || p.planet == lord {
                                     return false;
                                 }
-
-                                // Check 7th house aspect (opposition)
                                 let diff =
                                     ((p.rasi as i32 - lord_pos.rasi as i32).abs() % 12) as u8;
                                 diff == 6 // 7th house aspect
                             });
 
-                            // 2. Check minimum strength (debilitated planets give weak results)
+                            // 2. Check for malefic influence (strengthens/modifies the yoga)
+                            let has_malefic_influence = chart.planets.iter().any(|p| {
+                                let is_malefic = matches!(
+                                    p.planet,
+                                    VedicPlanet::Mars | VedicPlanet::Saturn | VedicPlanet::Sun
+                                );
+                                if !is_malefic || p.planet == lord {
+                                    return false;
+                                }
+                                let diff =
+                                    ((p.rasi as i32 - lord_pos.rasi as i32).abs() % 12) as u8;
+                                diff == 0 || diff == 6 // Conjunction or Opposition
+                            });
+
+                            // 3. Check minimum strength (debilitated planets give weak results)
                             let is_debilitated = lord_pos.rasi == lord.debilitation_rasi();
 
-                            // Accept the yoga if:
-                            // - Not heavily aspected by benefics (allows the "vice to virtue" transformation)
-                            // - Not severely debilitated (needs minimum strength to deliver results)
+                            // Logic:
+                            // - Strongly Present if no major benefic interference and either:
+                            //   a) Not debilitated
+                            //   b) Associated with malefics (pure "evil becomes good" theme)
                             if !has_benefic_aspect && !is_debilitated {
                                 vipareeta_planets.push(lord);
-                            } else if !is_debilitated {
-                                // Weakened yoga, but still present
-                                // (could be tracked separately for graded results)
+                            } else if has_malefic_influence && !is_debilitated {
                                 vipareeta_planets.push(lord);
                             }
                         }
@@ -806,6 +854,122 @@ impl YogaEngine {
                     } else {
                         None
                     }
+                } else {
+                    None
+                }
+            }
+            YogaCondition::KalaSarpaCheck => {
+                // All planets between Rahu and Ketu
+                let rahu = chart
+                    .planets
+                    .iter()
+                    .find(|p| p.planet == VedicPlanet::Rahu)?;
+                let ketu = chart
+                    .planets
+                    .iter()
+                    .find(|p| p.planet == VedicPlanet::Ketu)?;
+
+                let mut arc1_count = 0;
+                let mut arc2_count = 0;
+                let planets_to_check = [
+                    VedicPlanet::Sun,
+                    VedicPlanet::Moon,
+                    VedicPlanet::Mars,
+                    VedicPlanet::Mercury,
+                    VedicPlanet::Jupiter,
+                    VedicPlanet::Venus,
+                    VedicPlanet::Saturn,
+                ];
+
+                for &pl in &planets_to_check {
+                    let pos = chart.planets.iter().find(|p| p.planet == pl)?;
+                    let deg = pos.sidereal_deg;
+                    let start = rahu.sidereal_deg;
+                    let end = ketu.sidereal_deg;
+
+                    // Normalize to arc starting from Rahu
+                    let normalized_deg = (deg - start + 360.0) % 360.0;
+                    let normalized_end = (end - start + 360.0) % 360.0;
+
+                    if normalized_deg <= normalized_end {
+                        arc1_count += 1;
+                    } else {
+                        arc2_count += 1;
+                    }
+                }
+
+                if arc1_count == 7 || arc2_count == 7 {
+                    Some(vec![VedicPlanet::Rahu, VedicPlanet::Ketu])
+                } else {
+                    None
+                }
+            }
+            YogaCondition::AdhiYogaCheck => {
+                // Benefics (Mer, Jup, Ven) in 6, 7, 8 from Moon
+                let moon = chart
+                    .planets
+                    .iter()
+                    .find(|p| p.planet == VedicPlanet::Moon)?;
+                let moon_house = moon.house_index;
+
+                let mut involved = Vec::new();
+                let benefics = [
+                    VedicPlanet::Mercury,
+                    VedicPlanet::Jupiter,
+                    VedicPlanet::Venus,
+                ];
+
+                for &pl in &benefics {
+                    let pos = chart.planets.iter().find(|p| p.planet == pl)?;
+                    let rel_house = (pos.house_index as i32 - moon_house as i32 + 12) % 12 + 1;
+                    if [6, 7, 8].contains(&(rel_house as u8)) {
+                        involved.push(pl);
+                    }
+                }
+
+                if !involved.is_empty() {
+                    Some(involved)
+                } else {
+                    None
+                }
+            }
+            YogaCondition::VasumathiYogaCheck => {
+                // Benefics in Upachaya (3, 6, 10, 11) from Lagna (and/or Moon)
+                let mut involved = Vec::new();
+                let benefics = [
+                    VedicPlanet::Mercury,
+                    VedicPlanet::Jupiter,
+                    VedicPlanet::Venus,
+                ];
+
+                for &pl in &benefics {
+                    let pos = chart.planets.iter().find(|p| p.planet == pl)?;
+                    if [3, 6, 10, 11].contains(&pos.house_index) {
+                        involved.push(pl);
+                    }
+                }
+
+                if !involved.is_empty() {
+                    Some(involved)
+                } else {
+                    None
+                }
+            }
+            YogaCondition::SakataYogaCheck => {
+                // Moon in 6, 8, 12 from Jupiter
+                let jupiter = chart
+                    .planets
+                    .iter()
+                    .find(|p| p.planet == VedicPlanet::Jupiter)?;
+                let moon = chart
+                    .planets
+                    .iter()
+                    .find(|p| p.planet == VedicPlanet::Moon)?;
+
+                let rel_house =
+                    (moon.house_index as i32 - jupiter.house_index as i32 + 12) % 12 + 1;
+                if [6, 8, 12].contains(&(rel_house as u8)) {
+                    Some(vec![VedicPlanet::Moon, VedicPlanet::Jupiter])
                 } else {
                     None
                 }

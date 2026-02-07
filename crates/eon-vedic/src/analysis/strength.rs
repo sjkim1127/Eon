@@ -20,6 +20,7 @@ pub struct PlanetStrength {
     pub kendra_bala: f64,           // 0.0 ~ 60.0 (Kendra house strength)
     pub drekkana_bala: f64,         // 0.0 ~ 60.0 (Drekkana strength)
     pub ojayugmarasyamsa_bala: f64, // 0.0 ~ 15.0 (Odd/Even sign strength)
+    pub yuddha_bala: f64,           // Planetary war adjustment (can be positive or negative)
     pub ishta_phala: f64,           // Auspiciousness (0-60)
     pub kashta_phala: f64,          // Inauspiciousness (0-60)
     pub total_score: f64,           // Aggregate for MVP
@@ -33,7 +34,7 @@ impl StrengthEngine {
     pub fn calculate(pos: &VedicPosition, chart: &crate::chart::VedicChart) -> PlanetStrength {
         let ex_score = Self::calculate_uchcha_bala(pos.planet, pos.sidereal_deg);
         let dig_score = Self::calculate_dig_bala(pos.planet, pos.house_index);
-        let chesta_score = Self::calculate_chesta_bala(pos);
+        let chesta_score = Self::calculate_chesta_bala(pos, chart);
         let naisargika_score = Self::calculate_naisargika_bala(pos.planet);
         let kala_score = Self::calculate_kala_bala(pos.planet, chart);
         let ayana_score = Self::calculate_ayana_bala(pos.planet, pos.sidereal_deg);
@@ -48,20 +49,18 @@ impl StrengthEngine {
         let drekkana_bala = Self::calculate_drekkana_bala(pos);
         let ojayugmarasyamsa_bala = Self::calculate_ojayugmarasyamsa_bala(pos);
 
-        // BPHS: Moon's Chesta Bala equals its Paksha Bala
-        let final_chesta_score = if pos.planet == VedicPlanet::Moon {
-            paksha_score // Moon's motion strength is reflected in its phase
-        } else {
-            chesta_score
-        };
-
         // Ishta & Kashta Phala based on Exaltation (Uchcha) and Motion (Chesta)
-        let (ishta_phala, kashta_phala) =
-            Self::calculate_ishta_kashta(ex_score, final_chesta_score);
+        let (ishta_phala, kashta_phala) = Self::calculate_ishta_kashta(ex_score, chesta_score);
+
+        // Yuddha Bala (Planetary War) - calculate once for the chart
+        // We'll compute this per-planet context within calculate for now
+        // Note: In production, this should be cached at chart level to avoid recalculation
+        let yuddha_scores = Self::calculate_yuddha_bala(chart);
+        let yuddha_bala = *yuddha_scores.get(&pos.planet).unwrap_or(&0.0);
 
         let total = ex_score
             + dig_score
-            + final_chesta_score  // Use final_chesta_score (Paksha for Moon, Chesta for others)
+            + chesta_score
             + naisargika_score
             + kala_score
             + drik_score
@@ -70,7 +69,8 @@ impl StrengthEngine {
             + sapta_score
             + kendra_bala
             + drekkana_bala
-            + ojayugmarasyamsa_bala;
+            + ojayugmarasyamsa_bala
+            + yuddha_bala; // Add planetary war adjustment
 
         // Simple status determination
         let status = if ex_score >= 50.0 {
@@ -89,7 +89,7 @@ impl StrengthEngine {
             planet: pos.planet,
             exaltation_score: ex_score,
             directional_score: dig_score,
-            chesta_score: final_chesta_score, // Store the final value (Paksha for Moon)
+            chesta_score, // Store the final value (Paksha for Moon)
             naisargika_score,
             kala_score,
             drik_score,
@@ -99,6 +99,7 @@ impl StrengthEngine {
             kendra_bala,
             drekkana_bala,
             ojayugmarasyamsa_bala,
+            yuddha_bala,
             ishta_phala,
             kashta_phala,
             total_score: total,
@@ -415,7 +416,7 @@ impl StrengthEngine {
     /// For Sun and Moon (which don't retrograde), BPHS uses Ayana-based calculation:
     /// - Sun: Based on Uttarayana (northward) vs Dakshinayana (southward) movement
     /// - Moon: Based on Paksha (waxing vs waning) already covered in Paksha Bala
-    fn calculate_chesta_bala(pos: &VedicPosition) -> f64 {
+    fn calculate_chesta_bala(pos: &VedicPosition, chart: &VedicChart) -> f64 {
         use crate::core::constants::*;
 
         // Sun: BPHS Ayana-based Chesta Bala
@@ -429,11 +430,9 @@ impl StrengthEngine {
             return chesta.max(0.0).min(60.0);
         }
 
-        // Moon: Paksha-based strength is already covered in Paksha Bala
-        // For Chesta Bala specifically, BPHS uses a neutral value
-        // since Moon's "motion strength" is reflected in its phase (Paksha Bala)
+        // Moon: Paksha-based strength
         if pos.planet == VedicPlanet::Moon {
-            return 30.0; // Neutral, as Paksha Bala covers lunar variation
+            return Self::calculate_paksha_bala(VedicPlanet::Moon, chart);
         }
 
         // Get speed in degrees per day
@@ -644,5 +643,99 @@ impl StrengthEngine {
         }
 
         score
+    }
+
+    /// Get relative size/brightness for planetary war determination
+    /// Larger/brighter planets win when declinations are close
+    /// Order: Jupiter > Saturn > Mars > Venus > Mercury (approximate)
+    fn get_planet_relative_size(planet: VedicPlanet) -> f64 {
+        match planet {
+            VedicPlanet::Jupiter => 5.0,
+            VedicPlanet::Saturn => 4.0,
+            VedicPlanet::Mars => 3.0,
+            VedicPlanet::Venus => 2.0,
+            VedicPlanet::Mercury => 1.0,
+            _ => 0.0, // Should not happen (only war participants)
+        }
+    }
+
+    /// Yuddha Bala (Planetary War) - BPHS Standard
+    /// When two planets (excluding Sun, Moon, Rahu, Ketu) are within 1 degree,
+    /// a planetary war occurs. The planet with higher latitude wins.
+    /// Winner gains strength, loser loses strength.
+    ///
+    /// BPHS Chapter 27, Verse 31-33:
+    /// - War occurs when planets are within 1° in longitude
+    /// - Sun and Moon don't participate in wars
+    /// - Rahu and Ketu don't participate in wars
+    /// - Winner: Planet with higher latitude (farther from ecliptic)
+    /// - Winner gains 60 Virupas, Loser loses 60 Virupas
+    fn calculate_yuddha_bala(
+        chart: &crate::chart::VedicChart,
+    ) -> std::collections::HashMap<VedicPlanet, f64> {
+        let mut yuddha_scores = std::collections::HashMap::new();
+
+        // Only Mars, Mercury, Jupiter, Venus, and Saturn can engage in wars
+        let war_participants = vec![
+            VedicPlanet::Mars,
+            VedicPlanet::Mercury,
+            VedicPlanet::Jupiter,
+            VedicPlanet::Venus,
+            VedicPlanet::Saturn,
+        ];
+
+        // Find all planet positions
+        let mut positions: Vec<(&VedicPosition, VedicPlanet)> = Vec::new();
+        for planet in &war_participants {
+            if let Some(pos) = chart.planets.iter().find(|p| p.planet == *planet) {
+                positions.push((pos, *planet));
+            }
+        }
+
+        // Check each pair of planets
+        for i in 0..positions.len() {
+            for j in (i + 1)..positions.len() {
+                let (pos1, p1) = positions[i];
+                let (pos2, p2) = positions[j];
+
+                // Calculate longitudinal difference
+                let mut long_diff = (pos1.sidereal_deg - pos2.sidereal_deg).abs();
+                if long_diff > 180.0 {
+                    long_diff = 360.0 - long_diff;
+                }
+
+                // War occurs if within 1 degree
+                if long_diff <= 1.0 {
+                    // Winner is the planet with higher latitude (farther from ecliptic)
+                    let dec1 = pos1.declination.abs();
+                    let dec2 = pos2.declination.abs();
+
+                    // BPHS: Winner has higher declination (farther from ecliptic)
+                    // If declinations are close, use inherent size
+                    let size1 = Self::get_planet_relative_size(p1);
+                    let size2 = Self::get_planet_relative_size(p2);
+
+                    let (winner, loser) = if (dec1 - dec2).abs() > 0.1 {
+                        if dec1 > dec2 {
+                            (p1, p2)
+                        } else {
+                            (p2, p1)
+                        }
+                    } else {
+                        if size1 > size2 {
+                            (p1, p2)
+                        } else {
+                            (p2, p1)
+                        }
+                    };
+
+                    // BPHS: Winner gains 60 Virupas, Loser loses 60 Virupas
+                    *yuddha_scores.entry(winner).or_insert(0.0) += 60.0;
+                    *yuddha_scores.entry(loser).or_insert(0.0) -= 60.0;
+                }
+            }
+        }
+
+        yuddha_scores
     }
 }
