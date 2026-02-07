@@ -101,8 +101,8 @@ impl StrengthEngine {
     }
 
     fn calculate_ishta_kashta(uchcha: f64, chesta: f64) -> (f64, f64) {
-        // BPHS: Use geometric mean instead of arithmetic mean
-        let ishta = (uchcha * chesta).sqrt();
+        // BPHS: Ishta = (Uchcha Bala * Chesta Bala) / 60
+        let ishta = (uchcha * chesta) / 60.0;
         let kashta = (60.0 - ishta).max(0.0);
         (ishta, kashta)
     }

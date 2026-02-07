@@ -39,17 +39,22 @@ impl BhavaEngine {
         };
 
         // 2. Bhava Dig Bala
-        // BPHS: Strength depends on the Rasi (Sign) type at the house.
-        // House 1: Human, House 4: Watery, House 7: Insect/Keeta, House 10: Quadruped.
+        // BPHS Chapter 5: Dig Bala of Bhava (Houses)
+        // House 1: Nara (Human) signs get 60, Keeta (Insect) signs get 0. Others neutral (15-30).
+        // House 4: Jala (Watery) signs get 60.
+        // House 7: Keeta (Insect) signs get 60.
+        // House 10: Chatushpada (Quadruped) signs get 60.
         let sign_at_house = ((chart.ascendant.rasi as u8 + house - 2) % 12) + 1;
         let dig_score = match house {
             1 => {
                 if Self::is_human_sign(sign_at_house) {
                     60.0
+                } else if Self::is_insect_sign(sign_at_house) {
+                    0.0
                 } else {
                     30.0
                 }
-            } // (Simplified weighting)
+            }
             4 => {
                 if Self::is_watery_sign(sign_at_house) {
                     60.0
@@ -58,12 +63,14 @@ impl BhavaEngine {
                 }
             }
             7 => {
-                if sign_at_house == 8 {
+                if Self::is_insect_sign(sign_at_house) {
                     60.0
+                } else if Self::is_human_sign(sign_at_house) {
+                    0.0
                 } else {
                     15.0
                 }
-            } // Scorpio (Insect)
+            }
             10 => {
                 if Self::is_quadruped_sign(sign_at_house) {
                     60.0
@@ -82,16 +89,17 @@ impl BhavaEngine {
         for pos in &chart.planets {
             let aspect_strength = Self::calculate_aspect_strength(pos, house_center_deg);
             if aspect_strength > 0.0 {
+                // BPHS: Benefics (Jup, Ven, Mer, Waning Moon) add strength.
+                // Malefics (Sun, Mars, Sat) subtract.
                 let weight = match pos.planet {
-                    VedicPlanet::Jupiter => 0.5, // Jupiter is most benefic
-                    VedicPlanet::Venus => 0.4,
-                    VedicPlanet::Mercury | VedicPlanet::Moon => 0.2,
-                    VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Saturn => -0.3,
-                    VedicPlanet::Rahu | VedicPlanet::Ketu => -0.2,
+                    VedicPlanet::Jupiter => 1.0, // Full weight for gurus
+                    VedicPlanet::Venus => 0.75,
+                    VedicPlanet::Mercury | VedicPlanet::Moon => 0.5,
+                    VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Saturn => -0.5,
                     _ => 0.0,
                 };
-                // Score = logic (aspect_strength / 60.0) * weight * 100.0
-                drishti_score += (aspect_strength / 60.0) * weight * 100.0;
+                // Aspect in Virupas (0-60). Sum them directly.
+                drishti_score += aspect_strength * weight;
             }
         }
 
@@ -139,7 +147,7 @@ impl BhavaEngine {
     }
 
     fn virupa_at(diff: f64, target_angle: f64) -> f64 {
-        let orb = 15.0; // 15 degrees orb
+        let orb = 15.0; // 15 degrees orb for gradient
         let distance = (diff - target_angle).abs();
         let distance = if distance > 180.0 {
             360.0 - distance
@@ -148,7 +156,7 @@ impl BhavaEngine {
         };
 
         if distance < orb {
-            // Linear scale from 60 (at 0 distance) to 0 (at orb distance)
+            // Linear gradient peaking at 60.0 (BPHS Standard)
             60.0 * (1.0 - distance / orb)
         } else {
             0.0
@@ -156,14 +164,18 @@ impl BhavaEngine {
     }
 
     fn is_human_sign(rasi: u8) -> bool {
-        matches!(rasi, 3 | 6 | 7 | 11) // Gemini, Virgo, Libra, Aquarius
+        matches!(rasi, 3 | 6 | 7 | 9 | 11) // Gemini, Virgo, Libra, 1st half Sag, Aquarius
     }
 
     fn is_watery_sign(rasi: u8) -> bool {
-        matches!(rasi, 4 | 12) // Cancer, Pisces (Also 2nd half Capricorn, but simplified)
+        matches!(rasi, 4 | 8 | 10 | 12) // Cancer, Scorpio (partially), 2nd half Cap, Pisces
     }
 
     fn is_quadruped_sign(rasi: u8) -> bool {
-        matches!(rasi, 1 | 2 | 5) // Aries, Taurus, Leo (Also part of Sag/Cap)
+        matches!(rasi, 1 | 2 | 5 | 9 | 10) // Aries, Taurus, Leo, 2nd half Sag, 1st half Cap
+    }
+
+    fn is_insect_sign(rasi: u8) -> bool {
+        rasi == 8 // Scorpio (Keeta)
     }
 }
