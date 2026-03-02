@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { get_vedic_analysis, get_saju_analysis } from "./lib/api";
+import { get_vedic_analysis, get_saju_analysis, get_transit_analysis } from "./lib/api";
 import { Analytics } from "@vercel/analytics/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -85,6 +85,7 @@ function App() {
 
   const [report, setReport] = useState<VedicAnalysisResult | null>(null);
   const [sajuReport, setSajuReport] = useState<any | null>(null);
+  const [transitReport, setTransitReport] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -99,18 +100,27 @@ function App() {
   };
 
   const runAnalysis = async () => {
+    const now = new Date();
     setLoading(true);
     try {
-      const [vedic, saju] = await Promise.all([
+      const [vedic, saju, transit] = await Promise.all([
         get_vedic_analysis({ ...birthData }),
         get_saju_analysis({
           ...birthData,
           is_male: isMale,
           timezone: "Asia/Seoul",
         }),
+        get_transit_analysis({
+          ...birthData,
+          is_male: isMale,
+          timezone: "Asia/Seoul",
+          current_year: now.getFullYear(),
+          current_month: now.getMonth() + 1,
+        }),
       ]);
       setReport(vedic);
       setSajuReport(saju);
+      setTransitReport(transit);
     } catch (e) {
       console.error(e);
     } finally {
@@ -510,6 +520,260 @@ function App() {
     );
   };
 
+  const renderStrengthTab = () => {
+    if (!sajuReport) return null;
+    const entropy = sajuReport.entropy;
+    const topology = sajuReport.qi_topology;
+    const lints: any[] = sajuReport.lints ?? [];
+    const loadDiag: any[] = sajuReport.load_diagnostics ?? [];
+    const crashCount: number = sajuReport.crash_count ?? 0;
+
+    const ELEMENT_COLORS: Record<string, string> = {
+      Wood: "text-green-400  border-green-500/30 bg-green-500/10",
+      Fire: "text-red-400    border-red-500/30   bg-red-500/10",
+      Earth: "text-yellow-400 border-yellow-500/30 bg-yellow-500/10",
+      Metal: "text-gray-300  border-gray-400/30  bg-gray-400/10",
+      Water: "text-blue-400  border-blue-500/30  bg-blue-500/10",
+    };
+
+    return (
+      <motion.div
+        key="strength-tab"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="space-y-8"
+      >
+        {/* 오행 네트워크 (Qi Topology) */}
+        {topology?.nodes && (
+          <div className="glass p-8 rounded-[2rem]">
+            <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <Activity className="w-6 h-6 text-celestial-cyan" />
+              기(氣) 위상 분석 (Qi Topology)
+            </h5>
+            <div className="grid grid-cols-5 gap-4">
+              {topology.nodes.map((node: any, i: number) => {
+                const colorClass = ELEMENT_COLORS[node.element?.english] ?? "text-white/60";
+                const pct = Math.round(node.output * 100);
+                return (
+                  <div key={i} className={`p-4 rounded-2xl border text-center ${colorClass}`}>
+                    <p className="text-xs font-bold uppercase tracking-wider mb-2">{node.element?.hangul ?? node.element}</p>
+                    <p className="text-3xl font-black mb-1">{pct}%</p>
+                    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-current transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                    {node.is_bottleneck && (
+                      <span className="mt-2 inline-block text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40">병목</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Destiny Entropy */}
+        {entropy && (
+          <div className="glass p-8 rounded-[2rem]">
+            <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <Zap className="w-6 h-6 text-celestial-gold" />
+              운명 엔트로피 (Destiny Entropy / DIE)
+            </h5>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+                <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">복잡도 등급</p>
+                <p className="text-4xl font-black text-celestial-gold">{entropy.level ?? "—"}</p>
+              </div>
+              <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+                <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">Shannon Entropy</p>
+                <p className="text-4xl font-black text-white">{entropy.shannon_entropy?.toFixed(3) ?? "—"}</p>
+              </div>
+              <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+                <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">취약점 (Fuzzer)</p>
+                <p className={`text-4xl font-black ${crashCount > 5 ? "text-red-400" : "text-green-400"}`}>{crashCount}개</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Destiny Linter */}
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <Shield className="w-6 h-6 text-celestial-purple" />
+            Destiny Linter (사주 진단)
+          </h5>
+          {lints.length === 0 ? (
+            <p className="text-green-400 font-semibold">✅ No issues found. Perfect structure!</p>
+          ) : (
+            <div className="space-y-3">
+              {lints.map((lint: any, i: number) => (
+                <div key={i} className={`p-4 rounded-xl border flex gap-3 items-start ${
+                  lint.severity === "Error"
+                    ? "bg-red-500/10 border-red-500/30"
+                    : lint.severity === "Warning"
+                    ? "bg-yellow-500/10 border-yellow-500/30"
+                    : "bg-blue-500/10 border-blue-500/30"
+                }`}>
+                  <span className={`text-xs font-black px-2 py-1 rounded shrink-0 ${
+                    lint.severity === "Error" ? "bg-red-500/30 text-red-400"
+                    : lint.severity === "Warning" ? "bg-yellow-500/30 text-yellow-400"
+                    : "bg-blue-500/30 text-blue-400"
+                  }`}>{lint.severity?.toUpperCase()}</span>
+                  <div>
+                    <p className="text-sm font-bold text-white">[{lint.code}] {lint.message}</p>
+                    <p className="text-xs text-white/50 mt-1">└ {lint.advice}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Load Balancer 상위 진단 */}
+        {loadDiag.length > 0 && (
+          <div className="glass p-8 rounded-[2rem]">
+            <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <TrendingUp className="w-6 h-6 text-brand-400" />
+              카르마 부하 진단 (KarmaLoadBalancer)
+            </h5>
+            <div className="space-y-3">
+              {loadDiag.slice(0, 8).map((d: any, i: number) => (
+                <div key={i} className={`p-4 rounded-xl border flex gap-4 items-center ${
+                  d.status === "SystemDown" ? "bg-red-500/10 border-red-500/30"
+                  : d.status === "Overloaded" ? "bg-orange-500/10 border-orange-500/30"
+                  : "bg-white/5 border-white/10"
+                }`}>
+                  <span className="text-2xl">
+                    {d.status === "SystemDown" ? "🚫" : d.status === "Overloaded" ? "🔥" : "ℹ️"}
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-white">[{d.age}세] {d.reason}</p>
+                    <p className="text-xs text-white/50 mt-0.5">▶ {d.strategy}</p>
+                  </div>
+                  <span className="text-xs text-white/30 shrink-0">{d.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </motion.div>
+    );
+  };
+
+  const renderTransitTab = () => {
+    if (!transitReport) return null;
+    const yr = transitReport.yearly_luck;
+    const mo = transitReport.monthly_luck;
+    const frame = transitReport.current_frame;
+    const nearby: any[] = transitReport.nearby_diagnostics ?? [];
+    const age: number = transitReport.current_age ?? 0;
+
+    const scoreColor = (s: number) =>
+      s >= 70 ? "text-green-400" : s >= 40 ? "text-yellow-400" : "text-red-400";
+
+    return (
+      <motion.div
+        key="transit-tab"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="space-y-8"
+      >
+        {/* 세운 / 월운 카드 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="glass p-8 rounded-[2rem]">
+            <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-3">세운 (年運) — {yr?.year}년</p>
+            <h4 className="text-4xl font-black text-celestial-gold mb-3">{yr?.ganzi?.hangul ?? "—"}</h4>
+            <div className="space-y-1 text-sm text-white/60">
+              <p>천간 십성: <span className="text-white font-semibold">{yr?.stem_god?.hangul ?? yr?.stem_god ?? "—"}</span></p>
+              <p>지지 십성: <span className="text-white font-semibold">{yr?.branch_god?.hangul ?? yr?.branch_god ?? "—"}</span></p>
+              {yr?.special_events?.length > 0 && (
+                <p className="text-red-400 font-semibold">⚠️ {yr.special_events.join(" / ")}</p>
+              )}
+            </div>
+          </div>
+          <div className="glass p-8 rounded-[2rem] border-celestial-purple/20 bg-celestial-purple/5">
+            <p className="text-celestial-purple/80 text-sm font-bold uppercase tracking-wider mb-3">월운 (月運) — {mo?.month}월</p>
+            <h4 className="text-4xl font-black text-white mb-3">{mo?.ganzi?.hangul ?? "—"}</h4>
+            <div className="space-y-1 text-sm text-white/60">
+              <p>천간 십성: <span className="text-white font-semibold">{mo?.stem_god?.hangul ?? mo?.stem_god ?? "—"}</span></p>
+              <p>지지 십성: <span className="text-white font-semibold">{mo?.branch_god?.hangul ?? mo?.branch_god ?? "—"}</span></p>
+            </div>
+          </div>
+        </div>
+
+        {/* 현재 나이 LifeFrame */}
+        {frame && (
+          <div className="glass p-8 rounded-[2rem]">
+            <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <Activity className="w-6 h-6 text-celestial-cyan" />
+              현재 시스템 상태 ({age}세 LifeFrame)
+            </h5>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+                <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">System Score</p>
+                <p className={`text-5xl font-black ${scoreColor(frame.score ?? 0)}`}>
+                  {frame.score?.toFixed(1) ?? "—"}
+                </p>
+              </div>
+              <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+                <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">현재 간지</p>
+                <p className="text-4xl font-black text-white">{frame.ganzi?.hangul ?? "—"}</p>
+              </div>
+              <div className="p-6 bg-white/5 rounded-2xl border border-white/10">
+                <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">Tags</p>
+                <div className="flex flex-wrap gap-1">
+                  {(frame.tags ?? []).map((tag: string, i: number) => (
+                    <span key={i} className="text-xs px-2 py-1 rounded-full bg-celestial-purple/20 text-celestial-purple border border-celestial-purple/30">{tag}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {/* ESIL Trace */}
+            {frame.esil_trace && (
+              <div className="bg-black/40 rounded-xl p-4 font-mono text-xs border border-white/10 overflow-x-auto">
+                <p className="text-white/40 mb-2">// ESIL TRACE</p>
+                {frame.esil_trace.split("; ").map((line: string, i: number) => (
+                  <p key={i} className={line.includes("irq") || line.includes("panic") ? "text-red-400" : "text-green-300/70"}>
+                    {line}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 주변 부하 진단 */}
+        {nearby.length > 0 && (
+          <div className="glass p-8 rounded-[2rem]">
+            <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <Shield className="w-6 h-6 text-brand-400" />
+              전후 운세 부하 ({age - 3}~{age + 5}세)
+            </h5>
+            <div className="space-y-3">
+              {nearby.map((d: any, i: number) => (
+                <div key={i} className={`p-4 rounded-xl border flex gap-4 items-center ${
+                  d.status === "SystemDown" ? "bg-red-500/10 border-red-500/30"
+                  : d.status === "Overloaded" ? "bg-orange-500/10 border-orange-500/30"
+                  : "bg-white/5 border-white/10"
+                } ${d.age === age ? "ring-2 ring-celestial-purple" : ""}`}>
+                  <span className="text-2xl">{d.status === "SystemDown" ? "🚫" : d.status === "Overloaded" ? "🔥" : "ℹ️"}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-white">
+                      {d.age === age && <span className="text-celestial-purple mr-1">[현재]</span>}
+                      [{d.age}세] {d.reason}
+                    </p>
+                    <p className="text-xs text-white/50 mt-0.5">▶ {d.strategy}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </motion.div>
+    );
+  };
+
   return (
     <div className="h-screen w-full relative flex overflow-hidden">
       <ShootingStars />
@@ -585,6 +849,10 @@ function App() {
             renderSajuResults()
           ) : activeTab === "vedic_charts" ? (
             renderVedicCharts()
+          ) : activeTab === "strength" ? (
+            renderStrengthTab()
+          ) : activeTab === "transit" ? (
+            renderTransitTab()
           ) : (
             report && report.report && (
               <motion.div

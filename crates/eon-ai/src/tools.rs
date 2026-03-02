@@ -73,9 +73,13 @@ impl EonToolbox {
                 
                 // 에뮬레이션 시뮬레이션 데이터 필요
                 let emulator = LifePathEmulator::new(pillars.clone(), Gender::Male, 2004); // 예시용 고정 데이터
-                let report = emulator.emulate();
-                let res = DestinyDebugger::backtrace(&report, age, tag);
-                serde_json::to_value(res).unwrap()
+                match emulator.emulate() {
+                    Ok(report) => {
+                        let res = DestinyDebugger::backtrace(&report, age, tag);
+                        serde_json::to_value(res).unwrap()
+                    }
+                    Err(e) => serde_json::json!({"error": format!("에뮬레이션 실패: {}", e)}),
+                }
             }
             _ => serde_json::json!({"error": "Unknown tool"}),
         }

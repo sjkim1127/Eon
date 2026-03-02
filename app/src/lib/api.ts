@@ -70,3 +70,54 @@ export const get_saju_analysis = async (args: {
         );
     }
 };
+
+export const get_transit_analysis = async (args: {
+    year: number;
+    month: number;
+    day: number;
+    hour: number;
+    minute: number;
+    is_male: boolean;
+    lon: number;
+    lat: number;
+    timezone: string;
+    current_year: number;
+    current_month: number;
+}): Promise<any> => {
+    if (isTauri()) {
+        console.log("Using Tauri Native Backend (Transit)");
+        return invoke("get_transit_analysis", args);
+    } else {
+        console.log("Using WASM Backend (Transit)");
+        const wasm = await getWasmModule();
+        return wasm.get_transit_analysis(
+            args.year, args.month, args.day,
+            args.hour, args.minute,
+            args.is_male,
+            args.lon, args.lat,
+            args.timezone,
+            args.current_year, args.current_month
+        );
+    }
+};
+
+export const get_ai_audit = async (args: {
+    year: number;
+    month: number;
+    day: number;
+    hour: number;
+    minute: number;
+    is_male: boolean;
+    lon: number;
+    lat: number;
+    timezone: string;
+}): Promise<any> => {
+    if (isTauri()) {
+        console.log("Using Tauri Native Backend (AI Audit)");
+        return invoke("get_ai_audit", args);
+    } else {
+        // WASM 환경에서는 AI Audit 미지원 (Tauri 전용)
+        console.warn("AI Audit is only available in the Tauri desktop app.");
+        return null;
+    }
+};
