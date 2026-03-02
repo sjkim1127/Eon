@@ -99,9 +99,9 @@ function App() {
 
         <div className="space-y-2 flex-1">
           {[
-            { id: "overview", label: "Dashboard", icon: LayoutDashboard },
-            { id: "strength", label: "Strength", icon: Zap },
-            { id: "transit", label: "Transits", icon: Sun },
+            { id: "overview", label: "대시보드", icon: LayoutDashboard },
+            { id: "strength", label: "역량 및 기운", icon: Zap },
+            { id: "transit", label: "현재 운세", icon: Sun },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -128,15 +128,15 @@ function App() {
       <main className="flex-1 p-10 overflow-y-auto z-10">
         <header className="flex justify-between items-end mb-12">
           <div>
-            <h2 className="text-4xl font-bold text-white mb-2">Celestial Insight</h2>
-            <p className="text-brand-400">Computational Vedic Astrology Engine</p>
+            <h2 className="text-4xl font-bold text-white mb-2">천문(Celestial) 인사이트</h2>
+            <p className="text-brand-400">컴퓨테이셔널 베딕 점성학 엔진</p>
           </div>
 
           <div className="flex gap-4">
             <div className="glass px-6 py-4 rounded-2xl flex items-center gap-4">
               <Calendar className="w-5 h-5 text-celestial-purple" />
               <div className="text-sm">
-                <p className="text-white/40 leading-none mb-1">Birth Date</p>
+                <p className="text-white/40 leading-none mb-1">생년월일</p>
                 <p className="text-white font-semibold">
                   {birthData.year}.{birthData.month}.{birthData.day}
                 </p>
@@ -147,7 +147,7 @@ function App() {
               disabled={loading}
               className="bg-gradient-to-r from-celestial-purple to-brand-600 px-8 py-4 rounded-2xl font-bold text-white shadow-xl shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
             >
-              {loading ? "Calculating..." : "Update Chart"}
+              {loading ? "계산 중..." : "차트 업데이트"}
             </button>
           </div>
         </header>
@@ -162,10 +162,9 @@ function App() {
               <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
                 <Compass className="w-12 h-12 text-white/20 animate-pulse" />
               </div>
-              <h3 className="text-2xl font-semibold text-white mb-2">No Active Chart</h3>
+              <h3 className="text-2xl font-semibold text-white mb-2">활성화된 차트 없음</h3>
               <p className="text-brand-400 max-w-sm">
-                Synchronize with the heavens by clicking the update button to generate your
-                personalized Vedic analysis.
+                차트 업데이트 버튼을 눌러 당신만을 위한 정밀한 베딕 점성학 분석을 시작하세요.
               </p>
             </motion.div>
           ) : (
@@ -183,33 +182,32 @@ function App() {
                     <Heart className="w-32 h-32" />
                   </div>
                   <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-2">
-                    Soul Indicator
+                    영혼의 지표 (Atmakaraka)
                   </p>
                   <h4 className="text-3xl font-bold text-white mb-4">
                     {report.primary_karakas.atmakaraka}
                   </h4>
                   <p className="text-sm text-white/60 leading-relaxed">
-                    Atmakaraka - The indicator of the soul's primary desires and lessons in this
-                    incarnation.
+                    Atmakaraka - 이번 생에서 영혼이 추구하는 가장 강력한 욕망과 핵심 과제를 나타냅니다.
                   </p>
                 </div>
 
                 <div className="glass p-8 rounded-[2rem] border-celestial-purple/20 bg-celestial-purple/5">
                   <p className="text-celestial-purple/80 text-sm font-bold uppercase tracking-wider mb-2">
-                    Current Dasha
+                    현재 대운 (Dasha)
                   </p>
                   <h4 className="text-3xl font-bold text-white mb-4">
                     {report.dasha_focus.replace("Current Major Period: ", "")}
                   </h4>
                   <div className="flex items-center gap-2 text-sm text-white/60">
                     <Clock className="w-4 h-4" />
-                    <span>Primary influence at this stage of life.</span>
+                    <span>인생의 현재 단계에서 가장 강력한 영향을 미치는 기운입니다.</span>
                   </div>
                 </div>
 
                 <div className="glass p-8 rounded-[2rem]">
                   <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-2">
-                    Chart Strength
+                    전체 차트 강도
                   </p>
                   <div className="flex items-baseline gap-2 mb-4">
                     <h4 className="text-5xl font-black text-gradient leading-none">
@@ -231,7 +229,7 @@ function App() {
                 <div className="glass p-10 rounded-[2.5rem]">
                   <h5 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
                     <Star className="w-6 h-6 text-celestial-gold" />
-                    Nakshatra Blueprint
+                    낙샤트라 청사진
                   </h5>
                   <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
                     <p className="text-white text-lg font-medium leading-relaxed">
@@ -243,7 +241,7 @@ function App() {
                 <div className="glass p-10 rounded-[2.5rem]">
                   <h5 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
                     <Shield className="w-6 h-6 text-celestial-cyan" />
-                    Transit Alert
+                    현재 운세 경고 (사데사티)
                   </h5>
                   <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
                     <p className="text-white text-lg font-medium leading-relaxed">
@@ -255,14 +253,14 @@ function App() {
 
               {/* House Grid */}
               <section>
-                <h5 className="text-xl font-bold text-white mb-6">Bhava (House) Capacities</h5>
+                <h5 className="text-xl font-bold text-white mb-6">하우스(Bhava)별 에너지 역량</h5>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   {report.house_summary.map((house: any) => (
                     <div
                       key={house.house}
                       className="glass p-6 rounded-2xl text-center glass-hover cursor-help"
                     >
-                      <p className="text-xs text-white/30 font-bold mb-1">BASE {house.house}</p>
+                      <p className="text-xs text-white/30 font-bold mb-1">하우스 {house.house}</p>
                       <p className="text-2xl font-bold text-white mb-2">
                         {Math.round(house.total_score)}
                       </p>
