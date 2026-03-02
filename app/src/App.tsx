@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { get_vedic_analysis, get_saju_analysis } from "./lib/api";
+import { Analytics } from "@vercel/analytics/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -626,6 +627,7 @@ function App() {
           )}
         </AnimatePresence>
       </main>
+      <Analytics />
     </div>
   );
 }
