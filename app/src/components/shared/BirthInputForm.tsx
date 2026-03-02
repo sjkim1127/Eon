@@ -13,6 +13,10 @@ interface BirthInputFormProps {
   loading: boolean;
   onAnalysis: () => void;
   sajuReport: any;
+  /** 드로어 내부 렌더링 시 외부 래퍼·제목 제거 */
+  compact?: boolean;
+  /** 드로어 닫기 콜백 (compact 모드에서 분석 버튼 클릭 시 호출) */
+  onClose?: () => void;
 }
 
 export function BirthInputForm({
@@ -26,6 +30,8 @@ export function BirthInputForm({
   loading,
   onAnalysis,
   sajuReport,
+  compact = false,
+  onClose: _onClose,
 }: BirthInputFormProps) {
   const unknownTime = birthData.unknown_time ?? false;
 
@@ -39,17 +45,24 @@ export function BirthInputForm({
     }));
   };
 
-  return (
-    <div className="glass p-6 rounded-[2rem] mb-8">
-      <h5 className="text-lg font-bold text-white mb-5 flex items-center gap-3">
-        <Calendar className="w-5 h-5 text-celestial-purple" />
-        출생 정보 입력
-        {isDST && (
-          <span className="ml-auto text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-semibold animate-pulse">
-            ☀️ 서머타임 자동 적용
-          </span>
-        )}
-      </h5>
+  const inner = (
+    <div>
+      {!compact && (
+        <h5 className="text-lg font-bold text-white mb-5 flex items-center gap-3">
+          <Calendar className="w-5 h-5 text-celestial-purple" />
+          출생 정보 입력
+          {isDST && (
+            <span className="ml-auto text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-semibold animate-pulse">
+              ☀️ 서머타임 자동 적용
+            </span>
+          )}
+        </h5>
+      )}
+      {compact && isDST && (
+        <div className="mb-4 text-xs px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-semibold">
+          ☀️ 서머타임 자동 적용
+        </div>
+      )}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
         {/* 년 */}
         <div>
@@ -193,12 +206,12 @@ export function BirthInputForm({
         </button>
 
         <button
-          onClick={onAnalysis}
+          onClick={() => { onAnalysis(); }}
           disabled={loading}
           className="bg-gradient-to-r from-celestial-purple to-brand-600 px-6 py-2.5 rounded-xl font-bold text-white text-sm shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 inline-flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-          {loading ? "분석 준비 중..." : "통합 분석 시작"}
+          {loading ? "분석 중..." : "통합 분석 시작"}
         </button>
 
         <div className="w-full lg:w-auto lg:ml-auto text-xs text-white/30 flex flex-wrap items-center gap-3 lg:gap-4">
@@ -217,4 +230,7 @@ export function BirthInputForm({
       </div>
     </div>
   );
+
+  if (compact) return inner;
+  return <div className="glass p-6 rounded-[2rem] mb-8">{inner}</div>;
 }

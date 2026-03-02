@@ -1,10 +1,10 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Compass } from "lucide-react";
+import { Compass, Calendar, UserPlus, Pencil } from "lucide-react";
 
 import { useAnalysis } from "./hooks";
-import { ShootingStars, BirthInputForm, Sidebar } from "./components/shared";
+import { ShootingStars, BirthDrawer, Sidebar } from "./components/shared";
 import type { TabId } from "./types";
 
 const loadOverviewTab = () => import("./components/tabs/OverviewTab");
@@ -76,6 +76,22 @@ function App() {
     compReport, compLoading,
     runCompatibilityAnalysis,
   } = useAnalysis();
+
+  // 드로어 상태: 첫 로드시 자동 오픈 (온보딩)
+  const [formOpen, setFormOpen] = useState(true);
+  const prevHasReportRef = useRef(false);
+
+  // 분석 완료 시 드로어 자동 닫기
+  useEffect(() => {
+    const hasReport = !!(report || sajuReport);
+    if (hasReport && !prevHasReportRef.current) {
+      setFormOpen(false);
+    }
+    prevHasReportRef.current = hasReport;
+  }, [report, sajuReport]);
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const hasReport = !!(report || sajuReport);
   const transitionRef = useRef<Record<TabId, Record<TabId, number>>>(
     TABS.reduce((acc, from) => {
       acc[from] = TABS.reduce((inner, to) => {
@@ -174,29 +190,62 @@ function App() {
       {/* Main Content */}
       <main className="flex-1 p-4 md:p-10 pb-24 md:pb-10 overflow-y-auto z-10">
         <header className="mb-8">
-          <div className="flex justify-between items-end mb-6">
+          <div className="flex justify-between items-end mb-5">
             <div>
-              <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">천문 인사이트</h2>
-              <p className="text-sm md:text-base text-brand-400">사주명리 & 베딕 점성학 통합 분석</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">역학적 인사이트</h2>
+              <p className="text-sm text-brand-400 mt-1">사주명리 & 베딕 점성학 통합 분석</p>
             </div>
           </div>
 
-          {/* 출생 정보 입력 폼 */}
-          <BirthInputForm
-            birthData={birthData}
-            setBirthData={setBirthData}
-            selectedCity={selectedCity}
-            onCityChange={handleCityChange}
-            isMale={isMale}
-            setIsMale={setIsMale}
-            isDST={isDST}
-            loading={loading}
-            onAnalysis={runAnalysis}
-            sajuReport={sajuReport}
-          />
+          {/* 드로어 트리거 */}
+          {hasReport ? (
+            /* compact 출생 요약 바 */
+            <div
+              className="flex items-center gap-3 px-4 py-2.5 rounded-2xl mb-5"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              <Calendar className="w-4 h-4 text-celestial-purple shrink-0" />
+              <div className="flex items-center gap-2 text-sm text-white/60 flex-1 flex-wrap">
+                <span className="font-mono text-white/80">
+                  {birthData.year}.{pad(birthData.month)}.{pad(birthData.day)}
+                </span>
+                <span className="text-white/25">·</span>
+                {birthData.unknown_time ? (
+                  <span className="text-amber-400/70 text-xs">시간미상</span>
+                ) : (
+                  <span className="font-mono">{pad(birthData.hour)}:{pad(birthData.minute)}</span>
+                )}
+                <span className="text-white/25">·</span>
+                <span>{selectedCity}</span>
+                <span className="text-white/25">·</span>
+                <span className={isMale ? "text-celestial-cyan" : "text-pink-400"}>{isMale ? "남" : "여"}</span>
+                {isDST && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    DST
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setFormOpen(true)}
+                className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all font-medium"
+              >
+                <Pencil className="w-3 h-3" />
+                수정
+              </button>
+            </div>
+          ) : (
+            /* 첫 진입 CTA */
+            <button
+              onClick={() => setFormOpen(true)}
+              className="w-full py-5 rounded-2xl mb-5 border border-dashed border-white/15 hover:border-celestial-purple/40 hover:bg-celestial-purple/5 text-white/40 hover:text-white/70 transition-all text-sm font-medium flex items-center justify-center gap-2"
+            >
+              <UserPlus className="w-4 h-4" />
+              출생 정보 입력하여 분석 시작
+            </button>
+          )}
 
           {errorMessage && (
-            <p className="text-sm text-red-300/90 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2">
+            <p className="text-sm text-red-300/90 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2 mb-2">
               {errorMessage}
             </p>
           )}
@@ -246,6 +295,23 @@ function App() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* 출생 정보 드로어 */}
+      <BirthDrawer
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        birthData={birthData}
+        setBirthData={setBirthData}
+        selectedCity={selectedCity}
+        onCityChange={handleCityChange}
+        isMale={isMale}
+        setIsMale={setIsMale}
+        isDST={isDST}
+        loading={loading}
+        onAnalysis={runAnalysis}
+        sajuReport={sajuReport}
+      />
+
       <Analytics />
     </div>
   );
