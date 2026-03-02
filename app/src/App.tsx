@@ -41,7 +41,7 @@ interface VedicAnalysisReport {
 }
 
 function App() {
-  const [birthData, setBirthData] = useState({
+  const [birthData] = useState({
     year: 1990,
     month: 1,
     day: 1,
