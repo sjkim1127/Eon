@@ -181,7 +181,7 @@ export function BirthInputForm({
                 : "border-white/10 text-white focus:border-celestial-purple/50 focus:outline-none cursor-pointer"
               }`}
           >
-            {Array.from({ length: 12 }, (_, i) => i * 5).map((m) => (
+            {Array.from({ length: 60 }, (_, i) => i).map((m) => (
               <option key={m} value={m} className="bg-gray-900">
                 {String(m).padStart(2, "0")}분
               </option>
