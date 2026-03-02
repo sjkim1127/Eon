@@ -6,6 +6,7 @@ members = [
     "crates/eon-data",
     "crates/eon-astro",
     "crates/eon-ai", "crates/eon-vedic",
+    "app/src-tauri", "crates/eon-wasm",
 ]
 
 [workspace.package]

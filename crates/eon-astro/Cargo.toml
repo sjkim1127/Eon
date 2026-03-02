@@ -12,3 +12,9 @@ swiss-eph.workspace = true
 chrono.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+
+[features]
+default = []
+embedded-ephe = ["swiss-eph/embedded-ephe"]
+swiss-eph-data = ["swiss-eph/swiss-eph-data"]
+

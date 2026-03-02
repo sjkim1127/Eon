@@ -11,3 +11,9 @@ serde = { workspace = true }
 chrono = { workspace = true }
 thiserror = { workspace = true }
 eon-astro = { path = "../eon-astro" }
+
+[features]
+default = []
+embedded-ephe = ["eon-astro/embedded-ephe"]
+swiss-eph-data = ["eon-astro/swiss-eph-data"]
+
