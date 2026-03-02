@@ -1,0 +1,146 @@
+import { motion } from "framer-motion";
+import { Activity, Zap, Shield, TrendingUp } from "lucide-react";
+
+interface StrengthTabProps {
+  sajuReport: any;
+}
+
+const ELEMENT_COLORS: Record<string, string> = {
+  Wood: "text-green-400  border-green-500/30 bg-green-500/10",
+  Fire: "text-red-400    border-red-500/30   bg-red-500/10",
+  Earth: "text-yellow-400 border-yellow-500/30 bg-yellow-500/10",
+  Metal: "text-gray-300  border-gray-400/30  bg-gray-400/10",
+  Water: "text-blue-400  border-blue-500/30  bg-blue-500/10",
+};
+
+export function StrengthTab({ sajuReport }: StrengthTabProps) {
+  if (!sajuReport) return null;
+  const entropy = sajuReport.entropy;
+  const topology = sajuReport.qi_topology;
+  const lints: any[] = sajuReport.lints ?? [];
+  const loadDiag: any[] = sajuReport.load_diagnostics ?? [];
+  const crashCount: number = sajuReport.crash_count ?? 0;
+
+  return (
+    <motion.div
+      key="strength-tab"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-8"
+    >
+      {/* 오행 네트워크 (Qi Topology) */}
+      {topology?.nodes && (
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <Activity className="w-6 h-6 text-celestial-cyan" />
+            기(氣) 위상 분석 (Qi Topology)
+          </h5>
+          <div className="grid grid-cols-5 gap-4">
+            {topology.nodes.map((node: any, i: number) => {
+              const colorClass = ELEMENT_COLORS[node.element?.english] ?? "text-white/60";
+              const pct = Math.round(node.output * 100);
+              return (
+                <div key={i} className={`p-4 rounded-2xl border text-center ${colorClass}`}>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-2">{node.element?.hangul ?? node.element}</p>
+                  <p className="text-3xl font-black mb-1">{pct}%</p>
+                  <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full bg-current transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                  {(topology?.bottleneck?.hangul && node.element?.hangul === topology.bottleneck.hangul) && (
+                    <span className="mt-2 inline-block text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40">병목</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Destiny Entropy */}
+      {entropy && (
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <Zap className="w-6 h-6 text-celestial-gold" />
+            운명 엔트로피 (Destiny Entropy / DIE)
+          </h5>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">복잡도 등급</p>
+              <p className="text-4xl font-black text-celestial-gold">{entropy.level ?? "—"}</p>
+            </div>
+            <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">Shannon Entropy</p>
+              <p className="text-4xl font-black text-white">{entropy.score?.toFixed(3) ?? "—"}</p>
+            </div>
+            <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">취약점 (Fuzzer)</p>
+              <p className={`text-4xl font-black ${crashCount > 5 ? "text-red-400" : "text-green-400"}`}>{crashCount}개</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Destiny Linter */}
+      <div className="glass p-8 rounded-[2rem]">
+        <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+          <Shield className="w-6 h-6 text-celestial-purple" />
+          Destiny Linter (사주 진단)
+        </h5>
+        {lints.length === 0 ? (
+          <p className="text-green-400 font-semibold">✅ No issues found. Perfect structure!</p>
+        ) : (
+          <div className="space-y-3">
+            {lints.map((lint: any, i: number) => (
+              <div key={i} className={`p-4 rounded-xl border flex gap-3 items-start ${
+                lint.severity === "Error"
+                  ? "bg-red-500/10 border-red-500/30"
+                  : lint.severity === "Warning"
+                  ? "bg-yellow-500/10 border-yellow-500/30"
+                  : "bg-blue-500/10 border-blue-500/30"
+              }`}>
+                <span className={`text-xs font-black px-2 py-1 rounded shrink-0 ${
+                  lint.severity === "Error" ? "bg-red-500/30 text-red-400"
+                  : lint.severity === "Warning" ? "bg-yellow-500/30 text-yellow-400"
+                  : "bg-blue-500/30 text-blue-400"
+                }`}>{lint.severity?.toUpperCase()}</span>
+                <div>
+                  <p className="text-sm font-bold text-white">[{lint.code}] {lint.message}</p>
+                  <p className="text-xs text-white/50 mt-1">└ {lint.advice}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Load Balancer 상위 진단 */}
+      {loadDiag.length > 0 && (
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <TrendingUp className="w-6 h-6 text-brand-400" />
+            카르마 부하 진단 (KarmaLoadBalancer)
+          </h5>
+          <div className="space-y-3">
+            {loadDiag.slice(0, 8).map((d: any, i: number) => (
+              <div key={i} className={`p-4 rounded-xl border flex gap-4 items-center ${
+                d.status === "SystemDown" ? "bg-red-500/10 border-red-500/30"
+                : d.status === "Overloaded" ? "bg-orange-500/10 border-orange-500/30"
+                : "bg-white/5 border-white/10"
+              }`}>
+                <span className="text-2xl">
+                  {d.status === "SystemDown" ? "🚫" : d.status === "Overloaded" ? "🔥" : "ℹ️"}
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-white">[{d.age}세] {d.reason}</p>
+                  <p className="text-xs text-white/50 mt-0.5">▶ {d.strategy}</p>
+                </div>
+                <span className="text-xs text-white/30 shrink-0">{d.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}

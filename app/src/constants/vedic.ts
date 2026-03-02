@@ -1,0 +1,87 @@
+import type { NakshatraEntry, VargaDef } from "../types";
+
+// ─── 베딕 정적 데이터 ────────────────────────────────────────────────────────
+
+export const NAKSHATRA_DATA: NakshatraEntry[] = [
+  { name: "Ashwini",          lord: "Ketu",    deity: "Ashwini Kumara",  start_deg: 0 },
+  { name: "Bharani",          lord: "Venus",   deity: "Yama",            start_deg: 13.333 },
+  { name: "Krittika",         lord: "Sun",     deity: "Agni",            start_deg: 26.667 },
+  { name: "Rohini",           lord: "Moon",    deity: "Brahma",          start_deg: 40 },
+  { name: "Mrigashira",       lord: "Mars",    deity: "Chandra",         start_deg: 53.333 },
+  { name: "Ardra",            lord: "Rahu",    deity: "Rudra",           start_deg: 66.667 },
+  { name: "Punarvasu",        lord: "Jupiter", deity: "Aditi",           start_deg: 80 },
+  { name: "Pushya",           lord: "Saturn",  deity: "Brihaspati",      start_deg: 93.333 },
+  { name: "Ashlesha",         lord: "Mercury", deity: "Nagas",           start_deg: 106.667 },
+  { name: "Magha",            lord: "Ketu",    deity: "Pitrs",           start_deg: 120 },
+  { name: "Purva Phalguni",   lord: "Venus",   deity: "Bhaga",           start_deg: 133.333 },
+  { name: "Uttara Phalguni",  lord: "Sun",     deity: "Aryaman",         start_deg: 146.667 },
+  { name: "Hasta",            lord: "Moon",    deity: "Savitr",          start_deg: 160 },
+  { name: "Chitra",           lord: "Mars",    deity: "Tvastr",          start_deg: 173.333 },
+  { name: "Swati",            lord: "Rahu",    deity: "Vayu",            start_deg: 186.667 },
+  { name: "Vishakha",         lord: "Jupiter", deity: "Indra-Agni",      start_deg: 200 },
+  { name: "Anuradha",         lord: "Saturn",  deity: "Mitra",           start_deg: 213.333 },
+  { name: "Jyeshtha",         lord: "Mercury", deity: "Indra",           start_deg: 226.667 },
+  { name: "Mula",             lord: "Ketu",    deity: "Nritti",          start_deg: 240 },
+  { name: "Purva Ashadha",    lord: "Venus",   deity: "Apas",            start_deg: 253.333 },
+  { name: "Uttara Ashadha",   lord: "Sun",     deity: "Vishvedevas",     start_deg: 266.667 },
+  { name: "Shravana",         lord: "Moon",    deity: "Vishnu",          start_deg: 280 },
+  { name: "Dhanishta",        lord: "Mars",    deity: "Vasus",           start_deg: 293.333 },
+  { name: "Shatabhisha",      lord: "Rahu",    deity: "Varuna",          start_deg: 306.667 },
+  { name: "Purva Bhadrapada", lord: "Jupiter", deity: "Ajaikapada",      start_deg: 320 },
+  { name: "Uttara Bhadrapada",lord: "Saturn",  deity: "Ahirbudhnya",     start_deg: 333.333 },
+  { name: "Revati",           lord: "Mercury", deity: "Pushan",          start_deg: 346.667 },
+];
+
+export const SIGN_NAMES = [
+  "", "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces",
+];
+
+export const SIGN_LORDS = [
+  "", "Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury",
+  "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter",
+];
+
+export const PURUSHARTHA = ["Dharma", "Artha", "Kama", "Moksha"];
+
+export const VARGA_DEFS: VargaDef[] = [
+  { id: "rasi",              label: "D1",  name: "Rasi (원본 차트)",       key: "rasi" },
+  { id: "hora",              label: "D2",  name: "Hora (재물)",           key: "hora_rasi" },
+  { id: "drekkana",          label: "D3",  name: "Drekkana (형제)",       key: "drekkana_rasi" },
+  { id: "chaturthamsha",     label: "D4",  name: "Chaturthamsha (부동산)",key: "chaturthamsha_rasi" },
+  { id: "panchamsa",         label: "D5",  name: "Panchamsa",             key: "panchamsa_rasi" },
+  { id: "saptamsa",          label: "D7",  name: "Saptamsa (자녀)",       key: "saptamsa_rasi" },
+  { id: "ashtamsa",          label: "D8",  name: "Ashtamsa",              key: "ashtamsa_rasi" },
+  { id: "navamsa",           label: "D9",  name: "Navamsa (영혼/결혼)",   key: "navamsa_rasi" },
+  { id: "dasamsa",           label: "D10", name: "Dasamsa (직업)",        key: "dasamsa_rasi" },
+  { id: "rudramsa",          label: "D11", name: "Rudramsa",              key: "rudramsa_rasi" },
+  { id: "dwadasamsa",        label: "D12", name: "Dwadasamsa (부모)",     key: "dwadasamsa_rasi" },
+  { id: "shodashamsa",       label: "D16", name: "Shodashamsa (교통)",    key: "shodashamsa_rasi" },
+  { id: "vimsamsa",          label: "D20", name: "Vimsamsa (영적)",       key: "vimsamsa_rasi" },
+  { id: "chaturvimshamsa",   label: "D24", name: "Chaturvimshamsa (교육)",key: "chaturvimshamsa_rasi" },
+  { id: "saptavimsamsa",     label: "D27", name: "Saptavimsamsa (체력)",  key: "saptavimsamsa_rasi" },
+  { id: "trimsamsa",         label: "D30", name: "Trimsamsa (재앙)",      key: "trimsamsa_rasi" },
+  { id: "khavedamsa",        label: "D40", name: "Khavedamsa",            key: "khavedamsa_rasi" },
+  { id: "akshavedamsa",      label: "D45", name: "Akshavedamsa",          key: "akshavedamsa_rasi" },
+  { id: "shashtyamsa",       label: "D60", name: "Shashtyamsa (카르마)",  key: "shashtyamsa_rasi" },
+  { id: "navanavamsa",       label: "D81", name: "Navanavamsa",           key: "navanavamsa_rasi" },
+  { id: "ashtottaramsa",     label: "D108",name: "Ashtottaramsa",         key: "ashtottaramsa_rasi" },
+  { id: "dwadasdwadasamsa",  label: "D144",name: "Dwadasdwadasamsa",      key: "dwadasdwadasamsa_rasi" },
+];
+
+/** Ashta Kuta 항목 라벨 */
+export const ASHTA_LABELS: Record<string, string> = {
+  varna: "바르나 (계층)",
+  vashya: "바쉬야 (지배)",
+  tara: "타라 (별자리)",
+  yoni: "요니 (본능)",
+  maitri: "마이트리 (우정)",
+  gana: "가나 (기질)",
+  bhakoot: "바쿠트 (운명)",
+  nadi: "나디 (신체)",
+};
+
+/** Ashta Kuta 항목별 최대 점수 */
+export const ASHTA_MAX: Record<string, number> = {
+  varna: 1, vashya: 2, tara: 3, yoni: 4, maitri: 5, gana: 6, bhakoot: 7, nadi: 8,
+};

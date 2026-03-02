@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { VedicAnalysisResult } from "../types";
 
 // Dynamically imported WASM module
 let wasmModuleCache: any = null;
@@ -29,7 +30,7 @@ export const get_vedic_analysis = async (args: {
     minute: number;
     lat: number;
     lon: number;
-}): Promise<any> => {
+}): Promise<VedicAnalysisResult> => {
     if (isTauri()) {
         console.log("Using Tauri Native Backend");
         return invoke("get_vedic_analysis", args);
