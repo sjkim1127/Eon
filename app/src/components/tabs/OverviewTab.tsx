@@ -10,6 +10,19 @@ interface OverviewTabProps {
 export function OverviewTab({ report }: OverviewTabProps) {
   if (!report || !report.report) return null;
   const r = report.report;
+  const qualityLabel = (quality: string) => {
+    if (quality === "VeryHigh") return "최상";
+    if (quality === "High") return "상";
+    if (quality === "Medium") return "중";
+    return "하";
+  };
+
+  const ratingLabel = (rating: string) => {
+    if (rating === "Excellent") return "최상";
+    if (rating === "Strong") return "강함";
+    if (rating === "Average") return "보통";
+    return "약함";
+  };
 
   return (
     <motion.div
@@ -142,7 +155,7 @@ export function OverviewTab({ report }: OverviewTabProps) {
                 <div key={i} className={`p-5 rounded-2xl border ${qColor}`}>
                   <div className="flex items-start justify-between mb-2">
                     <p className="text-sm font-bold text-white">{yoga.name}</p>
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shrink-0 ml-2 ${qColor}`}>{quality}</span>
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border shrink-0 ml-2 ${qColor}`}>{qualityLabel(quality)}</span>
                   </div>
                   <p className="text-xs text-white/50 leading-relaxed mb-2">{yoga.description}</p>
                   {weakReason && <p className="text-xs text-white/30 italic">※ {weakReason}</p>}
@@ -185,7 +198,7 @@ export function OverviewTab({ report }: OverviewTabProps) {
                         : "bg-red-500/20 text-red-400"
                 )}
               >
-                {house.rating}
+                {ratingLabel(house.rating)}
               </span>
             </div>
           ))}

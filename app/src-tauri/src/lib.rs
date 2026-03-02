@@ -1,4 +1,3 @@
-use chrono::{TimeZone, Utc};
 use eon_vedic::analysis::report::VedicAnalysisReport;
 use eon_vedic::core::chart::{VedicChart, VedicChartCalculator};
 use eon_vedic::analysis::compatibility::CompatibilityEngine;
@@ -38,10 +37,11 @@ async fn get_vedic_analysis(
     minute: u32,
     lat: f64,
     lon: f64,
+    timezone: String,
 ) -> Result<serde_json::Value, String> {
-    let dt = Utc
-        .with_ymd_and_hms(year, month, day, hour, minute, 0)
-        .single()
+    let birth_info = BirthInfo::solar(year, month, day, hour, minute)
+        .with_timezone(&timezone);
+    let dt = birth_info.to_utc()
         .ok_or_else(|| "Invalid date/time".to_string())?;
 
     let calculator = VedicChartCalculator::new();
@@ -310,12 +310,17 @@ fn get_saju_compatibility(
 async fn get_vedic_compatibility(
     year1: i32, month1: u32, day1: u32, hour1: u32, minute1: u32, lat1: f64, lon1: f64,
     year2: i32, month2: u32, day2: u32, hour2: u32, minute2: u32, lat2: f64, lon2: f64,
+    timezone: String,
 ) -> Result<serde_json::Value, String> {
     let calculator = VedicChartCalculator::new();
-    let dt1 = Utc.with_ymd_and_hms(year1, month1, day1, hour1, minute1, 0)
-        .single().ok_or_else(|| "Invalid date/time (person 1)".to_string())?;
-    let dt2 = Utc.with_ymd_and_hms(year2, month2, day2, hour2, minute2, 0)
-        .single().ok_or_else(|| "Invalid date/time (person 2)".to_string())?;
+    let dt1 = BirthInfo::solar(year1, month1, day1, hour1, minute1)
+        .with_timezone(&timezone)
+        .to_utc()
+        .ok_or_else(|| "Invalid date/time (person 1)".to_string())?;
+    let dt2 = BirthInfo::solar(year2, month2, day2, hour2, minute2)
+        .with_timezone(&timezone)
+        .to_utc()
+        .ok_or_else(|| "Invalid date/time (person 2)".to_string())?;
     let chart1 = calculator.calculate(dt1, lat1, lon1);
     let chart2 = calculator.calculate(dt2, lat2, lon2);
     let result = CompatibilityEngine::analyze(&chart1, &chart2);

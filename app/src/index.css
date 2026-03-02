@@ -49,4 +49,16 @@ body {
   border-radius: 50%;
   box-shadow: 0 0 10px 2px white;
   pointer-events: none;
+  opacity: 0;
+}
+
+.shooting-star::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 80px;
+  height: 1px;
+  transform: translate(-100%, 0);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), transparent);
 }

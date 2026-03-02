@@ -93,12 +93,12 @@ export function CompatibilityTab({
           {/* 사주 궁합 점수 */}
           {compReport.saju && (
             <div className="glass p-6 rounded-2xl">
-              <h3 className="text-lg font-bold text-white mb-4">사주 궁합 (CompatibilityAudit)</h3>
+              <h3 className="text-lg font-bold text-white mb-4">사주 궁합 결과</h3>
               <div className="flex items-center gap-6 mb-6">
                 <div className="text-6xl font-bold" style={{ color: compReport.saju.sync_score > 70 ? "#4ade80" : compReport.saju.sync_score > 40 ? "#facc15" : "#f87171" }}>
                   {compReport.saju.sync_score?.toFixed(0) ?? "--"}
                 </div>
-                <div className="text-white/60 text-sm">/ 100점<br />궁합 동기화 지수</div>
+                <div className="text-white/60 text-sm">/ 100점<br />궁합 점수</div>
               </div>
               {compReport.saju.synergies?.length > 0 && (
                 <div className="mb-4">
@@ -114,7 +114,7 @@ export function CompatibilityTab({
               )}
               {compReport.saju.deadlocks?.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-amber-400 uppercase mb-2">교착 {compReport.saju.deadlocks.length}개</p>
+                  <p className="text-xs font-bold text-amber-400 uppercase mb-2">갈등 요소 {compReport.saju.deadlocks.length}개</p>
                   <div className="space-y-1">{compReport.saju.deadlocks.slice(0, 3).map((s: string, i: number) => (<div key={i} className="text-xs text-amber-300 bg-amber-500/10 rounded-lg px-3 py-1.5">{s}</div>))}</div>
                 </div>
               )}

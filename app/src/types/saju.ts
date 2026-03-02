@@ -1,5 +1,5 @@
 // ──────────────────────────────────────────────
-// 사주 관련 타입 정의
+// 사주 관련 타입 정의 (Rust 직렬화 기준)
 // ──────────────────────────────────────────────
 
 /** Rust enum 문자열 → 한자/한글 정보 */
@@ -22,97 +22,221 @@ export type BranchKey =
 export type ElementKey = "Wood" | "Fire" | "Earth" | "Metal" | "Water";
 
 /** 신강/신약/중화 */
-export type StrengthKey = "Strong" | "Weak" | "Balanced";
+export type StrengthTypeKey = "Strong" | "Weak" | "Balanced";
 
-/** 간지 객체 */
+/** 간지 객체 (GanZi Rust struct) */
 export interface GanZi {
-  stem: string;
-  branch: string;
+  stem: string;   // HeavenlyStem 변형명: "Jia" | "Yi" | ...
+  branch: string; // EarthlyBranch 변형명: "Zi" | "Chou" | ...
 }
 
 /** 주주(柱) 위치 */
 export type PillarPosition = "Year" | "Month" | "Day" | "Hour";
 
-/** 사주 분석 리포트 (Rust 직렬화 결과) */
+// ── 사주 원국 ────────────────────────────────
+
+/** 사주 사주(四柱) */
+export interface FourPillars {
+  year: GanZi;
+  month: GanZi;
+  day: GanZi;
+  hour: GanZi;
+}
+
+// ── 신강/신약 분석 ────────────────────────────
+
+/** 득령/득지/득시 결과 */
+export interface DeukBase {
+  acquired: boolean;
+}
+
+/** 득세(得勢) 결과 — 세력 분포 포함 */
+export interface DeukSe extends DeukBase {
+  bijie_count: number;
+  yinxing_count: number;
+  shishang_count: number;
+  caisheng_count: number;
+  guanxing_count: number;
+  support_ratio: number;
+}
+
+/** 신강/신약 분석 (StrengthAnalysis Rust struct) */
+export interface StrengthAnalysis {
+  day_master: string;         // HeavenlyStem 변형명
+  strength_type: StrengthTypeKey;
+  deuk_ryeong: DeukBase;
+  deuk_ji: DeukBase;
+  deuk_si: DeukBase;
+  deuk_se: DeukSe;
+  acquired_count: number;
+  strength_score: number;
+}
+
+// ── 용신 분석 ────────────────────────────────
+
+/** 용신 분석 결과 (YongshinAnalysis Rust struct) */
+export interface YongshinAnalysis {
+  recommendations: unknown[];
+  primary: string;    // Element 변형명: "Wood" | "Fire" | ...
+  assistant: string;  // Element 변형명
+}
+
+// ── 신살 ─────────────────────────────────────
+
+/** 발견된 신살 항목 (FoundMarker Rust struct) */
+export interface FoundMarker {
+  marker: string;   // SpiritMarker 변형명
+  position: string; // PillarPosition 변형명
+  is_stem: boolean;
+}
+
+/** 신살 분석 (SpiritMarkerAnalysis Rust struct) */
+export interface SpiritMarkerAnalysis {
+  markers: FoundMarker[];
+  auspicious: string[];
+  inauspicious: string[];
+}
+
+// ── 격국 ─────────────────────────────────────
+
+/** 격국 분석 (StructureAnalysis Rust struct) */
+export interface StructureAnalysis {
+  structure: string;
+  projected_stem: string | null;
+  projection_path: string | null;
+  reason: string;
+}
+
+// ── 대운 ─────────────────────────────────────
+
+/** 단일 대운 항목 (MajorLuck Rust struct) */
+export interface MajorLuck {
+  ganzi: GanZi;
+  start_age: number;
+  end_age: number;
+  stem_god: string;   // TenGod 변형명
+  branch_god: string; // TenGod 변형명
+  start_date: string; // ISO 8601 UTC 문자열
+}
+
+/** 대운 분석 (MajorLuckAnalysis Rust struct) */
+export interface MajorLuckAnalysis {
+  direction: string; // "Forward" | "Reverse"
+  start_age: number;
+  start_months: number;
+  start_days: number;
+  start_date: string;
+  cycles: MajorLuck[];
+  day_master: string;
+}
+
+// ── 골든타임 / 시뮬레이션 ─────────────────────
+
+/** 골든타임 (GoldenTime Rust struct) */
+export interface GoldenTime {
+  start_age: number;
+  end_age: number;
+  average_score: number;
+  description: string;
+}
+
+/** 오행 에너지 레지스터 */
+export interface QiRegisters {
+  r0_wood: number;
+  r1_fire: number;
+  r2_earth: number;
+  r3_metal: number;
+  r4_water: number;
+}
+
+/** 연도별 시뮬레이션 프레임 (LifeFrame Rust struct) */
+export interface LifeFrame {
+  age: number;
+  ganzi: GanZi;
+  major_ganzi: GanZi;
+  score: number;
+  tags: string[];       // TraceTag 변형명 배열
+  esil_trace: string;
+  register_state: QiRegisters;
+}
+
+// ── 핵심 사주 리포트 ─────────────────────────
+
+/** 사주 분석 내부 리포트 (SajuReport Rust struct) */
 export interface SajuReport {
-  pillars: {
-    year: GanZi;
-    month: GanZi;
-    day: GanZi;
-    hour: GanZi;
-  };
-  strength_analysis: {
-    day_master: string;
-    day_master_element: string;
-    strength: string;
-    scores: Record<string, number>;
-  };
-  yongshin_analysis: {
-    yongshin: string;
-    yongshin_element: string;
-    kibshin: string;
-    kibshin_element: string;
-  };
-  structure_analysis: {
-    structure: string;
-    description: string;
-  };
-  spirit_markers: Array<{
-    spirit: string;
-    pillar_position: string;
-    is_positive: boolean;
-    description: string;
-  }>;
-  major_luck_cycles: Array<{
-    ganzi: GanZi;
-    start_age: number;
-    end_age: number;
-    element: string;
-  }>;
-  golden_time: {
-    best_hours: string[];
-    reason: string;
-  };
-  simulation_frames: Array<{
-    age: number;
-    score: number;
-    ganzi: GanZi;
-    tags: string[];
-  }>;
+  pillars: FourPillars;
+  strength: StrengthAnalysis;
+  yongshin: YongshinAnalysis;
+  spirit_markers: SpiritMarkerAnalysis;
+  structure: StructureAnalysis;
+  major_luck: MajorLuckAnalysis | null;
+  golden_time: GoldenTime | null;
+  vm_summary: string | null;
+  simulation_frames: LifeFrame[];
 }
 
-/** 운세(대운) 리포트 */
-export interface TransitReport {
-  yearly_luck: {
-    ganzi: GanZi;
-    element: string;
-    influences: string[];
-  };
-  monthly_luck: {
-    ganzi: GanZi;
-    element: string;
-    influences: string[];
-  };
-  life_frames: Array<{
-    age: number;
-    score: number;
-    ganzi: GanZi;
-    tags: string[];
-    status: string;
-    reason: string;
-    strategy: string;
-    esil_trace?: string;
-    register_state?: Record<string, number>;
-  }>;
-  nearby_diagnostics: Array<{
-    age: number;
-    status: string;
-    reason: string;
-    strategy: string;
-  }>;
+/** 사주 분석 결과 최상위 래퍼 (SajuAnalysisResult Rust struct) */
+export interface SajuAnalysisResult {
+  report: SajuReport;
+  is_dst: boolean;
+  dst_offset_hours: number | null;
+  corrected_time: string;
+  lints: unknown[];
+  entropy: unknown;
+  qi_topology: unknown;
+  load_diagnostics: LoadBalanceDiagnostic[];
+  crash_count: number;
 }
 
-/** 궁합 (CompatibilityAudit) */
+/** 부하 진단 항목 (LoadBalanceDiagnostic Rust struct) */
+export interface LoadBalanceDiagnostic {
+  age: number;
+  status: string;  // "SystemDown" | "Overloaded" | "Normal"
+  reason: string;
+  strategy: string;
+}
+
+// ── 운세(세운/월운) ───────────────────────────
+
+/** 나타나는 운세 흐름 */
+export interface LuckInfluence {
+  relations_with_natal: string[];
+}
+
+/** 세운 (YearlyLuck Rust struct) */
+export interface YearlyLuck {
+  year: number;
+  ganzi: GanZi;
+  stem_god: string;
+  branch_god: string;
+  influence: LuckInfluence | null;
+  special_events: string[];
+  twelve_stage: string | null;
+}
+
+/** 월운 (MonthlyLuck Rust struct) */
+export interface MonthlyLuck {
+  year: number;
+  month: number;
+  ganzi: GanZi;
+  stem_god: string;
+  branch_god: string;
+  influence: LuckInfluence | null;
+  twelve_stage: string | null;
+}
+
+/** 운세 분석 결과 (TransitResult Rust struct) */
+export interface TransitResult {
+  yearly_luck: YearlyLuck;
+  monthly_luck: MonthlyLuck;
+  current_age: number;
+  current_frame: LifeFrame | null;
+  nearby_diagnostics: LoadBalanceDiagnostic[];
+}
+
+// ── 궁합 ─────────────────────────────────────
+
+/** 사주 궁합 (CompatibilityAudit Rust struct) */
 export interface CompatibilityAudit {
   sync_score: number;
   synergies: string[];

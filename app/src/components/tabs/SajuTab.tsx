@@ -1,5 +1,15 @@
 import { motion } from "framer-motion";
-import { Activity, Zap, Shield, Star, TrendingUp } from "lucide-react";
+import { Activity, Zap, Shield, Star, TrendingUp, AlertTriangle } from "lucide-react";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
+import { CHART_TOOLTIP_STYLE } from "../../lib/chartTheme";
 import {
   STEM_INFO, BRANCH_INFO, ELEMENT_INFO,
   STRENGTH_INFO, TENGOD_INFO, STRUCTURE_INFO,
@@ -9,9 +19,10 @@ import { ganziDisplay, ganziHangul } from "../../utils";
 
 interface SajuTabProps {
   sajuReport: any;
+  unknownTime?: boolean;
 }
 
-export function SajuTab({ sajuReport }: SajuTabProps) {
+export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
   if (!sajuReport || !sajuReport.report) return null;
   const reportData = sajuReport.report;
   const p = reportData.pillars;
@@ -30,6 +41,16 @@ export function SajuTab({ sajuReport }: SajuTabProps) {
       exit={{ opacity: 0, y: -20 }}
       className="space-y-8"
     >
+      {/* 시간 미상 경고 배너 */}
+      {unknownTime && (
+        <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-sm">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+          <span>
+            <strong>시주(時柱) 미상</strong> — 정오(12:00)기준 분석. 시주 및 시 기반 신살·용신은 참고용입니다.
+          </span>
+        </div>
+      )}
+
       {/* 사주팔자 차트 */}
       <div className="glass p-8 rounded-[2rem]">
         <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
@@ -38,13 +59,22 @@ export function SajuTab({ sajuReport }: SajuTabProps) {
         </h5>
         <div className="grid grid-cols-4 gap-4">
           {[
-            { label: "시주", pillar: p?.hour },
-            { label: "일주", pillar: p?.day },
-            { label: "월주", pillar: p?.month },
-            { label: "년주", pillar: p?.year },
-          ].map(({ label, pillar }) => (
-            <div key={label} className="text-center p-4 bg-white/5 rounded-2xl border border-white/10">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3">{label}</p>
+            { label: "시주", pillar: p?.hour, isHour: true },
+            { label: "일주", pillar: p?.day, isHour: false },
+            { label: "월주", pillar: p?.month, isHour: false },
+            { label: "년주", pillar: p?.year, isHour: false },
+          ].map(({ label, pillar, isHour }) => (
+            <div key={label} className={`text-center p-4 rounded-2xl border transition-all ${
+              isHour && unknownTime
+                ? "bg-amber-500/5 border-amber-500/25"
+                : "bg-white/5 border-white/10"
+            }`}>
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3 flex items-center justify-center gap-1.5">
+                {label}
+                {isHour && unknownTime && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-400/30 font-bold">미상</span>
+                )}
+              </p>
               <p className="text-2xl font-bold text-celestial-gold mb-1">
                 {STEM_INFO[pillar?.stem]?.hanja || "—"}
               </p>
@@ -183,32 +213,59 @@ export function SajuTab({ sajuReport }: SajuTabProps) {
         </div>
       )}
 
-      {/* 인생 시뮬레이션 타임라인 (LifeFrame × 100) */}
+      {/* 인생 시뮬레이션 타임라인 */}
       {reportData.simulation_frames && reportData.simulation_frames.length > 0 && (
         <div className="glass p-8 rounded-[2rem]">
           <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
             <TrendingUp className="w-6 h-6 text-celestial-cyan" />
-            인생 시뮬레이션 (0~100세 System Score)
+            인생 흐름 그래프 (0~100세 운세 점수)
           </h5>
-          <div className="flex items-end gap-0.5 h-24 w-full overflow-x-auto">
-            {(reportData.simulation_frames as any[]).map((f: any, i: number) => {
-              const score: number = f.score ?? 0;
-              const heightPct = Math.max(4, Math.round(score));
-              const color =
-                score >= 70
-                  ? "bg-green-400"
-                  : score >= 40
-                  ? "bg-celestial-gold"
-                  : "bg-red-400";
-              return (
-                <div
-                  key={i}
-                  title={`${f.age}세: ${score.toFixed(1)}`}
-                  className={`flex-1 min-w-[4px] rounded-sm ${color} opacity-80 hover:opacity-100 transition-opacity cursor-help`}
-                  style={{ height: `${heightPct}%` }}
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={(reportData.simulation_frames as any[]).map((f: any) => ({
+                  age: f.age,
+                  score: Number(f.score ?? 0),
+                }))}
+                margin={{ top: 8, right: 12, left: 0, bottom: 8 }}
+              >
+                <defs>
+                  <linearGradient id="sajuScoreGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.7} />
+                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="age"
+                  stroke="rgba(255,255,255,0.45)"
+                  tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={{ stroke: "rgba(255,255,255,0.15)" }}
+                  unit="세"
                 />
-              );
-            })}
+                <YAxis
+                  domain={[0, 100]}
+                  stroke="rgba(255,255,255,0.45)"
+                  tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={{ stroke: "rgba(255,255,255,0.15)" }}
+                />
+                <Tooltip
+                  formatter={(value: number) => [`${value.toFixed(1)}점`, "운세 점수"]}
+                  labelFormatter={(label: number) => `${label}세`}
+                  contentStyle={CHART_TOOLTIP_STYLE}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="score"
+                  stroke="#06b6d4"
+                  strokeWidth={2.5}
+                  fill="url(#sajuScoreGradient)"
+                  activeDot={{ r: 5, stroke: "#06b6d4", strokeWidth: 2, fill: "#111827" }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
           <div className="flex justify-between text-xs text-white/30 mt-2">
             <span>0세</span>

@@ -1,5 +1,18 @@
 import { motion } from "framer-motion";
 import { Activity, Shield } from "lucide-react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Cell,
+} from "recharts";
+import { CHART_TOOLTIP_STYLE } from "../../lib/chartTheme";
+import { TENGOD_INFO } from "../../constants";
+import { ganziHangul, ganziDisplay } from "../../utils";
 
 interface TransitTabProps {
   transitReport: any;
@@ -28,10 +41,10 @@ export function TransitTab({ transitReport }: TransitTabProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="glass p-8 rounded-[2rem]">
           <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-3">세운 (年運) — {yr?.year}년</p>
-          <h4 className="text-4xl font-black text-celestial-gold mb-3">{yr?.ganzi?.hangul ?? "—"}</h4>
+          <h4 className="text-4xl font-black text-celestial-gold mb-3">{ganziHangul(yr?.ganzi) || "—"}</h4>
           <div className="space-y-1 text-sm text-white/60 mb-4">
-            <p>천간 십성: <span className="text-white font-semibold">{yr?.stem_god?.hangul ?? yr?.stem_god ?? "—"}</span></p>
-            <p>지지 십성: <span className="text-white font-semibold">{yr?.branch_god?.hangul ?? yr?.branch_god ?? "—"}</span></p>
+            <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[yr?.stem_god]?.hangul ?? yr?.stem_god ?? "—"}</span></p>
+            <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[yr?.branch_god]?.hangul ?? yr?.branch_god ?? "—"}</span></p>
             {yr?.twelve_stage && (
               <p>12운성: <span className="text-celestial-cyan font-semibold">{yr.twelve_stage}</span></p>
             )}
@@ -49,10 +62,10 @@ export function TransitTab({ transitReport }: TransitTabProps) {
         </div>
         <div className="glass p-8 rounded-[2rem] border-celestial-purple/20 bg-celestial-purple/5">
           <p className="text-celestial-purple/80 text-sm font-bold uppercase tracking-wider mb-3">월운 (月運) — {mo?.month}월</p>
-          <h4 className="text-4xl font-black text-white mb-3">{mo?.ganzi?.hangul ?? "—"}</h4>
+          <h4 className="text-4xl font-black text-white mb-3">{ganziHangul(mo?.ganzi) || "—"}</h4>
           <div className="space-y-1 text-sm text-white/60 mb-4">
-            <p>천간 십성: <span className="text-white font-semibold">{mo?.stem_god?.hangul ?? mo?.stem_god ?? "—"}</span></p>
-            <p>지지 십성: <span className="text-white font-semibold">{mo?.branch_god?.hangul ?? mo?.branch_god ?? "—"}</span></p>
+            <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[mo?.stem_god]?.hangul ?? mo?.stem_god ?? "—"}</span></p>
+            <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[mo?.branch_god]?.hangul ?? mo?.branch_god ?? "—"}</span></p>
             {mo?.twelve_stage && (
               <p>12운성: <span className="text-celestial-cyan font-semibold">{mo.twelve_stage}</span></p>
             )}
@@ -67,26 +80,26 @@ export function TransitTab({ transitReport }: TransitTabProps) {
         </div>
       </div>
 
-      {/* 현재 나이 LifeFrame */}
+      {/* 현재 운세 상태 */}
       {frame && (
         <div className="glass p-8 rounded-[2rem]">
           <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
             <Activity className="w-6 h-6 text-celestial-cyan" />
-            현재 시스템 상태 ({age}세 LifeFrame)
+            현재 운세 상태 ({age}세)
           </h5>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">System Score</p>
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">운세 점수</p>
               <p className={`text-5xl font-black ${scoreColor(frame.score ?? 0)}`}>
                 {frame.score?.toFixed(1) ?? "—"}
               </p>
             </div>
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
               <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">현재 간지</p>
-              <p className="text-4xl font-black text-white">{frame.ganzi?.hangul ?? "—"}</p>
+              <p className="text-4xl font-black text-white">{ganziDisplay(frame.ganzi) || "—"}</p>
             </div>
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">Tags</p>
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">특징</p>
               <div className="flex flex-wrap gap-1">
                 {(frame.tags ?? []).map((tag: string, i: number) => (
                   <span key={i} className="text-xs px-2 py-1 rounded-full bg-celestial-purple/20 text-celestial-purple border border-celestial-purple/30">{tag}</span>
@@ -94,10 +107,10 @@ export function TransitTab({ transitReport }: TransitTabProps) {
               </div>
             </div>
           </div>
-          {/* ESIL Trace */}
+          {/* 흐름 추적 */}
           {frame.esil_trace && (
             <div className="bg-black/40 rounded-xl p-4 font-mono text-xs border border-white/10 overflow-x-auto">
-              <p className="text-white/40 mb-2">// ESIL TRACE</p>
+              <p className="text-white/40 mb-2">// 흐름 추적 로그</p>
               {frame.esil_trace.split("; ").map((line: string, i: number) => (
                 <p key={i} className={line.includes("irq") || line.includes("panic") ? "text-red-400" : "text-green-300/70"}>
                   {line}
@@ -106,30 +119,42 @@ export function TransitTab({ transitReport }: TransitTabProps) {
             </div>
           )}
 
-          {/* QiRegisters 미니 바 차트 */}
+          {/* 오행 에너지 분포 */}
           {frame.register_state && (
             <div className="mt-4">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3">오행 레지스터 (QiRegisters)</p>
-              <div className="grid grid-cols-5 gap-3">
-                {[
-                  { label: "木", key: "r0_wood", color: "bg-green-400" },
-                  { label: "火", key: "r1_fire", color: "bg-red-400" },
-                  { label: "土", key: "r2_earth", color: "bg-yellow-400" },
-                  { label: "金", key: "r3_metal", color: "bg-gray-300" },
-                  { label: "水", key: "r4_water", color: "bg-blue-400" },
-                ].map(({ label, key, color }) => {
-                  const val: number = frame.register_state[key] ?? 0;
-                  const pct = Math.min(100, Math.round(Math.abs(val) * 4));
-                  return (
-                    <div key={key} className="text-center">
-                      <div className="h-16 bg-white/5 rounded-lg flex items-end overflow-hidden mb-1">
-                        <div className={`w-full ${color} rounded-lg opacity-80 transition-all`} style={{ height: `${pct}%` }} />
-                      </div>
-                      <p className="text-xs text-white/40">{label}</p>
-                      <p className="text-[10px] text-white/30">{val.toFixed(1)}</p>
-                    </div>
-                  );
-                })}
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3">오행 에너지 분포</p>
+              <div className="h-56 bg-white/5 rounded-xl border border-white/10 p-3">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={[
+                      { label: "木", value: frame.register_state.r0_wood ?? 0, color: "#4ade80" },
+                      { label: "火", value: frame.register_state.r1_fire ?? 0, color: "#f87171" },
+                      { label: "土", value: frame.register_state.r2_earth ?? 0, color: "#facc15" },
+                      { label: "金", value: frame.register_state.r3_metal ?? 0, color: "#d1d5db" },
+                      { label: "水", value: frame.register_state.r4_water ?? 0, color: "#60a5fa" },
+                    ]}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
+                    <XAxis dataKey="label" tick={{ fill: "rgba(255,255,255,0.65)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "rgba(255,255,255,0.65)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      formatter={(value: number) => [`${value.toFixed(1)}`, "에너지"]}
+                      contentStyle={CHART_TOOLTIP_STYLE}
+                    />
+                    <Bar dataKey="value" radius={[10, 10, 0, 0]}>
+                      {[
+                        { color: "#4ade80" },
+                        { color: "#f87171" },
+                        { color: "#facc15" },
+                        { color: "#d1d5db" },
+                        { color: "#60a5fa" },
+                      ].map((entry, idx) => (
+                        <Cell key={idx} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
           )}
@@ -158,6 +183,7 @@ export function TransitTab({ transitReport }: TransitTabProps) {
                   </p>
                   <p className="text-xs text-white/50 mt-0.5">▶ {d.strategy}</p>
                 </div>
+                <span className="text-xs text-white/30 shrink-0">{d.status === "SystemDown" ? "위험" : d.status === "Overloaded" ? "주의" : "안정"}</span>
               </div>
             ))}
           </div>

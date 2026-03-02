@@ -71,3 +71,21 @@ impl AspectEngine {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::AspectEngine;
+
+    #[test]
+    fn wraps_to_twelve_when_modulo_is_zero() {
+        assert_eq!(AspectEngine::get_target_house(6, 7), 12);
+        assert_eq!(AspectEngine::get_target_house(3, 10), 12);
+    }
+
+    #[test]
+    fn computes_general_wrapped_houses_correctly() {
+        assert_eq!(AspectEngine::get_target_house(12, 7), 6);
+        assert_eq!(AspectEngine::get_target_house(1, 7), 7);
+        assert_eq!(AspectEngine::get_target_house(10, 4), 1);
+    }
+}

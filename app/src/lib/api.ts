@@ -30,6 +30,7 @@ export const get_vedic_analysis = async (args: {
     minute: number;
     lat: number;
     lon: number;
+    timezone: string;
 }): Promise<VedicAnalysisResult> => {
     if (isTauri()) {
         console.log("Using Tauri Native Backend");
@@ -40,7 +41,8 @@ export const get_vedic_analysis = async (args: {
         return wasm.get_vedic_analysis(
             args.year, args.month, args.day,
             args.hour, args.minute,
-            args.lat, args.lon
+            args.lat, args.lon,
+            args.timezone
         );
     }
 };
@@ -126,6 +128,7 @@ export const get_saju_compatibility = async (args: {
 export const get_vedic_compatibility = async (args: {
     year1: number; month1: number; day1: number; hour1: number; minute1: number; lat1: number; lon1: number;
     year2: number; month2: number; day2: number; hour2: number; minute2: number; lat2: number; lon2: number;
+    timezone: string;
 }): Promise<any> => {
     if (isTauri()) {
         return invoke("get_vedic_compatibility", args);
@@ -133,7 +136,8 @@ export const get_vedic_compatibility = async (args: {
         const wasm = await getWasmModule();
         return wasm.get_vedic_compatibility(
             args.year1, args.month1, args.day1, args.hour1, args.minute1, args.lat1, args.lon1,
-            args.year2, args.month2, args.day2, args.hour2, args.minute2, args.lat2, args.lon2
+            args.year2, args.month2, args.day2, args.hour2, args.minute2, args.lat2, args.lon2,
+            args.timezone
         );
     }
 };

@@ -1,8 +1,21 @@
 import { motion } from "framer-motion";
-import { Activity, Zap, Shield, TrendingUp } from "lucide-react";
+import { Activity, Zap, Shield, TrendingUp, AlertTriangle } from "lucide-react";
+import {
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  RadialBarChart,
+  RadialBar,
+  Tooltip,
+} from "recharts";
+import { CHART_TOOLTIP_STYLE } from "../../lib/chartTheme";
 
 interface StrengthTabProps {
   sajuReport: any;
+  unknownTime?: boolean;
 }
 
 const ELEMENT_COLORS: Record<string, string> = {
@@ -13,7 +26,7 @@ const ELEMENT_COLORS: Record<string, string> = {
   Water: "text-blue-400  border-blue-500/30  bg-blue-500/10",
 };
 
-export function StrengthTab({ sajuReport }: StrengthTabProps) {
+export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProps) {
   if (!sajuReport) return null;
   const entropy = sajuReport.entropy;
   const topology = sajuReport.qi_topology;
@@ -29,40 +42,79 @@ export function StrengthTab({ sajuReport }: StrengthTabProps) {
       exit={{ opacity: 0, y: -20 }}
       className="space-y-8"
     >
-      {/* 오행 네트워크 (Qi Topology) */}
+      {/* 시간 미상 경고 */}
+      {unknownTime && (
+        <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-sm">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+          <span>
+            <strong>시주(時柱) 미상</strong> — 득시(得時) 판정 및 시 기반 십이운성 수치는 시주 시간에 따라 달라집니다. 참고용으로 활용하세요.
+          </span>
+        </div>
+      )}
+
+      {/* 오행 에너지 균형 */}
       {topology?.nodes && (
         <div className="glass p-8 rounded-[2rem]">
           <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
             <Activity className="w-6 h-6 text-celestial-cyan" />
-            기(氣) 위상 분석 (Qi Topology)
+            오행 에너지 균형
           </h5>
-          <div className="grid grid-cols-5 gap-4">
-            {topology.nodes.map((node: any, i: number) => {
-              const colorClass = ELEMENT_COLORS[node.element?.english] ?? "text-white/60";
-              const pct = Math.round(node.output * 100);
-              return (
-                <div key={i} className={`p-4 rounded-2xl border text-center ${colorClass}`}>
-                  <p className="text-xs font-bold uppercase tracking-wider mb-2">{node.element?.hangul ?? node.element}</p>
-                  <p className="text-3xl font-black mb-1">{pct}%</p>
-                  <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full bg-current transition-all" style={{ width: `${pct}%` }} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="h-72 bg-white/5 rounded-2xl border border-white/10 p-3">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart
+                  data={topology.nodes.map((node: any) => ({
+                    element: node.element?.hangul ?? node.element,
+                    score: Math.round((node.output ?? 0) * 100),
+                  }))}
+                >
+                  <PolarGrid stroke="rgba(255,255,255,0.2)" />
+                  <PolarAngleAxis dataKey="element" tick={{ fill: "rgba(255,255,255,0.75)", fontSize: 12 }} />
+                  <PolarRadiusAxis
+                    angle={30}
+                    domain={[0, 100]}
+                    tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }}
+                    stroke="rgba(255,255,255,0.2)"
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [`${value.toFixed(0)}%`, "에너지"]}
+                    contentStyle={CHART_TOOLTIP_STYLE}
+                  />
+                  <Radar dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.45} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="space-y-3">
+              {topology.nodes.map((node: any, i: number) => {
+                const colorClass = ELEMENT_COLORS[node.element?.english] ?? "text-white/60";
+                const pct = Math.round(node.output * 100);
+                return (
+                  <div key={i} className={`p-4 rounded-2xl border ${colorClass}`}>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <p className="text-xs font-bold uppercase tracking-wider">{node.element?.hangul ?? node.element}</p>
+                      <p className="text-lg font-black">{pct}%</p>
+                    </div>
+                    <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-current transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                    {(topology?.bottleneck?.hangul && node.element?.hangul === topology.bottleneck.hangul) && (
+                      <span className="mt-2 inline-block text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40">부족</span>
+                    )}
                   </div>
-                  {(topology?.bottleneck?.hangul && node.element?.hangul === topology.bottleneck.hangul) && (
-                    <span className="mt-2 inline-block text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40">병목</span>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Destiny Entropy */}
+      {/* 운명 복잡도 */}
       {entropy && (
         <div className="glass p-8 rounded-[2rem]">
           <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
             <Zap className="w-6 h-6 text-celestial-gold" />
-            운명 엔트로피 (Destiny Entropy / DIE)
+            운명 복잡도 지수
           </h5>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
@@ -70,25 +122,43 @@ export function StrengthTab({ sajuReport }: StrengthTabProps) {
               <p className="text-4xl font-black text-celestial-gold">{entropy.level ?? "—"}</p>
             </div>
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">Shannon Entropy</p>
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">복잡도 수치</p>
               <p className="text-4xl font-black text-white">{entropy.score?.toFixed(3) ?? "—"}</p>
             </div>
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">취약점 (Fuzzer)</p>
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">주의 포인트</p>
               <p className={`text-4xl font-black ${crashCount > 5 ? "text-red-400" : "text-green-400"}`}>{crashCount}개</p>
             </div>
+          </div>
+          <div className="mt-6 h-44 bg-white/5 rounded-2xl border border-white/10 p-3">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadialBarChart
+                innerRadius="60%"
+                outerRadius="95%"
+                data={[{ name: "복잡도", value: Math.min(100, Math.max(0, (entropy.score ?? 0) * 25)) }]}
+                startAngle={180}
+                endAngle={0}
+              >
+                <RadialBar
+                  dataKey="value"
+                  cornerRadius={10}
+                  fill="#06b6d4"
+                  background={{ fill: "rgba(255,255,255,0.12)" }}
+                />
+              </RadialBarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       )}
 
-      {/* Destiny Linter */}
+      {/* 사주 체크업 */}
       <div className="glass p-8 rounded-[2rem]">
         <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
           <Shield className="w-6 h-6 text-celestial-purple" />
-          Destiny Linter (사주 진단)
+          사주 체크업
         </h5>
         {lints.length === 0 ? (
-          <p className="text-green-400 font-semibold">✅ No issues found. Perfect structure!</p>
+          <p className="text-green-400 font-semibold">✅ 문제 없음! 균형 잡힌 흐름입니다.</p>
         ) : (
           <div className="space-y-3">
             {lints.map((lint: any, i: number) => (
@@ -114,12 +184,12 @@ export function StrengthTab({ sajuReport }: StrengthTabProps) {
         )}
       </div>
 
-      {/* Load Balancer 상위 진단 */}
+      {/* 인생 흐름 진단 */}
       {loadDiag.length > 0 && (
         <div className="glass p-8 rounded-[2rem]">
           <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
             <TrendingUp className="w-6 h-6 text-brand-400" />
-            카르마 부하 진단 (KarmaLoadBalancer)
+            인생 흐름 진단
           </h5>
           <div className="space-y-3">
             {loadDiag.slice(0, 8).map((d: any, i: number) => (
@@ -135,7 +205,7 @@ export function StrengthTab({ sajuReport }: StrengthTabProps) {
                   <p className="text-sm font-bold text-white">[{d.age}세] {d.reason}</p>
                   <p className="text-xs text-white/50 mt-0.5">▶ {d.strategy}</p>
                 </div>
-                <span className="text-xs text-white/30 shrink-0">{d.status}</span>
+                <span className="text-xs text-white/30 shrink-0">{d.status === "SystemDown" ? "위험" : d.status === "Overloaded" ? "주의" : "안정"}</span>
               </div>
             ))}
           </div>

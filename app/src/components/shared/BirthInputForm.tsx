@@ -1,4 +1,4 @@
-import { Calendar, MapPin, User } from "lucide-react";
+import { Calendar, MapPin, User, Loader2, ChevronDown, Clock, HelpCircle } from "lucide-react";
 import { KOREAN_CITIES } from "../../constants";
 import type { BirthData } from "../../types";
 
@@ -27,6 +27,18 @@ export function BirthInputForm({
   onAnalysis,
   sajuReport,
 }: BirthInputFormProps) {
+  const unknownTime = birthData.unknown_time ?? false;
+
+  const toggleUnknownTime = () => {
+    setBirthData((prev) => ({
+      ...prev,
+      unknown_time: !prev.unknown_time,
+      // 시간 모름으로 전환 시 정오(12:00)로 초기화
+      hour: !prev.unknown_time ? 12 : prev.hour,
+      minute: !prev.unknown_time ? 0 : prev.minute,
+    }));
+  };
+
   return (
     <div className="glass p-6 rounded-[2rem] mb-8">
       <h5 className="text-lg font-bold text-white mb-5 flex items-center gap-3">
@@ -38,7 +50,7 @@ export function BirthInputForm({
           </span>
         )}
       </h5>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
         {/* 년 */}
         <div>
           <label className="block text-xs text-white/40 mb-1.5 font-medium">년</label>
@@ -52,12 +64,12 @@ export function BirthInputForm({
           />
         </div>
         {/* 월 */}
-        <div>
+        <div className="relative">
           <label className="block text-xs text-white/40 mb-1.5 font-medium">월</label>
           <select
             value={birthData.month}
             onChange={(e) => setBirthData((prev) => ({ ...prev, month: Number(e.target.value) }))}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-9 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
           >
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i + 1} value={i + 1} className="bg-gray-900">
@@ -65,6 +77,7 @@ export function BirthInputForm({
               </option>
             ))}
           </select>
+          <ChevronDown className="w-4 h-4 text-white/40 absolute right-3 top-9 pointer-events-none" />
         </div>
         {/* 일 */}
         <div>
@@ -79,12 +92,24 @@ export function BirthInputForm({
           />
         </div>
         {/* 시 */}
-        <div>
-          <label className="block text-xs text-white/40 mb-1.5 font-medium">시</label>
+        <div className="relative">
+          <label className="block text-xs mb-1.5 font-medium flex items-center gap-1.5">
+            <span className={unknownTime ? "text-white/20" : "text-white/40"}>시</span>
+            {unknownTime && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-400/30">
+                정오
+              </span>
+            )}
+          </label>
           <select
             value={birthData.hour}
             onChange={(e) => setBirthData((prev) => ({ ...prev, hour: Number(e.target.value) }))}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
+            disabled={unknownTime}
+            className={`w-full bg-white/5 border rounded-xl px-3 pr-9 py-2.5 text-sm appearance-none transition-all
+              ${unknownTime
+                ? "border-white/5 text-white/20 cursor-not-allowed opacity-40"
+                : "border-white/10 text-white focus:border-celestial-purple/50 focus:outline-none cursor-pointer"
+              }`}
           >
             {Array.from({ length: 24 }, (_, i) => (
               <option key={i} value={i} className="bg-gray-900">
@@ -92,28 +117,36 @@ export function BirthInputForm({
               </option>
             ))}
           </select>
+          <ChevronDown className={`w-4 h-4 absolute right-3 top-9 pointer-events-none ${unknownTime ? "text-white/10" : "text-white/40"}`} />
         </div>
         {/* 분 */}
         <div>
-          <label className="block text-xs text-white/40 mb-1.5 font-medium">분</label>
+          <label className="block text-xs mb-1.5 font-medium">
+            <span className={unknownTime ? "text-white/20" : "text-white/40"}>분</span>
+          </label>
           <input
             type="number"
             value={birthData.minute}
             onChange={(e) => setBirthData((prev) => ({ ...prev, minute: Number(e.target.value) }))}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none focus:ring-1 focus:ring-celestial-purple/30 transition-all"
+            disabled={unknownTime}
+            className={`w-full bg-white/5 border rounded-xl px-3 py-2.5 text-sm transition-all
+              ${unknownTime
+                ? "border-white/5 text-white/20 cursor-not-allowed opacity-40"
+                : "border-white/10 text-white focus:border-celestial-purple/50 focus:outline-none focus:ring-1 focus:ring-celestial-purple/30"
+              }`}
             min={0}
             max={59}
           />
         </div>
         {/* 도시 */}
-        <div>
+        <div className="relative col-span-2 sm:col-span-1">
           <label className="block text-xs text-white/40 mb-1.5 font-medium flex items-center gap-1">
             <MapPin className="w-3 h-3" /> 출생지
           </label>
           <select
             value={selectedCity}
             onChange={(e) => onCityChange(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-9 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
           >
             {KOREAN_CITIES.map((city) => (
               <option key={city.name} value={city.name} className="bg-gray-900">
@@ -121,10 +154,22 @@ export function BirthInputForm({
               </option>
             ))}
           </select>
+          <ChevronDown className="w-4 h-4 text-white/40 absolute right-3 top-9 pointer-events-none" />
         </div>
       </div>
 
-      {/* 하단: 성별 + 분석 실행 + 보정 정보 */}
+      {/* 시간 모름 안내 배너 */}
+      {unknownTime && (
+        <div className="flex items-start gap-2.5 mb-4 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300/90 text-xs leading-relaxed">
+          <HelpCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-400" />
+          <span>
+            <strong className="font-bold">시간 미상 모드</strong> — 정오(12:00, 午時)를 기준으로 분석합니다.
+            시주(時柱) 및 시 기반 신살·용신 결과는 참고용이며 실제와 다를 수 있습니다.
+          </span>
+        </div>
+      )}
+
+      {/* 하단: 성별 + 시간모름 토글 + 분석 실행 + 보정 정보 */}
       <div className="flex items-center gap-3 flex-wrap">
         <button
           onClick={() => setIsMale(!isMale)}
@@ -134,15 +179,29 @@ export function BirthInputForm({
           <span className="text-white font-semibold">{isMale ? "남" : "여"}</span>
         </button>
 
+        {/* 시간 모름 토글 */}
+        <button
+          onClick={toggleUnknownTime}
+          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 border transition-all text-sm font-semibold
+            ${unknownTime
+              ? "bg-amber-500/20 border-amber-500/50 text-amber-300"
+              : "bg-white/5 border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10"
+            }`}
+        >
+          <Clock className="w-4 h-4" />
+          {unknownTime ? "시간 미상 ✓" : "시간 모름"}
+        </button>
+
         <button
           onClick={onAnalysis}
           disabled={loading}
-          className="bg-gradient-to-r from-celestial-purple to-brand-600 px-6 py-2.5 rounded-xl font-bold text-white text-sm shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+          className="bg-gradient-to-r from-celestial-purple to-brand-600 px-6 py-2.5 rounded-xl font-bold text-white text-sm shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 inline-flex items-center gap-2 w-full sm:w-auto justify-center"
         >
-          {loading ? "계산 중..." : "통합 분석 시작"}
+          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          {loading ? "분석 준비 중..." : "통합 분석 시작"}
         </button>
 
-        <div className="ml-auto text-xs text-white/30 flex items-center gap-4">
+        <div className="w-full lg:w-auto lg:ml-auto text-xs text-white/30 flex flex-wrap items-center gap-3 lg:gap-4">
           <span>
             위도 {birthData.lat.toFixed(2)}° / 경도 {birthData.lon.toFixed(2)}°
           </span>

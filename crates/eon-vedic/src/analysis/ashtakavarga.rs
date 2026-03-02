@@ -340,3 +340,126 @@ impl AshtakavargaEngine {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::AshtakavargaEngine;
+    use crate::analysis::ashtakavarga::Sarvashtakavarga;
+    use crate::calc::panchanga::Panchanga;
+    use crate::chart::{VedicChart, VedicPosition};
+    use crate::planets::VedicPlanet;
+    use chrono::{TimeZone, Utc};
+
+    fn dummy_position(planet: VedicPlanet, rasi: u8) -> VedicPosition {
+        VedicPosition {
+            planet,
+            tropical_deg: 0.0,
+            sidereal_deg: 0.0,
+            nakshatra: 1,
+            pada: 1,
+            rasi,
+            house_index: 1,
+            speed: 0.0,
+            is_retrograde: false,
+            is_combust: false,
+            declination: 0.0,
+            hora_rasi: 1,
+            drekkana_rasi: 1,
+            chaturthamsha_rasi: 1,
+            panchamsa_rasi: 1,
+            saptamsa_rasi: 1,
+            ashtamsa_rasi: 1,
+            navamsa_rasi: 1,
+            dasamsa_rasi: 1,
+            rudramsa_rasi: 1,
+            dwadasamsa_rasi: 1,
+            shodashamsa_rasi: 1,
+            vimsamsa_rasi: 1,
+            chaturvimshamsa_rasi: 1,
+            saptavimsamsa_rasi: 1,
+            trimsamsa_rasi: 1,
+            khavedamsa_rasi: 1,
+            akshavedamsa_rasi: 1,
+            shashtyamsa_rasi: 1,
+            navanavamsa_rasi: 1,
+            ashtottaramsa_rasi: 1,
+            dwadasdwadasamsa_rasi: 1,
+        }
+    }
+
+    fn dummy_chart(planets: Vec<VedicPosition>) -> VedicChart {
+        let dt = Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap();
+        VedicChart {
+            ascendant: dummy_position(VedicPlanet::Ascendant, 1),
+            planets,
+            aspects: vec![],
+            sav: Sarvashtakavarga { points: [0; 12] },
+            house_cusps: vec![],
+            karakas: vec![],
+            bhava_strengths: vec![],
+            vimshopaka_scores: vec![],
+            panchanga: Panchanga {
+                vara: "Saturday".to_string(),
+                tithi: 1,
+                tithi_name: "Pratipada".to_string(),
+                nakshatra: 1,
+                yoga: 1,
+                karana: 1,
+                karana_name: "Bava".to_string(),
+                current_time: dt,
+                sunrise: dt,
+                sunset: dt,
+                next_sunrise: dt,
+                is_day_birth: true,
+                day_lord: VedicPlanet::Saturn,
+                hour_lord: VedicPlanet::Saturn,
+                daily_parts: [
+                    VedicPlanet::Sun,
+                    VedicPlanet::Moon,
+                    VedicPlanet::Mars,
+                    VedicPlanet::Mercury,
+                    VedicPlanet::Jupiter,
+                    VedicPlanet::Venus,
+                    VedicPlanet::Saturn,
+                    VedicPlanet::Rahu,
+                ],
+                is_night_birth: false,
+            },
+            analysis_report: None,
+        }
+    }
+
+    #[test]
+    fn triangular_reduction_zeroes_third_when_two_are_zero() {
+        let mut points = [0u8; 12];
+        points[8] = 6;
+
+        let reduced = AshtakavargaEngine::apply_triangular_reduction(points);
+        assert_eq!(reduced[0], 0);
+        assert_eq!(reduced[4], 0);
+        assert_eq!(reduced[8], 0);
+    }
+
+    #[test]
+    fn ekadhipatya_reduction_drops_single_nonzero_when_unoccupied() {
+        let mut points = [0u8; 12];
+        points[0] = 5;
+        let chart = dummy_chart(vec![]);
+
+        let reduced = AshtakavargaEngine::apply_ekadhipatya_reduction(points, &chart);
+        assert_eq!(reduced[0], 0);
+        assert_eq!(reduced[7], 0);
+    }
+
+    #[test]
+    fn ekadhipatya_reduction_equalizes_unoccupied_pair_to_minimum() {
+        let mut points = [0u8; 12];
+        points[0] = 6;
+        points[7] = 3;
+        let chart = dummy_chart(vec![]);
+
+        let reduced = AshtakavargaEngine::apply_ekadhipatya_reduction(points, &chart);
+        assert_eq!(reduced[0], 3);
+        assert_eq!(reduced[7], 3);
+    }
+}

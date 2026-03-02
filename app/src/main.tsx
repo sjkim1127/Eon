@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { Toaster } from "sonner";
 import App from "./App";
 import "./index.css";
 
@@ -7,5 +8,6 @@ import "./index.css";
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <App />
+    <Toaster theme="dark" richColors position="top-right" />
   </React.StrictMode>,
 );

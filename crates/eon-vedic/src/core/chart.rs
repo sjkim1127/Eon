@@ -65,6 +65,16 @@ pub struct VedicChartCalculator {
 }
 
 impl VedicChartCalculator {
+    fn calculate_nakshatra_and_pada(sidereal: f64) -> (u8, u8) {
+        let nak_pos = sidereal / (360.0 / 27.0);
+        let nakshatra = (nak_pos.floor() as u8) + 1;
+
+        let pada_pos = (sidereal % (360.0 / 27.0)) / (360.0 / 108.0);
+        let pada = (pada_pos.floor() as u8) + 1;
+
+        (nakshatra, pada)
+    }
+
     pub fn new() -> Self {
         Self {
             engine: AstroEngine::new(),
@@ -124,11 +134,7 @@ impl VedicChartCalculator {
                                declination: f64,
                                sun_sidereal: Option<f64>|
          -> VedicPosition {
-            let nak_pos = sidereal / (360.0 / 27.0);
-            let nakshatra = (nak_pos.floor() as u8) + 1;
-
-            let pada_pos = (sidereal % (360.0 / 27.0)) / (360.0 / 108.0);
-            let pada = (pada_pos.floor() as u8) + 1;
+            let (nakshatra, pada) = Self::calculate_nakshatra_and_pada(sidereal);
             let rasi = (sidereal / 30.0).floor() as u8 + 1;
 
             // House Index Calculation
@@ -343,5 +349,31 @@ impl VedicChartCalculator {
         ));
 
         chart
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::VedicChartCalculator;
+
+    #[test]
+    fn nakshatra_and_pada_start_boundary_is_correct() {
+        let (nak, pada) = VedicChartCalculator::calculate_nakshatra_and_pada(0.0);
+        assert_eq!(nak, 1);
+        assert_eq!(pada, 1);
+    }
+
+    #[test]
+    fn nakshatra_and_pada_transition_boundary_is_correct() {
+        let segment = 360.0 / 27.0;
+
+        let (nak_before, pada_before) =
+            VedicChartCalculator::calculate_nakshatra_and_pada(segment - 1e-9);
+        assert_eq!(nak_before, 1);
+        assert_eq!(pada_before, 4);
+
+        let (nak_after, pada_after) = VedicChartCalculator::calculate_nakshatra_and_pada(segment);
+        assert_eq!(nak_after, 2);
+        assert_eq!(pada_after, 1);
     }
 }

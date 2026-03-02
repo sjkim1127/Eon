@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   get_vedic_analysis,
   get_saju_analysis,
@@ -8,7 +9,15 @@ import {
 } from "../lib/api";
 import { KOREAN_CITIES } from "../constants";
 import { isKoreaDST } from "../utils";
-import type { BirthData, TabId, VedicAnalysisResult } from "../types";
+import type {
+  BirthData,
+  TabId,
+  VedicAnalysisResult,
+  SajuAnalysisResult,
+  TransitResult,
+  CompatibilityAudit,
+  AshtaKutaResult,
+} from "../types";
 
 /** 기본 출생 데이터 */
 const DEFAULT_BIRTH: BirthData = {
@@ -22,6 +31,25 @@ const DEFAULT_BIRTH2: BirthData = {
   lat: 37.5665, lon: 126.978,
 };
 
+const inRange = (value: number, min: number, max: number) => Number.isFinite(value) && value >= min && value <= max;
+
+const getBirthValidationError = (value: BirthData, label: string): string | null => {
+  if (!inRange(value.year, 1900, 2100)) return `${label}의 출생 연도는 1900~2100 사이여야 합니다.`;
+  if (!inRange(value.month, 1, 12)) return `${label}의 출생 월은 1~12 사이여야 합니다.`;
+  if (!inRange(value.day, 1, 31)) return `${label}의 출생 일은 1~31 사이여야 합니다.`;
+  if (!inRange(value.hour, 0, 23)) return `${label}의 출생 시는 0~23 사이여야 합니다.`;
+  if (!inRange(value.minute, 0, 59)) return `${label}의 출생 분은 0~59 사이여야 합니다.`;
+  if (!inRange(value.lat, -90, 90)) return `${label}의 위도 값이 올바르지 않습니다.`;
+  if (!inRange(value.lon, -180, 180)) return `${label}의 경도 값이 올바르지 않습니다.`;
+
+  const daysInMonth = new Date(value.year, value.month, 0).getDate();
+  if (value.day > daysInMonth) {
+    return `${label}의 날짜가 실제 달력과 맞지 않습니다. (${value.month}월은 최대 ${daysInMonth}일)`;
+  }
+
+  return null;
+};
+
 export function useAnalysis() {
   // ── 출생 정보 상태 ──
   const [birthData, setBirthData] = useState<BirthData>(DEFAULT_BIRTH);
@@ -30,16 +58,17 @@ export function useAnalysis() {
 
   // ── 분석 결과 ──
   const [report, setReport] = useState<VedicAnalysisResult | null>(null);
-  const [sajuReport, setSajuReport] = useState<any>(null);
-  const [transitReport, setTransitReport] = useState<any>(null);
+  const [sajuReport, setSajuReport] = useState<SajuAnalysisResult | null>(null);
+  const [transitReport, setTransitReport] = useState<TransitResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // ── 궁합 상태 ──
   const [birthData2, setBirthData2] = useState<BirthData>(DEFAULT_BIRTH2);
   const [isMale2, setIsMale2] = useState(false);
   const [selectedCity2, setSelectedCity2] = useState("서울");
-  const [compReport, setCompReport] = useState<any>(null);
+  const [compReport, setCompReport] = useState<{ saju: CompatibilityAudit; vedic: AshtaKutaResult } | null>(null);
   const [compLoading, setCompLoading] = useState(false);
 
   // ── 파생 값 ──
@@ -64,10 +93,18 @@ export function useAnalysis() {
 
   const runAnalysis = async () => {
     const now = new Date();
+    const validationError = getBirthValidationError(birthData, "내 정보");
+    if (validationError) {
+      setErrorMessage(validationError);
+      toast.error(validationError);
+      return;
+    }
+
     setLoading(true);
+    setErrorMessage(null);
     try {
       const [vedic, saju, transit] = await Promise.all([
-        get_vedic_analysis({ ...birthData }),
+        get_vedic_analysis({ ...birthData, timezone: "Asia/Seoul" }),
         get_saju_analysis({
           ...birthData,
           is_male: isMale,
@@ -84,15 +121,34 @@ export function useAnalysis() {
       setReport(vedic);
       setSajuReport(saju);
       setTransitReport(transit);
+      toast.success("분석이 완료되었습니다.");
     } catch (e) {
       console.error(e);
+      const message = e instanceof Error ? e.message : "분석 중 오류가 발생했습니다.";
+      setErrorMessage(message);
+      toast.error("분석에 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setLoading(false);
     }
   };
 
   const runCompatibilityAnalysis = async () => {
+    const firstValidation = getBirthValidationError(birthData, "내 정보");
+    if (firstValidation) {
+      setErrorMessage(firstValidation);
+      toast.error(firstValidation);
+      return;
+    }
+
+    const secondValidation = getBirthValidationError(birthData2, "상대 정보");
+    if (secondValidation) {
+      setErrorMessage(secondValidation);
+      toast.error(secondValidation);
+      return;
+    }
+
     setCompLoading(true);
+    setErrorMessage(null);
     try {
       const [saju, vedic] = await Promise.all([
         get_saju_compatibility({
@@ -111,11 +167,16 @@ export function useAnalysis() {
           year2: birthData2.year, month2: birthData2.month, day2: birthData2.day,
           hour2: birthData2.hour, minute2: birthData2.minute,
           lat2: birthData2.lat, lon2: birthData2.lon,
+          timezone: "Asia/Seoul",
         }),
       ]);
       setCompReport({ saju, vedic });
+      toast.success("궁합 분석이 완료되었습니다.");
     } catch (e) {
       console.error(e);
+      const message = e instanceof Error ? e.message : "궁합 분석 중 오류가 발생했습니다.";
+      setErrorMessage(message);
+      toast.error("궁합 분석에 실패했습니다. 입력값을 확인해주세요.");
     } finally {
       setCompLoading(false);
     }
@@ -132,6 +193,7 @@ export function useAnalysis() {
     loading, runAnalysis,
     // 탭
     activeTab, setActiveTab,
+    errorMessage,
     // 궁합
     birthData2, setBirthData2,
     selectedCity2, handleCityChange2,
