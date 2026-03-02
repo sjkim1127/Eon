@@ -1,6 +1,7 @@
 use chrono::{TimeZone, Utc};
 use eon_vedic::analysis::report::VedicAnalysisReport;
 use eon_vedic::core::chart::{VedicChart, VedicChartCalculator};
+use eon_vedic::analysis::compatibility::CompatibilityEngine;
 
 // Saju imports
 use eon_saju::analysis::analytics::Analyzer;
@@ -13,6 +14,7 @@ use eon_saju::engine::topology::{QiTopology, TopologyAnalysis};
 use eon_saju::engine::entropy::{DestinyEntropy, EntropyAnalysis};
 use eon_saju::engine::load_balancer::{KarmaLoadBalancer, LoadBalanceDiagnostic};
 use eon_saju::engine::fuzzer::DestinyFuzzer;
+use eon_saju::engine::interprocess::{CompatibilityAuditor, CompatibilityAudit};
 use eon_saju::report::SajuReport;
 
 // Core imports (BirthInfo, Location, DST)
@@ -269,6 +271,57 @@ fn get_ai_audit(
     serde_json::to_value(&result).map_err(|e| format!("직렬화 실패: {}", e))
 }
 
+/// 사주 궁합 분석 (두 사람의 원국 비교)
+#[tauri::command]
+fn get_saju_compatibility(
+    // 사람 1
+    year1: i32, month1: u32, day1: u32, hour1: u32, minute1: u32,
+    is_male1: bool, lon1: f64, lat1: f64,
+    // 사람 2
+    year2: i32, month2: u32, day2: u32, hour2: u32, minute2: u32,
+    is_male2: bool, lon2: f64, lat2: f64,
+    timezone: String,
+) -> Result<serde_json::Value, String> {
+    let make_pillars = |y: i32, mo: u32, d: u32, h: u32, mi: u32, male: bool, lon: f64, lat: f64| -> Result<FourPillars, String> {
+        let gender = if male { Gender::Male } else { Gender::Female };
+        let location = Location::new("출생지", lat, lon, 135.0);
+        let birth_info = BirthInfo::solar(y, mo, d, h, mi)
+            .with_timezone(&timezone)
+            .with_location(location)
+            .with_true_solar_time(true)
+            .with_gender(gender);
+        let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
+        let input = SajuInput::new_solar_at(cy, cm, cd, ch, cmin, lon, lat).with_gender(gender);
+        FourPillars::calculate(&input).map_err(|e| format!("사주 계산 실패: {}", e))
+    };
+
+    let pillars1 = make_pillars(year1, month1, day1, hour1, minute1, is_male1, lon1, lat1)?;
+    let pillars2 = make_pillars(year2, month2, day2, hour2, minute2, is_male2, lon2, lat2)?;
+
+    let vm1 = SajuVM::new(pillars1);
+    let vm2 = SajuVM::new(pillars2);
+    let audit: CompatibilityAudit = CompatibilityAuditor::audit(&vm1, &vm2);
+
+    serde_json::to_value(&audit).map_err(|e| format!("직렬화 실패: {}", e))
+}
+
+/// 베딕 궁합 분석 (Ashta Kuta 36점 만점)
+#[tauri::command]
+async fn get_vedic_compatibility(
+    year1: i32, month1: u32, day1: u32, hour1: u32, minute1: u32, lat1: f64, lon1: f64,
+    year2: i32, month2: u32, day2: u32, hour2: u32, minute2: u32, lat2: f64, lon2: f64,
+) -> Result<serde_json::Value, String> {
+    let calculator = VedicChartCalculator::new();
+    let dt1 = Utc.with_ymd_and_hms(year1, month1, day1, hour1, minute1, 0)
+        .single().ok_or_else(|| "Invalid date/time (person 1)".to_string())?;
+    let dt2 = Utc.with_ymd_and_hms(year2, month2, day2, hour2, minute2, 0)
+        .single().ok_or_else(|| "Invalid date/time (person 2)".to_string())?;
+    let chart1 = calculator.calculate(dt1, lat1, lon1);
+    let chart2 = calculator.calculate(dt2, lat2, lon2);
+    let result = CompatibilityEngine::analyze(&chart1, &chart2);
+    serde_json::to_value(&result).map_err(|e| format!("직렬화 실패: {}", e))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -279,6 +332,8 @@ pub fn run() {
             get_saju_analysis,
             get_transit_analysis,
             get_ai_audit,
+            get_saju_compatibility,
+            get_vedic_compatibility,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

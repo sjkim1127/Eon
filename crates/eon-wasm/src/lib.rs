@@ -1,5 +1,6 @@
 use chrono::{TimeZone, Utc};
 use eon_vedic::analysis::report::VedicAnalysisReport;
+use eon_vedic::analysis::compatibility::CompatibilityEngine;
 use eon_vedic::core::chart::{VedicChart, VedicChartCalculator};
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
@@ -15,6 +16,7 @@ use eon_saju::engine::topology::{QiTopology, TopologyAnalysis};
 use eon_saju::engine::entropy::{DestinyEntropy, EntropyAnalysis};
 use eon_saju::engine::load_balancer::{KarmaLoadBalancer, LoadBalanceDiagnostic};
 use eon_saju::engine::fuzzer::DestinyFuzzer;
+use eon_saju::engine::interprocess::{CompatibilityAuditor, CompatibilityAudit};
 use eon_saju::report::SajuReport;
 
 // === Core imports (BirthInfo, Location, DST) ===
@@ -225,4 +227,51 @@ pub fn get_transit_analysis(
         nearby_diagnostics,
     };
 
-    Ok(serde_wasm_bindgen::to_value(&result)?)}
+    Ok(serde_wasm_bindgen::to_value(&result)?)
+}
+
+/// 사주 궁합 분석 - WASM에서 호출 가능
+#[wasm_bindgen]
+pub fn get_saju_compatibility(
+    year1: i32, month1: u32, day1: u32, hour1: u32, minute1: u32,
+    is_male1: bool, lon1: f64, lat1: f64,
+    year2: i32, month2: u32, day2: u32, hour2: u32, minute2: u32,
+    is_male2: bool, lon2: f64, lat2: f64,
+    timezone: &str,
+) -> Result<JsValue, JsError> {
+    let make_pillars = |y: i32, mo: u32, d: u32, h: u32, mi: u32, male: bool, lon: f64, lat: f64| -> Result<FourPillars, JsError> {
+        let gender = if male { Gender::Male } else { Gender::Female };
+        let location = Location::new("출생지", lat, lon, 135.0);
+        let birth_info = BirthInfo::solar(y, mo, d, h, mi)
+            .with_timezone(timezone)
+            .with_location(location)
+            .with_true_solar_time(true)
+            .with_gender(gender);
+        let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
+        let input = SajuInput::new_solar_at(cy, cm, cd, ch, cmin, lon, lat).with_gender(gender);
+        FourPillars::calculate(&input).map_err(|e| JsError::new(&format!("사주 계산 실패: {}", e)))
+    };
+    let pillars1 = make_pillars(year1, month1, day1, hour1, minute1, is_male1, lon1, lat1)?;
+    let pillars2 = make_pillars(year2, month2, day2, hour2, minute2, is_male2, lon2, lat2)?;
+    let vm1 = SajuVM::new(pillars1);
+    let vm2 = SajuVM::new(pillars2);
+    let audit: CompatibilityAudit = CompatibilityAuditor::audit(&vm1, &vm2);
+    Ok(serde_wasm_bindgen::to_value(&audit)?)
+}
+
+/// 베딕 궁합 분석 (Ashta Kuta) - WASM에서 호출 가능
+#[wasm_bindgen]
+pub async fn get_vedic_compatibility(
+    year1: i32, month1: u32, day1: u32, hour1: u32, minute1: u32, lat1: f64, lon1: f64,
+    year2: i32, month2: u32, day2: u32, hour2: u32, minute2: u32, lat2: f64, lon2: f64,
+) -> Result<JsValue, JsError> {
+    let calculator = VedicChartCalculator::new();
+    let dt1 = Utc.with_ymd_and_hms(year1, month1, day1, hour1, minute1, 0)
+        .single().ok_or_else(|| JsError::new("Invalid date/time (person 1)"))?;
+    let dt2 = Utc.with_ymd_and_hms(year2, month2, day2, hour2, minute2, 0)
+        .single().ok_or_else(|| JsError::new("Invalid date/time (person 2)"))?;
+    let chart1 = calculator.calculate(dt1, lat1, lon1);
+    let chart2 = calculator.calculate(dt2, lat2, lon2);
+    let result = CompatibilityEngine::analyze(&chart1, &chart2);
+    Ok(serde_wasm_bindgen::to_value(&result)?)
+}

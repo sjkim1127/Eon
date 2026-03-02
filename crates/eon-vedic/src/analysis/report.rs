@@ -1,3 +1,4 @@
+use crate::analysis::yogas::{YogaEngine, YogaResult};
 use crate::chart::VedicChart;
 use crate::planets::VedicPlanet;
 use chrono::Utc;
@@ -11,6 +12,7 @@ pub struct VedicAnalysisReport {
     pub nakshatra_info: String,
     pub overall_strength_score: f64,
     pub sade_sati: crate::analysis::gochara::SadeSatiPhase,
+    pub yogas: Vec<YogaResult>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -125,6 +127,9 @@ impl VedicAnalysisReport {
             "Nakshatra info unavailable".to_string()
         };
 
+        // Yoga 계산
+        let yogas = YogaEngine::check_yogas(chart);
+
         Self {
             primary_karakas: KarakaSummary {
                 atmakaraka: ak,
@@ -141,6 +146,7 @@ impl VedicAnalysisReport {
                 .sum::<f64>()
                 / 12.0,
             sade_sati,
+            yogas,
         }
     }
 
