@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Activity, Shield } from "lucide-react";
+import { Activity, Shield, AlertCircle } from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -16,9 +16,10 @@ import { ganziHangul, ganziDisplay } from "../../utils";
 
 interface TransitTabProps {
   transitReport: any;
+  transitError?: string | null;
 }
 
-export function TransitTab({ transitReport }: TransitTabProps) {
+export function TransitTab({ transitReport, transitError }: TransitTabProps) {
   if (!transitReport) {
     return (
       <motion.div
@@ -27,12 +28,26 @@ export function TransitTab({ transitReport }: TransitTabProps) {
         className="h-[40vh] flex flex-col items-center justify-center text-center"
       >
         <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-5">
-          <Activity className="w-10 h-10 text-white/20 animate-pulse" />
+          {transitError
+            ? <AlertCircle className="w-10 h-10 text-red-400" />
+            : <Activity className="w-10 h-10 text-white/20 animate-pulse" />
+          }
         </div>
-        <h3 className="text-xl font-semibold text-white mb-2">운세 데이터 없음</h3>
-        <p className="text-white/40 text-sm max-w-sm">
-          출생 정보를 입력하고 통합 분석을 시작하면<br />현재 세운·월운 분석이 표시됩니다.
-        </p>
+        {transitError ? (
+          <>
+            <h3 className="text-xl font-semibold text-red-400 mb-2">운세 분석 오류</h3>
+            <p className="text-white/50 text-xs max-w-md font-mono bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 break-all">
+              {transitError}
+            </p>
+          </>
+        ) : (
+          <>
+            <h3 className="text-xl font-semibold text-white mb-2">운세 데이터 없음</h3>
+            <p className="text-white/40 text-sm max-w-sm">
+              출생 정보를 입력하고 통합 분석을 시작하면<br />현재 세운·월운 분석이 표시됩니다.
+            </p>
+          </>
+        )}
       </motion.div>
     );
   }

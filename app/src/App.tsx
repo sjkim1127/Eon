@@ -66,7 +66,7 @@ function App() {
     selectedCity, handleCityChange,
     isMale, setIsMale,
     isDST,
-    report, sajuReport, transitReport,
+    report, sajuReport, transitReport, transitError,
     loading, runAnalysis,
     errorMessage,
     activeTab, setActiveTab,
@@ -275,7 +275,7 @@ function App() {
               ) : activeTab === "strength" ? (
                 <StrengthTab sajuReport={sajuReport} unknownTime={birthData.unknown_time} />
               ) : activeTab === "transit" ? (
-                <TransitTab transitReport={transitReport} />
+                <TransitTab transitReport={transitReport} transitError={transitError} />
               ) : activeTab === "compatibility" ? (
                 <CompatibilityTab
                   birthData2={birthData2}

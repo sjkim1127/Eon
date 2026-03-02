@@ -60,6 +60,7 @@ export function useAnalysis() {
   const [report, setReport] = useState<VedicAnalysisResult | null>(null);
   const [sajuReport, setSajuReport] = useState<SajuAnalysisResult | null>(null);
   const [transitReport, setTransitReport] = useState<TransitResult | null>(null);
+  const [transitError, setTransitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -102,6 +103,7 @@ export function useAnalysis() {
 
     setLoading(true);
     setErrorMessage(null);
+    setTransitError(null);
     try {
       // 세 분석을 독립적으로 실행 — 하나가 실패해도 나머지 결과는 유지
       const [vedicResult, sajuResult, transitResult] = await Promise.allSettled([
@@ -127,7 +129,11 @@ export function useAnalysis() {
       else console.error("사주 분석 실패:", sajuResult.reason);
 
       if (transitResult.status === "fulfilled") setTransitReport(transitResult.value);
-      else console.error("운세 분석 실패:", transitResult.reason);
+      else {
+        const errMsg = transitResult.reason instanceof Error ? transitResult.reason.message : String(transitResult.reason);
+        console.error("운세 분석 실패:", transitResult.reason);
+        setTransitError(errMsg);
+      }
 
       const allFailed = vedicResult.status === "rejected" && sajuResult.status === "rejected" && transitResult.status === "rejected";
       if (allFailed) {
@@ -204,7 +210,7 @@ export function useAnalysis() {
     isMale, setIsMale,
     isDST,
     // 분석 결과
-    report, sajuReport, transitReport,
+    report, sajuReport, transitReport, transitError,
     loading, runAnalysis,
     // 탭
     activeTab, setActiveTab,
