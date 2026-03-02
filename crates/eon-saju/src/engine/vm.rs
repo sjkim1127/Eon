@@ -15,7 +15,9 @@ use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
 use crate::core::twelve_stages::TwelveStage;
 use crate::engine::signatures::{LuckSignature, SignatureScanner};
-use crate::engine::trace_tag::{TraceTag, LuckPeriod, StrengthTypeName, InterruptType, AuspiciousSpiritName};
+use crate::engine::trace_tag::{
+    AuspiciousSpiritName, InterruptType, LuckPeriod, StrengthTypeName, TraceTag,
+};
 use serde::{Deserialize, Serialize};
 
 /// Saju Interrupt (하드웨어 예외/인터럽트)
@@ -94,9 +96,9 @@ impl QiRegisters {
 pub struct LifeFrame {
     /// 나이
     pub age: u32,
-    pub ganzi: GanZi,                   // 그 해의 세운
-    pub major_ganzi: GanZi,             // 당시의 대운
-    pub score: f32,                     // 운세 점수 (0~100)
+    pub ganzi: GanZi,       // 그 해의 세운
+    pub major_ganzi: GanZi, // 당시의 대운
+    pub score: f32,         // 운세 점수 (0~100)
     /// 주요 특징 (용신운, 충, 합 등) - 구조화된 태그로 힙 할당 최소화
     pub tags: Vec<TraceTag>,
     pub signatures: Vec<LuckSignature>, // 탐지된 운세 패턴
@@ -290,7 +292,9 @@ impl SajuVM {
                         // 진공(眞空): 공망의 흉의가 그대로 작용
                         let penalty = 10.0;
                         score -= penalty;
-                        tags.push(TraceTag::VoidLuck { period: LuckPeriod::from_label(label) });
+                        tags.push(TraceTag::VoidLuck {
+                            period: LuckPeriod::from_label(label),
+                        });
                         esil_trace
                             .push_str(&format!("void_luck:{},penalty:-{:.1}; ", label, penalty));
                     }
@@ -328,7 +332,11 @@ impl SajuVM {
                 };
                 if s_score != 0.0 {
                     score += s_score;
-                    tags.push(TraceTag::Custom(format!("신살:{}({})", shinsal_day.hangul(), label)));
+                    tags.push(TraceTag::Custom(format!(
+                        "신살:{}({})",
+                        shinsal_day.hangul(),
+                        label
+                    )));
                     esil_trace.push_str(&format!(
                         "shinsal:{},score:{:.1}; ",
                         shinsal_day.hangul(),
@@ -341,9 +349,9 @@ impl SajuVM {
                 if cheoneul.contains(&b) {
                     let bonus = 15.0;
                     score += bonus;
-                    tags.push(TraceTag::AuspiciousSpirit { 
-                        name: AuspiciousSpiritName::Cheoneul, 
-                        period: LuckPeriod::from_label(label) 
+                    tags.push(TraceTag::AuspiciousSpirit {
+                        name: AuspiciousSpiritName::Cheoneul,
+                        period: LuckPeriod::from_label(label),
                     });
                     esil_trace.push_str(&format!("gilsin:cheoneul,bonus:{:.1}; ", bonus));
                 }
@@ -410,7 +418,11 @@ impl SajuVM {
                         label,
                         stage_score
                     ));
-                    tags.push(TraceTag::Custom(format!("운성:{}({})", stage.hangul(), label)));
+                    tags.push(TraceTag::Custom(format!(
+                        "운성:{}({})",
+                        stage.hangul(),
+                        label
+                    )));
                 }
             }
         }
@@ -444,7 +456,9 @@ impl SajuVM {
                     if has_zhengguan {
                         let penalty = 15.0;
                         score -= penalty;
-                        tags.push(TraceTag::HurtingOfficerMeetsOfficer { period: LuckPeriod::from_label(label) });
+                        tags.push(TraceTag::HurtingOfficerMeetsOfficer {
+                            period: LuckPeriod::from_label(label),
+                        });
                         esil_trace.push_str(&format!(
                             "pattern:shangguan_gyeongwan,penalty:-{:.1}; ",
                             penalty
@@ -468,7 +482,9 @@ impl SajuVM {
                     if has_wealth {
                         let bonus = 10.0;
                         score += bonus;
-                        tags.push(TraceTag::EatingGodProducesWealth { period: LuckPeriod::from_label(label) });
+                        tags.push(TraceTag::EatingGodProducesWealth {
+                            period: LuckPeriod::from_label(label),
+                        });
                         esil_trace
                             .push_str(&format!("pattern:shishen_saengjae,bonus:{:.1}; ", bonus));
                     }
@@ -554,7 +570,9 @@ impl SajuVM {
                         }
                     }
                 }
-                tags.push(TraceTag::BranchClash { clash_type: clash.hangul().to_string() });
+                tags.push(TraceTag::BranchClash {
+                    clash_type: clash.hangul().to_string(),
+                });
             }
         }
 
@@ -566,7 +584,9 @@ impl SajuVM {
                 "mem_corrupt:{}-{},penalty:-{:.1}; ",
                 p1, p2, penalty
             ));
-            tags.push(TraceTag::Punishment { punishment_type: pun.hangul().to_string() });
+            tags.push(TraceTag::Punishment {
+                punishment_type: pun.hangul().to_string(),
+            });
         }
 
         // 5. 지지 해 (害) - Race Condition
@@ -577,7 +597,9 @@ impl SajuVM {
                 "race_cond:{}-{},penalty:-{:.1}; ",
                 p1, p2, penalty
             ));
-            tags.push(TraceTag::Harm { harm_type: harm.hangul().to_string() });
+            tags.push(TraceTag::Harm {
+                harm_type: harm.hangul().to_string(),
+            });
         }
 
         // 6. 지지 파 (破) - IO Error
@@ -585,7 +607,9 @@ impl SajuVM {
             let penalty = 2.0;
             score -= penalty;
             esil_trace.push_str(&format!("io_error:{}-{},penalty:-{:.1}; ", p1, p2, penalty));
-            tags.push(TraceTag::Destruction { destruction_type: dest.hangul().to_string() });
+            tags.push(TraceTag::Destruction {
+                destruction_type: dest.hangul().to_string(),
+            });
         }
 
         // 6.5 육합 (Six Combinations) - Stable Connection
@@ -609,7 +633,9 @@ impl SajuVM {
                 }
 
                 esil_trace.push_str(&format!("six_combo:{}-{},bonus:{:.1}; ", p1, p2, bonus));
-                tags.push(TraceTag::SixCombination { combo_type: six.hangul().to_string() });
+                tags.push(TraceTag::SixCombination {
+                    combo_type: six.hangul().to_string(),
+                });
             }
         }
 
@@ -621,7 +647,9 @@ impl SajuVM {
                 "stem_clash:{}-{},penalty:-{:.1}; ",
                 p1, p2, penalty
             ));
-            tags.push(TraceTag::StemClash { clash_type: clash.hangul().to_string() });
+            tags.push(TraceTag::StemClash {
+                clash_type: clash.hangul().to_string(),
+            });
         }
 
         // 7. 동적 회합(Triple/Seasonal) 완성 분석 - Dynamic Combination Completion
@@ -635,7 +663,9 @@ impl SajuVM {
             crate::analysis::strength::StrengthType::Weak => StrengthTypeName::Weak,
             crate::analysis::strength::StrengthType::Balanced => StrengthTypeName::Balanced,
         };
-        tags.push(TraceTag::StrengthType { strength: strength_name });
+        tags.push(TraceTag::StrengthType {
+            strength: strength_name,
+        });
         if strength.deuk_ryeong.acquired {
             tags.push(TraceTag::DeukRyeong);
         }
@@ -697,23 +727,21 @@ impl SajuVM {
                 self.config.vm.irq_critical,
                 InterruptType::CriticalException,
             ),
-            SajuInterrupt::ResourceOverflow => (
-                self.config.vm.irq_overflow,
-                InterruptType::ResourceOverflow,
-            ),
-            SajuInterrupt::SystemStall => (
-                self.config.vm.irq_stall,
-                InterruptType::SystemStall,
-            ),
-            SajuInterrupt::ServiceInterrupt => (
-                self.config.vm.irq_service,
-                InterruptType::ServiceInterrupt,
-            ),
+            SajuInterrupt::ResourceOverflow => {
+                (self.config.vm.irq_overflow, InterruptType::ResourceOverflow)
+            }
+            SajuInterrupt::SystemStall => (self.config.vm.irq_stall, InterruptType::SystemStall),
+            SajuInterrupt::ServiceInterrupt => {
+                (self.config.vm.irq_service, InterruptType::ServiceInterrupt)
+            }
         };
 
         *score -= penalty;
         esil_trace.push_str(&format!("irq_handle:{:?},impact:-{:.1}; ", irq, penalty));
-        tags.push(TraceTag::Interrupt { irq_type, marker: marker_name.to_string() });
+        tags.push(TraceTag::Interrupt {
+            irq_type,
+            marker: marker_name.to_string(),
+        });
 
         // 인터럽트 발생 시 특정 레지스터 강제 변조 (Kernel Panic 효과)
         if matches!(irq, SajuInterrupt::CriticalException) {
@@ -947,7 +975,10 @@ impl SajuVM {
                 registers.update(element, bonus.abs());
 
                 let is_beneficial = priority > 0.0;
-                tags.push(TraceTag::TripleCombination { element, is_beneficial });
+                tags.push(TraceTag::TripleCombination {
+                    element,
+                    is_beneficial,
+                });
                 esil_trace.push_str(&format!(
                     "dynamic_triple:{},bonus:{:.1}; ",
                     triple.hangul(),
@@ -972,7 +1003,10 @@ impl SajuVM {
                 registers.update(element, bonus.abs());
 
                 let is_beneficial = priority > 0.0;
-                tags.push(TraceTag::SeasonalCombination { element, is_beneficial });
+                tags.push(TraceTag::SeasonalCombination {
+                    element,
+                    is_beneficial,
+                });
                 esil_trace.push_str(&format!(
                     "dynamic_seasonal:{},bonus:{:.1}; ",
                     seasonal.hangul(),
@@ -982,10 +1016,8 @@ impl SajuVM {
         }
     }
 
-    /// 인생 시뮬레이션 (Rayon 병렬 처리 지원)
+    /// 인생 시뮬레이션
     pub fn simulate_life(&self, start_age: u32, end_age: u32) -> Vec<LifeFrame> {
-        use rayon::prelude::*;
-
         // 1. 대운 흐름 계산 (교운기 포함 정밀 분석)
         let luck_analysis = MajorLuckAnalysis::calculate_astro(
             &self.natal,
@@ -1001,25 +1033,32 @@ impl SajuVM {
         // 출생 연도 (세운 계산 기준)
         let birth_year = self.natal.raw_input.year;
 
-        (start_age..=end_age)
-            .into_par_iter()
-            .map(|age| {
-                // 2. 해당 나이의 대운 간지 추출
-                let major_ganzi = luck_analysis
-                    .as_ref()
-                    .and_then(|a| a.at_age(age))
-                    .map(|m| m.ganzi)
-                    .unwrap_or_else(|| GanZi::from_index(0));
+        let mapper = |age: u32| {
+            // 2. 해당 나이의 대운 간지 추출
+            let major_ganzi = luck_analysis
+                .as_ref()
+                .and_then(|a| a.at_age(age))
+                .map(|m| m.ganzi)
+                .unwrap_or_else(|| GanZi::from_index(0));
 
-                // 3. 해당 나이의 세운 간지 추출 (한국식 나이 또는 만 나이 기준 보정 필요)
-                // 여기서는 단순하게 생년 + (나이-1) 전후의 세운을 계산
-                let target_year = birth_year + (age as i32) - 1; // 대략적인 나이 보정
-                let yearly_ganzi = YearlyLuck::calculate(target_year, &self.natal).ganzi;
+            // 3. 해당 나이의 세운 간지 추출
+            let target_year = birth_year + (age as i32) - 1;
+            let yearly_ganzi = YearlyLuck::calculate(target_year, &self.natal).ganzi;
 
-                // 4. 정밀한 step 수행
-                self.step(age, major_ganzi, yearly_ganzi, None, None, None)
-            })
-            .collect()
+            // 4. 정밀한 step 수행
+            self.step(age, major_ganzi, yearly_ganzi, None, None, None)
+        };
+
+        #[cfg(feature = "parallel")]
+        {
+            use rayon::prelude::*;
+            (start_age..=end_age).into_par_iter().map(mapper).collect()
+        }
+
+        #[cfg(not(feature = "parallel"))]
+        {
+            (start_age..=end_age).map(mapper).collect()
+        }
     }
 }
 

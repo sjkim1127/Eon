@@ -26,5 +26,6 @@ chrono = { workspace = true }
 eon-vedic = { path = "../../crates/eon-vedic" }
 eon-astro = { path = "../../crates/eon-astro" }
 eon-saju = { path = "../../crates/eon-saju" }
+eon-core = { path = "../../crates/eon-core" }
 
 

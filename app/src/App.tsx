@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { get_vedic_analysis } from "./lib/api";
+import { get_vedic_analysis, get_saju_analysis } from "./lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -12,6 +12,9 @@ import {
   Zap,
   Shield,
   Heart,
+  User,
+  TrendingUp,
+  Activity,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -38,7 +41,7 @@ interface VedicAnalysisReport {
 }
 
 function App() {
-  const [birthData] = useState({
+  const [birthData, setBirthData] = useState({
     year: 1990,
     month: 1,
     day: 1,
@@ -47,18 +50,25 @@ function App() {
     lat: 37.5665,
     lon: 126.978,
   });
+  const [isMale, setIsMale] = useState(true);
 
   const [report, setReport] = useState<VedicAnalysisReport | null>(null);
+  const [sajuReport, setSajuReport] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
   const runAnalysis = async () => {
     setLoading(true);
     try {
-      const res = await get_vedic_analysis({
-        ...birthData,
-      });
-      setReport(res);
+      const [vedic, saju] = await Promise.all([
+        get_vedic_analysis({ ...birthData }),
+        get_saju_analysis({
+          ...birthData,
+          is_male: isMale,
+        }),
+      ]);
+      setReport(vedic);
+      setSajuReport(saju);
     } catch (e) {
       console.error(e);
     } finally {
@@ -84,6 +94,177 @@ function App() {
     );
   };
 
+  const renderSajuResults = () => {
+    if (!sajuReport) return null;
+    const p = sajuReport.pillars;
+    const s = sajuReport.strength;
+    const y = sajuReport.yongshin;
+    const st = sajuReport.structure;
+    const sp = sajuReport.spirit_markers;
+    const ml = sajuReport.major_luck;
+    const gt = sajuReport.golden_time;
+
+    return (
+      <motion.div
+        key="saju-results"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="space-y-8"
+      >
+        {/* 사주팔자 차트 */}
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <Activity className="w-6 h-6 text-celestial-gold" />
+            사주팔자 (四柱八字)
+          </h5>
+          <div className="grid grid-cols-4 gap-4">
+            {[
+              { label: "시주", pillar: p?.hour },
+              { label: "일주", pillar: p?.day },
+              { label: "월주", pillar: p?.month },
+              { label: "년주", pillar: p?.year },
+            ].map(({ label, pillar }) => (
+              <div key={label} className="text-center p-4 bg-white/5 rounded-2xl border border-white/10">
+                <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3">{label}</p>
+                <p className="text-2xl font-bold text-celestial-gold mb-1">
+                  {pillar?.stem?.hanja || "—"}
+                </p>
+                <p className="text-2xl font-bold text-celestial-cyan">
+                  {pillar?.branch?.hanja || "—"}
+                </p>
+                <p className="text-xs text-white/30 mt-2">
+                  {pillar?.stem?.hangul || ""} {pillar?.branch?.hangul || ""}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 역량 + 용신 + 격국 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* 역량 분석 */}
+          <div className="glass p-8 rounded-[2rem] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 transform translate-x-4 -translate-y-4 opacity-5 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-500">
+              <Zap className="w-32 h-32" />
+            </div>
+            <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-2">
+              신강/신약 분석
+            </p>
+            <h4 className="text-3xl font-bold text-white mb-2">
+              {s?.strength_type?.hangul || "—"}
+            </h4>
+            <div className="flex items-baseline gap-2 mb-4">
+              <span className="text-5xl font-black text-gradient leading-none">
+                {s?.strength_score != null ? Math.round(s.strength_score) : "—"}
+              </span>
+              <span className="text-white/20 font-bold">점</span>
+            </div>
+            <div className="space-y-1 text-xs text-white/50">
+              <p>득령: {s?.deuk_ryeong?.acquired ? "✅" : "❌"}</p>
+              <p>득지: {s?.deuk_ji?.acquired ? "✅" : "❌"}</p>
+              <p>득시: {s?.deuk_si?.acquired ? "✅" : "❌"}</p>
+              <p>득세: {s?.deuk_se?.acquired ? "✅" : "❌"}</p>
+            </div>
+          </div>
+
+          {/* 용신 */}
+          <div className="glass p-8 rounded-[2rem] border-celestial-purple/20 bg-celestial-purple/5">
+            <p className="text-celestial-purple/80 text-sm font-bold uppercase tracking-wider mb-2">
+              용신 (用神)
+            </p>
+            <h4 className="text-3xl font-bold text-white mb-4">
+              {y?.primary?.hangul || "—"}
+            </h4>
+            <p className="text-sm text-white/60 mb-2">
+              <span className="text-white/40">보조 용신:</span>{" "}
+              {y?.assistant?.hangul || "—"}
+            </p>
+            <p className="text-xs text-white/40 leading-relaxed">
+              용신은 사주의 균형을 맞추는 가장 필요한 오행입니다.
+            </p>
+          </div>
+
+          {/* 격국 */}
+          <div className="glass p-8 rounded-[2rem]">
+            <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-2">
+              격국 (格局)
+            </p>
+            <h4 className="text-3xl font-bold text-white mb-4">
+              {st?.structure?.hangul || "—"}
+            </h4>
+            <p className="text-sm text-white/60 leading-relaxed">
+              {st?.reason || ""}
+            </p>
+          </div>
+        </div>
+
+        {/* 신살 */}
+        {sp?.markers && sp.markers.length > 0 && (
+          <div className="glass p-8 rounded-[2rem]">
+            <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <Shield className="w-6 h-6 text-celestial-cyan" />
+              신살 (神煞) 분석
+            </h5>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {sp.markers.map((m: any, i: number) => (
+                <div
+                  key={i}
+                  className="p-4 bg-white/5 rounded-xl border border-white/10 text-center"
+                >
+                  <p className="text-sm font-bold text-celestial-gold">{m.marker?.hangul || "—"}</p>
+                  <p className="text-xs text-white/40 mt-1">{m.position?.hangul || ""}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 대운 */}
+        {ml && ml.cycles && (
+          <div className="glass p-8 rounded-[2rem]">
+            <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <TrendingUp className="w-6 h-6 text-celestial-purple" />
+              대운 (大運) 흐름
+            </h5>
+            <p className="text-sm text-white/50 mb-4">
+              방향: {ml.direction === "Forward" ? "순행 ▶" : "역행 ◀"} | 시작 나이: {ml.start_age}세
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-3">
+              {ml.cycles.map((c: any, i: number) => (
+                <div
+                  key={i}
+                  className="p-3 bg-white/5 rounded-xl border border-white/10 text-center hover:bg-white/10 transition-all"
+                >
+                  <p className="text-xs text-white/40 mb-1">{c.start_age}~{c.end_age}세</p>
+                  <p className="text-lg font-bold text-white">{c.ganzi?.hangul || "—"}</p>
+                  <p className="text-[10px] text-celestial-gold mt-1">{c.stem_god || ""}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 골든타임 */}
+        {gt && (
+          <div className="glass p-8 rounded-[2rem] border-celestial-gold/20 bg-celestial-gold/5">
+            <h5 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
+              <Star className="w-6 h-6 text-celestial-gold" />
+              골든타임 🏆
+            </h5>
+            <div className="flex items-baseline gap-4 mb-4">
+              <span className="text-5xl font-black text-celestial-gold">
+                {gt.start_age}~{gt.end_age}세
+              </span>
+              <span className="text-white/40">평균 점수: {gt.average_score?.toFixed(1)}</span>
+            </div>
+            <p className="text-sm text-white/60">{gt.description}</p>
+          </div>
+        )}
+      </motion.div>
+    );
+  };
+
   return (
     <div className="min-h-screen relative flex">
       <ShootingStars />
@@ -100,6 +281,7 @@ function App() {
         <div className="space-y-2 flex-1">
           {[
             { id: "overview", label: "대시보드", icon: LayoutDashboard },
+            { id: "saju", label: "사주 분석", icon: Activity },
             { id: "strength", label: "역량 및 기운", icon: Zap },
             { id: "transit", label: "현재 운세", icon: Sun },
           ].map((tab) => (
@@ -129,10 +311,10 @@ function App() {
         <header className="flex justify-between items-end mb-12">
           <div>
             <h2 className="text-4xl font-bold text-white mb-2">천문(Celestial) 인사이트</h2>
-            <p className="text-brand-400">컴퓨테이셔널 베딕 점성학 엔진</p>
+            <p className="text-brand-400">사주명리 & 베딕 점성학 통합 엔진</p>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
             <div className="glass px-6 py-4 rounded-2xl flex items-center gap-4">
               <Calendar className="w-5 h-5 text-celestial-purple" />
               <div className="text-sm">
@@ -142,18 +324,28 @@ function App() {
                 </p>
               </div>
             </div>
+            {/* 성별 토글 */}
+            <button
+              onClick={() => setIsMale(!isMale)}
+              className="glass px-4 py-4 rounded-2xl flex items-center gap-2 hover:bg-white/10 transition-all"
+            >
+              <User className="w-5 h-5 text-celestial-cyan" />
+              <span className="text-white font-semibold text-sm">
+                {isMale ? "남" : "여"}
+              </span>
+            </button>
             <button
               onClick={runAnalysis}
               disabled={loading}
               className="bg-gradient-to-r from-celestial-purple to-brand-600 px-8 py-4 rounded-2xl font-bold text-white shadow-xl shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
             >
-              {loading ? "계산 중..." : "차트 업데이트"}
+              {loading ? "계산 중..." : "통합 분석 시작"}
             </button>
           </div>
         </header>
 
         <AnimatePresence mode="wait">
-          {!report ? (
+          {!report && !sajuReport ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -164,125 +356,129 @@ function App() {
               </div>
               <h3 className="text-2xl font-semibold text-white mb-2">활성화된 차트 없음</h3>
               <p className="text-brand-400 max-w-sm">
-                차트 업데이트 버튼을 눌러 당신만을 위한 정밀한 베딕 점성학 분석을 시작하세요.
+                통합 분석 시작 버튼을 눌러 사주명리와 베딕 점성학 분석을 함께 시작하세요.
               </p>
             </motion.div>
+          ) : activeTab === "saju" ? (
+            renderSajuResults()
           ) : (
-            <motion.div
-              key="results"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
-            >
-              {/* Hero Statistics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="glass p-8 rounded-[2rem] relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-8 transform translate-x-4 -translate-y-4 opacity-5 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-500">
-                    <Heart className="w-32 h-32" />
-                  </div>
-                  <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-2">
-                    영혼의 지표 (Atmakaraka)
-                  </p>
-                  <h4 className="text-3xl font-bold text-white mb-4">
-                    {report.primary_karakas.atmakaraka}
-                  </h4>
-                  <p className="text-sm text-white/60 leading-relaxed">
-                    Atmakaraka - 이번 생에서 영혼이 추구하는 가장 강력한 욕망과 핵심 과제를 나타냅니다.
-                  </p>
-                </div>
-
-                <div className="glass p-8 rounded-[2rem] border-celestial-purple/20 bg-celestial-purple/5">
-                  <p className="text-celestial-purple/80 text-sm font-bold uppercase tracking-wider mb-2">
-                    현재 대운 (Dasha)
-                  </p>
-                  <h4 className="text-3xl font-bold text-white mb-4">
-                    {report.dasha_focus.replace("Current Major Period: ", "")}
-                  </h4>
-                  <div className="flex items-center gap-2 text-sm text-white/60">
-                    <Clock className="w-4 h-4" />
-                    <span>인생의 현재 단계에서 가장 강력한 영향을 미치는 기운입니다.</span>
-                  </div>
-                </div>
-
-                <div className="glass p-8 rounded-[2rem]">
-                  <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-2">
-                    전체 차트 강도
-                  </p>
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <h4 className="text-5xl font-black text-gradient leading-none">
-                      {Math.round(report.overall_strength_score)}
-                    </h4>
-                    <span className="text-white/20 font-bold">/ 600</span>
-                  </div>
-                  <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-celestial-purple h-full rounded-full transition-all duration-1000"
-                      style={{ width: `${(report.overall_strength_score / 600) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Secondary Info */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="glass p-10 rounded-[2.5rem]">
-                  <h5 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
-                    <Star className="w-6 h-6 text-celestial-gold" />
-                    낙샤트라 청사진
-                  </h5>
-                  <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
-                    <p className="text-white text-lg font-medium leading-relaxed">
-                      {report.nakshatra_info}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="glass p-10 rounded-[2.5rem]">
-                  <h5 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
-                    <Shield className="w-6 h-6 text-celestial-cyan" />
-                    현재 운세 경고 (사데사티)
-                  </h5>
-                  <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
-                    <p className="text-white text-lg font-medium leading-relaxed">
-                      {report.sade_sati}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* House Grid */}
-              <section>
-                <h5 className="text-xl font-bold text-white mb-6">하우스(Bhava)별 에너지 역량</h5>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {report.house_summary.map((house: any) => (
-                    <div
-                      key={house.house}
-                      className="glass p-6 rounded-2xl text-center glass-hover cursor-help"
-                    >
-                      <p className="text-xs text-white/30 font-bold mb-1">하우스 {house.house}</p>
-                      <p className="text-2xl font-bold text-white mb-2">
-                        {Math.round(house.total_score)}
-                      </p>
-                      <span
-                        className={cn(
-                          "px-2 py-0.5 rounded text-[10px] font-black uppercase",
-                          house.rating === "Excellent"
-                            ? "bg-green-500/20 text-green-400"
-                            : house.rating === "Strong"
-                              ? "bg-blue-500/20 text-blue-400"
-                              : house.rating === "Average"
-                                ? "bg-yellow-500/20 text-yellow-400"
-                                : "bg-red-500/20 text-red-400"
-                        )}
-                      >
-                        {house.rating}
-                      </span>
+            report && (
+              <motion.div
+                key="results"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-8"
+              >
+                {/* Hero Statistics */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="glass p-8 rounded-[2rem] relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-8 transform translate-x-4 -translate-y-4 opacity-5 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-500">
+                      <Heart className="w-32 h-32" />
                     </div>
-                  ))}
+                    <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-2">
+                      영혼의 지표 (Atmakaraka)
+                    </p>
+                    <h4 className="text-3xl font-bold text-white mb-4">
+                      {report.primary_karakas.atmakaraka}
+                    </h4>
+                    <p className="text-sm text-white/60 leading-relaxed">
+                      Atmakaraka - 이번 생에서 영혼이 추구하는 가장 강력한 욕망과 핵심 과제를 나타냅니다.
+                    </p>
+                  </div>
+
+                  <div className="glass p-8 rounded-[2rem] border-celestial-purple/20 bg-celestial-purple/5">
+                    <p className="text-celestial-purple/80 text-sm font-bold uppercase tracking-wider mb-2">
+                      현재 대운 (Dasha)
+                    </p>
+                    <h4 className="text-3xl font-bold text-white mb-4">
+                      {report.dasha_focus.replace("Current Major Period: ", "")}
+                    </h4>
+                    <div className="flex items-center gap-2 text-sm text-white/60">
+                      <Clock className="w-4 h-4" />
+                      <span>인생의 현재 단계에서 가장 강력한 영향을 미치는 기운입니다.</span>
+                    </div>
+                  </div>
+
+                  <div className="glass p-8 rounded-[2rem]">
+                    <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-2">
+                      전체 차트 강도
+                    </p>
+                    <div className="flex items-baseline gap-2 mb-4">
+                      <h4 className="text-5xl font-black text-gradient leading-none">
+                        {Math.round(report.overall_strength_score)}
+                      </h4>
+                      <span className="text-white/20 font-bold">/ 600</span>
+                    </div>
+                    <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-celestial-purple h-full rounded-full transition-all duration-1000"
+                        style={{ width: `${(report.overall_strength_score / 600) * 100}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </section>
-            </motion.div>
+
+                {/* Secondary Info */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="glass p-10 rounded-[2.5rem]">
+                    <h5 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
+                      <Star className="w-6 h-6 text-celestial-gold" />
+                      낙샤트라 청사진
+                    </h5>
+                    <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
+                      <p className="text-white text-lg font-medium leading-relaxed">
+                        {report.nakshatra_info}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="glass p-10 rounded-[2.5rem]">
+                    <h5 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
+                      <Shield className="w-6 h-6 text-celestial-cyan" />
+                      현재 운세 경고 (사데사티)
+                    </h5>
+                    <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
+                      <p className="text-white text-lg font-medium leading-relaxed">
+                        {report.sade_sati}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* House Grid */}
+                <section>
+                  <h5 className="text-xl font-bold text-white mb-6">하우스(Bhava)별 에너지 역량</h5>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {report.house_summary.map((house: any) => (
+                      <div
+                        key={house.house}
+                        className="glass p-6 rounded-2xl text-center glass-hover cursor-help"
+                      >
+                        <p className="text-xs text-white/30 font-bold mb-1">하우스 {house.house}</p>
+                        <p className="text-2xl font-bold text-white mb-2">
+                          {Math.round(house.total_score)}
+                        </p>
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded text-[10px] font-black uppercase",
+                            house.rating === "Excellent"
+                              ? "bg-green-500/20 text-green-400"
+                              : house.rating === "Strong"
+                                ? "bg-blue-500/20 text-blue-400"
+                                : house.rating === "Average"
+                                  ? "bg-yellow-500/20 text-yellow-400"
+                                  : "bg-red-500/20 text-red-400"
+                          )}
+                        >
+                          {house.rating}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </motion.div>
+            )
           )}
         </AnimatePresence>
       </main>

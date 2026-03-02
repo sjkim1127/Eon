@@ -6,6 +6,10 @@ authors.workspace = true
 license.workspace = true
 description = "Four Pillars of Destiny (Saju/四柱) calculation library"
 
+[features]
+default = ["parallel"]
+parallel = ["rayon", "rand"]
+
 [dependencies]
 eon-core = { path = "../eon-core" }
 eon-data = { path = "../eon-data" }
@@ -13,7 +17,7 @@ eon-astro = { path = "../eon-astro" }
 chrono.workspace = true
 serde.workspace = true
 thiserror.workspace = true
-rand = "0.8"
-rayon = "1.10"
+rand = { version = "0.8", optional = true }
+rayon = { version = "1.10", optional = true }
 
 [dev-dependencies]
