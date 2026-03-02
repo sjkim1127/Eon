@@ -5,11 +5,13 @@
   "files": [
     "eon_wasm_bg.wasm",
     "eon_wasm.js",
+    "eon_wasm_bg.js",
     "eon_wasm.d.ts"
   ],
   "main": "eon_wasm.js",
   "types": "eon_wasm.d.ts",
   "sideEffects": [
+    "./eon_wasm.js",
     "./snippets/*"
   ]
 }

@@ -6,7 +6,7 @@ let wasmModuleCache: any = null;
 const getWasmModule = async () => {
     if (wasmModuleCache) return wasmModuleCache;
     const wasm = await import("eon-wasm");
-    await wasm.default(); // Initialize the WASM module
+    // bundler target auto-initializes; no need to call wasm.default()
     wasmModuleCache = wasm;
     return wasm;
 };
