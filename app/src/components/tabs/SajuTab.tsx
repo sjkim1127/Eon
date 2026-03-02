@@ -13,7 +13,7 @@ import { CHART_TOOLTIP_STYLE } from "../../lib/chartTheme";
 import {
   STEM_INFO, BRANCH_INFO, ELEMENT_INFO,
   STRENGTH_INFO, TENGOD_INFO, STRUCTURE_INFO,
-  SPIRIT_INFO, PILLAR_POS_INFO,
+  SPIRIT_INFO, PILLAR_POS_INFO, YONGSHIN_TYPE_INFO,
 } from "../../constants";
 import { ganziDisplay, ganziHangul } from "../../utils";
 
@@ -125,12 +125,23 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
             {ELEMENT_INFO[y?.primary]?.hangul || y?.primary || "—"}
             <span className="text-lg text-white/40 ml-2">{ELEMENT_INFO[y?.primary]?.hanja}</span>
           </h4>
-          <p className="text-sm text-white/60 mb-2">
-            <span className="text-white/40">보조 용신:</span>{" "}
-            {ELEMENT_INFO[y?.assistant]?.hangul || y?.assistant || "—"}
-          </p>
+          {/* 용신 상세 목록 (조후/억부/통관/병약) */}
+          {y?.recommendations && y.recommendations.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {y.recommendations.map((rec: any, i: number) => (
+                <div key={i} className="flex items-start gap-2 text-xs">
+                  <span className="shrink-0 px-1.5 py-0.5 rounded bg-celestial-purple/30 text-celestial-purple/90 font-bold">
+                    {YONGSHIN_TYPE_INFO[rec.yongshin_type] || rec.yongshin_type}
+                  </span>
+                  <span className="text-white/70 font-semibold">
+                    {ELEMENT_INFO[rec.element]?.hangul || rec.element}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
           <p className="text-xs text-white/40 leading-relaxed">
-            용신은 사주의 균형을 맞추는 가장 필요한 오행입니다.
+            희신(喜神): {ELEMENT_INFO[y?.assistant]?.hangul || y?.assistant || "—"}
           </p>
         </div>
 

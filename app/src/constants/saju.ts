@@ -74,3 +74,10 @@ export const SPIRIT_INFO: Record<string, HanjaHangul> = {
 export const PILLAR_POS_INFO: Record<string, string> = {
   Year: "년주", Month: "월주", Day: "일주", Hour: "시주",
 };
+
+export const YONGSHIN_TYPE_INFO: Record<string, string> = {
+  Eokbu: "억부용신",
+  Johu: "조후용신",
+  Tonggwan: "통관용신",
+  Byeongyak: "병약용신",
+};

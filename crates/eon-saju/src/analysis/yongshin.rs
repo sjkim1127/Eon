@@ -77,11 +77,10 @@ impl YongshinAnalysis {
             _ => {
                 match strength.strength_type {
                     StrengthType::Weak => {
-                        if strength.deuk_se.yinxing_count == 0 {
-                            day_master_el.generated_by() // 인성
-                        } else {
-                            day_master_el // 비겁
-                        }
+                        // 신약(身弱)은 항상 인성(印星)이 억부용신
+                        // - 인성이 원국에 없으면: 인성 보충 필요
+                        // - 인성이 원국에 있어도: 그 힘을 더 강화해야 함
+                        day_master_el.generated_by() // 인성
                     },
                     StrengthType::Strong => {
                         // 신강의 원인을 분석하여 용신 세분화

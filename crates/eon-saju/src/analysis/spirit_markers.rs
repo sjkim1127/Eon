@@ -652,12 +652,14 @@ impl SpiritMarkerAnalysis {
     }
 
     fn get_taiji_branches(day_stem: HeavenlyStem) -> Vec<EarthlyBranch> {
+        // 표준 태극귀인 대조표 (일간 기준)
+        // 甲乙 → 子·午  丙丁 → 卯·酉  戊己 → 丑·未  庚辛 → 寅·亥  壬癸 → 巳·申
         match day_stem {
-            HeavenlyStem::Jia | HeavenlyStem::Ji => vec![EarthlyBranch::Zi, EarthlyBranch::Wu],
-            HeavenlyStem::Yi | HeavenlyStem::Geng => vec![EarthlyBranch::Mao, EarthlyBranch::You],
-            HeavenlyStem::Bing | HeavenlyStem::Xin => vec![EarthlyBranch::Yin, EarthlyBranch::Hai],
-            HeavenlyStem::Ding | HeavenlyStem::Ren => vec![EarthlyBranch::Si, EarthlyBranch::You],
-            HeavenlyStem::Wu | HeavenlyStem::Gui => vec![EarthlyBranch::Chen, EarthlyBranch::Xu],
+            HeavenlyStem::Jia | HeavenlyStem::Yi => vec![EarthlyBranch::Zi, EarthlyBranch::Wu],
+            HeavenlyStem::Bing | HeavenlyStem::Ding => vec![EarthlyBranch::Mao, EarthlyBranch::You],
+            HeavenlyStem::Wu | HeavenlyStem::Ji => vec![EarthlyBranch::Chou, EarthlyBranch::Wei],
+            HeavenlyStem::Geng | HeavenlyStem::Xin => vec![EarthlyBranch::Yin, EarthlyBranch::Hai],
+            HeavenlyStem::Ren | HeavenlyStem::Gui => vec![EarthlyBranch::Si, EarthlyBranch::Shen],
         }
     }
 
@@ -686,8 +688,9 @@ impl SpiritMarkerAnalysis {
     }
 
     fn get_tianyi_medical_branch(month_branch: EarthlyBranch) -> EarthlyBranch {
-        // 월지의 다음 지지
-        EarthlyBranch::from_index((month_branch.index() as i32 + 1) % 12)
+        // 천의성(天醫星): 월지의 바로 이전(前) 지지
+        // 예) 월지 亥(9) → 天醫 戌(8), 월지 子(10) → 天醫 亥(9)
+        EarthlyBranch::from_index((month_branch.index() as i32 - 1).rem_euclid(12))
     }
 
     fn get_jinyu_branch(day_stem: HeavenlyStem) -> Option<EarthlyBranch> {

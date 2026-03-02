@@ -74,9 +74,16 @@ export interface StrengthAnalysis {
 
 // ── 용신 분석 ────────────────────────────────
 
+/** 용신 추천 항목 (RecommendedYongshin Rust struct) */
+export interface YongshinRecommendation {
+  yongshin_type: string; // "Eokbu" | "Johu" | "Tonggwan" | "Byeongyak"
+  element: string;       // Element 변형명
+  reason: string;
+}
+
 /** 용신 분석 결과 (YongshinAnalysis Rust struct) */
 export interface YongshinAnalysis {
-  recommendations: unknown[];
+  recommendations: YongshinRecommendation[];
   primary: string;    // Element 변형명: "Wood" | "Fire" | ...
   assistant: string;  // Element 변형명
 }
