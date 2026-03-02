@@ -15,12 +15,36 @@ import {
   User,
   TrendingUp,
   Activity,
+  MapPin,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+// 한국 주요 도시 데이터 (eon-core::Location과 동일)
+const KOREAN_CITIES = [
+  { name: "서울", lat: 37.5665, lon: 126.9780 },
+  { name: "안산", lat: 37.3219, lon: 126.8309 },
+  { name: "인천", lat: 37.4563, lon: 126.7052 },
+  { name: "부산", lat: 35.1796, lon: 129.0756 },
+  { name: "대구", lat: 35.8714, lon: 128.6014 },
+  { name: "대전", lat: 36.3504, lon: 127.3845 },
+  { name: "광주", lat: 35.1595, lon: 126.8526 },
+  { name: "제주", lat: 33.4996, lon: 126.5312 },
+  { name: "울산", lat: 35.5384, lon: 129.3114 },
+  { name: "수원", lat: 37.2636, lon: 127.0286 },
+];
+
+// 한국 DST(서머타임) 적용 기간 체크
+function isKoreaDST(year: number, month: number): boolean {
+  // 1948-1951, 1955-1960, 1987-1988년 여름(5-9월) 기간
+  if ((year >= 1948 && year <= 1951) || (year >= 1955 && year <= 1960) || (year >= 1987 && year <= 1988)) {
+    return month >= 5 && month <= 9;
+  }
+  return false;
 }
 
 interface VedicAnalysisReport {
@@ -41,7 +65,7 @@ interface VedicAnalysisReport {
 }
 
 function App() {
-  const [birthData] = useState({
+  const [birthData, setBirthData] = useState({
     year: 1990,
     month: 1,
     day: 1,
@@ -50,12 +74,23 @@ function App() {
     lat: 37.5665,
     lon: 126.978,
   });
+  const [selectedCity, setSelectedCity] = useState("서울");
   const [isMale, setIsMale] = useState(true);
 
   const [report, setReport] = useState<VedicAnalysisReport | null>(null);
   const [sajuReport, setSajuReport] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+
+  const isDST = isKoreaDST(birthData.year, birthData.month);
+
+  const handleCityChange = (cityName: string) => {
+    const city = KOREAN_CITIES.find((c) => c.name === cityName);
+    if (city) {
+      setSelectedCity(cityName);
+      setBirthData((prev) => ({ ...prev, lat: city.lat, lon: city.lon }));
+    }
+  };
 
   const runAnalysis = async () => {
     setLoading(true);
@@ -65,6 +100,7 @@ function App() {
         get_saju_analysis({
           ...birthData,
           is_male: isMale,
+          timezone: "Asia/Seoul",
         }),
       ]);
       setReport(vedic);
@@ -93,6 +129,138 @@ function App() {
       </div>
     );
   };
+
+  const renderBirthInputForm = () => (
+    <div className="glass p-6 rounded-[2rem] mb-8">
+      <h5 className="text-lg font-bold text-white mb-5 flex items-center gap-3">
+        <Calendar className="w-5 h-5 text-celestial-purple" />
+        출생 정보 입력
+        {isDST && (
+          <span className="ml-auto text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-semibold animate-pulse">
+            ☀️ 서머타임 자동 적용
+          </span>
+        )}
+      </h5>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-4">
+        {/* 년 */}
+        <div>
+          <label className="block text-xs text-white/40 mb-1.5 font-medium">년</label>
+          <input
+            type="number"
+            value={birthData.year}
+            onChange={(e) => setBirthData((prev) => ({ ...prev, year: Number(e.target.value) }))}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none focus:ring-1 focus:ring-celestial-purple/30 transition-all"
+            min={1900}
+            max={2100}
+          />
+        </div>
+        {/* 월 */}
+        <div>
+          <label className="block text-xs text-white/40 mb-1.5 font-medium">월</label>
+          <select
+            value={birthData.month}
+            onChange={(e) => setBirthData((prev) => ({ ...prev, month: Number(e.target.value) }))}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
+          >
+            {Array.from({ length: 12 }, (_, i) => (
+              <option key={i + 1} value={i + 1} className="bg-gray-900">
+                {i + 1}월
+              </option>
+            ))}
+          </select>
+        </div>
+        {/* 일 */}
+        <div>
+          <label className="block text-xs text-white/40 mb-1.5 font-medium">일</label>
+          <input
+            type="number"
+            value={birthData.day}
+            onChange={(e) => setBirthData((prev) => ({ ...prev, day: Number(e.target.value) }))}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none focus:ring-1 focus:ring-celestial-purple/30 transition-all"
+            min={1}
+            max={31}
+          />
+        </div>
+        {/* 시 */}
+        <div>
+          <label className="block text-xs text-white/40 mb-1.5 font-medium">시</label>
+          <select
+            value={birthData.hour}
+            onChange={(e) => setBirthData((prev) => ({ ...prev, hour: Number(e.target.value) }))}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
+          >
+            {Array.from({ length: 24 }, (_, i) => (
+              <option key={i} value={i} className="bg-gray-900">
+                {String(i).padStart(2, "0")}시
+              </option>
+            ))}
+          </select>
+        </div>
+        {/* 분 */}
+        <div>
+          <label className="block text-xs text-white/40 mb-1.5 font-medium">분</label>
+          <input
+            type="number"
+            value={birthData.minute}
+            onChange={(e) => setBirthData((prev) => ({ ...prev, minute: Number(e.target.value) }))}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none focus:ring-1 focus:ring-celestial-purple/30 transition-all"
+            min={0}
+            max={59}
+          />
+        </div>
+        {/* 도시 */}
+        <div>
+          <label className="block text-xs text-white/40 mb-1.5 font-medium flex items-center gap-1">
+            <MapPin className="w-3 h-3" /> 출생지
+          </label>
+          <select
+            value={selectedCity}
+            onChange={(e) => handleCityChange(e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
+          >
+            {KOREAN_CITIES.map((city) => (
+              <option key={city.name} value={city.name} className="bg-gray-900">
+                {city.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* 하단: 성별 + 분석 실행 + 보정 정보 */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          onClick={() => setIsMale(!isMale)}
+          className="glass px-4 py-2.5 rounded-xl flex items-center gap-2 hover:bg-white/10 transition-all text-sm"
+        >
+          <User className="w-4 h-4 text-celestial-cyan" />
+          <span className="text-white font-semibold">{isMale ? "남" : "여"}</span>
+        </button>
+
+        <button
+          onClick={runAnalysis}
+          disabled={loading}
+          className="bg-gradient-to-r from-celestial-purple to-brand-600 px-6 py-2.5 rounded-xl font-bold text-white text-sm shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+        >
+          {loading ? "계산 중..." : "통합 분석 시작"}
+        </button>
+
+        <div className="ml-auto text-xs text-white/30 flex items-center gap-4">
+          <span>
+            위도 {birthData.lat.toFixed(2)}° / 경도 {birthData.lon.toFixed(2)}°
+          </span>
+          {sajuReport?.corrected_time && (
+            <span className="text-celestial-cyan/60">
+              보정시: {sajuReport.corrected_time}
+            </span>
+          )}
+          {sajuReport?.is_dst && (
+            <span className="text-amber-400/80">DST 적용됨</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   const renderSajuResults = () => {
     if (!sajuReport) return null;
@@ -308,40 +476,16 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 p-10 overflow-y-auto z-10">
-        <header className="flex justify-between items-end mb-12">
-          <div>
-            <h2 className="text-4xl font-bold text-white mb-2">천문(Celestial) 인사이트</h2>
-            <p className="text-brand-400">사주명리 & 베딕 점성학 통합 엔진</p>
+        <header className="mb-8">
+          <div className="flex justify-between items-end mb-6">
+            <div>
+              <h2 className="text-4xl font-bold text-white mb-2">천문(Celestial) 인사이트</h2>
+              <p className="text-brand-400">사주명리 & 베딕 점성학 통합 엔진</p>
+            </div>
           </div>
 
-          <div className="flex gap-4 items-center">
-            <div className="glass px-6 py-4 rounded-2xl flex items-center gap-4">
-              <Calendar className="w-5 h-5 text-celestial-purple" />
-              <div className="text-sm">
-                <p className="text-white/40 leading-none mb-1">생년월일</p>
-                <p className="text-white font-semibold">
-                  {birthData.year}.{birthData.month}.{birthData.day}
-                </p>
-              </div>
-            </div>
-            {/* 성별 토글 */}
-            <button
-              onClick={() => setIsMale(!isMale)}
-              className="glass px-4 py-4 rounded-2xl flex items-center gap-2 hover:bg-white/10 transition-all"
-            >
-              <User className="w-5 h-5 text-celestial-cyan" />
-              <span className="text-white font-semibold text-sm">
-                {isMale ? "남" : "여"}
-              </span>
-            </button>
-            <button
-              onClick={runAnalysis}
-              disabled={loading}
-              className="bg-gradient-to-r from-celestial-purple to-brand-600 px-8 py-4 rounded-2xl font-bold text-white shadow-xl shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
-            >
-              {loading ? "계산 중..." : "통합 분석 시작"}
-            </button>
-          </div>
+          {/* 출생 정보 입력 폼 */}
+          {renderBirthInputForm()}
         </header>
 
         <AnimatePresence mode="wait">
@@ -349,14 +493,14 @@ function App() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="h-[60vh] flex flex-col items-center justify-center text-center"
+              className="h-[40vh] flex flex-col items-center justify-center text-center"
             >
               <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
                 <Compass className="w-12 h-12 text-white/20 animate-pulse" />
               </div>
               <h3 className="text-2xl font-semibold text-white mb-2">활성화된 차트 없음</h3>
               <p className="text-brand-400 max-w-sm">
-                통합 분석 시작 버튼을 눌러 사주명리와 베딕 점성학 분석을 함께 시작하세요.
+                출생 정보를 입력하고 통합 분석 시작 버튼을 눌러주세요.
               </p>
             </motion.div>
           ) : activeTab === "saju" ? (

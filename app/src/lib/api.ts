@@ -53,6 +53,7 @@ export const get_saju_analysis = async (args: {
     is_male: boolean;
     lon: number;
     lat: number;
+    timezone: string;
 }): Promise<any> => {
     if (isTauri()) {
         console.log("Using Tauri Native Backend (Saju)");
@@ -64,7 +65,8 @@ export const get_saju_analysis = async (args: {
             args.year, args.month, args.day,
             args.hour, args.minute,
             args.is_male,
-            args.lon, args.lat
+            args.lon, args.lat,
+            args.timezone
         );
     }
 };

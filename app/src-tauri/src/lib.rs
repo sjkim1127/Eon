@@ -9,6 +9,9 @@ use eon_saju::core::pillars::{FourPillars, SajuInput};
 use eon_saju::engine::vm::SajuVM;
 use eon_saju::report::SajuReport;
 
+// Core imports (BirthInfo, Location, DST)
+use eon_core::{BirthInfo, Gender, Location};
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -46,21 +49,35 @@ fn get_saju_analysis(
     is_male: bool,
     lon: f64,
     lat: f64,
+    timezone: String,
 ) -> Result<serde_json::Value, String> {
     let gender = if is_male {
-        eon_core::Gender::Male
+        Gender::Male
     } else {
-        eon_core::Gender::Female
+        Gender::Female
     };
-    let input =
-        SajuInput::new_solar_at(year, month, day, hour, minute, lon, lat).with_gender(gender);
+
+    // BirthInfo로 DST + 진태양시 보정
+    let location = Location::new("출생지", lat, lon, 135.0);
+    let birth_info = BirthInfo::solar(year, month, day, hour, minute)
+        .with_timezone(&timezone)
+        .with_location(location)
+        .with_true_solar_time(true)
+        .with_gender(gender);
+
+    let is_dst = birth_info.is_dst();
+    let dst_offset = birth_info.dst_offset_hours();
+    let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
+
+    // 보정된 시간으로 SajuInput 생성
+    let input = SajuInput::new_solar_at(cy, cm, cd, ch, cmin, lon, lat).with_gender(gender);
 
     let pillars = FourPillars::calculate(&input).map_err(|e| format!("사주 계산 실패: {}", e))?;
 
     let mut report = SajuReport::new(pillars.clone());
 
     if let Ok(major_luck) =
-        MajorLuckAnalysis::calculate_astro(&pillars, gender, year, month, day, hour, minute)
+        MajorLuckAnalysis::calculate_astro(&pillars, gender, cy, cm, cd, ch, cmin)
     {
         let vm = SajuVM::new(pillars.clone());
         let frames = vm.simulate_life(0, 100);
@@ -75,7 +92,24 @@ fn get_saju_analysis(
         }
     }
 
-    serde_json::to_value(&report).map_err(|e| format!("직렬화 실패: {}", e))
+    let mut result = serde_json::to_value(&report).map_err(|e| format!("직렬화 실패: {}", e))?;
+
+    // DST 정보 추가
+    if let Some(obj) = result.as_object_mut() {
+        obj.insert("is_dst".to_string(), serde_json::json!(is_dst));
+        if let Some(offset) = dst_offset {
+            obj.insert("dst_offset_hours".to_string(), serde_json::json!(offset));
+        }
+        obj.insert(
+            "corrected_time".to_string(),
+            serde_json::json!(format!(
+                "{:04}-{:02}-{:02} {:02}:{:02}",
+                cy, cm, cd, ch, cmin
+            )),
+        );
+    }
+
+    Ok(result)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
