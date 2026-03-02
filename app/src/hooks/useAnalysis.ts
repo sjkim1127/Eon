@@ -103,7 +103,8 @@ export function useAnalysis() {
     setLoading(true);
     setErrorMessage(null);
     try {
-      const [vedic, saju, transit] = await Promise.all([
+      // 세 분석을 독립적으로 실행 — 하나가 실패해도 나머지 결과는 유지
+      const [vedicResult, sajuResult, transitResult] = await Promise.allSettled([
         get_vedic_analysis({ ...birthData, timezone: "Asia/Seoul" }),
         get_saju_analysis({
           ...birthData,
@@ -118,10 +119,24 @@ export function useAnalysis() {
           current_month: now.getMonth() + 1,
         }),
       ]);
-      setReport(vedic);
-      setSajuReport(saju);
-      setTransitReport(transit);
-      toast.success("분석이 완료되었습니다.");
+
+      if (vedicResult.status === "fulfilled") setReport(vedicResult.value);
+      else console.error("베딕 분석 실패:", vedicResult.reason);
+
+      if (sajuResult.status === "fulfilled") setSajuReport(sajuResult.value);
+      else console.error("사주 분석 실패:", sajuResult.reason);
+
+      if (transitResult.status === "fulfilled") setTransitReport(transitResult.value);
+      else console.error("운세 분석 실패:", transitResult.reason);
+
+      const allFailed = vedicResult.status === "rejected" && sajuResult.status === "rejected" && transitResult.status === "rejected";
+      if (allFailed) {
+        const message = "분석 중 오류가 발생했습니다.";
+        setErrorMessage(message);
+        toast.error("분석에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      } else {
+        toast.success("분석이 완료되었습니다.");
+      }
     } catch (e) {
       console.error(e);
       const message = e instanceof Error ? e.message : "분석 중 오류가 발생했습니다.";
