@@ -73,7 +73,8 @@ export function BirthInputForm({
           ☀️ 서머타임 자동 적용
         </div>
       )}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+      {/* 날짜 행 */}
+      <div className="grid grid-cols-3 gap-3 mb-3">
         {/* 년 */}
         <div className="relative">
           <label className="block text-xs text-white/40 mb-1.5 font-medium">년</label>
@@ -88,15 +89,15 @@ export function BirthInputForm({
                 day: Math.min(prev.day, newMax),
               }));
             }}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-9 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-8 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
           >
             {years.map((y) => (
               <option key={y} value={y} className="bg-gray-900">
-                {y}년
+                {y}
               </option>
             ))}
           </select>
-          <ChevronDown className="w-4 h-4 text-white/40 absolute right-3 top-9 pointer-events-none" />
+          <ChevronDown className="w-4 h-4 text-white/40 absolute right-2.5 top-9 pointer-events-none" />
         </div>
         {/* 월 */}
         <div className="relative">
@@ -112,7 +113,7 @@ export function BirthInputForm({
                 day: Math.min(prev.day, newMax),
               }));
             }}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-9 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-8 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
           >
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i + 1} value={i + 1} className="bg-gray-900">
@@ -120,7 +121,7 @@ export function BirthInputForm({
               </option>
             ))}
           </select>
-          <ChevronDown className="w-4 h-4 text-white/40 absolute right-3 top-9 pointer-events-none" />
+          <ChevronDown className="w-4 h-4 text-white/40 absolute right-2.5 top-9 pointer-events-none" />
         </div>
         {/* 일 */}
         <div className="relative">
@@ -128,7 +129,7 @@ export function BirthInputForm({
           <select
             value={birthData.day}
             onChange={(e) => setBirthData((prev) => ({ ...prev, day: Number(e.target.value) }))}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-9 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-8 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
           >
             {Array.from({ length: daysInMonth }, (_, i) => (
               <option key={i + 1} value={i + 1} className="bg-gray-900">
@@ -136,8 +137,12 @@ export function BirthInputForm({
               </option>
             ))}
           </select>
-          <ChevronDown className="w-4 h-4 text-white/40 absolute right-3 top-9 pointer-events-none" />
+          <ChevronDown className="w-4 h-4 text-white/40 absolute right-2.5 top-9 pointer-events-none" />
         </div>
+      </div>
+
+      {/* 시간 + 출생지 행 */}
+      <div className="grid grid-cols-3 gap-3 mb-4">
         {/* 시 */}
         <div className="relative">
           <label className="block text-xs mb-1.5 font-medium flex items-center gap-1.5">
@@ -152,7 +157,7 @@ export function BirthInputForm({
             value={birthData.hour}
             onChange={(e) => setBirthData((prev) => ({ ...prev, hour: Number(e.target.value) }))}
             disabled={unknownTime}
-            className={`w-full bg-white/5 border rounded-xl px-3 pr-9 py-2.5 text-sm appearance-none transition-all
+            className={`w-full bg-white/5 border rounded-xl px-3 pr-8 py-2.5 text-sm appearance-none transition-all
               ${unknownTime
                 ? "border-white/5 text-white/20 cursor-not-allowed opacity-40"
                 : "border-white/10 text-white focus:border-celestial-purple/50 focus:outline-none cursor-pointer"
@@ -164,7 +169,7 @@ export function BirthInputForm({
               </option>
             ))}
           </select>
-          <ChevronDown className={`w-4 h-4 absolute right-3 top-9 pointer-events-none ${unknownTime ? "text-white/10" : "text-white/40"}`} />
+          <ChevronDown className={`w-4 h-4 absolute right-2.5 top-9 pointer-events-none ${unknownTime ? "text-white/10" : "text-white/40"}`} />
         </div>
         {/* 분 */}
         <div className="relative">
@@ -175,7 +180,7 @@ export function BirthInputForm({
             value={birthData.minute}
             onChange={(e) => setBirthData((prev) => ({ ...prev, minute: Number(e.target.value) }))}
             disabled={unknownTime}
-            className={`w-full bg-white/5 border rounded-xl px-3 pr-9 py-2.5 text-sm appearance-none transition-all
+            className={`w-full bg-white/5 border rounded-xl px-3 pr-8 py-2.5 text-sm appearance-none transition-all
               ${unknownTime
                 ? "border-white/5 text-white/20 cursor-not-allowed opacity-40"
                 : "border-white/10 text-white focus:border-celestial-purple/50 focus:outline-none cursor-pointer"
@@ -187,17 +192,17 @@ export function BirthInputForm({
               </option>
             ))}
           </select>
-          <ChevronDown className={`w-4 h-4 absolute right-3 top-9 pointer-events-none ${unknownTime ? "text-white/10" : "text-white/40"}`} />
+          <ChevronDown className={`w-4 h-4 absolute right-2.5 top-9 pointer-events-none ${unknownTime ? "text-white/10" : "text-white/40"}`} />
         </div>
         {/* 도시 */}
-        <div className="relative col-span-2 sm:col-span-1">
+        <div className="relative">
           <label className="block text-xs text-white/40 mb-1.5 font-medium flex items-center gap-1">
             <MapPin className="w-3 h-3" /> 출생지
           </label>
           <select
             value={selectedCity}
             onChange={(e) => onCityChange(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-9 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-8 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
           >
             {KOREAN_CITIES.map((city) => (
               <option key={city.name} value={city.name} className="bg-gray-900">
@@ -205,7 +210,7 @@ export function BirthInputForm({
               </option>
             ))}
           </select>
-          <ChevronDown className="w-4 h-4 text-white/40 absolute right-3 top-9 pointer-events-none" />
+          <ChevronDown className="w-4 h-4 text-white/40 absolute right-2.5 top-9 pointer-events-none" />
         </div>
       </div>
 
