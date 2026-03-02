@@ -65,6 +65,11 @@ interface VedicAnalysisReport {
   sade_sati: string;
 }
 
+interface VedicAnalysisResult {
+  report: VedicAnalysisReport;
+  chart: any; // Raw VedicChart data
+}
+
 function App() {
   const [birthData, setBirthData] = useState({
     year: 1990,
@@ -78,7 +83,7 @@ function App() {
   const [selectedCity, setSelectedCity] = useState("서울");
   const [isMale, setIsMale] = useState(true);
 
-  const [report, setReport] = useState<VedicAnalysisReport | null>(null);
+  const [report, setReport] = useState<VedicAnalysisResult | null>(null);
   const [sajuReport, setSajuReport] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -264,8 +269,8 @@ function App() {
   );
 
   const renderSajuResults = () => {
-    if (!sajuReport) return null;
-    const reportData = sajuReport.report || sajuReport; // Use wrapper or direct report
+    if (!sajuReport || !sajuReport.report) return null;
+    const reportData = sajuReport.report;
     const p = reportData.pillars;
     const s = reportData.strength;
     const y = reportData.yongshin;
@@ -435,6 +440,76 @@ function App() {
     );
   };
 
+  const renderVedicCharts = () => {
+    if (!report || !report.chart || !report.chart.planets) return null;
+    const planets = report.chart.planets;
+
+    // 대표적인 분할 차트 매핑
+    const VARGA_MAP = [
+      { id: "rasi", label: "D1: Rasi (기본 차트)", key: "rasi" },
+      { id: "navamsa", label: "D9: Navamsa (영혼/결혼)", key: "navamsa_rasi" },
+      { id: "dasamsa", label: "D10: Dasamsa (직업/사회)", key: "dasamsa_rasi" },
+      { id: "trimsamsa", label: "D30: Trimsamsa (재앙/질병)", key: "trimsamsa_rasi" },
+      { id: "shashtyamsa", label: "D60: Shashtyamsa (카르마/과거생)", key: "shashtyamsa_rasi" },
+      { id: "dwadasdwadasamsa", label: "D144: Dwadasdwadasamsa (궁극적 결실)", key: "dwadasdwadasamsa_rasi" },
+    ];
+
+    return (
+      <motion.div
+        key="vedic-charts"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="space-y-8"
+      >
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <Star className="w-6 h-6 text-celestial-purple" />
+            베딕 분할 차트 (D1 - D144)
+          </h5>
+          <p className="text-sm text-white/60 mb-8 leading-relaxed">
+            각 행성이 위치한 하우스(Rasi Sign 1~12)를 다차원 분할 차트(Varga)에 따라 심층적으로 분석합니다.
+          </p>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            {VARGA_MAP.map((varga) => {
+              // 해당 varga에 배치된 행성들을 그룹화 (1번~12번 Sign)
+              const grouped: Record<number, string[]> = {};
+              planets.forEach((p: any) => {
+                const sign = p[varga.key];
+                if (!grouped[sign]) grouped[sign] = [];
+                grouped[sign].push(p.planet);
+              });
+
+              return (
+                <div key={varga.id} className="bg-white/5 border border-white/10 p-6 rounded-2xl relative">
+                  <h6 className="text-sm font-bold text-brand-400 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">
+                    {varga.label}
+                  </h6>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((sign) => (
+                      <div key={sign} className="p-2 bg-black/20 rounded-lg min-h-[60px] flex flex-col items-center justify-center border border-white/5">
+                        <span className="text-[10px] text-white/30 font-black mb-1">SIGN {sign}</span>
+                        <div className="flex flex-wrap items-center justify-center gap-1">
+                          {grouped[sign]?.map((pl, idx) => (
+                            <span key={idx} className="text-xs font-bold text-white px-1.5 py-0.5 rounded-full bg-celestial-purple/30 border border-celestial-purple/50">
+                              {pl}
+                            </span>
+                          ))}
+                          {!grouped[sign] && <span className="text-white/10">—</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <div className="h-screen w-full relative flex overflow-hidden">
       <ShootingStars />
@@ -452,6 +527,7 @@ function App() {
           {[
             { id: "overview", label: "대시보드", icon: LayoutDashboard },
             { id: "saju", label: "사주 분석", icon: Activity },
+            { id: "vedic_charts", label: "베딕 차트 (D1-144)", icon: Star },
             { id: "strength", label: "역량 및 기운", icon: Zap },
             { id: "transit", label: "현재 운세", icon: Sun },
           ].map((tab) => (
@@ -507,8 +583,10 @@ function App() {
             </motion.div>
           ) : activeTab === "saju" ? (
             renderSajuResults()
+          ) : activeTab === "vedic_charts" ? (
+            renderVedicCharts()
           ) : (
-            report && (
+            report && report.report && (
               <motion.div
                 key="results"
                 initial={{ opacity: 0, y: 20 }}
@@ -526,7 +604,7 @@ function App() {
                       영혼의 지표 (Atmakaraka)
                     </p>
                     <h4 className="text-3xl font-bold text-white mb-4">
-                      {report.primary_karakas.atmakaraka}
+                      {report.report.primary_karakas.atmakaraka}
                     </h4>
                     <p className="text-sm text-white/60 leading-relaxed">
                       Atmakaraka - 이번 생에서 영혼이 추구하는 가장 강력한 욕망과 핵심 과제를 나타냅니다.
@@ -538,7 +616,7 @@ function App() {
                       현재 대운 (Dasha)
                     </p>
                     <h4 className="text-3xl font-bold text-white mb-4">
-                      {report.dasha_focus.replace("Current Major Period: ", "")}
+                      {report.report.dasha_focus.replace("Current Major Period: ", "")}
                     </h4>
                     <div className="flex items-center gap-2 text-sm text-white/60">
                       <Clock className="w-4 h-4" />
@@ -552,14 +630,14 @@ function App() {
                     </p>
                     <div className="flex items-baseline gap-2 mb-4">
                       <h4 className="text-5xl font-black text-gradient leading-none">
-                        {Math.round(report.overall_strength_score)}
+                        {Math.round(report.report.overall_strength_score)}
                       </h4>
                       <span className="text-white/20 font-bold">/ 600</span>
                     </div>
                     <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
                       <div
                         className="bg-celestial-purple h-full rounded-full transition-all duration-1000"
-                        style={{ width: `${(report.overall_strength_score / 600) * 100}%` }}
+                        style={{ width: `${(report.report.overall_strength_score / 600) * 100}%` }}
                       />
                     </div>
                   </div>
@@ -574,7 +652,7 @@ function App() {
                     </h5>
                     <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
                       <p className="text-white text-lg font-medium leading-relaxed">
-                        {report.nakshatra_info}
+                        {report.report.nakshatra_info}
                       </p>
                     </div>
                   </div>
@@ -586,7 +664,7 @@ function App() {
                     </h5>
                     <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
                       <p className="text-white text-lg font-medium leading-relaxed">
-                        {report.sade_sati}
+                        {report.report.sade_sati}
                       </p>
                     </div>
                   </div>
@@ -596,7 +674,7 @@ function App() {
                 <section>
                   <h5 className="text-xl font-bold text-white mb-6">하우스(Bhava)별 에너지 역량</h5>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {report.house_summary.map((house: any) => (
+                    {report.report.house_summary.map((house: any) => (
                       <div
                         key={house.house}
                         className="glass p-6 rounded-2xl text-center glass-hover cursor-help"

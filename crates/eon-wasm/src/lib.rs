@@ -1,6 +1,6 @@
 use chrono::{TimeZone, Utc};
 use eon_vedic::analysis::report::VedicAnalysisReport;
-use eon_vedic::chart::VedicChartCalculator;
+use eon_vedic::core::chart::{VedicChart, VedicChartCalculator};
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
@@ -17,7 +17,6 @@ use eon_core::{BirthInfo, Gender, Location};
 /// DST 메타데이터를 포함한 사주 분석 결과 래퍼
 #[derive(Serialize)]
 struct SajuAnalysisResult {
-    #[serde(flatten)]
     report: SajuReport,
     is_dst: bool,
     dst_offset_hours: Option<i32>,
@@ -49,7 +48,15 @@ pub async fn get_vedic_analysis(
 
     let report = VedicAnalysisReport::generate(&chart);
 
-    Ok(serde_wasm_bindgen::to_value(&report)?)
+    #[derive(Serialize)]
+    struct VedicAnalysisResult {
+        report: VedicAnalysisReport,
+        chart: VedicChart,
+    }
+
+    let result = VedicAnalysisResult { report, chart };
+
+    Ok(serde_wasm_bindgen::to_value(&result)?)
 }
 
 /// 사주(四柱) 분석 — WASM에서 호출 가능

@@ -1,6 +1,6 @@
 use chrono::{TimeZone, Utc};
 use eon_vedic::analysis::report::VedicAnalysisReport;
-use eon_vedic::core::chart::VedicChartCalculator;
+use eon_vedic::core::chart::{VedicChart, VedicChartCalculator};
 
 // Saju imports
 use eon_saju::analysis::analytics::Analyzer;
@@ -26,7 +26,7 @@ async fn get_vedic_analysis(
     minute: u32,
     lat: f64,
     lon: f64,
-) -> Result<VedicAnalysisReport, String> {
+) -> Result<serde_json::Value, String> {
     let dt = Utc
         .with_ymd_and_hms(year, month, day, hour, minute, 0)
         .single()
@@ -36,7 +36,16 @@ async fn get_vedic_analysis(
     let chart = calculator.calculate(dt, lat, lon);
 
     let report = VedicAnalysisReport::generate(&chart);
-    Ok(report)
+
+    #[derive(serde::Serialize)]
+    struct VedicAnalysisResult {
+        report: VedicAnalysisReport,
+        chart: VedicChart,
+    }
+
+    let result = VedicAnalysisResult { report, chart };
+
+    serde_json::to_value(&result).map_err(|e| format!("직렬화 실패: {}", e))
 }
 
 #[tauri::command]
@@ -92,24 +101,23 @@ fn get_saju_analysis(
         }
     }
 
-    let mut result = serde_json::to_value(&report).map_err(|e| format!("직렬화 실패: {}", e))?;
-
-    // DST 정보 추가
-    if let Some(obj) = result.as_object_mut() {
-        obj.insert("is_dst".to_string(), serde_json::json!(is_dst));
-        if let Some(offset) = dst_offset {
-            obj.insert("dst_offset_hours".to_string(), serde_json::json!(offset));
-        }
-        obj.insert(
-            "corrected_time".to_string(),
-            serde_json::json!(format!(
-                "{:04}-{:02}-{:02} {:02}:{:02}",
-                cy, cm, cd, ch, cmin
-            )),
-        );
+    // WASM과 동일한 응답 구조체 정의 (일회용)
+    #[derive(serde::Serialize)]
+    struct SajuAnalysisResult {
+        report: SajuReport,
+        is_dst: bool,
+        dst_offset_hours: Option<i32>,
+        corrected_time: String,
     }
 
-    Ok(result)
+    let result = SajuAnalysisResult {
+        report,
+        is_dst,
+        dst_offset_hours: dst_offset,
+        corrected_time: format!("{:04}-{:02}-{:02} {:02}:{:02}", cy, cm, cd, ch, cmin),
+    };
+
+    serde_json::to_value(&result).map_err(|e| format!("직렬화 실패: {}", e))
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
