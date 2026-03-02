@@ -106,8 +106,9 @@ pub fn get_saju_analysis(
     let dst_offset = birth_info.dst_offset_hours();
     let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
 
-    // 보정된 시간으로 SajuInput 생성
-    let input = SajuInput::new_solar_at(cy, cm, cd, ch, cmin, lon, lat).with_gender(gender);
+    // corrected_datetime()이 이미 진태양시 보정 완료
+    // new_solar_at(lon) 사용 시 이중 보정 발생 → new_solar 사용
+    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin).with_gender(gender);
 
     let pillars = FourPillars::calculate(&input)
         .map_err(|e| JsError::new(&format!("사주 계산 실패: {}", e)))?;
@@ -186,7 +187,8 @@ pub fn get_transit_analysis(
         .with_gender(gender);
 
     let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
-    let input = SajuInput::new_solar_at(cy, cm, cd, ch, cmin, lon, lat).with_gender(gender);
+    // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
+    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin).with_gender(gender);
     let pillars = FourPillars::calculate(&input)
         .map_err(|e| JsError::new(&format!("사주 계산 실패: {}", e)))?;
 
@@ -248,7 +250,8 @@ pub fn get_saju_compatibility(
             .with_true_solar_time(true)
             .with_gender(gender);
         let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
-        let input = SajuInput::new_solar_at(cy, cm, cd, ch, cmin, lon, lat).with_gender(gender);
+        // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
+        let input = SajuInput::new_solar(cy, cm, cd, ch, cmin).with_gender(gender);
         FourPillars::calculate(&input).map_err(|e| JsError::new(&format!("사주 계산 실패: {}", e)))
     };
     let pillars1 = make_pillars(year1, month1, day1, hour1, minute1, is_male1, lon1, lat1)?;

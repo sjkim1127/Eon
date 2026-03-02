@@ -90,8 +90,8 @@ fn get_saju_analysis(
     let dst_offset = birth_info.dst_offset_hours();
     let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
 
-    // 보정된 시간으로 SajuInput 생성
-    let input = SajuInput::new_solar_at(cy, cm, cd, ch, cmin, lon, lat).with_gender(gender);
+    // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
+    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin).with_gender(gender);
 
     let pillars = FourPillars::calculate(&input).map_err(|e| format!("사주 계산 실패: {}", e))?;
 
@@ -181,7 +181,8 @@ fn get_transit_analysis(
         .with_gender(gender);
 
     let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
-    let input = SajuInput::new_solar_at(cy, cm, cd, ch, cmin, lon, lat).with_gender(gender);
+    // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
+    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin).with_gender(gender);
     let pillars = FourPillars::calculate(&input).map_err(|e| format!("사주 계산 실패: {}", e))?;
 
     // 세운/월운 계산
@@ -247,7 +248,8 @@ fn get_ai_audit(
         .with_gender(gender);
 
     let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
-    let input = SajuInput::new_solar_at(cy, cm, cd, ch, cmin, lon, lat).with_gender(gender);
+    // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
+    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin).with_gender(gender);
     let pillars = FourPillars::calculate(&input).map_err(|e| format!("사주 계산 실패: {}", e))?;
 
     let emulator = LifePathEmulator::new(pillars.clone(), gender, cy);
@@ -291,7 +293,8 @@ fn get_saju_compatibility(
             .with_true_solar_time(true)
             .with_gender(gender);
         let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
-        let input = SajuInput::new_solar_at(cy, cm, cd, ch, cmin, lon, lat).with_gender(gender);
+        // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
+        let input = SajuInput::new_solar(cy, cm, cd, ch, cmin).with_gender(gender);
         FourPillars::calculate(&input).map_err(|e| format!("사주 계산 실패: {}", e))
     };
 
