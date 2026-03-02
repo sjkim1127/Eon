@@ -83,6 +83,87 @@ const SIGN_LORDS = ["", "Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury",
                        "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"];
 const PURUSHARTHA = ["Dharma", "Artha", "Kama", "Moksha"];
 
+// ──────────────────────────────────────────────
+// 사주 Rust enum → 한자/한글 변환 테이블
+// ──────────────────────────────────────────────
+const STEM_INFO: Record<string, { hanja: string; hangul: string }> = {
+  Jia:  { hanja: "甲", hangul: "갑" }, Yi:   { hanja: "乙", hangul: "을" },
+  Bing: { hanja: "丙", hangul: "병" }, Ding: { hanja: "丁", hangul: "정" },
+  Wu:   { hanja: "戊", hangul: "무" }, Ji:   { hanja: "己", hangul: "기" },
+  Geng: { hanja: "庚", hangul: "경" }, Xin:  { hanja: "辛", hangul: "신" },
+  Ren:  { hanja: "壬", hangul: "임" }, Gui:  { hanja: "癸", hangul: "계" },
+};
+const BRANCH_INFO: Record<string, { hanja: string; hangul: string }> = {
+  Zi:   { hanja: "子", hangul: "자" }, Chou: { hanja: "丑", hangul: "축" },
+  Yin:  { hanja: "寅", hangul: "인" }, Mao:  { hanja: "卯", hangul: "묘" },
+  Chen: { hanja: "辰", hangul: "진" }, Si:   { hanja: "巳", hangul: "사" },
+  Wu:   { hanja: "午", hangul: "오" }, Wei:  { hanja: "未", hangul: "미" },
+  Shen: { hanja: "申", hangul: "신" }, You:  { hanja: "酉", hangul: "유" },
+  Xu:   { hanja: "戌", hangul: "술" }, Hai:  { hanja: "亥", hangul: "해" },
+};
+const ELEMENT_INFO: Record<string, { hanja: string; hangul: string }> = {
+  Wood:  { hanja: "木", hangul: "목" }, Fire:  { hanja: "火", hangul: "화" },
+  Earth: { hanja: "土", hangul: "토" }, Metal: { hanja: "金", hangul: "금" },
+  Water: { hanja: "水", hangul: "수" },
+};
+const STRENGTH_INFO: Record<string, string> = {
+  Strong: "신강 (身强)", Weak: "신약 (身弱)", Balanced: "중화 (中和)",
+};
+const TENGOD_INFO: Record<string, { hangul: string; hanja: string }> = {
+  Bijian:    { hangul: "비견", hanja: "比肩" }, Jiecai:    { hangul: "겁재", hanja: "劫財" },
+  Shishen:   { hangul: "식신", hanja: "食神" }, Shangguan: { hangul: "상관", hanja: "傷官" },
+  Piancai:   { hangul: "편재", hanja: "偏財" }, Zhengcai:  { hangul: "정재", hanja: "正財" },
+  Pianguan:  { hangul: "편관", hanja: "偏官" }, Zhengguan: { hangul: "정관", hanja: "正官" },
+  Pianyin:   { hangul: "편인", hanja: "偏印" }, Zhengyin:  { hangul: "정인", hanja: "正印" },
+};
+const STRUCTURE_INFO: Record<string, { hangul: string; hanja: string }> = {
+  ShiShen: { hangul: "식신격", hanja: "食神格" }, ShangGuan: { hangul: "상관격", hanja: "傷官格" },
+  PianCai:  { hangul: "편재격", hanja: "偏財格" }, ZhengCai:  { hangul: "정재격", hanja: "正財格" },
+  PianGuan: { hangul: "편관격", hanja: "偏官格" }, ZhengGuan: { hangul: "정관격", hanja: "正官格" },
+  PianYin:  { hangul: "편인격", hanja: "偏印格" }, ZhengYin:  { hangul: "정인격", hanja: "正印格" },
+  JianLu:   { hangul: "건록격", hanja: "建祿格" }, YangIn:    { hangul: "양인격", hanja: "陽刃格" },
+  Special:  { hangul: "비겁격", hanja: "特殊格" },
+  JongAh:   { hangul: "종아격", hanja: "從兒格" }, JongJae:   { hangul: "종재격", hanja: "從財格" },
+  JongSal:  { hangul: "종살격", hanja: "從殺格" }, JongGang:  { hangul: "종강격", hanja: "從强格" },
+  JongWang: { hangul: "종왕격", hanja: "從旺格" }, Follower:  { hangul: "종격", hanja: "從格" },
+  SpecialTransformation: { hangul: "전왕격", hanja: "專旺格" },
+};
+const SPIRIT_INFO: Record<string, { hangul: string; hanja: string }> = {
+  Tianyi: { hangul: "천을귀인", hanja: "天乙貴人" }, Wenchang: { hangul: "문창귀인", hanja: "文昌貴人" },
+  Taiji: { hangul: "태극귀인", hanja: "太極貴人" }, Yuede: { hangul: "월덕귀인", hanja: "月德貴人" },
+  Tiande: { hangul: "천덕귀인", hanja: "天德貴人" }, Zhenglu: { hangul: "정록", hanja: "正祿" },
+  Jinyu: { hangul: "금여록", hanja: "金輿祿" }, Anlu: { hangul: "암록", hanja: "暗祿" },
+  Xuetang: { hangul: "학당귀인", hanja: "學堂貴人" }, TianyiMedical: { hangul: "천의성", hanja: "天醫星" },
+  Tianwen: { hangul: "천문성", hanja: "天文星" }, Yima: { hangul: "역마살", hanja: "驛馬煞" },
+  Huagai: { hangul: "화개살", hanja: "華蓋煞" }, Kuigang: { hangul: "괴강살", hanja: "魁罡煞" },
+  Taohua: { hangul: "도화살", hanja: "桃花煞" }, Hongyan: { hangul: "홍염살", hanja: "紅艶煞" },
+  Guchen: { hangul: "고신살", hanja: "孤辰煞" }, Guasu: { hangul: "과숙살", hanja: "寡宿煞" },
+  Xuanzhen: { hangul: "현침살", hanja: "懸針煞" }, Baihu: { hangul: "백호살", hanja: "白虎煞" },
+  Wangshen: { hangul: "망신살", hanja: "亡身煞" }, Jiesha: { hangul: "겁살", hanja: "劫煞" },
+  Yuanzhen: { hangul: "원진살", hanja: "怨嗔煞" }, Jaesha: { hangul: "재살", hanja: "災煞" },
+  Cheonsha: { hangul: "천살", hanja: "天煞" }, Jisha: { hangul: "지살", hanja: "地煞" },
+  Nyeonsha: { hangul: "년살", hanja: "年煞" }, Wolsha: { hangul: "월살", hanja: "月煞" },
+  Jangseong: { hangul: "장성살", hanja: "將星煞" }, Banan: { hangul: "반안살", hanja: "潘鞍煞" },
+  Yukhae: { hangul: "육해살", hanja: "六害煞" },
+};
+const PILLAR_POS_INFO: Record<string, string> = {
+  Year: "년주", Month: "월주", Day: "일주", Hour: "시주",
+};
+// GanZi 객체 {stem, branch} → "甲子(갑자)" 형식
+function ganziDisplay(gz: any): string {
+  if (!gz) return "—";
+  const s = STEM_INFO[gz.stem];
+  const b = BRANCH_INFO[gz.branch];
+  if (!s || !b) return "—";
+  return `${s.hanja}${b.hanja}`;
+}
+function ganziHangul(gz: any): string {
+  if (!gz) return "";
+  const s = STEM_INFO[gz.stem];
+  const b = BRANCH_INFO[gz.branch];
+  return `${s?.hangul ?? ""}${b?.hangul ?? ""}`;
+}
+
 // 사이드리얼 degree → 낙샤트라 정보
 function getNakshatraInfo(sidereal_deg: number) {
   const deg = ((sidereal_deg % 360) + 360) % 360;
@@ -464,13 +545,13 @@ function App() {
               <div key={label} className="text-center p-4 bg-white/5 rounded-2xl border border-white/10">
                 <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3">{label}</p>
                 <p className="text-2xl font-bold text-celestial-gold mb-1">
-                  {pillar?.stem?.hanja || "—"}
+                  {STEM_INFO[pillar?.stem]?.hanja || "—"}
                 </p>
                 <p className="text-2xl font-bold text-celestial-cyan">
-                  {pillar?.branch?.hanja || "—"}
+                  {BRANCH_INFO[pillar?.branch]?.hanja || "—"}
                 </p>
                 <p className="text-xs text-white/30 mt-2">
-                  {pillar?.stem?.hangul || ""} {pillar?.branch?.hangul || ""}
+                  {STEM_INFO[pillar?.stem]?.hangul || ""} {BRANCH_INFO[pillar?.branch]?.hangul || ""}
                 </p>
               </div>
             ))}
@@ -488,7 +569,7 @@ function App() {
               신강/신약 분석
             </p>
             <h4 className="text-3xl font-bold text-white mb-2">
-              {s?.strength_type?.hangul || "—"}
+              {STRENGTH_INFO[s?.strength_type] || s?.strength_type || "—"}
             </h4>
             <div className="flex items-baseline gap-2 mb-4">
               <span className="text-5xl font-black text-gradient leading-none">
@@ -510,11 +591,12 @@ function App() {
               용신 (用神)
             </p>
             <h4 className="text-3xl font-bold text-white mb-4">
-              {y?.primary?.hangul || "—"}
+              {ELEMENT_INFO[y?.primary]?.hangul || y?.primary || "—"}
+              <span className="text-lg text-white/40 ml-2">{ELEMENT_INFO[y?.primary]?.hanja}</span>
             </h4>
             <p className="text-sm text-white/60 mb-2">
               <span className="text-white/40">보조 용신:</span>{" "}
-              {y?.assistant?.hangul || "—"}
+              {ELEMENT_INFO[y?.assistant]?.hangul || y?.assistant || "—"}
             </p>
             <p className="text-xs text-white/40 leading-relaxed">
               용신은 사주의 균형을 맞추는 가장 필요한 오행입니다.
@@ -527,7 +609,8 @@ function App() {
               격국 (格局)
             </p>
             <h4 className="text-3xl font-bold text-white mb-4">
-              {st?.structure?.hangul || "—"}
+              {STRUCTURE_INFO[st?.structure]?.hangul || st?.structure || "—"}
+              <span className="text-sm text-white/40 ml-2">{STRUCTURE_INFO[st?.structure]?.hanja}</span>
             </h4>
             <p className="text-sm text-white/60 leading-relaxed">
               {st?.reason || ""}
@@ -548,8 +631,8 @@ function App() {
                   key={i}
                   className="p-4 bg-white/5 rounded-xl border border-white/10 text-center"
                 >
-                  <p className="text-sm font-bold text-celestial-gold">{m.marker?.hangul || "—"}</p>
-                  <p className="text-xs text-white/40 mt-1">{m.position?.hangul || ""}</p>
+                  <p className="text-sm font-bold text-celestial-gold">{SPIRIT_INFO[m.marker]?.hangul || m.marker || "—"}</p>
+                  <p className="text-xs text-white/40 mt-1">{PILLAR_POS_INFO[m.position] || m.position || ""}</p>
                 </div>
               ))}
             </div>
@@ -573,8 +656,9 @@ function App() {
                   className="p-3 bg-white/5 rounded-xl border border-white/10 text-center hover:bg-white/10 transition-all"
                 >
                   <p className="text-xs text-white/40 mb-1">{c.start_age}~{c.end_age}세</p>
-                  <p className="text-lg font-bold text-white">{c.ganzi?.hangul || "—"}</p>
-                  <p className="text-[10px] text-celestial-gold mt-1">{c.stem_god || ""}</p>
+                  <p className="text-lg font-bold text-white">{ganziDisplay(c.ganzi)}</p>
+                  <p className="text-xs text-white/30">{ganziHangul(c.ganzi)}</p>
+                  <p className="text-[10px] text-celestial-gold mt-1">{TENGOD_INFO[c.stem_god]?.hangul || c.stem_god || ""}</p>
                 </div>
               ))}
             </div>
