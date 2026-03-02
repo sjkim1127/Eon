@@ -29,31 +29,31 @@ impl KarmaLoadBalancer {
             let prev = &frames[i-1];
             let curr = &frames[i];
 
-            // 1. Traffic Spike Detection (급격한 상승/하락)
+            // 1. 운세 급변 구간 감지 (급격한 상승/하락)
             let score_diff = (curr.score - prev.score).abs();
             if score_diff >= 15.0 {
                 diagnostics.push(LoadBalanceDiagnostic {
                     age: curr.age,
                     status: TrafficStatus::Overloaded,
-                    reason: format!("Traffic Spike 감지 (변동폭: {:.1})", score_diff),
-                    strategy: "Auto-Scaling 활성화: 멘탈 리소스를 확장하고 과도한 요청을 순차 처리(Queuing)하십시오.".to_string(),
+                    reason: format!("운세 급변 구간 (변동 강도: {:.0}점)", score_diff),
+                    strategy: "에너지 변화가 클 때입니다. 무리한 결정은 미루고 변화에 유연하게 대응하세요.".to_string(),
                 });
             }
 
-            // 2. High Pressure (지속적인 고득점 또는 저득점 부하)
+            // 2. 운세 집중 구간 (지속적인 고득점 또는 저득점)
             if curr.score > 85.0 {
                 diagnostics.push(LoadBalanceDiagnostic {
                     age: curr.age,
                     status: TrafficStatus::Overloaded,
-                    reason: "Success_Overload: 과도한 성취로 인한 시스템 과열 가능성".to_string(),
-                    strategy: "Throttling 필요: 성과를 분산시키고 내부 시스템 안정화를 위한 점검(Maintenance) 기간을 가지십시오.".to_string(),
+                    reason: "좋은 기운이 강하게 몰리는 시기입니다.".to_string(),
+                    strategy: "성취욕이 높아지는 시기이지만 과욕을 경계하고 안정을 함께 챙기세요.".to_string(),
                 });
             } else if curr.score < 25.0 {
                 diagnostics.push(LoadBalanceDiagnostic {
                     age: curr.age,
                     status: TrafficStatus::SystemDown,
-                    reason: "Critical_Failure: 외부 충돌로 인한 서비스 다운 위기".to_string(),
-                    strategy: "Backup Restore 준비: 기존의 관계 및 자산을 철저히 백업하고 최소 운영 모드(Safe Mode)로 진입하십시오.".to_string(),
+                    reason: "어려움이 집중되는 시기입니다.".to_string(),
+                    strategy: "새로운 도전보다는 현상 유지에 집중하고, 소중한 것을 지키는 데 에너지를 쏟으세요.".to_string(),
                 });
             }
         }

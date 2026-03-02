@@ -2,13 +2,17 @@ use serde::{Deserialize, Serialize};
 use crate::core::element::Element;
 use crate::core::pillars::FourPillars;
 
-/// 인생 데이터 난독화 등급
+/// 인생 복잡도 등급
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ObfuscationLevel {
-    Plaintext,     // 해석이 매우 직관적이고 명확함
-    Standard,      // 일반적인 분석 난이도
-    Packed,        // 본모습이 숨겨져 있어 특정 시점에 언패킹이 필요함
-    Encrypted,     // 고도로 난독화되어 전문적 분석 없이는 파악 불가
+    #[serde(rename = "단순형")]
+    Plaintext,     // 오행이 한곳에 집중, 인생 경로가 선명함
+    #[serde(rename = "보통형")]
+    Standard,      // 고르게 분산된 균형 있는 사주
+    #[serde(rename = "복합형")]
+    Packed,        // 다양한 기운이 얽혀 있어 복잡한 흐름
+    #[serde(rename = "복잡형")]
+    Encrypted,     // 오행이 고도로 복잡하게 얽혀 있어 전문 분석 필요
 }
 
 /// 엔트로피 분석 결과
@@ -55,13 +59,13 @@ impl DestinyEntropy {
         // 3. 등급 판별 (DIE 기준 차용)
         // 최대 엔트로피는 log2(5) ≈ 2.32
         let (level, description) = if entropy < 1.0 {
-            (ObfuscationLevel::Plaintext, "데이터가 한곳에 집중되어 경로가 매우 선형적입니다. (Plaintext Life)".to_string())
+            (ObfuscationLevel::Plaintext, "오행이 한곳에 집중되어 인생 경로가 매우 명확합니다. 목표가 뚜렷하지만 유연성이 부족할 수 있습니다.".to_string())
         } else if entropy < 1.8 {
-            (ObfuscationLevel::Standard, "표준적인 데이터 분산을 가집니다. (Standard Binary)".to_string())
+            (ObfuscationLevel::Standard, "오행이 고르게 분포되어 균형 잡힌 삶의 흐름을 가집니다.".to_string())
         } else if entropy < 2.1 {
-            (ObfuscationLevel::Packed, "내부 로직이 복잡하게 얽혀 있어 본모습이 은폐되어 있습니다. (Packed Destiny)".to_string())
+            (ObfuscationLevel::Packed, "여러 기운이 복잡하게 얽혀 있어 특정 시점에 진정한 모습이 드러납니다.".to_string())
         } else {
-            (ObfuscationLevel::Encrypted, "고도의 난독화가 적용되어 해석이 매우 난해합니다. (Encrypted/Obfuscated)".to_string())
+            (ObfuscationLevel::Encrypted, "오행이 매우 복잡하게 얽혀 있어 삶의 흐름을 파악하기 어렵습니다. 전문적인 분석이 도움이 됩니다.".to_string())
         };
 
         // 4. Unpacker 탐색: 가장 부족하거나 엔트로피를 낮춰줄(균형을 잡을) 핵심 오행

@@ -50,8 +50,8 @@ impl DestinyLinter {
             lints.push(SajuLint {
                 code: "E404".to_string(),
                 severity: LintSeverity::Error,
-                message: format!("Missing_Dependency: 핵심 라이브러리 '{}'가 선언되지 않았습니다.", yongshin.primary.hangul()),
-                advice: format!("외부 운(Luck)에서 '{}'을(를) Import할 때까지 시스템 성능이 제한됩니다.", yongshin.primary.hangul()),
+                message: format!("핵심 기운 부재: 필요한 '{}' 기운이 사주에 없습니다.", yongshin.primary.hangul()),
+                advice: format!("대운이나 세운에서 '{}' 기운이 들어올 때까지 핵심 역량 발휘가 제한될 수 있습니다.", yongshin.primary.hangul()),
             });
         }
     }
@@ -66,8 +66,8 @@ impl DestinyLinter {
                     lints.push(SajuLint {
                         code: "W105".to_string(),
                         severity: LintSeverity::Warning,
-                        message: format!("Unused_Variable: '{}' 자원이 선언되었으나 '{}'에 의해 점유(Lock)되었습니다.", el.hangul(), controller.hangul()),
-                        advice: format!("'{}' 프로세스를 강제 종료하거나 제어할 수 있는 보조 루틴이 필요합니다.", controller.hangul()),
+                        message: format!("기운 억제: '{}' 기운이 강한 '{}' 기운에 눌려 제대로 발휘되지 못하고 있습니다.", el.hangul(), controller.hangul()),
+                        advice: format!("'{}' 기운을 조절하거나 균형을 잡아줄 보완 요소가 필요합니다.", controller.hangul()),
                     });
                 }
             }
@@ -80,8 +80,8 @@ impl DestinyLinter {
                 lints.push(SajuLint {
                     code: "W202".to_string(),
                     severity: LintSeverity::Warning,
-                    message: format!("Resource_Exhaustion: '{}' 오행의 메모리 점유율이 너무 높습니다.", el.hangul()),
-                    advice: "특정 모듈에 리소스가 쏠려 전체 시스템의 부하가 예상됩니다. 부하 분산(Load Balancing)이 시급합니다.".to_string(),
+                    message: format!("기운 편중: '{}' 기운이 지나치게 강합니다.", el.hangul()),
+                    advice: "한 가지 기운에 치우치면 전체 흐름이 불균형해집니다. 부족한 기운을 보완하는 것이 중요합니다.".to_string(),
                 });
             }
         }
@@ -95,8 +95,8 @@ impl DestinyLinter {
              lints.push(SajuLint {
                 code: "I303".to_string(),
                 severity: LintSeverity::Info,
-                message: "Deprecated_API: '백호(Baekho)' 패턴은 현대 사회에서 '전문직 카리스마'로 대체되었습니다.".to_string(),
-                advice: "Legacy 해석을 중단하고 전문 역량 강화를 위한 API로 마이그레이션하십시오.".to_string(),
+                message: "백호(白虎) 신살: 현대에는 강한 추진력과 전문직 카리스마로 발현될 수 있습니다.".to_string(),
+                advice: "전통적 흉신 해석보다는 전문 역량을 강화하는 방향으로 활용하면 긍정적입니다.".to_string(),
             });
         }
     }
