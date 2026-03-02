@@ -265,13 +265,14 @@ function App() {
 
   const renderSajuResults = () => {
     if (!sajuReport) return null;
-    const p = sajuReport.pillars;
-    const s = sajuReport.strength;
-    const y = sajuReport.yongshin;
-    const st = sajuReport.structure;
-    const sp = sajuReport.spirit_markers;
-    const ml = sajuReport.major_luck;
-    const gt = sajuReport.golden_time;
+    const reportData = sajuReport.report || sajuReport; // Use wrapper or direct report
+    const p = reportData.pillars;
+    const s = reportData.strength;
+    const y = reportData.yongshin;
+    const st = reportData.structure;
+    const sp = reportData.spirit_markers;
+    const ml = reportData.major_luck;
+    const gt = reportData.golden_time;
 
     return (
       <motion.div
@@ -435,7 +436,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen relative flex">
+    <div className="h-screen w-full relative flex overflow-hidden">
       <ShootingStars />
 
       {/* Sidebar */}
