@@ -4,6 +4,12 @@ use eon_vedic::core::chart::{VedicChart, VedicChartCalculator};
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
 
+/// WASM 패닉 메시지를 브라우저 콘솔에 표시
+#[wasm_bindgen(start)]
+pub fn init_panic_hook() {
+    console_error_panic_hook::set_once();
+}
+
 // === Saju (四柱) imports ===
 use eon_saju::analysis::analytics::Analyzer;
 use eon_saju::analysis::major_luck::MajorLuckAnalysis;
@@ -196,60 +202,26 @@ pub fn get_transit_analysis(
     let yearly = YearlyLuck::calculate(current_year, &pillars);
     let monthly = MonthlyLuck::calculate(current_year, current_month, &pillars);
 
-    // 현재 나이 계산 및 해당 LifeFrame 추출
+    // 현재 나이 계산
     let current_age = (current_year - year).max(0) as u32;
-    let vm = SajuVM::new(pillars.clone());
-    let frames = vm.simulate_life(0, 105);
-    let current_frame = frames
-        .iter()
-        .find(|f| f.age == current_age)
-        .cloned();
 
-    // 현재 시점 전후 부하 진단
-    let all_diagnostics = KarmaLoadBalancer::diagnose(&frames);
-    let nearby_diagnostics: Vec<LoadBalanceDiagnostic> = all_diagnostics
-        .into_iter()
-        .filter(|d| d.age >= current_age.saturating_sub(3) && d.age <= current_age + 5)
-        .collect();
-
-    // LifeFrame의 tags를 문자열 배열로 변환하는 DTO
-    // (TraceTag enum은 JSON 객체로 직렬화되어 프론트에서 그대로 사용 불가)
-    #[derive(Serialize)]
-    struct LifeFrameDto {
-        age: u32,
-        ganzi: eon_saju::core::ganzi::GanZi,
-        major_ganzi: eon_saju::core::ganzi::GanZi,
-        score: f32,
-        tags: Vec<String>,
-        esil_trace: String,
-        register_state: eon_saju::engine::vm::QiRegisters,
-    }
-
+    // WASM 환경: MajorLuckAnalysis::calculate_astro는 ephe 데이터를 사용하므로
+    // VM 시뮬레이션 없이 세운/월운만 반환 (대운 데이터 별도 제공 예정)
     #[derive(Serialize)]
     struct TransitResult {
         yearly_luck: YearlyLuck,
         monthly_luck: MonthlyLuck,
         current_age: u32,
-        current_frame: Option<LifeFrameDto>,
+        current_frame: Option<()>,
         nearby_diagnostics: Vec<LoadBalanceDiagnostic>,
     }
-
-    let current_frame_dto = current_frame.map(|f| LifeFrameDto {
-        age: f.age,
-        ganzi: f.ganzi,
-        major_ganzi: f.major_ganzi,
-        score: f.score,
-        tags: f.tags_as_strings(),
-        esil_trace: f.esil_trace,
-        register_state: f.register_state,
-    });
 
     let result = TransitResult {
         yearly_luck: yearly,
         monthly_luck: monthly,
         current_age,
-        current_frame: current_frame_dto,
-        nearby_diagnostics,
+        current_frame: None,
+        nearby_diagnostics: vec![],
     };
 
     Ok(serde_wasm_bindgen::to_value(&result)?)

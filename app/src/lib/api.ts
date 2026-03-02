@@ -91,16 +91,23 @@ export const get_transit_analysis = async (args: {
         console.log("Using Tauri Native Backend (Transit)");
         return invoke("get_transit_analysis", args);
     } else {
-        console.log("Using WASM Backend (Transit)");
+        console.log("Using WASM Backend (Transit)", args);
         const wasm = await getWasmModule();
-        return wasm.get_transit_analysis(
-            args.year, args.month, args.day,
-            args.hour, args.minute,
-            args.is_male,
-            args.lon, args.lat,
-            args.timezone,
-            args.current_year, args.current_month
-        );
+        try {
+            const result = wasm.get_transit_analysis(
+                args.year, args.month, args.day,
+                args.hour, args.minute,
+                args.is_male,
+                args.lon, args.lat,
+                args.timezone,
+                args.current_year, args.current_month
+            );
+            console.log("Transit result:", result);
+            return result;
+        } catch (e) {
+            console.error("[Transit WASM Error]", e);
+            throw e;
+        }
     }
 };
 

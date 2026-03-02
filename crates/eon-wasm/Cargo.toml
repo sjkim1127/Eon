@@ -17,6 +17,7 @@ eon-astro = { path = "../eon-astro" }
 eon-saju = { path = "../eon-saju", default-features = false }
 eon-core = { path = "../eon-core" }
 tsify-next = "0.5"
+console_error_panic_hook = "0.1"
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false

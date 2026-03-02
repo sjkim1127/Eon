@@ -7,6 +7,7 @@ export const get_transit_analysis: (a: number, b: number, c: number, d: number, 
 export const get_vedic_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => any;
 export const get_vedic_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number) => any;
 export const greet: (a: number, b: number) => [number, number];
+export const init_panic_hook: () => void;
 export const __wbg_get_position_distance: (a: number) => number;
 export const __wbg_get_position_distance_speed: (a: number) => number;
 export const __wbg_get_position_latitude: (a: number) => number;

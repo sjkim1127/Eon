@@ -78,6 +78,11 @@ export function get_vedic_compatibility(year1: number, month1: number, day1: num
 export function greet(name: string): string;
 
 /**
+ * WASM 패닉 메시지를 브라우저 콘솔에 표시
+ */
+export function init_panic_hook(): void;
+
+/**
  * Set the ephemeris path
  */
 export function set_ephe_path(path: string): void;
