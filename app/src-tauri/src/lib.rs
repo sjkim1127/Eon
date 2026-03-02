@@ -205,20 +205,42 @@ fn get_transit_analysis(
         .filter(|d| d.age >= current_age.saturating_sub(3) && d.age <= current_age + 5)
         .collect();
 
+    // LifeFrame의 tags를 문자열 배열로 변환 (TraceTag enum은 JSON 객체로 직렬화됨)
+    #[derive(serde::Serialize)]
+    struct LifeFrameDto {
+        age: u32,
+        ganzi: eon_saju::core::ganzi::GanZi,
+        major_ganzi: eon_saju::core::ganzi::GanZi,
+        score: f32,
+        tags: Vec<String>,
+        esil_trace: String,
+        register_state: eon_saju::engine::vm::QiRegisters,
+    }
+
     #[derive(serde::Serialize)]
     struct TransitResult {
         yearly_luck: YearlyLuck,
         monthly_luck: MonthlyLuck,
         current_age: u32,
-        current_frame: Option<eon_saju::engine::vm::LifeFrame>,
+        current_frame: Option<LifeFrameDto>,
         nearby_diagnostics: Vec<LoadBalanceDiagnostic>,
     }
+
+    let current_frame_dto = current_frame.map(|f| LifeFrameDto {
+        age: f.age,
+        ganzi: f.ganzi,
+        major_ganzi: f.major_ganzi,
+        score: f.score,
+        tags: f.tags_as_strings(),
+        esil_trace: f.esil_trace,
+        register_state: f.register_state,
+    });
 
     let result = TransitResult {
         yearly_luck: yearly,
         monthly_luck: monthly,
         current_age,
-        current_frame,
+        current_frame: current_frame_dto,
         nearby_diagnostics,
     };
 
