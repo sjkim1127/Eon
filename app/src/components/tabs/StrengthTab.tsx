@@ -167,20 +167,27 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
             )}
           </div>
 
-          <div className="h-44 bg-white/5 rounded-2xl border border-white/10 p-3">
+          {/* 운명 복잡도 게이지 차트 */}
+          <div className="relative h-48 bg-white/5 rounded-2xl border border-white/10 p-4 mt-6 flex flex-col justify-end overflow-hidden">
+            <div className="absolute inset-0 flex flex-col items-center justify-end pb-6 pointer-events-none">
+              <p className="text-3xl font-black text-celestial-cyan">{entropy.score?.toFixed(3) ?? "—"}</p>
+              <p className="text-xs text-white/40 tracking-wider">복잡도 게이지 (Max 4.0)</p>
+            </div>
             <ResponsiveContainer width="100%" height="100%">
               <RadialBarChart
-                innerRadius="60%"
-                outerRadius="95%"
+                cx="50%"
+                cy="90%"
+                innerRadius="80%"
+                outerRadius="120%"
                 data={[{ name: "복잡도", value: Math.min(100, Math.max(0, (entropy.score ?? 0) * 25)) }]}
                 startAngle={180}
                 endAngle={0}
               >
                 <RadialBar
                   dataKey="value"
-                  cornerRadius={10}
+                  cornerRadius={20}
                   fill="#06b6d4"
-                  background={{ fill: "rgba(255,255,255,0.12)" }}
+                  background={{ fill: "rgba(255,255,255,0.05)" }}
                 />
               </RadialBarChart>
             </ResponsiveContainer>
