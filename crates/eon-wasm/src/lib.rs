@@ -29,6 +29,24 @@ use eon_saju::report::SajuReport;
 // === Core imports (BirthInfo, Location, DST) ===
 use eon_core::{BirthInfo, Gender, Location};
 
+// Chrono imports for timezone-based standard meridian calculation
+use chrono::TimeZone;
+use chrono_tz::Tz;
+
+/// Compute the standard meridian (degrees) from an IANA timezone string.
+/// e.g. "Asia/Seoul" (UTC+9) → 135.0, "America/New_York" (UTC-5) → -75.0
+fn standard_meridian_from_tz(timezone: &str) -> f64 {
+    if let Ok(tz) = timezone.parse::<Tz>() {
+        let ref_dt = tz.with_ymd_and_hms(2024, 1, 15, 12, 0, 0).single();
+        if let Some(dt) = ref_dt {
+            use chrono_tz::OffsetComponents;
+            let base_offset_secs = dt.offset().base_utc_offset().num_seconds() as f64;
+            return (base_offset_secs / 3600.0) * 15.0;
+        }
+    }
+    135.0 // Fallback: Korean Standard Meridian
+}
+
 /// DST 메타데이터 + 고급 분석을 포함한 사주 분석 결과 래퍼
 #[derive(Serialize)]
 struct SajuAnalysisResult {
@@ -114,7 +132,7 @@ pub fn get_saju_analysis(
     };
 
     // BirthInfo로 DST + 진태양시 보정
-    let location = Location::new("출생지", lat, lon, 135.0);
+    let location = Location::new("출생지", lat, lon, standard_meridian_from_tz(timezone));
     let mut birth_info = if is_lunar {
         BirthInfo::lunar(year, month, day, hour, minute, is_leap_month)
     } else {
@@ -214,7 +232,7 @@ pub fn get_transit_analysis(
         Gender::Female
     };
 
-    let location = Location::new("출생지", lat, lon, 135.0);
+    let location = Location::new("출생지", lat, lon, standard_meridian_from_tz(timezone));
     let mut birth_info = if is_lunar {
         BirthInfo::lunar(year, month, day, hour, minute, is_leap_month)
     } else {
@@ -381,7 +399,7 @@ pub fn get_saju_compatibility(
                         lat: f64|
      -> Result<FourPillars, JsError> {
         let gender = if male { Gender::Male } else { Gender::Female };
-        let location = Location::new("출생지", lat, lon, 135.0);
+        let location = Location::new("출생지", lat, lon, standard_meridian_from_tz(timezone));
         let mut birth_info = if lunar {
             BirthInfo::lunar(y, mo, d, h, mi, leap)
         } else {

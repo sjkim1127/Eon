@@ -8,7 +8,6 @@ import {
   get_vedic_compatibility,
 } from "../lib/api";
 import { KOREAN_CITIES } from "../constants";
-import { isKoreaDST } from "../utils";
 import type {
   BirthData,
   TabId,
@@ -24,6 +23,7 @@ const DEFAULT_BIRTH: BirthData = {
   year: 1990, month: 1, day: 1, hour: 12, minute: 0,
   lat: 37.5665, lon: 126.978,
   is_lunar: false, is_leap_month: false,
+  timezone: "Asia/Seoul",
 };
 
 /** 상대방 기본 출생 데이터 */
@@ -31,6 +31,7 @@ const DEFAULT_BIRTH2: BirthData = {
   year: 1990, month: 6, day: 15, hour: 10, minute: 0,
   lat: 37.5665, lon: 126.978,
   is_lunar: false, is_leap_month: false,
+  timezone: "Asia/Seoul",
 };
 
 const inRange = (value: number, min: number, max: number) => Number.isFinite(value) && value >= min && value <= max;
@@ -75,14 +76,13 @@ export function useAnalysis() {
   const [compLoading, setCompLoading] = useState(false);
 
   // ── 파생 값 ──
-  const isDST = isKoreaDST(birthData.year, birthData.month);
 
   // ── 핸들러 ──
   const handleCityChange = (cityName: string) => {
     const city = KOREAN_CITIES.find((c) => c.name === cityName);
     if (city) {
       setSelectedCity(cityName);
-      setBirthData((prev) => ({ ...prev, lat: city.lat, lon: city.lon }));
+      setBirthData((prev) => ({ ...prev, lat: city.lat, lon: city.lon, timezone: city.timezone }));
     }
   };
 
@@ -90,7 +90,7 @@ export function useAnalysis() {
     const city = KOREAN_CITIES.find((c) => c.name === cityName);
     if (city) {
       setSelectedCity2(cityName);
-      setBirthData2((prev) => ({ ...prev, lat: city.lat, lon: city.lon }));
+      setBirthData2((prev) => ({ ...prev, lat: city.lat, lon: city.lon, timezone: city.timezone }));
     }
   };
 
@@ -114,7 +114,7 @@ export function useAnalysis() {
           hour: birthData.hour, minute: birthData.minute,
           is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
           lat: birthData.lat, lon: birthData.lon,
-          timezone: "Asia/Seoul",
+          timezone: birthData.timezone,
         }),
         get_saju_analysis({
           year: birthData.year, month: birthData.month, day: birthData.day,
@@ -122,7 +122,7 @@ export function useAnalysis() {
           is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
           is_male: isMale,
           lat: birthData.lat, lon: birthData.lon,
-          timezone: "Asia/Seoul",
+          timezone: birthData.timezone,
         }),
         get_transit_analysis({
           year: birthData.year, month: birthData.month, day: birthData.day,
@@ -130,7 +130,7 @@ export function useAnalysis() {
           is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
           is_male: isMale,
           lat: birthData.lat, lon: birthData.lon,
-          timezone: "Asia/Seoul",
+          timezone: birthData.timezone,
           current_year: now.getFullYear(),
           current_month: now.getMonth() + 1,
           current_day: now.getDate(),
@@ -196,7 +196,7 @@ export function useAnalysis() {
           hour2: birthData2.hour, minute2: birthData2.minute,
           is_lunar2: birthData2.is_lunar ?? false, is_leap_month2: birthData2.is_leap_month ?? false,
           is_male2: isMale2, lon2: birthData2.lon, lat2: birthData2.lat,
-          timezone: "Asia/Seoul",
+          timezone: birthData.timezone,
         }),
         get_vedic_compatibility({
           year1: birthData.year, month1: birthData.month, day1: birthData.day,
@@ -207,7 +207,7 @@ export function useAnalysis() {
           hour2: birthData2.hour, minute2: birthData2.minute,
           is_lunar2: birthData2.is_lunar ?? false, is_leap_month2: birthData2.is_leap_month ?? false,
           lat2: birthData2.lat, lon2: birthData2.lon,
-          timezone: "Asia/Seoul",
+          timezone: birthData.timezone,
         }),
       ]);
       setCompReport({ saju, vedic });
@@ -227,7 +227,7 @@ export function useAnalysis() {
     birthData, setBirthData,
     selectedCity, handleCityChange,
     isMale, setIsMale,
-    isDST,
+    isDST: false, // DST is now fully computed by backend
     // 분석 결과
     report, sajuReport, transitReport, transitError,
     loading, runAnalysis,

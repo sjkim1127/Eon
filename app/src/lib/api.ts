@@ -1,14 +1,14 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { VedicAnalysisResult } from "../types";
 
-// Dynamically imported WASM module
-let wasmModuleCache: any = null;
+// Dynamically imported WASM module — cache the Promise to prevent race conditions
+// when multiple API calls (saju, vedic, transit) fire simultaneously via Promise.allSettled
+let wasmPromiseCache: Promise<any> | null = null;
 const getWasmModule = async () => {
-    if (wasmModuleCache) return wasmModuleCache;
-    const wasm = await import("eon-wasm");
-    // bundler target auto-initializes; no need to call wasm.default()
-    wasmModuleCache = wasm;
-    return wasm;
+    if (!wasmPromiseCache) {
+        wasmPromiseCache = import("eon-wasm");
+    }
+    return wasmPromiseCache;
 };
 
 // Check if we are running inside the Tauri environment
