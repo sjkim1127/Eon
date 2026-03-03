@@ -182,12 +182,23 @@ function App() {
     }
   }, [activeTab, report, sajuReport, transitReport, compReport]);
 
+  useEffect(() => {
+    if (birthData.unknown_time && activeTab === "vedic_charts") {
+      setActiveTab("saju");
+    }
+  }, [birthData.unknown_time, activeTab]);
+
   return (
     <div className="h-screen w-full relative flex overflow-hidden">
       <ShootingStars />
 
       {/* Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onTabHover={prefetchTab} />
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onTabHover={prefetchTab}
+        unknownTime={birthData.unknown_time}
+      />
 
       {/* Main Content */}
       <main className="flex-1 p-4 md:p-10 pb-24 md:pb-10 overflow-y-auto z-10">

@@ -7,6 +7,7 @@ interface SidebarProps {
   activeTab: TabId;
   setActiveTab: (tab: TabId) => void;
   onTabHover?: (tab: TabId) => void;
+  unknownTime?: boolean;
 }
 
 const TABS = [
@@ -18,13 +19,15 @@ const TABS = [
   { id: "compatibility" as TabId, label: "궁합 분석", icon: Heart },
 ];
 
-export function Sidebar({ activeTab, setActiveTab, onTabHover }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, onTabHover, unknownTime }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleSelectTab = (tabId: TabId) => {
     setActiveTab(tabId);
     setMobileOpen(false);
   };
+
+  const filteredTabs = TABS.filter(tab => !(unknownTime && tab.id === "vedic_charts"));
 
   return (
     <>
@@ -61,7 +64,7 @@ export function Sidebar({ activeTab, setActiveTab, onTabHover }: SidebarProps) {
         </div>
 
         <div className="space-y-2 flex-1">
-          {TABS.map((tab) => (
+          {filteredTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => handleSelectTab(tab.id)}
@@ -85,8 +88,8 @@ export function Sidebar({ activeTab, setActiveTab, onTabHover }: SidebarProps) {
       </nav>
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-black/60 backdrop-blur-xl px-2 py-2">
-        <div className="grid grid-cols-6 gap-1">
-          {TABS.map((tab) => (
+        <div className={cn("grid gap-1", filteredTabs.length === 5 ? "grid-cols-5" : "grid-cols-6")}>
+          {filteredTabs.map((tab) => (
             <button
               key={`mobile-${tab.id}`}
               type="button"
