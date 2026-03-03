@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Activity, Zap, Shield, Star, TrendingUp, AlertTriangle, Link2, CircleOff } from "lucide-react";
 import {
   ResponsiveContainer,
-  AreaChart,
+  ComposedChart,
   Area,
   Line,
   CartesianGrid,
@@ -465,7 +465,7 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
           </h5>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
+              <ComposedChart
                 data={reportData.timeline.map((f: any) => ({
                   age: f.age,
                   score: Number(f.total_score ?? 0),
@@ -558,7 +558,7 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
                 <Line type="monotone" dataKey="academic" stroke="#60a5fa" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />
                 <Line type="monotone" dataKey="health" stroke="#34d399" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />
                 <Line type="step" dataKey="volatility" stroke="#f43f5e" strokeWidth={1} strokeDasharray="3 3" dot={false} strokeOpacity={0.6} />
-              </AreaChart>
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
           <div className="flex justify-between text-xs text-white/30 mt-2">
