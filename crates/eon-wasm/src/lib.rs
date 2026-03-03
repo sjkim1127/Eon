@@ -62,6 +62,8 @@ struct SajuAnalysisResult {
     crash_count: u32,
     relationships: RelationshipAnalysis,
     void_analysis: VoidAnalysis,
+    /// serde_wasm_bindgen workaround: timeline은 JSON 문자열로 전달
+    timeline_json: String,
 }
 
 #[wasm_bindgen]
@@ -193,6 +195,10 @@ pub fn get_saju_analysis(
         }
     }
 
+    // timeline을 JSON 문자열로 직렬화 (serde_wasm_bindgen 우회)
+    let timeline_json =
+        serde_json::to_string(&report.timeline).unwrap_or_else(|_| "[]".to_string());
+
     // 결과 래퍼
     let result = SajuAnalysisResult {
         report,
@@ -206,6 +212,7 @@ pub fn get_saju_analysis(
         crash_count,
         relationships,
         void_analysis,
+        timeline_json,
     };
 
     Ok(serde_wasm_bindgen::to_value(&result)?)

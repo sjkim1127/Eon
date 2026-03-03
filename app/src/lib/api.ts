@@ -69,7 +69,7 @@ export const get_saju_analysis = async (args: {
     } else {
         console.log("Using WASM Backend (Saju)");
         const wasm = await getWasmModule();
-        return wasm.get_saju_analysis(
+        const result = wasm.get_saju_analysis(
             args.year, args.month, args.day,
             args.hour, args.minute,
             args.is_lunar, args.is_leap_month,
@@ -77,6 +77,16 @@ export const get_saju_analysis = async (args: {
             args.lon, args.lat,
             args.timezone
         );
+        // serde_wasm_bindgen workaround: timeline_json → report.timeline
+        if (result.timeline_json && result.report) {
+            try {
+                result.report.timeline = JSON.parse(result.timeline_json);
+                console.log("[WASM] timeline parsed:", result.report.timeline?.length, "items");
+            } catch (e) {
+                console.warn("[WASM] timeline_json parse failed:", e);
+            }
+        }
+        return result;
     }
 };
 
