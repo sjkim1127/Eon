@@ -212,9 +212,10 @@ impl LifePathEmulator {
                 let priority = self
                     .vm
                     .get_element_priority(el, primary, assistant, thermal);
-                // 0.0 기준을 1.0(보통)으로 맞추고 용신일때 1.5, 기신일때 0.5 등으로 스케일링
+                // 0.0 기준을 1.0(보통)으로 맞추고 용신일때 증폭, 기신일때 축소
                 // get_element_priority는 1.0, 0.5, -0.8 등을 반환
-                let mut f_val = 1.0 + (priority as f64 * 0.5);
+                // 변동성 강화를 위해 priority 가중치를 1.5로 더 증폭
+                let mut f_val = 1.0 + (priority as f64 * 1.5);
                 if f_val < 0.2 {
                     f_val = 0.2;
                 } // 최소값 보장
@@ -246,9 +247,11 @@ impl LifePathEmulator {
                 e_scores[el_idx as usize] = s_val * f_val * m_val;
             }
 
-            // 카테고리별 핵심 십성 매핑 (Base 50점 + E(X) 가중치 합산 * scale)
-            let base = 30.0;
-            let scale_factor = 5.0; // 점수 증폭
+            // 카테고리별 핵심 십성 매핑
+            // 변동성 확대를 위해 기본점수(base)를 0점으로 낮추고,
+            // 원점수 대비 증폭 계수(scale_factor)를 25.0으로 2배 더 높임
+            let base = 0.0;
+            let scale_factor = 25.0; // 점수 증폭 극대화
 
             // 재물(Wealth) = 재성 0.6 + 식상 0.4
             let wealth_el = dm_element.controls();
