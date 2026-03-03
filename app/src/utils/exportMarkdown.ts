@@ -7,7 +7,7 @@ const SEP = "\n---\n";
 
 // ── 사주 섹션 ────────────────────────────────────────
 
-function buildSajuMarkdown(s: SajuAnalysisResult): string {
+export function buildSajuMarkdown(s: SajuAnalysisResult): string {
     const r = s.report;
     const lines: string[] = [];
 
@@ -142,7 +142,7 @@ function buildSajuMarkdown(s: SajuAnalysisResult): string {
 
 // ── 베딕 섹션 ────────────────────────────────────────
 
-function buildVedicMarkdown(v: VedicAnalysisResult): string {
+export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     const r = v.report;
     const c = v.chart;
     const lines: string[] = [];

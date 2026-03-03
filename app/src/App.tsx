@@ -5,7 +5,7 @@ import { Compass, Calendar, UserPlus, Pencil, ClipboardCopy, Check } from "lucid
 
 import { useAnalysis } from "./hooks";
 import { ShootingStars, BirthDrawer, Sidebar } from "./components/shared";
-import { buildFullAnalysisMarkdown } from "./utils";
+import { buildFullAnalysisMarkdown, buildSajuMarkdown, buildVedicMarkdown } from "./utils";
 import type { TabId } from "./types";
 
 const loadOverviewTab = () => import("./components/tabs/OverviewTab");
@@ -81,6 +81,8 @@ function App() {
   // 드로어 상태: 첫 로드시 자동 오픈 (온보딩)
   const [formOpen, setFormOpen] = useState(true);
   const [mdCopied, setMdCopied] = useState(false);
+  const [sajuCopied, setSajuCopied] = useState(false);
+  const [vedicCopied, setVedicCopied] = useState(false);
   const prevHasReportRef = useRef(false);
 
   // 분석 완료 시 드로어 자동 닫기
@@ -245,18 +247,48 @@ function App() {
                 <Pencil className="w-3 h-3" />
                 수정
               </button>
-              <button
-                onClick={async () => {
-                  const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null);
-                  await navigator.clipboard.writeText(md);
-                  setMdCopied(true);
-                  setTimeout(() => setMdCopied(false), 2500);
-                }}
-                className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all font-medium"
-              >
-                {mdCopied ? <Check className="w-3 h-3 text-green-400" /> : <ClipboardCopy className="w-3 h-3" />}
-                {mdCopied ? "복사됨!" : "전체 리포트 복사"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={async () => {
+                    const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null);
+                    await navigator.clipboard.writeText(md);
+                    setMdCopied(true);
+                    setTimeout(() => setMdCopied(false), 2500);
+                  }}
+                  className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all font-medium"
+                >
+                  {mdCopied ? <Check className="w-3 h-3 text-green-400" /> : <ClipboardCopy className="w-3 h-3" />}
+                  {mdCopied ? "복사됨!" : "전체 복사"}
+                </button>
+                {sajuReport && (
+                  <button
+                    onClick={async () => {
+                      const md = buildSajuMarkdown(sajuReport);
+                      await navigator.clipboard.writeText(md);
+                      setSajuCopied(true);
+                      setTimeout(() => setSajuCopied(false), 2500);
+                    }}
+                    className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-brand-500/20 bg-brand-500/10 hover:bg-brand-500/20 text-brand-300 transition-all font-medium"
+                  >
+                    {sajuCopied ? <Check className="w-3 h-3 text-green-400" /> : <ClipboardCopy className="w-3 h-3" />}
+                    {sajuCopied ? "사주 복사됨!" : "사주 복사"}
+                  </button>
+                )}
+                {report && (
+                  <button
+                    onClick={async () => {
+                      const md = buildVedicMarkdown(report);
+                      await navigator.clipboard.writeText(md);
+                      setVedicCopied(true);
+                      setTimeout(() => setVedicCopied(false), 2500);
+                    }}
+                    className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-celestial-purple/30 bg-celestial-purple/10 hover:bg-celestial-purple/20 text-indigo-300 transition-all font-medium"
+                  >
+                    {vedicCopied ? <Check className="w-3 h-3 text-green-400" /> : <ClipboardCopy className="w-3 h-3" />}
+                    {vedicCopied ? "베딕 복사됨!" : "베딕 복사"}
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             /* 첫 진입 CTA */
