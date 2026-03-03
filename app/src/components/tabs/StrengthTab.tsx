@@ -178,29 +178,31 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
           </div>
 
           {/* 운명 복잡도 게이지 차트 */}
-          <div className="relative h-48 bg-white/5 rounded-2xl border border-white/10 p-4 mt-6 flex flex-col justify-end overflow-hidden">
-            <div className="absolute inset-0 flex flex-col items-center justify-end pb-6 pointer-events-none">
-              <p className="text-3xl font-black text-celestial-cyan">{entropy.score?.toFixed(3) ?? "—"}</p>
-              <p className="text-xs text-white/40 tracking-wider">복잡도 게이지 (Max 4.0)</p>
+          <div className="relative h-56 bg-white/5 rounded-2xl border border-white/10 mt-6 overflow-hidden">
+            <div className="absolute inset-0 pt-6">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadialBarChart
+                  cx="50%"
+                  cy="100%"
+                  innerRadius="80%"
+                  outerRadius="100%"
+                  data={[{ name: "복잡도", value: Math.min(100, Math.max(0, (entropy.score ?? 0) * 25)) }]}
+                  startAngle={180}
+                  endAngle={0}
+                >
+                  <RadialBar
+                    dataKey="value"
+                    cornerRadius={15}
+                    fill="#06b6d4"
+                    background={{ fill: "rgba(255,255,255,0.05)" }}
+                  />
+                </RadialBarChart>
+              </ResponsiveContainer>
             </div>
-            <ResponsiveContainer width="100%" height="100%">
-              <RadialBarChart
-                cx="50%"
-                cy="90%"
-                innerRadius="80%"
-                outerRadius="120%"
-                data={[{ name: "복잡도", value: Math.min(100, Math.max(0, (entropy.score ?? 0) * 25)) }]}
-                startAngle={180}
-                endAngle={0}
-              >
-                <RadialBar
-                  dataKey="value"
-                  cornerRadius={20}
-                  fill="#06b6d4"
-                  background={{ fill: "rgba(255,255,255,0.05)" }}
-                />
-              </RadialBarChart>
-            </ResponsiveContainer>
+            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center justify-center pointer-events-none">
+              <p className="text-5xl font-black text-celestial-cyan drop-shadow-md">{entropy.score?.toFixed(3) ?? "—"}</p>
+              <p className="text-sm font-bold text-white/40 tracking-wider mt-1">복잡도 게이지 (Max 4.0)</p>
+            </div>
           </div>
         </div>
       )}
