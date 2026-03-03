@@ -15,6 +15,7 @@ use crate::analysis::{
 };
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGodAnalysis;
+use crate::engine::emulator::YearlyScore;
 use crate::engine::vm::LifeFrame;
 use serde::{Deserialize, Serialize};
 
@@ -28,6 +29,7 @@ pub struct SajuReport {
     pub major_luck: Option<MajorLuckAnalysis>,
     pub golden_time: Option<GoldenTime>,
     pub vm_summary: Option<String>,
+    pub timeline: Vec<YearlyScore>,
     pub simulation_frames: Vec<LifeFrame>,
     pub ten_gods: TenGodAnalysis,
     pub power: IntegratedAnalysis,
@@ -58,6 +60,7 @@ impl SajuReport {
             major_luck: None,
             golden_time: None,
             vm_summary: None,
+            timeline: Vec::new(),
             simulation_frames: Vec::new(),
             ten_gods,
             power,
@@ -78,6 +81,11 @@ impl SajuReport {
 
     pub fn with_vm_simulation(mut self, frames: Vec<LifeFrame>) -> Self {
         self.simulation_frames = frames;
+        self
+    }
+
+    pub fn with_timeline(mut self, timeline: Vec<YearlyScore>) -> Self {
+        self.timeline = timeline;
         self
     }
 

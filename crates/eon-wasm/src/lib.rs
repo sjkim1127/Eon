@@ -17,6 +17,7 @@ use eon_saju::analysis::periodic_luck::{MonthlyLuck, YearlyLuck};
 use eon_saju::analysis::relationships::RelationshipAnalysis;
 use eon_saju::analysis::void::VoidAnalysis;
 use eon_saju::core::pillars::{FourPillars, SajuInput};
+use eon_saju::engine::emulator::LifePathEmulator;
 use eon_saju::engine::entropy::{DestinyEntropy, EntropyAnalysis};
 use eon_saju::engine::fuzzer::DestinyFuzzer;
 use eon_saju::engine::interprocess::{CompatibilityAudit, CompatibilityAuditor};
@@ -169,24 +170,26 @@ pub fn get_saju_analysis(
     if let Ok(major_luck) =
         MajorLuckAnalysis::calculate_astro(&pillars, gender, cy, cm, cd, ch, cmin)
     {
-        let vm = SajuVM::new(pillars.clone());
-        let frames = vm.simulate_life(0, 100);
-        let golden_time = Analyzer::find_golden_time(&frames, 10);
+        let emulator = LifePathEmulator::new(pillars.clone(), gender, cy);
+        if let Ok(life_report) = emulator.emulate() {
+            let golden_time = Analyzer::find_golden_time(&life_report.frames, 10);
 
-        // 동적 엔진 계산 (시뮬레이션 기반)
-        load_diagnostics = KarmaLoadBalancer::diagnose(&frames);
+            // 동적 엔진 계산 (시뮬레이션 기반)
+            load_diagnostics = KarmaLoadBalancer::diagnose(&life_report.frames);
 
-        let vm_fuzz = SajuVM::new(pillars.clone());
-        let fuzzer = DestinyFuzzer::new(vm_fuzz);
-        let fuzzer_report = fuzzer.audit(pillars.month);
-        crash_count = fuzzer_report.total_crashes as u32;
+            let vm_fuzz = SajuVM::new(pillars.clone());
+            let fuzzer = DestinyFuzzer::new(vm_fuzz);
+            let fuzzer_report = fuzzer.audit(pillars.month);
+            crash_count = fuzzer_report.total_crashes as u32;
 
-        report = report
-            .with_major_luck(major_luck)
-            .with_vm_simulation(frames);
+            report = report
+                .with_major_luck(major_luck)
+                .with_timeline(life_report.timeline)
+                .with_vm_simulation(life_report.frames);
 
-        if let Some(gt) = golden_time {
-            report = report.with_golden_time(gt);
+            if let Some(gt) = golden_time {
+                report = report.with_golden_time(gt);
+            }
         }
     }
 
