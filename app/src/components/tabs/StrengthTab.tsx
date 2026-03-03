@@ -85,10 +85,13 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
             <div className="h-72 bg-white/5 rounded-2xl border border-white/10 p-3">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart
-                  data={topology.nodes.map((node: any) => ({
-                    element: node.element?.hangul ?? node.element,
-                    score: Math.round((node.output ?? 0) * 100),
-                  }))}
+                  data={topology.nodes.map((node: any) => {
+                    const elName = typeof node.element === "string" ? (ELEMENT_KOREAN[node.element] ?? node.element) : (node.element?.hangul ?? node.element);
+                    return {
+                      element: elName,
+                      score: Math.min(100, Math.round((node.output ?? 0) * 5)),
+                    };
+                  })}
                 >
                   <PolarGrid stroke="rgba(255,255,255,0.2)" />
                   <PolarAngleAxis dataKey="element" tick={{ fill: "rgba(255,255,255,0.75)", fontSize: 12 }} />
@@ -99,7 +102,7 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
                     stroke="rgba(255,255,255,0.2)"
                   />
                   <Tooltip
-                    formatter={(value: number) => [`${value.toFixed(0)}%`, "에너지"]}
+                    formatter={(value: number) => [`${value.toFixed(0)}`, "에너지 지수"]}
                     contentStyle={CHART_TOOLTIP_STYLE}
                   />
                   <Radar dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.45} />
@@ -109,18 +112,25 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
 
             <div className="space-y-3">
               {topology.nodes.map((node: any, i: number) => {
-                const colorClass = ELEMENT_COLORS[node.element?.english] ?? "text-white/60";
-                const pct = Math.round(node.output * 100);
+                const colorClass = ELEMENT_COLORS[typeof node.element === "string" ? node.element : node.element?.english] ?? "text-white/60";
+                const elName = typeof node.element === "string" ? (ELEMENT_KOREAN[node.element] ?? node.element) : (node.element?.hangul ?? node.element);
+                const pct = Math.min(100, Math.round((node.output ?? 0) * 5));
+
+                const isBottleneck = topology?.bottleneck && (
+                  node.element === topology.bottleneck ||
+                  (typeof node.element === "object" && node.element?.hangul && node.element.hangul === topology.bottleneck?.hangul)
+                );
+
                 return (
                   <div key={i} className={`p-4 rounded-2xl border ${colorClass}`}>
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <p className="text-xs font-bold uppercase tracking-wider">{node.element?.hangul ?? node.element}</p>
-                      <p className="text-lg font-black">{pct}%</p>
+                      <p className="text-xs font-bold tracking-wider">{elName}</p>
+                      <p className="text-lg font-black text-white">{pct}</p>
                     </div>
                     <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
                       <div className="h-full rounded-full bg-current transition-all" style={{ width: `${pct}%` }} />
                     </div>
-                    {((topology?.bottleneck && (node.element === topology.bottleneck || node.element?.hangul === topology.bottleneck?.hangul || node.element?.english === topology.bottleneck?.english))) && (
+                    {isBottleneck && (
                       <span className="mt-2 inline-block text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40">흐름이 막히거나 정체되는 기운</span>
                     )}
                   </div>
