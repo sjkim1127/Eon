@@ -90,7 +90,7 @@ impl PanchangaEngine {
             tithi_name,
             nakshatra,
             yoga,
-            karana: (karana_idx % 11) as u8 + 1, // Simplified type
+            karana: Self::get_karana_type(karana_idx),
             karana_name,
             current_time: time,
             sunrise,
@@ -274,9 +274,12 @@ impl PanchangaEngine {
         let sunrise_min = solar_noon - 4.0 * ha_deg;
         let sunset_min = solar_noon + 4.0 * ha_deg;
 
-        let base_date = date.date_naive();
-        // Assume UTC
-        let midnight = base_date.and_hms_opt(0, 0, 0).unwrap().and_utc();
+        // Use local midnight based on longitude to avoid date shift
+        // (e.g. KST 2026-03-03 08:00 = UTC 2026-03-02 23:00 → would wrongly use Mar 2 sunset)
+        let local_offset = chrono::Duration::seconds((lon * 240.0) as i64); // 1° = 4min = 240s
+        let local_date = (date + local_offset).date_naive();
+        let local_midnight = local_date.and_hms_opt(0, 0, 0).unwrap();
+        let midnight = local_midnight.and_utc() - local_offset;
 
         let rise_secs = (sunrise_min * 60.0) as i64;
         let set_secs = (sunset_min * 60.0) as i64;
@@ -324,6 +327,23 @@ impl PanchangaEngine {
             .get(tithi as usize - 1)
             .unwrap_or(&"Unknown")
             .to_string()
+    }
+
+    /// Karana type mapping (BPHS rules)
+    /// Sequential index 1-60 → Type 1-11
+    /// 1: Kimstughna (fixed, only first karana)
+    /// 2-8: Bava, Balava, Kaulava, Taitila, Gara, Vanija, Vishti (rotating, 8 cycles)
+    /// 9-11: Shakuni, Chatushpada, Naga (fixed, last 3 karanas)
+    fn get_karana_type(karana_idx: u16) -> u8 {
+        if karana_idx == 1 {
+            1 // Kimstughna (fixed)
+        } else if karana_idx >= 58 {
+            // Last 3: Shakuni(9), Chatushpada(10), Naga(11)
+            (karana_idx - 58 + 9) as u8
+        } else {
+            // Rotating 7 movable karanas: Bava(2)..Vishti(8)
+            (((karana_idx - 2) % 7) + 2) as u8
+        }
     }
 
     fn get_karana_name(idx: u16) -> String {

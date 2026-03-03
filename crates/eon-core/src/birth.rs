@@ -1,13 +1,13 @@
 //! 출생 정보 (BirthInfo) - 히스토리컬 타임존 지원
 //!
 //! 모든 운명 시스템에서 공통으로 사용되는 출생 정보입니다.
-//! IANA 타임존 데이터베이스(chrono-tz)를 활용하여 
+//! IANA 타임존 데이터베이스(chrono-tz)를 활용하여
 //! 썸머타임(DST) 등 역사적 시간대 변경을 자동으로 처리합니다.
 
+use crate::location::Location;
 use chrono::{DateTime, Datelike, Duration, NaiveDate, NaiveDateTime, TimeZone, Timelike, Utc};
 use chrono_tz::{OffsetComponents, Tz};
 use serde::{Deserialize, Serialize};
-use crate::location::Location;
 
 /// 성별
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -61,26 +61,26 @@ impl CalendarType {
 }
 
 /// 출생 정보
-/// 
+///
 /// 모든 운명 시스템(사주, 베딕, 자미두수 등)에서 공통으로 사용됩니다.
-/// 
+///
 /// ## 타임존 지원
-/// 
+///
 /// IANA 타임존 데이터베이스를 사용하여 역사적 썸머타임(DST)을 자동 처리합니다.
-/// 
+///
 /// ### 한국 썸머타임 역사
 /// - 1948-1951년: 일광절약시간 시행
 /// - 1955-1960년: 일광절약시간 시행
 /// - 1987-1988년: 서울 올림픽 전후 일광절약시간 시행
-/// 
+///
 /// ## 예시
 /// ```rust
 /// use eon_core::{BirthInfo, Location};
-/// 
+///
 /// // 1988년 올림픽 시절 (썸머타임 적용 기간)
 /// let birth = BirthInfo::solar(1988, 5, 15, 10, 0)
 ///     .with_timezone("Asia/Seoul");
-/// 
+///
 /// // chrono-tz가 자동으로 +1시간(KDT) 보정
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -132,7 +132,9 @@ impl BirthInfo {
             day,
             hour,
             minute,
-            calendar: CalendarType::Lunar { is_leap_month: is_leap },
+            calendar: CalendarType::Lunar {
+                is_leap_month: is_leap,
+            },
             location: None,
             timezone: None,
             use_true_solar_time: false,
@@ -181,31 +183,30 @@ impl BirthInfo {
     }
 
     /// 썸머타임(DST)이 적용된 UTC 시간 반환
-    /// 
+    ///
     /// IANA 타임존 데이터베이스를 사용하여 역사적 DST를 자동 처리합니다.
     pub fn to_utc(&self) -> Option<DateTime<Utc>> {
         let naive = self.local_datetime()?;
-        
-        if let Some(tz) = self.parsed_timezone() {
-            // 타임존이 설정된 경우: DST 적용
-            tz.from_local_datetime(&naive)
-                .single()
-                .map(|dt| dt.with_timezone(&Utc))
-        } else {
-            // 타임존 미설정: 단순 변환 (KST 가정)
-            let kst = chrono_tz::Asia::Seoul;
-            kst.from_local_datetime(&naive)
-                .single()
-                .map(|dt| dt.with_timezone(&Utc))
+
+        let tz = self.parsed_timezone().unwrap_or(chrono_tz::Asia::Seoul);
+        // Handle ambiguous times (DST fall-back) by picking the earlier (DST) variant
+        match tz.from_local_datetime(&naive) {
+            chrono::LocalResult::Single(dt) => Some(dt.with_timezone(&Utc)),
+            chrono::LocalResult::Ambiguous(dt1, _dt2) => Some(dt1.with_timezone(&Utc)),
+            chrono::LocalResult::None => None,
         }
     }
 
     /// 썸머타임(DST) 적용 여부 확인
     pub fn is_dst(&self) -> bool {
         if let (Some(tz), Some(naive)) = (self.parsed_timezone(), self.local_datetime()) {
-            if let Some(local_dt) = tz.from_local_datetime(&naive).single() {
-                // OffsetComponents 트레이트를 사용하여 DST 오프셋 확인
-                let dst = local_dt.offset().dst_offset();
+            let local_dt = match tz.from_local_datetime(&naive) {
+                chrono::LocalResult::Single(dt) => Some(dt),
+                chrono::LocalResult::Ambiguous(dt1, _) => Some(dt1),
+                chrono::LocalResult::None => None,
+            };
+            if let Some(dt) = local_dt {
+                let dst = dt.offset().dst_offset();
                 return dst.num_hours() > 0;
             }
         }
@@ -213,13 +214,18 @@ impl BirthInfo {
     }
 
     /// DST 오프셋 정보 반환 (시간 단위)
-    /// 
+    ///
     /// 전체 UTC 오프셋(base + dst)을 반환합니다.
     pub fn dst_offset_hours(&self) -> Option<i32> {
         if let (Some(tz), Some(naive)) = (self.parsed_timezone(), self.local_datetime()) {
-            if let Some(local_dt) = tz.from_local_datetime(&naive).single() {
-                let base = local_dt.offset().base_utc_offset();
-                let dst = local_dt.offset().dst_offset();
+            let local_dt = match tz.from_local_datetime(&naive) {
+                chrono::LocalResult::Single(dt) => Some(dt),
+                chrono::LocalResult::Ambiguous(dt1, _) => Some(dt1),
+                chrono::LocalResult::None => None,
+            };
+            if let Some(dt) = local_dt {
+                let base = dt.offset().base_utc_offset();
+                let dst = dt.offset().dst_offset();
                 return Some((base.num_hours() + dst.num_hours()) as i32);
             }
         }
@@ -229,14 +235,17 @@ impl BirthInfo {
     /// 지역시 보정값 (분 단위) - 경도 기반
     pub fn longitude_offset_minutes(&self) -> i32 {
         if self.use_true_solar_time {
-            self.location.as_ref().map(|l| l.time_offset_minutes()).unwrap_or(0)
+            self.location
+                .as_ref()
+                .map(|l| l.time_offset_minutes())
+                .unwrap_or(0)
         } else {
             0
         }
     }
 
     /// 보정된 시간 (시, 분)
-    /// 
+    ///
     /// 진태양시를 사용하는 경우, 경도 기반 보정이 적용됩니다.
     /// 주의: DST는 `to_utc()` 메서드에서 자동 처리됩니다.
     pub fn corrected_time(&self) -> (u32, u32) {
@@ -245,7 +254,8 @@ impl BirthInfo {
             return (self.hour, self.minute);
         }
 
-        let total_minutes = (self.hour as i32 * 60 + self.minute as i32 + offset).rem_euclid(24 * 60);
+        let total_minutes =
+            (self.hour as i32 * 60 + self.minute as i32 + offset).rem_euclid(24 * 60);
         let corrected_hour = (total_minutes / 60) as u32;
         let corrected_minute = (total_minutes % 60) as u32;
 
@@ -276,7 +286,7 @@ impl BirthInfo {
     }
 
     /// 사주 계산용 데이터 반환 (년, 월, 일, 시)
-    /// 
+    ///
     /// 진태양시 보정이 적용된 값을 반환합니다.
     pub fn for_saju(&self) -> (i32, u32, u32, u32) {
         let (year, month, day, hour, _) = self.corrected_datetime();
@@ -288,36 +298,43 @@ impl std::fmt::Display for BirthInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let cal = match self.calendar {
             CalendarType::Solar => "양력",
-            CalendarType::Lunar { is_leap_month: false } => "음력",
-            CalendarType::Lunar { is_leap_month: true } => "음력(윤달)",
+            CalendarType::Lunar {
+                is_leap_month: false,
+            } => "음력",
+            CalendarType::Lunar {
+                is_leap_month: true,
+            } => "음력(윤달)",
         };
-        
-        write!(f, "{} {}년 {}월 {}일 {:02}:{:02}", 
-            cal, self.year, self.month, self.day, self.hour, self.minute)?;
-        
+
+        write!(
+            f,
+            "{} {}년 {}월 {}일 {:02}:{:02}",
+            cal, self.year, self.month, self.day, self.hour, self.minute
+        )?;
+
         if let Some(ref loc) = self.location {
             write!(f, " ({})", loc.name)?;
         }
-        
+
         if let Some(ref tz) = self.timezone {
             write!(f, " [{}]", tz)?;
         }
-        
+
         if let Some(gender) = self.gender {
             write!(f, " {}", gender)?;
         }
-        
+
         if self.is_dst() {
             write!(f, " (썸머타임)")?;
         }
-        
+
         if self.use_true_solar_time {
             let offset = self.longitude_offset_minutes();
             if offset != 0 {
                 write!(f, " [지역시 {:+}분]", offset)?;
             }
         }
-        
+
         Ok(())
     }
 }
@@ -373,8 +390,7 @@ mod tests {
     #[test]
     fn test_to_utc_normal() {
         // 2004년 11월 27일 22:00 KST (썸머타임 아님)
-        let info = BirthInfo::solar(2004, 11, 27, 22, 0)
-            .with_korea_timezone();
+        let info = BirthInfo::solar(2004, 11, 27, 22, 0).with_korea_timezone();
 
         let utc = info.to_utc().unwrap();
         // KST = UTC+9, 22:00 KST = 13:00 UTC
@@ -384,13 +400,12 @@ mod tests {
     #[test]
     fn test_to_utc_with_dst_1988() {
         // 1988년 5월 15일 10:00 - 서울 올림픽 전 썸머타임 기간
-        let info = BirthInfo::solar(1988, 5, 15, 10, 0)
-            .with_korea_timezone();
+        let info = BirthInfo::solar(1988, 5, 15, 10, 0).with_korea_timezone();
 
         let utc = info.to_utc().unwrap();
         // KDT(썸머타임) = UTC+10, 10:00 KDT = 00:00 UTC
         assert_eq!(utc.hour(), 0);
-        
+
         // DST 확인
         assert!(info.is_dst());
         assert_eq!(info.dst_offset_hours(), Some(10));
@@ -399,8 +414,7 @@ mod tests {
     #[test]
     fn test_no_dst_winter() {
         // 2004년 1월 (겨울, 썸머타임 없음)
-        let info = BirthInfo::solar(2004, 1, 15, 10, 0)
-            .with_korea_timezone();
+        let info = BirthInfo::solar(2004, 1, 15, 10, 0).with_korea_timezone();
 
         assert!(!info.is_dst());
         assert_eq!(info.dst_offset_hours(), Some(9));
