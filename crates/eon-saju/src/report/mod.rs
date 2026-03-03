@@ -6,9 +6,11 @@ use crate::analysis::{
     analytics::GoldenTime,
     major_luck::MajorLuckAnalysis,
     power::{AnalysisOptions, IntegratedAnalysis},
+    relationships::RelationshipAnalysis,
     spirit_markers::SpiritMarkerAnalysis,
     strength::StrengthAnalysis,
     structure::StructureAnalysis,
+    void::VoidAnalysis,
     yongshin::YongshinAnalysis,
 };
 use crate::core::pillars::FourPillars;
@@ -29,6 +31,8 @@ pub struct SajuReport {
     pub simulation_frames: Vec<LifeFrame>,
     pub ten_gods: TenGodAnalysis,
     pub power: IntegratedAnalysis,
+    pub voids: VoidAnalysis,
+    pub relationships: RelationshipAnalysis,
 }
 
 impl SajuReport {
@@ -42,6 +46,8 @@ impl SajuReport {
             AnalysisOptions::default(),
             &crate::core::config::AnalysisConfig::default(),
         );
+        let voids = pillars.void_analysis();
+        let relationships = RelationshipAnalysis::from_pillars(&pillars);
 
         Self {
             pillars,
@@ -55,6 +61,8 @@ impl SajuReport {
             simulation_frames: Vec::new(),
             ten_gods,
             power,
+            voids,
+            relationships,
         }
     }
 

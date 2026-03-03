@@ -247,6 +247,8 @@ export interface SajuReport {
   simulation_frames: LifeFrame[];
   ten_gods: TenGodAnalysis;
   power: IntegratedAnalysis;
+  voids?: any;
+  relationships?: any;
 }
 
 /** 사주 분석 결과 최상위 래퍼 (SajuAnalysisResult Rust struct) */

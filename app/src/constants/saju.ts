@@ -97,3 +97,29 @@ export const YONGSHIN_TYPE_INFO: Record<string, string> = {
   Tonggwan: "통관용신",
   Byeongyak: "병약용신",
 };
+
+export const REL_INFO: Record<string, string> = {
+  // 천간합
+  JiaJi: "갑기합", YiGeng: "을경합", BingXin: "병신합", DingRen: "정임합", WuGui: "무계합",
+  // 천간충
+  JiaGeng: "갑경충", YiXin: "을신충", BingRen: "병임충", DingGui: "정계충",
+  // 삼합
+  YinWuXu: "인오술 삼합", ShenZiChen: "신자진 삼합", SiYouChou: "사유축 삼합", HaiMaoWei: "해묘미 삼합",
+  // 방합
+  YinMaoChen: "인묘진 방합", SiWuWei: "사오미 방합", ShenYouXu: "신유술 방합", HaiZiChou: "해자축 방합",
+  // 반합
+  YinWu: "인오반합", WuXu: "오술반합", YinXu: "인술반합",
+  ShenZi: "신자반합", ZiChen: "자진반합", ShenChen: "신진반합",
+  SiYou: "사유반합", YouChou: "유축반합", SiChou: "사축반합",
+  HaiMao: "해묘반합", MaoWei: "묘미반합", HaiWei: "해미반합",
+  // 육합
+  ZiChou: "자축합", YinHai: "인해합", MaoXu: "묘술합", ChenYou: "진유합", SiShen: "사신합", WuWei: "오미합",
+  // 지지충
+  ZiWu: "자오충", ChouWei: "축미충", YinShen: "인신충", MaoYou: "묘유충", ChenXu: "진술충", SiHai: "사해충",
+  // 지지형 (객체인 자형은 아래에서 별도 처리 필요)
+  TriplePunishment: "삼형(인사신)", MutualPunishment: "상형(축술미)",
+  // 지지파
+  ZiYou: "자유파", MaoWu: "묘오파", ChenChou: "진축파", WeiXu: "미술파",
+  // 지지해
+  ZiWei: "자미해", ChouWu: "축오해", YinSi: "인사해", MaoChen: "묘진해", ShenHai: "신해해", YouXu: "유술해",
+};

@@ -11,6 +11,7 @@ export {
   SPIRIT_INFO,
   PILLAR_POS_INFO,
   YONGSHIN_TYPE_INFO,
+  REL_INFO,
 } from "./saju";
 export {
   NAKSHATRA_DATA,
