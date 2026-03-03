@@ -147,6 +147,20 @@ export interface GoldenTime {
   description: string;
 }
 
+/** 연도별 다차원 시계열 점수 (YearlyScore Rust struct) */
+export interface YearlyScore {
+  year: number;
+  age: number;
+  total_score: number;
+  wealth_score: number;
+  career_score: number;
+  academic_score: number;
+  health_score: number;
+  volatility_index: number;
+  is_transition_period: boolean;
+  trend_ma_5yr: number | null;
+}
+
 /** 오행 에너지 레지스터 */
 export interface QiRegisters {
   r0_wood: number;
@@ -244,6 +258,7 @@ export interface SajuReport {
   major_luck: MajorLuckAnalysis | null;
   golden_time: GoldenTime | null;
   vm_summary: string | null;
+  timeline: YearlyScore[];
   simulation_frames: LifeFrame[];
   ten_gods: TenGodAnalysis;
   power: IntegratedAnalysis;

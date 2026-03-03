@@ -893,7 +893,7 @@ impl SajuVM {
     }
 
     /// 오행별 우선순위 가중치 (Thermal + Yongshin Matrix)
-    fn get_element_priority(
+    pub fn get_element_priority(
         &self,
         el: Element,
         primary: Element,

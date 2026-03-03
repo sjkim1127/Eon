@@ -4,12 +4,12 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
+  Line,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
 } from "recharts";
-import { CHART_TOOLTIP_STYLE } from "../../lib/chartTheme";
 import {
   STEM_INFO, BRANCH_INFO, ELEMENT_INFO,
   STEM_TO_ELEMENT, BRANCH_TO_ELEMENT,
@@ -455,19 +455,26 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
         </div>
       )}
 
-      {/* 인생 시뮬레이션 타임라인 */}
-      {reportData.simulation_frames && reportData.simulation_frames.length > 0 && (
+      {reportData.timeline && reportData.timeline.length > 0 && (
         <div className="glass p-8 rounded-[2rem]">
-          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-            <TrendingUp className="w-6 h-6 text-celestial-cyan" />
-            인생 흐름 그래프 (0~100세 운세 점수)
+          <h5 className="text-xl font-bold text-white mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="w-6 h-6 text-celestial-cyan" />
+              인생 흐름 그래프 (0~100세 다차원 점수)
+            </div>
           </h5>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={(reportData.simulation_frames as any[]).map((f: any) => ({
+                data={reportData.timeline.map((f: any) => ({
                   age: f.age,
-                  score: Number(f.score ?? 0),
+                  score: Number(f.total_score ?? 0),
+                  trend_ma: f.trend_ma_5yr != null ? Number(f.trend_ma_5yr) : null,
+                  wealth: Number(f.wealth_score ?? 0),
+                  career: Number(f.career_score ?? 0),
+                  academic: Number(f.academic_score ?? 0),
+                  health: Number(f.health_score ?? 0),
+                  volatility: Number(f.volatility_index ?? 0)
                 }))}
                 margin={{ top: 8, right: 12, left: 0, bottom: 8 }}
               >
@@ -494,18 +501,63 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
                   axisLine={{ stroke: "rgba(255,255,255,0.15)" }}
                 />
                 <Tooltip
-                  formatter={(value: number) => [`${value.toFixed(1)}점`, "운세 점수"]}
-                  labelFormatter={(label: number) => `${label}세`}
-                  contentStyle={CHART_TOOLTIP_STYLE}
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      const getStatusColor = (score: number) => score >= 70 ? "text-green-400" : (score >= 40 ? "text-amber-400" : "text-red-400");
+
+                      return (
+                        <div className="bg-slate-900 border border-white/20 p-4 rounded-xl shadow-xl min-w-[200px]">
+                          <p className="font-bold text-white mb-3 pb-2 border-b border-white/10 flex justify-between">
+                            <span>{label}세</span>
+                            {data.volatility >= 50 && (
+                              <span className="text-rose-400 text-xs px-2 py-0.5 rounded-full bg-rose-500/20">교운기 변동</span>
+                            )}
+                          </p>
+                          <div className="space-y-2 text-xs">
+                            <p className="flex justify-between items-center text-white/50">
+                              <span>총점 (MA):</span>
+                              <span className={`font-bold ${data.trend_ma != null ? getStatusColor(data.trend_ma) : getStatusColor(data.score)}`}>
+                                {(data.trend_ma ?? data.score).toFixed(1)}점
+                              </span>
+                            </p>
+                            <p className="flex justify-between items-center">
+                              <span className="text-amber-400">재물/사업운:</span>
+                              <span className={`font-bold ${getStatusColor(data.wealth)}`}>{data.wealth.toFixed(1)}점</span>
+                            </p>
+                            <p className="flex justify-between items-center">
+                              <span className="text-purple-400">직장/명예운:</span>
+                              <span className={`font-bold ${getStatusColor(data.career)}`}>{data.career.toFixed(1)}점</span>
+                            </p>
+                            <p className="flex justify-between items-center">
+                              <span className="text-blue-400">학업/문서운:</span>
+                              <span className={`font-bold ${getStatusColor(data.academic)}`}>{data.academic.toFixed(1)}점</span>
+                            </p>
+                            <p className="flex justify-between items-center">
+                              <span className="text-emerald-400">건강/독립운:</span>
+                              <span className={`font-bold ${getStatusColor(data.health)}`}>{data.health.toFixed(1)}점</span>
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
                 />
+                {/* 배경 면적: 평활화된 이동평균 총점 */}
                 <Area
                   type="monotone"
-                  dataKey="score"
+                  dataKey="trend_ma"
                   stroke="#06b6d4"
                   strokeWidth={2.5}
                   fill="url(#sajuScoreGradient)"
-                  activeDot={{ r: 5, stroke: "#06b6d4", strokeWidth: 2, fill: "#111827" }}
+                  activeDot={{ r: 4, stroke: "#06b6d4", strokeWidth: 2, fill: "#111827" }}
                 />
+                <Line type="monotone" dataKey="wealth" stroke="#fbbf24" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />
+                <Line type="monotone" dataKey="career" stroke="#a78bfa" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />
+                <Line type="monotone" dataKey="academic" stroke="#60a5fa" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />
+                <Line type="monotone" dataKey="health" stroke="#34d399" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />
+                <Line type="step" dataKey="volatility" stroke="#f43f5e" strokeWidth={1} strokeDasharray="3 3" dot={false} strokeOpacity={0.6} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -516,10 +568,13 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
             <span>75세</span>
             <span>100세</span>
           </div>
-          <div className="flex gap-4 mt-3 text-xs text-white/40">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />70+ 좋음</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-celestial-gold inline-block" />40~70 보통</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />~40 주의</span>
+          <div className="flex gap-4 mt-3 text-xs text-white/40 flex-wrap">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-400 inline-block" />종합(MA)</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />재물운</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-400 inline-block" />명예운</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />학업운</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />건강운</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />교운기 변동</span>
           </div>
         </div>
       )}
