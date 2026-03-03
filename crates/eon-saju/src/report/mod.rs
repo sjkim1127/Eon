@@ -3,8 +3,13 @@
 //! Aggregates various analysis results into a single structured report.
 
 use crate::analysis::{
-    analytics::GoldenTime, major_luck::MajorLuckAnalysis, spirit_markers::SpiritMarkerAnalysis,
-    strength::StrengthAnalysis, structure::StructureAnalysis, yongshin::YongshinAnalysis,
+    analytics::GoldenTime,
+    major_luck::MajorLuckAnalysis,
+    power::{AnalysisOptions, IntegratedAnalysis},
+    spirit_markers::SpiritMarkerAnalysis,
+    strength::StrengthAnalysis,
+    structure::StructureAnalysis,
+    yongshin::YongshinAnalysis,
 };
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGodAnalysis;
@@ -23,6 +28,7 @@ pub struct SajuReport {
     pub vm_summary: Option<String>,
     pub simulation_frames: Vec<LifeFrame>,
     pub ten_gods: TenGodAnalysis,
+    pub power: IntegratedAnalysis,
 }
 
 impl SajuReport {
@@ -32,6 +38,10 @@ impl SajuReport {
         let spirit_markers = pillars.spirit_markers();
         let structure = pillars.structure();
         let ten_gods = pillars.ten_gods();
+        let power = pillars.integrated_analysis(
+            AnalysisOptions::default(),
+            &crate::core::config::AnalysisConfig::default(),
+        );
 
         Self {
             pillars,
@@ -44,6 +54,7 @@ impl SajuReport {
             vm_summary: None,
             simulation_frames: Vec::new(),
             ten_gods,
+            power,
         }
     }
 

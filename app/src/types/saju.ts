@@ -218,6 +218,20 @@ export interface TenGodAnalysis {
   hour_branch: string;
 }
 
+export interface AnalysisOptions {
+  apply_transform: boolean;
+  apply_correction: boolean;
+}
+
+/** 정밀 분석 엔진 결과 (IntegratedAnalysis Rust struct) */
+export interface IntegratedAnalysis {
+  options: AnalysisOptions;
+  element_scores: [string, number, number][]; // [Element, Percentage, Score]
+  ten_god_scores: [string, number, number][]; // [TenGod, Percentage, Score]
+  dominant_element: string;
+  dominant_ten_god: string;
+}
+
 // ── 핵심 사주 리포트 ─────────────────────────
 
 /** 사주 분석 내부 리포트 (SajuReport Rust struct) */
@@ -232,6 +246,7 @@ export interface SajuReport {
   vm_summary: string | null;
   simulation_frames: LifeFrame[];
   ten_gods: TenGodAnalysis;
+  power: IntegratedAnalysis;
 }
 
 /** 사주 분석 결과 최상위 래퍼 (SajuAnalysisResult Rust struct) */
