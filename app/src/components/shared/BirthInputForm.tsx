@@ -73,7 +73,35 @@ export function BirthInputForm({
           ☀️ 서머타임 자동 적용
         </div>
       )}
-      {/* 날짜 행 */}
+      {/* 달력 구분 (양력/음력) */}
+      <div className="relative mb-3">
+        <label className="block text-xs text-white/40 mb-1.5 font-medium">달력 구분</label>
+        <select
+          value={
+            birthData.is_lunar
+              ? birthData.is_leap_month
+                ? "lunar_leap"
+                : "lunar"
+              : "solar"
+          }
+          onChange={(e) => {
+            const val = e.target.value;
+            setBirthData((prev) => ({
+              ...prev,
+              is_lunar: val === "lunar" || val === "lunar_leap",
+              is_leap_month: val === "lunar_leap",
+            }));
+          }}
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-8 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
+        >
+          <option value="solar" className="bg-gray-900">☀️ 양력 (Solar)</option>
+          <option value="lunar" className="bg-gray-900">🌙 음력 (Lunar)</option>
+          <option value="lunar_leap" className="bg-gray-900">🌙 음력 윤달 (Leap)</option>
+        </select>
+        <ChevronDown className="w-4 h-4 text-white/40 absolute right-2.5 top-9 pointer-events-none" />
+      </div>
+
+      {/* 날짜 행 (년/월/일) */}
       <div className="grid grid-cols-3 gap-3 mb-3">
         {/* 년 */}
         <div className="relative">
@@ -261,6 +289,11 @@ export function BirthInputForm({
           <span>
             위도 {birthData.lat.toFixed(2)}° / 경도 {birthData.lon.toFixed(2)}°
           </span>
+          {birthData.is_lunar && (
+            <span className="text-pink-400">
+              {birthData.is_leap_month ? "음력(윤달)" : "음력"}
+            </span>
+          )}
           {sajuReport?.corrected_time && (
             <span className="text-celestial-cyan/60">
               보정시: {sajuReport.corrected_time}
