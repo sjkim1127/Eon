@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, LayoutDashboard, Activity, Star, Zap, Sun, Heart, Menu, X } from "lucide-react";
+import { Sparkles, LayoutDashboard, Activity, Star, Zap, Sun, Heart, Menu, X, Github } from "lucide-react";
 import { cn } from "../../utils";
 import type { TabId } from "../../types";
 
@@ -82,8 +82,17 @@ export function Sidebar({ activeTab, setActiveTab, onTabHover, unknownTime }: Si
           ))}
         </div>
 
-        <div className="mt-auto pt-6 border-t border-white/5">
-          <p className="text-xs text-brand-400 font-medium">Eon v0.1.0</p>
+        <div className="mt-auto pt-6 border-t border-white/5 flex flex-col gap-2">
+          <p className="text-xs text-brand-400 font-medium tracking-wide">Eon. The Destiny Engine</p>
+          <a
+            href="https://github.com/sjkim1127"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-xs text-white/30 hover:text-white/80 transition-colors"
+          >
+            <Github className="w-3 h-3" />
+            @sjkim1127
+          </a>
         </div>
       </nav>
 
