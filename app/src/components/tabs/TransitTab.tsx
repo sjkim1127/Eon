@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Activity, Shield, AlertCircle } from "lucide-react";
+import { Activity, Shield, AlertCircle, Calendar } from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -53,6 +53,8 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
   }
   const yr = transitReport.yearly_luck;
   const mo = transitReport.monthly_luck;
+  const dl = transitReport.daily_luck;
+  const monthlyAll: any[] = transitReport.monthly_lucks ?? [];
   const frame = transitReport.current_frame;
   const nearby: any[] = transitReport.nearby_diagnostics ?? [];
   const age: number = transitReport.current_age ?? 0;
@@ -109,7 +111,67 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
             </div>
           )}
         </div>
+
+        {/* 일운 카드 */}
+        {dl && (
+          <div className="glass p-8 rounded-[2rem] border-celestial-cyan/20 bg-celestial-cyan/5">
+            <p className="text-celestial-cyan/80 text-sm font-bold uppercase tracking-wider mb-3">일운 (日運) — {dl.month}월 {dl.day}일</p>
+            <h4 className="text-4xl font-black text-white mb-3">{ganziHangul(dl.ganzi) || "—"}</h4>
+            <div className="space-y-1 text-sm text-white/60 mb-4">
+              <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[dl.stem_god]?.hangul ?? dl.stem_god ?? "—"}</span></p>
+              <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[dl.branch_god]?.hangul ?? dl.branch_god ?? "—"}</span></p>
+              {dl.twelve_stage && (
+                <p>12운성: <span className="text-celestial-cyan font-semibold">{dl.twelve_stage}</span></p>
+              )}
+            </div>
+            {dl.influence?.relations_with_natal?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {dl.influence.relations_with_natal.map((rel: string, i: number) => (
+                  <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-celestial-cyan/15 text-celestial-cyan border border-celestial-cyan/30 font-medium">{rel}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* 12개월 월운 그리드 */}
+      {monthlyAll.length > 0 && (
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <Calendar className="w-6 h-6 text-celestial-purple" />
+            {yr?.year ?? new Date().getFullYear()}년 월별 운세 한눈에 보기
+          </h5>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            {monthlyAll.map((m: any, i: number) => {
+              const isCurrent = m.month === mo?.month;
+              return (
+                <div
+                  key={i}
+                  className={`p-4 rounded-2xl border text-center transition-all ${isCurrent
+                      ? "border-celestial-purple/50 bg-celestial-purple/15 ring-2 ring-celestial-purple/40"
+                      : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+                    }`}
+                >
+                  <p className={`text-xs font-bold mb-1 ${isCurrent ? "text-celestial-purple" : "text-white/30"}`}>{m.month}월</p>
+                  <p className="text-lg font-bold text-white mb-1">{ganziHangul(m.ganzi) || "—"}</p>
+                  <div className="text-[10px] text-white/50 space-y-0.5">
+                    <p>{TENGOD_INFO[m.stem_god]?.hangul ?? m.stem_god} / {TENGOD_INFO[m.branch_god]?.hangul ?? m.branch_god}</p>
+                    {m.twelve_stage && <p className="text-celestial-cyan/70">{m.twelve_stage}</p>}
+                  </div>
+                  {m.influence?.relations_with_natal?.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-1 mt-2">
+                      {m.influence.relations_with_natal.slice(0, 2).map((rel: string, j: number) => (
+                        <span key={j} className="text-[9px] px-1.5 py-0.5 rounded-full bg-celestial-purple/10 text-celestial-purple/80 border border-celestial-purple/20">{rel}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* 현재 운세 상태 */}
       {frame && (
@@ -201,11 +263,10 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
           </h5>
           <div className="space-y-3">
             {nearby.map((d: any, i: number) => (
-              <div key={i} className={`p-4 rounded-xl border flex gap-4 items-center ${
-                d.status === "SystemDown" ? "bg-red-500/10 border-red-500/30"
-                : d.status === "Overloaded" ? "bg-orange-500/10 border-orange-500/30"
-                : "bg-white/5 border-white/10"
-              } ${d.age === age ? "ring-2 ring-celestial-purple" : ""}`}>
+              <div key={i} className={`p-4 rounded-xl border flex gap-4 items-center ${d.status === "SystemDown" ? "bg-red-500/10 border-red-500/30"
+                  : d.status === "Overloaded" ? "bg-orange-500/10 border-orange-500/30"
+                    : "bg-white/5 border-white/10"
+                } ${d.age === age ? "ring-2 ring-celestial-purple" : ""}`}>
                 <span className="text-2xl">{d.status === "SystemDown" ? "🚫" : d.status === "Overloaded" ? "🔥" : "ℹ️"}</span>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-white">

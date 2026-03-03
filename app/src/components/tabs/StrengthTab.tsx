@@ -26,6 +26,14 @@ const ELEMENT_COLORS: Record<string, string> = {
   Water: "text-blue-400  border-blue-500/30  bg-blue-500/10",
 };
 
+const ELEMENT_KOREAN: Record<string, string> = {
+  Wood: "목(木)",
+  Fire: "화(火)",
+  Earth: "토(土)",
+  Metal: "금(金)",
+  Water: "수(水)",
+};
+
 export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProps) {
   if (!sajuReport) return null;
   const entropy = sajuReport.entropy;
@@ -57,8 +65,22 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
         <div className="glass p-8 rounded-[2rem]">
           <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
             <Activity className="w-6 h-6 text-celestial-cyan" />
-            오행 에너지 균형
+            오행 기운 분포 및 에너지 흐름
           </h5>
+
+          {/* 전체 에너지 흐름 원활도 (순환 지수) */}
+          <div className="mb-6 bg-white/5 border border-white/10 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold text-white mb-1">전체 에너지 흐름 원활도 (순환 지수)</p>
+              <p className="text-xs text-white/50">사주 내 오행이 서로 상생, 상극하며 얼마나 막힘없이 원활하게 흐르는지 나타냅니다.</p>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="text-3xl font-black text-celestial-cyan">
+                {Math.round((topology.throughput ?? 0) * 100)}%
+              </span>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="h-72 bg-white/5 rounded-2xl border border-white/10 p-3">
               <ResponsiveContainer width="100%" height="100%">
@@ -98,8 +120,8 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
                     <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
                       <div className="h-full rounded-full bg-current transition-all" style={{ width: `${pct}%` }} />
                     </div>
-                    {(topology?.bottleneck?.hangul && node.element?.hangul === topology.bottleneck.hangul) && (
-                      <span className="mt-2 inline-block text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40">부족</span>
+                    {((topology?.bottleneck && (node.element === topology.bottleneck || node.element?.hangul === topology.bottleneck?.hangul || node.element?.english === topology.bottleneck?.english))) && (
+                      <span className="mt-2 inline-block text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40">흐름이 막히거나 정체되는 기운</span>
                     )}
                   </div>
                 );
@@ -126,11 +148,26 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
               <p className="text-4xl font-black text-white">{entropy.score?.toFixed(3) ?? "—"}</p>
             </div>
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">주의 포인트</p>
-              <p className={`text-4xl font-black ${crashCount > 5 ? "text-red-400" : "text-green-400"}`}>{crashCount}개</p>
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">시뮬레이션 중 위기 상황 발생 횟수</p>
+              <p className={`text-4xl font-black ${crashCount > 5 ? "text-red-400" : "text-green-400"}`}>{crashCount}번</p>
             </div>
           </div>
-          <div className="mt-6 h-44 bg-white/5 rounded-2xl border border-white/10 p-3">
+
+          <div className="mb-6 p-5 bg-white/5 border border-white/10 rounded-2xl">
+            <p className="text-sm text-white/80 leading-relaxed font-medium">
+              {entropy.description ?? "오행의 분포에 따른 삶의 복잡성을 나타냅니다."}
+            </p>
+            {entropy.unpacker_element && (
+              <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/10">
+                <span className="text-xs font-bold text-white/50">운명적 꼬임을 풀어주는 해결 열쇠 (오행):</span>
+                <span className="px-3 py-1 bg-celestial-gold/20 border border-celestial-gold/40 text-celestial-gold rounded-full text-xs font-bold">
+                  {typeof entropy.unpacker_element === 'string' ? (ELEMENT_KOREAN[entropy.unpacker_element] ?? entropy.unpacker_element) : (entropy.unpacker_element?.hangul ?? "알 수 없음")}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="h-44 bg-white/5 rounded-2xl border border-white/10 p-3">
             <ResponsiveContainer width="100%" height="100%">
               <RadialBarChart
                 innerRadius="60%"
@@ -162,18 +199,16 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
         ) : (
           <div className="space-y-3">
             {lints.map((lint: any, i: number) => (
-              <div key={i} className={`p-4 rounded-xl border flex gap-3 items-start ${
-                lint.severity === "Error"
-                  ? "bg-red-500/10 border-red-500/30"
-                  : lint.severity === "Warning"
+              <div key={i} className={`p-4 rounded-xl border flex gap-3 items-start ${lint.severity === "Error"
+                ? "bg-red-500/10 border-red-500/30"
+                : lint.severity === "Warning"
                   ? "bg-yellow-500/10 border-yellow-500/30"
                   : "bg-blue-500/10 border-blue-500/30"
-              }`}>
-                <span className={`text-xs font-black px-2 py-1 rounded shrink-0 ${
-                  lint.severity === "Error" ? "bg-red-500/30 text-red-400"
+                }`}>
+                <span className={`text-xs font-black px-2 py-1 rounded shrink-0 ${lint.severity === "Error" ? "bg-red-500/30 text-red-400"
                   : lint.severity === "Warning" ? "bg-yellow-500/30 text-yellow-400"
-                  : "bg-blue-500/30 text-blue-400"
-                }`}>{lint.severity?.toUpperCase()}</span>
+                    : "bg-blue-500/30 text-blue-400"
+                  }`}>{lint.severity?.toUpperCase()}</span>
                 <div>
                   <p className="text-sm font-bold text-white">[{lint.code}] {lint.message}</p>
                   <p className="text-xs text-white/50 mt-1">└ {lint.advice}</p>
@@ -193,11 +228,10 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
           </h5>
           <div className="space-y-3">
             {loadDiag.slice(0, 8).map((d: any, i: number) => (
-              <div key={i} className={`p-4 rounded-xl border flex gap-4 items-center ${
-                d.status === "SystemDown" ? "bg-red-500/10 border-red-500/30"
+              <div key={i} className={`p-4 rounded-xl border flex gap-4 items-center ${d.status === "SystemDown" ? "bg-red-500/10 border-red-500/30"
                 : d.status === "Overloaded" ? "bg-orange-500/10 border-orange-500/30"
-                : "bg-white/5 border-white/10"
-              }`}>
+                  : "bg-white/5 border-white/10"
+                }`}>
                 <span className="text-2xl">
                   {d.status === "SystemDown" ? "🚫" : d.status === "Overloaded" ? "🔥" : "ℹ️"}
                 </span>

@@ -36,6 +36,55 @@ export interface VedicAnalysisReport {
   yogas: Yoga[];
 }
 
+// ── 하우스 점수 (SAV / Bhava) ─────────────────────
+
+/** 사르바아슈타카바르가 (전체 하우스 점수) */
+export interface Sarvashtakavarga {
+  points: number[]; // 12개 하우스별 합산 빈두 포인트
+}
+
+/** 하우스(바바) 강점 상세 */
+export interface BhavaStrength {
+  house: number;        // 1~12
+  lord_score: number;   // 하우스 주인 행성의 힘
+  dig_score: number;    // 방위 힘 (Dig Bala)
+  drishti_score: number; // 행성 시선의 영향
+  total_score: number;
+}
+
+// ── 행성 힘 (Vimshopaka / Karakas / Aspects) ──────
+
+/** 빔쇼파카 발라 (행성 종합 힘 20점 만점) */
+export interface VimshopakaScore {
+  shadvarga_score: number;       // 6분할 기준 점수 (0~20)
+  shodashavarga_score: number;   // 16분할 기준 점수 (0~20)
+  details: [string, number][];   // [분할차트명, 점수] 쌍
+}
+
+/** 제미니 카라카 역할 */
+export type JaiminiKarakaRole =
+  | "Atmakaraka"     // 영혼
+  | "Amatyakaraka"   // 직업/대신
+  | "Bhratrukaraka"  // 형제
+  | "Matrukaraka"    // 어머니
+  | "Pitrikaraka"    // 아버지
+  | "Putrakaraka"    // 자식
+  | "Gnatikaraka"    // 경쟁자/친척
+  | "Darakaraka";    // 배우자
+
+/** 카라카 배정 결과 */
+export interface KarakaAssignment {
+  planet: string;
+  role: JaiminiKarakaRole;
+  degree_in_rasi: number;
+}
+
+/** 행성 시선(Drishti/Aspect) 관계 */
+export interface AspectRelation {
+  aspecting_planet: string;
+  aspected_houses: number[]; // 1~12
+}
+
 // ── VedicChart 원시 데이터 ────────────────────
 
 /** 판창가 (Panchanga Rust struct) */
@@ -72,12 +121,12 @@ export interface VedicPosition {
 export interface VedicChartData {
   ascendant: VedicPosition;
   planets: VedicPosition[];
-  aspects: unknown[];
-  sav: unknown;
+  aspects: AspectRelation[];
+  sav: Sarvashtakavarga;
   house_cusps: number[];
-  karakas: unknown[];
-  bhava_strengths: unknown[];
-  vimshopaka_scores: unknown[];
+  karakas: KarakaAssignment[];
+  bhava_strengths: BhavaStrength[];
+  vimshopaka_scores: [string, VimshopakaScore][];
   panchanga: VedicPanchanga;
   analysis_report: VedicAnalysisReport | null;
 }

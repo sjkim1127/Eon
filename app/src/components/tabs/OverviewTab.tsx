@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Heart, Clock, Star, Shield, Sparkles } from "lucide-react";
+import { Heart, Clock, Star, Shield, Sparkles, Eye, Users } from "lucide-react";
 import { cn } from "../../utils";
 import type { VedicAnalysisResult } from "../../types";
 
@@ -10,6 +10,7 @@ interface OverviewTabProps {
 export function OverviewTab({ report }: OverviewTabProps) {
   if (!report || !report.report) return null;
   const r = report.report;
+  const chart = report.chart;
   const qualityLabel = (quality: string) => {
     if (quality === "VeryHigh") return "최상";
     if (quality === "High") return "상";
@@ -148,9 +149,9 @@ export function OverviewTab({ report }: OverviewTabProps) {
               const weakReason = typeof yoga.quality === "object" && yoga.quality.Weak ? yoga.quality.Weak : null;
               const qColor =
                 quality === "VeryHigh" ? "text-green-400 border-green-500/30 bg-green-500/10"
-                : quality === "High" ? "text-celestial-cyan border-celestial-cyan/30 bg-celestial-cyan/10"
-                : quality === "Medium" ? "text-celestial-gold border-celestial-gold/30 bg-celestial-gold/10"
-                : "text-white/50 border-white/20 bg-white/5";
+                  : quality === "High" ? "text-celestial-cyan border-celestial-cyan/30 bg-celestial-cyan/10"
+                    : quality === "Medium" ? "text-celestial-gold border-celestial-gold/30 bg-celestial-gold/10"
+                      : "text-white/50 border-white/20 bg-white/5";
               return (
                 <div key={i} className={`p-5 rounded-2xl border ${qColor}`}>
                   <div className="flex items-start justify-between mb-2">
@@ -177,33 +178,132 @@ export function OverviewTab({ report }: OverviewTabProps) {
       <section>
         <h5 className="text-xl font-bold text-white mb-6">하우스(Bhava)별 에너지 역량</h5>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {r.house_summary.map((house: any) => (
-            <div
-              key={house.house}
-              className="glass p-6 rounded-2xl text-center glass-hover cursor-help"
-            >
-              <p className="text-xs text-white/30 font-bold mb-1">하우스 {house.house}</p>
-              <p className="text-2xl font-bold text-white mb-2">
-                {Math.round(house.total_score)}
-              </p>
-              <span
-                className={cn(
-                  "px-2 py-0.5 rounded text-[10px] font-black uppercase",
-                  house.rating === "Excellent"
-                    ? "bg-green-500/20 text-green-400"
-                    : house.rating === "Strong"
-                      ? "bg-blue-500/20 text-blue-400"
-                      : house.rating === "Average"
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : "bg-red-500/20 text-red-400"
-                )}
+          {r.house_summary.map((house: any) => {
+            const bhava = chart?.bhava_strengths?.find((b: any) => b.house === house.house);
+            return (
+              <div
+                key={house.house}
+                className="glass p-6 rounded-2xl text-center glass-hover cursor-help"
               >
-                {ratingLabel(house.rating)}
-              </span>
-            </div>
-          ))}
+                <p className="text-xs text-white/30 font-bold mb-1">하우스 {house.house}</p>
+                <p className="text-2xl font-bold text-white mb-2">
+                  {Math.round(house.total_score)}
+                </p>
+                <span
+                  className={cn(
+                    "px-2 py-0.5 rounded text-[10px] font-black uppercase",
+                    house.rating === "Excellent"
+                      ? "bg-green-500/20 text-green-400"
+                      : house.rating === "Strong"
+                        ? "bg-blue-500/20 text-blue-400"
+                        : house.rating === "Average"
+                          ? "bg-yellow-500/20 text-yellow-400"
+                          : "bg-red-500/20 text-red-400"
+                  )}
+                >
+                  {ratingLabel(house.rating)}
+                </span>
+                {bhava && (
+                  <div className="mt-3 space-y-1 text-left">
+                    {[
+                      { label: "주인 행성", value: bhava.lord_score },
+                      { label: "방위 힘", value: bhava.dig_score },
+                      { label: "시선 영향", value: bhava.drishti_score },
+                    ].map(({ label, value }) => (
+                      <div key={label}>
+                        <div className="flex justify-between text-[9px] text-white/40 mb-0.5">
+                          <span>{label}</span>
+                          <span>{(value ?? 0).toFixed(0)}</span>
+                        </div>
+                        <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-celestial-cyan/60 transition-all" style={{ width: `${Math.min(100, Math.max(0, (value ?? 0) / 60 * 100))}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
+
+      {/* 8 카라카 전체 */}
+      {chart?.karakas && chart.karakas.length > 0 && (
+        <section className="glass p-10 rounded-[2.5rem]">
+          <h5 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
+            <Users className="w-6 h-6 text-celestial-purple" />
+            제미니 카라카 — 8가지 인생 역할 배정
+          </h5>
+          <p className="text-xs text-white/40 mb-6">태양계 행성들이 당신의 인생에서 맡는 구체적인 역할입니다. 사이드리얼 도수가 높을수록 그 역할의 영향이 큽니다.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {chart.karakas.map((k: any, i: number) => {
+              const roleKr: Record<string, string> = {
+                Atmakaraka: "영혼 (나 자신)",
+                Amatyakaraka: "직업 / 재능",
+                Bhratrukaraka: "형제 / 자매",
+                Matrukaraka: "어머니 / 보호",
+                Pitrikaraka: "아버지 / 권위",
+                Putrakaraka: "자식 / 창작",
+                Gnatikaraka: "경쟁자 / 친척",
+                Darakaraka: "배우자 / 파트너",
+              };
+              const colors = [
+                "border-celestial-gold/40 bg-celestial-gold/10",
+                "border-celestial-purple/40 bg-celestial-purple/10",
+                "border-green-500/30 bg-green-500/10",
+                "border-pink-500/30 bg-pink-500/10",
+                "border-blue-500/30 bg-blue-500/10",
+                "border-orange-500/30 bg-orange-500/10",
+                "border-red-500/30 bg-red-500/10",
+                "border-celestial-cyan/30 bg-celestial-cyan/10",
+              ];
+              return (
+                <div key={i} className={`p-4 rounded-2xl border ${colors[i % colors.length]}`}>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1">{roleKr[k.role] ?? k.role}</p>
+                  <p className="text-lg font-bold text-white">{k.planet}</p>
+                  <p className="text-xs text-white/40 mt-1">{(k.degree_in_rasi ?? 0).toFixed(2)}°</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* 행성 시선(Aspects) */}
+      {chart?.aspects && chart.aspects.length > 0 && (
+        <section className="glass p-10 rounded-[2.5rem]">
+          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <Eye className="w-6 h-6 text-celestial-cyan" />
+            행성 시선 (Drishti) — 행성 간 상호 영향
+          </h5>
+          <p className="text-xs text-white/40 mb-6">각 행성이 바라보는(시선을 보내는) 하우스 번호입니다. 해당 하우스에 있는 행성이나 영역에 직접적인 영향을 미칩니다.</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">행성</th>
+                  <th className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">바라보는 하우스</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {chart.aspects.map((a: any, i: number) => (
+                  <tr key={i} className="hover:bg-white/[0.03] transition-colors">
+                    <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">{a.aspecting_planet}</td>
+                    <td className="py-2.5 pr-4">
+                      <div className="flex flex-wrap gap-1.5">
+                        {(a.aspected_houses ?? []).map((h: number) => (
+                          <span key={h} className="px-2 py-0.5 rounded-lg bg-celestial-cyan/15 border border-celestial-cyan/30 text-celestial-cyan text-xs font-mono font-bold">H{h}</span>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </motion.div>
   );
 }

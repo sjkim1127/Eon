@@ -23,12 +23,14 @@ import type {
 const DEFAULT_BIRTH: BirthData = {
   year: 1990, month: 1, day: 1, hour: 12, minute: 0,
   lat: 37.5665, lon: 126.978,
+  is_lunar: false, is_leap_month: false,
 };
 
 /** 상대방 기본 출생 데이터 */
 const DEFAULT_BIRTH2: BirthData = {
   year: 1990, month: 6, day: 15, hour: 10, minute: 0,
   lat: 37.5665, lon: 126.978,
+  is_lunar: false, is_leap_month: false,
 };
 
 const inRange = (value: number, min: number, max: number) => Number.isFinite(value) && value >= min && value <= max;
@@ -107,18 +109,31 @@ export function useAnalysis() {
     try {
       // 세 분석을 독립적으로 실행 — 하나가 실패해도 나머지 결과는 유지
       const [vedicResult, sajuResult, transitResult] = await Promise.allSettled([
-        get_vedic_analysis({ ...birthData, timezone: "Asia/Seoul" }),
+        get_vedic_analysis({
+          year: birthData.year, month: birthData.month, day: birthData.day,
+          hour: birthData.hour, minute: birthData.minute,
+          is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
+          lat: birthData.lat, lon: birthData.lon,
+          timezone: "Asia/Seoul",
+        }),
         get_saju_analysis({
-          ...birthData,
+          year: birthData.year, month: birthData.month, day: birthData.day,
+          hour: birthData.hour, minute: birthData.minute,
+          is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
           is_male: isMale,
+          lat: birthData.lat, lon: birthData.lon,
           timezone: "Asia/Seoul",
         }),
         get_transit_analysis({
-          ...birthData,
+          year: birthData.year, month: birthData.month, day: birthData.day,
+          hour: birthData.hour, minute: birthData.minute,
+          is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
           is_male: isMale,
+          lat: birthData.lat, lon: birthData.lon,
           timezone: "Asia/Seoul",
           current_year: now.getFullYear(),
           current_month: now.getMonth() + 1,
+          current_day: now.getDate(),
         }),
       ]);
 
@@ -175,18 +190,22 @@ export function useAnalysis() {
         get_saju_compatibility({
           year1: birthData.year, month1: birthData.month, day1: birthData.day,
           hour1: birthData.hour, minute1: birthData.minute,
+          is_lunar1: birthData.is_lunar ?? false, is_leap_month1: birthData.is_leap_month ?? false,
           is_male1: isMale, lon1: birthData.lon, lat1: birthData.lat,
           year2: birthData2.year, month2: birthData2.month, day2: birthData2.day,
           hour2: birthData2.hour, minute2: birthData2.minute,
+          is_lunar2: birthData2.is_lunar ?? false, is_leap_month2: birthData2.is_leap_month ?? false,
           is_male2: isMale2, lon2: birthData2.lon, lat2: birthData2.lat,
           timezone: "Asia/Seoul",
         }),
         get_vedic_compatibility({
           year1: birthData.year, month1: birthData.month, day1: birthData.day,
           hour1: birthData.hour, minute1: birthData.minute,
+          is_lunar1: birthData.is_lunar ?? false, is_leap_month1: birthData.is_leap_month ?? false,
           lat1: birthData.lat, lon1: birthData.lon,
           year2: birthData2.year, month2: birthData2.month, day2: birthData2.day,
           hour2: birthData2.hour, minute2: birthData2.minute,
+          is_lunar2: birthData2.is_lunar ?? false, is_leap_month2: birthData2.is_leap_month ?? false,
           lat2: birthData2.lat, lon2: birthData2.lon,
           timezone: "Asia/Seoul",
         }),

@@ -167,6 +167,44 @@ export interface LifeFrame {
   register_state: QiRegisters;
 }
 
+// ── 심화 분석 (고급 통계/AI/물리) ─────────────────
+
+/** 운명 복잡도 등급 */
+export type ObfuscationLevel = "단순형" | "보통형" | "복합형" | "복잡형";
+
+/** 운명 복잡도 지수 (EntropyAnalysis Rust struct) */
+export interface EntropyAnalysis {
+  score: number;
+  level: ObfuscationLevel;
+  description: string;
+  unpacker_element: string | null; // Element 변형명
+}
+
+/** 오행 위상 노드 (QiNode Rust struct) */
+export interface QiNode {
+  element: string; // Element 변형명 (또는 { english: string, hangul: string } 등)
+  capacity: number;
+  output: number;
+}
+
+/** 운명 에너지 흐름 (TopologyAnalysis Rust struct) */
+export interface TopologyAnalysis {
+  nodes: QiNode[];
+  throughput: number;
+  bottleneck: string | null; // Element 변형명
+}
+
+/** 린트 심각도 */
+export type LintSeverity = "Error" | "Warning" | "Info";
+
+/** 사주 체크업 진단 (SajuLint Rust struct) */
+export interface SajuLint {
+  code: string;
+  severity: LintSeverity;
+  message: string;
+  advice: string;
+}
+
 // ── 핵심 사주 리포트 ─────────────────────────
 
 /** 사주 분석 내부 리포트 (SajuReport Rust struct) */
@@ -188,9 +226,9 @@ export interface SajuAnalysisResult {
   is_dst: boolean;
   dst_offset_hours: number | null;
   corrected_time: string;
-  lints: unknown[];
-  entropy: unknown;
-  qi_topology: unknown;
+  lints: SajuLint[];
+  entropy: EntropyAnalysis | null;
+  qi_topology: TopologyAnalysis | null;
   load_diagnostics: LoadBalanceDiagnostic[];
   crash_count: number;
 }

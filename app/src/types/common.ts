@@ -9,6 +9,10 @@ export interface BirthData {
   lon: number;
   /** 태어난 시각을 모르는 경우. true이면 hour=12, minute=0 으로 대체하여 분석 */
   unknown_time?: boolean;
+  /** 음력 여부. 값이 참이면 음력으로 계산합니다. */
+  is_lunar?: boolean;
+  /** 윤달 여부. 음력 여부가 참일 때 이 값이 참이면 윤달로 계산합니다. */
+  is_leap_month?: boolean;
 }
 
 /** 한국 도시 */

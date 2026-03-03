@@ -1,10 +1,11 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Compass, Calendar, UserPlus, Pencil } from "lucide-react";
+import { Compass, Calendar, UserPlus, Pencil, ClipboardCopy, Check } from "lucide-react";
 
 import { useAnalysis } from "./hooks";
 import { ShootingStars, BirthDrawer, Sidebar } from "./components/shared";
+import { buildFullAnalysisMarkdown } from "./utils";
 import type { TabId } from "./types";
 
 const loadOverviewTab = () => import("./components/tabs/OverviewTab");
@@ -79,6 +80,7 @@ function App() {
 
   // 드로어 상태: 첫 로드시 자동 오픈 (온보딩)
   const [formOpen, setFormOpen] = useState(true);
+  const [mdCopied, setMdCopied] = useState(false);
   const prevHasReportRef = useRef(false);
 
   // 분석 완료 시 드로어 자동 닫기
@@ -231,6 +233,18 @@ function App() {
               >
                 <Pencil className="w-3 h-3" />
                 수정
+              </button>
+              <button
+                onClick={async () => {
+                  const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null);
+                  await navigator.clipboard.writeText(md);
+                  setMdCopied(true);
+                  setTimeout(() => setMdCopied(false), 2500);
+                }}
+                className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all font-medium"
+              >
+                {mdCopied ? <Check className="w-3 h-3 text-green-400" /> : <ClipboardCopy className="w-3 h-3" />}
+                {mdCopied ? "복사됨!" : "전체 리포트 복사"}
               </button>
             </div>
           ) : (

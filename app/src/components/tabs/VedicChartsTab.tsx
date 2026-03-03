@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Star, Copy, Check, Grid3x3 } from "lucide-react";
+import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap } from "lucide-react";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
 import { getNakshatraInfo } from "../../utils";
 import type { VedicAnalysisResult } from "../../types";
@@ -17,7 +17,7 @@ const PLANET_ABBR: Record<string, string> = {
   Jupiter: "Ju", Saturn: "Sa", Rahu: "Ra", Ketu: "Ke",
 };
 const SIGN_ABBR = ["", "Ar", "Ta", "Ge", "Cn", "Le", "Vi", "Li", "Sc", "Sg", "Cp", "Aq", "Pi"];
-const SIGN_LORDS = ["","Mars","Venus","Mercury","Moon","Sun","Mercury","Venus","Mars","Jupiter","Saturn","Saturn","Jupiter"];
+const SIGN_LORDS = ["", "Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"];
 
 function SouthIndianChart({
   lagnaRasi,
@@ -45,9 +45,8 @@ function SouthIndianChart({
           return (
             <div
               key={`${ri}-${ci}`}
-              className={`border min-h-[64px] rounded-lg p-1.5 flex flex-col ${
-                isLagna ? "border-celestial-gold/50 bg-amber-500/[0.08]" : "border-white/10 bg-white/[0.03]"
-              }`}
+              className={`border min-h-[64px] rounded-lg p-1.5 flex flex-col ${isLagna ? "border-celestial-gold/50 bg-amber-500/[0.08]" : "border-white/10 bg-white/[0.03]"
+                }`}
             >
               <div className="flex justify-between items-center mb-1">
                 <span className="text-[9px] text-white/35 font-mono">{SIGN_ABBR[signNum]}</span>
@@ -55,9 +54,8 @@ function SouthIndianChart({
               </div>
               <div className="flex flex-wrap gap-x-1 gap-y-0.5">
                 {planetList.map((p, i) => (
-                  <span key={i} className={`text-[10px] font-bold leading-none ${
-                    p === "Lg" ? "text-celestial-gold" : p.includes("\u211e") ? "text-amber-300" : "text-white/80"
-                  }`}>{p}</span>
+                  <span key={i} className={`text-[10px] font-bold leading-none ${p === "Lg" ? "text-celestial-gold" : p.includes("\u211e") ? "text-amber-300" : "text-white/80"
+                    }`}>{p}</span>
                 ))}
               </div>
             </div>
@@ -79,6 +77,8 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const planets: any[] = report.chart.planets;
   const ascendant: any = report.chart.ascendant;
   const panchanga = report.chart.panchanga;
+  const sav = report.chart.sav;
+  const vimshopaka = report.chart.vimshopaka_scores;
 
   // ── 복사 텍스트 생성 헬퍼 ──────────────────────────────────────────
   const fmtPosition = (sidereal_deg: number) => {
@@ -222,9 +222,9 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
                 const ni = getNakshatraInfo(row.sidereal_deg);
                 const purposeColor =
                   ni.purpose === "Dharma" ? "text-celestial-gold"
-                  : ni.purpose === "Artha" ? "text-green-400"
-                  : ni.purpose === "Kama" ? "text-pink-400"
-                  : "text-blue-400";
+                    : ni.purpose === "Artha" ? "text-green-400"
+                      : ni.purpose === "Kama" ? "text-pink-400"
+                        : "text-blue-400";
                 return (
                   <tr key={i} className="hover:bg-white/3 transition-colors">
                     <td className="py-3 pr-4 font-bold text-white whitespace-nowrap">
@@ -417,6 +417,84 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
           </table>
         </div>
       </div>
+
+      {/* ── SAV (Sarvashtakavarga) 12하우스 점수 ────────────── */}
+      {sav?.points && sav.points.length === 12 && (
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
+            <BarChart3 className="w-6 h-6 text-celestial-gold" />
+            SAV (사르바아슈타카바르가) — 하우스별 에너지 점수
+          </h5>
+          <p className="text-xs text-white/40 mb-6">각 하우스의 빈두 포인트 합산입니다. 28점 이상이면 강력한 하우스, 25점 미만이면 약한 하우스로 볼 수 있습니다.</p>
+          <div className="grid grid-cols-12 gap-2 items-end h-48">
+            {sav.points.map((pt: number, i: number) => {
+              const maxPt = Math.max(...sav.points, 1);
+              const pct = (pt / maxPt) * 100;
+              const isStrong = pt >= 28;
+              const isWeak = pt < 25;
+              return (
+                <div key={i} className="flex flex-col items-center gap-1 h-full justify-end">
+                  <span className={`text-[10px] font-bold ${isStrong ? 'text-green-400' : isWeak ? 'text-red-400' : 'text-white/60'}`}>{pt}</span>
+                  <div
+                    className={`w-full rounded-t-lg transition-all ${isStrong ? 'bg-green-500/60' : isWeak ? 'bg-red-500/40' : 'bg-celestial-cyan/40'}`}
+                    style={{ height: `${pct}%`, minHeight: '4px' }}
+                  />
+                  <span className="text-[9px] text-white/30 font-bold">H{i + 1}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── 빔쇼파카 발라 (행성 종합 힘) ────────────────── */}
+      {vimshopaka && vimshopaka.length > 0 && (
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
+            <Zap className="w-6 h-6 text-celestial-purple" />
+            빔쇼파카 발라 — 행성별 종합 힘 (20점 만점)
+          </h5>
+          <p className="text-xs text-white/40 mb-6">각 행성이 여러 분할 차트(D1~D60)에서 얼마나 좋은 위치에 있는지를 종합한 점수입니다. 15점 이상이면 매우 강력합니다.</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">행성</th>
+                  <th className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">6분할 점수</th>
+                  <th className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">16분할 점수</th>
+                  <th className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3">힘 그래프</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {vimshopaka.map(([planet, score]: [string, any], i: number) => {
+                  const shad = score?.shadvarga_score ?? 0;
+                  const shod = score?.shodashavarga_score ?? 0;
+                  const avg = (shad + shod) / 2;
+                  const pct = (avg / 20) * 100;
+                  return (
+                    <tr key={i} className="hover:bg-white/[0.03] transition-colors">
+                      <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">{planet}</td>
+                      <td className="py-2.5 pr-4 text-celestial-cyan font-mono">{shad.toFixed(1)}</td>
+                      <td className="py-2.5 pr-4 text-celestial-purple font-mono">{shod.toFixed(1)}</td>
+                      <td className="py-2.5 pr-4 w-48">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 bg-white/10 h-2 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${avg >= 15 ? 'bg-green-500' : avg >= 10 ? 'bg-celestial-cyan' : avg >= 5 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-white/50 font-mono w-8 text-right">{avg.toFixed(1)}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
