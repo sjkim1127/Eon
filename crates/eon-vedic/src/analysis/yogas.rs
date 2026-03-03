@@ -1034,3 +1034,130 @@ impl YogaEngine {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::calc::panchanga::Panchanga;
+    use crate::chart::VedicPosition;
+
+    fn mock_chart(planets: Vec<VedicPosition>) -> VedicChart {
+        VedicChart {
+            ascendant: mock_pos(VedicPlanet::Ketu, 1, 1),
+            planets,
+            karakas: vec![],
+            house_cusps: vec![],
+            bhava_strengths: vec![],
+            vimshopaka_scores: vec![],
+            aspects: vec![],
+            sav: crate::analysis::ashtakavarga::Sarvashtakavarga { points: [0; 12] },
+            analysis_report: None,
+            panchanga: Panchanga {
+                vara: "Sunday".to_string(),
+                tithi: 1,
+                tithi_name: "Pratipada".to_string(),
+                nakshatra: 1,
+                karana: 1,
+                karana_name: "Bava".to_string(),
+                yoga: 1,
+                day_lord: VedicPlanet::Sun,
+                hour_lord: VedicPlanet::Sun,
+                sunrise: chrono::DateTime::from_timestamp(21600, 0)
+                    .unwrap()
+                    .with_timezone(&chrono::Utc),
+                sunset: chrono::DateTime::from_timestamp(64800, 0)
+                    .unwrap()
+                    .with_timezone(&chrono::Utc),
+                next_sunrise: chrono::DateTime::from_timestamp(108000, 0)
+                    .unwrap()
+                    .with_timezone(&chrono::Utc),
+                is_day_birth: true,
+                is_night_birth: false,
+                daily_parts: [VedicPlanet::Sun; 8],
+                current_time: chrono::DateTime::from_timestamp(43200, 0)
+                    .unwrap()
+                    .with_timezone(&chrono::Utc),
+            },
+        }
+    }
+
+    fn mock_pos(planet: VedicPlanet, rasi: u8, house: u8) -> VedicPosition {
+        VedicPosition {
+            planet,
+            tropical_deg: (rasi as f64 - 1.0) * 30.0 + 15.0,
+            sidereal_deg: (rasi as f64 - 1.0) * 30.0 + 15.0,
+            nakshatra: 1,
+            pada: 1,
+            rasi,
+            house_index: house,
+            speed: 1.0,
+            is_retrograde: false,
+            is_combust: false,
+            declination: 0.0,
+            hora_rasi: rasi,
+            drekkana_rasi: rasi,
+            chaturthamsha_rasi: rasi,
+            panchamsa_rasi: rasi,
+            saptamsa_rasi: rasi,
+            ashtamsa_rasi: rasi,
+            navamsa_rasi: rasi,
+            dasamsa_rasi: rasi,
+            rudramsa_rasi: rasi,
+            dwadasamsa_rasi: rasi,
+            shodashamsa_rasi: rasi,
+            vimsamsa_rasi: rasi,
+            chaturvimshamsa_rasi: rasi,
+            saptavimsamsa_rasi: rasi,
+            trimsamsa_rasi: rasi,
+            khavedamsa_rasi: rasi,
+            akshavedamsa_rasi: rasi,
+            shashtyamsa_rasi: rasi,
+            navanavamsa_rasi: rasi,
+            ashtottaramsa_rasi: rasi,
+            dwadasdwadasamsa_rasi: rasi,
+        }
+    }
+
+    #[test]
+    fn test_neecha_bhanga_moon_kendra() {
+        // Mars debilitated in Cancer (Rasi 4), which is house 4 for Aries ascendant
+        // dispositor is Moon. Exaltation lord is Saturn.
+        // If Moon is in Kendra from Ascendant (e.g. 7th house, Libra), cancellation occurs.
+        let mars = mock_pos(VedicPlanet::Mars, 4, 4);
+        let moon = mock_pos(VedicPlanet::Moon, 7, 7); // Moon in Kendra from lagna
+
+        let chart = mock_chart(vec![mars, moon]);
+
+        let yogas = YogaEngine::check_yogas(&chart);
+        let nb_yoga = yogas.iter().find(|y| y.yoga_type == YogaType::NeechaBhanga);
+        assert!(
+            nb_yoga.is_some(),
+            "Neecha Bhanga should be detected due to Dispositor Moon in Kendra"
+        );
+
+        let nb_yoga = nb_yoga.unwrap();
+        assert!(nb_yoga.planets_involved.contains(&VedicPlanet::Mars));
+        assert!(nb_yoga.planets_involved.contains(&VedicPlanet::Moon));
+    }
+
+    #[test]
+    fn test_vipareeta_raja_yoga() {
+        // Aries Lagna.
+        // Debilitated planet usually doesn't give a strong Vipareeta Raja Yoga according to our refinement.
+        // Let's use 8th lord instead. 8th lord is Mars (Scorpio). Mars in 12th (Pisces).
+        let mars = mock_pos(VedicPlanet::Mars, 12, 12);
+
+        let chart = mock_chart(vec![mars]);
+        let yogas = YogaEngine::check_yogas(&chart);
+        let vr_yoga = yogas
+            .iter()
+            .find(|y| y.yoga_type == YogaType::VipareetaRajaYoga);
+        assert!(
+            vr_yoga.is_some(),
+            "Vipareeta Raja Yoga should be detected for 8th lord in 12th house"
+        );
+
+        let vr_yoga = vr_yoga.unwrap();
+        assert!(vr_yoga.planets_involved.contains(&VedicPlanet::Mars));
+    }
+}
