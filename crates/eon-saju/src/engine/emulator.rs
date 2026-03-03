@@ -274,10 +274,16 @@ impl LifePathEmulator {
                 (e_scores[dm_element as usize] * 0.5) + (e_scores[shik_el as usize] * 0.5);
             let health_score = (base + (health_raw * scale_factor)).clamp(0.0, 100.0);
 
+            // 통합 총점: VM 시뮬레이션 점수 + 4개 세부 점수의 균등 평균
+            let vm_score = frame.score as f64;
+            let integrated_total =
+                ((vm_score + wealth_score + career_score + academic_score + health_score) / 5.0)
+                    .clamp(0.0, 100.0);
+
             timeline.push(YearlyScore {
                 year,
                 age,
-                total_score: frame.score as f64,
+                total_score: integrated_total,
                 wealth_score,
                 career_score,
                 academic_score,
