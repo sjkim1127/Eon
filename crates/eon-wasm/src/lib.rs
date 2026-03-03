@@ -443,7 +443,7 @@ pub async fn get_vedic_compatibility(
     timezone: &str,
 ) -> Result<JsValue, JsError> {
     let calculator = VedicChartCalculator::new();
-    let mut birth1 = if is_lunar1 {
+    let birth1 = if is_lunar1 {
         BirthInfo::lunar(year1, month1, day1, hour1, minute1, is_leap_month1)
     } else {
         BirthInfo::solar(year1, month1, day1, hour1, minute1)
@@ -452,7 +452,7 @@ pub async fn get_vedic_compatibility(
         .with_timezone(timezone)
         .to_utc()
         .ok_or_else(|| JsError::new("Invalid date/time (person 1)"))?;
-    let mut birth2 = if is_lunar2 {
+    let birth2 = if is_lunar2 {
         BirthInfo::lunar(year2, month2, day2, hour2, minute2, is_leap_month2)
     } else {
         BirthInfo::solar(year2, month2, day2, hour2, minute2)

@@ -366,16 +366,18 @@ export function calc_ut(jd_ut, planet, flags) {
  * @param {number} day
  * @param {number} hour
  * @param {number} minute
+ * @param {boolean} is_lunar
+ * @param {boolean} is_leap_month
  * @param {boolean} is_male
  * @param {number} lon
  * @param {number} lat
  * @param {string} timezone
  * @returns {any}
  */
-export function get_saju_analysis(year, month, day, hour, minute, is_male, lon, lat, timezone) {
+export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, lon, lat, timezone) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_saju_analysis(year, month, day, hour, minute, is_male, lon, lat, ptr0, len0);
+    const ret = wasm.get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, lon, lat, ptr0, len0);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -389,6 +391,8 @@ export function get_saju_analysis(year, month, day, hour, minute, is_male, lon, 
  * @param {number} day1
  * @param {number} hour1
  * @param {number} minute1
+ * @param {boolean} is_lunar1
+ * @param {boolean} is_leap_month1
  * @param {boolean} is_male1
  * @param {number} lon1
  * @param {number} lat1
@@ -397,16 +401,18 @@ export function get_saju_analysis(year, month, day, hour, minute, is_male, lon, 
  * @param {number} day2
  * @param {number} hour2
  * @param {number} minute2
+ * @param {boolean} is_lunar2
+ * @param {boolean} is_leap_month2
  * @param {boolean} is_male2
  * @param {number} lon2
  * @param {number} lat2
  * @param {string} timezone
  * @returns {any}
  */
-export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_male1, lon1, lat1, year2, month2, day2, hour2, minute2, is_male2, lon2, lat2, timezone) {
+export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, timezone) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_saju_compatibility(year1, month1, day1, hour1, minute1, is_male1, lon1, lat1, year2, month2, day2, hour2, minute2, is_male2, lon2, lat2, ptr0, len0);
+    const ret = wasm.get_saju_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, ptr0, len0);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -414,24 +420,27 @@ export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_m
 }
 
 /**
- * 현재 운세(세운/월운) 분석 — WASM에서 호출 가능
+ * 현재 운세(세운/월운/일운) 분석 — WASM에서 호출 가능
  * @param {number} year
  * @param {number} month
  * @param {number} day
  * @param {number} hour
  * @param {number} minute
+ * @param {boolean} is_lunar
+ * @param {boolean} is_leap_month
  * @param {boolean} is_male
  * @param {number} lon
  * @param {number} lat
  * @param {string} timezone
  * @param {number} current_year
  * @param {number} current_month
+ * @param {number} current_day
  * @returns {any}
  */
-export function get_transit_analysis(year, month, day, hour, minute, is_male, lon, lat, timezone, current_year, current_month) {
+export function get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, lon, lat, timezone, current_year, current_month, current_day) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_transit_analysis(year, month, day, hour, minute, is_male, lon, lat, ptr0, len0, current_year, current_month);
+    const ret = wasm.get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, lon, lat, ptr0, len0, current_year, current_month, current_day);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -444,15 +453,17 @@ export function get_transit_analysis(year, month, day, hour, minute, is_male, lo
  * @param {number} day
  * @param {number} hour
  * @param {number} minute
+ * @param {boolean} is_lunar
+ * @param {boolean} is_leap_month
  * @param {number} lat
  * @param {number} lon
  * @param {string} timezone
  * @returns {Promise<any>}
  */
-export function get_vedic_analysis(year, month, day, hour, minute, lat, lon, timezone) {
+export function get_vedic_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, lat, lon, timezone) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_vedic_analysis(year, month, day, hour, minute, lat, lon, ptr0, len0);
+    const ret = wasm.get_vedic_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, lat, lon, ptr0, len0);
     return ret;
 }
 
@@ -463,6 +474,8 @@ export function get_vedic_analysis(year, month, day, hour, minute, lat, lon, tim
  * @param {number} day1
  * @param {number} hour1
  * @param {number} minute1
+ * @param {boolean} is_lunar1
+ * @param {boolean} is_leap_month1
  * @param {number} lat1
  * @param {number} lon1
  * @param {number} year2
@@ -470,15 +483,17 @@ export function get_vedic_analysis(year, month, day, hour, minute, lat, lon, tim
  * @param {number} day2
  * @param {number} hour2
  * @param {number} minute2
+ * @param {boolean} is_lunar2
+ * @param {boolean} is_leap_month2
  * @param {number} lat2
  * @param {number} lon2
  * @param {string} timezone
  * @returns {Promise<any>}
  */
-export function get_vedic_compatibility(year1, month1, day1, hour1, minute1, lat1, lon1, year2, month2, day2, hour2, minute2, lat2, lon2, timezone) {
+export function get_vedic_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, lat1, lon1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, lat2, lon2, timezone) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_vedic_compatibility(year1, month1, day1, hour1, minute1, lat1, lon1, year2, month2, day2, hour2, minute2, lat2, lon2, ptr0, len0);
+    const ret = wasm.get_vedic_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, lat1, lon1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, lat2, lon2, ptr0, len0);
     return ret;
 }
 
@@ -703,15 +718,15 @@ export function __wbindgen_cast_2241b6af4c4b2941(arg0, arg1) {
     return ret;
 };
 
-export function __wbindgen_cast_d6cd19b81560fd6e(arg0) {
-    // Cast intrinsic for `F64 -> Externref`.
-    const ret = arg0;
+export function __wbindgen_cast_b3587965ddad1edc(arg0, arg1) {
+    // Cast intrinsic for `Closure(Closure { dtor_idx: 25, function: Function { arguments: [Externref], shim_idx: 26, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h5e9e2a75c5727948, wasm_bindgen__convert__closures_____invoke__h4cd75a9079ae9638);
     return ret;
 };
 
-export function __wbindgen_cast_fc3da82b7ff1aaaf(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { dtor_idx: 28, function: Function { arguments: [Externref], shim_idx: 29, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h5e9e2a75c5727948, wasm_bindgen__convert__closures_____invoke__h4cd75a9079ae9638);
+export function __wbindgen_cast_d6cd19b81560fd6e(arg0) {
+    // Cast intrinsic for `F64 -> Externref`.
+    const ret = arg0;
     return ret;
 };
 
