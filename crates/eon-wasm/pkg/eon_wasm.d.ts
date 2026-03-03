@@ -61,7 +61,7 @@ export function get_saju_analysis(year: number, month: number, day: number, hour
 /**
  * 사주 궁합 분석 - WASM에서 호출 가능
  */
-export function get_saju_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, is_male1: boolean, lon1: number, lat1: number, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, is_male2: boolean, lon2: number, lat2: number, timezone: string): any;
+export function get_saju_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, is_male1: boolean, lon1: number, lat1: number, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, is_male2: boolean, lon2: number, lat2: number, timezone1: string, timezone2: string): any;
 
 /**
  * 현재 운세(세운/월운/일운) 분석 — WASM에서 호출 가능
@@ -73,7 +73,7 @@ export function get_vedic_analysis(year: number, month: number, day: number, hou
 /**
  * 베딕 궁합 분석 (Ashta Kuta) - WASM에서 호출 가능
  */
-export function get_vedic_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, lat1: number, lon1: number, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, lat2: number, lon2: number, timezone: string): Promise<any>;
+export function get_vedic_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, lat1: number, lon1: number, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, lat2: number, lon2: number, timezone1: string, timezone2: string): Promise<any>;
 
 export function greet(name: string): string;
 

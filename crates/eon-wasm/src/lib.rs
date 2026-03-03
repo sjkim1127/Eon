@@ -385,7 +385,8 @@ pub fn get_saju_compatibility(
     is_male2: bool,
     lon2: f64,
     lat2: f64,
-    timezone: &str,
+    timezone1: &str,
+    timezone2: &str,
 ) -> Result<JsValue, JsError> {
     let make_pillars = |y: i32,
                         mo: u32,
@@ -396,17 +397,18 @@ pub fn get_saju_compatibility(
                         leap: bool,
                         male: bool,
                         lon: f64,
-                        lat: f64|
+                        lat: f64,
+                        tz: &str|
      -> Result<FourPillars, JsError> {
         let gender = if male { Gender::Male } else { Gender::Female };
-        let location = Location::new("출생지", lat, lon, standard_meridian_from_tz(timezone));
+        let location = Location::new("출생지", lat, lon, standard_meridian_from_tz(tz));
         let mut birth_info = if lunar {
             BirthInfo::lunar(y, mo, d, h, mi, leap)
         } else {
             BirthInfo::solar(y, mo, d, h, mi)
         };
         birth_info = birth_info
-            .with_timezone(timezone)
+            .with_timezone(tz)
             .with_location(location)
             .with_true_solar_time(true)
             .with_gender(gender);
@@ -426,6 +428,7 @@ pub fn get_saju_compatibility(
         is_male1,
         lon1,
         lat1,
+        timezone1,
     )?;
     let pillars2 = make_pillars(
         year2,
@@ -438,6 +441,7 @@ pub fn get_saju_compatibility(
         is_male2,
         lon2,
         lat2,
+        timezone2,
     )?;
     let vm1 = SajuVM::new(pillars1);
     let vm2 = SajuVM::new(pillars2);
@@ -466,7 +470,8 @@ pub async fn get_vedic_compatibility(
     is_leap_month2: bool,
     lat2: f64,
     lon2: f64,
-    timezone: &str,
+    timezone1: &str,
+    timezone2: &str,
 ) -> Result<JsValue, JsError> {
     let calculator = VedicChartCalculator::new();
     let birth1 = if is_lunar1 {
@@ -475,7 +480,7 @@ pub async fn get_vedic_compatibility(
         BirthInfo::solar(year1, month1, day1, hour1, minute1)
     };
     let dt1 = birth1
-        .with_timezone(timezone)
+        .with_timezone(timezone1)
         .to_utc()
         .ok_or_else(|| JsError::new("Invalid date/time (person 1)"))?;
     let birth2 = if is_lunar2 {
@@ -484,7 +489,7 @@ pub async fn get_vedic_compatibility(
         BirthInfo::solar(year2, month2, day2, hour2, minute2)
     };
     let dt2 = birth2
-        .with_timezone(timezone)
+        .with_timezone(timezone2)
         .to_utc()
         .ok_or_else(|| JsError::new("Invalid date/time (person 2)"))?;
     let chart1 = calculator.calculate(dt1, lat1, lon1);

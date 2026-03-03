@@ -4,6 +4,7 @@ import {
   get_vedic_analysis,
   get_saju_analysis,
   get_transit_analysis,
+  get_ai_audit,
   get_saju_compatibility,
   get_vedic_compatibility,
 } from "../lib/api";
@@ -62,6 +63,7 @@ export function useAnalysis() {
   // ── 분석 결과 ──
   const [report, setReport] = useState<VedicAnalysisResult | null>(null);
   const [sajuReport, setSajuReport] = useState<SajuAnalysisResult | null>(null);
+  const [aiAuditReport, setAiAuditReport] = useState<any>(null);
   const [transitReport, setTransitReport] = useState<TransitResult | null>(null);
   const [transitError, setTransitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -108,7 +110,7 @@ export function useAnalysis() {
     setTransitError(null);
     try {
       // 세 분석을 독립적으로 실행 — 하나가 실패해도 나머지 결과는 유지
-      const [vedicResult, sajuResult, transitResult] = await Promise.allSettled([
+      const [vedicResult, sajuResult, transitResult, aiAuditResult] = await Promise.allSettled([
         get_vedic_analysis({
           year: birthData.year, month: birthData.month, day: birthData.day,
           hour: birthData.hour, minute: birthData.minute,
@@ -135,6 +137,14 @@ export function useAnalysis() {
           current_month: now.getMonth() + 1,
           current_day: now.getDate(),
         }),
+        get_ai_audit({
+          year: birthData.year, month: birthData.month, day: birthData.day,
+          hour: birthData.hour, minute: birthData.minute,
+          is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
+          is_male: isMale,
+          lat: birthData.lat, lon: birthData.lon,
+          timezone: birthData.timezone,
+        }),
       ]);
 
       if (vedicResult.status === "fulfilled") setReport(vedicResult.value);
@@ -149,6 +159,9 @@ export function useAnalysis() {
         console.error("운세 분석 실패:", transitResult.reason);
         setTransitError(errMsg);
       }
+
+      if (aiAuditResult.status === "fulfilled") setAiAuditReport(aiAuditResult.value);
+      else console.error("AI Audit 분석 실패:", aiAuditResult.reason);
 
       const allFailed = vedicResult.status === "rejected" && sajuResult.status === "rejected" && transitResult.status === "rejected";
       if (allFailed) {
@@ -196,7 +209,8 @@ export function useAnalysis() {
           hour2: birthData2.hour, minute2: birthData2.minute,
           is_lunar2: birthData2.is_lunar ?? false, is_leap_month2: birthData2.is_leap_month ?? false,
           is_male2: isMale2, lon2: birthData2.lon, lat2: birthData2.lat,
-          timezone: birthData.timezone,
+          timezone1: birthData.timezone,
+          timezone2: birthData2.timezone,
         }),
         get_vedic_compatibility({
           year1: birthData.year, month1: birthData.month, day1: birthData.day,
@@ -207,7 +221,8 @@ export function useAnalysis() {
           hour2: birthData2.hour, minute2: birthData2.minute,
           is_lunar2: birthData2.is_lunar ?? false, is_leap_month2: birthData2.is_leap_month ?? false,
           lat2: birthData2.lat, lon2: birthData2.lon,
-          timezone: birthData.timezone,
+          timezone1: birthData.timezone,
+          timezone2: birthData2.timezone,
         }),
       ]);
       setCompReport({ saju, vedic });
@@ -227,9 +242,11 @@ export function useAnalysis() {
     birthData, setBirthData,
     selectedCity, handleCityChange,
     isMale, setIsMale,
-    isDST: false, // DST is now fully computed by backend
+    isDST: sajuReport?.is_dst ?? false,
+    correctedTime: sajuReport?.corrected_time ?? null,
+    dstOffsetHours: sajuReport?.dst_offset_hours ?? null,
     // 분석 결과
-    report, sajuReport, transitReport, transitError,
+    report, sajuReport, aiAuditReport, transitReport, transitError,
     loading, runAnalysis,
     // 탭
     activeTab, setActiveTab,

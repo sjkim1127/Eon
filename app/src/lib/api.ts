@@ -127,12 +127,16 @@ export const get_saju_compatibility = async (args: {
     is_male1: boolean; lon1: number; lat1: number;
     year2: number; month2: number; day2: number; hour2: number; minute2: number;
     is_lunar2: boolean; is_leap_month2: boolean;
-    is_male2: boolean; lon2: number; lat2: number;
-    timezone: string;
+    is_male2: boolean; lat2: number;
+    lon2: number;
+    timezone1: string;
+    timezone2: string;
 }): Promise<any> => {
     if (isTauri()) {
+        console.log("Using Tauri Native Backend (Saju Compatibility)");
         return invoke("get_saju_compatibility", args);
     } else {
+        console.log("Using WASM Backend (Saju Compatibility)");
         const wasm = await getWasmModule();
         return wasm.get_saju_compatibility(
             args.year1, args.month1, args.day1, args.hour1, args.minute1,
@@ -141,7 +145,7 @@ export const get_saju_compatibility = async (args: {
             args.year2, args.month2, args.day2, args.hour2, args.minute2,
             args.is_lunar2, args.is_leap_month2,
             args.is_male2, args.lon2, args.lat2,
-            args.timezone
+            args.timezone1, args.timezone2
         );
     }
 };
@@ -149,7 +153,8 @@ export const get_saju_compatibility = async (args: {
 export const get_vedic_compatibility = async (args: {
     year1: number; month1: number; day1: number; hour1: number; minute1: number; is_lunar1: boolean; is_leap_month1: boolean; lat1: number; lon1: number;
     year2: number; month2: number; day2: number; hour2: number; minute2: number; is_lunar2: boolean; is_leap_month2: boolean; lat2: number; lon2: number;
-    timezone: string;
+    timezone1: string;
+    timezone2: string;
 }): Promise<any> => {
     if (isTauri()) {
         return invoke("get_vedic_compatibility", args);
@@ -158,7 +163,7 @@ export const get_vedic_compatibility = async (args: {
         return wasm.get_vedic_compatibility(
             args.year1, args.month1, args.day1, args.hour1, args.minute1, args.is_lunar1, args.is_leap_month1, args.lat1, args.lon1,
             args.year2, args.month2, args.day2, args.hour2, args.minute2, args.is_lunar2, args.is_leap_month2, args.lat2, args.lon2,
-            args.timezone
+            args.timezone1, args.timezone2
         );
     }
 };
