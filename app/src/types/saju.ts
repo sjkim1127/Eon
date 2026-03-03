@@ -205,6 +205,19 @@ export interface SajuLint {
   advice: string;
 }
 
+/** 십성 분석 (TenGodAnalysis Rust struct) */
+export interface TenGodAnalysis {
+  day_master: string;
+  year_stem: string;
+  month_stem: string;
+  day_stem: string;
+  hour_stem: string;
+  year_branch: string;
+  month_branch: string;
+  day_branch: string;
+  hour_branch: string;
+}
+
 // ── 핵심 사주 리포트 ─────────────────────────
 
 /** 사주 분석 내부 리포트 (SajuReport Rust struct) */
@@ -218,6 +231,7 @@ export interface SajuReport {
   golden_time: GoldenTime | null;
   vm_summary: string | null;
   simulation_frames: LifeFrame[];
+  ten_gods: TenGodAnalysis;
 }
 
 /** 사주 분석 결과 최상위 래퍼 (SajuAnalysisResult Rust struct) */
