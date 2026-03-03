@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Activity, Zap, Shield, Star, TrendingUp, AlertTriangle, Link2, CircleOff } from "lucide-react";
 import {
@@ -25,6 +26,19 @@ interface SajuTabProps {
 }
 
 export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
+  const [visibleLines, setVisibleLines] = useState({
+    trend_ma: true,
+    wealth: true,
+    career: true,
+    academic: true,
+    health: true,
+    volatility: true,
+  });
+
+  const toggleLine = (dataKey: string) => {
+    setVisibleLines(prev => ({ ...prev, [dataKey as keyof typeof prev]: !prev[dataKey as keyof typeof prev] }));
+  };
+
   if (!sajuReport || !sajuReport.report) return null;
   const reportData = sajuReport.report;
   const p = reportData.pillars;
@@ -564,19 +578,21 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
                     }}
                   />
                   {/* 배경 면적: 평활화된 이동평균 총점 */}
-                  <Area
-                    type="monotone"
-                    dataKey="trend_ma"
-                    stroke="#06b6d4"
-                    strokeWidth={2.5}
-                    fill="url(#sajuScoreGradient)"
-                    activeDot={{ r: 4, stroke: "#06b6d4", strokeWidth: 2, fill: "#111827" }}
-                  />
-                  <Line type="monotone" dataKey="wealth" stroke="#fbbf24" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />
-                  <Line type="monotone" dataKey="career" stroke="#a78bfa" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />
-                  <Line type="monotone" dataKey="academic" stroke="#60a5fa" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />
-                  <Line type="monotone" dataKey="health" stroke="#34d399" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />
-                  <Line type="step" dataKey="volatility" stroke="#f43f5e" strokeWidth={1} strokeDasharray="3 3" dot={false} strokeOpacity={0.6} />
+                  {visibleLines.trend_ma && (
+                    <Area
+                      type="monotone"
+                      dataKey="trend_ma"
+                      stroke="#06b6d4"
+                      strokeWidth={2.5}
+                      fill="url(#sajuScoreGradient)"
+                      activeDot={{ r: 4, stroke: "#06b6d4", strokeWidth: 2, fill: "#111827" }}
+                    />
+                  )}
+                  {visibleLines.wealth && <Line type="monotone" dataKey="wealth" stroke="#fbbf24" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />}
+                  {visibleLines.career && <Line type="monotone" dataKey="career" stroke="#a78bfa" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />}
+                  {visibleLines.academic && <Line type="monotone" dataKey="academic" stroke="#60a5fa" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />}
+                  {visibleLines.health && <Line type="monotone" dataKey="health" stroke="#34d399" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />}
+                  {visibleLines.volatility && <Line type="step" dataKey="volatility" stroke="#f43f5e" strokeWidth={1} strokeDasharray="3 3" dot={false} strokeOpacity={0.6} />}
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -588,12 +604,24 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
               <span>100세</span>
             </div>
             <div className="flex gap-4 mt-3 text-xs text-white/40 flex-wrap">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-400 inline-block" />종합(MA)</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />재물운</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-400 inline-block" />명예운</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />학업운</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />건강운</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />교운기 변동</span>
+              <button type="button" onClick={() => toggleLine("trend_ma")} className={`flex items-center gap-1 transition-opacity ${visibleLines.trend_ma ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
+                <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block" />종합(MA)
+              </button>
+              <button type="button" onClick={() => toggleLine("wealth")} className={`flex items-center gap-1 transition-opacity ${visibleLines.wealth ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
+                <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />재물운
+              </button>
+              <button type="button" onClick={() => toggleLine("career")} className={`flex items-center gap-1 transition-opacity ${visibleLines.career ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
+                <span className="w-2 h-2 rounded-full bg-purple-400 inline-block" />명예운
+              </button>
+              <button type="button" onClick={() => toggleLine("academic")} className={`flex items-center gap-1 transition-opacity ${visibleLines.academic ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
+                <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />학업운
+              </button>
+              <button type="button" onClick={() => toggleLine("health")} className={`flex items-center gap-1 transition-opacity ${visibleLines.health ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />건강운
+              </button>
+              <button type="button" onClick={() => toggleLine("volatility")} className={`flex items-center gap-1 transition-opacity ${visibleLines.volatility ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
+                <span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />교운기 변동
+              </button>
             </div>
           </div>
         );
