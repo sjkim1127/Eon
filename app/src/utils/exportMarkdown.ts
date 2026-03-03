@@ -1,5 +1,5 @@
 import { ganziDisplay, ganziHangul } from "./ganzi";
-import { SIGN_NAMES } from "../constants";
+import { SIGN_NAMES, VARGA_DEFS } from "../constants";
 import type { SajuAnalysisResult } from "../types";
 import type { VedicAnalysisResult } from "../types";
 
@@ -273,6 +273,29 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push(`- **일주/시주 천주**: ${pan.day_lord} / ${pan.hour_lord}`);
         lines.push(`- **출생 시간대**: ${pan.is_day_birth ? "주간" : "야간"}`);
         lines.push("");
+    }
+
+    // 상세 분할 차트 (D1 - D144)
+    if (allPos.length > 0) {
+        lines.push("## 파생 분할 차트 (Varga D-Charts)\n");
+        // D1은 이미 출력했으나 비교를 위해 포함하거나 제외할 수 있음
+        // 아래 VARGA_DEFS(e.g. D2, D9 등) 배열을 돌며 각 테이블 생성
+        for (const varga of VARGA_DEFS) {
+            lines.push(`### ${varga.label}: ${varga.name}`);
+            lines.push("| 행성 | 라시 (Sign) |");
+            lines.push("|---|---|");
+            for (const p of allPos) {
+                const name = (p as any).planet ?? "ASC";
+                const rasiIdx = (p as any)[varga.key];
+                if (rasiIdx !== undefined && rasiIdx !== null) {
+                    const rasiName = (SIGN_NAMES as any)?.[rasiIdx] ?? rasiIdx;
+                    lines.push(`| ${name} | ${rasiName} |`);
+                } else {
+                    lines.push(`| ${name} | — |`);
+                }
+            }
+            lines.push("");
+        }
     }
 
     return lines.join("\n");
