@@ -14,6 +14,8 @@ pub fn init_panic_hook() {
 use eon_saju::analysis::analytics::Analyzer;
 use eon_saju::analysis::major_luck::MajorLuckAnalysis;
 use eon_saju::analysis::periodic_luck::{MonthlyLuck, YearlyLuck};
+use eon_saju::analysis::relationships::RelationshipAnalysis;
+use eon_saju::analysis::void::VoidAnalysis;
 use eon_saju::core::pillars::{FourPillars, SajuInput};
 use eon_saju::engine::entropy::{DestinyEntropy, EntropyAnalysis};
 use eon_saju::engine::fuzzer::DestinyFuzzer;
@@ -39,6 +41,8 @@ struct SajuAnalysisResult {
     qi_topology: TopologyAnalysis,
     load_diagnostics: Vec<LoadBalanceDiagnostic>,
     crash_count: u32,
+    relationships: RelationshipAnalysis,
+    void_analysis: VoidAnalysis,
 }
 
 #[wasm_bindgen]
@@ -137,6 +141,8 @@ pub fn get_saju_analysis(
     let lints: Vec<SajuLint> = DestinyLinter::lint(&pillars);
     let entropy: EntropyAnalysis = DestinyEntropy::analyze(&pillars);
     let qi_topology: TopologyAnalysis = QiTopology::analyze(&pillars);
+    let relationships = pillars.relationships();
+    let void_analysis = pillars.void_analysis();
 
     let mut report = SajuReport::new(pillars.clone());
     let mut load_diagnostics: Vec<LoadBalanceDiagnostic> = Vec::new();
@@ -177,6 +183,8 @@ pub fn get_saju_analysis(
         qi_topology,
         load_diagnostics,
         crash_count,
+        relationships,
+        void_analysis,
     };
 
     Ok(serde_wasm_bindgen::to_value(&result)?)

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Activity, Zap, Shield, Star, TrendingUp, AlertTriangle } from "lucide-react";
+import { Activity, Zap, Shield, Star, TrendingUp, AlertTriangle, Link2, CircleOff } from "lucide-react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -64,11 +64,10 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
             { label: "월주", pillar: p?.month, isHour: false },
             { label: "년주", pillar: p?.year, isHour: false },
           ].map(({ label, pillar, isHour }) => (
-            <div key={label} className={`text-center p-4 rounded-2xl border transition-all ${
-              isHour && unknownTime
-                ? "bg-amber-500/5 border-amber-500/25"
-                : "bg-white/5 border-white/10"
-            }`}>
+            <div key={label} className={`text-center p-4 rounded-2xl border transition-all ${isHour && unknownTime
+              ? "bg-amber-500/5 border-amber-500/25"
+              : "bg-white/5 border-white/10"
+              }`}>
               <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3 flex items-center justify-center gap-1.5">
                 {label}
                 {isHour && unknownTime && (
@@ -180,6 +179,105 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
           </div>
         </div>
       )}
+
+      {/* 합충형해 (合沖刑害) 분석 */}
+      {sajuReport.relationships && (() => {
+        const rel = sajuReport.relationships;
+        type RelGroup = { label: string; color: string; items: string[] };
+        const groups: RelGroup[] = [
+          { label: "천간합", color: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30", items: (rel.stem_combinations ?? []).map((r: any) => `${r[0]?.hangul ?? r[0]} (${r[1]}-${r[2]})`) },
+          { label: "천간충", color: "text-red-400 bg-red-500/15 border-red-500/30", items: (rel.stem_clashes ?? []).map((r: any) => `${r[0]?.hangul ?? r[0]} (${r[1]}-${r[2]})`) },
+          { label: "삼합", color: "text-amber-400 bg-amber-500/15 border-amber-500/30", items: (rel.triple_combinations ?? []).map((r: any) => r?.hangul ?? JSON.stringify(r)) },
+          { label: "방합", color: "text-amber-400 bg-amber-500/15 border-amber-500/30", items: (rel.seasonal_combinations ?? []).map((r: any) => r?.hangul ?? JSON.stringify(r)) },
+          { label: "반합(진)", color: "text-yellow-400 bg-yellow-500/15 border-yellow-500/30", items: (rel.dominant_semi_combinations ?? []).map((r: any) => `${r[0]?.hangul ?? r[0]} (${r[1]}-${r[2]})`) },
+          { label: "육합", color: "text-green-400 bg-green-500/15 border-green-500/30", items: (rel.six_combinations ?? []).map((r: any) => `${r[0]?.hangul ?? r[0]} (${r[1]}-${r[2]})`) },
+          { label: "지지충", color: "text-rose-400 bg-rose-500/15 border-rose-500/30", items: (rel.branch_clashes ?? []).map((r: any) => `${r[0]?.hangul ?? r[0]} (${r[1]}-${r[2]})`) },
+          { label: "지지형", color: "text-orange-400 bg-orange-500/15 border-orange-500/30", items: (rel.branch_punishments ?? []).map((r: any) => `${r[0]?.hangul ?? r[0]} (${r[1]}-${r[2]})`) },
+          { label: "지지해", color: "text-pink-400 bg-pink-500/15 border-pink-500/30", items: (rel.branch_harms ?? []).map((r: any) => `${r[0]?.hangul ?? r[0]} (${r[1]}-${r[2]})`) },
+          { label: "지지파", color: "text-fuchsia-400 bg-fuchsia-500/15 border-fuchsia-500/30", items: (rel.branch_destructions ?? []).map((r: any) => `${r[0]?.hangul ?? r[0]} (${r[1]}-${r[2]})`) },
+          { label: "암합", color: "text-teal-400 bg-teal-500/15 border-teal-500/30", items: (rel.am_combinations ?? []).map((r: any) => `${r[0]?.combination?.hangul ?? r[0]} (${r[1]}-${r[2]})`) },
+          { label: "명암합", color: "text-cyan-400 bg-cyan-500/15 border-cyan-500/30", items: (rel.myung_am_combinations ?? []).map((r: any) => `${r[0]?.combination?.hangul ?? r[0]} (${r[1]}-${r[2]})`) },
+        ].filter(g => g.items.length > 0);
+
+        if (groups.length === 0) return null;
+        return (
+          <div className="glass p-8 rounded-[2rem]">
+            <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <Link2 className="w-6 h-6 text-emerald-400" />
+              합충형해 (合沖刑害) 분석
+            </h5>
+            <div className="space-y-4">
+              {groups.map((g) => (
+                <div key={g.label}>
+                  <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">{g.label}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {g.items.map((item: string, j: number) => (
+                      <span key={j} className={`text-xs px-3 py-1.5 rounded-full border font-semibold ${g.color}`}>
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 공망 (空亡) 분석 */}
+      {sajuReport.void_analysis && (() => {
+        const va = sajuReport.void_analysis;
+        const branches: any[] = va.void_branches ?? [];
+        const positions: string[] = va.void_positions ?? [];
+        const tenGods: any[] = va.void_ten_gods ?? [];
+        const xunGroup: string = va.xun_group ?? "";
+
+        return (
+          <div className="glass p-8 rounded-[2rem] border-violet-500/20 bg-violet-500/5">
+            <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+              <CircleOff className="w-6 h-6 text-violet-400" />
+              공망 (空亡) 분석
+            </h5>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3">공망 지지</p>
+                <div className="flex gap-3">
+                  {branches.map((b: any, i: number) => (
+                    <div key={i} className="px-5 py-3 rounded-xl bg-violet-500/15 border border-violet-500/30 text-center">
+                      <p className="text-2xl font-black text-violet-300">{b?.hanja ?? b}</p>
+                      <p className="text-xs text-violet-400/70 mt-1">{b?.hangul ?? ""}</p>
+                    </div>
+                  ))}
+                </div>
+                {xunGroup && (
+                  <p className="text-xs text-white/40 mt-3">순(旬) 그룹: <span className="text-violet-300 font-semibold">{xunGroup}</span></p>
+                )}
+              </div>
+              <div>
+                {positions.length > 0 ? (
+                  <>
+                    <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3">원국 내 공망 발생</p>
+                    <div className="space-y-2">
+                      {positions.map((pos: string, i: number) => (
+                        <div key={i} className="flex items-center gap-3 text-sm">
+                          <span className="px-2.5 py-1 rounded-lg bg-violet-500/20 border border-violet-500/30 text-violet-300 font-bold">{pos}</span>
+                          <span className="text-white/60">→</span>
+                          <span className="text-white font-semibold">{TENGOD_INFO[tenGods[i]]?.hangul ?? tenGods[i] ?? ""}</span>
+                          <span className="text-white/30 text-xs">공망</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center h-full">
+                    <p className="text-sm text-white/40">원국 내에 공망이 없습니다.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 대운 */}
       {ml && ml.cycles && (

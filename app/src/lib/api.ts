@@ -102,7 +102,6 @@ export const get_transit_analysis = async (args: {
     } else {
         console.log("Using WASM Backend (Transit)", args);
         const wasm = await getWasmModule();
-        console.log("WASM Module exports:", Object.keys(wasm));
         try {
             const result = wasm.get_transit_analysis(
                 args.year, args.month, args.day,
