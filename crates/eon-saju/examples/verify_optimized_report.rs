@@ -1,7 +1,7 @@
 use eon_core::Gender;
-use eon_saju::{FourPillars, SajuInput, SajuVM};
-use eon_saju::report::SajuReport;
 use eon_saju::analysis::analytics::Analyzer;
+use eon_saju::report::SajuReport;
+use eon_saju::{FourPillars, SajuInput, SajuVM};
 
 fn main() {
     println!("--- Saju Optimization & Report Verification ---\n");
@@ -9,7 +9,7 @@ fn main() {
     // 1. 임의의 사주 입력 (2004-10-16 음력 -> 2004-11-27 양력)
     let input = SajuInput::new_solar(2004, 11, 27, 22, 0).with_gender(Gender::Male);
     let pillars = FourPillars::calculate(&input).unwrap();
-    
+
     // 2. SajuVM 시뮬레이션 (100년)
     println!("Running 100-year simulation (Parallel)...");
     let start_sim = std::time::Instant::now();
@@ -19,12 +19,26 @@ fn main() {
     println!("Simulation done in {:?}\n", duration_sim);
 
     // 3. 골든 타임 분석
-    let golden_time = Analyzer::find_golden_time(&frames, 10);
-    
+    let timeline: Vec<eon_saju::engine::emulator::YearlyScore> = frames
+        .iter()
+        .map(|f| eon_saju::engine::emulator::YearlyScore {
+            year: 2004 + f.age as i32,
+            age: f.age,
+            total_score: f.score as f64,
+            wealth_score: 0.0,
+            career_score: 0.0,
+            academic_score: 0.0,
+            health_score: 0.0,
+            volatility_index: 0.0,
+            is_transition_period: false,
+            trend_ma_5yr: None,
+        })
+        .collect();
+    let golden_time = Analyzer::find_golden_time(&timeline, 10);
+
     // 4. 고도화된 리포트 생성
-    let mut report = SajuReport::new(pillars.clone())
-        .with_vm_simulation(frames.clone());
-    
+    let mut report = SajuReport::new(pillars.clone()).with_vm_simulation(frames.clone());
+
     if let Some(gt) = golden_time {
         report = report.with_golden_time(gt);
     }
@@ -32,12 +46,16 @@ fn main() {
     let start_md = std::time::Instant::now();
     let markdown = report.to_markdown();
     let duration_md = start_md.elapsed();
-    
+
     println!("Markdown report generated in {:?}\n", duration_md);
 
     // 5. 결과 확인 (첫 1000자 출력, 유니코드 경계 안전하게)
     println!("--- Report Preview (Snippet) ---\n");
-    let preview_end = markdown.char_indices().nth(1000).map(|(i, _)| i).unwrap_or(markdown.len());
+    let preview_end = markdown
+        .char_indices()
+        .nth(1000)
+        .map(|(i, _)| i)
+        .unwrap_or(markdown.len());
     println!("{}", &markdown[..preview_end]);
     println!("...\n");
 
