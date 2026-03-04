@@ -39,11 +39,18 @@ export interface BackendClient {
     getAiAudit(args: SajuArgs): Promise<unknown>;
 }
 
-// WASM Module Loading Cache
+// WASM Module Loading Cache — init(default) 호출 후 사용해야 __wbindgen_malloc 등 사용 가능
 let wasmPromiseCache: Promise<typeof import("eon-wasm")> | null = null;
 const getWasmModule = async () => {
     if (!wasmPromiseCache) {
-        wasmPromiseCache = import("eon-wasm");
+        wasmPromiseCache = (async () => {
+            const mod = await import("eon-wasm");
+            const init = (mod as { default?: () => Promise<unknown> }).default;
+            if (typeof init === "function") {
+                await init();
+            }
+            return mod;
+        })();
     }
     return wasmPromiseCache;
 };
