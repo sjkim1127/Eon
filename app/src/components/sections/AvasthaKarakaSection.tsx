@@ -48,7 +48,17 @@ export function AvasthaKarakaSection({ avasthas, karakas }: AvasthaKarakaSection
     const hasAvasthas = avasthas && avasthas.length > 0;
     const hasKarakas = karakas && karakas.length > 0;
 
-    if (!hasAvasthas && !hasKarakas) return null;
+    if (!hasAvasthas && !hasKarakas) {
+        return (
+            <div className="glass p-8 rounded-[2rem]">
+                <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <Users className="w-6 h-6 text-celestial-gold" />
+                    제미니 카라카 & 행성 상태
+                </h5>
+                <p className="text-white/50 text-sm">데이터를 불러올 수 없습니다. (배열이 비어있음)</p>
+            </div>
+        );
+    }
 
     return (
         <div className="glass p-8 rounded-[2rem]">

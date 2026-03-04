@@ -15,7 +15,17 @@ interface GocharaSectionProps {
 }
 
 export function GocharaSection({ summary }: GocharaSectionProps) {
-    if (!summary || !summary.transits || summary.transits.length === 0) return null;
+    if (!summary || !summary.transits || summary.transits.length === 0) {
+        return (
+            <div className="glass p-8 rounded-[2rem]">
+                <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <Globe className="w-6 h-6 text-celestial-cyan" />
+                    고차라 트랜싯 (Gochara)
+                </h5>
+                <p className="text-white/50 text-sm">데이터를 불러올 수 없습니다. (데이터 없음)</p>
+            </div>
+        );
+    }
 
     return (
         <div className="glass p-8 rounded-[2rem]">
