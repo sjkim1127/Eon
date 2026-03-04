@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Activity, Shield, AlertCircle, Calendar } from "lucide-react";
+import { Activity, Shield, AlertCircle, Calendar, CloudLightning, CloudRain, Cloud, CloudSun, Sun } from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -70,9 +70,67 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
       exit={{ opacity: 0, y: -20 }}
       className="space-y-8"
     >
-      {/* 세운 / 월운 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="glass p-8 rounded-[2rem]">
+      {/* ── 운세 기상도 (Weather Forecast) ────────────────────── */}
+      {frame && (
+        <div className="glass p-8 rounded-[2rem] bg-gradient-to-br from-white/5 to-black/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+            {(frame.score ?? 0) >= 80 ? <Sun className="w-48 h-48" />
+              : (frame.score ?? 0) >= 60 ? <CloudSun className="w-48 h-48" />
+                : (frame.score ?? 0) >= 40 ? <Cloud className="w-48 h-48" />
+                  : (frame.score ?? 0) >= 20 ? <CloudRain className="w-48 h-48" />
+                    : <CloudLightning className="w-48 h-48" />
+            }
+          </div>
+
+          <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center md:items-start">
+            <div className="text-center md:text-left">
+              <p className="text-xs text-brand-300 font-bold uppercase tracking-wider mb-2">현재 운세 기상도</p>
+              <div className="flex items-center gap-4 mb-4 justify-center md:justify-start">
+                {(frame.score ?? 0) >= 80 ? <Sun className="w-12 h-12 text-yellow-400" />
+                  : (frame.score ?? 0) >= 60 ? <CloudSun className="w-12 h-12 text-orange-300" />
+                    : (frame.score ?? 0) >= 40 ? <Cloud className="w-12 h-12 text-gray-300" />
+                      : (frame.score ?? 0) >= 20 ? <CloudRain className="w-12 h-12 text-blue-400" />
+                        : <CloudLightning className="w-12 h-12 text-purple-400" />
+                }
+                <div>
+                  <h3 className="text-3xl font-black text-white">
+                    {(frame.score ?? 0) >= 80 ? "맑고 화창함 (매우 긍정적)"
+                      : (frame.score ?? 0) >= 60 ? "가끔 구름 (순조로움)"
+                        : (frame.score ?? 0) >= 40 ? "흐림 (무난함 / 정체기)"
+                          : (frame.score ?? 0) >= 20 ? "비 (주의 및 대비 필요)"
+                            : "뇌우 (변화와 시련기)"
+                    }
+                  </h3>
+                  <p className="text-white/60 text-sm mt-1">
+                    운세 점수: <span className={`font-bold ${scoreColor(frame.score ?? 0)}`}>{frame.score?.toFixed(1) ?? "—"}</span> / 100
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-2">
+                {(frame.tags ?? []).map((tag: string, i: number) => (
+                  <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-white/90 border border-white/20 font-medium">{tag}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="md:ml-auto flex gap-4 text-center">
+              <div className="p-4 bg-black/30 rounded-2xl border border-white/10 min-w-[100px]">
+                <p className="text-xs text-white/40 mb-1">현재 나이</p>
+                <p className="text-2xl font-bold text-white">{age}세</p>
+              </div>
+              <div className="p-4 bg-black/30 rounded-2xl border border-white/10 min-w-[100px]">
+                <p className="text-xs text-white/40 mb-1">현재 간지</p>
+                <p className="text-2xl font-bold text-white">{ganziDisplay(frame.ganzi) || "—"}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 세운 / 월운 / 일운 카드 (가로 스크롤 또는 그리드로 재배치) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="glass p-6 md:p-8 rounded-[2rem]">
           <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-3">세운 (年運) — {yr?.year}년</p>
           <h4 className="text-4xl font-black text-celestial-gold mb-3">{ganziHangul(yr?.ganzi) || "—"}</h4>
           <div className="space-y-1 text-sm text-white/60 mb-4">
@@ -93,7 +151,7 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
             </div>
           )}
         </div>
-        <div className="glass p-8 rounded-[2rem] border-celestial-purple/20 bg-celestial-purple/5">
+        <div className="glass p-6 md:p-8 rounded-[2rem] border-celestial-purple/20 bg-celestial-purple/5">
           <p className="text-celestial-purple/80 text-sm font-bold uppercase tracking-wider mb-3">월운 (月運) — {mo?.month}월</p>
           <h4 className="text-4xl font-black text-white mb-3">{ganziHangul(mo?.ganzi) || "—"}</h4>
           <div className="space-y-1 text-sm text-white/60 mb-4">
@@ -114,7 +172,7 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
 
         {/* 일운 카드 */}
         {dl && (
-          <div className="glass p-8 rounded-[2rem] border-celestial-cyan/20 bg-celestial-cyan/5">
+          <div className="glass p-6 md:p-8 rounded-[2rem] border-celestial-cyan/20 bg-celestial-cyan/5">
             <p className="text-celestial-cyan/80 text-sm font-bold uppercase tracking-wider mb-3">일운 (日運) — {dl.month}월 {dl.day}일</p>
             <h4 className="text-4xl font-black text-white mb-3">{ganziHangul(dl.ganzi) || "—"}</h4>
             <div className="space-y-1 text-sm text-white/60 mb-4">
@@ -149,8 +207,8 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
                 <div
                   key={i}
                   className={`p-4 rounded-2xl border text-center transition-all ${isCurrent
-                      ? "border-celestial-purple/50 bg-celestial-purple/15 ring-2 ring-celestial-purple/40"
-                      : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
+                    ? "border-celestial-purple/50 bg-celestial-purple/15 ring-2 ring-celestial-purple/40"
+                    : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
                     }`}
                 >
                   <p className={`text-xs font-bold mb-1 ${isCurrent ? "text-celestial-purple" : "text-white/30"}`}>{m.month}월</p>
@@ -261,23 +319,54 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
             <Shield className="w-6 h-6 text-brand-400" />
             전후 운세 부하 ({age - 3}~{age + 5}세)
           </h5>
-          <div className="space-y-3">
-            {nearby.map((d: any, i: number) => (
-              <div key={i} className={`p-4 rounded-xl border flex gap-4 items-center ${d.status === "SystemDown" ? "bg-red-500/10 border-red-500/30"
-                  : d.status === "Overloaded" ? "bg-orange-500/10 border-orange-500/30"
-                    : "bg-white/5 border-white/10"
-                } ${d.age === age ? "ring-2 ring-celestial-purple" : ""}`}>
-                <span className="text-2xl">{d.status === "SystemDown" ? "🚫" : d.status === "Overloaded" ? "🔥" : "ℹ️"}</span>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-white">
-                    {d.age === age && <span className="text-celestial-purple mr-1">[현재]</span>}
-                    [{d.age}세] {d.reason}
-                  </p>
-                  <p className="text-xs text-white/50 mt-0.5">▶ {d.strategy}</p>
+          <div className="relative pl-6 space-y-8 before:absolute before:inset-y-0 before:left-[11px] before:w-px before:bg-white/10">
+            {nearby.map((d: any, i: number) => {
+              const isDanger = d.status === "SystemDown";
+              const isWarning = d.status === "Overloaded";
+              const isCurrent = d.age === age;
+
+              const nodeColor = isDanger ? "bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]"
+                : isWarning ? "bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.5)]"
+                  : isCurrent ? "bg-celestial-purple shadow-[0_0_12px_rgba(168,85,247,0.5)]"
+                    : "bg-white/40";
+              const borderColor = isDanger ? "border-red-500/30" : isWarning ? "border-orange-500/30" : isCurrent ? "border-celestial-purple/50" : "border-white/10";
+              const bgColor = isDanger ? "bg-red-500/5 hover:bg-red-500/10" : isWarning ? "bg-orange-500/5 hover:bg-orange-500/10" : isCurrent ? "bg-celestial-purple/10 hover:bg-celestial-purple/15" : "bg-white/5 hover:bg-white/[0.07]";
+
+              return (
+                <div key={i} className="relative group transition-all">
+                  {/* Timeline Node */}
+                  <div className={`absolute -left-[30px] top-6 w-[10px] h-[10px] rounded-full ${nodeColor} ring-4 ring-black/50 transition-transform group-hover:scale-125 z-10`} />
+
+                  {/* Content Card */}
+                  <div className={`p-5 rounded-2xl border backdrop-blur-sm transition-all duration-300 ${bgColor} ${borderColor} ${isCurrent ? 'scale-[1.02] shadow-lg shadow-celestial-purple/5' : ''}`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl drop-shadow-sm">{isDanger ? "🚫" : isWarning ? "🔥" : isCurrent ? "🎯" : "ℹ️"}</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h6 className="text-base font-bold text-white tracking-tight">
+                              [{d.age}세] {d.reason}
+                            </h6>
+                            {isCurrent && <span className="text-[10px] px-2 py-0.5 rounded-full bg-celestial-purple text-white font-bold animate-pulse">현재</span>}
+                          </div>
+                          <p className="text-xs text-white/50 font-medium mt-0.5">
+                            상태: <span className={isDanger ? "text-red-400" : isWarning ? "text-orange-400" : "text-white/70"}>
+                              {isDanger ? "위험 (System Down)" : isWarning ? "주의 (Overloaded)" : "안정적 (Normal)"}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pl-9 box-border">
+                      <p className="text-sm text-white/80 leading-relaxed bg-black/20 p-3 rounded-xl border border-white/5">
+                        <span className="text-celestial-cyan font-bold mr-2">▶ 전략:</span>
+                        {d.strategy}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-xs text-white/30 shrink-0">{d.status === "SystemDown" ? "위험" : d.status === "Overloaded" ? "주의" : "안정"}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

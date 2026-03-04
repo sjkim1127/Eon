@@ -77,6 +77,13 @@ export const get_saju_analysis = async (args: {
             args.lon, args.lat,
             args.timezone
         );
+        // 디버그: 원시 result 전체 구조 점검
+        console.log("[WASM DEBUG] result type:", typeof result);
+        console.log("[WASM DEBUG] result keys:", Object.keys(result));
+        console.log("[WASM DEBUG] timeline_json exists:", "timeline_json" in result);
+        console.log("[WASM DEBUG] timeline_json value:", result.timeline_json);
+        console.log("[WASM DEBUG] report type:", typeof result.report);
+        console.log("[WASM DEBUG] report.timeline:", result.report?.timeline);
         // serde_wasm_bindgen workaround: timeline_json → report.timeline
         if (result.timeline_json && result.report) {
             try {

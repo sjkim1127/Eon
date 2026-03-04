@@ -174,7 +174,7 @@ pub fn get_saju_analysis(
     {
         let emulator = LifePathEmulator::new(pillars.clone(), gender, cy);
         if let Ok(life_report) = emulator.emulate() {
-            let golden_time = Analyzer::find_golden_time(&life_report.frames, 10);
+            let golden_time = Analyzer::find_golden_time(&life_report.timeline, 10);
 
             // 동적 엔진 계산 (시뮬레이션 기반)
             load_diagnostics = KarmaLoadBalancer::diagnose(&life_report.frames);

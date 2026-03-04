@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap } from "lucide-react";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
 import { getNakshatraInfo } from "../../utils";
-import type { VedicAnalysisResult } from "../../types";
+import type { VedicAnalysisResult, Yoga } from "../../types";
 
 // ── 남인도 차트 상수 ────────────────────────────────────────────────────
 const SOUTH_GRID: (number | null)[][] = [
@@ -19,12 +19,18 @@ const PLANET_ABBR: Record<string, string> = {
 const SIGN_ABBR = ["", "Ar", "Ta", "Ge", "Cn", "Le", "Vi", "Li", "Sc", "Sg", "Cp", "Aq", "Pi"];
 const SIGN_LORDS = ["", "Mars", "Venus", "Mercury", "Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Saturn", "Jupiter"];
 
+function formatDeg(deg?: number) {
+  if (deg === undefined) return "";
+  const d = ((deg % 360) + 360) % 360;
+  return `${Math.floor(d % 30)}°`;
+}
+
 function SouthIndianChart({
   lagnaRasi,
   planetEntries,
 }: {
   lagnaRasi: number;
-  planetEntries: { name: string; rasi: number; retro: boolean }[];
+  planetEntries: { name: string; rasi: number; retro: boolean; deg?: number }[];
 }) {
   const bySign: Record<number, string[]> = {};
   if (!bySign[lagnaRasi]) bySign[lagnaRasi] = [];
@@ -40,8 +46,11 @@ function SouthIndianChart({
         row.map((signNum, ci) => {
           if (signNum === null) return <div key={`${ri}-${ci}`} className="aspect-square" />;
           const houseNum = ((signNum - lagnaRasi + 12) % 12) + 1;
-          const planetList = bySign[signNum] ?? [];
           const isLagna = signNum === lagnaRasi;
+
+          // Get the actual planet objects for this sign to show degrees
+          const planetsInSign = planetEntries.filter(p => p.rasi === signNum);
+          const hasLg = isLagna;
           return (
             <div
               key={`${ri}-${ci}`}
@@ -52,16 +61,133 @@ function SouthIndianChart({
                 <span className="text-[9px] text-white/35 font-mono">{SIGN_ABBR[signNum]}</span>
                 <span className="text-[9px] text-white/25 font-bold">{houseNum}</span>
               </div>
-              <div className="flex flex-wrap gap-x-1 gap-y-0.5">
-                {planetList.map((p, i) => (
-                  <span key={i} className={`text-[10px] font-bold leading-none ${p === "Lg" ? "text-celestial-gold" : p.includes("\u211e") ? "text-amber-300" : "text-white/80"
-                    }`}>{p}</span>
-                ))}
+              <div className="flex flex-col gap-0.5 mt-1">
+                {hasLg && (
+                  <span className="text-[10px] font-bold leading-none text-celestial-gold">Lg</span>
+                )}
+                {planetsInSign.map((p, i) => {
+                  const abbr = PLANET_ABBR[p.name] ?? p.name.substring(0, 2);
+                  const isRetro = p.retro;
+                  return (
+                    <div key={i} className="flex items-center gap-1">
+                      <span className={`text-[10px] font-bold leading-none ${isRetro ? "text-amber-300" : "text-white/80"}`}>
+                        {abbr}{isRetro && "℞"}
+                      </span>
+                      {p.deg !== undefined && (
+                        <span className="text-[8px] text-white/40 leading-none">{formatDeg(p.deg)}</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
         })
       )}
+    </div>
+  );
+}
+
+const NORTH_HOUSE_CENTERS = [
+  null,
+  { x: 200, y: 90 },  // H1
+  { x: 90, y: 50 },   // H2
+  { x: 50, y: 90 },   // H3
+  { x: 90, y: 200 },  // H4
+  { x: 50, y: 310 },  // H5
+  { x: 90, y: 350 },  // H6
+  { x: 200, y: 310 }, // H7
+  { x: 310, y: 350 }, // H8
+  { x: 350, y: 310 }, // H9
+  { x: 310, y: 200 }, // H10
+  { x: 350, y: 90 },  // H11
+  { x: 310, y: 50 },  // H12
+];
+
+const NORTH_SIGN_POS = [
+  null,
+  { x: 195, y: 175 }, // H1 bottom
+  { x: 170, y: 25 },  // H2 
+  { x: 25, y: 170 },  // H3 
+  { x: 175, y: 195 }, // H4 right
+  { x: 25, y: 235 },  // H5 
+  { x: 170, y: 385 }, // H6 
+  { x: 195, y: 235 }, // H7 top
+  { x: 240, y: 385 }, // H8 
+  { x: 385, y: 235 }, // H9 
+  { x: 235, y: 195 }, // H10 left
+  { x: 385, y: 170 }, // H11
+  { x: 240, y: 25 },  // H12
+];
+
+function NorthIndianChart({
+  lagnaRasi,
+  planetEntries,
+}: {
+  lagnaRasi: number;
+  planetEntries: { name: string; rasi: number; retro: boolean; deg?: number }[];
+}) {
+  const byHouse: Record<number, typeof planetEntries> = {};
+  for (const p of planetEntries) {
+    const houseNum = ((p.rasi - lagnaRasi + 12) % 12) + 1;
+    if (!byHouse[houseNum]) byHouse[houseNum] = [];
+    byHouse[houseNum].push(p);
+  }
+
+  return (
+    <div className="relative w-full max-w-[280px] shrink-0 aspect-square">
+      <svg viewBox="0 0 400 400" className="w-full h-full overflow-hidden rounded-lg bg-white/[0.02] border border-white/10">
+        <g stroke="rgba(255,255,255,0.15)" strokeWidth="2" fill="none">
+          <rect x="0" y="0" width="400" height="400" />
+          <line x1="0" y1="0" x2="400" y2="400" />
+          <line x1="400" y1="0" x2="0" y2="400" />
+          <line x1="200" y1="0" x2="400" y2="200" />
+          <line x1="400" y1="200" x2="200" y2="400" />
+          <line x1="200" y1="400" x2="0" y2="200" />
+          <line x1="0" y1="200" x2="200" y2="0" />
+        </g>
+
+        {/* Draw contents for all 12 houses */}
+        {NORTH_HOUSE_CENTERS.slice(1).map((center, index) => {
+          if (!center) return null;
+          const houseNum = index + 1;
+          const signNum = ((lagnaRasi + houseNum - 2) % 12) + 1;
+          const pList = byHouse[houseNum] || [];
+          const isLagna = houseNum === 1;
+          const signPos = NORTH_SIGN_POS[houseNum] || { x: center.x, y: center.y };
+
+          return (
+            <g key={`h${houseNum}`}>
+              {/* Sign Number */}
+              <text x={signPos.x} y={signPos.y} fill="rgba(255,255,255,0.3)" fontSize="14" fontWeight="bold">
+                {signNum}
+              </text>
+
+              {/* Planets */}
+              <foreignObject x={center.x - 45} y={center.y - 40} width="90" height="80">
+                <div className="w-full h-full flex flex-col items-center justify-center pointer-events-none">
+                  <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
+                    {isLagna && <span className="text-[11px] font-bold text-celestial-gold">Lg</span>}
+                    {pList.map((p, i) => {
+                      const abbr = PLANET_ABBR[p.name] ?? p.name.substring(0, 2);
+                      return (
+                        <div key={i} className="flex items-center gap-1">
+                          <span className={`text-[11px] font-bold leading-none ${p.retro ? "text-amber-300" : "text-white/80"}`}>
+                            {abbr}{p.retro && "℞"}
+                          </span>
+                          {p.deg !== undefined && (
+                            <span className="text-[9px] text-white/40 leading-none">{formatDeg(p.deg)}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </foreignObject>
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }
@@ -73,6 +199,7 @@ interface VedicChartsTabProps {
 export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const [copied, setCopied] = useState(false);
   const [selectedVargaId, setSelectedVargaId] = useState<string>("navamsa");
+  const [chartStyle, setChartStyle] = useState<"south" | "north">("south");
 
   if (!report || !report.chart || !report.chart.planets) return null;
   const planets: any[] = report.chart.planets;
@@ -80,6 +207,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const panchanga = report.chart.panchanga;
   const sav = report.chart.sav;
   const vimshopaka = report.chart.vimshopaka_scores;
+  const yogas: Yoga[] = report.report?.yogas ?? [];
 
   // ── 복사 텍스트 생성 헬퍼 ──────────────────────────────────────────
   const fmtPosition = (sidereal_deg: number) => {
@@ -193,6 +321,61 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
         </div>
       )}
 
+      {/* ── 요가 (Yogas) 하이라이트 ────────────────────────────────────────── */}
+      {yogas.length > 0 && (
+        <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
+          {yogas.map((yoga: Yoga, idx: number) => {
+            const isVeryHigh = yoga.quality === "VeryHigh";
+            const isHigh = yoga.quality === "High";
+            const isMedium = yoga.quality === "Medium";
+            const isWeak = typeof yoga.quality === 'object' && 'Weak' in yoga.quality;
+
+            let colorCls = "border-white/10 bg-white/5 text-white/70";
+            let qualityLabel = isWeak ? "약함" : "알 수 없음";
+            let badgeCls = "bg-white/10 text-white/50";
+
+            if (isVeryHigh) {
+              colorCls = "border-celestial-gold/40 bg-celestial-gold/5 text-celestial-gold";
+              qualityLabel = "매우 강함";
+              badgeCls = "bg-celestial-gold/20 text-celestial-gold";
+            } else if (isHigh) {
+              colorCls = "border-celestial-cyan/40 bg-celestial-cyan/5 text-celestial-cyan";
+              qualityLabel = "강함";
+              badgeCls = "bg-celestial-cyan/20 text-celestial-cyan";
+            } else if (isMedium) {
+              colorCls = "border-blue-400/40 bg-blue-400/5 text-blue-300";
+              qualityLabel = "보통";
+              badgeCls = "bg-blue-400/20 text-blue-300";
+            }
+
+            return (
+              <div
+                key={idx}
+                className={`min-w-[280px] max-w-[320px] snap-center shrink-0 p-5 rounded-2xl border backdrop-blur-sm ${colorCls} transition-all hover:scale-[1.02]`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h6 className="font-bold text-lg leading-tight tracking-tight drop-shadow-sm">{yoga.name}</h6>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeCls}`}>
+                    {qualityLabel}
+                  </span>
+                </div>
+                <p className="text-xs font-semibold opacity-80 mb-3">{yoga.yoga_type}</p>
+                <p className="text-sm opacity-90 leading-relaxed break-keep line-clamp-3 mb-4 flex-1">
+                  {yoga.description}
+                </p>
+                <div className="mt-auto flex flex-wrap gap-1.5">
+                  {yoga.planets_involved.map((p: string) => (
+                    <span key={p} className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/30 border border-white/5 opacity-80">
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* ── D1 낙샤트라 상세 테이블 ─────────────────────────────────── */}
       <div className="glass p-8 rounded-[2rem]">
         <div className="flex items-center justify-between mb-6">
@@ -263,6 +446,20 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
                 <Grid3x3 className="w-6 h-6 text-celestial-cyan" />
                 분할 차트 (Varga Charts)
               </h5>
+              <div className="flex bg-black/40 border border-white/20 rounded-xl overflow-hidden p-0.5">
+                <button
+                  onClick={() => setChartStyle("south")}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${chartStyle === "south" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+                >
+                  남인도 스타일
+                </button>
+                <button
+                  onClick={() => setChartStyle("north")}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${chartStyle === "north" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+                >
+                  북인도 스타일
+                </button>
+              </div>
               <select
                 value={selectedVargaId}
                 onChange={(e) => setSelectedVargaId(e.target.value)}
@@ -281,10 +478,17 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
               <span className="text-white/30">황금 테두리 = 현재 차트 라그나 · 오른쪽 숫자 = 하우스 번호</span>
             </p>
             <div className="flex flex-col md:flex-row gap-8 items-start">
-              <SouthIndianChart
-                lagnaRasi={ascendant?.[vargaDef.key] ?? 1}
-                planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p[vargaDef.key], retro: p.is_retrograde }))}
-              />
+              {chartStyle === "south" ? (
+                <SouthIndianChart
+                  lagnaRasi={ascendant?.[vargaDef.key] ?? 1}
+                  planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p[vargaDef.key], retro: p.is_retrograde, deg: p.sidereal_deg }))}
+                />
+              ) : (
+                <NorthIndianChart
+                  lagnaRasi={ascendant?.[vargaDef.key] ?? 1}
+                  planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p[vargaDef.key], retro: p.is_retrograde, deg: p.sidereal_deg }))}
+                />
+              )}
               <div className="flex-1 overflow-x-auto w-full">
                 <table className="w-full text-sm">
                   <thead>

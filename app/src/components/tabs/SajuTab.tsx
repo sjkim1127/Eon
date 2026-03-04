@@ -74,7 +74,7 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
           <Activity className="w-6 h-6 text-celestial-gold" />
           사주팔자 (四柱八字)
         </h5>
-        <div className={`grid gap-4 ${unknownTime ? "grid-cols-3" : "grid-cols-4"}`}>
+        <div className={`grid gap-2 md:gap-4 ${unknownTime ? "grid-cols-3" : "grid-cols-4"}`}>
           {[
             { label: "시주", pillar: p?.hour, isHour: true, tStem: t?.hour_stem, tBranch: t?.hour_branch },
             { label: "일주", pillar: p?.day, isHour: false, tStem: t?.day_stem, tBranch: t?.day_branch },
@@ -97,7 +97,7 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
                     <p className="text-[11px] text-white/50 mb-1.5 font-semibold">
                       {TENGOD_INFO[tStem]?.hangul || tStem || "—"}
                     </p>
-                    <p className="text-3xl font-black text-celestial-gold mb-1.5 leading-none">
+                    <p className="text-2xl sm:text-3xl font-black text-celestial-gold mb-1.5 leading-none">
                       {STEM_INFO[pillar?.stem]?.hanja || "—"}
                     </p>
                     <p className="text-xs text-white/80 flex items-center justify-center gap-1">
@@ -110,7 +110,7 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
 
                   {/* 지지 영역 */}
                   <div className="flex-1 flex flex-col justify-center py-2 relative group mt-1">
-                    <p className="text-3xl font-black text-celestial-cyan mb-1.5 leading-none">
+                    <p className="text-2xl sm:text-3xl font-black text-celestial-cyan mb-1.5 leading-none">
                       {BRANCH_INFO[pillar?.branch]?.hanja || "—"}
                     </p>
                     <p className="text-xs text-white/80 flex items-center justify-center gap-1 mb-1.5">
