@@ -32,4 +32,5 @@ export type TabId =
   | "vedic_charts"
   | "strength"
   | "transit"
-  | "compatibility";
+  | "compatibility"
+  | "ai_audit";

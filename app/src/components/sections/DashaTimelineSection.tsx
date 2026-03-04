@@ -45,6 +45,7 @@ interface DashaTimelineSectionProps {
 
 export function DashaTimelineSection({ periods }: DashaTimelineSectionProps) {
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+    const [now] = useState(() => Date.now());
 
     if (!periods || periods.length === 0) return null;
 
@@ -52,7 +53,6 @@ export function DashaTimelineSection({ periods }: DashaTimelineSectionProps) {
     const totalYears = periods.reduce((sum, p) => sum + yearsBetween(p.start_time, p.end_time), 0);
 
     // Find current Mahadasha
-    const now = Date.now();
     const currentIdx = periods.findIndex(p => {
         const s = new Date(p.start_time).getTime();
         const e = new Date(p.end_time).getTime();

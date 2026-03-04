@@ -36,6 +36,7 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
   if (!sajuReport) return null;
   const entropy = sajuReport.entropy;
   const topology = sajuReport.qi_topology;
+  const complexity = sajuReport.complexity;
   const lints: any[] = sajuReport.lints ?? [];
   const loadDiag: any[] = sajuReport.load_diagnostics ?? [];
   const crashCount: number = sajuReport.crash_count ?? 0;
@@ -217,6 +218,40 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
               </div>
             );
           })()}
+        </div>
+      )}
+
+      {/* 운명 Cyclomatic Complexity (결정 분기 복잡도) */}
+      {complexity && (
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <Activity className="w-6 h-6 text-celestial-cyan" />
+            운명 Cyclomatic Complexity (결정 분기 복잡도)
+          </h5>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">복잡도 M</p>
+              <p className="text-4xl font-black text-celestial-cyan">{complexity.cyclomatic_complexity}</p>
+              <p className="text-[10px] text-white/40 mt-1">Decision Points + 1</p>
+            </div>
+            <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">안정성 등급</p>
+              <p className="text-lg font-black text-white leading-tight">{complexity.stability_grade}</p>
+            </div>
+            <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">유지보수 엔트로피</p>
+              <p className="text-4xl font-black text-white">{complexity.entropy?.toFixed(2) ?? "—"}</p>
+            </div>
+          </div>
+          {complexity.decision_nodes && complexity.decision_nodes.length > 0 && (
+            <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/10">
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">주요 분기점 (나이)</p>
+              <p className="text-sm text-white/80 font-mono">
+                {complexity.decision_nodes.slice(0, 20).join("세, ")}
+                {complexity.decision_nodes.length > 20 ? ` ... 외 ${complexity.decision_nodes.length - 20}개` : "세"}
+              </p>
+            </div>
+          )}
         </div>
       )}
 

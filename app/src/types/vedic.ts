@@ -145,6 +145,7 @@ export interface VedicChartData {
 export interface VedicAnalysisResult {
   report: VedicAnalysisReport;
   chart: VedicChartData;
+  gochara?: GocharaSummary;
 }
 
 /** 낙샤트라 원시 데이터 */
@@ -204,5 +205,4 @@ export interface TransitPosition {
 /** 고차라 요약 (GocharaSummary Rust struct) */
 export interface GocharaSummary {
   transits: TransitPosition[];
-  sade_sati: "None" | "Rising" | "Peak" | "Setting";
 }
