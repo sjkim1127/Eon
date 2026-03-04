@@ -9,10 +9,48 @@ import { formatSiderealPosition, buildNakshatraMarkdownRows } from "./vedicForma
 
 const SEP = "\n---\n";
 
-const fmtIsoShort = (iso: string | null | undefined) => {
+/** ISO 8601 → "YYYY년 MM월" (다샤 타임라인용) */
+const fmtYearMonth = (iso: string | null | undefined): string => {
     if (!iso) return "—";
-    return iso.replace("T", " ").replace("Z", " UTC");
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso.slice(0, 10);
+    return `${d.getUTCFullYear()}년 ${String(d.getUTCMonth() + 1).padStart(2, "0")}월`;
 };
+
+/**
+ * 백엔드 Varga 낙샤트라 데이터가 없을 때 프론트엔드에서 근사 계산합니다.
+ * 공식: sidereal_deg × divisionCount mod 360 → 낙샤트라 위치
+ * 정밀도는 Swiss Ephemeris 수준이 아니지만 참고 값으로 활용합니다.
+ */
+function computeFrontendVargaRows(
+    allPos: Array<{ planet?: string; sidereal_deg?: number; is_retrograde?: boolean; is_combust?: boolean; [key: string]: unknown }>,
+    divisionCount: number,
+) {
+    return allPos.map(p => {
+        const name = (p.planet as string) ?? "ASC";
+        const rawDeg = (p.sidereal_deg ?? 0) * divisionCount;
+        const vargaDeg = ((rawDeg % 360) + 360) % 360;
+        const ni = getNakshatraInfo(vargaDeg);
+        // 분할 차트 사인/하우스는 라시 인덱스(0-based)로 계산
+        const signIdx = Math.floor(vargaDeg / 30) + 1;
+        return {
+            planet: name,
+            position_str: formatSiderealPosition(vargaDeg),
+            sign: signIdx,
+            house: 0,
+            nakshatra: ni.pada,
+            nakshatra_name: ni.name,
+            pada: ni.pada,
+            pada_range: ni.range,
+            nakshatra_lord: ni.lord,
+            pada_lord: ni.padaLord,
+            deity: ni.deity,
+            purpose: ni.purpose,
+            is_retrograde: !!p.is_retrograde,
+            is_combust: !!p.is_combust,
+        };
+    });
+}
 
 // ── 사주 섹션 ────────────────────────────────────────
 
@@ -322,13 +360,17 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     lines.push(`- **전체 차트 강도**: ${Math.round(r.overall_strength_score)}/600`);
     lines.push("");
 
-    // 다샤 타임라인
+    // 다샤 타임라인 — 마하다샤 + 안타르다샤 2단계
     if (Array.isArray(r.dasha_timeline) && r.dasha_timeline.length > 0) {
-        lines.push("## 다샤 타임라인 (삶의 시기 구분)\n");
-        lines.push("| 주인(Planet) | 시작 | 종료 | 하위 기간 수 |");
-        lines.push("|---|---|---|---:|");
-        for (const d of r.dasha_timeline) {
-            lines.push(`| ${d.lord} | ${fmtIsoShort(d.start_time)} | ${fmtIsoShort(d.end_time)} | ${(d.sub_dashas ?? []).length} |`);
+        lines.push("## 다샤 타임라인 (Vimshottari Dasha — 마하다샤 & 안타르다샤)\n");
+        lines.push("> 다샤는 달(Moon)의 낙샤트라 위치를 기준으로 산출하는 베딕 시간 주기입니다.\n");
+        lines.push("| 구분 | 행성 (Planet) | 시작 | 종료 |");
+        lines.push("|---|---|---|---|");
+        for (const maha of r.dasha_timeline) {
+            lines.push(`| **Mahadasha** | **${maha.lord}** | ${fmtYearMonth(maha.start_time)} | ${fmtYearMonth(maha.end_time)} |`);
+            for (const antar of maha.sub_dashas ?? []) {
+                lines.push(`| └ Antardasha | ${antar.lord} | ${fmtYearMonth(antar.start_time)} | ${fmtYearMonth(antar.end_time)} |`);
+            }
         }
         lines.push("");
     }
@@ -421,38 +463,30 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("");
     }
 
-    // 행성 위치 — D1 낙샤트라 전체 리포트
-    lines.push("## D1 낙샤트라 리포트 (전체 행성)\n");
-    lines.push("> D1 낙샤트라는 본 차트 기준입니다.\n");
+    // ── 낙샤트라 리포트 D1~D144 통합 섹션 ──
+    lines.push("## 낙샤트라 리포트 (D1~D144 전체)\n");
+    lines.push("> 컬럼: 행성 | 위치(사이드리얼) | 사인 | 하우스 | 낙샤트라(파다) | 파다 범위 | 낙샤트라 로드 | 파다 로드 | 신(Deity) | 목적(Purpose)\n");
+    lines.push("> D1은 본 차트 기준, D2 이상은 해당 분할 좌표 기준입니다. (※ 백엔드 미제공 차트는 프론트엔드 근사값)\n");
     const allPos = [...(c?.planets ?? []), ...(c?.ascendant ? [c.ascendant] : [])];
-    const d1Report = v.varga_nakshatra_reports?.reports?.["rasi"];
-    if (d1Report?.rows?.length) {
-        // 백엔드 데이터 우선 사용 (Rust 계산과 완전 일치)
-        const mdRows = buildNakshatraMarkdownRows(d1Report.rows, false);
-        for (const row of mdRows) lines.push(row);
-    } else {
-        // 폴백: 프론트엔드 계산 (Swiss Ephemeris 정밀도 없음)
-        const rows = allPos.map(p => {
-            const name = p.planet ?? "ASC";
-            const ni = getNakshatraInfo(p.sidereal_deg ?? 0);
-            return {
-                planet: name,
-                position_str: formatSiderealPosition(p.sidereal_deg ?? 0),
-                nakshatra_name: ni.name,
-                pada: ni.pada,
-                pada_range: ni.range,
-                nakshatra_lord: ni.lord,
-                pada_lord: ni.padaLord,
-                deity: ni.deity,
-                purpose: ni.purpose,
-                is_retrograde: p.is_retrograde,
-                is_combust: p.is_combust,
-            };
-        });
-        const mdRows = buildNakshatraMarkdownRows(rows, false);
-        for (const row of mdRows) lines.push(row);
+    const vargaReportsMap = v.varga_nakshatra_reports?.reports;
+    for (const vargaDef of VARGA_DEFS) {
+        const rep = vargaReportsMap?.[vargaDef.id];
+        if (rep?.rows?.length) {
+            // 백엔드 Rust 계산 우선
+            const lagna = rep.lagna_rasi ? ` (라그나: ${SIGN_NAMES[rep.lagna_rasi] ?? rep.lagna_rasi})` : "";
+            lines.push(`### ${rep.varga_label} · ${vargaDef.name}${lagna}`);
+            const showHouse = vargaDef.id !== "rasi";
+            const mdRows = buildNakshatraMarkdownRows(rep.rows, showHouse);
+            for (const row of mdRows) lines.push(row);
+        } else {
+            // 프론트엔드 근사 계산 폴백
+            lines.push(`### ${vargaDef.label} · ${vargaDef.name} *(근사값)*`);
+            const rows = computeFrontendVargaRows(allPos, vargaDef.divisionCount);
+            const mdRows = buildNakshatraMarkdownRows(rows, vargaDef.id !== "rasi");
+            for (const row of mdRows) lines.push(row);
+        }
+        lines.push("");
     }
-    lines.push("");
 
     // 고차라(Gochara) 트랜싯
     if (v.gochara?.transits?.length) {
@@ -477,41 +511,6 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push(`- **일주/시주 천주**: ${pan.day_lord} / ${pan.hour_lord}`);
         lines.push(`- **출생 시간대**: ${pan.is_day_birth ? "주간" : "야간"}`);
         lines.push("");
-    }
-
-    // 분할 차트 낙샤트라 리포트 (D-Charts)
-    lines.push("## 분할 차트 낙샤트라 리포트 (Varga D-Charts)\n");
-    lines.push("> 분할 차트 낙샤트라는 해당 분할 좌표 기준입니다.\n");
-    const vargaReportsMap = v.varga_nakshatra_reports?.reports;
-    if (vargaReportsMap && Object.keys(vargaReportsMap).length > 0) {
-        // 백엔드 Varga 낙샤트라 리포트 — 전체 8(+사인·하우스) 컬럼
-        for (const vargaDef of VARGA_DEFS) {
-            const rep = vargaReportsMap[vargaDef.id];
-            if (!rep?.rows?.length) continue;
-            const lagna = rep.lagna_rasi ? ` (라그나: ${SIGN_NAMES[rep.lagna_rasi] ?? rep.lagna_rasi})` : "";
-            lines.push(`### ${rep.varga_label}${lagna}`);
-            const mdRows = buildNakshatraMarkdownRows(rep.rows, true);
-            for (const row of mdRows) lines.push(row);
-            lines.push("");
-        }
-    } else {
-        // 폴백: 라시(Sign)만 2컬럼
-        for (const varga of VARGA_DEFS) {
-            lines.push(`### ${varga.label}: ${varga.name}`);
-            lines.push("| 행성 | 라시 (Sign) |");
-            lines.push("|---|---|");
-            for (const p of allPos) {
-                const name = p.planet ?? "ASC";
-                const rasiIdx = (p as Record<string, unknown>)[varga.key];
-                if (rasiIdx !== undefined && rasiIdx !== null) {
-                    const rasiName = typeof rasiIdx === "number" ? (SIGN_NAMES[rasiIdx] ?? rasiIdx) : rasiIdx;
-                    lines.push(`| ${name} | ${rasiName} |`);
-                } else {
-                    lines.push(`| ${name} | — |`);
-                }
-            }
-            lines.push("");
-        }
     }
 
     return lines.join("\n");
