@@ -6,7 +6,7 @@ import { Compass, Calendar, UserPlus, Pencil, ClipboardCopy, Check } from "lucid
 
 import { useAnalysis } from "./hooks";
 import { ShootingStars, BirthDrawer, Sidebar } from "./components/shared";
-import { buildFullAnalysisMarkdown, buildSajuMarkdown, buildVedicMarkdown } from "./utils";
+import { buildFullAnalysisMarkdown, buildSajuMarkdown, buildVedicMarkdown, buildCompatibilityMarkdown } from "./utils";
 import type { TabId } from "./types";
 
 const loadOverviewTab = () => import("./components/tabs/OverviewTab");
@@ -103,6 +103,7 @@ function App() {
   const [mdCopied, setMdCopied] = useState(false);
   const [sajuCopied, setSajuCopied] = useState(false);
   const [vedicCopied, setVedicCopied] = useState(false);
+  const [compCopied, setCompCopied] = useState(false);
 
   // 분석 완료 시 닫기는 BirthInputForm 내부 온클릭에서 처리됨
 
@@ -242,7 +243,7 @@ function App() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={async () => {
-                    const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null, transitReport ?? null);
+                    const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null, transitReport ?? null, compReport ?? null);
                     await navigator.clipboard.writeText(md);
                     setMdCopied(true);
                     setTimeout(() => setMdCopied(false), 2500);
@@ -278,6 +279,20 @@ function App() {
                   >
                     {vedicCopied ? <Check className="w-3 h-3 text-green-400" /> : <ClipboardCopy className="w-3 h-3" />}
                     {vedicCopied ? "베딕 복사됨!" : "베딕 복사"}
+                  </button>
+                )}
+                {compReport && (
+                  <button
+                    onClick={async () => {
+                      const md = buildCompatibilityMarkdown(compReport);
+                      await navigator.clipboard.writeText(md);
+                      setCompCopied(true);
+                      setTimeout(() => setCompCopied(false), 2500);
+                    }}
+                    className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-pink-500/30 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 transition-all font-medium"
+                  >
+                    {compCopied ? <Check className="w-3 h-3 text-green-400" /> : <ClipboardCopy className="w-3 h-3" />}
+                    {compCopied ? "궁합 복사됨!" : "궁합 복사"}
                   </button>
                 )}
               </div>
