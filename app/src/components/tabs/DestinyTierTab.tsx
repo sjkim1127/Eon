@@ -10,7 +10,7 @@ import {
 import type { SajuAnalysisResult } from "../../types";
 import type { VedicAnalysisResult } from "../../types";
 import type { TransitResult } from "../../types";
-import { computeTierResult } from "../../utils/tierScore";
+import { computeTierResult, type TierResult } from "../../utils/tierScore";
 
 // ── 상수 ────────────────────────────────────────────────────────────────────
 
@@ -38,45 +38,98 @@ const TIER_SCORE_MAP: Record<string, number> = { S: 5, A: 4, B: 3, C: 2, D: 1 };
 
 // ── 헬퍼 함수 ───────────────────────────────────────────────────────────────
 
-/** profile / riskLevel / growthGap 기반 동적 인사이트 문장 생성 */
-function buildInsightText(
-  grade: string,
-  profile: "stable" | "balanced" | "growth",
-  riskLevel: "low" | "medium" | "high",
-  growthGap: number,
-): string {
+/** TierResult 전체를 받아 다층 인사이트 문단 배열을 생성 */
+function buildInsightBlocks(result: TierResult): { title: string; icon: string; text: string; color: string }[] {
+  const { destinyTier, potentialTier, profile, riskLevel, growthGap,
+    strengths, weaknesses, domainTiers, sajuResult, vedicResult, transitResult,
+    natalScore, currentScore, destinyScore } = result;
+  const grade = destinyTier.grade;
+  const blocks: { title: string; icon: string; text: string; color: string }[] = [];
+
+  // ── 1. 종합 판정 ──────────────────────────────────
   const baseMap: Record<string, string> = {
-    S: "사주와 별운이 서로 보완하며 극상의 기운을 이룹니다.",
-    A: "전반적으로 강한 차트입니다. 용신·대운·요가가 유리하게 작용하는 시기에는 더욱 적극적인 도전을 권합니다.",
-    B: "균형이 잘 잡힌 운세입니다. 강점을 살리고 약점은 주의 시점 참고를 통해 보완하면 좋은 결과를 기대할 수 있습니다.",
-    C: "일부 어려운 시기가 있으나 극복 가능합니다. 역량 및 기운 탭의 주의 시점을 참고하고, 골든타임·대운 흐름을 활용해 보세요.",
-    D: "성장 여지가 많은 시기입니다. 주의가 필요한 시기를 피하고, 용신·요가가 도와주는 구간을 적극 활용하시길 권합니다.",
+    S: `사주와 별운이 서로 보완하며 극상의 기운을 이룹니다(${Math.round(destinyScore)}점). 대부분의 조건이 이상적으로 결합된 희귀한 조합입니다.`,
+    A: `전반적으로 매우 강한 차트입니다(${Math.round(destinyScore)}점). 용신·대운·요가가 유리하게 맞물리는 시기에 적극적인 도전이 빛납니다.`,
+    B: `균형이 잘 잡힌 운세입니다(${Math.round(destinyScore)}점). 강점을 살리고 주의 시점을 사전에 파악해 보완하면 좋은 결과를 기대할 수 있습니다.`,
+    C: `일부 어려운 구간이 있으나 충분히 극복 가능합니다(${Math.round(destinyScore)}점). 주의 시점과 골든타임·대운 흐름을 함께 참고하세요.`,
+    D: `성장 여지가 많은 시기입니다(${Math.round(destinyScore)}점). 주의 구간을 피하고 용신·요가가 도와주는 구간을 집중 활용하면 큰 변화를 만들 수 있습니다.`,
   };
-  const sentences: string[] = [baseMap[grade] ?? ""];
+  blocks.push({ title: "종합 판정", icon: "🏆", text: baseMap[grade] ?? "", color: "text-celestial-gold" });
 
-  if (profile === "growth") {
-    sentences.push("현재 성장 가속 구간에 있습니다. 용신 오행을 강화하고 골든타임을 집중 활용하세요.");
-  } else if (profile === "stable") {
-    sentences.push("안정적인 원국이 흐름을 뒷받침합니다. 리스크 관리와 꾸준한 실천에 집중하세요.");
+  // ── 2. 원국 vs 현재 운세 비교 ────────────────────
+  const diffText = (() => {
+    const diff = currentScore - natalScore;
+    if (Math.abs(diff) < 5) return `원국(${Math.round(natalScore)}점)과 현재 운세(${Math.round(currentScore)}점)가 거의 일치합니다. 타고난 흐름 그대로 안정적으로 진행 중입니다.`;
+    if (diff > 15) return `현재 운세(${Math.round(currentScore)}점)가 원국(${Math.round(natalScore)}점)보다 현저히 높습니다. 지금이 바로 행동해야 할 최적의 타이밍입니다.`;
+    if (diff > 0) return `현재 운세(${Math.round(currentScore)}점)가 원국(${Math.round(natalScore)}점)보다 소폭 우세합니다. 적극적인 실행이 효과적인 시기입니다.`;
+    if (diff < -15) return `현재 운세(${Math.round(currentScore)}점)가 원국(${Math.round(natalScore)}점)보다 눈에 띄게 낮습니다. 리스크를 줄이고 내실을 다지는 수성(守城) 전략을 권합니다.`;
+    return `현재 운세(${Math.round(currentScore)}점)가 원국(${Math.round(natalScore)}점)보다 소폭 낮습니다. 과도한 확장보다 준비와 기반 강화에 집중하세요.`;
+  })();
+  blocks.push({ title: "원국 vs 현재 운세", icon: "⚖️", text: diffText, color: "text-celestial-cyan" });
+
+  // ── 3. 프로필 기반 조언 ──────────────────────────
+  const profileMap: Record<string, string> = {
+    growth: "현재 성장 가속 구간(35세 미만)에 있습니다. 용신 오행과 연계된 색상·방위·직업군을 환경에 적극 반영하고, 골든타임 내 학습·도전·투자를 집중하세요.",
+    stable: "안정형 원국(56세 이상)으로 타고난 흐름이 흔들리지 않습니다. 새로운 모험보다 리스크 관리와 꾸준한 실천, 후진 양성에 집중하면 더욱 탄탄한 기반을 만들 수 있습니다.",
+    balanced: "원국과 현재 운세가 균형을 이루고 있습니다. 강점 분야를 적극 공략하면서도 약점 구간의 방어를 소홀히 하지 마세요.",
+  };
+  blocks.push({ title: "운세 프로필", icon: profile === "growth" ? "🌱" : profile === "stable" ? "🏛️" : "⚖️", text: profileMap[profile], color: "text-emerald-300" });
+
+  // ── 4. 강점 요약 ──────────────────────────────────
+  if (strengths.length > 0) {
+    const strengthText = strengths.map(s => `· ${s}`).join("  ") +
+      "  이 요소들이 운명 티어를 지탱하는 핵심 기둥입니다.";
+    blocks.push({ title: "핵심 강점", icon: "✨", text: strengthText, color: "text-amber-300" });
+  }
+
+  // ── 5. 약점 & 리스크 ─────────────────────────────
+  const riskMap: Record<string, string> = {
+    high: "⚠️ 현재 리스크 요소가 복합적으로 집중된 구간입니다. 주의 시점 탭의 대운·세운 충돌 지점을 반드시 사전에 파악하고, 중요한 계약·투자·이직 결정을 신중히 내리세요.",
+    medium: "일부 주의가 필요구간이 있습니다. 역량 탭의 부하 시점을 확인하고, 체력 관리와 재정 안전망을 점검하세요.",
+    low: "리스크 요인이 적어 안정적인 환경입니다. 이 여유를 기반 강화와 장기 포트폴리오 구축에 활용하세요.",
+  };
+  const weaknessPart = weaknesses.length > 0
+    ? `  주요 약점: ${weaknesses.join(", ")}.`
+    : "";
+  blocks.push({ title: "리스크 & 약점", icon: riskLevel === "high" ? "🔴" : riskLevel === "medium" ? "🟡" : "🟢", text: riskMap[riskLevel] + weaknessPart, color: riskLevel === "high" ? "text-rose-300" : riskLevel === "medium" ? "text-amber-300" : "text-emerald-300" });
+
+  // ── 6. 잠재력 격차 조언 ───────────────────────────
+  const potGrade = potentialTier.grade;
+  const potText = (() => {
+    if (growthGap > 20) return `잠재력 티어(${potGrade})가 운명 티어(${grade})보다 +${Math.round(growthGap)}pt 크게 앞섭니다. 용신 오행 강화, 우수 요가 활성화, 골든타임 집중 활용으로 단기간에 큰 상향이 가능합니다.`;
+    if (growthGap > 10) return `잠재력(${potGrade})이 운명 티어(${grade})보다 +${Math.round(growthGap)}pt 앞서 있습니다. 일관된 노력과 주의 시점 회피로 꾸준히 격차를 좁혀가세요.`;
+    if (growthGap > 3) return `잠재력(+${Math.round(growthGap)}pt 여유)을 점진적으로 발현 중입니다. 현재 방향을 유지하면 자연스럽게 상향됩니다.`;
+    if (growthGap < -5) return `운명 티어(${grade})가 잠재력(${potGrade})보다 앞서 있습니다. 현재의 흐름이 매우 효율적임을 의미합니다.`;
+    return "잠재력과 운명 티어가 거의 일치합니다. 현재의 흐름을 잘 유지하고 있습니다.";
+  })();
+  blocks.push({ title: "잠재력 격차 분석", icon: "🚀", text: potText, color: "text-purple-300" });
+
+  // ── 7. 분야별 집중 공략 ───────────────────────────
+  const topDomains = [...domainTiers].filter(d => d.tier === "S" || d.tier === "A").slice(0, 3);
+  const weakDomains = [...domainTiers].filter(d => d.tier === "D" || d.tier === "C").slice(0, 3);
+  if (topDomains.length > 0 || weakDomains.length > 0) {
+    const domainParts: string[] = [];
+    if (topDomains.length > 0) domainParts.push(`강점 분야: ${topDomains.map(d => `${d.domain}(${d.tier})`).join(", ")} — 이 영역을 주력 무대로 삼으세요.`);
+    if (weakDomains.length > 0) domainParts.push(`보완 분야: ${weakDomains.map(d => `${d.domain}(${d.tier})`).join(", ")} — 과도한 집중보다 방어적 관리를 권합니다.`);
+    blocks.push({ title: "분야별 집중 전략", icon: "🎯", text: domainParts.join("  "), color: "text-sky-300" });
+  }
+
+  // ── 8. 사주 vs 베딕 점수 균형 ────────────────────
+  const sajuS = sajuResult.score;
+  const vedicS = vedicResult.score;
+  const transitS = transitResult.score;
+  const balanceParts: string[] = [];
+  if (Math.abs(sajuS - vedicS) > 20) {
+    if (sajuS > vedicS) balanceParts.push(`사주 원국(${sajuS}점)이 베딕 차트(${vedicS}점)보다 강합니다. 동양 명리 기반의 판단이 더 정확할 수 있습니다.`);
+    else balanceParts.push(`베딕 차트(${vedicS}점)가 사주 원국(${sajuS}점)보다 강합니다. 베딕 요가와 다샤 흐름을 우선 참고하세요.`);
   } else {
-    sentences.push("원국과 현재 운세가 균형을 이루고 있습니다. 강점 분야를 적극 공략해 보세요.");
+    balanceParts.push(`사주(${sajuS}점)·베딕(${vedicS}점) 두 체계가 균형 있게 같은 방향을 가리킵니다. 신뢰도가 높은 분석 결과입니다.`);
   }
+  if (transitS >= 70) balanceParts.push(`현재 운세 점수(${transitS}점)가 높아 지금이 행동하기 좋은 시기입니다.`);
+  else if (transitS < 40) balanceParts.push(`현재 운세 점수(${transitS}점)가 낮습니다. 중요 결정은 운세 점수가 회복된 후 미루는 것을 권합니다.`);
+  blocks.push({ title: "분석 체계 균형", icon: "🔬", text: balanceParts.join("  "), color: "text-indigo-300" });
 
-  if (riskLevel === "high") {
-    sentences.push("⚠️ 현재 리스크 요소가 집중된 구간입니다. 주의 시점 탭을 반드시 확인하고 중요한 결정을 신중히 내리세요.");
-  } else if (riskLevel === "medium") {
-    sentences.push("일부 주의가 필요한 구간이 있습니다. 역량 탭에서 부하 시점을 확인하세요.");
-  }
-
-  if (growthGap > 15) {
-    sentences.push(`잠재력과의 격차(+${Math.round(growthGap)}pt)가 크게 열려 있습니다. 용신 강화와 요가 활성화로 빠른 상향이 가능합니다.`);
-  } else if (growthGap > 5) {
-    sentences.push(`잠재력 여지(+${Math.round(growthGap)}pt)를 꾸준히 좁혀가세요.`);
-  } else {
-    sentences.push("현재의 흐름을 잘 유지하고 있습니다.");
-  }
-
-  return sentences.join(" ");
+  return blocks;
 }
 
 // ── 점수 바 컴포넌트 ─────────────────────────────────────────────────────────
@@ -497,15 +550,23 @@ export function DestinyTierTab({ sajuReport, report, transitReport, unknownTime 
         </p>
       </div>
 
-      {/* ⑤ 종합 인사이트 — 동적 */}
+      {/* ⑤ 종합 인사이트 — 다층 블록 */}
       <div className="glass p-6 rounded-2xl">
-        <h5 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <h5 className="text-lg font-bold text-white mb-5 flex items-center gap-2">
           <Flame className="w-5 h-5 text-celestial-gold" />
           종합 인사이트
         </h5>
-        <p className="text-white/80 leading-relaxed">
-          {buildInsightText(destinyTier.grade, profile, riskLevel, growthGap)}
-        </p>
+        <div className="space-y-4">
+          {buildInsightBlocks(result).map((block, i) => (
+            <div key={i} className="flex gap-3 p-3.5 rounded-xl bg-white/5 border border-white/8">
+              <span className="text-xl shrink-0 mt-0.5">{block.icon}</span>
+              <div>
+                <p className={`text-xs font-semibold mb-1 ${block.color}`}>{block.title}</p>
+                <p className="text-sm text-white/80 leading-relaxed">{block.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </motion.div>
   );
