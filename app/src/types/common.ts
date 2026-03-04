@@ -15,6 +15,12 @@ export interface BirthData {
   is_leap_month?: boolean;
   /** IANA 타임존 문자열 (예: "Asia/Seoul", "America/New_York") */
   timezone: string;
+  /**
+   * 야자시(夜子時) 적용 여부
+   * - true: 23:00~23:59를 당일의 자시로 인정(일주 유지)
+   * - false: 23:00~23:59를 다음날 자시로 간주(일주 변경, 기본값)
+   */
+  use_night_rat_hour?: boolean;
 }
 
 /** 한국 도시 */

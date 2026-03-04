@@ -116,6 +116,7 @@ fn get_saju_analysis(
     is_lunar: bool,
     is_leap_month: bool,
     is_male: bool,
+    use_night_rat_hour: bool,
     lon: f64,
     lat: f64,
     timezone: String,
@@ -144,7 +145,9 @@ fn get_saju_analysis(
     let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
 
     // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
-    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin).with_gender(gender);
+    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin)
+        .with_gender(gender)
+        .with_night_rat_hour(use_night_rat_hour);
 
     let pillars = FourPillars::calculate(&input).map_err(|e| format!("사주 계산 실패: {}", e))?;
 
@@ -236,6 +239,7 @@ fn get_transit_analysis(
     is_lunar: bool,
     is_leap_month: bool,
     is_male: bool,
+    use_night_rat_hour: bool,
     lon: f64,
     lat: f64,
     timezone: String,
@@ -263,7 +267,9 @@ fn get_transit_analysis(
 
     let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
     // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
-    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin).with_gender(gender);
+    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin)
+        .with_gender(gender)
+        .with_night_rat_hour(use_night_rat_hour);
     let pillars = FourPillars::calculate(&input).map_err(|e| format!("사주 계산 실패: {}", e))?;
 
     // 세운/월운 계산
@@ -385,6 +391,7 @@ fn get_ai_audit(
     is_lunar: bool,
     is_leap_month: bool,
     is_male: bool,
+    use_night_rat_hour: bool,
     lon: f64,
     lat: f64,
     timezone: String,
@@ -409,7 +416,9 @@ fn get_ai_audit(
 
     let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
     // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
-    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin).with_gender(gender);
+    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin)
+        .with_gender(gender)
+        .with_night_rat_hour(use_night_rat_hour);
     let pillars = FourPillars::calculate(&input).map_err(|e| format!("사주 계산 실패: {}", e))?;
 
     let emulator = LifePathEmulator::new(pillars.clone(), gender, cy);
@@ -449,6 +458,7 @@ fn get_saju_compatibility(
     is_male1: bool,
     lon1: f64,
     lat1: f64,
+    use_night_rat_hour1: bool,
     // 사람 2
     year2: i32,
     month2: u32,
@@ -460,6 +470,7 @@ fn get_saju_compatibility(
     is_male2: bool,
     lon2: f64,
     lat2: f64,
+    use_night_rat_hour2: bool,
     timezone1: String,
     timezone2: String,
 ) -> Result<serde_json::Value, String> {
@@ -473,6 +484,7 @@ fn get_saju_compatibility(
                         male: bool,
                         lon: f64,
                         lat: f64,
+                        night_rat: bool,
                         tz: &str|
      -> Result<FourPillars, String> {
         let gender = if male { Gender::Male } else { Gender::Female };
@@ -489,7 +501,9 @@ fn get_saju_compatibility(
             .with_gender(gender);
         let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
         // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
-        let input = SajuInput::new_solar(cy, cm, cd, ch, cmin).with_gender(gender);
+        let input = SajuInput::new_solar(cy, cm, cd, ch, cmin)
+            .with_gender(gender)
+            .with_night_rat_hour(night_rat);
         FourPillars::calculate(&input).map_err(|e| format!("사주 계산 실패: {}", e))
     };
 
@@ -504,6 +518,7 @@ fn get_saju_compatibility(
         is_male1,
         lon1,
         lat1,
+        use_night_rat_hour1,
         &timezone1,
     )?;
     let pillars2 = make_pillars(
@@ -517,6 +532,7 @@ fn get_saju_compatibility(
         is_male2,
         lon2,
         lat2,
+        use_night_rat_hour2,
         &timezone2,
     )?;
 
