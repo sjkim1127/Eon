@@ -35,12 +35,22 @@ const HOUSE_DOMAIN_LABELS: Record<number, string> = {
 
 const BENEFIC_PLANETS = ["Jupiter", "Venus", "Mercury", "Moon"];
 
+const clampScore = (score: number): number => Math.min(100, Math.max(0, score));
+
+// 상단 구간을 완만하게 만드는 부드러운 비선형 정규화 (0~100 → 0~100)
+const softNormalizeForDestiny = (score: number): number => {
+  const clamped = clampScore(score);
+  const x = clamped / 100;
+  const y = Math.log1p(9 * x) / Math.log1p(9); // 0 근처는 살리고 80~100은 완만하게
+  return Math.round(y * 100);
+};
+
 function computeSajuScore(saju: SajuAnalysisResult | null): { score: number; highlights: string[] } {
   if (!saju?.report) return { score: 0, highlights: [] };
   const r = saju.report;
   const st = r.strength;
   const highlights: string[] = [];
-  const strengthNorm = Math.max(0, Math.min(100, (st.strength_score ?? 50) * 2));
+  const strengthNorm = clampScore((st.strength_score ?? 50) * 2);
   let sajuScore = strengthNorm * 0.35;
   if (st.deuk_ryeong?.acquired) { sajuScore += 8; highlights.push("득령: 계절의 도움"); }
   if (st.deuk_ji?.acquired) { sajuScore += 8; highlights.push("득지: 뿌리의 도움"); }
@@ -58,14 +68,14 @@ function computeSajuScore(saju: SajuAnalysisResult | null): { score: number; hig
   if (/^[AB]$/.test(stabilityGrade) || stabilityGrade.includes("A") || stabilityGrade.includes("B")) sajuScore += 4;
   else if (stabilityGrade.includes("D") || /High Entropy|Unstable/i.test(stabilityGrade)) sajuScore -= 3;
   if (r.yongshin?.primary) sajuScore += 2;
-  return { score: Math.min(100, Math.max(0, Math.round(sajuScore))), highlights: highlights.slice(0, 5) };
+  return { score: clampScore(Math.round(sajuScore)), highlights: highlights.slice(0, 5) };
 }
 
 function computeVedicScore(report: VedicAnalysisResult | null): { score: number; highlights: string[] } {
   if (!report?.report) return { score: 0, highlights: [] };
   const r = report.report;
   const chart = report.chart;
-  const strengthNorm = Math.min(100, (r.overall_strength_score ?? 0) / 6);
+  const strengthNorm = clampScore((r.overall_strength_score ?? 0) / 6);
   let vedicScore = strengthNorm * 0.5;
   const highlights: string[] = [];
   const yogas = r.yogas ?? [];
@@ -88,7 +98,7 @@ function computeVedicScore(report: VedicAnalysisResult | null): { score: number;
   const h10 = bhava.find((b: { house: number }) => b.house === 10);
   if ((h1?.total_score ?? 0) > 50) vedicScore += 1;
   if ((h10?.total_score ?? 0) > 50) vedicScore += 1;
-  return { score: Math.min(100, Math.max(0, Math.round(vedicScore))), highlights: highlights.slice(0, 5) };
+  return { score: clampScore(Math.round(vedicScore)), highlights: highlights.slice(0, 5) };
 }
 
 function computeTransitScore(transit: TransitResult | null | undefined): { score: number; highlights: string[] } {
@@ -96,12 +106,12 @@ function computeTransitScore(transit: TransitResult | null | undefined): { score
   const highlights: string[] = [];
   const frame = transit.current_frame;
   const nearby = transit.nearby_diagnostics ?? [];
-  let score = frame?.score != null ? Math.min(100, Math.max(0, frame.score)) : 50;
+  let score = frame?.score != null ? clampScore(frame.score) : 50;
   if (score >= 70) highlights.push("현재 운세 긍정적");
   else if (score < 40) highlights.push("현재 운세 주의 필요");
   const badCount = nearby.filter((d: { status: string }) => d.status === "Overloaded" || d.status === "SystemDown").length;
   if (badCount > 0) { score -= Math.min(15, badCount * 5); highlights.push(`부하 구간 ${badCount}개`); }
-  return { score: Math.min(100, Math.max(0, Math.round(score))), highlights: highlights.slice(0, 3) };
+  return { score: clampScore(Math.round(score)), highlights: highlights.slice(0, 3) };
 }
 
 function computePotentialScore(saju: SajuAnalysisResult | null, report: VedicAnalysisResult | null): { score: number; highlights: string[] } {
@@ -131,7 +141,7 @@ function computePotentialScore(saju: SajuAnalysisResult | null, report: VedicAna
     score += Math.min(10, excellentHouses * 3);
     if (excellentHouses >= 3) highlights.push(`강한 하우스 ${excellentHouses}개`);
   }
-  return { score: Math.min(100, Math.max(0, Math.round(score))), highlights: highlights.slice(0, 5) };
+  return { score: clampScore(Math.round(score)), highlights: highlights.slice(0, 5) };
 }
 
 function getDomainTiers(report: VedicAnalysisResult | null): { house: number; domain: string; tier: string }[] {
@@ -156,6 +166,10 @@ export interface TierResult {
   transitResult: { score: number; highlights: string[] };
   strengths: string[];
   weaknesses: string[];
+  growthGap: number;
+  riskLevel: "low" | "medium" | "high";
+  profile: "stable" | "balanced" | "growth";
+  version: "v1" | "v2";
 }
 
 export function computeTierResult(
@@ -171,9 +185,64 @@ export function computeTierResult(
   const transitResult = computeTransitScore(transitReport);
   const potentialResult = computePotentialScore(sajuReport, report);
   const domainTiers = getDomainTiers(report);
-  const natalScore = hasSaju && hasVedic ? (sajuResult.score * 0.5 + vedicResult.score * 0.5) : hasSaju ? sajuResult.score : vedicResult.score;
+  const natalScoreRaw = hasSaju && hasVedic
+    ? (sajuResult.score * 0.5 + vedicResult.score * 0.5)
+    : hasSaju
+      ? sajuResult.score
+      : vedicResult.score;
+
+  // 연령·프로필에 따른 원국/현재 가중치
+  let natalWeight = 0.7;
+  let currentWeight = 0.3;
+  let profile: TierResult["profile"] = "balanced";
+  const age = transitReport?.current_age;
+  if (typeof age === "number") {
+    if (age < 35) {
+      natalWeight = 0.6;
+      currentWeight = 0.4;
+      profile = "growth";
+    } else if (age > 55) {
+      natalWeight = 0.8;
+      currentWeight = 0.2;
+      profile = "stable";
+    }
+  }
+
   const hasTransit = !!transitReport?.current_frame;
-  const destinyScore = hasTransit ? natalScore * 0.7 + transitResult.score * 0.3 : natalScore;
+  let currentScoreForDestiny = transitResult.score;
+  if (hasTransit) {
+    // 현재 점수 캡핑 (극단값 완화)
+    if (currentScoreForDestiny < 25) currentScoreForDestiny = 25;
+    if (currentScoreForDestiny > 90) currentScoreForDestiny = 90;
+  }
+
+  const natalScoreNormalized = softNormalizeForDestiny(natalScoreRaw);
+  const currentScoreNormalized = hasTransit ? softNormalizeForDestiny(currentScoreForDestiny) : 0;
+
+  let destinyScore = hasTransit
+    ? natalScoreNormalized * natalWeight + currentScoreNormalized * currentWeight
+    : natalScoreNormalized;
+
+  // 분야별 티어에 따른 소폭 보정
+  if (domainTiers.length > 0) {
+    let domainAdjustment = 0;
+    let penaltyFocus = 0;
+    for (const d of domainTiers) {
+      if (d.tier === "S") domainAdjustment += 0.5;
+      else if (d.tier === "A") domainAdjustment += 0.2;
+      else if (d.tier === "C") domainAdjustment -= 0.5;
+      else if (d.tier === "D") domainAdjustment -= 1;
+
+      if ([1, 2, 6, 10, 11].includes(d.house)) {
+        if (d.tier === "C") penaltyFocus -= 0.5;
+        else if (d.tier === "D") penaltyFocus -= 1;
+      }
+    }
+    domainAdjustment = Math.max(-3, Math.min(3, domainAdjustment + penaltyFocus));
+    destinyScore += domainAdjustment;
+  }
+
+  destinyScore = clampScore(destinyScore);
   const destinyTier = getTierFromScore(destinyScore);
   const potentialTier = getTierFromScore(potentialResult.score);
   const strengths = [...sajuResult.highlights.slice(0, 2), ...vedicResult.highlights.slice(0, 2)].filter(Boolean).slice(0, 3);
@@ -182,8 +251,24 @@ export function computeTierResult(
   const vulnTotal = sajuReport?.vulnerability_report?.total_crashes ?? 0;
   if (vulnTotal > 0) weaknesses.push(`주의 시점 ${vulnTotal}개`);
   if (report?.report?.sade_sati === "Peak" || report?.report?.sade_sati === "Rising") weaknesses.push("사데사티 진행 중");
+
+  // 잠재력-운명 갭 및 리스크 레벨
+  const growthGap = clampScore(potentialResult.score) - destinyScore;
+  let riskPoints = 0;
+  if (vulnTotal >= 10) riskPoints += 1;
+  if (vulnTotal >= 20) riskPoints += 1;
+  if (vulnTotal >= 40) riskPoints += 1;
+  if (transitResult.score < 40) riskPoints += 1;
+  if (transitResult.score < 30) riskPoints += 1;
+  if (report?.report?.sade_sati === "Peak" || report?.report?.sade_sati === "Rising") riskPoints += 2;
+  const nearby = transitReport?.nearby_diagnostics ?? [];
+  const badNearby = nearby.filter((d: { status: string }) => d.status === "Overloaded" || d.status === "SystemDown").length;
+  if (badNearby >= 2) riskPoints += 1;
+  const riskLevel: TierResult["riskLevel"] =
+    riskPoints <= 1 ? "low" : riskPoints <= 3 ? "medium" : "high";
+
   return {
-    natalScore,
+    natalScore: clampScore(Math.round(natalScoreRaw)),
     currentScore: transitResult.score,
     destinyScore,
     destinyTier,
@@ -195,5 +280,9 @@ export function computeTierResult(
     transitResult,
     strengths: strengths.slice(0, 3),
     weaknesses: weaknesses.slice(0, 2),
+    growthGap,
+    riskLevel,
+    profile,
+    version: "v2",
   };
 }
