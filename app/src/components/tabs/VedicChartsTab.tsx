@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle, Compass, ChevronDown, ChevronRight } from "lucide-react";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
-import { getNakshatraInfo, getVargaEffectiveLongitude } from "../../utils";
+import { getNakshatraInfo, getVargaEffectiveLongitude, formatSiderealPosition, buildNakshatraMarkdownRows, D1_COLUMNS } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
 import { BhavaRadarSection } from "../sections/BhavaRadarSection";
 import { AspectsSection } from "../sections/AspectsSection";
@@ -222,40 +222,51 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const dashaTimeline = report.report?.dasha_timeline ?? [];
 
   // ── 복사 텍스트 생성 헬퍼 ──────────────────────────────────────────
-  const fmtPosition = (sidereal_deg: number) => {
-    const deg = ((sidereal_deg % 360) + 360) % 360;
-    const sign = Math.floor(deg / 30) + 1;
-    const d = deg % 30;
-    const dd = Math.floor(d);
-    const mm = Math.floor((d - dd) * 60);
-    return `${dd}°${String(mm).padStart(2, "0")}' ${SIGN_NAMES[sign]}`;
-  };
-
   const buildD1ReportText = () => {
-    const header = ["Planet", "Position", "Nakshatra (Pada)", "Nak Lord", "Pada Lord", "Deity", "Purpose"]
-      .join("\t");
-    const sep = "─".repeat(120);
+    const vargaReports = report.varga_nakshatra_reports;
+    const d1Report = vargaReports?.reports?.["rasi"];
 
+    if (d1Report?.rows?.length) {
+      // 백엔드 데이터가 있으면 공통 포맷터 사용
+      const mdRows = buildNakshatraMarkdownRows(d1Report.rows, false);
+      return [
+        "## D1 낙샤트라 리포트 (전체 행성)",
+        "> D1 낙샤트라는 본 차트 기준입니다.",
+        "",
+        ...mdRows,
+      ].join("\n");
+    }
+
+    // 폴백: 프론트엔드 계산
     const allPoints = [
-      ...planets.map((p: any) => ({ name: p.planet, deg: p.sidereal_deg, retro: p.is_retrograde, combust: p.is_combust })),
-      { name: "ASC", deg: ascendant?.sidereal_deg, retro: false, combust: false },
+      ...planets.map((p: any) => ({ name: p.planet as string, deg: p.sidereal_deg as number, retro: p.is_retrograde as boolean, combust: p.is_combust as boolean })),
+      { name: "ASC", deg: ascendant?.sidereal_deg as number, retro: false, combust: false },
     ].filter(x => x.deg != null);
 
     const rows = allPoints.map(p => {
       const ni = getNakshatraInfo(p.deg);
-      const flags = [p.retro ? "℞" : "", p.combust ? "☀" : ""].filter(Boolean).join(" ");
-      return [
-        `${p.name}${flags ? " " + flags : ""}`,
-        fmtPosition(p.deg),
-        `${ni.name} (Pada ${ni.pada})`,
-        ni.lord,
-        ni.padaLord,
-        ni.deity,
-        ni.purpose,
-      ].join("\t");
+      return {
+        planet: p.name,
+        position_str: formatSiderealPosition(p.deg),
+        nakshatra_name: ni.name,
+        pada: ni.pada,
+        pada_range: ni.range,
+        nakshatra_lord: ni.lord,
+        pada_lord: ni.padaLord,
+        deity: ni.deity,
+        purpose: ni.purpose,
+        is_retrograde: p.retro,
+        is_combust: p.combust,
+      };
     });
 
-    return [sep, "D1 Nakshatra Report", sep, header, ...rows, sep].join("\n");
+    const mdRows = buildNakshatraMarkdownRows(rows, false);
+    return [
+      "## D1 낙샤트라 리포트 (전체 행성)",
+      "> D1 낙샤트라는 본 차트 기준입니다.",
+      "",
+      ...mdRows,
+    ].join("\n");
   };
 
   const buildVargaTableText = () => {
@@ -273,15 +284,36 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
     return ["D1–D144 Sign Positions", header, ...rows].join("\n");
   };
 
+  const buildVargaNakshatraText = (): string => {
+    const vargaReps = report.varga_nakshatra_reports?.reports;
+    if (!vargaReps || Object.keys(vargaReps).length === 0) return buildVargaTableText();
+
+    const out: string[] = [
+      "## 분할 차트 낙샤트라 리포트 (Varga D-Charts)",
+      "> 분할 차트 낙샤트라는 해당 분할 좌표 기준입니다.",
+      "",
+    ];
+    for (const vargaDef of VARGA_DEFS) {
+      const rep = vargaReps[vargaDef.id];
+      if (!rep?.rows?.length) continue;
+      const lagna = rep.lagna_rasi ? ` (라그나: ${SIGN_NAMES[rep.lagna_rasi] ?? rep.lagna_rasi})` : "";
+      out.push(`### ${rep.varga_label}${lagna}`);
+      const mdRows = buildNakshatraMarkdownRows(rep.rows, true);
+      out.push(...mdRows);
+      out.push("");
+    }
+    return out.join("\n");
+  };
+
   const copyReport = async () => {
-    const text = [buildD1ReportText(), "", buildVargaTableText()].join("\n");
+    const text = [buildD1ReportText(), "", buildVargaNakshatraText()].join("\n");
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
 
   const copyVargaCharts = async () => {
-    await navigator.clipboard.writeText(buildVargaTableText());
+    await navigator.clipboard.writeText(buildVargaNakshatraText());
     setVargaCopied(true);
     setTimeout(() => setVargaCopied(false), 2500);
   };
@@ -355,7 +387,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
             {report.chart.house_cusps.map((deg: number, i: number) => (
               <div key={i} className="p-3 bg-white/5 rounded-xl border border-white/10">
                 <p className="text-xs text-white/40 font-bold mb-1">H{i + 1}</p>
-                <p className="text-sm font-semibold text-white font-mono">{fmtPosition(deg)}</p>
+                <p className="text-sm font-semibold text-white font-mono">{formatSiderealPosition(deg)}</p>
               </div>
             ))}
           </div>
@@ -485,7 +517,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10">
-                  {["행성", "위치 (사이드리얼)", "낙샤트라 (파다)", "파다 범위", "낙샤트라 로드", "파다 로드", "신 (Deity)", "목적 (Purpose)"].map(h => (
+                  {D1_COLUMNS.map(h => (
                     <th key={h} className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -505,7 +537,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
                         {row.retro && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">℞</span>}
                         {row.combust && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40">☀</span>}
                       </td>
-                      <td className="py-3 pr-4 text-white/70 font-mono text-xs whitespace-nowrap">{fmtPosition(row.sidereal_deg)}</td>
+                      <td className="py-3 pr-4 text-white/70 font-mono text-xs whitespace-nowrap">{formatSiderealPosition(row.sidereal_deg)}</td>
                       <td className="py-3 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">
                         {ni.name}
                         <span className="ml-1.5 text-[10px] text-white/40">(Pada {ni.pada})</span>

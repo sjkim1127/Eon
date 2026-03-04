@@ -4,6 +4,8 @@ import type { SajuAnalysisResult } from "../types";
 import type { VedicAnalysisResult } from "../types";
 import type { TransitResult } from "../types";
 import { computeTierResult, type TierResult } from "./tierScore";
+import { getNakshatraInfo } from "./nakshatra";
+import { formatSiderealPosition, buildNakshatraMarkdownRows } from "./vedicFormat";
 
 const SEP = "\n---\n";
 
@@ -419,15 +421,36 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("");
     }
 
-    // 행성 위치
-    lines.push("## 행성 위치 (사이드리얼)\n");
-    lines.push("| 행성 | 라시 | 낙샤트라 | 파다 | 역행 | 소각 |");
-    lines.push("|---|---|---|---|---|---|");
+    // 행성 위치 — D1 낙샤트라 전체 리포트
+    lines.push("## D1 낙샤트라 리포트 (전체 행성)\n");
+    lines.push("> D1 낙샤트라는 본 차트 기준입니다.\n");
     const allPos = [...(c?.planets ?? []), ...(c?.ascendant ? [c.ascendant] : [])];
-    for (const p of allPos) {
-        const name = p.planet ?? "ASC";
-        const rasi = SIGN_NAMES[p.rasi] ?? p.rasi;
-        lines.push(`| ${name} | ${rasi} | ${p.nakshatra} | ${p.pada} | ${p.is_retrograde ? "℞" : ""} | ${p.is_combust ? "☀" : ""} |`);
+    const d1Report = v.varga_nakshatra_reports?.reports?.["rasi"];
+    if (d1Report?.rows?.length) {
+        // 백엔드 데이터 우선 사용 (Rust 계산과 완전 일치)
+        const mdRows = buildNakshatraMarkdownRows(d1Report.rows, false);
+        for (const row of mdRows) lines.push(row);
+    } else {
+        // 폴백: 프론트엔드 계산 (Swiss Ephemeris 정밀도 없음)
+        const rows = allPos.map(p => {
+            const name = p.planet ?? "ASC";
+            const ni = getNakshatraInfo(p.sidereal_deg ?? 0);
+            return {
+                planet: name,
+                position_str: formatSiderealPosition(p.sidereal_deg ?? 0),
+                nakshatra_name: ni.name,
+                pada: ni.pada,
+                pada_range: ni.range,
+                nakshatra_lord: ni.lord,
+                pada_lord: ni.padaLord,
+                deity: ni.deity,
+                purpose: ni.purpose,
+                is_retrograde: p.is_retrograde,
+                is_combust: p.is_combust,
+            };
+        });
+        const mdRows = buildNakshatraMarkdownRows(rows, false);
+        for (const row of mdRows) lines.push(row);
     }
     lines.push("");
 
@@ -456,18 +479,30 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("");
     }
 
-    // 상세 분할 차트 (D1 - D144)
-    if (allPos.length > 0) {
-        lines.push("## 파생 분할 차트 (Varga D-Charts)\n");
-        // D1은 이미 출력했으나 비교를 위해 포함하거나 제외할 수 있음
-        // 아래 VARGA_DEFS(e.g. D2, D9 등) 배열을 돌며 각 테이블 생성
+    // 분할 차트 낙샤트라 리포트 (D-Charts)
+    lines.push("## 분할 차트 낙샤트라 리포트 (Varga D-Charts)\n");
+    lines.push("> 분할 차트 낙샤트라는 해당 분할 좌표 기준입니다.\n");
+    const vargaReportsMap = v.varga_nakshatra_reports?.reports;
+    if (vargaReportsMap && Object.keys(vargaReportsMap).length > 0) {
+        // 백엔드 Varga 낙샤트라 리포트 — 전체 8(+사인·하우스) 컬럼
+        for (const vargaDef of VARGA_DEFS) {
+            const rep = vargaReportsMap[vargaDef.id];
+            if (!rep?.rows?.length) continue;
+            const lagna = rep.lagna_rasi ? ` (라그나: ${SIGN_NAMES[rep.lagna_rasi] ?? rep.lagna_rasi})` : "";
+            lines.push(`### ${rep.varga_label}${lagna}`);
+            const mdRows = buildNakshatraMarkdownRows(rep.rows, true);
+            for (const row of mdRows) lines.push(row);
+            lines.push("");
+        }
+    } else {
+        // 폴백: 라시(Sign)만 2컬럼
         for (const varga of VARGA_DEFS) {
             lines.push(`### ${varga.label}: ${varga.name}`);
             lines.push("| 행성 | 라시 (Sign) |");
             lines.push("|---|---|");
             for (const p of allPos) {
                 const name = p.planet ?? "ASC";
-                const rasiIdx = p[varga.key as keyof typeof p];
+                const rasiIdx = (p as Record<string, unknown>)[varga.key];
                 if (rasiIdx !== undefined && rasiIdx !== null) {
                     const rasiName = typeof rasiIdx === "number" ? (SIGN_NAMES[rasiIdx] ?? rasiIdx) : rasiIdx;
                     lines.push(`| ${name} | ${rasiName} |`);
