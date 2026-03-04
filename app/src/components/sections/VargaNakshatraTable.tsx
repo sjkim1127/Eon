@@ -1,5 +1,6 @@
 import type { VargaNakshatraReportRow } from "../../types/vedic";
 import { SIGN_NAMES } from "../../constants";
+import { NAKSHATRA_TABLE_COLUMNS } from "../../utils/vedicFormat";
 
 interface VargaNakshatraTableProps {
   title: string;
@@ -29,14 +30,14 @@ export function VargaNakshatraTable({
           : "text-blue-400";
 
   const columns = [
-    "행성",
-    "위치 (사이드리얼)",
-    "낙샤트라 (파다)",
-    "파다 범위",
-    "낙샤트라 로드",
-    "파다 로드",
-    "신 (Deity)",
-    "목적 (Purpose)",
+    NAKSHATRA_TABLE_COLUMNS.planet,
+    NAKSHATRA_TABLE_COLUMNS.position,
+    NAKSHATRA_TABLE_COLUMNS.nakshatra,
+    NAKSHATRA_TABLE_COLUMNS.padaRange,
+    NAKSHATRA_TABLE_COLUMNS.nakshatraLord,
+    NAKSHATRA_TABLE_COLUMNS.padaLord,
+    NAKSHATRA_TABLE_COLUMNS.deity,
+    NAKSHATRA_TABLE_COLUMNS.purpose,
   ];
 
   if (showHouse) {
