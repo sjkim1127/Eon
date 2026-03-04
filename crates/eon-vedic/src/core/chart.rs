@@ -45,6 +45,37 @@ pub struct VedicPosition {
     pub dwadasdwadasamsa_rasi: u8, // D144
 }
 
+impl VedicPosition {
+    /// Get rasi (1..12) for the given varga chart type
+    pub fn varga_rasi(&self, vt: crate::calc::varga::VargaType) -> u8 {
+        use crate::calc::varga::VargaType;
+        match vt {
+            VargaType::D1 => self.rasi,
+            VargaType::D2 => self.hora_rasi,
+            VargaType::D3 => self.drekkana_rasi,
+            VargaType::D4 => self.chaturthamsha_rasi,
+            VargaType::D5 => self.panchamsa_rasi,
+            VargaType::D7 => self.saptamsa_rasi,
+            VargaType::D8 => self.ashtamsa_rasi,
+            VargaType::D9 => self.navamsa_rasi,
+            VargaType::D10 => self.dasamsa_rasi,
+            VargaType::D11 => self.rudramsa_rasi,
+            VargaType::D12 => self.dwadasamsa_rasi,
+            VargaType::D16 => self.shodashamsa_rasi,
+            VargaType::D20 => self.vimsamsa_rasi,
+            VargaType::D24 => self.chaturvimshamsa_rasi,
+            VargaType::D27 => self.saptavimsamsa_rasi,
+            VargaType::D30 => self.trimsamsa_rasi,
+            VargaType::D40 => self.khavedamsa_rasi,
+            VargaType::D45 => self.akshavedamsa_rasi,
+            VargaType::D60 => self.shashtyamsa_rasi,
+            VargaType::D81 => self.navanavamsa_rasi,
+            VargaType::D108 => self.ashtottaramsa_rasi,
+            VargaType::D144 => self.dwadasdwadasamsa_rasi,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VedicChart {
     pub ascendant: VedicPosition,

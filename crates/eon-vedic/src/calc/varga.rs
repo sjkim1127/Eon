@@ -77,6 +77,25 @@ impl VargaType {
             Self::D81 => 81, Self::D108 => 108, Self::D144 => 144,
         }
     }
+
+    /// Effective longitude (0..360) for nakshatra calculation in a varga chart.
+    /// D1: use sidereal directly. Other vargas: project degree within division onto full sign.
+    pub fn effective_longitude_for_nakshatra(
+        &self,
+        sidereal_deg: f64,
+        varga_rasi: u8,
+    ) -> f64 {
+        if self.division_count() <= 1 {
+            return (sidereal_deg % 360.0 + 360.0) % 360.0;
+        }
+        let deg = (sidereal_deg % 360.0 + 360.0) % 360.0;
+        let sign_degree = deg % 30.0;
+        let division_size = 30.0 / self.division_count() as f64;
+        let degree_in_division = sign_degree % division_size;
+        let scaled_degree = degree_in_division * self.division_count() as f64;
+        ((varga_rasi as f64 - 1.0) * 30.0 + scaled_degree) % 360.0
+    }
+
 }
 
 /// Helper: Get 0-based sign index (0=Aries, 11=Pisces)
