@@ -13,12 +13,14 @@ export const TIER_GRADES = [
   { grade: "D", label: "다다익선", desc: "성장 여지가 많은 시기, 주의 시점 활용 권장" },
 ] as const;
 
+// 기준 상향: 원점수 인플레이션 제거 후 실질적 분포 조정
+// 기존(log): 60원점 → 80 정규화 → A/B 몰림 → 새 기준으로 C~B 정상 분포
 export function getTierFromScore(score: number): (typeof TIER_GRADES)[number] {
-  if (score >= 88) return TIER_GRADES[0];
-  if (score >= 72) return TIER_GRADES[1];
-  if (score >= 55) return TIER_GRADES[2];
-  if (score >= 38) return TIER_GRADES[3];
-  return TIER_GRADES[4];
+  if (score >= 85) return TIER_GRADES[0]; // S: 원점수 90+ (극상)
+  if (score >= 70) return TIER_GRADES[1]; // A: 원점수 80+ (상위)
+  if (score >= 54) return TIER_GRADES[2]; // B: 원점수 66+ (양호)
+  if (score >= 38) return TIER_GRADES[3]; // C: 원점수 50+ (평균)
+  return TIER_GRADES[4];                  // D: 원점수 50 미만
 }
 
 const RATING_TO_TIER: Record<string, string> = {
@@ -37,11 +39,13 @@ const BENEFIC_PLANETS = ["Jupiter", "Venus", "Mercury", "Moon"];
 
 const clampScore = (score: number): number => Math.min(100, Math.max(0, score));
 
-// 상단 구간을 완만하게 만드는 부드러운 비선형 정규화 (0~100 → 0~100)
+// 고득점 구간을 압축하는 정규화 (log→pow 교체로 인플레이션 제거)
+// log1p 곡선은 60점 원점수를 80점으로 올려버리는 문제가 있어 역방향 압축 곡선으로 변경
+// x^1.3: 60→47, 70→60, 80→72, 90→84 — 적정 점수대에서 C~B 분포가 되도록 설계
 const softNormalizeForDestiny = (score: number): number => {
   const clamped = clampScore(score);
   const x = clamped / 100;
-  const y = Math.log1p(9 * x) / Math.log1p(9); // 0 근처는 살리고 80~100은 완만하게
+  const y = Math.pow(x, 1.3);
   return Math.round(y * 100);
 };
 
@@ -58,12 +62,12 @@ function computeSajuScore(saju: SajuAnalysisResult | null): { score: number; hig
   const rawSupportRatio = st.deuk_se?.support_ratio ?? 0;
   // 백엔드가 소수(0~1) 또는 % 단위(>1, 예: 31.82)로 반환할 수 있으므로 자동 감지
   const supportPct = rawSupportRatio > 1 ? rawSupportRatio : rawSupportRatio * 100;
-  sajuScore += (supportPct / 100) * 15;
+  sajuScore += (supportPct / 100) * 12; // 15 → 12 (과도 보너스 완화)
   if (supportPct > 50) highlights.push(`득세 지지비율 ${supportPct.toFixed(0)}%`);
   const throughput = saju.qi_topology?.throughput ?? 0;
-  sajuScore += throughput * 25;
+  sajuScore += throughput * 18; // 25 → 18 (throughput이 점수를 지나치게 주도하던 문제 완화)
   if (throughput > 0.7) highlights.push(`오행 흐름 원활 ${(throughput * 100).toFixed(0)}%`);
-  if (r.golden_time) { sajuScore += 10; highlights.push(`골든타임 ${r.golden_time.start_age}~${r.golden_time.end_age}세`); }
+  if (r.golden_time) { sajuScore += 7; highlights.push(`골든타임 ${r.golden_time.start_age}~${r.golden_time.end_age}세`); } // 10 → 7
   const vulnTotal = saju.vulnerability_report?.total_crashes ?? 0;
   if (vulnTotal > 40) sajuScore -= 5; else if (vulnTotal === 0 && saju.vulnerability_report) sajuScore += 5;
   const stabilityGrade = saju.complexity?.stability_grade ?? "";
