@@ -493,7 +493,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
-                      {["행성", `${vargaDef.label} 사인`, `${vargaDef.label} 하우스`, "사인 로드"].map((h) => (
+                      {["행성", `${vargaDef.label} 사인`, `${vargaDef.label} 하우스`, "사인 로드", "낙샤트라(파다)", "낙샤트라 로드"].map((h) => (
                         <th key={h} className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">{h}</th>
                       ))}
                     </tr>
@@ -503,10 +503,11 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
                       ...planets.map((p: any) => ({
                         name: p.planet,
                         rasi: p[vargaDef.key] as number,
+                        deg: p.sidereal_deg as number,
                         retro: p.is_retrograde,
                         combust: p.is_combust,
                       })),
-                      ...(ascendant ? [{ name: "ASC", rasi: ascendant[vargaDef.key] as number, retro: false, combust: false }] : []),
+                      ...(ascendant ? [{ name: "ASC", rasi: ascendant[vargaDef.key] as number, deg: ascendant.sidereal_deg, retro: false, combust: false }] : []),
                     ].map((row, i) => {
                       const houseNum = ((row.rasi - (ascendant?.[vargaDef.key] ?? 1) + 12) % 12) + 1;
                       return (
@@ -521,6 +522,23 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
                             <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-xs">H{houseNum}</span>
                           </td>
                           <td className="py-2.5 pr-4 text-white/50 whitespace-nowrap">{SIGN_LORDS[row.rasi] ?? "—"}</td>
+                          {row.deg !== undefined && row.deg !== null ? (() => {
+                            const ni = getNakshatraInfo(row.deg);
+                            return (
+                              <>
+                                <td className="py-2.5 pr-4 text-white/80 whitespace-nowrap">
+                                  {ni.name}
+                                  <span className="ml-1 text-[10px] text-white/40">(Pada {ni.pada})</span>
+                                </td>
+                                <td className="py-2.5 pr-4 text-white/60 whitespace-nowrap">{ni.lord}</td>
+                              </>
+                            );
+                          })() : (
+                            <>
+                              <td className="py-2.5 pr-4 text-white/30 whitespace-nowrap">—</td>
+                              <td className="py-2.5 pr-4 text-white/30 whitespace-nowrap">—</td>
+                            </>
+                          )}
                         </tr>
                       );
                     })}
