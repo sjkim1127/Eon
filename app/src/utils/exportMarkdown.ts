@@ -1,5 +1,9 @@
 import { ganziDisplay, ganziHangul } from "./ganzi";
-import { SIGN_NAMES, VARGA_DEFS, ASHTA_LABELS, ASHTA_MAX } from "../constants";
+import {
+    SIGN_NAMES, VARGA_DEFS, ASHTA_LABELS, ASHTA_MAX,
+    STEM_INFO, ELEMENT_INFO, STRENGTH_INFO, TENGOD_INFO,
+    STRUCTURE_INFO, SPIRIT_INFO, PILLAR_POS_INFO, YONGSHIN_TYPE_INFO,
+} from "../constants";
 import type { SajuAnalysisResult } from "../types";
 import type { VedicAnalysisResult } from "../types";
 import type { TransitResult } from "../types";
@@ -7,6 +11,29 @@ import type { CompReport } from "../types";
 import { computeTierResult, type TierResult } from "./tierScore";
 import { getNakshatraInfo } from "./nakshatra";
 import { formatSiderealPosition, buildNakshatraMarkdownRows } from "./vedicFormat";
+
+/** TraceTag / LifeFrame.tags 가 문자열 혹은 { Key: null } 객체로 올 수 있음 — 항상 문자열로 변환 */
+const tagToStr = (tag: unknown): string => {
+    if (typeof tag === "string") return tag;
+    if (tag && typeof tag === "object") {
+        const keys = Object.keys(tag as object);
+        return keys.length > 0 ? keys[0] : "";
+    }
+    return String(tag ?? "");
+};
+
+/** TenGod 영문 키 → 한글 변환 */
+const tgKr = (key: string) => TENGOD_INFO[key]?.hangul ?? key;
+/** Element 영문 키 → 한글(한자) */
+const elKr = (key: string) => {
+    const e = ELEMENT_INFO[key];
+    return e ? `${e.hangul}(${e.hanja})` : key;
+};
+/** Stem 영문 키 → 한자·한글 */
+const stemKr = (key: string) => {
+    const s = STEM_INFO[key];
+    return s ? `${s.hanja}(${s.hangul})` : key;
+};
 
 const SEP = "\n---\n";
 
@@ -80,33 +107,38 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
 
     // 신강/신약
     const st = r.strength;
+    const dayMasterKr = stemKr(st.day_master);
+    const strengthTypeKr = STRENGTH_INFO[st.strength_type] ?? st.strength_type;
     lines.push("## 신강·신약 분석\n");
-    lines.push(`- **일간**: ${st.day_master} (나의 기본 기운/성향의 중심)`);
-    lines.push(`- **신강/신약**: ${st.strength_type} (점수: ${st.strength_score}, 체력/버팀의 강도)`);
+    lines.push(`- **일간**: ${dayMasterKr} (나의 기본 기운/성향의 중심)`);
+    lines.push(`- **신강/신약**: ${strengthTypeKr} (점수: ${Math.round(st.strength_score * 100) / 100}, 체력/버팀의 강도)`);
     lines.push(`- **득령(得令)**: ${st.deuk_ryeong.acquired ? "✅" : "❌"} (계절의 도움)`);
     lines.push(`- **득지(得地)**: ${st.deuk_ji.acquired ? "✅" : "❌"} (뿌리/근거의 도움)`);
     lines.push(`- **득시(得時)**: ${st.deuk_si.acquired ? "✅" : "❌"} (시간대의 도움)`);
-    const supportPctForExport = (st.deuk_se.support_ratio ?? 0) > 1 ? st.deuk_se.support_ratio : st.deuk_se.support_ratio * 100;
+    const rawSr = st.deuk_se?.support_ratio ?? 0;
+    const supportPctForExport = rawSr > 1 ? rawSr : rawSr * 100;
     lines.push(`- **득세 지지비율**: ${supportPctForExport.toFixed(1)}%`);
     lines.push("");
 
     // 용신
     const y = r.yongshin;
     lines.push("## 용신 분석 (균형을 맞추는 방향)\n");
-    lines.push(`- **주 용신**: ${y.primary}`);
-    lines.push(`- **보조 용신**: ${y.assistant}`);
+    lines.push(`- **주 용신**: ${elKr(y.primary)}`);
+    lines.push(`- **보조 용신**: ${elKr(y.assistant)}`);
     if (y.recommendations?.length) {
         for (const rec of y.recommendations) {
-            lines.push(`- ${rec.yongshin_type} (${rec.element}): ${rec.reason}`);
+            const ynTypeKr = YONGSHIN_TYPE_INFO[rec.yongshin_type] ?? rec.yongshin_type;
+            lines.push(`- ${ynTypeKr} (${elKr(rec.element)}): ${rec.reason}`);
         }
     }
     lines.push("");
 
     // 격국
+    const structInfo = STRUCTURE_INFO[r.structure.structure];
     lines.push("## 격국 (구조/패턴)\n");
-    lines.push(`- **격국명**: ${r.structure.structure}`);
+    lines.push(`- **격국명**: ${structInfo ? `${structInfo.hangul}(${structInfo.hanja})` : r.structure.structure}`);
     lines.push(`- **사유**: ${r.structure.reason}`);
-    if (r.structure.projected_stem) lines.push(`- **투출 천간**: ${r.structure.projected_stem}`);
+    if (r.structure.projected_stem) lines.push(`- **투출 천간**: ${stemKr(r.structure.projected_stem)}`);
     lines.push("");
 
     // 신살
@@ -114,21 +146,29 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
         lines.push("## 신살 (특수 패턴 태그)\n");
         lines.push("| 신살명 | 위치 | 천간/지지 |");
         lines.push("|---|---|---|");
+        // 중복 제거
+        const seenMarkers = new Set<string>();
         for (const m of r.spirit_markers.markers) {
-            lines.push(`| ${m.marker} | ${m.position} | ${m.is_stem ? "천간" : "지지"} |`);
+            const key = `${m.marker}|${m.position}|${m.is_stem}`;
+            if (seenMarkers.has(key)) continue;
+            seenMarkers.add(key);
+            const mKr = SPIRIT_INFO[m.marker]?.hangul ?? m.marker;
+            const posKr = PILLAR_POS_INFO[m.position] ?? m.position;
+            lines.push(`| ${mKr} | ${posKr} | ${m.is_stem ? "천간" : "지지"} |`);
         }
         lines.push("");
     }
 
     // 대운
+    const mlDir: Record<string, string> = { Forward: "순행 (順行)", Reverse: "역행 (逆行)" };
     if (r.major_luck?.cycles?.length) {
         lines.push("## 대운 (10년 단위 큰 흐름)\n");
-        lines.push(`- **순행/역행**: ${r.major_luck.direction} (대운이 흘러가는 방향)`);
+        lines.push(`- **순행/역행**: ${mlDir[r.major_luck.direction] ?? r.major_luck.direction}`);
         lines.push(`- **대운 시작**: ${r.major_luck.start_age}세\n`);
         lines.push("| 간지 | 시작 나이 | 종료 나이 | 천간 십신 | 지지 십신 |");
         lines.push("|---|---|---|---|---|");
         for (const c of r.major_luck.cycles) {
-            lines.push(`| ${ganziDisplay(c.ganzi)} | ${c.start_age}세 | ${c.end_age}세 | ${c.stem_god} | ${c.branch_god} |`);
+            lines.push(`| ${ganziDisplay(c.ganzi)} | ${c.start_age}세 | ${c.end_age}세 | ${tgKr(c.stem_god)} | ${tgKr(c.branch_god)} |`);
         }
         lines.push("");
     }
@@ -156,12 +196,16 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
     if (s.qi_topology) {
         lines.push("## 오행 에너지 흐름 (상생/상극의 순환 상태)\n");
         lines.push(`- **전체 순환 지수**: ${(s.qi_topology.throughput * 100).toFixed(0)}% (높을수록 흐름이 막힘 없이 원활)`);
-        if (s.qi_topology.bottleneck) lines.push(`- **흐름 정체 오행**: ${s.qi_topology.bottleneck}`);
+        if (s.qi_topology.bottleneck) {
+            const bnEl = typeof s.qi_topology.bottleneck === "string" ? elKr(s.qi_topology.bottleneck) : s.qi_topology.bottleneck;
+            lines.push(`- **흐름 정체 오행**: ${bnEl}`);
+        }
         lines.push("\n| 오행 | 용량 | 산출 |");
         lines.push("|---|---|---|");
         for (const n of s.qi_topology.nodes ?? []) {
-            const el = typeof n.element === "string" ? n.element : ((n.element as { hangul?: string })?.hangul ?? "—");
-            lines.push(`| ${el} | ${n.capacity.toFixed(1)} | ${n.output.toFixed(1)} |`);
+            const elKey = typeof n.element === "string" ? n.element : ((n.element as { english?: string })?.english ?? "");
+            const elLabel = ELEMENT_INFO[elKey] ? `${ELEMENT_INFO[elKey].hangul}(${ELEMENT_INFO[elKey].hanja})` : ((n.element as { hangul?: string })?.hangul ?? elKey);
+            lines.push(`| ${elLabel} | ${n.capacity.toFixed(1)} | ${n.output.toFixed(1)} |`);
         }
         lines.push("");
     }
@@ -191,7 +235,7 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
         for (const v of top) {
             const major = v.vector?.major ? `${ganziDisplay(v.vector.major)} (${ganziHangul(v.vector.major)})` : "—";
             const yearly = v.vector?.yearly ? `${ganziDisplay(v.vector.yearly)} (${ganziHangul(v.vector.yearly)})` : "—";
-            const tags = (v.tags ?? []).slice(0, 8).join(", ");
+            const tags = (v.tags ?? []).slice(0, 8).map(tagToStr).join(", ");
             lines.push(`| ${Number.isFinite(v.crash_score) ? v.crash_score.toFixed(1) : "—"} | ${major} | ${yearly} | ${v.vulnerability_type ?? "—"} | ${tags || "—"} |`);
         }
         lines.push("");
@@ -200,14 +244,14 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
     // 정밀 분석(power)
     if (r.power) {
         lines.push("## 정밀 분석 요약 (오행·십신 분포)\n");
-        lines.push(`- **우세 오행**: ${r.power.dominant_element} (가장 강하게 나타나는 기운)`);
-        lines.push(`- **우세 십신**: ${r.power.dominant_ten_god} (행동/관계 패턴의 중심 역할)`);
+        lines.push(`- **우세 오행**: ${elKr(r.power.dominant_element)} (가장 강하게 나타나는 기운)`);
+        lines.push(`- **우세 십신**: ${tgKr(r.power.dominant_ten_god)} (행동/관계 패턴의 중심 역할)`);
         if (Array.isArray(r.power.element_scores) && r.power.element_scores.length) {
             lines.push("\n### 오행 점수\n");
             lines.push("| 오행 | 비중(%) | 점수 |");
             lines.push("|---|---:|---:|");
             for (const [el, pct, score] of r.power.element_scores) {
-                lines.push(`| ${el} | ${(pct ?? 0).toFixed(1)} | ${(score ?? 0).toFixed(1)} |`);
+                lines.push(`| ${elKr(el as string)} | ${(pct ?? 0).toFixed(1)} | ${(score ?? 0).toFixed(1)} |`);
             }
             lines.push("");
         }
@@ -216,7 +260,7 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
             lines.push("| 십신 | 비중(%) | 점수 |");
             lines.push("|---|---:|---:|");
             for (const [tg, pct, score] of r.power.ten_god_scores) {
-                lines.push(`| ${tg} | ${(pct ?? 0).toFixed(1)} | ${(score ?? 0).toFixed(1)} |`);
+                lines.push(`| ${tgKr(tg as string)} | ${(pct ?? 0).toFixed(1)} | ${(score ?? 0).toFixed(1)} |`);
             }
             lines.push("");
         }
@@ -227,10 +271,10 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
         lines.push("## 십신 배치 (기둥별 역할)\n");
         lines.push("| 위치 | 천간 | 지지 |");
         lines.push("|---|---|---|");
-        lines.push(`| 년주 | ${r.ten_gods.year_stem} | ${r.ten_gods.year_branch} |`);
-        lines.push(`| 월주 | ${r.ten_gods.month_stem} | ${r.ten_gods.month_branch} |`);
-        lines.push(`| 일주 | ${r.ten_gods.day_stem} | ${r.ten_gods.day_branch} |`);
-        lines.push(`| 시주 | ${r.ten_gods.hour_stem} | ${r.ten_gods.hour_branch} |`);
+        lines.push(`| 년주 | ${tgKr(r.ten_gods.year_stem)} | ${tgKr(r.ten_gods.year_branch)} |`);
+        lines.push(`| 월주 | ${tgKr(r.ten_gods.month_stem)} | ${tgKr(r.ten_gods.month_branch)} |`);
+        lines.push(`| 일주 | ${tgKr(r.ten_gods.day_stem)} | ${tgKr(r.ten_gods.day_branch)} |`);
+        lines.push(`| 시주 | ${tgKr(r.ten_gods.hour_stem)} | ${tgKr(r.ten_gods.hour_branch)} |`);
         lines.push("");
     }
 
@@ -287,7 +331,7 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
         for (const f of r.simulation_frames) {
             const yearly = f.ganzi ? `${ganziDisplay(f.ganzi)} (${ganziHangul(f.ganzi)})` : "—";
             const major = f.major_ganzi ? `${ganziDisplay(f.major_ganzi)} (${ganziHangul(f.major_ganzi)})` : "—";
-            const tags = (f.tags ?? []).join(", ");
+            const tags = (f.tags ?? []).map(tagToStr).filter(Boolean).join(", ");
             lines.push(`| ${f.age} | ${yearly} | ${major} | ${(f.score ?? 0).toFixed(1)} | ${tags || "—"} |`);
         }
         lines.push("");
@@ -296,9 +340,18 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
         lines.push("### ESIL 트레이스 (상위 위험 프레임 일부)\n");
         for (const f of topFrames) {
             lines.push(`- **${f.age}세** (${ganziDisplay(f.ganzi)} / 대운 ${ganziDisplay(f.major_ganzi)}) 점수 ${(f.score ?? 0).toFixed(1)}`);
-            lines.push("```");
-            lines.push((f.esil_trace ?? "").trim() || "—");
-            lines.push("```");
+            const esilRaw = (f.esil_trace ?? "").trim();
+            if (esilRaw) {
+                lines.push("");
+                for (const tl of esilRaw.split("\n").filter(Boolean)) {
+                    // 세미콜론으로 구분된 경우도 처리
+                    const parts = tl.includes(";") ? tl.split(";").map(s => s.trim()).filter(Boolean) : [tl.trim()];
+                    for (const part of parts) {
+                        const formatted = formatEsilLine(part);
+                        lines.push(`  - ${formatted}`);
+                    }
+                }
+            }
         }
         lines.push("");
     }
@@ -567,7 +620,7 @@ export function buildTransitMarkdown(t: TransitResult): string {
     lines.push("## 세운 (올해의 흐름)\n");
     lines.push(`- **연도**: ${y.year}`);
     lines.push(`- **간지**: ${ganziDisplay(y.ganzi)} (${ganziHangul(y.ganzi)})`);
-    lines.push(`- **천간 십신 / 지지 십신**: ${y.stem_god} / ${y.branch_god}`);
+    lines.push(`- **천간 십신 / 지지 십신**: ${tgKr(y.stem_god)} / ${tgKr(y.branch_god)}`);
     if (y.twelve_stage) lines.push(`- **12운성**: ${y.twelve_stage}`);
     if (y.special_events?.length) lines.push(`- **특이 이벤트**: ${y.special_events.join(", ")}`);
     if (y.influence?.relations_with_natal?.length) {
@@ -580,7 +633,7 @@ export function buildTransitMarkdown(t: TransitResult): string {
     lines.push("## 월운 (이번 달의 흐름)\n");
     lines.push(`- **연-월**: ${m.year}-${String(m.month).padStart(2, "0")}`);
     lines.push(`- **간지**: ${ganziDisplay(m.ganzi)} (${ganziHangul(m.ganzi)})`);
-    lines.push(`- **천간 십신 / 지지 십신**: ${m.stem_god} / ${m.branch_god}`);
+    lines.push(`- **천간 십신 / 지지 십신**: ${tgKr(m.stem_god)} / ${tgKr(m.branch_god)}`);
     if (m.twelve_stage) lines.push(`- **12운성**: ${m.twelve_stage}`);
     if (m.influence?.relations_with_natal?.length) {
         lines.push(`- **원국과의 관계**: ${m.influence.relations_with_natal.join(", ")}`);
@@ -608,7 +661,7 @@ export function buildTransitMarkdown(t: TransitResult): string {
         lines.push(`- **세운**: ${ganziDisplay(f.ganzi)} (${ganziHangul(f.ganzi)})`);
         lines.push(`- **대운**: ${ganziDisplay(f.major_ganzi)} (${ganziHangul(f.major_ganzi)})`);
         lines.push(`- **운세 점수**: ${(f.score ?? 0).toFixed(1)} / 100 (${scoreLabel})`);
-        if (f.tags?.length) lines.push(`- **운세 태그**: ${f.tags.join(", ")}`);
+        if (f.tags?.length) lines.push(`- **운세 태그**: ${f.tags.map(tagToStr).filter(Boolean).join(", ")}`);
         lines.push("");
 
         // ESIL 트레이스
@@ -632,7 +685,7 @@ export function buildTransitMarkdown(t: TransitResult): string {
         for (const ml of monthlyAll) {
             const ganziStr = `${ganziDisplay(ml.ganzi)} (${ganziHangul(ml.ganzi)})`;
             const relations = ml.influence?.relations_with_natal?.join(", ") ?? "—";
-            lines.push(`| ${ml.year}-${String(ml.month).padStart(2, "0")} | ${ganziStr} | ${ml.stem_god} | ${ml.branch_god} | ${ml.twelve_stage ?? "—"} | ${relations} |`);
+            lines.push(`| ${ml.year}-${String(ml.month).padStart(2, "0")} | ${ganziStr} | ${tgKr(ml.stem_god)} | ${tgKr(ml.branch_god)} | ${ml.twelve_stage ?? "—"} | ${relations} |`);
         }
         lines.push("");
     }
