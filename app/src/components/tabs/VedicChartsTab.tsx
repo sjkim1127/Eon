@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle } from "lucide-react";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
-import { getNakshatraInfo } from "../../utils";
+import { getNakshatraInfo, getVargaEffectiveLongitude } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
 import { BhavaRadarSection } from "../sections/BhavaRadarSection";
 import { AspectsSection } from "../sections/AspectsSection";
@@ -203,6 +203,7 @@ interface VedicChartsTabProps {
 
 export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const [copied, setCopied] = useState(false);
+  const [vargaCopied, setVargaCopied] = useState(false);
   const [selectedVargaId, setSelectedVargaId] = useState<string>("navamsa");
   const [chartStyle, setChartStyle] = useState<"south" | "north">("south");
 
@@ -275,6 +276,12 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  const copyVargaCharts = async () => {
+    await navigator.clipboard.writeText(buildVargaTableText());
+    setVargaCopied(true);
+    setTimeout(() => setVargaCopied(false), 2500);
   };
 
   // ── D1 낙샤트라 상세 테이블 데이터 ─────────────────────────────────
@@ -532,7 +539,10 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
                           </td>
                           <td className="py-2.5 pr-4 text-white/50 whitespace-nowrap">{SIGN_LORDS[row.rasi] ?? "—"}</td>
                           {row.deg !== undefined && row.deg !== null ? (() => {
-                            const ni = getNakshatraInfo(row.deg);
+                            const degForNak = vargaDef.id === "rasi"
+                              ? row.deg
+                              : getVargaEffectiveLongitude(row.deg, row.rasi, vargaDef.divisionCount);
+                            const ni = getNakshatraInfo(degForNak);
                             return (
                               <>
                                 <td className="py-2.5 pr-4 text-white/80 whitespace-nowrap">
@@ -561,10 +571,20 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
 
       {/* ── D1-D144 분할 차트 사인 위치 테이블 ──────────────────────── */}
       <div className="glass p-8 rounded-[2rem]">
-        <h5 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
-          <Star className="w-6 h-6 text-celestial-purple" />
-          D1 – D144 사인 포지션 (전체 분할 차트)
-        </h5>
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+          <h5 className="text-xl font-bold text-white flex items-center gap-3">
+            <Star className="w-6 h-6 text-celestial-purple" />
+            D1 – D144 사인 포지션 (전체 분할 차트)
+          </h5>
+          <button
+            type="button"
+            onClick={copyVargaCharts}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-celestial-purple/20 hover:bg-celestial-purple/30 border border-celestial-purple/40 text-celestial-purple text-sm font-semibold transition-colors"
+          >
+            {vargaCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+            {vargaCopied ? "복사됨!" : "D1~D144 차트 복사"}
+          </button>
+        </div>
         <p className="text-xs text-white/40 mb-6">각 셀 = 해당 분할 차트에서의 사인 번호 (1=Aries … 12=Pisces)</p>
 
         <div className="flex gap-4 text-xs text-white/40 mb-4">

@@ -174,6 +174,8 @@ export interface VargaDef {
   label: string;
   name: string;
   key: string;
+  /** 분할 수 (D3=3, D9=9 등) — 바르가별 낙샤트라 계산용 */
+  divisionCount: number;
 }
 
 /** Ashta Kuta 궁합 결과 (CompatibilityResult Rust struct) */
