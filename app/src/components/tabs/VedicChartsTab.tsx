@@ -72,6 +72,7 @@ interface VedicChartsTabProps {
 
 export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const [copied, setCopied] = useState(false);
+  const [selectedVargaId, setSelectedVargaId] = useState<string>("navamsa");
 
   if (!report || !report.chart || !report.chart.planets) return null;
   const planets: any[] = report.chart.planets;
@@ -252,107 +253,80 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
         </div>
       </div>
 
-      {/* ── D9 Navamsa 차트 ──────────────────────────────────────────── */}
-      <div className="glass p-8 rounded-[2rem]">
-        <h5 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
-          <Grid3x3 className="w-6 h-6 text-celestial-cyan" />
-          D9 나바암사 (Navamsa) — 영혼·결혼 차트
-        </h5>
-        <p className="text-xs text-white/40 mb-6">
-          라그나: <span className="text-white/70 font-semibold">{SIGN_NAMES[ascendant?.navamsa_rasi] ?? "—"}</span>
-          <span className="ml-4 text-white/30">황금 테두리 = D9 라그나 · 오른쪽 숫자 = 하우스</span>
-        </p>
-        <div className="flex flex-col md:flex-row gap-8 items-start">
-          <SouthIndianChart
-            lagnaRasi={ascendant?.navamsa_rasi ?? 1}
-            planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p.navamsa_rasi, retro: p.is_retrograde }))}
-          />
-          <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  {["행성", "D9 사인", "D9 하우스", "사인 로드"].map(h => (
-                    <th key={h} className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {[
-                  ...planets.map((p: any) => ({ name: p.planet, rasi: p.navamsa_rasi as number, retro: p.is_retrograde, combust: p.is_combust })),
-                  ...(ascendant ? [{ name: "ASC", rasi: ascendant.navamsa_rasi as number, retro: false, combust: false }] : []),
-                ].map((row, i) => {
-                  const houseNum = ((row.rasi - (ascendant?.navamsa_rasi ?? 1) + 12) % 12) + 1;
-                  return (
-                    <tr key={i} className="hover:bg-white/[0.03] transition-colors">
-                      <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">
-                        {row.name}
-                        {row.retro && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">℞</span>}
-                        {row.combust && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40">☀</span>}
-                      </td>
-                      <td className="py-2.5 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">{SIGN_NAMES[row.rasi] ?? "—"}</td>
-                      <td className="py-2.5 pr-4 text-white/70 whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-xs">H{houseNum}</span>
-                      </td>
-                      <td className="py-2.5 pr-4 text-white/50 whitespace-nowrap">{SIGN_LORDS[row.rasi] ?? "—"}</td>
+      {/* ── 선택형 분할 차트 (D1~D144) ─────────────────────────────────── */}
+      {(() => {
+        const vargaDef = VARGA_DEFS.find((v) => v.id === selectedVargaId) ?? VARGA_DEFS[7]; // fallback to D9 navamsa
+        return (
+          <div className="glass p-8 rounded-[2rem]">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+              <h5 className="text-xl font-bold text-white flex items-center gap-3">
+                <Grid3x3 className="w-6 h-6 text-celestial-cyan" />
+                분할 차트 (Varga Charts)
+              </h5>
+              <select
+                value={selectedVargaId}
+                onChange={(e) => setSelectedVargaId(e.target.value)}
+                className="bg-black/40 border border-white/20 text-white text-sm font-semibold rounded-xl px-4 py-2 outline-none focus:border-celestial-cyan appearance-none cursor-pointer"
+              >
+                {VARGA_DEFS.map((v) => (
+                  <option key={v.id} value={v.id} className="bg-slate-900 text-white">
+                    {v.label} - {v.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <p className="text-xs text-white/40 mb-6 flex flex-wrap gap-4 items-center mt-2 md:mt-0">
+              <span>라그나: <span className="text-white/70 font-semibold">{SIGN_NAMES[ascendant?.[vargaDef.key]] ?? "—"}</span></span>
+              <span className="text-white/30 hidden md:inline">|</span>
+              <span className="text-white/30">황금 테두리 = 현재 차트 라그나 · 오른쪽 숫자 = 하우스 번호</span>
+            </p>
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              <SouthIndianChart
+                lagnaRasi={ascendant?.[vargaDef.key] ?? 1}
+                planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p[vargaDef.key], retro: p.is_retrograde }))}
+              />
+              <div className="flex-1 overflow-x-auto w-full">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      {["행성", `${vargaDef.label} 사인`, `${vargaDef.label} 하우스`, "사인 로드"].map((h) => (
+                        <th key={h} className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">{h}</th>
+                      ))}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {[
+                      ...planets.map((p: any) => ({
+                        name: p.planet,
+                        rasi: p[vargaDef.key] as number,
+                        retro: p.is_retrograde,
+                        combust: p.is_combust,
+                      })),
+                      ...(ascendant ? [{ name: "ASC", rasi: ascendant[vargaDef.key] as number, retro: false, combust: false }] : []),
+                    ].map((row, i) => {
+                      const houseNum = ((row.rasi - (ascendant?.[vargaDef.key] ?? 1) + 12) % 12) + 1;
+                      return (
+                        <tr key={i} className="hover:bg-white/[0.03] transition-colors">
+                          <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">
+                            {row.name}
+                            {row.retro && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">℞</span>}
+                            {row.combust && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40">☀</span>}
+                          </td>
+                          <td className="py-2.5 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">{SIGN_NAMES[row.rasi] ?? "—"}</td>
+                          <td className="py-2.5 pr-4 text-white/70 whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-xs">H{houseNum}</span>
+                          </td>
+                          <td className="py-2.5 pr-4 text-white/50 whitespace-nowrap">{SIGN_LORDS[row.rasi] ?? "—"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* ── D60 Shastiamsha 차트 ─────────────────────────────────────── */}
-      <div className="glass p-8 rounded-[2rem]">
-        <h5 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
-          <Grid3x3 className="w-6 h-6 text-celestial-purple" />
-          D60 샤쉬탸암사 (Shastiamsha) — 카르마 차트
-        </h5>
-        <p className="text-xs text-white/40 mb-6">
-          라그나: <span className="text-white/70 font-semibold">{SIGN_NAMES[ascendant?.shashtyamsa_rasi] ?? "—"}</span>
-          <span className="ml-4 text-white/30">전생 카르마 패턴을 나타내는 60분할 차트</span>
-        </p>
-        <div className="flex flex-col md:flex-row gap-8 items-start">
-          <SouthIndianChart
-            lagnaRasi={ascendant?.shashtyamsa_rasi ?? 1}
-            planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p.shashtyamsa_rasi, retro: p.is_retrograde }))}
-          />
-          <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  {["행성", "D60 사인", "D60 하우스", "사인 로드"].map(h => (
-                    <th key={h} className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {[
-                  ...planets.map((p: any) => ({ name: p.planet, rasi: p.shashtyamsa_rasi as number, retro: p.is_retrograde, combust: p.is_combust })),
-                  ...(ascendant ? [{ name: "ASC", rasi: ascendant.shashtyamsa_rasi as number, retro: false, combust: false }] : []),
-                ].map((row, i) => {
-                  const houseNum = ((row.rasi - (ascendant?.shashtyamsa_rasi ?? 1) + 12) % 12) + 1;
-                  return (
-                    <tr key={i} className="hover:bg-white/[0.03] transition-colors">
-                      <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">
-                        {row.name}
-                        {row.retro && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">℞</span>}
-                        {row.combust && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40">☀</span>}
-                      </td>
-                      <td className="py-2.5 pr-4 text-celestial-purple font-semibold whitespace-nowrap">{SIGN_NAMES[row.rasi] ?? "—"}</td>
-                      <td className="py-2.5 pr-4 text-white/70 whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-xs">H{houseNum}</span>
-                      </td>
-                      <td className="py-2.5 pr-4 text-white/50 whitespace-nowrap">{SIGN_LORDS[row.rasi] ?? "—"}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* ── D1-D144 분할 차트 사인 위치 테이블 ──────────────────────── */}
       <div className="glass p-8 rounded-[2rem]">
