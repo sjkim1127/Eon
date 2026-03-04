@@ -15,11 +15,16 @@ import { computeTierResult, type TierResult } from "../../utils/tierScore";
 // ── 상수 ────────────────────────────────────────────────────────────────────
 
 const TIER_GRADES_UI = [
-  { grade: "S", label: "천운", color: "from-amber-400 to-yellow-600", desc: "사주와 별운이 모두 유리한 극상의 조합" },
-  { grade: "A", label: "대길", color: "from-emerald-400 to-green-600", desc: "전반적으로 아주 강한 기운의 조합" },
-  { grade: "B", label: "길상", color: "from-celestial-cyan to-indigo-500", desc: "균형 잡힌 운세, 적극적으로 활용 가능" },
-  { grade: "C", label: "중평", color: "from-slate-400 to-slate-600", desc: "일부 어려움이 있으나 극복 가능한 조합" },
-  { grade: "D", label: "다다익선", color: "from-rose-400 to-pink-600", desc: "성장 여지가 많은 시기, 주의 시점 활용 권장" },
+  { grade: "S+", label: "천기",    color: "from-orange-300 to-amber-500",    desc: "극희귀 최상의 조합" },
+  { grade: "S",  label: "천운",    color: "from-amber-400 to-yellow-600",    desc: "사주와 별운이 모두 유리한 극상의 조합" },
+  { grade: "A+", label: "대길상",  color: "from-lime-400 to-emerald-500",    desc: "용신·대운·요가가 거의 완벽하게 지원하는 강운" },
+  { grade: "A",  label: "대길",    color: "from-emerald-400 to-green-600",   desc: "전반적으로 아주 강한 기운의 조합" },
+  { grade: "B+", label: "길상",    color: "from-sky-400 to-celestial-cyan",  desc: "균형이 잡히고 강점이 뚜렷하게 빛나는 운세" },
+  { grade: "B",  label: "길",      color: "from-celestial-cyan to-indigo-500", desc: "전반적으로 안정적이고 활용 가능한 운세" },
+  { grade: "C+", label: "중상",    color: "from-violet-400 to-purple-500",   desc: "보통 이상의 기운, 노력으로 충분히 도약 가능" },
+  { grade: "C",  label: "중평",    color: "from-slate-400 to-slate-600",     desc: "일부 어려움이 있으나 극복 가능한 조합" },
+  { grade: "D+", label: "성장예비", color: "from-orange-400 to-rose-500",    desc: "성장 여지가 많으며 빠른 상향 가능" },
+  { grade: "D",  label: "다다익선", color: "from-rose-400 to-pink-600",      desc: "성장 여지가 많은 시기, 주의 시점 활용 권장" },
 ] as const;
 
 const PROFILE_META: Record<string, { icon: string; label: string; color: string }> = {
@@ -34,7 +39,9 @@ const RISK_META: Record<string, { icon: string; label: string; color: string; bg
   high:   { icon: "🔴", label: "리스크 높음", color: "text-rose-300",    bg: "bg-rose-500/15 border-rose-500/30"     },
 };
 
-const TIER_SCORE_MAP: Record<string, number> = { S: 5, A: 4, B: 3, C: 2, D: 1 };
+const TIER_SCORE_MAP: Record<string, number> = {
+  "S+": 10, S: 9, "A+": 8, A: 7, "B+": 6, B: 5, "C+": 4, C: 3, "D+": 2, D: 1,
+};
 
 // ── 헬퍼 함수 ───────────────────────────────────────────────────────────────
 
@@ -47,14 +54,21 @@ function buildInsightBlocks(result: TierResult): { title: string; icon: string; 
   const blocks: { title: string; icon: string; text: string; color: string }[] = [];
 
   // ── 1. 종합 판정 ──────────────────────────────────
+  // S+/S는 같은 계열, + 접두 제거로 base 키 참조
+  const base = grade.replace("+", "") as string;
   const baseMap: Record<string, string> = {
-    S: `사주와 별운이 서로 보완하며 극상의 기운을 이룹니다(${Math.round(destinyScore)}점). 대부분의 조건이 이상적으로 결합된 희귀한 조합입니다.`,
-    A: `전반적으로 매우 강한 차트입니다(${Math.round(destinyScore)}점). 용신·대운·요가가 유리하게 맞물리는 시기에 적극적인 도전이 빛납니다.`,
-    B: `균형이 잘 잡힌 운세입니다(${Math.round(destinyScore)}점). 강점을 살리고 주의 시점을 사전에 파악해 보완하면 좋은 결과를 기대할 수 있습니다.`,
-    C: `일부 어려운 구간이 있으나 충분히 극복 가능합니다(${Math.round(destinyScore)}점). 주의 시점과 골든타임·대운 흐름을 함께 참고하세요.`,
-    D: `성장 여지가 많은 시기입니다(${Math.round(destinyScore)}점). 주의 구간을 피하고 용신·요가가 도와주는 구간을 집중 활용하면 큰 변화를 만들 수 있습니다.`,
+    "S+": `사주와 별운이 완전히 일치하는 극희귀 최상의 조합입니다(${Math.round(destinyScore)}점). 모든 조건이 이상적으로 결합된 천기(天機) 수준의 운세입니다.`,
+    S:  `사주와 별운이 서로 보완하며 극상의 기운을 이룹니다(${Math.round(destinyScore)}점). 대부분의 조건이 이상적으로 결합된 희귀한 조합입니다.`,
+    "A+": `용신·대운·요가가 거의 완벽하게 지원하는 강한 차트입니다(${Math.round(destinyScore)}점). 적극적인 도전과 확장이 결실을 맺기 매우 좋은 환경입니다.`,
+    A:  `전반적으로 매우 강한 차트입니다(${Math.round(destinyScore)}점). 용신·대운·요가가 유리하게 맞물리는 시기에 적극적인 도전이 빛납니다.`,
+    "B+": `균형이 잡혀 있고 강점이 뚜렷하게 빛나는 운세입니다(${Math.round(destinyScore)}점). 강점 분야를 주력으로 삼으면 기대 이상의 결과를 낼 수 있습니다.`,
+    B:  `전반적으로 안정적이고 활용 가능한 운세입니다(${Math.round(destinyScore)}점). 강점을 살리고 주의 시점을 사전에 파악해 보완하면 좋은 결과를 기대할 수 있습니다.`,
+    "C+": `보통 이상의 기운으로 노력에 따라 충분히 도약 가능합니다(${Math.round(destinyScore)}점). 골든타임·용신 방향을 정확하게 파악하고 실행하는 것이 키포인트입니다.`,
+    C:  `일부 어려운 구간이 있으나 충분히 극복 가능합니다(${Math.round(destinyScore)}점). 주의 시점과 골든타임·대운 흐름을 함께 참고하세요.`,
+    "D+": `성장 여지가 많으며 조건이 갖춰지면 빠른 상향이 가능합니다(${Math.round(destinyScore)}점). 지금은 기반을 다지고 골든타임을 기다리는 준비 단계입니다.`,
+    D:  `성장 여지가 많은 시기입니다(${Math.round(destinyScore)}점). 주의 구간을 피하고 용신·요가가 도와주는 구간을 집중 활용하면 큰 변화를 만들 수 있습니다.`,
   };
-  blocks.push({ title: "종합 판정", icon: "🏆", text: baseMap[grade] ?? "", color: "text-celestial-gold" });
+  blocks.push({ title: "종합 판정", icon: "🏆", text: baseMap[grade] ?? baseMap[base] ?? "", color: "text-celestial-gold" });
 
   // ── 2. 원국 vs 현재 운세 비교 ────────────────────
   const diffText = (() => {
@@ -381,7 +395,7 @@ export function DestinyTierTab({ sajuReport, report, transitReport, unknownTime 
       {domainTiers.length > 0 && (
         <div className="glass p-6 rounded-2xl">
           <h5 className="text-lg font-bold text-white mb-1">분야별 티어</h5>
-          <p className="text-xs text-white/40 mb-4">베딕 12하우스 강도 기반 (S=5 · A=4 · B=3 · C=2 · D=1)</p>
+          <p className="text-xs text-white/40 mb-4">베딕 12하우스 강도 기반 (S+=10 · S=9 · A+=8 · A=7 · B+=6 · B=5 · C+=4 · C=3 · D+=2 · D=1)</p>
           <ResponsiveContainer width="100%" height={300}>
             <RadarChart data={radarData} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
               <PolarGrid stroke="rgba(255,255,255,0.1)" />
@@ -391,7 +405,7 @@ export function DestinyTierTab({ sajuReport, report, transitReport, unknownTime 
               />
               <PolarRadiusAxis
                 angle={90}
-                domain={[0, 5]}
+                domain={[0, 10]}
                 tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 9 }}
                 tickCount={6}
               />
@@ -418,13 +432,18 @@ export function DestinyTierTab({ sajuReport, report, transitReport, unknownTime 
             </RadarChart>
           </ResponsiveContainer>
           {/* 티어 범례 */}
-          <div className="flex flex-wrap justify-center gap-2 mt-2">
+          <div className="flex flex-wrap justify-center gap-1.5 mt-2">
             {[
-              { t: "S", c: "bg-amber-500/30 text-amber-300 border-amber-500/40" },
-              { t: "A", c: "bg-emerald-500/30 text-emerald-300 border-emerald-500/40" },
-              { t: "B", c: "bg-celestial-cyan/20 text-celestial-cyan border-celestial-cyan/40" },
-              { t: "C", c: "bg-slate-500/20 text-slate-300 border-slate-500/40" },
-              { t: "D", c: "bg-rose-500/20 text-rose-400 border-rose-500/40" },
+              { t: "S+", c: "bg-orange-500/30 text-orange-300 border-orange-500/40" },
+              { t: "S",  c: "bg-amber-500/30 text-amber-300 border-amber-500/40" },
+              { t: "A+", c: "bg-lime-500/30 text-lime-300 border-lime-500/40" },
+              { t: "A",  c: "bg-emerald-500/30 text-emerald-300 border-emerald-500/40" },
+              { t: "B+", c: "bg-sky-500/30 text-sky-300 border-sky-500/40" },
+              { t: "B",  c: "bg-celestial-cyan/20 text-celestial-cyan border-celestial-cyan/40" },
+              { t: "C+", c: "bg-violet-500/30 text-violet-300 border-violet-500/40" },
+              { t: "C",  c: "bg-slate-500/20 text-slate-300 border-slate-500/40" },
+              { t: "D+", c: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
+              { t: "D",  c: "bg-rose-500/20 text-rose-400 border-rose-500/40" },
             ].map(({ t, c }) => (
               <span key={t} className={`px-2 py-0.5 rounded text-xs font-bold border ${c}`}>{t}</span>
             ))}
@@ -432,11 +451,17 @@ export function DestinyTierTab({ sajuReport, report, transitReport, unknownTime 
           {/* 보조 배지 그리드 */}
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mt-4">
             {domainTiers.map(({ house, domain, tier }) => {
-              const tierColor = tier === "S" ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                : tier === "A" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                  : tier === "B" ? "bg-celestial-cyan/15 text-celestial-cyan border-celestial-cyan/30"
-                    : tier === "C" ? "bg-slate-500/15 text-slate-300 border-slate-500/30"
-                      : "bg-rose-500/15 text-rose-400 border-rose-500/30";
+              const tierColor =
+                tier === "S+" ? "bg-orange-500/15 text-orange-300 border-orange-500/30"
+                : tier === "S"  ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                : tier === "A+" ? "bg-lime-500/15 text-lime-400 border-lime-500/30"
+                : tier === "A"  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                : tier === "B+" ? "bg-sky-500/15 text-sky-400 border-sky-500/30"
+                : tier === "B"  ? "bg-celestial-cyan/15 text-celestial-cyan border-celestial-cyan/30"
+                : tier === "C+" ? "bg-violet-500/15 text-violet-400 border-violet-500/30"
+                : tier === "C"  ? "bg-slate-500/15 text-slate-300 border-slate-500/30"
+                : tier === "D+" ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
+                : "bg-rose-500/15 text-rose-400 border-rose-500/30";
               return (
                 <div key={house} className={`p-2 rounded-lg border text-center ${tierColor}`}>
                   <p className="text-[9px] text-white/50 mb-0.5 leading-tight">{domain}</p>

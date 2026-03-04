@@ -6,21 +6,32 @@ import type { VedicAnalysisResult } from "../types";
 import type { TransitResult } from "../types";
 
 export const TIER_GRADES = [
-  { grade: "S", label: "천운", desc: "사주와 별운이 모두 유리한 극상의 조합" },
-  { grade: "A", label: "대길", desc: "전반적으로 아주 강한 기운의 조합" },
-  { grade: "B", label: "길상", desc: "균형 잡힌 운세, 적극적으로 활용 가능" },
-  { grade: "C", label: "중평", desc: "일부 어려움이 있으나 극복 가능한 조합" },
-  { grade: "D", label: "다다익선", desc: "성장 여지가 많은 시기, 주의 시점 활용 권장" },
+  { grade: "S+", label: "천기",   desc: "사주와 별운이 완전히 일치하는 극희귀 최상의 조합" },
+  { grade: "S",  label: "천운",   desc: "사주와 별운이 모두 유리한 극상의 조합" },
+  { grade: "A+", label: "대길상", desc: "용신·대운·요가가 거의 완벽하게 지원하는 강운" },
+  { grade: "A",  label: "대길",   desc: "전반적으로 아주 강한 기운의 조합" },
+  { grade: "B+", label: "길상",   desc: "균형이 잡히고 강점이 뚜렷하게 빛나는 운세" },
+  { grade: "B",  label: "길",     desc: "전반적으로 안정적이고 활용 가능한 운세" },
+  { grade: "C+", label: "중상",   desc: "보통 이상의 기운, 노력으로 충분히 도약 가능" },
+  { grade: "C",  label: "중평",   desc: "일부 어려움이 있으나 극복 가능한 조합" },
+  { grade: "D+", label: "성장예비", desc: "성장 여지가 많으며 조건이 갖춰지면 빠른 상향 가능" },
+  { grade: "D",  label: "다다익선", desc: "성장 여지가 많은 시기, 주의 시점 활용 권장" },
 ] as const;
 
-// 기준 상향: 원점수 인플레이션 제거 후 실질적 분포 조정
-// 기존(log): 60원점 → 80 정규화 → A/B 몰림 → 새 기준으로 C~B 정상 분포
+// 10단계 티어 기준 (score → grade)
+// 사용자 점수 34 → D+ 로 인식되도록 설계
+// S+: 93+, S: 85+, A+: 77+, A: 69+, B+: 61+, B: 53+, C+: 45+, C: 37+, D+: 29+, D: <29
 export function getTierFromScore(score: number): (typeof TIER_GRADES)[number] {
-  if (score >= 85) return TIER_GRADES[0]; // S: 원점수 90+ (극상)
-  if (score >= 70) return TIER_GRADES[1]; // A: 원점수 80+ (상위)
-  if (score >= 54) return TIER_GRADES[2]; // B: 원점수 66+ (양호)
-  if (score >= 38) return TIER_GRADES[3]; // C: 원점수 50+ (평균)
-  return TIER_GRADES[4];                  // D: 원점수 50 미만
+  if (score >= 93) return TIER_GRADES[0]; // S+
+  if (score >= 85) return TIER_GRADES[1]; // S
+  if (score >= 77) return TIER_GRADES[2]; // A+
+  if (score >= 69) return TIER_GRADES[3]; // A
+  if (score >= 61) return TIER_GRADES[4]; // B+
+  if (score >= 53) return TIER_GRADES[5]; // B
+  if (score >= 45) return TIER_GRADES[6]; // C+
+  if (score >= 37) return TIER_GRADES[7]; // C
+  if (score >= 29) return TIER_GRADES[8]; // D+
+  return TIER_GRADES[9];                  // D
 }
 
 const RATING_TO_TIER: Record<string, string> = {
