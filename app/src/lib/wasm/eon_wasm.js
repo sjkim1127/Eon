@@ -727,6 +727,11 @@ function __wbg_get_imports() {
         const ret = getStringFromWasm0(arg0, arg1);
         return ret;
     };
+    imports.wbg.__wbindgen_cast_4625c577ab2ec9ee = function(arg0) {
+        // Cast intrinsic for `U64 -> Externref`.
+        const ret = BigInt.asUintN(64, arg0);
+        return ret;
+    };
     imports.wbg.__wbindgen_cast_b3587965ddad1edc = function(arg0, arg1) {
         // Cast intrinsic for `Closure(Closure { dtor_idx: 25, function: Function { arguments: [Externref], shim_idx: 26, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
         const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h5e9e2a75c5727948, wasm_bindgen__convert__closures_____invoke__h4cd75a9079ae9638);
