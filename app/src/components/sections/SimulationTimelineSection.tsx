@@ -39,7 +39,9 @@ export function SimulationTimelineSection({ frames }: SimulationTimelineSectionP
   const chartData = frames.map((f) => ({
     age: f.age,
     score: Number(f.score ?? 0),
-    ganzi: f.ganzi ? ganziDisplay(f.ganzi) : "—",
+    ganzi: f.ganzi && f.ganzi.stem != null && f.ganzi.branch != null
+      ? ganziDisplay({ stem: f.ganzi.stem, branch: f.ganzi.branch })
+      : "—",
     tags: (f.tags ?? []).slice(0, 3).join(", "),
   }));
 
@@ -92,7 +94,7 @@ export function SimulationTimelineSection({ frames }: SimulationTimelineSectionP
               }}
             />
             <Bar dataKey="score" radius={[2, 2, 0, 0]} maxBarSize={12}>
-              {chartData.map((entry, index) => (
+              {chartData.map((entry) => (
                 <Cell
                   key={entry.age}
                   fill={getScoreColor(entry.score)}
