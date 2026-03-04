@@ -49,62 +49,201 @@ const softNormalizeForDestiny = (score: number): number => {
   return Math.round(y * 100);
 };
 
+// 흉격 계열 격국
+const WEAK_STRUCTURES = new Set(["Follower", "FollowerResource", "FollowerStrength"]);
+// 길한 12운성
+const GOOD_12_STAGES = new Set(["장생", "건록", "제왕", "관대", "목욕"]);
+// 흉한 12운성
+const BAD_12_STAGES = new Set(["절", "묘", "태"]);
+
 function computeSajuScore(saju: SajuAnalysisResult | null): { score: number; highlights: string[] } {
   if (!saju?.report) return { score: 0, highlights: [] };
   const r = saju.report;
   const st = r.strength;
   const highlights: string[] = [];
-  const strengthNorm = clampScore((st.strength_score ?? 50) * 2);
-  let sajuScore = strengthNorm * 0.35;
-  if (st.deuk_ryeong?.acquired) { sajuScore += 8; highlights.push("득령: 계절의 도움"); }
-  if (st.deuk_ji?.acquired) { sajuScore += 8; highlights.push("득지: 뿌리의 도움"); }
-  if (st.deuk_si?.acquired) { sajuScore += 6; highlights.push("득시: 시간대의 도움"); }
+  let sajuScore = 0;
+
+  // ── 1. 신강/신약 (strength_score 0~50 → 정규화) ──
+  const strengthNorm = clampScore((st.strength_score ?? 25) * 2);
+  sajuScore += strengthNorm * 0.28; // 최대 28점
+
+  // ── 2. 득령/득지/득시 ──
+  const acquired = [st.deuk_ryeong?.acquired, st.deuk_ji?.acquired, st.deuk_si?.acquired].filter(Boolean).length;
+  sajuScore += acquired * 4; // 최대 12점
+  if (acquired === 3) highlights.push("삼득(득령·득지·득시) 완성");
+  else if (acquired >= 2) highlights.push(`득령·득지·득시 ${acquired}개 달성`);
+
+  // ── 3. 득세 지지비율 ──
   const rawSupportRatio = st.deuk_se?.support_ratio ?? 0;
-  // 백엔드가 소수(0~1) 또는 % 단위(>1, 예: 31.82)로 반환할 수 있으므로 자동 감지
   const supportPct = rawSupportRatio > 1 ? rawSupportRatio : rawSupportRatio * 100;
-  sajuScore += (supportPct / 100) * 12; // 15 → 12 (과도 보너스 완화)
-  if (supportPct > 50) highlights.push(`득세 지지비율 ${supportPct.toFixed(0)}%`);
+  sajuScore += (supportPct / 100) * 10; // 최대 10점
+  if (supportPct > 60) highlights.push(`득세 지지비율 ${supportPct.toFixed(0)}% (우세)`);
+  else if (supportPct < 30) { /* 약세 — 감점 없음, 이미 낮은 값 */ }
+
+  // ── 4. 오행 에너지 흐름 ──
   const throughput = saju.qi_topology?.throughput ?? 0;
-  sajuScore += throughput * 18; // 25 → 18 (throughput이 점수를 지나치게 주도하던 문제 완화)
-  if (throughput > 0.7) highlights.push(`오행 흐름 원활 ${(throughput * 100).toFixed(0)}%`);
-  if (r.golden_time) { sajuScore += 7; highlights.push(`골든타임 ${r.golden_time.start_age}~${r.golden_time.end_age}세`); } // 10 → 7
+  sajuScore += throughput * 12; // 최대 12점
+  if (throughput > 0.75) highlights.push(`오행 흐름 ${(throughput * 100).toFixed(0)}% (원활)`);
+  // 병목 페널티
+  if (saju.qi_topology?.bottleneck) sajuScore -= 2;
+
+  // ── 5. 격국 유형 ──
+  const structure = r.structure?.structure ?? "";
+  if (WEAK_STRUCTURES.has(structure)) sajuScore -= 3; // 종격류
+  else if (structure) sajuScore += 2; // 일반 내격
+
+  // ── 6. 신살 — 길신·흉신 비율 ──
+  const auspicious = r.spirit_markers?.auspicious?.length ?? 0;
+  const inauspicious = r.spirit_markers?.inauspicious?.length ?? 0;
+  sajuScore += Math.min(5, auspicious * 1); // 길신 최대 +5
+  sajuScore -= Math.min(4, inauspicious * 0.8); // 흉신 최대 -4
+  if (auspicious > 0) highlights.push(`길신 ${auspicious}개 (천을귀인 등)`);
+  if (inauspicious >= 3) highlights.push(`흉신 ${inauspicious}개 주의`);
+
+  // ── 7. 골든타임 ──
+  if (r.golden_time) {
+    const gtLength = (r.golden_time.end_age - r.golden_time.start_age);
+    sajuScore += Math.min(6, gtLength * 0.4); // 길이에 비례 최대 6점
+    highlights.push(`골든타임 ${r.golden_time.start_age}~${r.golden_time.end_age}세 (${gtLength}년)`);
+  }
+
+  // ── 8. 시뮬레이션 프레임 — 평균 점수 + 고득점 구간 비율 ──
+  const frames = r.simulation_frames ?? [];
+  if (frames.length > 0) {
+    const avg = frames.reduce((s, f) => s + (f.score ?? 50), 0) / frames.length;
+    const goodPct = frames.filter(f => (f.score ?? 0) >= 65).length / frames.length;
+    sajuScore += Math.min(8, (avg - 50) * 0.16); // 평균 50 기준 최대 ±8
+    sajuScore += goodPct * 5; // 좋은 구간 비율 최대 5점
+    if (avg >= 70) highlights.push(`시뮬레이션 평균 ${avg.toFixed(0)}점 (우수)`);
+  }
+
+  // ── 9. 주의 시점 (vulnerability) ──
   const vulnTotal = saju.vulnerability_report?.total_crashes ?? 0;
-  if (vulnTotal > 40) sajuScore -= 5; else if (vulnTotal === 0 && saju.vulnerability_report) sajuScore += 5;
+  if (vulnTotal === 0 && saju.vulnerability_report) { sajuScore += 4; highlights.push("충돌 주의 시점 없음"); }
+  else if (vulnTotal > 40) { sajuScore -= 5; highlights.push(`주의 시점 ${vulnTotal}개`); }
+  else if (vulnTotal > 20) sajuScore -= 2;
+
+  // ── 10. 안정성 등급 ──
   const stabilityGrade = saju.complexity?.stability_grade ?? "";
-  if (/^[AB]$/.test(stabilityGrade) || stabilityGrade.includes("A") || stabilityGrade.includes("B")) sajuScore += 4;
-  else if (stabilityGrade.includes("D") || /High Entropy|Unstable/i.test(stabilityGrade)) sajuScore -= 3;
-  if (r.yongshin?.primary) sajuScore += 2;
-  return { score: clampScore(Math.round(sajuScore)), highlights: highlights.slice(0, 5) };
+  if (/^A/.test(stabilityGrade)) { sajuScore += 4; highlights.push("안정성 A등급"); }
+  else if (/^B/.test(stabilityGrade)) sajuScore += 2;
+  else if (/^D/.test(stabilityGrade) || /Unstable|High Entropy/i.test(stabilityGrade)) sajuScore -= 3;
+
+  // ── 11. 린트 — Error 페널티, 클린 보너스 ──
+  const lints = saju.lints ?? [];
+  const errorCount = lints.filter(l => l.severity === "Error").length;
+  const warnCount = lints.filter(l => l.severity === "Warning").length;
+  if (errorCount === 0 && warnCount === 0) { sajuScore += 2; highlights.push("사주 구조 클린"); }
+  sajuScore -= Math.min(6, errorCount * 2 + warnCount * 0.5);
+
+  // ── 12. 운명 복잡도 엔트로피 — 낮을수록 단순·안정 ──
+  const entropyScore = saju.entropy?.score ?? 0.5;
+  if (entropyScore < 0.3) { sajuScore += 2; highlights.push("운명 패턴 단순 (예측 가능)"); }
+  else if (entropyScore > 0.7) { sajuScore -= 2; highlights.push("운명 변수 많음"); }
+
+  // ── 13. 용신 추천 명확도 ──
+  const recCount = r.yongshin?.recommendations?.length ?? 0;
+  if (recCount >= 2) sajuScore += 2; // 용신 방향이 여럿으로 명확
+
+  return { score: clampScore(Math.round(sajuScore)), highlights: highlights.slice(0, 6) };
 }
 
 function computeVedicScore(report: VedicAnalysisResult | null): { score: number; highlights: string[] } {
   if (!report?.report) return { score: 0, highlights: [] };
   const r = report.report;
   const chart = report.chart;
-  const strengthNorm = clampScore((r.overall_strength_score ?? 0) / 6);
-  let vedicScore = strengthNorm * 0.5;
   const highlights: string[] = [];
+  let vedicScore = 0;
+
+  // ── 1. 전체 차트 강도 (0~600 → 0~100 정규화) ──
+  const strengthNorm = clampScore((r.overall_strength_score ?? 0) / 6);
+  vedicScore += strengthNorm * 0.35; // 최대 35점
+
+  // ── 2. 요가 품질 ──
   const yogas = r.yogas ?? [];
+  const veryHighYogas = yogas.filter((y: { quality: string | object }) => {
+    const q = typeof y.quality === "string" ? y.quality : Object.keys(y.quality ?? {})[0];
+    return q === "VeryHigh";
+  });
   const highYogas = yogas.filter((y: { quality: string | object }) => {
     const q = typeof y.quality === "string" ? y.quality : Object.keys(y.quality ?? {})[0];
-    return q === "VeryHigh" || q === "High";
+    return q === "High";
   });
-  vedicScore += Math.min(20, highYogas.length * 5);
-  if (highYogas.length > 0) highlights.push(`우수 요가 ${highYogas.length}개`);
+  vedicScore += Math.min(12, veryHighYogas.length * 4 + highYogas.length * 2);
+  if (veryHighYogas.length > 0) highlights.push(`최상급 요가 ${veryHighYogas.length}개`);
+  else if (highYogas.length > 0) highlights.push(`우수 요가 ${highYogas.length}개`);
+
+  // ── 3. 하우스 강도 분류 ──
   const houseSummary = r.house_summary ?? [];
-  const strongHouses = houseSummary.filter((h: { rating: string }) => h.rating === "Excellent" || h.rating === "Strong").length;
-  vedicScore += (strongHouses / 12) * 20;
-  if (strongHouses >= 6) highlights.push(`강한 하우스 ${strongHouses}개`);
-  if (r.sade_sati === "None") { vedicScore += 5; highlights.push("사데사티 비해당"); }
-  else if (r.sade_sati === "Peak" || r.sade_sati === "Rising") vedicScore -= 5;
-  const dashaFocus = r.dasha_focus ?? "";
-  if (BENEFIC_PLANETS.some((p) => dashaFocus.includes(p))) vedicScore += 4;
+  const excellentHouses = houseSummary.filter((h: { rating: string }) => h.rating === "Excellent").length;
+  const strongHouses = houseSummary.filter((h: { rating: string }) => h.rating === "Strong").length;
+  const weakHouses = houseSummary.filter((h: { rating: string }) => h.rating === "Weak").length;
+  vedicScore += Math.min(10, excellentHouses * 2 + strongHouses * 0.8);
+  vedicScore -= Math.min(6, weakHouses * 1.2);
+  if (excellentHouses >= 4) highlights.push(`최강 하우스 ${excellentHouses}개`);
+  else if (strongHouses + excellentHouses >= 6) highlights.push(`강한 하우스 ${strongHouses + excellentHouses}개`);
+
+  // ── 4. 핵심 하우스 강도 (1·5·9·10—자아·운·지혜·명예) ──
   const bhava = chart?.bhava_strengths ?? [];
-  const h1 = bhava.find((b: { house: number }) => b.house === 1);
-  const h10 = bhava.find((b: { house: number }) => b.house === 10);
-  if ((h1?.total_score ?? 0) > 50) vedicScore += 1;
-  if ((h10?.total_score ?? 0) > 50) vedicScore += 1;
-  return { score: clampScore(Math.round(vedicScore)), highlights: highlights.slice(0, 5) };
+  const KEY_HOUSES = [1, 5, 9, 10];
+  let keyHouseBonus = 0;
+  for (const h of KEY_HOUSES) {
+    const bh = bhava.find((b: { house: number }) => b.house === h);
+    if ((bh?.total_score ?? 0) >= 60) keyHouseBonus += 1.5;
+    else if ((bh?.total_score ?? 0) >= 40) keyHouseBonus += 0.5;
+  }
+  vedicScore += Math.min(6, keyHouseBonus);
+  if (keyHouseBonus >= 4) highlights.push("핵심 하우스(1·5·9·10) 강화");
+
+  // ── 5. 사데사티 ──
+  if (r.sade_sati === "None") { vedicScore += 5; highlights.push("사데사티 비해당"); }
+  else if (r.sade_sati === "Peak") { vedicScore -= 6; highlights.push("사데사티 절정 진행 중"); }
+  else if (r.sade_sati === "Rising") { vedicScore -= 3; highlights.push("사데사티 상승 진행 중"); }
+  else if (r.sade_sati === "Setting") vedicScore -= 1; // 하강은 일부 회복
+
+  // ── 6. 현재 다샤 기준 길성 여부 ──
+  const dashaFocus = r.dasha_focus ?? "";
+  if (BENEFIC_PLANETS.some((p) => dashaFocus.includes(p))) { vedicScore += 4; highlights.push(`길성 다샤 (${dashaFocus.split(" ")[0]})`); }
+
+  // ── 7. SAV 포인트 — 28+ 하우스가 많을수록 강함 ──
+  const savPoints = chart?.sav?.points ?? [];
+  if (Array.isArray(savPoints) && savPoints.length === 12) {
+    const strongSav = savPoints.filter((p: number) => p >= 28).length;
+    const weakSav = savPoints.filter((p: number) => p <= 22).length;
+    vedicScore += Math.min(5, strongSav * 0.8);
+    vedicScore -= Math.min(4, weakSav * 0.8);
+    if (strongSav >= 6) highlights.push(`SAV 강점 하우스 ${strongSav}개`);
+  }
+
+  // ── 8. 빔쇼파카 발라 평균 (0~20 → ×5 환산) ──
+  const vimshopaka = chart?.vimshopaka_scores ?? [];
+  if (vimshopaka.length > 0) {
+    const avgVim = vimshopaka.reduce((sum: number, [, v]: [string, { shadvarga_score: number; shodashavarga_score: number }]) => {
+      return sum + ((v.shadvarga_score + v.shodashavarga_score) / 2);
+    }, 0) / vimshopaka.length;
+    vedicScore += Math.min(6, (avgVim / 20) * 6); // 최대 6점
+    if (avgVim >= 14) highlights.push(`빔쇼파카 발라 평균 ${avgVim.toFixed(1)} (강함)`);
+  }
+
+  // ── 9. 역행·연소 행성 페널티 ──
+  const planets = chart?.planets ?? [];
+  const retroCount = planets.filter((p: { is_retrograde: boolean }) => p.is_retrograde).length;
+  const combustCount = planets.filter((p: { is_combust: boolean }) => p.is_combust).length;
+  vedicScore -= Math.min(4, retroCount * 0.8);
+  vedicScore -= Math.min(3, combustCount * 0.8);
+  if (retroCount + combustCount >= 3) highlights.push(`역행 ${retroCount}+연소 ${combustCount}개 (약화)`);
+
+  // ── 10. 아바스타 (행성 상태) — Bala=활성, Mrita=사망 ──
+  const avasthas = chart?.avasthas ?? [];
+  if (avasthas.length > 0) {
+    const balaCount = avasthas.filter((a: { baladi: string }) => a.baladi === "Bala" || a.baladi === "Yuva").length;
+    const mrtaCount = avasthas.filter((a: { baladi: string }) => a.baladi === "Mrita" || a.baladi === "Vridha").length;
+    vedicScore += Math.min(3, balaCount * 0.6);
+    vedicScore -= Math.min(3, mrtaCount * 0.7);
+    if (balaCount >= 4) highlights.push(`활성 행성 ${balaCount}개 (Bala·Yuva)`);
+  }
+
+  return { score: clampScore(Math.round(vedicScore)), highlights: highlights.slice(0, 6) };
 }
 
 function computeTransitScore(transit: TransitResult | null | undefined): { score: number; highlights: string[] } {
@@ -113,40 +252,117 @@ function computeTransitScore(transit: TransitResult | null | undefined): { score
   const frame = transit.current_frame;
   const nearby = transit.nearby_diagnostics ?? [];
   let score = frame?.score != null ? clampScore(frame.score) : 50;
-  if (score >= 70) highlights.push("현재 운세 긍정적");
+
+  // ── 1. 현재 프레임 점수 기반 라벨 ──
+  if (score >= 75) highlights.push("현재 운세 긍정적 (맑음)");
+  else if (score >= 55) highlights.push("현재 운세 보통 (구름)");
   else if (score < 40) highlights.push("현재 운세 주의 필요");
+
+  // ── 2. 근처 부하 진단 ──
   const badCount = nearby.filter((d: { status: string }) => d.status === "Overloaded" || d.status === "SystemDown").length;
-  if (badCount > 0) { score -= Math.min(15, badCount * 5); highlights.push(`부하 구간 ${badCount}개`); }
-  return { score: clampScore(Math.round(score)), highlights: highlights.slice(0, 3) };
+  if (badCount > 0) { score -= Math.min(15, badCount * 5); highlights.push(`근처 부하 구간 ${badCount}개`); }
+  const downCount = nearby.filter((d: { status: string }) => d.status === "SystemDown").length;
+  if (downCount > 0) score -= downCount * 3; // SystemDown 추가 페널티
+
+  // ── 3. 세운 12운성 ──
+  const yearlyStage = transit.yearly_luck?.twelve_stage ?? "";
+  if (GOOD_12_STAGES.has(yearlyStage)) { score += 5; highlights.push(`세운 12운성: ${yearlyStage} (길)`); }
+  else if (BAD_12_STAGES.has(yearlyStage)) { score -= 5; highlights.push(`세운 12운성: ${yearlyStage} (흉)`); }
+
+  // ── 4. 월운 12운성 ──
+  const monthlyStage = transit.monthly_luck?.twelve_stage ?? "";
+  if (GOOD_12_STAGES.has(monthlyStage)) { score += 3; highlights.push(`월운 12운성: ${monthlyStage} (길)`); }
+  else if (BAD_12_STAGES.has(monthlyStage)) score -= 3;
+
+  // ── 5. 세운 특이 이벤트 ──
+  const events = transit.yearly_luck?.special_events ?? [];
+  if (events.length > 0) {
+    score += Math.min(4, events.length * 1.5);
+    highlights.push(`길조 이벤트 ${events.length}개`);
+  }
+
+  // ── 6. 세운·월운 원국 관계 (합이 있을수록 활성화) ──
+  const yearRelations = transit.yearly_luck?.influence?.relations_with_natal ?? [];
+  const goodRelations = yearRelations.filter((rel: string) => /합|록|귀인|삼합|육합/.test(rel)).length;
+  const badRelations = yearRelations.filter((rel: string) => /충|형|해|파/.test(rel)).length;
+  score += Math.min(4, goodRelations * 1.5);
+  score -= Math.min(4, badRelations * 1.5);
+
+  return { score: clampScore(Math.round(score)), highlights: highlights.slice(0, 4) };
 }
 
 function computePotentialScore(saju: SajuAnalysisResult | null, report: VedicAnalysisResult | null): { score: number; highlights: string[] } {
   const highlights: string[] = [];
   let score = 50;
+
   if (saju?.report) {
+    // 오행 흐름
     const throughput = saju.qi_topology?.throughput ?? 0;
-    score += throughput * 15;
-    if (throughput > 0.7) highlights.push("오행 흐름 원활");
+    score += throughput * 12;
+    if (throughput > 0.7) highlights.push("오행 흐름 원활 (잠재력 발현 유리)");
+
+    // 안정성 등급
     const stability = saju.complexity?.stability_grade ?? "";
-    if (/^[AB]$/.test(stability) || /A|B/.test(stability)) { score += 8; highlights.push("안정적 성장 가능"); }
-    if (saju.report.golden_time) { score += 10; highlights.push("골든타임 구간 있음"); }
+    if (/^A/.test(stability)) { score += 8; highlights.push("안정성 A등급 (성장 기반 탄탄)"); }
+    else if (/^B/.test(stability)) score += 4;
+    else if (/^D/.test(stability)) score -= 4;
+
+    // 골든타임 — 길이에 비례
+    const gt = saju.report.golden_time;
+    if (gt) {
+      const gtLen = gt.end_age - gt.start_age;
+      score += Math.min(12, gtLen * 0.5); // 24년 골든타임 → +12
+      highlights.push(`골든타임 ${gt.start_age}~${gt.end_age}세 (${gtLen}년)`);
+    }
+
+    // 용신 추천 방향
     const recCount = saju.report.yongshin?.recommendations?.length ?? 0;
-    if (recCount >= 2) { score += 5; highlights.push("용신 방향 명확"); }
+    if (recCount >= 2) { score += 4; highlights.push("용신 방향 명확 (잠재력 활용 가능)"); }
+
+    // 주의 시점 — 적을수록 성장 여지
     const vulnTotal = saju.vulnerability_report?.total_crashes ?? 99;
-    if (vulnTotal < 10) score += 5; else if (vulnTotal > 40) score -= 5;
+    if (vulnTotal === 0) { score += 5; } else if (vulnTotal < 10) score += 3;
+    else if (vulnTotal > 40) score -= 5;
+
+    // 길신(신살)
+    const auspicious = saju.report.spirit_markers?.auspicious?.length ?? 0;
+    score += Math.min(5, auspicious * 1.2);
+    if (auspicious >= 3) highlights.push(`길신 ${auspicious}개 (잠재력 촉매)`);
+
+    // 린트 클린
+    const errorCount = (saju.lints ?? []).filter(l => l.severity === "Error").length;
+    if (errorCount === 0) score += 3;
+    else score -= errorCount * 2;
+
+    // 시뮬레이션 고득점 구간 비율
+    const frames = saju.report.simulation_frames ?? [];
+    if (frames.length > 0) {
+      const goodPct = frames.filter(f => (f.score ?? 0) >= 70).length / frames.length;
+      score += goodPct * 8; // 최대 8점
+      if (goodPct >= 0.5) highlights.push(`우호 구간 ${(goodPct * 100).toFixed(0)}% (절반 이상 순풍)`);
+    }
   }
+
   if (report?.report) {
+    // 베딕 요가
     const yogas = report.report.yogas ?? [];
     const highYogas = yogas.filter((y: { quality: string | object }) => {
       const q = typeof y.quality === "string" ? y.quality : Object.keys(y.quality ?? {})[0];
       return q === "VeryHigh" || q === "High";
     }).length;
-    score += Math.min(12, highYogas * 4);
-    if (highYogas > 0) highlights.push(`우수 요가 ${highYogas}개`);
+    score += Math.min(10, highYogas * 3);
+    if (highYogas > 0) highlights.push(`상급 요가 ${highYogas}개 (잠재력 극대화)`);
+
+    // Excellent 하우스
     const excellentHouses = (report.report.house_summary ?? []).filter((h: { rating: string }) => h.rating === "Excellent").length;
-    score += Math.min(10, excellentHouses * 3);
-    if (excellentHouses >= 3) highlights.push(`강한 하우스 ${excellentHouses}개`);
+    score += Math.min(8, excellentHouses * 2.5);
+    if (excellentHouses >= 3) highlights.push(`최강 하우스 ${excellentHouses}개`);
+
+    // 사데사티 없으면 성장 가능성 ↑
+    if (report.report.sade_sati === "None") score += 3;
+    else if (report.report.sade_sati === "Peak") score -= 5;
   }
+
   return { score: clampScore(Math.round(score)), highlights: highlights.slice(0, 5) };
 }
 
@@ -251,12 +467,27 @@ export function computeTierResult(
   destinyScore = clampScore(destinyScore);
   const destinyTier = getTierFromScore(destinyScore);
   const potentialTier = getTierFromScore(potentialResult.score);
-  const strengths = [...sajuResult.highlights.slice(0, 2), ...vedicResult.highlights.slice(0, 2)].filter(Boolean).slice(0, 3);
-  if (sajuReport?.report?.golden_time) strengths.push(`골든타임 ${sajuReport.report.golden_time.start_age}~${sajuReport.report.golden_time.end_age}세`);
+
+  // 강점: 사주·베딕·운세 하이라이트에서 최대 5개
+  const strengths = [
+    ...sajuResult.highlights.slice(0, 2),
+    ...vedicResult.highlights.slice(0, 2),
+    ...transitResult.highlights.filter(h => !h.includes("주의") && !h.includes("부하")).slice(0, 1),
+  ].filter(Boolean).slice(0, 5);
+
+  // 약점: 주의 시점, 사데사티, 부하진단, 흉신, 린트
   const weaknesses: string[] = [];
   const vulnTotal = sajuReport?.vulnerability_report?.total_crashes ?? 0;
-  if (vulnTotal > 0) weaknesses.push(`주의 시점 ${vulnTotal}개`);
-  if (report?.report?.sade_sati === "Peak" || report?.report?.sade_sati === "Rising") weaknesses.push("사데사티 진행 중");
+  if (vulnTotal > 30) weaknesses.push(`주의 시점 ${vulnTotal}개 (위험 구간 다수)`);
+  else if (vulnTotal > 0) weaknesses.push(`주의 시점 ${vulnTotal}개`);
+  if (report?.report?.sade_sati === "Peak") weaknesses.push("사데사티 절정 — 토성 압박 최고조");
+  else if (report?.report?.sade_sati === "Rising") weaknesses.push("사데사티 상승 진행 중");
+  const inauspicious = sajuReport?.report?.spirit_markers?.inauspicious?.length ?? 0;
+  if (inauspicious >= 3) weaknesses.push(`흉신 ${inauspicious}개 (겁살·망신살 등)`);
+  const errorLints = (sajuReport?.lints ?? []).filter(l => l.severity === "Error");
+  if (errorLints.length > 0) weaknesses.push(`사주 구조 오류 ${errorLints.length}개 — ${errorLints[0].code}`);
+  const badTransit = transitResult.highlights.filter(h => h.includes("주의") || h.includes("부하") || h.includes("흉"));
+  if (badTransit.length > 0) weaknesses.push(badTransit[0]);
 
   // 잠재력-운명 갭 및 리스크 레벨
   const growthGap = clampScore(potentialResult.score) - destinyScore;
@@ -284,8 +515,8 @@ export function computeTierResult(
     sajuResult,
     vedicResult,
     transitResult,
-    strengths: strengths.slice(0, 3),
-    weaknesses: weaknesses.slice(0, 2),
+    strengths: strengths.slice(0, 5),
+    weaknesses: weaknesses.slice(0, 4),
     growthGap,
     riskLevel,
     profile,
