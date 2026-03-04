@@ -140,6 +140,7 @@ fn get_saju_analysis(
     let mut report = SajuReport::new(pillars.clone());
     let mut load_diagnostics: Vec<LoadBalanceDiagnostic> = Vec::new();
     let mut crash_count: u32 = 0;
+    let mut vulnerability_report: Option<eon_saju::engine::fuzzer::VulnerabilityReport> = None;
 
     if let Ok(major_luck) =
         MajorLuckAnalysis::calculate_astro(&pillars, gender, cy, cm, cd, ch, cmin)
@@ -155,6 +156,7 @@ fn get_saju_analysis(
             let fuzzer = DestinyFuzzer::new(vm_fuzz);
             let fuzzer_report = fuzzer.audit(pillars.month);
             crash_count = fuzzer_report.total_crashes as u32;
+            vulnerability_report = Some(fuzzer_report);
 
             report = report
                 .with_major_luck(major_luck)
@@ -178,6 +180,7 @@ fn get_saju_analysis(
         qi_topology: TopologyAnalysis,
         load_diagnostics: Vec<LoadBalanceDiagnostic>,
         crash_count: u32,
+        vulnerability_report: Option<eon_saju::engine::fuzzer::VulnerabilityReport>,
         relationships: RelationshipAnalysis,
         void_analysis: VoidAnalysis,
     }
@@ -192,6 +195,7 @@ fn get_saju_analysis(
         qi_topology,
         load_diagnostics,
         crash_count,
+        vulnerability_report,
         relationships,
         void_analysis,
     };

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Activity, Zap, Shield, Star, TrendingUp, AlertTriangle, Link2, CircleOff } from "lucide-react";
 import { LifeGraphSection } from "../sections/LifeGraphSection";
+import { VulnerabilitySection } from "../sections/VulnerabilitySection";
 import {
   STEM_INFO, BRANCH_INFO, ELEMENT_INFO,
   STEM_TO_ELEMENT, BRANCH_TO_ELEMENT,
@@ -433,6 +434,9 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
         goldenTime={gt}
         simulationFrames={reportData.simulation_frames}
       />
+
+      {/* 운명 취약점 분석 — extracted to VulnerabilitySection */}
+      <VulnerabilitySection report={sajuReport.vulnerability_report ?? null} />
     </motion.div>
   );
 }

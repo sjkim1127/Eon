@@ -266,6 +266,30 @@ export interface SajuReport {
   relationships?: any;
 }
 
+/** 취약점 재현 벡터 (LuckVector Rust struct) */
+export interface LuckVector {
+  major: GanZi;
+  yearly: GanZi;
+  monthly: GanZi | null;
+  daily: GanZi | null;
+  hourly: GanZi | null;
+}
+
+/** 개별 취약점 (Vulnerability Rust struct) */
+export interface Vulnerability {
+  crash_score: number;
+  vector: LuckVector;
+  vulnerability_type: string;
+  tags: string[];
+  timestamp: string | null;
+}
+
+/** 취약점 리포트 (VulnerabilityReport Rust struct) */
+export interface VulnerabilityReport {
+  total_crashes: number;
+  critical_vectors: Vulnerability[];
+}
+
 /** 사주 분석 결과 최상위 래퍼 (SajuAnalysisResult Rust struct) */
 export interface SajuAnalysisResult {
   report: SajuReport;
@@ -277,6 +301,7 @@ export interface SajuAnalysisResult {
   qi_topology: TopologyAnalysis | null;
   load_diagnostics: LoadBalanceDiagnostic[];
   crash_count: number;
+  vulnerability_report: VulnerabilityReport | null;
 }
 
 /** 부하 진단 항목 (LoadBalanceDiagnostic Rust struct) */
