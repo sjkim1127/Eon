@@ -7,8 +7,6 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  RadialBarChart,
-  RadialBar,
   Tooltip,
 } from "recharts";
 import { CHART_TOOLTIP_STYLE } from "../../lib/chartTheme";
@@ -177,33 +175,48 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
             )}
           </div>
 
-          {/* 운명 복잡도 게이지 차트 */}
-          <div className="relative h-56 bg-white/5 rounded-2xl border border-white/10 mt-6 overflow-hidden">
-            <div className="absolute inset-0 pt-6">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart
-                  cx="50%"
-                  cy="100%"
-                  innerRadius="80%"
-                  outerRadius="100%"
-                  data={[{ name: "복잡도", value: Math.min(100, Math.max(0, (entropy.score ?? 0) * 25)) }]}
-                  startAngle={180}
-                  endAngle={0}
-                >
-                  <RadialBar
-                    dataKey="value"
-                    cornerRadius={15}
-                    fill="#06b6d4"
-                    background={{ fill: "rgba(255,255,255,0.05)" }}
+          {/* 운명 복잡도 게이지 — SVG 도넛 링 */}
+          {(() => {
+            const score = entropy.score ?? 0;
+            const pct = Math.min(100, Math.max(0, (score / 4.0) * 100));
+            const r = 72;
+            const circ = 2 * Math.PI * r;
+            const dash = (pct / 100) * circ;
+            const level = score < 1.5 ? "단순" : score < 2.5 ? "보통" : score < 3.2 ? "복잡" : "매우 복잡";
+            const levelColor = score < 1.5 ? "#4ade80" : score < 2.5 ? "#facc15" : score < 3.2 ? "#f97316" : "#ef4444";
+            return (
+              <div className="relative flex flex-col items-center justify-center mt-6 py-6">
+                <svg width="180" height="180" viewBox="0 0 180 180" className="drop-shadow-lg">
+                  <defs>
+                    <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#06b6d4" />
+                      <stop offset="50%" stopColor="#8b5cf6" />
+                      <stop offset="100%" stopColor="#ef4444" />
+                    </linearGradient>
+                  </defs>
+                  {/* Background ring */}
+                  <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="14" />
+                  {/* Filled arc */}
+                  <circle
+                    cx="90" cy="90" r={r}
+                    fill="none"
+                    stroke="url(#gaugeGrad)"
+                    strokeWidth="14"
+                    strokeLinecap="round"
+                    strokeDasharray={`${dash} ${circ}`}
+                    transform="rotate(-90 90 90)"
+                    style={{ transition: "stroke-dasharray 0.8s ease" }}
                   />
-                </RadialBarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center justify-center pointer-events-none">
-              <p className="text-5xl font-black text-celestial-cyan drop-shadow-md">{entropy.score?.toFixed(3) ?? "—"}</p>
-              <p className="text-sm font-bold text-white/40 tracking-wider mt-1">복잡도 게이지 (Max 4.0)</p>
-            </div>
-          </div>
+                </svg>
+                {/* Center text */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <p className="text-4xl font-black text-white tracking-tight">{score.toFixed(2)}</p>
+                  <p className="text-xs font-bold mt-1 tracking-wider" style={{ color: levelColor }}>{level}</p>
+                  <p className="text-[10px] text-white/30 mt-0.5">/ 4.00</p>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
