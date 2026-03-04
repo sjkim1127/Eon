@@ -19,6 +19,52 @@ interface TransitTabProps {
   transitError?: string | null;
 }
 
+function formatTraceLine(line: string): { text: string; isPositive: boolean; isNegative: boolean } {
+  // 예: 대운_infl:화,weight:2.0,score+=20.0
+  // 예: shinsal:천살,score:-5.0
+  // 예: clash:월지-세운지지,impact:-20.0
+  // 예: mem_dump:해(갑),bonus:1.5
+  // 예: mem_corrupt:월지-시지,penalty:-5.0
+  // 예: race_cond:년지-월지,penalty:-3.0
+
+  const isPositive = line.includes("bonus") || line.includes("score+=") || line.includes("score:10") || line.includes("score:15");
+  const isNegative = line.includes("penalty") || line.includes("impact") || line.includes("irq") || line.includes("panic") || line.includes("score:-");
+
+  let formatted = line;
+
+  // 정규식 기반 변환
+  if (line.includes("infl:")) {
+    formatted = line.replace(/([가-힣]+)_infl:([가-힣]),weight:([0-9.]+),score\+=([0-9.]+)/, "$1의 $2 기운 유입 (영향력 x$3) ➔ +$4점");
+    formatted = formatted.replace(/([가-힣]+)_infl:([가-힣]),weight:([0-9.]+),impact:-([0-9.]+)/, "$1의 $2 기운 유입 (과부하 x$3) ➔ -$4점");
+  } else if (line.includes("shinsal:")) {
+    formatted = line.replace(/shinsal:([가-힣]+),score:([0-9.-]+)/, "신살 작용 [$1] ➔ $2점");
+  } else if (line.includes("gilsin:")) {
+    formatted = line.replace(/gilsin:([a-zA-Z]+),bonus:([0-9.]+)/, "길신 작용 [$1] ➔ +$2점");
+  } else if (line.includes("lifecycle:")) {
+    formatted = line.replace(/lifecycle:([^,]+),score:([0-9.-]+)/, "12운성 환경 [$1] ➔ $2점");
+  } else if (line.includes("clash:") && !line.includes("stem_clash")) {
+    formatted = line.replace(/clash:([^,]+),impact:([0-9.-]+)/, "지지 충돌 발생 [$1] ➔ $2점");
+  } else if (line.includes("stem_clash:")) {
+    formatted = line.replace(/stem_clash:([^,]+),penalty:([0-9.-]+)/, "천간 충돌 발생 [$1] ➔ $2점");
+  } else if (line.includes("mem_dump:")) {
+    formatted = line.replace(/mem_dump:([^,]+),bonus:([0-9.-]+)/, "잠재 에너지 발현 [$1] ➔ +$2점");
+  } else if (line.includes("mem_corrupt:")) {
+    formatted = line.replace(/mem_corrupt:([^,]+),penalty:([0-9.-]+)/, "에너지 교란 현상 [$1] ➔ $2점");
+  } else if (line.includes("race_cond:")) {
+    formatted = line.replace(/race_cond:([^,]+),penalty:([0-9.-]+)/, "에너지 우선순위 경합 [$1] ➔ $2점");
+  } else if (line.includes("six_combo:")) {
+    formatted = line.replace(/six_combo:([^,]+),bonus:([0-9.-]+)/, "육합 형성으로 파생 에너지 생성 [$1] ➔ +$2점");
+  } else if (line.includes("three_combo:")) {
+    formatted = line.replace(/three_combo:([^,]+),bonus:([0-9.-]+)/, "삼합 형성으로 강한 세력 구축 [$1] ➔ +$2점");
+  } else if (line.includes("panic")) {
+    formatted = "⚠️ 시스템 패닉: 치명적인 운세 타격 발생 " + line.split("panic")[1];
+  } else if (line.includes("irq")) {
+    formatted = "⛔ 인터럽트: 돌발 변수 발생 " + line.split("irq")[1];
+  }
+
+  return { text: formatted, isPositive, isNegative };
+}
+
 export function TransitTab({ transitReport, transitError }: TransitTabProps) {
   if (!transitReport) {
     return (
@@ -260,13 +306,19 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
           </div>
           {/* 흐름 추적 */}
           {frame.esil_trace && (
-            <div className="bg-black/40 rounded-xl p-4 font-mono text-xs border border-white/10 overflow-x-auto">
-              <p className="text-white/40 mb-2">// 흐름 추적 로그</p>
-              {frame.esil_trace.split("; ").map((line: string, i: number) => (
-                <p key={i} className={line.includes("irq") || line.includes("panic") ? "text-red-400" : "text-green-300/70"}>
-                  {line}
-                </p>
-              ))}
+            <div className="bg-black/40 rounded-xl p-5 font-mono text-sm border border-white/10 overflow-x-auto">
+              <p className="text-white/40 mb-3 text-xs tracking-widest font-bold">// DESTINY ENGINE TRACE LOG</p>
+              <div className="space-y-2">
+                {frame.esil_trace.split("; ").map((line: string, i: number) => {
+                  const { text, isPositive, isNegative } = formatTraceLine(line);
+                  return (
+                    <div key={i} className={`flex items-start gap-2 ${isNegative ? "text-red-400" : isPositive ? "text-green-300" : "text-white/70"}`}>
+                      <span className="opacity-50 select-none mt-0.5 text-[10px]">▶</span>
+                      <p>{text}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
