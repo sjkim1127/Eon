@@ -292,8 +292,8 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
       )}
 
       {/* 합충형해 (合沖刑害) 분석 */}
-      {sajuReport.relationships && (() => {
-        const rel = sajuReport.relationships;
+      {sajuReport.relationships != null && (() => {
+        const rel = sajuReport.relationships as Record<string, unknown[] | undefined>;
         type RelGroup = { label: string; color: string; items: string[] };
 
         const formatRel = (r: any) => {
