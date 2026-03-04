@@ -29,7 +29,7 @@ export function VargaNakshatraTable({
           ? "text-pink-400"
           : "text-blue-400";
 
-  const columns = [
+  const columns: string[] = [
     NAKSHATRA_TABLE_COLUMNS.planet,
     NAKSHATRA_TABLE_COLUMNS.position,
     NAKSHATRA_TABLE_COLUMNS.nakshatra,
