@@ -12,14 +12,42 @@ import { computeTierResult, type TierResult } from "./tierScore";
 import { getNakshatraInfo } from "./nakshatra";
 import { formatSiderealPosition, buildNakshatraMarkdownRows } from "./vedicFormat";
 
-/** TraceTag / LifeFrame.tags 가 문자열 혹은 { Key: null } 객체로 올 수 있음 — 항상 문자열로 변환 */
+/** 영문 태그명 → 한글 변환 맵 */
+const TAG_KR: Record<string, string> = {
+    CoreLuck: "핵심길운",
+    GoodLuck: "길운",
+    BadLuck: "흉운",
+    Interrupt: "돌발변수",
+    AuspiciousSpirit: "길신",
+    BranchClash: "지지충",
+    StemClash: "천간충",
+    Punishment: "지지형",
+    Harm: "지지해",
+    SixCombination: "육합",
+    TripleCombination: "삼합",
+    SeasonalCombination: "방합",
+    EscapedVoidClash: "공망탈출(충)",
+    EscapedVoidSixCombo: "공망탈출(합)",
+    EatingGodProducesWealth: "식신생재",
+    HurtingOfficerMeetsOfficer: "상관견관",
+    StrengthType: "신강·신약",
+    DeukJi: "득지",
+    Custom: "", // 노이즈 태그 — 출력 생략
+};
+
+/** TraceTag / LifeFrame.tags 가 문자열 혹은 { Key: null } 객체로 올 수 있음 — 항상 한글 문자열로 변환 */
 const tagToStr = (tag: unknown): string => {
-    if (typeof tag === "string") return tag;
-    if (tag && typeof tag === "object") {
+    let key = "";
+    if (typeof tag === "string") key = tag;
+    else if (tag && typeof tag === "object") {
         const keys = Object.keys(tag as object);
-        return keys.length > 0 ? keys[0] : "";
+        key = keys.length > 0 ? keys[0] : "";
+    } else {
+        key = String(tag ?? "");
     }
-    return String(tag ?? "");
+    // TAG_KR 맵에 있으면 한글 사용 (빈 문자열이면 필터링됨)
+    if (Object.prototype.hasOwnProperty.call(TAG_KR, key)) return TAG_KR[key];
+    return key;
 };
 
 /** TenGod 영문 키 → 한글 변환 */
@@ -573,12 +601,38 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
 
 // ══ ESIL 트레이스 포맷 변환 (TransitTab.formatTraceLine 이식) ═══════════
 
+/** ESIL raw suffix(:xxx) 를 읽기 좋게 변환 */
+const ESIL_PANIC_LABELS: Record<string, string> = {
+    earth_overflow: "🌍 토 과부하",
+    water_overflow: "🌊 수 과부하",
+    fire_overflow: "🔥 화 과부하",
+    wood_overflow: "🌳 목 과부하",
+    metal_overflow: "⚙️ 금 과부하",
+    ResourceOverflow: "자원 과부하",
+    CriticalException: "치명적 예외",
+    SystemPanic: "시스템 패닉",
+};
+const cleanEsilSuffix = (s: string): string => {
+    // ":key" or "_handle:key,impact:..." 형태를 한글 레이블로 변환
+    return s.replace(/:?_?handle:([a-zA-Z_]+)[^,]*/g, (_, k) => ESIL_PANIC_LABELS[k] ? `(${ESIL_PANIC_LABELS[k]})` : "")
+            .replace(/:([a-zA-Z_]+)/g, (_, k) => ESIL_PANIC_LABELS[k] ? `(${ESIL_PANIC_LABELS[k]})` : "")
+            .replace(/,impact:[-0-9.]+/g, "")
+            .trim();
+};
+
 function formatEsilLine(line: string): string {
     let formatted = line;
     if (line.includes("infl:")) {
+        // weight 가 음수인 경우도 처리
         formatted = line
-            .replace(/([가-힣]+)_infl:([가-힣]),weight:([0-9.]+),score\+=([0-9.]+)/, "$1의 $2 기운 유입 (영향력 x$3) ➔ +$4점")
-            .replace(/([가-힣]+)_infl:([가-힣]),weight:([0-9.]+),impact:-([0-9.]+)/, "$1의 $2 기운 유입 (과부하 x$3) ➔ -$4점");
+            .replace(/([가-힣]+)_infl:([가-힣]),weight:(-?[0-9.]+),score\+=([-0-9.]+)/, (_, src, el, w, sc) => {
+                const impact = parseFloat(w);
+                const score = parseFloat(sc);
+                if (impact <= 0) return `${src}의 ${el} 기운 유입 (부정 영향 x${Math.abs(impact)}) ➔ ${score > 0 ? "+" : ""}${score}점`;
+                return `${src}의 ${el} 기운 유입 (영향력 x${impact}) ➔ ${score >= 0 ? "+" : ""}${score}점`;
+            })
+            .replace(/pipeline_stall:.*/, (m) => `⛔ 기운 흐름 차단 (${m.split(":")[1] ?? ""})`)
+            .replace(/pipeline_forwarding:.*/, (m) => `✅ 기운 흐름 연결 (${m.split(":")[1] ?? ""})`);
     } else if (line.includes("shinsal:")) {
         formatted = line.replace(/shinsal:([가-힣]+),score:([0-9.-]+)/, "신살 작용 [$1] ➔ $2점");
     } else if (line.includes("gilsin:")) {
@@ -599,10 +653,14 @@ function formatEsilLine(line: string): string {
         formatted = line.replace(/six_combo:([^,]+),bonus:([0-9.-]+)/, "육합 형성으로 파생 에너지 생성 [$1] ➔ +$2점");
     } else if (line.includes("three_combo:")) {
         formatted = line.replace(/three_combo:([^,]+),bonus:([0-9.-]+)/, "삼합 형성으로 강한 세력 구축 [$1] ➔ +$2점");
+    } else if (line.includes("dynamic_seasonal:")) {
+        formatted = line.replace(/dynamic_seasonal:([^,]+),bonus:([0-9.-]+)/, "계절 에너지 발동 [$1] ➔ +$2점");
     } else if (line.includes("panic")) {
-        formatted = "⚠️ 시스템 패닉: 치명적인 운세 타격 발생 " + line.split("panic")[1];
+        const suffix = cleanEsilSuffix(line.split("panic")[1] ?? "");
+        formatted = `⚠️ 시스템 패닉: 치명적인 운세 타격 발생${suffix ? " — " + suffix : ""}`;
     } else if (line.includes("irq")) {
-        formatted = "⛔ 인터럽트: 돌발 변수 발생 " + line.split("irq")[1];
+        const suffix = cleanEsilSuffix(line.split("irq")[1] ?? "");
+        formatted = `⛔ 인터럽트: 돌발 변수 발생${suffix ? " — " + suffix : ""}`;
     }
     return formatted;
 }
