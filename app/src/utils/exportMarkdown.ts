@@ -808,14 +808,68 @@ export function buildDestinyTierMarkdown(
         lines.push("");
     }
 
-    const potentialHigher = result.potentialScore > result.destinyScore;
-    lines.push("## 인사이트\n");
-    if (potentialHigher) {
-        lines.push("- 잠재력이 운명 티어보다 높아 **성장 여지가 큽니다**. 용신·골든타임·우수 요가를 적극 활용하세요.");
-    } else {
-        lines.push("- 현재 흐름을 잘 활용하고 있습니다.");
+    lines.push("## 종합 인사이트\n");
+
+    // ① 종합 판정
+    const gradeMap: Record<string, string> = {
+        S: `사주와 별운이 서로 보완하며 극상의 기운을 이룹니다 (${Math.round(result.destinyScore)}점).`,
+        A: `전반적으로 매우 강한 차트입니다 (${Math.round(result.destinyScore)}점). 용신·대운·요가가 유리하게 맞물리는 시기에 적극적인 도전이 빛납니다.`,
+        B: `균형이 잘 잡힌 운세입니다 (${Math.round(result.destinyScore)}점). 강점을 살리고 주의 시점을 사전에 파악해 보완하면 좋은 결과를 기대할 수 있습니다.`,
+        C: `일부 어려운 구간이 있으나 충분히 극복 가능합니다 (${Math.round(result.destinyScore)}점). 주의 시점과 골든타임·대운 흐름을 함께 참고하세요.`,
+        D: `성장 여지가 많은 시기입니다 (${Math.round(result.destinyScore)}점). 용신·요가가 도와주는 구간을 집중 활용하면 큰 변화를 만들 수 있습니다.`,
+    };
+    lines.push(`### 🏆 종합 판정\n${gradeMap[result.destinyTier.grade] ?? ""}`);
+    lines.push("");
+
+    // ② 원국 vs 현재 운세
+    const diff = result.currentScore - result.natalScore;
+    let diffLine = `원국(${Math.round(result.natalScore)}점) vs 현재 운세(${Math.round(result.currentScore)}점) — `;
+    if (Math.abs(diff) < 5) diffLine += "두 점수가 거의 일치합니다. 타고난 흐름 그대로 안정적으로 진행 중입니다.";
+    else if (diff > 15) diffLine += "현재 운세가 원국보다 현저히 높습니다. 지금이 행동하기 최적의 타이밍입니다.";
+    else if (diff > 0) diffLine += "현재 운세가 원국보다 소폭 우세합니다. 적극적인 실행이 효과적인 시기입니다.";
+    else if (diff < -15) diffLine += "현재 운세가 원국보다 눈에 띄게 낮습니다. 리스크를 줄이고 내실을 다지는 수성 전략을 권합니다.";
+    else diffLine += "현재 운세가 원국보다 소폭 낮습니다. 과도한 확장보다 준비와 기반 강화에 집중하세요.";
+    lines.push(`### ⚖️ 원국 vs 현재 운세\n${diffLine}`);
+    lines.push("");
+
+    // ③ 잠재력 격차
+    const gap = result.growthGap;
+    let gapLine = `잠재력 티어: ${result.potentialTier.grade} · ${result.potentialTier.label} — `;
+    if (gap > 20) gapLine += `+${Math.round(gap)}pt 격차. 용신 강화, 요가 활성화, 골든타임 집중으로 단기간 상향 가능.`;
+    else if (gap > 10) gapLine += `+${Math.round(gap)}pt 여유. 일관된 노력으로 꾸준히 격차를 좁혀가세요.`;
+    else if (gap > 3) gapLine += `+${Math.round(gap)}pt 소폭 앞섬. 현재 방향 유지하면 자연스럽게 상향됩니다.`;
+    else if (gap < -5) gapLine += "운명 티어가 잠재력보다 앞서 있습니다. 현재 흐름이 매우 효율적입니다.";
+    else gapLine += "잠재력과 운명 티어가 거의 일치합니다. 현재 흐름을 잘 유지하고 있습니다.";
+    lines.push(`### 🚀 잠재력 격차 분석\n${gapLine}`);
+    lines.push("");
+
+    // ④ 강점
+    if (result.strengths.length > 0) {
+        lines.push(`### ✨ 핵심 강점`);
+        for (const s of result.strengths) lines.push(`- ${s}`);
+        lines.push("");
     }
-    lines.push(`- ${result.destinyTier.desc}`);
+
+    // ⑤ 약점 & 리스크
+    const riskLabel = result.riskLevel === "high" ? "높음 🔴" : result.riskLevel === "medium" ? "보통 🟡" : "낮음 🟢";
+    lines.push(`### ⚠️ 리스크 수준: ${riskLabel}`);
+    if (result.weaknesses.length > 0) {
+        for (const w of result.weaknesses) lines.push(`- ${w}`);
+    } else {
+        lines.push("- 특이 약점 없음");
+    }
+    lines.push("");
+
+    // ⑥ 분야별 집중 전략
+    const topDomains = result.domainTiers.filter(d => d.tier === "S" || d.tier === "A").slice(0, 3);
+    const weakDomains = result.domainTiers.filter(d => d.tier === "D" || d.tier === "C").slice(0, 3);
+    if (topDomains.length > 0 || weakDomains.length > 0) {
+        lines.push(`### 🎯 분야별 집중 전략`);
+        if (topDomains.length > 0) lines.push(`- **강점 분야**: ${topDomains.map(d => `${d.domain}(${d.tier})`).join(", ")} — 주력 무대로 삼으세요.`);
+        if (weakDomains.length > 0) lines.push(`- **보완 분야**: ${weakDomains.map(d => `${d.domain}(${d.tier})`).join(", ")} — 방어적 관리를 권합니다.`);
+        lines.push("");
+    }
+
     lines.push("");
 
     return lines.join("\n");
