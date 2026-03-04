@@ -114,7 +114,13 @@ pub async fn get_vedic_analysis(
         varga_nakshatra_reports,
     };
 
-    Ok(serde_wasm_bindgen::to_value(&result)?)
+    // json_compatible: HashMap<K,V>을 JS Map이 아닌 plain 객체로 직렬화
+    // (serde-wasm-bindgen 0.4+ 기본값은 Map 객체 → 프론트엔드 bracket 접근 호환 안 됨)
+    use serde::Serialize as _;
+    let js_val = result
+        .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+        .map_err(|e| JsError::new(&format!("직렬화 오류: {e}")))?;
+    Ok(js_val)
 }
 
 /// 사주(四柱) 분석 — WASM에서 호출 가능

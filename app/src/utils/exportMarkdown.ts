@@ -551,9 +551,17 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     lines.push("> 컬럼: 행성 | 위치(사이드리얼) | 사인 | 하우스 | 낙샤트라(파다) | 파다 범위 | 낙샤트라 로드 | 파다 로드 | 신(Deity) | 목적(Purpose)\n");
     lines.push("> D1은 본 차트 기준, D2 이상은 해당 분할 좌표 기준입니다. (※ 백엔드 미제공 차트는 프론트엔드 근사값)\n");
     const allPos = [...(c?.planets ?? []), ...(c?.ascendant ? [c.ascendant] : [])];
-    const vargaReportsMap = v.varga_nakshatra_reports?.reports;
+    const rawReports = v.varga_nakshatra_reports?.reports;
+    // serde-wasm-bindgen >= 0.4 는 Rust HashMap을 JS Map 객체로 직렬화함
+    // → 대괄호 접근(map[key]) 불가, Map.get(key) 필요
+    // 양쪽 모두 지원하는 헬퍼 사용
+    const getReport = (id: string): import("../types").VargaNakshatraReport | undefined => {
+        if (!rawReports) return undefined;
+        if (rawReports instanceof Map) return rawReports.get(id);
+        return (rawReports as Record<string, import("../types").VargaNakshatraReport>)[id];
+    };
     for (const vargaDef of VARGA_DEFS) {
-        const rep = vargaReportsMap?.[vargaDef.id];
+        const rep = getReport(vargaDef.id);
         if (rep?.rows?.length) {
             // 백엔드 Rust 계산 우선
             const lagna = rep.lagna_rasi ? ` (라그나: ${SIGN_NAMES[rep.lagna_rasi] ?? rep.lagna_rasi})` : "";
