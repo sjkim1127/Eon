@@ -60,7 +60,7 @@ export async function searchCities(
         }));
     } catch (err) {
         console.warn("[GeoNames] searchCities error:", err);
-        return [];
+        throw err;
     }
 }
 

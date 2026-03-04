@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MapPin, Loader2, Search } from "lucide-react";
+import { toast } from "sonner";
 import { searchCities, getTimezone, type GeoCity } from "../../utils/geonames";
 import { KOREAN_CITIES } from "../../constants";
 
@@ -8,9 +9,11 @@ interface CitySearchInputProps {
     selectedLabel: string;
     /** 도시 선택 시 콜백 */
     onSelect: (city: { name: string; lat: number; lon: number; timezone: string }) => void;
+    /** 검색 실패 시 콜백 (미지정 시 토스트로 자동 표시) */
+    onError?: (message: string) => void;
 }
 
-export function CitySearchInput({ selectedLabel, onSelect }: CitySearchInputProps) {
+export function CitySearchInput({ selectedLabel, onSelect, onError }: CitySearchInputProps) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<GeoCity[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -47,6 +50,9 @@ export function CitySearchInput({ selectedLabel, onSelect }: CitySearchInputProp
             }
             setResults(cities);
         } catch {
+            const msg = "도시 검색에 실패했습니다.";
+            onError?.(msg);
+            toast.error(msg);
             setUseFallback(true);
             setResults([]);
         } finally {

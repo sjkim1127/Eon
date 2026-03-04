@@ -117,7 +117,7 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
         lines.push("\n| 오행 | 용량 | 산출 |");
         lines.push("|---|---|---|");
         for (const n of s.qi_topology.nodes ?? []) {
-            const el = typeof n.element === "string" ? n.element : ((n.element as any)?.hangul ?? "—");
+            const el = typeof n.element === "string" ? n.element : ((n.element as { hangul?: string })?.hangul ?? "—");
             lines.push(`| ${el} | ${n.capacity.toFixed(1)} | ${n.output.toFixed(1)} |`);
         }
         lines.push("");
@@ -306,7 +306,7 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
             Gnatikaraka: "경쟁자", Darakaraka: "배우자",
         };
         for (const k of c.karakas) {
-            lines.push(`| ${roleKr[(k as any).role] ?? (k as any).role} | ${(k as any).planet} | ${((k as any).degree_in_rasi ?? 0).toFixed(2)}° |`);
+            lines.push(`| ${roleKr[k.role] ?? k.role} | ${k.planet} | ${(k.degree_in_rasi ?? 0).toFixed(2)}° |`);
         }
         lines.push("");
     }
@@ -347,14 +347,14 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("| 하우스 | 주인 행성 힘 | 방위 힘 | 시선 영향 | 총점 |");
         lines.push("|---|---|---|---|---|");
         for (const b of c.bhava_strengths) {
-            lines.push(`| ${(b as any).house} | ${((b as any).lord_score ?? 0).toFixed(1)} | ${((b as any).dig_score ?? 0).toFixed(1)} | ${((b as any).drishti_score ?? 0).toFixed(1)} | ${((b as any).total_score ?? 0).toFixed(1)} |`);
+            lines.push(`| ${b.house} | ${(b.lord_score ?? 0).toFixed(1)} | ${(b.dig_score ?? 0).toFixed(1)} | ${(b.drishti_score ?? 0).toFixed(1)} | ${(b.total_score ?? 0).toFixed(1)} |`);
         }
         lines.push("");
     }
 
     // SAV
     if (c?.sav?.points) {
-        const pts = (c.sav as any).points;
+        const pts = c.sav.points;
         if (Array.isArray(pts) && pts.length === 12) {
             lines.push("## SAV (사르바아슈타카바르가)\n");
             lines.push("| " + Array.from({ length: 12 }, (_, i) => `H${i + 1}`).join(" | ") + " |");
@@ -370,8 +370,8 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("| 행성 | 6분할 점수 | 16분할 점수 | 평균 |");
         lines.push("|---|---|---|---|");
         for (const [planet, score] of c.vimshopaka_scores) {
-            const s6 = (score as any)?.shadvarga_score ?? 0;
-            const s16 = (score as any)?.shodashavarga_score ?? 0;
+            const s6 = score?.shadvarga_score ?? 0;
+            const s16 = score?.shodashavarga_score ?? 0;
             lines.push(`| ${planet} | ${s6.toFixed(1)} | ${s16.toFixed(1)} | ${((s6 + s16) / 2).toFixed(1)} |`);
         }
         lines.push("");
@@ -383,7 +383,7 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("| 행성 | Baladi | Jagradi |");
         lines.push("|---|---|---|");
         for (const a of c.avasthas) {
-            lines.push(`| ${(a as any).planet} | ${(a as any).baladi} | ${(a as any).jagradadi} |`);
+            lines.push(`| ${a.planet} | ${a.baladi} | ${a.jagradadi} |`);
         }
         lines.push("");
     }
@@ -401,7 +401,7 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("| 행성 | 바라보는 하우스 |");
         lines.push("|---|---|");
         for (const a of c.aspects) {
-            lines.push(`| ${(a as any).aspecting_planet} | ${((a as any).aspected_houses ?? []).map((h: number) => `H${h}`).join(", ")} |`);
+            lines.push(`| ${a.aspecting_planet} | ${(a.aspected_houses ?? []).map((h: number) => `H${h}`).join(", ")} |`);
         }
         lines.push("");
     }
@@ -424,9 +424,9 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     lines.push("|---|---|---|---|---|---|");
     const allPos = [...(c?.planets ?? []), ...(c?.ascendant ? [c.ascendant] : [])];
     for (const p of allPos) {
-        const name = (p as any).planet ?? "ASC";
-        const rasi = (SIGN_NAMES as any)?.[(p as any).rasi] ?? (p as any).rasi;
-        lines.push(`| ${name} | ${rasi} | ${(p as any).nakshatra} | ${(p as any).pada} | ${(p as any).is_retrograde ? "℞" : ""} | ${(p as any).is_combust ? "☀" : ""} |`);
+        const name = p.planet ?? "ASC";
+        const rasi = SIGN_NAMES[p.rasi] ?? p.rasi;
+        lines.push(`| ${name} | ${rasi} | ${p.nakshatra} | ${p.pada} | ${p.is_retrograde ? "℞" : ""} | ${p.is_combust ? "☀" : ""} |`);
     }
     lines.push("");
 
@@ -436,7 +436,7 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("| 행성 | 현재 라시 | 달 기준 하우스 | 길/흉 | 차단 | Murti |");
         lines.push("|---|---|---:|---|---|---|");
         for (const t of v.gochara.transits) {
-            const rasiName = (SIGN_NAMES as any)?.[t.current_rasi] ?? t.current_rasi;
+            const rasiName = SIGN_NAMES[t.current_rasi] ?? t.current_rasi;
             lines.push(`| ${t.planet} | ${rasiName} | ${t.house_from_moon} | ${t.is_benefic_transit ? "✅" : "—"} | ${t.is_blocked ? "✅" : "—"} | ${t.murti} |`);
         }
         lines.push("");
@@ -465,10 +465,10 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
             lines.push("| 행성 | 라시 (Sign) |");
             lines.push("|---|---|");
             for (const p of allPos) {
-                const name = (p as any).planet ?? "ASC";
-                const rasiIdx = (p as any)[varga.key];
+                const name = p.planet ?? "ASC";
+                const rasiIdx = p[varga.key as keyof typeof p];
                 if (rasiIdx !== undefined && rasiIdx !== null) {
-                    const rasiName = (SIGN_NAMES as any)?.[rasiIdx] ?? rasiIdx;
+                    const rasiName = typeof rasiIdx === "number" ? (SIGN_NAMES[rasiIdx] ?? rasiIdx) : rasiIdx;
                     lines.push(`| ${name} | ${rasiName} |`);
                 } else {
                     lines.push(`| ${name} | — |`);

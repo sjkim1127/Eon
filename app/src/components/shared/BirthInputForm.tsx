@@ -12,11 +12,15 @@ interface BirthInputFormProps {
   isDST: boolean;
   loading: boolean;
   onAnalysis: () => void;
-  sajuReport: any;
+  sajuReport: import("../../types").SajuAnalysisResult | null;
   /** 드로어 내부 렌더링 시 외부 래퍼·제목 제거 */
   compact?: boolean;
   /** 드로어 닫기 콜백 (compact 모드에서 분석 버튼 클릭 시 호출) */
   onClose?: () => void;
+  /** compact 모드에서 분석 버튼 라벨 (미지정 시 "통합 분석 시작") */
+  submitLabel?: string;
+  /** compact 모드에서 true면 시간 모름 토글 숨김 */
+  hideUnknownTime?: boolean;
 }
 
 export function BirthInputForm({
@@ -32,6 +36,8 @@ export function BirthInputForm({
   sajuReport,
   compact = false,
   onClose,
+  submitLabel,
+  hideUnknownTime = false,
 }: BirthInputFormProps) {
   const unknownTime = birthData.unknown_time ?? false;
   const useNightRatHour = birthData.use_night_rat_hour ?? false;
@@ -258,7 +264,8 @@ export function BirthInputForm({
           <span className="text-white font-semibold">{isMale ? "남" : "여"}</span>
         </button>
 
-        {/* 시간 모름 토글 */}
+        {/* 시간 모름 토글 (hideUnknownTime이면 숨김) */}
+        {!hideUnknownTime && (
         <button
           onClick={toggleUnknownTime}
           className={`px-4 py-2.5 rounded-xl flex items-center gap-2 border transition-all text-sm font-semibold
@@ -270,6 +277,7 @@ export function BirthInputForm({
           <Clock className="w-4 h-4" />
           {unknownTime ? "시간 미상 ✓" : "시간 모름"}
         </button>
+        )}
 
         {/* 야자시 토글 */}
         <button
@@ -294,7 +302,7 @@ export function BirthInputForm({
           className="bg-gradient-to-r from-celestial-purple to-brand-600 px-6 py-2.5 rounded-xl font-bold text-white text-sm shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 inline-flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-          {loading ? "분석 중..." : "통합 분석 시작"}
+          {loading ? "분석 중..." : (submitLabel ?? "통합 분석 시작")}
         </button>
 
         <div className="w-full lg:w-auto lg:ml-auto text-xs text-white/30 flex flex-wrap items-center gap-3 lg:gap-4">

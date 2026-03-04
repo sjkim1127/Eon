@@ -59,10 +59,11 @@ const getWasmModule = async () => {
 };
 
 // JSON 파싱 헬퍼 함수
-const processSajuResult = (result: any): SajuAnalysisResult => {
-    if (result.timeline_json && result.report) {
+const processSajuResult = (result: unknown): SajuAnalysisResult => {
+    const r = result as { timeline_json?: string; report?: { timeline?: unknown } };
+    if (r?.timeline_json && r?.report) {
         try {
-            result.report.timeline = JSON.parse(result.timeline_json);
+            r.report.timeline = JSON.parse(r.timeline_json);
         } catch (e) {
             console.warn("[WASM] timeline_json parse failed:", e);
         }
@@ -134,28 +135,28 @@ export class WasmBackendClient implements BackendClient {
 
 export class TauriBackendClient implements BackendClient {
     async getVedicAnalysis(args: AnalysisArgs): Promise<VedicAnalysisResult> {
-        return invoke("get_vedic_analysis", args as any);
+        return invoke("get_vedic_analysis", args as unknown as Record<string, unknown>);
     }
 
     async getSajuAnalysis(args: SajuArgs): Promise<SajuAnalysisResult> {
-        const result = await invoke("get_saju_analysis", args as any);
+        const result = await invoke("get_saju_analysis", args as unknown as Record<string, unknown>);
         return processSajuResult(result);
     }
 
     async getTransitAnalysis(args: TransitArgs): Promise<TransitResult> {
-        return invoke("get_transit_analysis", args as any);
+        return invoke("get_transit_analysis", args as unknown as Record<string, unknown>);
     }
 
     async getSajuCompatibility(args: CompArgs): Promise<CompatibilityAudit> {
-        return invoke("get_saju_compatibility", args as any);
+        return invoke("get_saju_compatibility", args as unknown as Record<string, unknown>);
     }
 
     async getVedicCompatibility(args: CompArgs): Promise<AshtaKutaResult> {
-        return invoke("get_vedic_compatibility", args as any);
+        return invoke("get_vedic_compatibility", args as unknown as Record<string, unknown>);
     }
 
     async getAiAudit(args: SajuArgs): Promise<unknown> {
-        return invoke("get_ai_audit", args as any);
+        return invoke("get_ai_audit", args as unknown as Record<string, unknown>);
     }
 }
 
