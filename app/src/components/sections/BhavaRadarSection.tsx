@@ -21,7 +21,17 @@ interface BhavaRadarSectionProps {
 }
 
 export function BhavaRadarSection({ strengths }: BhavaRadarSectionProps) {
-    if (!strengths || strengths.length === 0) return null;
+    if (!strengths || strengths.length === 0) {
+        return (
+            <div className="glass p-8 rounded-[2rem]">
+                <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <Home className="w-6 h-6 text-celestial-purple" />
+                    12하우스 강도 분석 (Bhava Strength)
+                </h5>
+                <p className="text-white/50 text-sm">데이터를 불러올 수 없습니다. (배열이 비어있음)</p>
+            </div>
+        );
+    }
 
     const chartData = strengths.map(s => ({
         house: HOUSE_LABELS[s.house] ?? `H${s.house}`,
