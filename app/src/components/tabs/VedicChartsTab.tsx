@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle, Compass, ChevronDown, ChevronRight } from "lucide-react";
+import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle, Compass } from "lucide-react";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
-import { getNakshatraInfo, getVargaEffectiveLongitude, formatSiderealPosition, buildNakshatraMarkdownRows, D1_COLUMNS } from "../../utils";
+import { getNakshatraInfo, getVargaEffectiveLongitude, formatSiderealPosition, buildNakshatraMarkdownRows } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
 import { BhavaRadarSection } from "../sections/BhavaRadarSection";
 import { AspectsSection } from "../sections/AspectsSection";
@@ -203,10 +203,8 @@ interface VedicChartsTabProps {
 
 export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const [copied, setCopied] = useState(false);
-  const [vargaCopied, setVargaCopied] = useState(false);
   const [selectedVargaId, setSelectedVargaId] = useState<string>("navamsa");
   const [chartStyle, setChartStyle] = useState<"south" | "north">("south");
-  const [expandedVargaDetail, setExpandedVargaDetail] = useState<string>("");
 
   if (!report || !report.chart || !report.chart.planets) return null;
   const planets: any[] = report.chart.planets;
@@ -311,26 +309,8 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const copyVargaCharts = async () => {
-    await navigator.clipboard.writeText(buildVargaNakshatraText());
-    setVargaCopied(true);
-    setTimeout(() => setVargaCopied(false), 2500);
-  };
-
-  // ── D1 낙샤트라 상세 테이블 데이터 (fallback when varga_nakshatra_reports not available) ──
-  const d1Rows = [
-    ...planets.map((p: any) => ({
-      name: p.planet as string,
-      sidereal_deg: p.sidereal_deg as number,
-      retro: p.is_retrograde as boolean,
-      combust: p.is_combust as boolean,
-    })),
-    ...(ascendant ? [{ name: "ASC", sidereal_deg: ascendant.sidereal_deg, retro: false, combust: false }] : []),
-  ].filter(x => x.sidereal_deg != null);
-
   const vargaReports = report.varga_nakshatra_reports;
   const reportsMap = vargaReports?.reports;
-  const hasBackendReports = !!reportsMap && !!reportsMap["rasi"]?.rows?.length;
 
   return (
     <motion.div
@@ -448,238 +428,136 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
         </div>
       )}
 
-      {/* ── D1 + 분할 차트 낙샤트라 상세 리포트 (D1/D9/D10/D108) ─────────────────────── */}
-      <div className="glass p-8 rounded-[2rem]">
-        <div className="flex items-center justify-between mb-6">
-          <h5 className="text-xl font-bold text-white flex items-center gap-3">
-            <Star className="w-6 h-6 text-celestial-gold" />
-            D1 낙샤트라 리포트 (전체 행성)
-          </h5>
-          <button
-            onClick={copyReport}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm text-white font-semibold transition-all"
-          >
-            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-            {copied ? "복사됨!" : "리포트 복사 (D1+분할)"}
-          </button>
-        </div>
-
-        {hasBackendReports ? (
-          <>
-            <VargaNakshatraTable
-              title="D1 - Rasi (원본 차트)"
-              vargaLabel="D1"
-              rows={reportsMap!["rasi"].rows}
-              showHouse={true}
-            />
-            {/* D2~D144 아코디언 */}
-            <div className="mt-8 space-y-2 max-h-[50vh] overflow-y-auto">
-              {VARGA_DEFS.filter((v) => v.id !== "rasi").map((vargaDef) => {
-                const r = reportsMap![vargaDef.id];
-                if (!r) return null;
-                return (
-                  <div
-                    key={vargaDef.id}
-                    className="border border-white/10 rounded-xl overflow-hidden bg-white/[0.02]"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setExpandedVargaDetail((prev) => (prev === vargaDef.id ? "" : vargaDef.id))}
-                      className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
-                    >
-                      <span className="font-bold text-white">
-                        {vargaDef.label} - {vargaDef.name}
-                      </span>
-                      {expandedVargaDetail === vargaDef.id ? (
-                        <ChevronDown className="w-5 h-5 text-white/50" />
-                      ) : (
-                        <ChevronRight className="w-5 h-5 text-white/50" />
-                      )}
-                    </button>
-                    {expandedVargaDetail === vargaDef.id && (
-                      <div className="px-5 pb-5 pt-0 border-t border-white/5">
-                        <VargaNakshatraTable
-                          title=""
-                          vargaLabel={r.varga_label}
-                          rows={r.rows}
-                          showHouse={true}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  {D1_COLUMNS.map(h => (
-                    <th key={h} className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4 whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {d1Rows.map((row, i) => {
-                  const ni = getNakshatraInfo(row.sidereal_deg);
-                  const purposeColor =
-                    ni.purpose === "Dharma" ? "text-celestial-gold"
-                      : ni.purpose === "Artha" ? "text-green-400"
-                        : ni.purpose === "Kama" ? "text-pink-400"
-                          : "text-blue-400";
-                  return (
-                    <tr key={i} className="hover:bg-white/3 transition-colors">
-                      <td className="py-3 pr-4 font-bold text-white whitespace-nowrap">
-                        {row.name}
-                        {row.retro && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">℞</span>}
-                        {row.combust && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40">☀</span>}
-                      </td>
-                      <td className="py-3 pr-4 text-white/70 font-mono text-xs whitespace-nowrap">{formatSiderealPosition(row.sidereal_deg)}</td>
-                      <td className="py-3 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">
-                        {ni.name}
-                        <span className="ml-1.5 text-[10px] text-white/40">(Pada {ni.pada})</span>
-                      </td>
-                      <td className="py-3 pr-4 text-white/40 text-xs whitespace-nowrap">{ni.range}</td>
-                      <td className="py-3 pr-4 text-white/70 whitespace-nowrap">{ni.lord}</td>
-                      <td className="py-3 pr-4 text-white/70 whitespace-nowrap">{ni.padaLord}</td>
-                      <td className="py-3 pr-4 text-white/60 whitespace-nowrap">{ni.deity}</td>
-                      <td className="py-3 pr-4 whitespace-nowrap">
-                        <span className={`text-xs font-bold ${purposeColor}`}>{ni.purpose}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* ── 선택형 분할 차트 (D1~D144) ─────────────────────────────────── */}
+      {/* ── 분할 차트 + 낙샤트라 리포트 (통합) ─────────────────────────────────── */}
       {(() => {
-        const vargaDef = VARGA_DEFS.find((v) => v.id === selectedVargaId) ?? VARGA_DEFS[7]; // fallback to D9 navamsa
+        const vargaDef = VARGA_DEFS.find((v) => v.id === selectedVargaId) ?? VARGA_DEFS[7];
+        const backendReport = reportsMap?.[vargaDef.id];
+        const lagnaRasi: number = backendReport?.lagna_rasi ?? ascendant?.[vargaDef.key] ?? 1;
+
+        const rows = backendReport?.rows?.length
+          ? backendReport.rows
+          : [
+              ...planets.map((p: any) => {
+                const rasi: number = p[vargaDef.key] ?? 1;
+                const deg: number = p.sidereal_deg ?? 0;
+                const effectiveDeg = vargaDef.id === "rasi"
+                  ? deg
+                  : getVargaEffectiveLongitude(deg, rasi, vargaDef.divisionCount);
+                const ni = getNakshatraInfo(effectiveDeg);
+                const house = ((rasi - lagnaRasi + 12) % 12) + 1;
+                return {
+                  planet: p.planet as string,
+                  position_str: formatSiderealPosition(effectiveDeg),
+                  sign: rasi,
+                  house,
+                  nakshatra: 0,
+                  nakshatra_name: ni.name,
+                  pada: ni.pada,
+                  pada_range: ni.range,
+                  nakshatra_lord: ni.lord,
+                  pada_lord: ni.padaLord,
+                  deity: ni.deity,
+                  purpose: ni.purpose,
+                  is_retrograde: p.is_retrograde as boolean,
+                  is_combust: p.is_combust as boolean,
+                };
+              }),
+              ...(ascendant ? (() => {
+                const rasi: number = ascendant[vargaDef.key] ?? 1;
+                const deg: number = ascendant.sidereal_deg ?? 0;
+                const effectiveDeg = vargaDef.id === "rasi"
+                  ? deg
+                  : getVargaEffectiveLongitude(deg, rasi, vargaDef.divisionCount);
+                const ni = getNakshatraInfo(effectiveDeg);
+                const house = ((rasi - lagnaRasi + 12) % 12) + 1;
+                return [{
+                  planet: "ASC",
+                  position_str: formatSiderealPosition(effectiveDeg),
+                  sign: rasi,
+                  house,
+                  nakshatra: 0,
+                  nakshatra_name: ni.name,
+                  pada: ni.pada,
+                  pada_range: ni.range,
+                  nakshatra_lord: ni.lord,
+                  pada_lord: ni.padaLord,
+                  deity: ni.deity,
+                  purpose: ni.purpose,
+                  is_retrograde: false,
+                  is_combust: false,
+                }];
+              })() : []),
+            ];
+
         return (
           <div className="glass p-8 rounded-[2rem]">
+            {/* 헤더 */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
               <h5 className="text-xl font-bold text-white flex items-center gap-3">
                 <Grid3x3 className="w-6 h-6 text-celestial-cyan" />
                 분할 차트 (Varga Charts)
               </h5>
-              <div className="flex bg-black/40 border border-white/20 rounded-xl overflow-hidden p-0.5">
-                <button
-                  onClick={() => setChartStyle("south")}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${chartStyle === "south" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex bg-black/40 border border-white/20 rounded-xl overflow-hidden p-0.5">
+                  <button
+                    onClick={() => setChartStyle("south")}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${chartStyle === "south" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+                  >
+                    남인도
+                  </button>
+                  <button
+                    onClick={() => setChartStyle("north")}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${chartStyle === "north" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+                  >
+                    북인도
+                  </button>
+                </div>
+                <select
+                  value={selectedVargaId}
+                  onChange={(e) => setSelectedVargaId(e.target.value)}
+                  className="bg-black/40 border border-white/20 text-white text-sm font-semibold rounded-xl px-4 py-2 outline-none focus:border-celestial-cyan appearance-none cursor-pointer"
                 >
-                  남인도 스타일
-                </button>
+                  {VARGA_DEFS.map((v) => (
+                    <option key={v.id} value={v.id} className="bg-slate-900 text-white">
+                      {v.label} - {v.name}
+                    </option>
+                  ))}
+                </select>
                 <button
-                  onClick={() => setChartStyle("north")}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${chartStyle === "north" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+                  onClick={copyReport}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm text-white font-semibold transition-all"
                 >
-                  북인도 스타일
+                  {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                  {copied ? "복사됨!" : "전체 리포트 복사"}
                 </button>
               </div>
-              <select
-                value={selectedVargaId}
-                onChange={(e) => setSelectedVargaId(e.target.value)}
-                className="bg-black/40 border border-white/20 text-white text-sm font-semibold rounded-xl px-4 py-2 outline-none focus:border-celestial-cyan appearance-none cursor-pointer"
-              >
-                {VARGA_DEFS.map((v) => (
-                  <option key={v.id} value={v.id} className="bg-slate-900 text-white">
-                    {v.label} - {v.name}
-                  </option>
-                ))}
-              </select>
             </div>
-            <p className="text-xs text-white/40 mb-6 flex flex-wrap gap-4 items-center mt-2 md:mt-0">
-              <span>라그나: <span className="text-white/70 font-semibold">{SIGN_NAMES[ascendant?.[vargaDef.key]] ?? "—"}</span></span>
+            <p className="text-xs text-white/40 mb-6 flex flex-wrap gap-4 items-center mt-2">
+              <span>라그나: <span className="text-white/70 font-semibold">{SIGN_NAMES[lagnaRasi] ?? "—"}</span></span>
+              {backendReport && <span className="text-celestial-cyan/60 text-[10px]">✓ 백엔드 정밀값</span>}
               <span className="text-white/30 hidden md:inline">|</span>
-              <span className="text-white/30">황금 테두리 = 현재 차트 라그나 · 오른쪽 숫자 = 하우스 번호</span>
+              <span className="text-white/30">황금 테두리 = 라그나 · 오른쪽 숫자 = 하우스 번호</span>
             </p>
+            {/* 차트 + 낙샤트라 테이블 */}
             <div className="flex flex-col md:flex-row gap-8 items-start">
               {chartStyle === "south" ? (
                 <SouthIndianChart
-                  lagnaRasi={ascendant?.[vargaDef.key] ?? 1}
+                  lagnaRasi={lagnaRasi}
                   planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p[vargaDef.key], retro: p.is_retrograde, deg: p.sidereal_deg }))}
                 />
               ) : (
                 <NorthIndianChart
-                  lagnaRasi={ascendant?.[vargaDef.key] ?? 1}
+                  lagnaRasi={lagnaRasi}
                   planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p[vargaDef.key], retro: p.is_retrograde, deg: p.sidereal_deg }))}
                 />
               )}
               <div className="flex-1 overflow-x-auto w-full">
-                {(() => {
-                  // 백엔드 데이터 우선, 없으면 프론트엔드에서 직접 계산하여 항상 전체 컬럼 표시
-                  const backendReport = reportsMap?.[vargaDef.id];
-                  const lagnaRasi: number = ascendant?.[vargaDef.key] ?? 1;
-
-                  const rows = backendReport?.rows?.length
-                    ? backendReport.rows
-                    : [
-                        ...planets.map((p: any) => {
-                          const rasi: number = p[vargaDef.key] ?? 1;
-                          const deg: number = p.sidereal_deg ?? 0;
-                          const effectiveDeg = vargaDef.id === "rasi"
-                            ? deg
-                            : getVargaEffectiveLongitude(deg, rasi, vargaDef.divisionCount);
-                          const ni = getNakshatraInfo(effectiveDeg);
-                          const house = ((rasi - lagnaRasi + 12) % 12) + 1;
-                          return {
-                            planet: p.planet as string,
-                            position_str: formatSiderealPosition(effectiveDeg),
-                            sign: rasi,
-                            house,
-                            nakshatra: 0,
-                            nakshatra_name: ni.name,
-                            pada: ni.pada,
-                            pada_range: ni.range,
-                            nakshatra_lord: ni.lord,
-                            pada_lord: ni.padaLord,
-                            deity: ni.deity,
-                            purpose: ni.purpose,
-                            is_retrograde: p.is_retrograde as boolean,
-                            is_combust: p.is_combust as boolean,
-                          };
-                        }),
-                        ...(ascendant ? (() => {
-                          const rasi: number = ascendant[vargaDef.key] ?? 1;
-                          const deg: number = ascendant.sidereal_deg ?? 0;
-                          const effectiveDeg = vargaDef.id === "rasi"
-                            ? deg
-                            : getVargaEffectiveLongitude(deg, rasi, vargaDef.divisionCount);
-                          const ni = getNakshatraInfo(effectiveDeg);
-                          const house = ((rasi - lagnaRasi + 12) % 12) + 1;
-                          return [{
-                            planet: "ASC",
-                            position_str: formatSiderealPosition(effectiveDeg),
-                            sign: rasi,
-                            house,
-                            nakshatra: 0,
-                            nakshatra_name: ni.name,
-                            pada: ni.pada,
-                            pada_range: ni.range,
-                            nakshatra_lord: ni.lord,
-                            pada_lord: ni.padaLord,
-                            deity: ni.deity,
-                            purpose: ni.purpose,
-                            is_retrograde: false,
-                            is_combust: false,
-                          }];
-                        })() : []),
-                      ];
-
-                  return (
-                    <VargaNakshatraTable
-                      title=""
-                      vargaLabel={vargaDef.label}
-                      rows={rows}
-                      showHouse={true}
-                    />
-                  );
-                })()}
+                <VargaNakshatraTable
+                  title=""
+                  vargaLabel={vargaDef.label}
+                  rows={rows}
+                  showHouse={vargaDef.id !== "rasi"}
+                />
               </div>
             </div>
           </div>
@@ -695,11 +573,11 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
           </h5>
           <button
             type="button"
-            onClick={copyVargaCharts}
+            onClick={copyReport}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-celestial-purple/20 hover:bg-celestial-purple/30 border border-celestial-purple/40 text-celestial-purple text-sm font-semibold transition-colors"
           >
-            {vargaCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-            {vargaCopied ? "복사됨!" : "D1~D144 차트 복사"}
+            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+            {copied ? "복사됨!" : "전체 리포트 복사"}
           </button>
         </div>
         <p className="text-xs text-white/40 mb-6">각 셀 = 해당 분할 차트에서의 사인 번호 (1=Aries … 12=Pisces)</p>
