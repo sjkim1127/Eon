@@ -73,7 +73,7 @@ export function DestinyTierTab({ sajuReport, report, transitReport, unknownTime 
         </h2>
         <div className="flex flex-col md:flex-row items-center gap-8 mt-8">
           <div className="flex flex-col items-center">
-            <span className={`text-8xl md:text-9xl font-black bg-gradient-to-br ${tierUi.color} bg-clip-text text-transparent`}>
+            <span className="text-8xl md:text-9xl font-black text-black">
               {destinyTier.grade}
             </span>
             <span className="text-lg font-bold text-white mt-2">{destinyTier.label}</span>
