@@ -290,6 +290,14 @@ export interface VulnerabilityReport {
   critical_vectors: Vulnerability[];
 }
 
+/** 운명 복잡도 분석 (ComplexityAnalysis Rust struct) */
+export interface ComplexityAnalysis {
+  cyclomatic_complexity: number;
+  stability_grade: string;
+  entropy: number;
+  decision_nodes: number[];
+}
+
 /** 사주 분석 결과 최상위 래퍼 (SajuAnalysisResult Rust struct) */
 export interface SajuAnalysisResult {
   report: SajuReport;
@@ -302,6 +310,7 @@ export interface SajuAnalysisResult {
   load_diagnostics: LoadBalanceDiagnostic[];
   crash_count: number;
   vulnerability_report: VulnerabilityReport | null;
+  complexity?: ComplexityAnalysis | null;
 }
 
 /** 부하 진단 항목 (LoadBalanceDiagnostic Rust struct) */

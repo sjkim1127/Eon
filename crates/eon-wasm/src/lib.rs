@@ -17,6 +17,7 @@ use eon_saju::analysis::periodic_luck::{MonthlyLuck, YearlyLuck};
 use eon_saju::analysis::relationships::RelationshipAnalysis;
 use eon_saju::analysis::void::VoidAnalysis;
 use eon_saju::core::pillars::{FourPillars, SajuInput};
+use eon_saju::engine::complexity::{ComplexityAnalysis, DestinyComplexity};
 use eon_saju::engine::emulator::LifePathEmulator;
 use eon_saju::engine::entropy::{DestinyEntropy, EntropyAnalysis};
 use eon_saju::engine::fuzzer::DestinyFuzzer;
@@ -63,6 +64,7 @@ struct SajuAnalysisResult {
     vulnerability_report: Option<eon_saju::engine::fuzzer::VulnerabilityReport>,
     relationships: RelationshipAnalysis,
     void_analysis: VoidAnalysis,
+    complexity: Option<ComplexityAnalysis>,
     /// serde_wasm_bindgen workaround: timeline은 JSON 문자열로 전달
     timeline_json: String,
 }
@@ -187,6 +189,7 @@ pub fn get_saju_analysis(
     let mut load_diagnostics: Vec<LoadBalanceDiagnostic> = Vec::new();
     let mut crash_count: u32 = 0;
     let mut vulnerability_report: Option<eon_saju::engine::fuzzer::VulnerabilityReport> = None;
+    let mut complexity: Option<ComplexityAnalysis> = None;
 
     if let Ok(major_luck) =
         MajorLuckAnalysis::calculate_astro(&pillars, gender, cy, cm, cd, ch, cmin)
@@ -197,6 +200,7 @@ pub fn get_saju_analysis(
 
             // 동적 엔진 계산 (시뮬레이션 기반)
             load_diagnostics = KarmaLoadBalancer::diagnose(&life_report.frames);
+            complexity = Some(DestinyComplexity::analyze(&life_report.frames));
 
             let vm_fuzz = SajuVM::new(pillars.clone());
             let fuzzer = DestinyFuzzer::new(vm_fuzz);
@@ -233,6 +237,7 @@ pub fn get_saju_analysis(
         vulnerability_report,
         relationships,
         void_analysis,
+        complexity,
         timeline_json,
     };
 

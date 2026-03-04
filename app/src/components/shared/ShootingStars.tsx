@@ -1,16 +1,14 @@
-import { useMemo } from "react";
+import { useState } from "react";
 
 /** 배경 유성 애니메이션 */
 export function ShootingStars() {
-  const stars = useMemo(
-    () =>
-      [...Array(5)].map(() => ({
-        top: `${Math.random() * 70}%`,
-        left: `${Math.random() * 70}%`,
-        delay: `${Math.random() * 10}s`,
-        duration: `${3 + Math.random() * 3}s`,
-      })),
-    []
+  const [stars] = useState(() =>
+    [...Array(5)].map(() => ({
+      top: `${Math.random() * 70}%`,
+      left: `${Math.random() * 70}%`,
+      delay: `${Math.random() * 10}s`,
+      duration: `${3 + Math.random() * 3}s`,
+    }))
   );
 
   return (

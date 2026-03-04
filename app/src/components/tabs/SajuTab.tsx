@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Activity, Zap, Shield, Star, TrendingUp, AlertTriangle, Link2, CircleOff } from "lucide-react";
 import { LifeGraphSection } from "../sections/LifeGraphSection";
+import { SimulationTimelineSection } from "../sections/SimulationTimelineSection";
 import { VulnerabilitySection } from "../sections/VulnerabilitySection";
 import {
   STEM_INFO, BRANCH_INFO, ELEMENT_INFO,
@@ -345,8 +346,9 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
       })()}
 
       {/* 공망 (空亡) 분석 */}
-      {sajuReport.voids && (() => {
-        const va = sajuReport.voids;
+      {(() => {
+        const va = sajuReport.void_analysis ?? sajuReport.report?.voids;
+        if (!va) return null;
         const branches: any[] = va.void_branches ?? [];
         const positions: string[] = va.void_positions ?? [];
         const tenGods: any[] = va.void_ten_gods ?? [];
@@ -434,6 +436,9 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
         goldenTime={gt}
         simulationFrames={reportData.simulation_frames}
       />
+
+      {/* 생애 시뮬레이션 타임라인 */}
+      <SimulationTimelineSection frames={reportData.simulation_frames ?? []} />
 
       {/* 운명 취약점 분석 — extracted to VulnerabilitySection */}
       <VulnerabilitySection report={sajuReport.vulnerability_report ?? null} />

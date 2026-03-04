@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-  get_vedic_analysis,
-  get_saju_analysis,
-  get_transit_analysis,
-  get_ai_audit,
-  get_saju_compatibility,
-  get_vedic_compatibility,
-} from "../lib/api";
+import { backendClient } from "../lib/backend";
 import type {
   BirthData,
   TabId,
@@ -104,14 +97,14 @@ export function useAnalysis() {
     try {
       // 세 분석을 독립적으로 실행 — 하나가 실패해도 나머지 결과는 유지
       const [vedicResult, sajuResult, transitResult, aiAuditResult] = await Promise.allSettled([
-        get_vedic_analysis({
+        backendClient.getVedicAnalysis({
           year: birthData.year, month: birthData.month, day: birthData.day,
           hour: birthData.hour, minute: birthData.minute,
           is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
           lat: birthData.lat, lon: birthData.lon,
           timezone: birthData.timezone,
         }),
-        get_saju_analysis({
+        backendClient.getSajuAnalysis({
           year: birthData.year, month: birthData.month, day: birthData.day,
           hour: birthData.hour, minute: birthData.minute,
           is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
@@ -119,7 +112,7 @@ export function useAnalysis() {
           lat: birthData.lat, lon: birthData.lon,
           timezone: birthData.timezone,
         }),
-        get_transit_analysis({
+        backendClient.getTransitAnalysis({
           year: birthData.year, month: birthData.month, day: birthData.day,
           hour: birthData.hour, minute: birthData.minute,
           is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
@@ -130,7 +123,7 @@ export function useAnalysis() {
           current_month: now.getMonth() + 1,
           current_day: now.getDate(),
         }),
-        get_ai_audit({
+        backendClient.getAiAudit({
           year: birthData.year, month: birthData.month, day: birthData.day,
           hour: birthData.hour, minute: birthData.minute,
           is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
@@ -193,7 +186,7 @@ export function useAnalysis() {
     setErrorMessage(null);
     try {
       const [saju, vedic] = await Promise.all([
-        get_saju_compatibility({
+        backendClient.getSajuCompatibility({
           year1: birthData.year, month1: birthData.month, day1: birthData.day,
           hour1: birthData.hour, minute1: birthData.minute,
           is_lunar1: birthData.is_lunar ?? false, is_leap_month1: birthData.is_leap_month ?? false,
@@ -205,15 +198,15 @@ export function useAnalysis() {
           timezone1: birthData.timezone,
           timezone2: birthData2.timezone,
         }),
-        get_vedic_compatibility({
+        backendClient.getVedicCompatibility({
           year1: birthData.year, month1: birthData.month, day1: birthData.day,
           hour1: birthData.hour, minute1: birthData.minute,
           is_lunar1: birthData.is_lunar ?? false, is_leap_month1: birthData.is_leap_month ?? false,
-          lat1: birthData.lat, lon1: birthData.lon,
+          is_male1: isMale, lon1: birthData.lon, lat1: birthData.lat,
           year2: birthData2.year, month2: birthData2.month, day2: birthData2.day,
           hour2: birthData2.hour, minute2: birthData2.minute,
           is_lunar2: birthData2.is_lunar ?? false, is_leap_month2: birthData2.is_leap_month ?? false,
-          lat2: birthData2.lat, lon2: birthData2.lon,
+          is_male2: isMale2, lon2: birthData2.lon, lat2: birthData2.lat,
           timezone1: birthData.timezone,
           timezone2: birthData2.timezone,
         }),

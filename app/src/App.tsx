@@ -15,6 +15,7 @@ const loadVedicChartsTab = () => import("./components/tabs/VedicChartsTab");
 const loadStrengthTab = () => import("./components/tabs/StrengthTab");
 const loadTransitTab = () => import("./components/tabs/TransitTab");
 const loadCompatibilityTab = () => import("./components/tabs/CompatibilityTab");
+const loadAiAuditTab = () => import("./components/tabs/AiAuditTab");
 
 const OverviewTab = lazy(() => loadOverviewTab().then((m) => ({ default: m.OverviewTab })));
 const SajuTab = lazy(() => loadSajuTab().then((m) => ({ default: m.SajuTab })));
@@ -22,8 +23,9 @@ const VedicChartsTab = lazy(() => loadVedicChartsTab().then((m) => ({ default: m
 const StrengthTab = lazy(() => loadStrengthTab().then((m) => ({ default: m.StrengthTab })));
 const TransitTab = lazy(() => loadTransitTab().then((m) => ({ default: m.TransitTab })));
 const CompatibilityTab = lazy(() => loadCompatibilityTab().then((m) => ({ default: m.CompatibilityTab })));
+const AiAuditTab = lazy(() => loadAiAuditTab().then((m) => ({ default: m.AiAuditTab })));
 
-const TABS: TabId[] = ["overview", "saju", "vedic_charts", "strength", "transit", "compatibility"];
+const TABS: TabId[] = ["overview", "saju", "vedic_charts", "strength", "transit", "compatibility", "ai_audit"];
 
 const FALLBACK_NEXT_TABS: Record<TabId, TabId[]> = {
   overview: ["saju", "strength"],
@@ -32,6 +34,7 @@ const FALLBACK_NEXT_TABS: Record<TabId, TabId[]> = {
   strength: ["transit", "saju"],
   transit: ["compatibility", "overview"],
   compatibility: ["overview", "saju"],
+  ai_audit: ["overview", "saju"],
 };
 
 const REPORT_READY_BONUS: Partial<Record<TabId, number>> = {
@@ -69,6 +72,7 @@ function App() {
     isMale, setIsMale,
     isDST,
     report, sajuReport, transitReport, transitError,
+    aiAuditReport,
     loading, runAnalysis,
     errorMessage,
     activeTab, setActiveTab,
@@ -84,16 +88,8 @@ function App() {
   const [mdCopied, setMdCopied] = useState(false);
   const [sajuCopied, setSajuCopied] = useState(false);
   const [vedicCopied, setVedicCopied] = useState(false);
-  const prevHasReportRef = useRef(false);
 
-  // 분석 완료 시 드로어 자동 닫기
-  useEffect(() => {
-    const hasReport = !!(report || sajuReport);
-    if (hasReport && !prevHasReportRef.current) {
-      setFormOpen(false);
-    }
-    prevHasReportRef.current = hasReport;
-  }, [report, sajuReport]);
+  // 분석 완료 시 닫기는 BirthInputForm 내부 온클릭에서 처리됨
 
   const pad = (n: number) => String(n).padStart(2, "0");
   const hasReport = !!(report || sajuReport);
@@ -127,6 +123,10 @@ function App() {
     }
     if (tab === "transit") {
       void loadTransitTab();
+      return;
+    }
+    if (tab === "ai_audit") {
+      void loadAiAuditTab();
       return;
     }
     void loadCompatibilityTab();
@@ -346,6 +346,8 @@ function App() {
                   compLoading={compLoading}
                   onRunCompatibility={runCompatibilityAnalysis}
                 />
+              ) : activeTab === "ai_audit" ? (
+                <AiAuditTab aiAuditReport={aiAuditReport} />
               ) : (
                 <OverviewTab report={report!} />
               )}

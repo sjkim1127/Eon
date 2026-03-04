@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Heart, Clock, Star, Shield, Sparkles, Eye, Users } from "lucide-react";
 import { cn } from "../../utils";
 import type { VedicAnalysisResult } from "../../types";
+import { GocharaSection } from "../sections/GocharaSection";
 
 interface OverviewTabProps {
   report: VedicAnalysisResult;
@@ -108,6 +109,9 @@ export function OverviewTab({ report }: OverviewTabProps) {
           </div>
         </div>
       </div>
+
+      {/* 현재 고차라(트랜짓) 요약 */}
+      <GocharaSection summary={report.gochara ?? null} />
 
       {/* Secondary Info */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

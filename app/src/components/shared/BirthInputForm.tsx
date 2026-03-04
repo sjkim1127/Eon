@@ -31,7 +31,7 @@ export function BirthInputForm({
   onAnalysis,
   sajuReport,
   compact = false,
-  onClose: _onClose,
+  onClose,
 }: BirthInputFormProps) {
   const unknownTime = birthData.unknown_time ?? false;
 
@@ -264,7 +264,7 @@ export function BirthInputForm({
         </button>
 
         <button
-          onClick={() => { onAnalysis(); }}
+          onClick={async () => { await Promise.resolve(onAnalysis()); onClose?.(); }}
           disabled={loading}
           className="bg-gradient-to-r from-celestial-purple to-brand-600 px-6 py-2.5 rounded-xl font-bold text-white text-sm shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 inline-flex items-center gap-2 w-full sm:w-auto justify-center"
         >
