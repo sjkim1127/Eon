@@ -612,63 +612,79 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
                 />
               )}
               <div className="flex-1 overflow-x-auto w-full">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      {["행성", `${vargaDef.label} 사인`, `${vargaDef.label} 하우스`, "사인 로드", "낙샤트라(파다)", "낙샤트라 로드"].map((h) => (
-                        <th key={h} className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {[
-                      ...planets.map((p: any) => ({
-                        name: p.planet,
-                        rasi: p[vargaDef.key] as number,
-                        deg: p.sidereal_deg as number,
-                        retro: p.is_retrograde,
-                        combust: p.is_combust,
-                      })),
-                      ...(ascendant ? [{ name: "ASC", rasi: ascendant[vargaDef.key] as number, deg: ascendant.sidereal_deg, retro: false, combust: false }] : []),
-                    ].map((row, i) => {
-                      const houseNum = ((row.rasi - (ascendant?.[vargaDef.key] ?? 1) + 12) % 12) + 1;
-                      return (
-                        <tr key={i} className="hover:bg-white/[0.03] transition-colors">
-                          <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">
-                            {row.name}
-                            {row.retro && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">℞</span>}
-                            {row.combust && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40">☀</span>}
-                          </td>
-                          <td className="py-2.5 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">{SIGN_NAMES[row.rasi] ?? "—"}</td>
-                          <td className="py-2.5 pr-4 text-white/70 whitespace-nowrap">
-                            <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-xs">H{houseNum}</span>
-                          </td>
-                          <td className="py-2.5 pr-4 text-white/50 whitespace-nowrap">{SIGN_LORDS[row.rasi] ?? "—"}</td>
-                          {row.deg !== undefined && row.deg !== null ? (() => {
-                            const degForNak = vargaDef.id === "rasi"
-                              ? row.deg
-                              : getVargaEffectiveLongitude(row.deg, row.rasi, vargaDef.divisionCount);
-                            const ni = getNakshatraInfo(degForNak);
-                            return (
-                              <>
-                                <td className="py-2.5 pr-4 text-white/80 whitespace-nowrap">
-                                  {ni.name}
-                                  <span className="ml-1 text-[10px] text-white/40">(Pada {ni.pada})</span>
-                                </td>
-                                <td className="py-2.5 pr-4 text-white/60 whitespace-nowrap">{ni.lord}</td>
-                              </>
-                            );
-                          })() : (
-                            <>
-                              <td className="py-2.5 pr-4 text-white/30 whitespace-nowrap">—</td>
-                              <td className="py-2.5 pr-4 text-white/30 whitespace-nowrap">—</td>
-                            </>
-                          )}
+                {(() => {
+                  const backendReport = reportsMap?.[vargaDef.id];
+                  if (backendReport?.rows?.length) {
+                    return (
+                      <VargaNakshatraTable
+                        title=""
+                        vargaLabel={vargaDef.label}
+                        rows={backendReport.rows}
+                        showHouse={true}
+                      />
+                    );
+                  }
+                  // 폴백: 프론트엔드 계산 (6컬럼)
+                  return (
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10">
+                          {["행성", `${vargaDef.label} 사인`, `${vargaDef.label} 하우스`, "사인 로드", "낙샤트라(파다)", "낙샤트라 로드"].map((h) => (
+                            <th key={h} className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">{h}</th>
+                          ))}
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {[
+                          ...planets.map((p: any) => ({
+                            name: p.planet,
+                            rasi: p[vargaDef.key] as number,
+                            deg: p.sidereal_deg as number,
+                            retro: p.is_retrograde,
+                            combust: p.is_combust,
+                          })),
+                          ...(ascendant ? [{ name: "ASC", rasi: ascendant[vargaDef.key] as number, deg: ascendant.sidereal_deg, retro: false, combust: false }] : []),
+                        ].map((row, i) => {
+                          const houseNum = ((row.rasi - (ascendant?.[vargaDef.key] ?? 1) + 12) % 12) + 1;
+                          return (
+                            <tr key={i} className="hover:bg-white/[0.03] transition-colors">
+                              <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">
+                                {row.name}
+                                {row.retro && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">℞</span>}
+                                {row.combust && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40">☀</span>}
+                              </td>
+                              <td className="py-2.5 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">{SIGN_NAMES[row.rasi] ?? "—"}</td>
+                              <td className="py-2.5 pr-4 text-white/70 whitespace-nowrap">
+                                <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-xs">H{houseNum}</span>
+                              </td>
+                              <td className="py-2.5 pr-4 text-white/50 whitespace-nowrap">{SIGN_LORDS[row.rasi] ?? "—"}</td>
+                              {row.deg !== undefined && row.deg !== null ? (() => {
+                                const degForNak = vargaDef.id === "rasi"
+                                  ? row.deg
+                                  : getVargaEffectiveLongitude(row.deg, row.rasi, vargaDef.divisionCount);
+                                const ni = getNakshatraInfo(degForNak);
+                                return (
+                                  <>
+                                    <td className="py-2.5 pr-4 text-white/80 whitespace-nowrap">
+                                      {ni.name}
+                                      <span className="ml-1 text-[10px] text-white/40">(Pada {ni.pada})</span>
+                                    </td>
+                                    <td className="py-2.5 pr-4 text-white/60 whitespace-nowrap">{ni.lord}</td>
+                                  </>
+                                );
+                              })() : (
+                                <>
+                                  <td className="py-2.5 pr-4 text-white/30 whitespace-nowrap">—</td>
+                                  <td className="py-2.5 pr-4 text-white/30 whitespace-nowrap">—</td>
+                                </>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  );
+                })()}
               </div>
             </div>
           </div>
