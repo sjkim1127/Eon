@@ -133,8 +133,16 @@ export function useAnalysis() {
         }),
       ]);
 
-      if (vedicResult.status === "fulfilled") setReport(vedicResult.value);
-      else console.error("베딕 분석 실패:", vedicResult.reason);
+      if (vedicResult.status === "fulfilled") {
+        const raw = vedicResult.value as any;
+        if (raw && typeof raw === "object") {
+          if (raw.report && typeof raw.report === "object" && !Array.isArray(raw.report.dasha_timeline))
+            raw.report = { ...raw.report, dasha_timeline: raw.report.dasha_timeline ?? [] };
+          if (raw.gochara != null && typeof raw.gochara === "object" && !Array.isArray(raw.gochara.transits))
+            raw.gochara = { ...raw.gochara, transits: raw.gochara.transits ?? [] };
+        }
+        setReport(vedicResult.value);
+      } else console.error("베딕 분석 실패:", vedicResult.reason);
 
       if (sajuResult.status === "fulfilled") setSajuReport(sajuResult.value);
       else console.error("사주 분석 실패:", sajuResult.reason);

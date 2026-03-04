@@ -17,7 +17,7 @@ const TABS = [
   { id: "strength" as TabId, label: "역량 및 기운", icon: Zap },
   { id: "transit" as TabId, label: "현재 운세", icon: Sun },
   { id: "compatibility" as TabId, label: "궁합 분석", icon: Heart },
-  { id: "ai_audit" as TabId, label: "AI 감사", icon: Brain },
+  { id: "ai_audit" as TabId, label: "AI", icon: Brain },
 ];
 
 export function Sidebar({ activeTab, setActiveTab, onTabHover, unknownTime }: SidebarProps) {

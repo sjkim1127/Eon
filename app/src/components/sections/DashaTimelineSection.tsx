@@ -47,7 +47,21 @@ export function DashaTimelineSection({ periods }: DashaTimelineSectionProps) {
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
     const [now] = useState(() => Date.now());
 
-    if (!periods || periods.length === 0) return null;
+    const hasPeriods = Array.isArray(periods) && periods.length > 0;
+
+    if (!hasPeriods) {
+        return (
+            <div className="glass p-8 rounded-[2rem]">
+                <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                    <Clock className="w-6 h-6 text-celestial-gold" />
+                    다샤 타임라인 (Vimshottari Dasha)
+                </h5>
+                <p className="text-white/50 text-sm">
+                    다샤 타임라인을 계산할 수 없습니다. 출생 차트에 달 위치가 필요하며, 베딕 분석이 완료되면 여기에 표시됩니다.
+                </p>
+            </div>
+        );
+    }
 
     // Total duration for proportional widths
     const totalYears = periods.reduce((sum, p) => sum + yearsBetween(p.start_time, p.end_time), 0);
