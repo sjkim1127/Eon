@@ -98,7 +98,7 @@ pub async fn get_vedic_analysis(
     let calculator = VedicChartCalculator::new();
     let chart = calculator.calculate(dt, lat, lon);
 
-    let report = VedicAnalysisReport::generate(&chart);
+    let report = VedicAnalysisReport::generate(&chart, dt);
 
     // Gochara: compute current transit chart and analyze
     let gochara = {

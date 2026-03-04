@@ -31,7 +31,7 @@ pub struct HouseRating {
 }
 
 impl VedicAnalysisReport {
-    pub fn generate(chart: &VedicChart) -> Self {
+    pub fn generate(chart: &VedicChart, birth_time: chrono::DateTime<Utc>) -> Self {
         let ak = chart
             .karakas
             .iter()
@@ -105,7 +105,7 @@ impl VedicAnalysisReport {
         let moon_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon);
         let (dasha_focus, dasha_timeline) = if let Some(m) = moon_pos {
             let timeline = crate::analysis::dasha::VimshottariDasha::calculate_timeline(
-                Utc::now(),
+                birth_time,
                 m.sidereal_deg,
                 2, // Mahadasha + Antardasha
             );

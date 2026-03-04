@@ -361,7 +361,7 @@ impl VedicChartCalculator {
 
         // Final High-level Report
         chart.analysis_report = Some(crate::analysis::report::VedicAnalysisReport::generate(
-            &chart,
+            &chart, time,
         ));
 
         chart
