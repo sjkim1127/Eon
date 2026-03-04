@@ -3,7 +3,7 @@ import { Trophy, Activity, Star, Sparkles, Target, TrendingUp, Zap, ChevronRight
 import type { SajuAnalysisResult } from "../../types";
 import type { VedicAnalysisResult } from "../../types";
 import type { TransitResult } from "../../types";
-import { computeTierResult, getTierFromScore } from "../../utils/tierScore";
+import { computeTierResult } from "../../utils/tierScore";
 
 const TIER_GRADES_UI = [
   { grade: "S", label: "천운", color: "from-amber-400 to-yellow-600", desc: "사주와 별운이 모두 유리한 극상의 조합" },
@@ -43,7 +43,7 @@ export function DestinyTierTab({ sajuReport, report, transitReport, unknownTime 
     );
   }
 
-  const { destinyTier, potentialTier, domainTiers, sajuResult, vedicResult, transitResult, strengths, weaknesses } = result;
+  const { destinyTier, potentialTier, domainTiers, sajuResult, vedicResult, strengths, weaknesses } = result;
   const hasSaju = !!sajuReport?.report;
   const hasVedic = !!report?.report;
   const hasTransit = !!transitReport?.current_frame;
