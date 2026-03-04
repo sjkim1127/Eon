@@ -141,11 +141,43 @@ export interface VedicChartData {
   analysis_report: VedicAnalysisReport | null;
 }
 
+/** 단일 바르가 낙샤트라 리포트 행 */
+export interface VargaNakshatraReportRow {
+  planet: string;
+  position_str: string;
+  sign: number;
+  house: number;
+  nakshatra: number;
+  nakshatra_name: string;
+  pada: number;
+  pada_range: string;
+  nakshatra_lord: string;
+  pada_lord: string;
+  deity: string;
+  purpose: string;
+  is_retrograde: boolean;
+  is_combust: boolean;
+}
+
+/** 단일 바르가(D1/D9/D10/D108) 낙샤트라 리포트 */
+export interface VargaNakshatraReport {
+  varga_id: string;
+  varga_label: string;
+  lagna_rasi: number;
+  rows: VargaNakshatraReportRow[];
+}
+
+/** D1~D144 전체 바르가 낙샤트라 리포트 맵 (varga_id -> report) */
+export interface VargaNakshatraReports {
+  reports: Record<string, VargaNakshatraReport>;
+}
+
 /** 베딕 분석 결과 (report + raw chart) */
 export interface VedicAnalysisResult {
   report: VedicAnalysisReport;
   chart: VedicChartData;
   gochara?: GocharaSummary;
+  varga_nakshatra_reports?: VargaNakshatraReports;
 }
 
 /** 낙샤트라 원시 데이터 */

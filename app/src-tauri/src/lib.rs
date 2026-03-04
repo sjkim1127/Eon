@@ -71,17 +71,22 @@ async fn get_vedic_analysis(
         eon_vedic::analysis::gochara::GocharaEngine::analyze(natal_moon_rasi, &transit_chart)
     };
 
+    let varga_nakshatra_reports =
+        eon_vedic::analysis::varga_nakshatra_report::build_varga_nakshatra_reports(&chart);
+
     #[derive(serde::Serialize)]
     struct VedicAnalysisResult {
         report: VedicAnalysisReport,
         chart: VedicChart,
         gochara: eon_vedic::analysis::gochara::GocharaSummary,
+        varga_nakshatra_reports: eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReports,
     }
 
     let result = VedicAnalysisResult {
         report,
         chart,
         gochara,
+        varga_nakshatra_reports,
     };
 
     serde_json::to_value(&result).map_err(|e| format!("직렬화 실패: {}", e))

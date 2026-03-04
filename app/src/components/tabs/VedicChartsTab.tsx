@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle, Compass } from "lucide-react";
+import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle, Compass, ChevronDown, ChevronRight } from "lucide-react";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
 import { getNakshatraInfo, getVargaEffectiveLongitude } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
@@ -9,6 +9,7 @@ import { AspectsSection } from "../sections/AspectsSection";
 import { DashaTimelineSection } from "../sections/DashaTimelineSection";
 import { GocharaSection } from "../sections/GocharaSection";
 import { AvasthaKarakaSection } from "../sections/AvasthaKarakaSection";
+import { VargaNakshatraTable } from "../sections/VargaNakshatraTable";
 
 // ── 남인도 차트 상수 ────────────────────────────────────────────────────
 const SOUTH_GRID: (number | null)[][] = [
@@ -206,6 +207,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const [vargaCopied, setVargaCopied] = useState(false);
   const [selectedVargaId, setSelectedVargaId] = useState<string>("navamsa");
   const [chartStyle, setChartStyle] = useState<"south" | "north">("south");
+  const [expandedVargaDetail, setExpandedVargaDetail] = useState<string>("");
 
   if (!report || !report.chart || !report.chart.planets) return null;
   const planets: any[] = report.chart.planets;
@@ -284,7 +286,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
     setTimeout(() => setVargaCopied(false), 2500);
   };
 
-  // ── D1 낙샤트라 상세 테이블 데이터 ─────────────────────────────────
+  // ── D1 낙샤트라 상세 테이블 데이터 (fallback when varga_nakshatra_reports not available) ──
   const d1Rows = [
     ...planets.map((p: any) => ({
       name: p.planet as string,
@@ -294,6 +296,10 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
     })),
     ...(ascendant ? [{ name: "ASC", sidereal_deg: ascendant.sidereal_deg, retro: false, combust: false }] : []),
   ].filter(x => x.sidereal_deg != null);
+
+  const vargaReports = report.varga_nakshatra_reports;
+  const reportsMap = vargaReports?.reports;
+  const hasBackendReports = !!reportsMap && !!reportsMap["rasi"]?.rows?.length;
 
   return (
     <motion.div
@@ -411,7 +417,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
         </div>
       )}
 
-      {/* ── D1 낙샤트라 상세 테이블 ─────────────────────────────────── */}
+      {/* ── D1 + 분할 차트 낙샤트라 상세 리포트 (D1/D9/D10/D108) ─────────────────────── */}
       <div className="glass p-8 rounded-[2rem]">
         <div className="flex items-center justify-between mb-6">
           <h5 className="text-xl font-bold text-white flex items-center gap-3">
@@ -427,48 +433,97 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/10">
-                {["행성", "위치 (사이드리얼)", "낙샤트라 (파다)", "파다 범위", "낙샤트라 로드", "파다 로드", "신 (Deity)", "목적 (Purpose)"].map(h => (
-                  <th key={h} className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4 whitespace-nowrap">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {d1Rows.map((row, i) => {
-                const ni = getNakshatraInfo(row.sidereal_deg);
-                const purposeColor =
-                  ni.purpose === "Dharma" ? "text-celestial-gold"
-                    : ni.purpose === "Artha" ? "text-green-400"
-                      : ni.purpose === "Kama" ? "text-pink-400"
-                        : "text-blue-400";
+        {hasBackendReports ? (
+          <>
+            <VargaNakshatraTable
+              title="D1 - Rasi (원본 차트)"
+              vargaLabel="D1"
+              rows={reportsMap!["rasi"].rows}
+              showHouse={true}
+            />
+            {/* D2~D144 아코디언 */}
+            <div className="mt-8 space-y-2 max-h-[50vh] overflow-y-auto">
+              {VARGA_DEFS.filter((v) => v.id !== "rasi").map((vargaDef) => {
+                const r = reportsMap![vargaDef.id];
+                if (!r) return null;
                 return (
-                  <tr key={i} className="hover:bg-white/3 transition-colors">
-                    <td className="py-3 pr-4 font-bold text-white whitespace-nowrap">
-                      {row.name}
-                      {row.retro && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">℞</span>}
-                      {row.combust && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40">☀</span>}
-                    </td>
-                    <td className="py-3 pr-4 text-white/70 font-mono text-xs whitespace-nowrap">{fmtPosition(row.sidereal_deg)}</td>
-                    <td className="py-3 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">
-                      {ni.name}
-                      <span className="ml-1.5 text-[10px] text-white/40">(Pada {ni.pada})</span>
-                    </td>
-                    <td className="py-3 pr-4 text-white/40 text-xs whitespace-nowrap">{ni.range}</td>
-                    <td className="py-3 pr-4 text-white/70 whitespace-nowrap">{ni.lord}</td>
-                    <td className="py-3 pr-4 text-white/70 whitespace-nowrap">{ni.padaLord}</td>
-                    <td className="py-3 pr-4 text-white/60 whitespace-nowrap">{ni.deity}</td>
-                    <td className="py-3 pr-4 whitespace-nowrap">
-                      <span className={`text-xs font-bold ${purposeColor}`}>{ni.purpose}</span>
-                    </td>
-                  </tr>
+                  <div
+                    key={vargaDef.id}
+                    className="border border-white/10 rounded-xl overflow-hidden bg-white/[0.02]"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setExpandedVargaDetail((prev) => (prev === vargaDef.id ? "" : vargaDef.id))}
+                      className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-white/5 transition-colors"
+                    >
+                      <span className="font-bold text-white">
+                        {vargaDef.label} - {vargaDef.name}
+                      </span>
+                      {expandedVargaDetail === vargaDef.id ? (
+                        <ChevronDown className="w-5 h-5 text-white/50" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-white/50" />
+                      )}
+                    </button>
+                    {expandedVargaDetail === vargaDef.id && (
+                      <div className="px-5 pb-5 pt-0 border-t border-white/5">
+                        <VargaNakshatraTable
+                          title=""
+                          vargaLabel={r.varga_label}
+                          rows={r.rows}
+                          showHouse={true}
+                        />
+                      </div>
+                    )}
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10">
+                  {["행성", "위치 (사이드리얼)", "낙샤트라 (파다)", "파다 범위", "낙샤트라 로드", "파다 로드", "신 (Deity)", "목적 (Purpose)"].map(h => (
+                    <th key={h} className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4 whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {d1Rows.map((row, i) => {
+                  const ni = getNakshatraInfo(row.sidereal_deg);
+                  const purposeColor =
+                    ni.purpose === "Dharma" ? "text-celestial-gold"
+                      : ni.purpose === "Artha" ? "text-green-400"
+                        : ni.purpose === "Kama" ? "text-pink-400"
+                          : "text-blue-400";
+                  return (
+                    <tr key={i} className="hover:bg-white/3 transition-colors">
+                      <td className="py-3 pr-4 font-bold text-white whitespace-nowrap">
+                        {row.name}
+                        {row.retro && <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">℞</span>}
+                        {row.combust && <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40">☀</span>}
+                      </td>
+                      <td className="py-3 pr-4 text-white/70 font-mono text-xs whitespace-nowrap">{fmtPosition(row.sidereal_deg)}</td>
+                      <td className="py-3 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">
+                        {ni.name}
+                        <span className="ml-1.5 text-[10px] text-white/40">(Pada {ni.pada})</span>
+                      </td>
+                      <td className="py-3 pr-4 text-white/40 text-xs whitespace-nowrap">{ni.range}</td>
+                      <td className="py-3 pr-4 text-white/70 whitespace-nowrap">{ni.lord}</td>
+                      <td className="py-3 pr-4 text-white/70 whitespace-nowrap">{ni.padaLord}</td>
+                      <td className="py-3 pr-4 text-white/60 whitespace-nowrap">{ni.deity}</td>
+                      <td className="py-3 pr-4 whitespace-nowrap">
+                        <span className={`text-xs font-bold ${purposeColor}`}>{ni.purpose}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* ── 선택형 분할 차트 (D1~D144) ─────────────────────────────────── */}
