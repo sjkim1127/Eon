@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Compass, Calendar, UserPlus, Pencil, ClipboardCopy, Check } from "lucide-react";
 
@@ -370,6 +371,7 @@ function App() {
       />
 
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }
