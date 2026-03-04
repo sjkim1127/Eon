@@ -18,7 +18,7 @@
     "@vercel/speed-insights": "^1.3.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "eon-wasm": "file:../crates/eon-wasm/pkg",
+    "eon-wasm": "file:./src/lib/wasm",
     "framer-motion": "^12.33.0",
     "lucide-react": "^0.563.0",
     "react": "^19.1.0",
