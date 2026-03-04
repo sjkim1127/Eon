@@ -55,9 +55,11 @@ function computeSajuScore(saju: SajuAnalysisResult | null): { score: number; hig
   if (st.deuk_ryeong?.acquired) { sajuScore += 8; highlights.push("득령: 계절의 도움"); }
   if (st.deuk_ji?.acquired) { sajuScore += 8; highlights.push("득지: 뿌리의 도움"); }
   if (st.deuk_si?.acquired) { sajuScore += 6; highlights.push("득시: 시간대의 도움"); }
-  const supportRatio = st.deuk_se?.support_ratio ?? 0;
-  sajuScore += supportRatio * 15;
-  if (supportRatio > 0.5) highlights.push(`득세 지지비율 ${(supportRatio * 100).toFixed(0)}%`);
+  const rawSupportRatio = st.deuk_se?.support_ratio ?? 0;
+  // 백엔드가 소수(0~1) 또는 % 단위(>1, 예: 31.82)로 반환할 수 있으므로 자동 감지
+  const supportPct = rawSupportRatio > 1 ? rawSupportRatio : rawSupportRatio * 100;
+  sajuScore += (supportPct / 100) * 15;
+  if (supportPct > 50) highlights.push(`득세 지지비율 ${supportPct.toFixed(0)}%`);
   const throughput = saju.qi_topology?.throughput ?? 0;
   sajuScore += throughput * 25;
   if (throughput > 0.7) highlights.push(`오행 흐름 원활 ${(throughput * 100).toFixed(0)}%`);
