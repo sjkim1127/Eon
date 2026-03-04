@@ -251,7 +251,7 @@ function App() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={async () => {
-                    const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null);
+                    const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null, transitReport ?? null);
                     await navigator.clipboard.writeText(md);
                     setMdCopied(true);
                     setTimeout(() => setMdCopied(false), 2500);

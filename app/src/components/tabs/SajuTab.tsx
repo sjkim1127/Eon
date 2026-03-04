@@ -440,7 +440,7 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
       {/* 생애 시뮬레이션 타임라인 */}
       <SimulationTimelineSection frames={reportData.simulation_frames ?? []} />
 
-      {/* 운명 취약점 분석 — extracted to VulnerabilitySection */}
+      {/* 주의가 필요한 시기 (대운·세운 전수 조사) — VulnerabilitySection */}
       <VulnerabilitySection report={sajuReport.vulnerability_report ?? null} />
     </motion.div>
   );

@@ -15,6 +15,7 @@ export interface AnalysisArgs {
 
 export interface SajuArgs extends AnalysisArgs {
     is_male: boolean;
+    use_night_rat_hour?: boolean;
 }
 
 export interface TransitArgs extends SajuArgs {
@@ -28,6 +29,8 @@ export interface CompArgs {
     year2: number; month2: number; day2: number; hour2: number; minute2: number;
     is_lunar2: boolean; is_leap_month2: boolean;
     is_male2: boolean; lon2: number; lat2: number; timezone2: string;
+    use_night_rat_hour1?: boolean;
+    use_night_rat_hour2?: boolean;
 }
 
 export interface BackendClient {
@@ -81,6 +84,7 @@ export class WasmBackendClient implements BackendClient {
         const result = wasm.get_saju_analysis(
             args.year, args.month, args.day, args.hour, args.minute,
             args.is_lunar, args.is_leap_month, args.is_male,
+            args.use_night_rat_hour ?? false,
             args.lon, args.lat, args.timezone
         );
         return processSajuResult(result);
@@ -91,6 +95,7 @@ export class WasmBackendClient implements BackendClient {
         return wasm.get_transit_analysis(
             args.year, args.month, args.day, args.hour, args.minute,
             args.is_lunar, args.is_leap_month, args.is_male,
+            args.use_night_rat_hour ?? false,
             args.lon, args.lat, args.timezone,
             args.current_year, args.current_month, args.current_day
         );
@@ -101,8 +106,10 @@ export class WasmBackendClient implements BackendClient {
         return wasm.get_saju_compatibility(
             args.year1, args.month1, args.day1, args.hour1, args.minute1,
             args.is_lunar1, args.is_leap_month1, args.is_male1, args.lon1, args.lat1,
+            args.use_night_rat_hour1 ?? false,
             args.year2, args.month2, args.day2, args.hour2, args.minute2,
             args.is_lunar2, args.is_leap_month2, args.is_male2, args.lon2, args.lat2,
+            args.use_night_rat_hour2 ?? false,
             args.timezone1, args.timezone2
         );
     }

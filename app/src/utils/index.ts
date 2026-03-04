@@ -2,4 +2,4 @@ export { cn } from "./cn";
 export { ganziDisplay, ganziHangul } from "./ganzi";
 export { getNakshatraInfo } from "./nakshatra";
 export { isKoreaDST } from "./dst";
-export { buildFullAnalysisMarkdown, buildSajuMarkdown, buildVedicMarkdown } from "./exportMarkdown";
+export { buildFullAnalysisMarkdown, buildSajuMarkdown, buildVedicMarkdown, buildTransitMarkdown } from "./exportMarkdown";

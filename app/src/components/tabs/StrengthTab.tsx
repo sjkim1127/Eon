@@ -221,25 +221,25 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
         </div>
       )}
 
-      {/* 운명 Cyclomatic Complexity (결정 분기 복잡도) */}
+      {/* 인생 갈림길 분석 (중요 분기점 요약) */}
       {complexity && (
         <div className="glass p-8 rounded-[2rem]">
           <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
             <Activity className="w-6 h-6 text-celestial-cyan" />
-            운명 Cyclomatic Complexity (결정 분기 복잡도)
+            인생 갈림길 분석 (중요 분기점 요약)
           </h5>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">복잡도 M</p>
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">갈림길 지수</p>
               <p className="text-4xl font-black text-celestial-cyan">{complexity.cyclomatic_complexity}</p>
-              <p className="text-[10px] text-white/40 mt-1">Decision Points + 1</p>
+              <p className="text-[10px] text-white/40 mt-1">중요 선택이 많을수록 값이 커집니다.</p>
             </div>
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
               <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">안정성 등급</p>
               <p className="text-lg font-black text-white leading-tight">{complexity.stability_grade}</p>
             </div>
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">유지보수 엔트로피</p>
+              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">변화의 불안정성</p>
               <p className="text-4xl font-black text-white">{complexity.entropy?.toFixed(2) ?? "—"}</p>
             </div>
           </div>

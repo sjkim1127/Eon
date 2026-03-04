@@ -34,6 +34,7 @@ export function BirthInputForm({
   onClose,
 }: BirthInputFormProps) {
   const unknownTime = birthData.unknown_time ?? false;
+  const useNightRatHour = birthData.use_night_rat_hour ?? false;
 
   // 해당 년/월의 최대 일수 계산
   const daysInMonth = new Date(birthData.year, birthData.month, 0).getDate();
@@ -52,6 +53,13 @@ export function BirthInputForm({
       // 시간 모름으로 전환 시 정오(12:00)로 초기화
       hour: !prev.unknown_time ? 12 : prev.hour,
       minute: !prev.unknown_time ? 0 : prev.minute,
+    }));
+  };
+
+  const toggleNightRatHour = () => {
+    setBirthData((prev) => ({
+      ...prev,
+      use_night_rat_hour: !(prev.use_night_rat_hour ?? false),
     }));
   };
 
@@ -261,6 +269,23 @@ export function BirthInputForm({
         >
           <Clock className="w-4 h-4" />
           {unknownTime ? "시간 미상 ✓" : "시간 모름"}
+        </button>
+
+        {/* 야자시 토글 */}
+        <button
+          onClick={toggleNightRatHour}
+          disabled={unknownTime}
+          title="23:00~23:59를 '당일' 자시로 볼지(야자시) 선택합니다. 야자시는 일주가 유지되고, 조자시는 다음날로 넘어가 일주가 바뀔 수 있습니다."
+          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 border transition-all text-sm font-semibold
+            ${unknownTime
+              ? "bg-white/5 border-white/10 text-white/20 cursor-not-allowed opacity-40"
+              : useNightRatHour
+                ? "bg-celestial-cyan/15 border-celestial-cyan/40 text-celestial-cyan"
+                : "bg-white/5 border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10"
+            }`}
+        >
+          <Clock className="w-4 h-4" />
+          {useNightRatHour ? "야자시 ✓" : "야자시"}
         </button>
 
         <button

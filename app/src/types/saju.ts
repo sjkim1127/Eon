@@ -266,7 +266,7 @@ export interface SajuReport {
   relationships?: any;
 }
 
-/** 취약점 재현 벡터 (LuckVector Rust struct) */
+/** 주의 시점 재현 벡터 (LuckVector Rust struct) */
 export interface LuckVector {
   major: GanZi;
   yearly: GanZi;
@@ -275,7 +275,7 @@ export interface LuckVector {
   hourly: GanZi | null;
 }
 
-/** 개별 취약점 (Vulnerability Rust struct) */
+/** 개별 주의 시점 (Vulnerability Rust struct) */
 export interface Vulnerability {
   crash_score: number;
   vector: LuckVector;
@@ -284,7 +284,7 @@ export interface Vulnerability {
   timestamp: string | null;
 }
 
-/** 취약점 리포트 (VulnerabilityReport Rust struct) */
+/** 주의 시점 리포트 (VulnerabilityReport Rust struct) */
 export interface VulnerabilityReport {
   total_crashes: number;
   critical_vectors: Vulnerability[];
