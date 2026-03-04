@@ -143,10 +143,12 @@ export function DestinyTierTab({ sajuReport, report, transitReport, unknownTime 
   // ── 점수 분해: 사주 ──
   const sajuSt = sajuReport?.report?.strength;
   const strengthNorm = Math.min(100, (sajuSt?.strength_score ?? 0) * 2);
+  const rawSupportRatioUi = sajuSt?.deuk_se?.support_ratio ?? 0;
+  const supportPctUi = rawSupportRatioUi > 1 ? rawSupportRatioUi : rawSupportRatioUi * 100;
   const deukSum = (sajuSt?.deuk_ryeong?.acquired ? 8 : 0)
     + (sajuSt?.deuk_ji?.acquired ? 8 : 0)
     + (sajuSt?.deuk_si?.acquired ? 6 : 0)
-    + ((sajuSt?.deuk_se?.support_ratio ?? 0) * 15);
+    + (supportPctUi / 100) * 15;
   const throughput = sajuReport?.qi_topology?.throughput ?? 0;
   const goldenTimePt = sajuReport?.report?.golden_time ? 10 : 0;
   const stabilityGrade = sajuReport?.complexity?.stability_grade ?? "";

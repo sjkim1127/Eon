@@ -86,7 +86,8 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
     lines.push(`- **득령(得令)**: ${st.deuk_ryeong.acquired ? "✅" : "❌"} (계절의 도움)`);
     lines.push(`- **득지(得地)**: ${st.deuk_ji.acquired ? "✅" : "❌"} (뿌리/근거의 도움)`);
     lines.push(`- **득시(得時)**: ${st.deuk_si.acquired ? "✅" : "❌"} (시간대의 도움)`);
-    lines.push(`- **득세 지지비율**: ${(st.deuk_se.support_ratio * 100).toFixed(1)}%`);
+    const supportPctForExport = (st.deuk_se.support_ratio ?? 0) > 1 ? st.deuk_se.support_ratio : st.deuk_se.support_ratio * 100;
+    lines.push(`- **득세 지지비율**: ${supportPctForExport.toFixed(1)}%`);
     lines.push("");
 
     // 용신
