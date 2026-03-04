@@ -14,15 +14,27 @@ interface GocharaSectionProps {
     summary: GocharaSummary | null;
 }
 
+/** 응답에서 gochara가 와도 transits가 배열이 아닐 수 있음 (WASM 직렬화 등) — 정규화 */
+function normalizeSummary(summary: GocharaSummary | null): GocharaSummary | null {
+    if (!summary || typeof summary !== "object") return null;
+    const transits = Array.isArray(summary.transits) ? summary.transits : [];
+    return { ...summary, transits };
+}
+
 export function GocharaSection({ summary }: GocharaSectionProps) {
-    if (!summary || !summary.transits || summary.transits.length === 0) {
+    const normalized = normalizeSummary(summary);
+    if (!normalized || normalized.transits.length === 0) {
         return (
             <div className="glass p-8 rounded-[2rem]">
                 <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
                     <Globe className="w-6 h-6 text-celestial-cyan" />
                     고차라 트랜싯 (Gochara)
                 </h5>
-                <p className="text-white/50 text-sm">데이터를 불러올 수 없습니다. (데이터 없음)</p>
+                <p className="text-white/50 text-sm">
+                    {summary != null && typeof summary === "object"
+                        ? "현재 트랜짓 데이터가 비어 있습니다. 출생 달 위치 기준으로 현재 행성 위치를 계산합니다. (웹에서는 WASM 빌드 후 표시될 수 있습니다.)"
+                        : "데이터를 불러올 수 없습니다. 베딕 분석을 실행한 뒤 다시 확인해 주세요."}
+                </p>
             </div>
         );
     }
@@ -47,13 +59,13 @@ export function GocharaSection({ summary }: GocharaSectionProps) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {summary.transits.map((t: TransitPosition, i: number) => {
+                        {normalized.transits.map((t: TransitPosition, i: number) => {
                             const murti = MURTI_LABELS[t.murti] ?? MURTI_LABELS.Unknown;
                             const signName = SIGN_NAMES[t.current_rasi] ?? `#${t.current_rasi}`;
 
                             return (
                                 <tr key={i} className="hover:bg-white/[0.03] transition-colors">
-                                    <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">{t.planet}</td>
+                                    <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">{typeof t.planet === "string" ? t.planet : (t as any).planet ?? "—"}</td>
                                     <td className="py-2.5 pr-4 text-white/70">{signName}</td>
                                     <td className="py-2.5 pr-4 text-white/50 font-mono">H{t.house_from_moon}</td>
                                     <td className="py-2.5 pr-4">

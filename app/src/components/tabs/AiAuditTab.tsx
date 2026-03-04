@@ -25,13 +25,8 @@ export function AiAuditTab({ aiAuditReport }: AiAuditTabProps) {
         <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
           <Brain className="w-10 h-10 text-white/30" />
         </div>
-        <h3 className="text-xl font-bold text-white mb-3">AI 감사 (데스크탑 전용)</h3>
-        <p className="text-white/60 max-w-md mx-auto">
-          AI 감사는 Tauri 데스크탑 앱에서만 사용 가능합니다. 웹 환경에서는 LLM 연동이 제한됩니다.
-        </p>
-        <p className="text-sm text-white/40 mt-4">
-          <code className="px-2 py-1 rounded bg-white/10 font-mono">npm run tauri dev</code> 로 데스크탑 앱을 실행한 뒤 분석을 실행해보세요.
-        </p>
+        <h3 className="text-xl font-bold text-white mb-3">AI</h3>
+        <p className="text-white/60">아직 미완성 기능입니다.</p>
       </motion.div>
     );
   }
@@ -46,9 +41,9 @@ export function AiAuditTab({ aiAuditReport }: AiAuditTabProps) {
         <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
           <Brain className="w-10 h-10 text-white/30" />
         </div>
-        <h3 className="text-xl font-bold text-white mb-3">AI 감사 결과</h3>
+        <h3 className="text-xl font-bold text-white mb-3">AI 결과</h3>
         <p className="text-white/60">
-          출생 정보를 입력하고 통합 분석을 실행하면 AI 감사(코어덤프 형식 컨텍스트)가 여기에 표시됩니다.
+          출생 정보를 입력하고 통합 분석을 실행하면 AI(코어덤프 형식 컨텍스트)가 여기에 표시됩니다.
         </p>
       </motion.div>
     );
