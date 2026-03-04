@@ -50,14 +50,15 @@ const BENEFIC_PLANETS = ["Jupiter", "Venus", "Mercury", "Moon"];
 
 const clampScore = (score: number): number => Math.min(100, Math.max(0, score));
 
-// 고득점 구간을 압축하는 정규화 (log→pow 교체로 인플레이션 제거)
-// log1p 곡선은 60점 원점수를 80점으로 올려버리는 문제가 있어 역방향 압축 곡선으로 변경
-// x^1.3: 60→47, 70→60, 80→72, 90→84 — 적정 점수대에서 C~B 분포가 되도록 설계
+// 고득점 구간만 압축하는 정규화
+// ▸ 50 이하: 그대로 통과 (하방 압축 금지 — x^1.3 곡선이 45→35로 왜곡하던 버그 수정)
+// ▸ 50 초과: 상단 35점 범위에서 x^1.4 압축 적용 (80→67, 90→76, 100→85)
 const softNormalizeForDestiny = (score: number): number => {
   const clamped = clampScore(score);
-  const x = clamped / 100;
-  const y = Math.pow(x, 1.3);
-  return Math.round(y * 100);
+  if (clamped <= 50) return clamped;
+  const excess = (clamped - 50) / 50; // 0~1
+  const compressed = Math.pow(excess, 1.4) * 35; // 최대 35점 추가
+  return Math.round(50 + compressed);
 };
 
 // 흉격 계열 격국
@@ -136,21 +137,26 @@ function computeSajuScore(saju: SajuAnalysisResult | null): { score: number; hig
 
   // ── 10. 안정성 등급 ──
   const stabilityGrade = saju.complexity?.stability_grade ?? "";
+  const entropyScore = saju.entropy?.score ?? 1.0;
+  // 엔트로피가 이미 높으면(>1.5) stability D 패널티를 절반으로 줄여 이중 패널티 방지
+  const isHighEntropy = entropyScore > 1.5;
   if (/^A/.test(stabilityGrade)) { sajuScore += 4; highlights.push("안정성 A등급"); }
   else if (/^B/.test(stabilityGrade)) sajuScore += 2;
-  else if (/^D/.test(stabilityGrade) || /Unstable|High Entropy/i.test(stabilityGrade)) sajuScore -= 3;
+  else if (/^D/.test(stabilityGrade) || /Unstable|High Entropy/i.test(stabilityGrade)) {
+    sajuScore -= isHighEntropy ? 1.5 : 3; // 엔트로피 중복 패널티 완화
+  }
 
   // ── 11. 린트 — Error 페널티, 클린 보너스 ──
   const lints = saju.lints ?? [];
   const errorCount = lints.filter(l => l.severity === "Error").length;
   const warnCount = lints.filter(l => l.severity === "Warning").length;
   if (errorCount === 0 && warnCount === 0) { sajuScore += 2; highlights.push("사주 구조 클린"); }
-  sajuScore -= Math.min(6, errorCount * 2 + warnCount * 0.5);
+  sajuScore -= Math.min(5, errorCount * 1.5 + warnCount * 0.4);
 
-  // ── 12. 운명 복잡도 엔트로피 — 낮을수록 단순·안정 ──
-  const entropyScore = saju.entropy?.score ?? 0.5;
-  if (entropyScore < 0.3) { sajuScore += 2; highlights.push("운명 패턴 단순 (예측 가능)"); }
-  else if (entropyScore > 0.7) { sajuScore -= 2; highlights.push("운명 변수 많음"); }
+  // ── 12. 운명 복잡도 엔트로피 ──
+  // entropy.score는 0~3 범위 (백엔드 실제 스케일) — 과거 >0.7 기준은 버그
+  if (entropyScore < 1.0) { sajuScore += 2; highlights.push("운명 패턴 안정 (예측 가능)"); }
+  else if (entropyScore > 2.0) { sajuScore -= 2; highlights.push("운명 변수 많음"); }
 
   // ── 13. 용신 추천 명확도 ──
   const recCount = r.yongshin?.recommendations?.length ?? 0;
@@ -471,7 +477,7 @@ export function computeTierResult(
         else if (d.tier === "D") penaltyFocus -= 1;
       }
     }
-    domainAdjustment = Math.max(-3, Math.min(3, domainAdjustment + penaltyFocus));
+    domainAdjustment = Math.max(-4, Math.min(5, domainAdjustment + penaltyFocus));
     destinyScore += domainAdjustment;
   }
 
