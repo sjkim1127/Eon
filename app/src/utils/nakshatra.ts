@@ -1,4 +1,4 @@
-import { NAKSHATRA_DATA, SIGN_NAMES, SIGN_LORDS, PURUSHARTHA } from "../constants";
+import { NAKSHATRA_DATA, SIGN_NAMES, SIGN_LORDS } from "../constants";
 import type { NakshatraInfo } from "../types";
 
 /** 사이드리얼 degree → 낙샤트라 정보 */
@@ -11,7 +11,7 @@ export function getNakshatraInfo(sidereal_deg: number): NakshatraInfo {
   const clampedPada = Math.min(4, Math.max(1, pada));
   const navamsaSign = ((idx * 4 + (clampedPada - 1)) % 12) + 1;
   const padaLord = SIGN_LORDS[navamsaSign];
-  const purpose = PURUSHARTHA[(navamsaSign - 1) % 4];
+  const purpose = nak.purpose; // BPHS nakshatra-level purpose
   const padaStartDeg = nak.start_deg + (clampedPada - 1) * (13.333 / 4);
   const padaEndDeg = padaStartDeg + (13.333 / 4);
 

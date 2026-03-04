@@ -153,6 +153,7 @@ export interface NakshatraEntry {
   lord: string;
   deity: string;
   start_deg: number;
+  purpose: string;
 }
 
 /** 낙샤트라 계산 결과 */

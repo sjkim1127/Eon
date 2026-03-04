@@ -1,5 +1,5 @@
 use crate::calc::ayanamsa::get_lahiri_ayanamsa;
-use crate::core::config::VedicConfig;
+use crate::core::config::{NodeCalculation, VedicConfig};
 use crate::planets::VedicPlanet;
 use chrono::{DateTime, Utc};
 use eon_astro::AstroEngine;
@@ -261,10 +261,19 @@ impl VedicChartCalculator {
 
         let mut planets = Vec::new();
         for p in &planets_names {
+            // Use config to decide Mean vs True Node for Rahu/Ketu
+            let se_id = if *p == VedicPlanet::Rahu {
+                match self.config.node_calc {
+                    NodeCalculation::MeanNode => 10, // SE_MEAN_NODE
+                    NodeCalculation::TrueNode => 11, // SE_TRUE_NODE
+                }
+            } else {
+                p.se_id()
+            };
             let flag = 256 | 2; // SEFLG_SPEED | SEFLG_SIDEREAL (or just standard)
             let (trop, speed) = self
                 .engine
-                .get_planet_full(time, p.se_id(), flag)
+                .get_planet_full(time, se_id, flag)
                 .unwrap_or((0.0, 0.0));
             let (_, dec) = self
                 .engine
