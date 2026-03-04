@@ -6,6 +6,7 @@ import { getNakshatraInfo } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
 import { BhavaRadarSection } from "../sections/BhavaRadarSection";
 import { AspectsSection } from "../sections/AspectsSection";
+import { DashaTimelineSection } from "../sections/DashaTimelineSection";
 
 // ── 남인도 차트 상수 ────────────────────────────────────────────────────
 const SOUTH_GRID: (number | null)[][] = [
@@ -213,6 +214,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const sadeSati = report.report?.sade_sati ?? "None";
   const bhavaStrengths = report.chart.bhava_strengths ?? [];
   const aspects = report.chart.aspects ?? [];
+  const dashaTimeline = report.report?.dasha_timeline ?? [];
 
   // ── 복사 텍스트 생성 헬퍼 ──────────────────────────────────────────
   const fmtPosition = (sidereal_deg: number) => {
@@ -714,6 +716,9 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
           </div>
         </div>
       )}
+
+      {/* ── 다샤 타임라인 (Vimshottari Dasha) ───────────── */}
+      <DashaTimelineSection periods={dashaTimeline} />
 
       {/* ── 12하우스 강도 레이더 (Bhava Strength) ───────────── */}
       <BhavaRadarSection strengths={bhavaStrengths} />

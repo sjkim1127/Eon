@@ -9,6 +9,7 @@ pub struct VedicAnalysisReport {
     pub primary_karakas: KarakaSummary,
     pub house_summary: Vec<HouseRating>,
     pub dasha_focus: String,
+    pub dasha_timeline: Vec<crate::analysis::dasha::DashaPeriod>,
     pub nakshatra_info: String,
     pub overall_strength_score: f64,
     pub sade_sati: crate::analysis::gochara::SadeSatiPhase,
@@ -102,19 +103,20 @@ impl VedicAnalysisReport {
 
         // Calculate Dasha Focus (Vimshottari)
         let moon_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon);
-        let dasha_focus = if let Some(m) = moon_pos {
+        let (dasha_focus, dasha_timeline) = if let Some(m) = moon_pos {
             let timeline = crate::analysis::dasha::VimshottariDasha::calculate_timeline(
                 Utc::now(),
                 m.sidereal_deg,
-                1,
+                2, // Mahadasha + Antardasha
             );
-            if let Some(d) = timeline.first() {
+            let focus = if let Some(d) = timeline.first() {
                 format!("Current Major Period: {:?}", d.lord)
             } else {
                 "Dasha info unavailable".to_string()
-            }
+            };
+            (focus, timeline)
         } else {
-            "Moon position required for Dasha".to_string()
+            ("Moon position required for Dasha".to_string(), Vec::new())
         };
 
         // Nakshatra Info
@@ -138,6 +140,7 @@ impl VedicAnalysisReport {
             },
             house_summary,
             dasha_focus,
+            dasha_timeline,
             nakshatra_info,
             overall_strength_score: chart
                 .bhava_strengths

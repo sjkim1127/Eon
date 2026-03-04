@@ -21,6 +21,14 @@ export interface HouseSummary {
   total_score: number;
 }
 
+/** 다샤 기간 (DashaPeriod Rust struct) */
+export interface DashaPeriod {
+  lord: string;
+  start_time: string; // ISO 8601 UTC
+  end_time: string;   // ISO 8601 UTC
+  sub_dashas: DashaPeriod[];
+}
+
 /** 베딕 분석 리포트 (VedicAnalysisReport Rust struct) */
 export interface VedicAnalysisReport {
   primary_karakas: {
@@ -30,6 +38,7 @@ export interface VedicAnalysisReport {
   };
   house_summary: HouseSummary[];
   dasha_focus: string;
+  dasha_timeline: DashaPeriod[];
   nakshatra_info: string;
   overall_strength_score: number;
   sade_sati: "None" | "Rising" | "Peak" | "Setting";
