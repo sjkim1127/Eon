@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap } from "lucide-react";
+import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle } from "lucide-react";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
 import { getNakshatraInfo } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
+import { BhavaRadarSection } from "../sections/BhavaRadarSection";
+import { AspectsSection } from "../sections/AspectsSection";
 
 // ── 남인도 차트 상수 ────────────────────────────────────────────────────
 const SOUTH_GRID: (number | null)[][] = [
@@ -208,6 +210,9 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const sav = report.chart.sav;
   const vimshopaka = report.chart.vimshopaka_scores;
   const yogas: Yoga[] = report.report?.yogas ?? [];
+  const sadeSati = report.report?.sade_sati ?? "None";
+  const bhavaStrengths = report.chart.bhava_strengths ?? [];
+  const aspects = report.chart.aspects ?? [];
 
   // ── 복사 텍스트 생성 헬퍼 ──────────────────────────────────────────
   const fmtPosition = (sidereal_deg: number) => {
@@ -691,6 +696,30 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
           </div>
         </div>
       )}
+
+      {/* ── 사데사티 (Sade Sati) 경고 배너 ─────────────────────── */}
+      {sadeSati !== "None" && (
+        <div className={`p-5 rounded-2xl border flex items-center gap-4 ${sadeSati === "Peak" ? "bg-red-500/10 border-red-500/30" : "bg-orange-500/10 border-orange-500/30"
+          }`}>
+          <AlertCircle className={`w-8 h-8 flex-shrink-0 ${sadeSati === "Peak" ? "text-red-400" : "text-orange-400"}`} />
+          <div>
+            <h6 className="text-base font-bold text-white mb-1">
+              Sade Sati ({sadeSati === "Rising" ? "상승기" : sadeSati === "Peak" ? "절정기" : "하강기"}) 활성 중
+            </h6>
+            <p className="text-sm text-white/60">
+              {sadeSati === "Rising" && "토성이 달의 12번째 하우스에 진입했습니다. 내적 변화의 시기가 시작됩니다."}
+              {sadeSati === "Peak" && "토성이 달 위를 지나고 있습니다. 감정적 회복력과 인내에 집중하세요."}
+              {sadeSati === "Setting" && "토성이 달의 2번째 하우스로 이동 중입니다. 강도가 점차 약해지고 있습니다."}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── 12하우스 강도 레이더 (Bhava Strength) ───────────── */}
+      <BhavaRadarSection strengths={bhavaStrengths} />
+
+      {/* ── 행성 시선 (Aspects / Drishti) ─────────────────── */}
+      <AspectsSection aspects={aspects} />
     </motion.div>
   );
 }

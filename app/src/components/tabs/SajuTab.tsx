@@ -1,16 +1,6 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Activity, Zap, Shield, Star, TrendingUp, AlertTriangle, Link2, CircleOff } from "lucide-react";
-import {
-  ResponsiveContainer,
-  ComposedChart,
-  Area,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-} from "recharts";
+import { LifeGraphSection } from "../sections/LifeGraphSection";
 import {
   STEM_INFO, BRANCH_INFO, ELEMENT_INFO,
   STEM_TO_ELEMENT, BRANCH_TO_ELEMENT,
@@ -26,18 +16,7 @@ interface SajuTabProps {
 }
 
 export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
-  const [visibleLines, setVisibleLines] = useState({
-    trend_ma: true,
-    wealth: true,
-    career: true,
-    academic: true,
-    health: true,
-    volatility: true,
-  });
 
-  const toggleLine = (dataKey: string) => {
-    setVisibleLines(prev => ({ ...prev, [dataKey as keyof typeof prev]: !prev[dataKey as keyof typeof prev] }));
-  };
 
   if (!sajuReport || !sajuReport.report) return null;
   const reportData = sajuReport.report;
@@ -448,180 +427,12 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
         </div>
       )}
 
-      {/* 골든타임 */}
-      {gt && (
-        <div className="glass p-8 rounded-[2rem] border-celestial-gold/20 bg-celestial-gold/5">
-          <h5 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-            <Star className="w-6 h-6 text-celestial-gold" />
-            골든타임 🏆
-          </h5>
-          <div className="flex items-baseline gap-4 mb-4">
-            <span className="text-5xl font-black text-celestial-gold">
-              {gt.start_age}~{gt.end_age}세
-            </span>
-            <span className="text-white/40">평균 점수: {gt.average_score?.toFixed(1)}</span>
-          </div>
-          <p className="text-sm text-white/60">{gt.description}</p>
-        </div>
-      )}
-
-      {(() => {
-        // Debug: timeline / simulation_frames 데이터 확인
-        console.log("[SajuTab] reportData keys:", Object.keys(reportData));
-        console.log("[SajuTab] timeline:", reportData.timeline?.length ?? "없음");
-        console.log("[SajuTab] simulation_frames:", reportData.simulation_frames?.length ?? "없음");
-        return null;
-      })()}
-
-      {/* 다차원 인생 흐름 그래프 — timeline 우선, fallback으로 simulation_frames */}
-      {((reportData.timeline && reportData.timeline.length > 0) || (reportData.simulation_frames && reportData.simulation_frames.length > 0)) && (() => {
-        const hasTimeline = reportData.timeline && reportData.timeline.length > 0;
-        const chartData = hasTimeline
-          ? reportData.timeline.map((f: any) => ({
-            age: f.age,
-            score: Number(f.total_score ?? 0),
-            trend_ma: f.trend_ma_5yr != null ? Number(f.trend_ma_5yr) : null,
-            wealth: Number(f.wealth_score ?? 0),
-            career: Number(f.career_score ?? 0),
-            academic: Number(f.academic_score ?? 0),
-            health: Number(f.health_score ?? 0),
-            volatility: Number(f.volatility_index ?? 0),
-          }))
-          : reportData.simulation_frames.map((f: any) => ({
-            age: f.age,
-            score: Number(f.score ?? 0),
-            trend_ma: Number(f.score ?? 0),
-            wealth: 0, career: 0, academic: 0, health: 0, volatility: 0,
-          }));
-        return (
-          <div className="glass p-8 rounded-[2rem]">
-            <h5 className="text-xl font-bold text-white mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="w-6 h-6 text-celestial-cyan" />
-                인생 흐름 그래프 (0~100세 {hasTimeline ? "다차원 점수" : "종합 점수"})
-              </div>
-            </h5>
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                  data={chartData}
-                  margin={{ top: 8, right: 12, left: 0, bottom: 8 }}
-                >
-                  <defs>
-                    <linearGradient id="sajuScoreGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.7} />
-                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="age"
-                    stroke="rgba(255,255,255,0.45)"
-                    tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={{ stroke: "rgba(255,255,255,0.15)" }}
-                    unit="세"
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    stroke="rgba(255,255,255,0.45)"
-                    tick={{ fill: "rgba(255,255,255,0.55)", fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={{ stroke: "rgba(255,255,255,0.15)" }}
-                  />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        const getStatusColor = (score: number) => score >= 70 ? "text-green-400" : (score >= 40 ? "text-amber-400" : "text-red-400");
-
-                        return (
-                          <div className="bg-slate-900 border border-white/20 p-4 rounded-xl shadow-xl min-w-[200px]">
-                            <p className="font-bold text-white mb-3 pb-2 border-b border-white/10 flex justify-between">
-                              <span>{label}세</span>
-                              {data.volatility >= 50 && (
-                                <span className="text-rose-400 text-xs px-2 py-0.5 rounded-full bg-rose-500/20">교운기 변동</span>
-                              )}
-                            </p>
-                            <div className="space-y-2 text-xs">
-                              <p className="flex justify-between items-center text-white/50">
-                                <span>총점 (MA):</span>
-                                <span className={`font-bold ${data.trend_ma != null ? getStatusColor(data.trend_ma) : getStatusColor(data.score)}`}>
-                                  {(data.trend_ma ?? data.score).toFixed(1)}점
-                                </span>
-                              </p>
-                              <p className="flex justify-between items-center">
-                                <span className="text-amber-400">재물/사업운:</span>
-                                <span className={`font-bold ${getStatusColor(data.wealth)}`}>{data.wealth.toFixed(1)}점</span>
-                              </p>
-                              <p className="flex justify-between items-center">
-                                <span className="text-purple-400">직장/명예운:</span>
-                                <span className={`font-bold ${getStatusColor(data.career)}`}>{data.career.toFixed(1)}점</span>
-                              </p>
-                              <p className="flex justify-between items-center">
-                                <span className="text-blue-400">학업/문서운:</span>
-                                <span className={`font-bold ${getStatusColor(data.academic)}`}>{data.academic.toFixed(1)}점</span>
-                              </p>
-                              <p className="flex justify-between items-center">
-                                <span className="text-emerald-400">건강/독립운:</span>
-                                <span className={`font-bold ${getStatusColor(data.health)}`}>{data.health.toFixed(1)}점</span>
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  {/* 배경 면적: 평활화된 이동평균 총점 */}
-                  {visibleLines.trend_ma && (
-                    <Area
-                      type="monotone"
-                      dataKey="trend_ma"
-                      stroke="#06b6d4"
-                      strokeWidth={2.5}
-                      fill="url(#sajuScoreGradient)"
-                      activeDot={{ r: 4, stroke: "#06b6d4", strokeWidth: 2, fill: "#111827" }}
-                    />
-                  )}
-                  {visibleLines.wealth && <Line type="monotone" dataKey="wealth" stroke="#fbbf24" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />}
-                  {visibleLines.career && <Line type="monotone" dataKey="career" stroke="#a78bfa" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />}
-                  {visibleLines.academic && <Line type="monotone" dataKey="academic" stroke="#60a5fa" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />}
-                  {visibleLines.health && <Line type="monotone" dataKey="health" stroke="#34d399" strokeWidth={1.5} dot={false} strokeOpacity={0.8} />}
-                  {visibleLines.volatility && <Line type="step" dataKey="volatility" stroke="#f43f5e" strokeWidth={1} strokeDasharray="3 3" dot={false} strokeOpacity={0.6} />}
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex justify-between text-xs text-white/30 mt-2">
-              <span>0세</span>
-              <span>25세</span>
-              <span>50세</span>
-              <span>75세</span>
-              <span>100세</span>
-            </div>
-            <div className="flex gap-4 mt-3 text-xs text-white/40 flex-wrap">
-              <button type="button" onClick={() => toggleLine("trend_ma")} className={`flex items-center gap-1 transition-opacity ${visibleLines.trend_ma ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
-                <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block" />종합(MA)
-              </button>
-              <button type="button" onClick={() => toggleLine("wealth")} className={`flex items-center gap-1 transition-opacity ${visibleLines.wealth ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
-                <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />재물운
-              </button>
-              <button type="button" onClick={() => toggleLine("career")} className={`flex items-center gap-1 transition-opacity ${visibleLines.career ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
-                <span className="w-2 h-2 rounded-full bg-purple-400 inline-block" />명예운
-              </button>
-              <button type="button" onClick={() => toggleLine("academic")} className={`flex items-center gap-1 transition-opacity ${visibleLines.academic ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
-                <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />학업운
-              </button>
-              <button type="button" onClick={() => toggleLine("health")} className={`flex items-center gap-1 transition-opacity ${visibleLines.health ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />건강운
-              </button>
-              <button type="button" onClick={() => toggleLine("volatility")} className={`flex items-center gap-1 transition-opacity ${visibleLines.volatility ? "opacity-100 hover:opacity-80 text-white" : "opacity-30 hover:opacity-60"}`}>
-                <span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />교운기 변동
-              </button>
-            </div>
-          </div>
-        );
-      })()}
+      {/* 인생 흐름 그래프 + 골든타임 — extracted to LifeGraphSection */}
+      <LifeGraphSection
+        timeline={reportData.timeline ?? []}
+        goldenTime={gt}
+        simulationFrames={reportData.simulation_frames}
+      />
     </motion.div>
   );
 }
