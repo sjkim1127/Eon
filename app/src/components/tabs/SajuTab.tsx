@@ -13,7 +13,7 @@ import {
 import { ganziDisplay, ganziHangul } from "../../utils";
 
 interface SajuTabProps {
-  sajuReport: any;
+  sajuReport: import("../../types").SajuAnalysisResult | null;
   unknownTime?: boolean;
 }
 

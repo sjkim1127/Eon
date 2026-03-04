@@ -17,6 +17,16 @@ const loadTransitTab = () => import("./components/tabs/TransitTab");
 const loadCompatibilityTab = () => import("./components/tabs/CompatibilityTab");
 const loadAiAuditTab = () => import("./components/tabs/AiAuditTab");
 
+const TAB_LOADERS: Record<TabId, () => Promise<unknown>> = {
+  overview: loadOverviewTab,
+  saju: loadSajuTab,
+  vedic_charts: loadVedicChartsTab,
+  strength: loadStrengthTab,
+  transit: loadTransitTab,
+  compatibility: loadCompatibilityTab,
+  ai_audit: loadAiAuditTab,
+};
+
 const OverviewTab = lazy(() => loadOverviewTab().then((m) => ({ default: m.OverviewTab })));
 const SajuTab = lazy(() => loadSajuTab().then((m) => ({ default: m.SajuTab })));
 const VedicChartsTab = lazy(() => loadVedicChartsTab().then((m) => ({ default: m.VedicChartsTab })));
@@ -105,31 +115,7 @@ function App() {
   const prevTabRef = useRef<TabId | null>(null);
 
   const prefetchTab = (tab: TabId) => {
-    if (tab === "overview") {
-      void loadOverviewTab();
-      return;
-    }
-    if (tab === "saju") {
-      void loadSajuTab();
-      return;
-    }
-    if (tab === "vedic_charts") {
-      void loadVedicChartsTab();
-      return;
-    }
-    if (tab === "strength") {
-      void loadStrengthTab();
-      return;
-    }
-    if (tab === "transit") {
-      void loadTransitTab();
-      return;
-    }
-    if (tab === "ai_audit") {
-      void loadAiAuditTab();
-      return;
-    }
-    void loadCompatibilityTab();
+    void TAB_LOADERS[tab]?.();
   };
 
   const getDomainWeightedTabs = (currentTab: TabId): TabId[] => {

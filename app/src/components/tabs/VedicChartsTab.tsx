@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle } from "lucide-react";
+import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle, Compass } from "lucide-react";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
 import { getNakshatraInfo, getVargaEffectiveLongitude } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
@@ -333,6 +333,25 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
               <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">출생 시간대</p>
               <p className="text-sm text-white">{panchanga.is_day_birth ? "☀️ 주간 출생" : "🌙 야간 출생"}</p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 하우스 쿠스프 */}
+      {report.chart?.house_cusps?.length === 12 && (
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
+            <Compass className="w-6 h-6 text-celestial-cyan" />
+            하우스 쿠스프 (House Cusps)
+          </h5>
+          <p className="text-xs text-white/40 mb-4">각 하우스(바바) 경계의 사이드리얼 경도입니다.</p>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            {report.chart.house_cusps.map((deg: number, i: number) => (
+              <div key={i} className="p-3 bg-white/5 rounded-xl border border-white/10">
+                <p className="text-xs text-white/40 font-bold mb-1">H{i + 1}</p>
+                <p className="text-sm font-semibold text-white font-mono">{fmtPosition(deg)}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}

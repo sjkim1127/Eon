@@ -16,7 +16,7 @@ interface BirthDrawerProps {
   isDST: boolean;
   loading: boolean;
   onAnalysis: () => void;
-  sajuReport: any;
+  sajuReport: import("../../types").SajuAnalysisResult | null;
 }
 
 export function BirthDrawer({ open, onClose, ...formProps }: BirthDrawerProps) {

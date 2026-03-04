@@ -56,17 +56,17 @@ export function calc_ut(jd_ut: number, planet: number, flags: number): Position;
  * 생년월일시 + 성별 + 좌표 + 타임존을 받아 사주 분석 결과를 반환합니다.
  * BirthInfo를 사용하여 DST(서머타임) + 경도 기반 진태양시 보정을 자동 적용합니다.
  */
-export function get_saju_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, lon: number, lat: number, timezone: string): any;
+export function get_saju_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string): any;
 
 /**
  * 사주 궁합 분석 - WASM에서 호출 가능
  */
-export function get_saju_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, is_male1: boolean, lon1: number, lat1: number, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, is_male2: boolean, lon2: number, lat2: number, timezone1: string, timezone2: string): any;
+export function get_saju_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, is_male1: boolean, lon1: number, lat1: number, use_night_rat_hour1: boolean, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, is_male2: boolean, lon2: number, lat2: number, use_night_rat_hour2: boolean, timezone1: string, timezone2: string): any;
 
 /**
  * 현재 운세(세운/월운/일운) 분석 — WASM에서 호출 가능
  */
-export function get_transit_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, lon: number, lat: number, timezone: string, current_year: number, current_month: number, current_day: number): any;
+export function get_transit_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string, current_year: number, current_month: number, current_day: number): any;
 
 export function get_vedic_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, lat: number, lon: number, timezone: string): Promise<any>;
 
@@ -96,9 +96,9 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
-  readonly get_saju_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => [number, number, number];
-  readonly get_saju_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number, w: number, x: number) => [number, number, number];
-  readonly get_transit_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number) => [number, number, number];
+  readonly get_saju_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => [number, number, number];
+  readonly get_saju_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number, w: number, x: number, y: number, z: number) => [number, number, number];
+  readonly get_transit_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number) => [number, number, number];
   readonly get_vedic_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => any;
   readonly get_vedic_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number) => any;
   readonly greet: (a: number, b: number) => [number, number];

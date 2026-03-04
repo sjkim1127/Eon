@@ -366,15 +366,16 @@ export function calc_ut(jd_ut, planet, flags) {
  * @param {boolean} is_lunar
  * @param {boolean} is_leap_month
  * @param {boolean} is_male
+ * @param {boolean} use_night_rat_hour
  * @param {number} lon
  * @param {number} lat
  * @param {string} timezone
  * @returns {any}
  */
-export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, lon, lat, timezone) {
+export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, lon, lat, ptr0, len0);
+    const ret = wasm.get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -393,6 +394,7 @@ export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_l
  * @param {boolean} is_male1
  * @param {number} lon1
  * @param {number} lat1
+ * @param {boolean} use_night_rat_hour1
  * @param {number} year2
  * @param {number} month2
  * @param {number} day2
@@ -403,16 +405,17 @@ export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_l
  * @param {boolean} is_male2
  * @param {number} lon2
  * @param {number} lat2
+ * @param {boolean} use_night_rat_hour2
  * @param {string} timezone1
  * @param {string} timezone2
  * @returns {any}
  */
-export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, timezone1, timezone2) {
+export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, use_night_rat_hour1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, use_night_rat_hour2, timezone1, timezone2) {
     const ptr0 = passStringToWasm0(timezone1, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ptr1 = passStringToWasm0(timezone2, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
-    const ret = wasm.get_saju_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, ptr0, len0, ptr1, len1);
+    const ret = wasm.get_saju_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, use_night_rat_hour1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, use_night_rat_hour2, ptr0, len0, ptr1, len1);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -429,6 +432,7 @@ export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_l
  * @param {boolean} is_lunar
  * @param {boolean} is_leap_month
  * @param {boolean} is_male
+ * @param {boolean} use_night_rat_hour
  * @param {number} lon
  * @param {number} lat
  * @param {string} timezone
@@ -437,10 +441,10 @@ export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_l
  * @param {number} current_day
  * @returns {any}
  */
-export function get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, lon, lat, timezone, current_year, current_month, current_day) {
+export function get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone, current_year, current_month, current_day) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, lon, lat, ptr0, len0, current_year, current_month, current_day);
+    const ret = wasm.get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0, current_year, current_month, current_day);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }

@@ -184,19 +184,6 @@ pub fn get_month_branch_index(
     Ok(get_month_branch_index_from_dt(dt_utc))
 }
 
-/// 양력 날짜/시각으로부터 해당 월의 절기 지지 인덱스 계산 (KST 기본값)
-///
-/// **⚠️ Deprecated:** 명시적 timezone 지정을 위해 `get_month_branch_index()`를 사용하세요.
-///
-/// 이 함수는 입력값을 **KST(UTC+9)**로 간주합니다.
-#[deprecated(
-    since = "0.2.0",
-    note = "Use get_month_branch_index() with explicit timezone"
-)]
-pub fn get_month_branch_index_kst(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> u8 {
-    get_month_branch_index(year, month, day, hour, minute, 540).unwrap_or(2) // 기본값 寅월, KST=540분
-}
-
 /// DateTime<Utc>로부터 해당 월의 절기 지지 인덱스 계산
 ///
 /// 이 함수는 이미 UTC로 변환된 시간을 받으므로 timezone 문제가 없습니다.

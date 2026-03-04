@@ -29,25 +29,7 @@ use eon_saju::engine::vm::SajuVM;
 use eon_saju::report::SajuReport;
 
 // === Core imports (BirthInfo, Location, DST) ===
-use eon_core::{BirthInfo, Gender, Location};
-
-// Chrono imports for timezone-based standard meridian calculation
-use chrono::TimeZone;
-use chrono_tz::Tz;
-
-/// Compute the standard meridian (degrees) from an IANA timezone string.
-/// e.g. "Asia/Seoul" (UTC+9) → 135.0, "America/New_York" (UTC-5) → -75.0
-fn standard_meridian_from_tz(timezone: &str) -> f64 {
-    if let Ok(tz) = timezone.parse::<Tz>() {
-        let ref_dt = tz.with_ymd_and_hms(2024, 1, 15, 12, 0, 0).single();
-        if let Some(dt) = ref_dt {
-            use chrono_tz::OffsetComponents;
-            let base_offset_secs = dt.offset().base_utc_offset().num_seconds() as f64;
-            return (base_offset_secs / 3600.0) * 15.0;
-        }
-    }
-    135.0 // Fallback: Korean Standard Meridian
-}
+use eon_core::{BirthInfo, Gender, Location, standard_meridian_from_tz};
 
 /// DST 메타데이터 + 고급 분석을 포함한 사주 분석 결과 래퍼
 #[derive(Serialize)]

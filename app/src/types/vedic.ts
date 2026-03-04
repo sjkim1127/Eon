@@ -192,6 +192,12 @@ export interface AshtaKutaResult {
   nadi?: number;
 }
 
+/** 궁합 분석 결과 (사주 + 베딕) */
+export interface CompReport {
+  saju: import("./saju").CompatibilityAudit;
+  vedic: AshtaKutaResult;
+}
+
 // ── 고차라 트랜싯 (Gochara) ──────────────────────
 
 /** 행성 트랜싯 위치 (TransitPosition Rust struct) */

@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
-import { cn } from "../../utils";
 import { ASHTA_LABELS, ASHTA_MAX } from "../../constants";
-import { CitySearchInput } from "../shared/CitySearchInput";
-import type { BirthData } from "../../types";
+import { BirthInputForm } from "../shared/BirthInputForm";
+import type { BirthData, CompReport } from "../../types";
 
 interface CompatibilityTabProps {
   birthData2: BirthData;
@@ -12,7 +11,7 @@ interface CompatibilityTabProps {
   setIsMale2: (v: boolean) => void;
   selectedCity2: string;
   onCitySelect2: (city: { name: string; lat: number; lon: number; timezone: string }) => void;
-  compReport: any;
+  compReport: CompReport | null;
   compLoading: boolean;
   onRunCompatibility: () => void;
 }
@@ -35,49 +34,21 @@ export function CompatibilityTab({
       {/* 두 번째 사람 입력 폼 */}
       <div className="glass p-6 rounded-2xl">
         <h3 className="text-lg font-bold text-white mb-4">상대방 출생 정보</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          {(["year", "month", "day", "hour", "minute"] as const).map((field) => (
-            <div key={field}>
-              <label className="text-xs text-brand-400 mb-1 block">
-                {field === "year" ? "연도" : field === "month" ? "월" : field === "day" ? "일" : field === "hour" ? "시" : "분"}
-              </label>
-              <input
-                type="number"
-                value={birthData2[field]}
-                onChange={(e) => setBirthData2((prev) => ({ ...prev, [field]: parseInt(e.target.value) || 0 }))}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-white/30"
-              />
-            </div>
-          ))}
-        </div>
-        <div className="flex gap-4 items-center flex-wrap">
-          <div>
-            <label className="text-xs text-brand-400 mb-1 block">도시</label>
-            <CitySearchInput
-              selectedLabel={selectedCity2}
-              onSelect={onCitySelect2}
-            />
-          </div>
-          <div className="flex gap-3 items-center">
-            <label className="text-xs text-brand-400">성별</label>
-            {["남성", "여성"].map((g) => (
-              <button
-                key={g}
-                onClick={() => setIsMale2(g === "남성")}
-                className={cn("px-4 py-2 rounded-lg text-sm font-medium transition-all", isMale2 === (g === "남성") ? "bg-celestial-purple text-white" : "bg-white/5 text-white/50 hover:bg-white/10")}
-              >
-                {g}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={onRunCompatibility}
-            disabled={compLoading}
-            className="ml-auto px-6 py-2 rounded-xl bg-gradient-to-r from-pink-600 to-rose-500 text-white font-semibold text-sm shadow-lg shadow-pink-500/20 hover:shadow-pink-500/40 transition-all disabled:opacity-50"
-          >
-            {compLoading ? "분석 중..." : "궁합 분석 시작"}
-          </button>
-        </div>
+        <BirthInputForm
+          birthData={birthData2}
+          setBirthData={setBirthData2}
+          selectedCity={selectedCity2}
+          onCitySelect={onCitySelect2}
+          isMale={isMale2}
+          setIsMale={setIsMale2}
+          isDST={false}
+          loading={compLoading}
+          onAnalysis={onRunCompatibility}
+          sajuReport={null}
+          compact
+          submitLabel="궁합 분석 시작"
+          hideUnknownTime
+        />
       </div>
 
       {!compReport && (

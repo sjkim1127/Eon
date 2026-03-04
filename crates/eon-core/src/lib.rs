@@ -15,7 +15,9 @@
 pub mod error;
 pub mod location;
 pub mod birth;
+pub mod timezone;
 
 pub use error::EonError;
 pub use location::Location;
 pub use birth::{BirthInfo, Gender, CalendarType, timezones};
+pub use timezone::standard_meridian_from_tz;

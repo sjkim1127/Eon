@@ -12,7 +12,7 @@ import {
 import { CHART_TOOLTIP_STYLE } from "../../lib/chartTheme";
 
 interface StrengthTabProps {
-  sajuReport: any;
+  sajuReport: import("../../types").SajuAnalysisResult | null;
   unknownTime?: boolean;
 }
 
