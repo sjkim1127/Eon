@@ -1,8 +1,9 @@
 import { ganziDisplay, ganziHangul } from "./ganzi";
-import { SIGN_NAMES, VARGA_DEFS } from "../constants";
+import { SIGN_NAMES, VARGA_DEFS, ASHTA_LABELS, ASHTA_MAX } from "../constants";
 import type { SajuAnalysisResult } from "../types";
 import type { VedicAnalysisResult } from "../types";
 import type { TransitResult } from "../types";
+import type { CompReport } from "../types";
 import { computeTierResult, type TierResult } from "./tierScore";
 import { getNakshatraInfo } from "./nakshatra";
 import { formatSiderealPosition, buildNakshatraMarkdownRows } from "./vedicFormat";
@@ -516,6 +517,42 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     return lines.join("\n");
 }
 
+// ══ ESIL 트레이스 포맷 변환 (TransitTab.formatTraceLine 이식) ═══════════
+
+function formatEsilLine(line: string): string {
+    let formatted = line;
+    if (line.includes("infl:")) {
+        formatted = line
+            .replace(/([가-힣]+)_infl:([가-힣]),weight:([0-9.]+),score\+=([0-9.]+)/, "$1의 $2 기운 유입 (영향력 x$3) ➔ +$4점")
+            .replace(/([가-힣]+)_infl:([가-힣]),weight:([0-9.]+),impact:-([0-9.]+)/, "$1의 $2 기운 유입 (과부하 x$3) ➔ -$4점");
+    } else if (line.includes("shinsal:")) {
+        formatted = line.replace(/shinsal:([가-힣]+),score:([0-9.-]+)/, "신살 작용 [$1] ➔ $2점");
+    } else if (line.includes("gilsin:")) {
+        formatted = line.replace(/gilsin:([a-zA-Z]+),bonus:([0-9.]+)/, "길신 작용 [$1] ➔ +$2점");
+    } else if (line.includes("lifecycle:")) {
+        formatted = line.replace(/lifecycle:([^,]+),score:([0-9.-]+)/, "12운성 환경 [$1] ➔ $2점");
+    } else if (line.includes("clash:") && !line.includes("stem_clash")) {
+        formatted = line.replace(/clash:([^,]+),impact:([0-9.-]+)/, "지지 충돌 발생 [$1] ➔ $2점");
+    } else if (line.includes("stem_clash:")) {
+        formatted = line.replace(/stem_clash:([^,]+),penalty:([0-9.-]+)/, "천간 충돌 발생 [$1] ➔ $2점");
+    } else if (line.includes("mem_dump:")) {
+        formatted = line.replace(/mem_dump:([^,]+),bonus:([0-9.-]+)/, "잠재 에너지 발현 [$1] ➔ +$2점");
+    } else if (line.includes("mem_corrupt:")) {
+        formatted = line.replace(/mem_corrupt:([^,]+),penalty:([0-9.-]+)/, "에너지 교란 현상 [$1] ➔ $2점");
+    } else if (line.includes("race_cond:")) {
+        formatted = line.replace(/race_cond:([^,]+),penalty:([0-9.-]+)/, "에너지 우선순위 경합 [$1] ➔ $2점");
+    } else if (line.includes("six_combo:")) {
+        formatted = line.replace(/six_combo:([^,]+),bonus:([0-9.-]+)/, "육합 형성으로 파생 에너지 생성 [$1] ➔ +$2점");
+    } else if (line.includes("three_combo:")) {
+        formatted = line.replace(/three_combo:([^,]+),bonus:([0-9.-]+)/, "삼합 형성으로 강한 세력 구축 [$1] ➔ +$2점");
+    } else if (line.includes("panic")) {
+        formatted = "⚠️ 시스템 패닉: 치명적인 운세 타격 발생 " + line.split("panic")[1];
+    } else if (line.includes("irq")) {
+        formatted = "⛔ 인터럽트: 돌발 변수 발생 " + line.split("irq")[1];
+    }
+    return formatted;
+}
+
 // ── 운세(세운/월운) 섹션 ───────────────────────────
 
 export function buildTransitMarkdown(t: TransitResult): string {
@@ -537,7 +574,7 @@ export function buildTransitMarkdown(t: TransitResult): string {
     }
     lines.push("");
 
-    // 월운
+    // 월운 (이번 달)
     const m = t.monthly_luck;
     lines.push("## 월운 (이번 달의 흐름)\n");
     lines.push(`- **연-월**: ${m.year}-${String(m.month).padStart(2, "0")}`);
@@ -549,15 +586,53 @@ export function buildTransitMarkdown(t: TransitResult): string {
     }
     lines.push("");
 
+    // 일운
+    const dl = (t as unknown as Record<string, unknown>).daily_luck as Record<string, unknown> | undefined;
+    if (dl) {
+        lines.push("## 일운 (오늘의 흐름)\n");
+        const dlGanzi = dl.ganzi as Parameters<typeof ganziDisplay>[0] | undefined;
+        if (dlGanzi) lines.push(`- **간지**: ${ganziDisplay(dlGanzi)} (${ganziHangul(dlGanzi)})`);
+        if (dl.stem_god) lines.push(`- **천간 십신**: ${dl.stem_god}`);
+        if (dl.branch_god) lines.push(`- **지지 십신**: ${dl.branch_god}`);
+        if (dl.twelve_stage) lines.push(`- **12운성**: ${dl.twelve_stage}`);
+        lines.push("");
+    }
+
     // 현재 프레임
     if (t.current_frame) {
         const f = t.current_frame;
+        const scoreLabel = (f.score ?? 0) >= 80 ? "맑고 화창함" : (f.score ?? 0) >= 60 ? "가끔 구름" : (f.score ?? 0) >= 40 ? "흐림" : (f.score ?? 0) >= 20 ? "비" : "뇌우";
         lines.push("## 현재 프레임 (시뮬레이션 스냅샷)\n");
         lines.push(`- **나이**: ${f.age}세`);
         lines.push(`- **세운**: ${ganziDisplay(f.ganzi)} (${ganziHangul(f.ganzi)})`);
         lines.push(`- **대운**: ${ganziDisplay(f.major_ganzi)} (${ganziHangul(f.major_ganzi)})`);
-        lines.push(`- **점수**: ${(f.score ?? 0).toFixed(1)}`);
-        if (f.tags?.length) lines.push(`- **태그**: ${f.tags.join(", ")}`);
+        lines.push(`- **운세 점수**: ${(f.score ?? 0).toFixed(1)} / 100 (${scoreLabel})`);
+        if (f.tags?.length) lines.push(`- **운세 태그**: ${f.tags.join(", ")}`);
+        lines.push("");
+
+        // ESIL 트레이스
+        if (f.esil_trace?.trim()) {
+            lines.push("### ESIL 트레이스 (운세 계산 상세)\n");
+            const traceLines = f.esil_trace.trim().split("\n").filter(Boolean);
+            for (const tl of traceLines) {
+                const formatted = formatEsilLine(tl.trim());
+                lines.push(`- ${formatted}`);
+            }
+            lines.push("");
+        }
+    }
+
+    // 월별 운세 12개 (monthly_lucks)
+    const monthlyAll = (t as unknown as Record<string, unknown>).monthly_lucks as typeof t.monthly_luck[] | undefined;
+    if (Array.isArray(monthlyAll) && monthlyAll.length > 0) {
+        lines.push("## 월별 운세 (이번 해 12개월)\n");
+        lines.push("| 연-월 | 간지 | 천간 십신 | 지지 십신 | 12운성 | 원국 관계 |");
+        lines.push("|---|---|---|---|---|---|");
+        for (const ml of monthlyAll) {
+            const ganziStr = `${ganziDisplay(ml.ganzi)} (${ganziHangul(ml.ganzi)})`;
+            const relations = ml.influence?.relations_with_natal?.join(", ") ?? "—";
+            lines.push(`| ${ml.year}-${String(ml.month).padStart(2, "0")} | ${ganziStr} | ${ml.stem_god} | ${ml.branch_god} | ${ml.twelve_stage ?? "—"} | ${relations} |`);
+        }
         lines.push("");
     }
 
@@ -568,6 +643,60 @@ export function buildTransitMarkdown(t: TransitResult): string {
         lines.push("|---:|---|---|---|");
         for (const d of t.nearby_diagnostics) {
             lines.push(`| ${d.age}세 | ${d.status} | ${d.reason} | ${d.strategy} |`);
+        }
+        lines.push("");
+    }
+
+    return lines.join("\n");
+}
+
+// ── 궁합 섹션 ────────────────────────────────────────
+
+export function buildCompatibilityMarkdown(comp: CompReport): string {
+    const lines: string[] = [];
+    lines.push("# 궁합 분석 리포트\n");
+
+    // 사주 궁합
+    if (comp.saju) {
+        const sj = comp.saju;
+        const scoreColor = sj.sync_score > 70 ? "🟢" : sj.sync_score > 40 ? "🟡" : "🔴";
+        lines.push("## 사주 궁합 결과\n");
+        lines.push(`- **궁합 점수**: ${scoreColor} ${sj.sync_score?.toFixed(0) ?? "—"} / 100`);
+        lines.push("");
+
+        if (sj.synergies?.length) {
+            lines.push("### 시너지 (긍정 작용)\n");
+            for (const s of sj.synergies) lines.push(`- ✅ ${s}`);
+            lines.push("");
+        }
+        if (sj.conflicts?.length) {
+            lines.push("### 충돌 (부정 작용)\n");
+            for (const s of sj.conflicts) lines.push(`- ⚡ ${s}`);
+            lines.push("");
+        }
+        if (sj.deadlocks?.length) {
+            lines.push("### 갈등 요소\n");
+            for (const s of sj.deadlocks) lines.push(`- ⚠️ ${s}`);
+            lines.push("");
+        }
+    }
+
+    // 베딕 Ashta Kuta
+    if (comp.vedic) {
+        const vd = comp.vedic;
+        const totalIcon = (vd.total_score ?? 0) >= 26 ? "🟢" : (vd.total_score ?? 0) >= 18 ? "🟡" : "🔴";
+        lines.push("## 베딕 궁합 (Ashta Kuta)\n");
+        lines.push(`- **총점**: ${totalIcon} ${vd.total_score?.toFixed(1) ?? "—"} / 36`);
+        if (vd.message) lines.push(`- **종합 판정**: ${vd.message}`);
+        lines.push("");
+
+        lines.push("| 항목 | 점수 | 만점 | 비율 |");
+        lines.push("|---|---:|---:|---:|");
+        for (const [key, label] of Object.entries(ASHTA_LABELS)) {
+            const val = (vd as unknown as Record<string, number | undefined>)[key];
+            const max = ASHTA_MAX[key] ?? 1;
+            const pct = val != null ? ((val / max) * 100).toFixed(0) : "—";
+            lines.push(`| ${label} | ${val?.toFixed(1) ?? "—"} | ${max} | ${typeof val === "number" ? pct + "%" : "—"} |`);
         }
         lines.push("");
     }
@@ -644,6 +773,7 @@ export function buildFullAnalysisMarkdown(
     sajuReport: SajuAnalysisResult | null,
     vedicReport: VedicAnalysisResult | null,
     transitReport: TransitResult | null = null,
+    compReport?: CompReport | null,
 ): string {
     const parts: string[] = [];
 
@@ -670,6 +800,11 @@ export function buildFullAnalysisMarkdown(
     if (vedicReport) {
         if (parts.length > 0) parts.push(SEP);
         parts.push(buildVedicMarkdown(vedicReport));
+    }
+
+    if (compReport) {
+        parts.push(SEP);
+        parts.push(buildCompatibilityMarkdown(compReport));
     }
 
     return parts.join("\n");
