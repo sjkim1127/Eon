@@ -7,6 +7,8 @@ import type { VedicAnalysisResult, Yoga } from "../../types";
 import { BhavaRadarSection } from "../sections/BhavaRadarSection";
 import { AspectsSection } from "../sections/AspectsSection";
 import { DashaTimelineSection } from "../sections/DashaTimelineSection";
+import { GocharaSection } from "../sections/GocharaSection";
+import { AvasthaKarakaSection } from "../sections/AvasthaKarakaSection";
 
 // ── 남인도 차트 상수 ────────────────────────────────────────────────────
 const SOUTH_GRID: (number | null)[][] = [
@@ -725,6 +727,15 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
 
       {/* ── 행성 시선 (Aspects / Drishti) ─────────────────── */}
       <AspectsSection aspects={aspects} />
+
+      {/* ── 고차라 트랜싯 (Gochara) ─────────────────── */}
+      <GocharaSection summary={(report as any).gochara ?? null} />
+
+      {/* ── 카라카 + 아바스타 (Karakas + Avasthas) ────────── */}
+      <AvasthaKarakaSection
+        avasthas={report.chart.avasthas ?? []}
+        karakas={report.chart.karakas ?? []}
+      />
     </motion.div>
   );
 }

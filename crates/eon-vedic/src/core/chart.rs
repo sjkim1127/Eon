@@ -55,6 +55,7 @@ pub struct VedicChart {
     pub karakas: Vec<crate::analysis::jaimini::KarakaAssignment>,
     pub bhava_strengths: Vec<crate::analysis::bhava::BhavaStrength>,
     pub vimshopaka_scores: Vec<(VedicPlanet, crate::analysis::vimshopaka::VimshopakaScore)>,
+    pub avasthas: Vec<crate::analysis::avasthas::PlanetAvastha>,
     pub panchanga: crate::panchanga::Panchanga,
     pub analysis_report: Option<crate::analysis::report::VedicAnalysisReport>,
 }
@@ -324,6 +325,7 @@ impl VedicChartCalculator {
             karakas: Vec::new(),
             bhava_strengths: Vec::new(),
             vimshopaka_scores: Vec::new(),
+            avasthas: Vec::new(),
             panchanga,
             analysis_report,
         };
@@ -333,6 +335,11 @@ impl VedicChartCalculator {
         chart.sav = crate::analysis::ashtakavarga::AshtakavargaEngine::calculate_sav(&chart);
         chart.karakas = crate::analysis::jaimini::JaiminiEngine::calculate_karakas(&chart, true); // Default 8-karaka
         chart.bhava_strengths = crate::analysis::bhava::BhavaEngine::calculate_all(&chart);
+        chart.avasthas = chart
+            .planets
+            .iter()
+            .map(|p| crate::analysis::avasthas::AvasthaEngine::calculate(p))
+            .collect();
 
         let mut v_scores = Vec::new();
         for p in &chart.planets {

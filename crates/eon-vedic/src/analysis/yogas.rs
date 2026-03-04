@@ -1051,6 +1051,7 @@ mod tests {
             vimshopaka_scores: vec![],
             aspects: vec![],
             sav: crate::analysis::ashtakavarga::Sarvashtakavarga { points: [0; 12] },
+            avasthas: vec![],
             analysis_report: None,
             panchanga: Panchanga {
                 vara: "Sunday".to_string(),

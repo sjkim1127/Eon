@@ -136,6 +136,7 @@ export interface VedicChartData {
   karakas: KarakaAssignment[];
   bhava_strengths: BhavaStrength[];
   vimshopaka_scores: [string, VimshopakaScore][];
+  avasthas: { planet: string; baladi: string; jagradadi: string }[];
   panchanga: VedicPanchanga;
   analysis_report: VedicAnalysisReport | null;
 }
@@ -185,4 +186,22 @@ export interface AshtaKutaResult {
   gana?: number;
   bhakoot?: number;
   nadi?: number;
+}
+
+// ── 고차라 트랜싯 (Gochara) ──────────────────────
+
+/** 행성 트랜싯 위치 (TransitPosition Rust struct) */
+export interface TransitPosition {
+  planet: string;
+  current_rasi: number;
+  house_from_moon: number;
+  is_benefic_transit: boolean;
+  is_blocked: boolean;
+  murti: "Gold" | "Silver" | "Copper" | "Iron" | "Unknown";
+}
+
+/** 고차라 요약 (GocharaSummary Rust struct) */
+export interface GocharaSummary {
+  transits: TransitPosition[];
+  sade_sati: "None" | "Rising" | "Peak" | "Setting";
 }

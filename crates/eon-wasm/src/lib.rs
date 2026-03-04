@@ -100,13 +100,30 @@ pub async fn get_vedic_analysis(
 
     let report = VedicAnalysisReport::generate(&chart);
 
+    // Gochara: compute current transit chart and analyze
+    let gochara = {
+        let natal_moon_rasi = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == eon_vedic::planets::VedicPlanet::Moon)
+            .map(|m| m.rasi)
+            .unwrap_or(1);
+        let transit_chart = calculator.calculate(chrono::Utc::now(), lat, lon);
+        eon_vedic::analysis::gochara::GocharaEngine::analyze(natal_moon_rasi, &transit_chart)
+    };
+
     #[derive(Serialize)]
     struct VedicAnalysisResult {
         report: VedicAnalysisReport,
         chart: VedicChart,
+        gochara: eon_vedic::analysis::gochara::GocharaSummary,
     }
 
-    let result = VedicAnalysisResult { report, chart };
+    let result = VedicAnalysisResult {
+        report,
+        chart,
+        gochara,
+    };
 
     Ok(serde_wasm_bindgen::to_value(&result)?)
 }
