@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { cn } from "../../utils";
-import { KOREAN_CITIES, ASHTA_LABELS, ASHTA_MAX } from "../../constants";
+import { ASHTA_LABELS, ASHTA_MAX } from "../../constants";
+import { CitySearchInput } from "../shared/CitySearchInput";
 import type { BirthData } from "../../types";
 
 interface CompatibilityTabProps {
@@ -10,7 +11,7 @@ interface CompatibilityTabProps {
   isMale2: boolean;
   setIsMale2: (v: boolean) => void;
   selectedCity2: string;
-  onCityChange2: (cityName: string) => void;
+  onCitySelect2: (city: { name: string; lat: number; lon: number; timezone: string }) => void;
   compReport: any;
   compLoading: boolean;
   onRunCompatibility: () => void;
@@ -22,7 +23,7 @@ export function CompatibilityTab({
   isMale2,
   setIsMale2,
   selectedCity2,
-  onCityChange2,
+  onCitySelect2,
   compReport,
   compLoading,
   onRunCompatibility,
@@ -35,7 +36,7 @@ export function CompatibilityTab({
       <div className="glass p-6 rounded-2xl">
         <h3 className="text-lg font-bold text-white mb-4">상대방 출생 정보</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          {(["year","month","day","hour","minute"] as const).map((field) => (
+          {(["year", "month", "day", "hour", "minute"] as const).map((field) => (
             <div key={field}>
               <label className="text-xs text-brand-400 mb-1 block">
                 {field === "year" ? "연도" : field === "month" ? "월" : field === "day" ? "일" : field === "hour" ? "시" : "분"}
@@ -52,13 +53,10 @@ export function CompatibilityTab({
         <div className="flex gap-4 items-center flex-wrap">
           <div>
             <label className="text-xs text-brand-400 mb-1 block">도시</label>
-            <select
-              value={selectedCity2}
-              onChange={(e) => onCityChange2(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-white/30"
-            >
-              {KOREAN_CITIES.map((c) => (<option key={c.name} value={c.name}>{c.name}</option>))}
-            </select>
+            <CitySearchInput
+              selectedLabel={selectedCity2}
+              onSelect={onCitySelect2}
+            />
           </div>
           <div className="flex gap-3 items-center">
             <label className="text-xs text-brand-400">성별</label>

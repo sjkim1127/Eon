@@ -64,7 +64,7 @@ function TabSkeleton() {
 function App() {
   const {
     birthData, setBirthData,
-    selectedCity, handleCityChange,
+    selectedCity, handleCitySelect,
     isMale, setIsMale,
     isDST,
     report, sajuReport, transitReport, transitError,
@@ -72,7 +72,7 @@ function App() {
     errorMessage,
     activeTab, setActiveTab,
     birthData2, setBirthData2,
-    selectedCity2, handleCityChange2,
+    selectedCity2, handleCitySelect2,
     isMale2, setIsMale2,
     compReport, compLoading,
     runCompatibilityAnalysis,
@@ -340,7 +340,7 @@ function App() {
                   isMale2={isMale2}
                   setIsMale2={setIsMale2}
                   selectedCity2={selectedCity2}
-                  onCityChange2={handleCityChange2}
+                  onCitySelect2={handleCitySelect2}
                   compReport={compReport}
                   compLoading={compLoading}
                   onRunCompatibility={runCompatibilityAnalysis}
@@ -360,7 +360,7 @@ function App() {
         birthData={birthData}
         setBirthData={setBirthData}
         selectedCity={selectedCity}
-        onCityChange={handleCityChange}
+        onCitySelect={handleCitySelect}
         isMale={isMale}
         setIsMale={setIsMale}
         isDST={isDST}

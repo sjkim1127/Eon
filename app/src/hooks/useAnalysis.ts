@@ -8,7 +8,6 @@ import {
   get_saju_compatibility,
   get_vedic_compatibility,
 } from "../lib/api";
-import { KOREAN_CITIES } from "../constants";
 import type {
   BirthData,
   TabId,
@@ -80,20 +79,14 @@ export function useAnalysis() {
   // ── 파생 값 ──
 
   // ── 핸들러 ──
-  const handleCityChange = (cityName: string) => {
-    const city = KOREAN_CITIES.find((c) => c.name === cityName);
-    if (city) {
-      setSelectedCity(cityName);
-      setBirthData((prev) => ({ ...prev, lat: city.lat, lon: city.lon, timezone: city.timezone }));
-    }
+  const handleCitySelect = (city: { name: string; lat: number; lon: number; timezone: string }) => {
+    setSelectedCity(city.name);
+    setBirthData((prev) => ({ ...prev, lat: city.lat, lon: city.lon, timezone: city.timezone }));
   };
 
-  const handleCityChange2 = (cityName: string) => {
-    const city = KOREAN_CITIES.find((c) => c.name === cityName);
-    if (city) {
-      setSelectedCity2(cityName);
-      setBirthData2((prev) => ({ ...prev, lat: city.lat, lon: city.lon, timezone: city.timezone }));
-    }
+  const handleCitySelect2 = (city: { name: string; lat: number; lon: number; timezone: string }) => {
+    setSelectedCity2(city.name);
+    setBirthData2((prev) => ({ ...prev, lat: city.lat, lon: city.lon, timezone: city.timezone }));
   };
 
   const runAnalysis = async () => {
@@ -240,7 +233,7 @@ export function useAnalysis() {
   return {
     // 1차 출생 정보
     birthData, setBirthData,
-    selectedCity, handleCityChange,
+    selectedCity, handleCitySelect,
     isMale, setIsMale,
     isDST: sajuReport?.is_dst ?? false,
     correctedTime: sajuReport?.corrected_time ?? null,
@@ -253,7 +246,7 @@ export function useAnalysis() {
     errorMessage,
     // 궁합
     birthData2, setBirthData2,
-    selectedCity2, handleCityChange2,
+    selectedCity2, handleCitySelect2,
     isMale2, setIsMale2,
     compReport, compLoading,
     runCompatibilityAnalysis,

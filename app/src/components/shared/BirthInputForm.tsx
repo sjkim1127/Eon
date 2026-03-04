@@ -1,12 +1,12 @@
-import { Calendar, MapPin, User, Loader2, ChevronDown, Clock, HelpCircle } from "lucide-react";
-import { KOREAN_CITIES } from "../../constants";
+import { Calendar, User, Loader2, ChevronDown, Clock, HelpCircle } from "lucide-react";
+import { CitySearchInput } from "./CitySearchInput";
 import type { BirthData } from "../../types";
 
 interface BirthInputFormProps {
   birthData: BirthData;
   setBirthData: React.Dispatch<React.SetStateAction<BirthData>>;
   selectedCity: string;
-  onCityChange: (cityName: string) => void;
+  onCitySelect: (city: { name: string; lat: number; lon: number; timezone: string }) => void;
   isMale: boolean;
   setIsMale: (v: boolean) => void;
   isDST: boolean;
@@ -23,7 +23,7 @@ export function BirthInputForm({
   birthData,
   setBirthData,
   selectedCity,
-  onCityChange,
+  onCitySelect,
   isMale,
   setIsMale,
   isDST,
@@ -223,23 +223,10 @@ export function BirthInputForm({
           <ChevronDown className={`w-4 h-4 absolute right-2.5 top-9 pointer-events-none ${unknownTime ? "text-white/10" : "text-white/40"}`} />
         </div>
         {/* 도시 */}
-        <div className="relative">
-          <label className="block text-xs text-white/40 mb-1.5 font-medium flex items-center gap-1">
-            <MapPin className="w-3 h-3" /> 출생지
-          </label>
-          <select
-            value={selectedCity}
-            onChange={(e) => onCityChange(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-8 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
-          >
-            {KOREAN_CITIES.map((city) => (
-              <option key={city.name} value={city.name} className="bg-gray-900">
-                {city.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="w-4 h-4 text-white/40 absolute right-2.5 top-9 pointer-events-none" />
-        </div>
+        <CitySearchInput
+          selectedLabel={selectedCity}
+          onSelect={onCitySelect}
+        />
       </div>
 
       {/* 시간 모름 안내 배너 */}

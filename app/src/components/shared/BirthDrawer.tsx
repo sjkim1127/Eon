@@ -10,7 +10,7 @@ interface BirthDrawerProps {
   birthData: BirthData;
   setBirthData: React.Dispatch<React.SetStateAction<BirthData>>;
   selectedCity: string;
-  onCityChange: (cityName: string) => void;
+  onCitySelect: (city: { name: string; lat: number; lon: number; timezone: string }) => void;
   isMale: boolean;
   setIsMale: (v: boolean) => void;
   isDST: boolean;
