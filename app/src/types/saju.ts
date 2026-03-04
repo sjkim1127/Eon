@@ -311,6 +311,10 @@ export interface SajuAnalysisResult {
   crash_count: number;
   vulnerability_report: VulnerabilityReport | null;
   complexity?: ComplexityAnalysis | null;
+  /** 합충형해 분석 (RelationshipAnalysis) */
+  relationships?: unknown;
+  /** 공망 분석 (VoidAnalysis) */
+  void_analysis?: unknown;
 }
 
 /** 부하 진단 항목 (LoadBalanceDiagnostic Rust struct) */

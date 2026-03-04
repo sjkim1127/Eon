@@ -104,14 +104,14 @@ export function CompatibilityTab({
               )}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {Object.entries(ASHTA_LABELS).map(([key, label]) => {
-                  const val = compReport.vedic[key];
+                  const val = (compReport.vedic as unknown as Record<string, number | undefined>)[key];
                   const max = ASHTA_MAX[key];
-                  const pct = val != null ? (val / max) * 100 : 0;
+                  const pct = val != null && typeof val === "number" ? (val / max) * 100 : 0;
                   return (
                     <div key={key} className="bg-white/5 rounded-xl p-3">
                       <p className="text-xs text-brand-400 mb-1">{label}</p>
                       <div className="flex items-end gap-1 mb-2">
-                        <span className="text-xl font-bold text-white">{val?.toFixed ? val.toFixed(1) : val ?? "--"}</span>
+                        <span className="text-xl font-bold text-white">{typeof val === "number" ? val.toFixed(1) : val ?? "--"}</span>
                         <span className="text-xs text-white/40 mb-0.5">/ {max}</span>
                       </div>
                       <div className="w-full bg-white/10 rounded-full h-1.5">

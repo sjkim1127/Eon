@@ -15,6 +15,7 @@ const loadVedicChartsTab = () => import("./components/tabs/VedicChartsTab");
 const loadStrengthTab = () => import("./components/tabs/StrengthTab");
 const loadTransitTab = () => import("./components/tabs/TransitTab");
 const loadCompatibilityTab = () => import("./components/tabs/CompatibilityTab");
+const loadDestinyTierTab = () => import("./components/tabs/DestinyTierTab");
 const loadAiAuditTab = () => import("./components/tabs/AiAuditTab");
 
 const TAB_LOADERS: Record<TabId, () => Promise<unknown>> = {
@@ -24,6 +25,7 @@ const TAB_LOADERS: Record<TabId, () => Promise<unknown>> = {
   strength: loadStrengthTab,
   transit: loadTransitTab,
   compatibility: loadCompatibilityTab,
+  destiny_tier: loadDestinyTierTab,
   ai_audit: loadAiAuditTab,
 };
 
@@ -33,9 +35,10 @@ const VedicChartsTab = lazy(() => loadVedicChartsTab().then((m) => ({ default: m
 const StrengthTab = lazy(() => loadStrengthTab().then((m) => ({ default: m.StrengthTab })));
 const TransitTab = lazy(() => loadTransitTab().then((m) => ({ default: m.TransitTab })));
 const CompatibilityTab = lazy(() => loadCompatibilityTab().then((m) => ({ default: m.CompatibilityTab })));
+const DestinyTierTab = lazy(() => loadDestinyTierTab().then((m) => ({ default: m.DestinyTierTab })));
 const AiAuditTab = lazy(() => loadAiAuditTab().then((m) => ({ default: m.AiAuditTab })));
 
-const TABS: TabId[] = ["overview", "saju", "vedic_charts", "strength", "transit", "compatibility", "ai_audit"];
+const TABS: TabId[] = ["overview", "saju", "vedic_charts", "strength", "transit", "compatibility", "destiny_tier", "ai_audit"];
 
 const FALLBACK_NEXT_TABS: Record<TabId, TabId[]> = {
   overview: ["saju", "strength"],
@@ -43,7 +46,8 @@ const FALLBACK_NEXT_TABS: Record<TabId, TabId[]> = {
   vedic_charts: ["overview", "strength"],
   strength: ["transit", "saju"],
   transit: ["compatibility", "overview"],
-  compatibility: ["overview", "saju"],
+  compatibility: ["destiny_tier", "overview"],
+  destiny_tier: ["overview", "strength"],
   ai_audit: ["overview", "saju"],
 };
 
@@ -52,6 +56,7 @@ const REPORT_READY_BONUS: Partial<Record<TabId, number>> = {
   strength: 4,
   vedic_charts: 2,
   transit: 2,
+  destiny_tier: 5,
 };
 
 const TRANSIT_READY_BONUS: Partial<Record<TabId, number>> = {
@@ -331,6 +336,13 @@ function App() {
                   compReport={compReport}
                   compLoading={compLoading}
                   onRunCompatibility={runCompatibilityAnalysis}
+                />
+              ) : activeTab === "destiny_tier" ? (
+                <DestinyTierTab
+                  sajuReport={sajuReport}
+                  report={report}
+                  transitReport={transitReport}
+                  unknownTime={birthData.unknown_time}
                 />
               ) : activeTab === "ai_audit" ? (
                 <AiAuditTab aiAuditReport={aiAuditReport} />

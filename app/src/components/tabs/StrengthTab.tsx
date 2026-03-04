@@ -115,10 +115,8 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
                 const elName = typeof node.element === "string" ? (ELEMENT_KOREAN[node.element] ?? node.element) : (node.element?.hangul ?? node.element);
                 const pct = Math.min(100, Math.round((node.output ?? 0) * 5));
 
-                const isBottleneck = topology?.bottleneck && (
-                  node.element === topology.bottleneck ||
-                  (typeof node.element === "object" && node.element?.hangul && node.element.hangul === topology.bottleneck?.hangul)
-                );
+                const elemKey = typeof node.element === "string" ? node.element : (node.element as { english?: string })?.english;
+                const isBottleneck = topology?.bottleneck && elemKey === topology.bottleneck;
 
                 return (
                   <div key={i} className={`p-4 rounded-2xl border ${colorClass}`}>
@@ -170,7 +168,7 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
               <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/10">
                 <span className="text-xs font-bold text-white/50">운명적 꼬임을 풀어주는 해결 열쇠 (오행):</span>
                 <span className="px-3 py-1 bg-celestial-gold/20 border border-celestial-gold/40 text-celestial-gold rounded-full text-xs font-bold">
-                  {typeof entropy.unpacker_element === 'string' ? (ELEMENT_KOREAN[entropy.unpacker_element] ?? entropy.unpacker_element) : (entropy.unpacker_element?.hangul ?? "알 수 없음")}
+                  {typeof entropy.unpacker_element === "string" ? (ELEMENT_KOREAN[entropy.unpacker_element] ?? entropy.unpacker_element) : "알 수 없음"}
                 </span>
               </div>
             )}

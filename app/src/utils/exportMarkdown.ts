@@ -3,6 +3,7 @@ import { SIGN_NAMES, VARGA_DEFS } from "../constants";
 import type { SajuAnalysisResult } from "../types";
 import type { VedicAnalysisResult } from "../types";
 import type { TransitResult } from "../types";
+import { computeTierResult, type TierResult } from "./tierScore";
 
 const SEP = "\n---\n";
 
@@ -540,6 +541,69 @@ export function buildTransitMarkdown(t: TransitResult): string {
     return lines.join("\n");
 }
 
+// ── 운명 티어 섹션 ──────────────────────────────────────
+
+export function buildDestinyTierMarkdown(
+    sajuReport: SajuAnalysisResult | null,
+    vedicReport: VedicAnalysisResult | null,
+    transitReport: TransitResult | null | undefined,
+    tierResult?: TierResult | null,
+): string {
+    const result = tierResult ?? computeTierResult(sajuReport, vedicReport, transitReport ?? null);
+    if (!result) return "";
+
+    const lines: string[] = [];
+    const hasTransit = !!transitReport?.current_frame;
+
+    lines.push("# 운명 티어 요약\n");
+    lines.push(`- **운명 티어**: ${result.destinyTier.grade} · ${result.destinyTier.label}`);
+    lines.push(`- **잠재력 티어**: ${result.potentialTier.grade} · ${result.potentialTier.label}`);
+    if (hasTransit) {
+        lines.push(`- **원국 점수**: ${Math.round(result.natalScore)}`);
+        lines.push(`- **현재 시점 점수**: ${Math.round(result.currentScore)}`);
+    }
+    lines.push(`- **종합 점수**: ${Math.round(result.destinyScore)} / 100`);
+    lines.push("");
+
+    lines.push("## 강점\n");
+    if (result.strengths.length > 0) {
+        for (const s of result.strengths) lines.push(`- ${s}`);
+    } else {
+        lines.push("- (추가 분석 필요)");
+    }
+    lines.push("");
+
+    lines.push("## 약점\n");
+    if (result.weaknesses.length > 0) {
+        for (const w of result.weaknesses) lines.push(`- ${w}`);
+    } else {
+        lines.push("- 특별한 주의 시점 없음");
+    }
+    lines.push("");
+
+    if (result.domainTiers.length > 0) {
+        lines.push("## 분야별 티어\n");
+        lines.push("| 영역 | 하우스 | 티어 |");
+        lines.push("|---|---|---|");
+        for (const d of result.domainTiers) {
+            lines.push(`| ${d.domain} | H${d.house} | ${d.tier} |`);
+        }
+        lines.push("");
+    }
+
+    const potentialHigher = result.potentialScore > result.destinyScore;
+    lines.push("## 인사이트\n");
+    if (potentialHigher) {
+        lines.push("- 잠재력이 운명 티어보다 높아 **성장 여지가 큽니다**. 용신·골든타임·우수 요가를 적극 활용하세요.");
+    } else {
+        lines.push("- 현재 흐름을 잘 활용하고 있습니다.");
+    }
+    lines.push(`- ${result.destinyTier.desc}`);
+    lines.push("");
+
+    return lines.join("\n");
+}
+
 // ── 외부 API ──────────────────────────────────────
 
 export function buildFullAnalysisMarkdown(
@@ -553,6 +617,12 @@ export function buildFullAnalysisMarkdown(
     parts.push(`- 생성 시각: ${new Date().toLocaleString()}`);
     parts.push("- 이 문서는 앱 화면의 분석 결과를 복사/공유하기 쉬운 형태로 정리한 것입니다.");
     parts.push("");
+
+    const destinyTierMd = buildDestinyTierMarkdown(sajuReport, vedicReport, transitReport);
+    if (destinyTierMd) {
+        parts.push(destinyTierMd);
+        parts.push(SEP);
+    }
 
     if (sajuReport) {
         parts.push(buildSajuMarkdown(sajuReport));
