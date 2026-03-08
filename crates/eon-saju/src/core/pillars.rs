@@ -179,7 +179,7 @@ impl FourPillars {
         };
 
         // 입력 유효성 검사 (변환된 양력 기준)
-        if solar_month < 1 || solar_month > 12 {
+        if !(1..=12).contains(&solar_month) {
             return Err(SajuError::InvalidDateTime(format!("Invalid month: {}", solar_month)));
         }
 
@@ -292,7 +292,7 @@ impl FourPillars {
 
     /// 시주 계산
     pub(crate) fn calculate_hour_pillar(day_pillar: &GanZi, hour: u32) -> GanZi {
-        let branch_idx = ((hour + 1) / 2) % 12;
+        let branch_idx = hour.div_ceil(2) % 12;
         let branch = EarthlyBranch::from_index(branch_idx as i32);
 
         let day_stem = day_pillar.stem;

@@ -731,8 +731,8 @@ impl RelationshipAnalysis {
 
         let mut stem_combinations = Vec::new();
         let mut stem_clashes = Vec::new();
-        let triple_combinations;
-        let seasonal_combinations;
+        
+        
         let mut dominant_semi_combinations = Vec::new();
         let mut weak_semi_combinations = Vec::new();
         let mut six_combinations = Vec::new();
@@ -808,8 +808,8 @@ impl RelationshipAnalysis {
 
         // 삼합 및 방합 분석
         let all_branches: Vec<_> = branches.iter().map(|(_, b)| *b).collect();
-        triple_combinations = TripleCombination::check(&all_branches);
-        seasonal_combinations = SeasonalCombination::check(&all_branches);
+        let triple_combinations = TripleCombination::check(&all_branches);
+        let seasonal_combinations = SeasonalCombination::check(&all_branches);
 
         // 암합 분석 (지지 간의 지장간 합)
         for i in 0..4 {

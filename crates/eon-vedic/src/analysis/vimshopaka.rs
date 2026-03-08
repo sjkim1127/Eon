@@ -37,7 +37,7 @@ impl VimshopakaEngine {
         for (varga, weight) in &shadvarga_weights {
             let rasi = Self::get_varga_rasi(pos, *varga);
             let point = Self::get_dignity_point(pos.planet, rasi, chart);
-            shadvarga_sum += point * (*weight as f64);
+            shadvarga_sum += point * *weight;
             details.push((*varga, point));
         }
 

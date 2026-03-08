@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// 전역 분석 설정
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct AnalysisConfig {
     pub weights: WeightsConfig,
     pub strength: StrengthConfig,
@@ -14,17 +15,6 @@ pub struct AnalysisConfig {
     pub vm: VmConfig,
 }
 
-impl Default for AnalysisConfig {
-    fn default() -> Self {
-        Self {
-            weights: WeightsConfig::default(),
-            strength: StrengthConfig::default(),
-            root: RootConfig::default(),
-            thermal: ThermalConfig::default(),
-            vm: VmConfig::default(),
-        }
-    }
-}
 
 /// 위치별 가중치 (110점법)
 #[derive(Debug, Clone, Serialize, Deserialize)]

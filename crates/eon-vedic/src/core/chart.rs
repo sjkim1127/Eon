@@ -97,6 +97,12 @@ pub struct VedicChartCalculator {
     config: VedicConfig,
 }
 
+impl Default for VedicChartCalculator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VedicChartCalculator {
     fn calculate_nakshatra_and_pada(sidereal: f64) -> (u8, u8) {
         let nak_pos = sidereal / (360.0 / 27.0);
@@ -394,7 +400,7 @@ impl VedicChartCalculator {
         chart.avasthas = chart
             .planets
             .iter()
-            .map(|p| crate::analysis::avasthas::AvasthaEngine::calculate(p))
+            .map(crate::analysis::avasthas::AvasthaEngine::calculate)
             .collect();
 
         let mut v_scores = Vec::new();

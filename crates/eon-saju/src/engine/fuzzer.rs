@@ -61,7 +61,7 @@ impl DestinyFuzzer {
         let mut vulnerabilities = Vec::new();
 
         for i in 0..60 {
-            let yearly = GanZi::from_index(i as i32);
+            let yearly = GanZi::from_index(i);
             let frame = self.vm.step(0, major_context, yearly, None, None, None);
 
             if frame.score <= self.crash_threshold {
@@ -152,7 +152,7 @@ impl DestinyFuzzer {
                 .unwrap_or(yearly_ganzi);
 
             for month in 1..=12 {
-                let monthly_ganzi = self.calculate_month_ganzi(year, month as i32);
+                let monthly_ganzi = self.calculate_month_ganzi(year, month);
 
                 // 샘플링: 매월 1, 11, 21일 (전수 조사 시 43만 개, 샘플링 시 약 4.3만 개)
                 for day in [1, 11, 21] {

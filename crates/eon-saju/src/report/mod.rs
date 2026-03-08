@@ -103,7 +103,7 @@ impl SajuReport {
         md.push_str("## 1. Natal Chart (Four Pillars)\n");
         md.push_str("```\n");
         md.push_str(&self.pillars.to_string());
-        md.push_str("\n");
+        md.push('\n');
         md.push_str(&self.pillars.hangul());
         md.push_str("\n```\n\n");
 
@@ -178,7 +178,7 @@ impl SajuReport {
                 ));
             }
         }
-        md.push_str("\n");
+        md.push('\n');
 
         if let Some(major) = &self.major_luck {
             md.push_str("## 5. Major Luck Cycles (Daeyun)\n");
@@ -195,7 +195,7 @@ impl SajuReport {
                     cycle.start_date.format("%Y-%m-%d")
                 ));
             }
-            md.push_str("\n");
+            md.push('\n');
         }
 
         if let Some(golden) = &self.golden_time {
@@ -206,7 +206,7 @@ impl SajuReport {
             ));
             md.push_str(&format!("- **Avg Score**: {:.2}\n", golden.average_score));
             md.push_str(&format!("- **Description**: {}\n", golden.description));
-            md.push_str("\n");
+            md.push('\n');
         }
 
         if !self.simulation_frames.is_empty() {
@@ -250,13 +250,13 @@ impl SajuReport {
                     }
                 }
             }
-            md.push_str("\n");
+            md.push('\n');
         }
 
         if let Some(summary) = &self.vm_summary {
             md.push_str("## 8. Simulation Summary\n");
             md.push_str(summary);
-            md.push_str("\n");
+            md.push('\n');
         }
 
         md

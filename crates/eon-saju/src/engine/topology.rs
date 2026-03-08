@@ -27,7 +27,7 @@ impl QiTopology {
         
         // 1. 각 노드(오행)의 Capacity 계산
         for i in 0..5 {
-            let el = Element::from_index(i as i32);
+            let el = Element::from_index(i);
             let count = counts.iter().find(|(e, _)| *e == el).map(|(_, c)| *c).unwrap_or(0);
             nodes.push(QiNode {
                 element: el,

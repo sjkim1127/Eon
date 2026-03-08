@@ -48,6 +48,12 @@ pub struct QiRegisters {
     pub r4_water: f32,
 }
 
+impl Default for QiRegisters {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl QiRegisters {
     pub fn new() -> Self {
         Self {
@@ -233,11 +239,11 @@ impl SajuVM {
 
                     // 탈공 조건 1: 지지 충
                     for (_, p1, p2) in &dynamic.combined_relations.branch_clashes {
-                        if p1.contains(label) || p2.contains(label) {
-                            if (p1.contains(label)
+                        if (p1.contains(label) || p2.contains(label))
+                            && ((p1.contains(label)
                                 && self.get_branch_by_path(p1, dynamic) == Some(b))
                                 || (p2.contains(label)
-                                    && self.get_branch_by_path(p2, dynamic) == Some(b))
+                                    && self.get_branch_by_path(p2, dynamic) == Some(b)))
                             {
                                 is_escaped = true;
                                 let period = LuckPeriod::from_label(label);
@@ -248,7 +254,6 @@ impl SajuVM {
                                 ));
                                 break;
                             }
-                        }
                     }
 
                     // 탈공 조건 2: 합 (육합, 삼합, 방합)

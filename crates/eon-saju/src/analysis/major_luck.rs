@@ -173,11 +173,11 @@ impl MajorLuckAnalysis {
         let target_term_idx = match direction {
             LuckDirection::Forward => {
                 // 순행: 다음 절입 시각 (현재보다 큰 가장 가까운 짝수 인덱스)
-                if term_idx % 2 == 0 { (term_idx + 2) % 24 } else { (term_idx + 1) % 24 }
+                if term_idx.is_multiple_of(2) { (term_idx + 2) % 24 } else { (term_idx + 1) % 24 }
             },
             LuckDirection::Reverse => {
                 // 역행: 이전 절입 시각 (현재 또는 이전의 가장 가까운 짝수 인덱스)
-                if term_idx % 2 == 0 { term_idx } else { term_idx - 1 }
+                if term_idx.is_multiple_of(2) { term_idx } else { term_idx - 1 }
             }
         };
 

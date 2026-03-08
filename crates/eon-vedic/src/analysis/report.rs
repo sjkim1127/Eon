@@ -7,12 +7,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VedicAnalysisReport {
     pub primary_karakas: KarakaSummary,
+    #[serde(default)]
     pub house_summary: Vec<HouseRating>,
     pub dasha_focus: String,
+    #[serde(default)]
     pub dasha_timeline: Vec<crate::analysis::dasha::DashaPeriod>,
     pub nakshatra_info: String,
     pub overall_strength_score: f64,
     pub sade_sati: crate::analysis::gochara::SadeSatiPhase,
+    #[serde(default)]
     pub yogas: Vec<YogaResult>,
 }
 
@@ -193,7 +196,7 @@ impl VedicAnalysisReport {
                 ));
             }
         }
-        s.push_str("\n");
+        s.push('\n');
 
         s.push_str("## 🪐 Transit Alerts\n");
         match self.sade_sati {
@@ -202,7 +205,7 @@ impl VedicAnalysisReport {
             crate::analysis::gochara::SadeSatiPhase::Setting => s.push_str("- **Sade Sati (Setting)**: The intensity is fading as Saturn reaches the 2nd from Moon.\n"),
             crate::analysis::gochara::SadeSatiPhase::None => s.push_str("- No Sade Sati active. Normal transit rules apply.\n"),
         }
-        s.push_str("\n");
+        s.push('\n');
 
         s.push_str(&format!(
             "## 📊 Overall Chart Strength: {:.1}/600\n",

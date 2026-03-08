@@ -3,11 +3,13 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Compass, UserPlus } from "lucide-react";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 
-import { useAnalysis } from "./hooks";
+import { useBirthForm, useAstrologyAnalysis, useCompatibility } from "./hooks";
 import { useTabPrefetcher } from "./hooks/useTabPrefetcher";
+import { useAppStore } from "./store/useAppStore";
 import { ShootingStars, BirthDrawer, Sidebar, CompactBirthInfoBar, ExportActionButtons } from "./components/shared";
-
+import type { TabId } from "./types";
 
 const OverviewTab = lazy(() => import("./components/tabs/OverviewTab").then((m) => ({ default: m.OverviewTab })));
 const SajuTab = lazy(() => import("./components/tabs/SajuTab").then((m) => ({ default: m.SajuTab })));
@@ -30,22 +32,37 @@ function TabSkeleton() {
 }
 
 function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Route -> TabId mapping
+  const pathParts = location.pathname.split('/').filter(Boolean);
+  const currentTab: TabId = (pathParts.length > 0 ? pathParts[0] : "overview") as TabId;
+
+  const setActiveTab = (tab: TabId) => {
+    useAppStore.getState().setActiveTab(tab); // keep store in sync if needed elsewhere
+    navigate(`/${tab === 'overview' ? '' : tab}`);
+  };
+
+  // Global Store States
+  const errorMessage = useAppStore(state => state.errorMessage);
+
   const {
     birthData, setBirthData,
     selectedCity, handleCitySelect,
     isMale, setIsMale,
-    isDST,
+  } = useBirthForm();
+
+  const {
+    runAnalysis,
     report, sajuReport, transitReport, transitError,
     aiAuditReport,
-    loading, runAnalysis,
-    errorMessage,
-    activeTab, setActiveTab,
-    birthData2, setBirthData2,
-    selectedCity2, handleCitySelect2,
-    isMale2, setIsMale2,
-    compReport, compLoading,
-    runCompatibilityAnalysis,
-  } = useAnalysis();
+    loading,
+  } = useAstrologyAnalysis();
+
+  const { compReport } = useCompatibility();
+
+  const isDST = sajuReport?.is_dst ?? false;
 
   // 드로어 상태: 첫 로드시 자동 오픈 (온보딩)
   const [formOpen, setFormOpen] = useState(true);
@@ -53,7 +70,7 @@ function App() {
   const hasReport = !!(report || sajuReport);
 
   // 마르코프 체인 기반 탭 프리패칭 훅
-  const { prefetchTab } = useTabPrefetcher(activeTab, {
+  const { prefetchTab } = useTabPrefetcher(currentTab, {
     hasReport,
     hasTransit: !!transitReport,
     hasComp: !!compReport,
@@ -61,10 +78,10 @@ function App() {
 
   // 시간미상 → vedic_charts 탭 자동 회피
   useEffect(() => {
-    if (birthData.unknown_time && activeTab === "vedic_charts") {
+    if (birthData.unknown_time && currentTab === "vedic_charts") {
       setActiveTab("saju");
     }
-  }, [birthData.unknown_time, activeTab, setActiveTab]);
+  }, [birthData.unknown_time, currentTab]);
 
   return (
     <div className="h-screen w-full relative flex overflow-hidden">
@@ -72,7 +89,7 @@ function App() {
 
       {/* Sidebar */}
       <Sidebar
-        activeTab={activeTab}
+        activeTab={currentTab}
         setActiveTab={setActiveTab}
         onTabHover={prefetchTab}
         unknownTime={birthData.unknown_time}
@@ -139,38 +156,24 @@ function App() {
             </motion.div>
           ) : (
             <Suspense fallback={<TabSkeleton />}>
-              {activeTab === "saju" ? (
-                <SajuTab sajuReport={sajuReport} unknownTime={birthData.unknown_time} />
-              ) : activeTab === "vedic_charts" ? (
-                <VedicChartsTab report={report!} />
-              ) : activeTab === "strength" ? (
-                <StrengthTab sajuReport={sajuReport} unknownTime={birthData.unknown_time} />
-              ) : activeTab === "transit" ? (
-                <TransitTab transitReport={transitReport} transitError={transitError} />
-              ) : activeTab === "compatibility" ? (
-                <CompatibilityTab
-                  birthData2={birthData2}
-                  setBirthData2={setBirthData2}
-                  isMale2={isMale2}
-                  setIsMale2={setIsMale2}
-                  selectedCity2={selectedCity2}
-                  onCitySelect2={handleCitySelect2}
-                  compReport={compReport}
-                  compLoading={compLoading}
-                  onRunCompatibility={runCompatibilityAnalysis}
-                />
-              ) : activeTab === "destiny_tier" ? (
-                <DestinyTierTab
-                  sajuReport={sajuReport}
-                  report={report}
-                  transitReport={transitReport}
-                  unknownTime={birthData.unknown_time}
-                />
-              ) : activeTab === "ai_audit" ? (
-                <AiAuditTab aiAuditReport={aiAuditReport} />
-              ) : (
-                <OverviewTab report={report!} />
-              )}
+              <Routes location={location} key={location.pathname}>
+                <Route path="/" element={<OverviewTab report={report!} />} />
+                <Route path="/saju" element={<SajuTab sajuReport={sajuReport} unknownTime={birthData.unknown_time} />} />
+                <Route path="/vedic_charts" element={<VedicChartsTab report={report!} />} />
+                <Route path="/strength" element={<StrengthTab sajuReport={sajuReport} unknownTime={birthData.unknown_time} />} />
+                <Route path="/transit" element={<TransitTab transitReport={transitReport} transitError={transitError} />} />
+                <Route path="/compatibility" element={<CompatibilityTab />} />
+                <Route path="/destiny_tier" element={
+                  <DestinyTierTab
+                    sajuReport={sajuReport}
+                    report={report}
+                    transitReport={transitReport}
+                    unknownTime={birthData.unknown_time}
+                  />
+                } />
+                <Route path="/ai_audit" element={<AiAuditTab aiAuditReport={aiAuditReport} />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
             </Suspense>
           )}
         </AnimatePresence>

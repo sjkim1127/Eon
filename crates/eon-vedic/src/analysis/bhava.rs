@@ -44,7 +44,7 @@ impl BhavaEngine {
         // House 4: Jala (Watery) signs get 60.
         // House 7: Keeta (Insect) signs get 60.
         // House 10: Chatushpada (Quadruped) signs get 60.
-        let sign_at_house = ((chart.ascendant.rasi as u8 + house - 2) % 12) + 1;
+        let sign_at_house = ((chart.ascendant.rasi + house - 2) % 12) + 1;
         let dig_score = match house {
             1 => {
                 if Self::is_human_sign(sign_at_house) {

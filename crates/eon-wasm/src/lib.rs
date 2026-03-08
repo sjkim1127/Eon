@@ -33,6 +33,69 @@ use eon_core::{standard_meridian_from_tz, BirthInfo, Gender, Location};
 
 // ── 공통 헬퍼 함수 ─────────────────────────────────────────────────────────────
 
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+pub struct AnalysisArgs {
+    pub year: i32,
+    pub month: u32,
+    pub day: u32,
+    pub hour: u32,
+    pub minute: u32,
+    pub is_lunar: bool,
+    pub is_leap_month: bool,
+    pub lat: f64,
+    pub lon: f64,
+    pub timezone: String,
+}
+
+#[derive(Deserialize)]
+pub struct SajuArgs {
+    pub year: i32,
+    pub month: u32,
+    pub day: u32,
+    pub hour: u32,
+    pub minute: u32,
+    pub is_lunar: bool,
+    pub is_leap_month: bool,
+    pub lat: f64,
+    pub lon: f64,
+    pub timezone: String,
+    pub is_male: bool,
+    pub use_night_rat_hour: bool,
+}
+
+#[derive(Deserialize)]
+pub struct TransitArgs {
+    pub year: i32,
+    pub month: u32,
+    pub day: u32,
+    pub hour: u32,
+    pub minute: u32,
+    pub is_lunar: bool,
+    pub is_leap_month: bool,
+    pub lat: f64,
+    pub lon: f64,
+    pub timezone: String,
+    pub is_male: bool,
+    pub use_night_rat_hour: bool,
+    pub current_year: i32,
+    pub current_month: u32,
+    pub current_day: u32,
+}
+
+#[derive(Deserialize)]
+pub struct CompArgs {
+    pub year1: i32, pub month1: u32, pub day1: u32, pub hour1: u32, pub minute1: u32,
+    pub is_lunar1: bool, pub is_leap_month1: bool,
+    pub is_male1: bool, pub lon1: f64, pub lat1: f64, pub timezone1: String,
+    pub year2: i32, pub month2: u32, pub day2: u32, pub hour2: u32, pub minute2: u32,
+    pub is_lunar2: bool, pub is_leap_month2: bool,
+    pub is_male2: bool, pub lon2: f64, pub lat2: f64, pub timezone2: String,
+    pub use_night_rat_hour1: bool,
+    pub use_night_rat_hour2: bool,
+}
+
 /// `BirthInfo`를 생성하고 DST + 경도 기반 진태양시 보정을 적용합니다.
 ///
 /// `get_saju_analysis`, `get_transit_analysis` 양쪽에서 동일하게 반복되던
@@ -99,7 +162,7 @@ pub async fn get_vedic_analysis(
     lat: f64,
     lon: f64,
     timezone: &str,
-) -> Result<JsValue, JsError> {
+) -> Result<JsValue, JsValue> {
     let mut birth_info = if is_lunar {
         BirthInfo::lunar(year, month, day, hour, minute, is_leap_month)
     } else {
@@ -172,7 +235,7 @@ pub fn get_saju_analysis(
     lon: f64,
     lat: f64,
     timezone: &str,
-) -> Result<JsValue, JsError> {
+) -> Result<JsValue, JsValue> {
     let gender = if is_male {
         Gender::Male
     } else {
@@ -292,7 +355,7 @@ pub fn get_transit_analysis(
     current_year: i32,
     current_month: u32,
     current_day: u32,
-) -> Result<JsValue, JsError> {
+) -> Result<JsValue, JsValue> {
     let gender = if is_male {
         Gender::Male
     } else {
@@ -451,7 +514,7 @@ pub fn get_ai_audit(
     lon: f64,
     lat: f64,
     timezone: &str,
-) -> Result<JsValue, JsError> {
+) -> Result<JsValue, JsValue> {
     use eon_ai::DestinyAIAuditor;
 
     let gender = if is_male {
@@ -540,7 +603,7 @@ pub fn get_saju_compatibility(
     use_night_rat_hour2: bool,
     timezone1: &str,
     timezone2: &str,
-) -> Result<JsValue, JsError> {
+) -> Result<JsValue, JsValue> {
     let make_pillars = |y: i32,
                         mo: u32,
                         d: u32,
@@ -620,7 +683,7 @@ pub async fn get_vedic_compatibility(
     lon2: f64,
     timezone1: &str,
     timezone2: &str,
-) -> Result<JsValue, JsError> {
+) -> Result<JsValue, JsValue> {
     let calculator = VedicChartCalculator::new();
     let birth1 = if is_lunar1 {
         BirthInfo::lunar(year1, month1, day1, hour1, minute1, is_leap_month1)
