@@ -451,14 +451,25 @@ impl StrengthEngine {
         use crate::core::constants::*;
 
         // Sun: BPHS Ayana-based Chesta Bala
-        // Maximum when moving North (increasing declination), minimum when moving South
+        // 기본: 적위(declination)로 0~60 범위 산출
+        //   - 하지(+23.45°) = 60, 동지(-23.45°) = 0
+        // 방향 보정(Uttarayana/Dakshinayana):
+        //   - 동일 적위라도 북진(Uttarayana) 중인 태양이 더 강함
+        //   - 사이드리얼 기준: 마카라(270°)~미투나(90°) = Uttarayana → +5
+        //   - 카르카(90°)~다누(270°) = Dakshinayana → 0
         if pos.planet == VedicPlanet::Sun {
-            // Sun's declination ranges from -23.45° to +23.45°
-            // Chesta Bala = [(Declination + 23.45) / (2 * 23.45)] * 60
-            // This gives 0 at minimum declination, 60 at maximum
             let dec = pos.declination;
-            let chesta = ((dec + ECLIPTIC_OBLIQUITY) / (2.0 * ECLIPTIC_OBLIQUITY)) * 60.0;
-            return chesta.max(0.0).min(60.0);
+            let lon = pos.sidereal_deg;
+
+            // 기본 Ayana Chesta Bala (순수 적위 비율)
+            let base = ((dec + ECLIPTIC_OBLIQUITY) / (2.0 * ECLIPTIC_OBLIQUITY)) * 60.0;
+
+            // Uttarayana 방향 보정: 동지점(마카라 270°)→하지점(미투나 90°)
+            // 동일 적위에서 북진 중인 태양에 추가 강도를 부여
+            let is_uttarayana = lon >= 270.0 || lon < 90.0;
+            let direction_bonus = if is_uttarayana { 5.0 } else { 0.0 };
+
+            return (base + direction_bonus).clamp(0.0, 60.0);
         }
 
         // Moon: Paksha-based strength
