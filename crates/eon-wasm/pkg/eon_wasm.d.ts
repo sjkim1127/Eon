@@ -51,6 +51,14 @@ export class SwissEphError {
 export function calc_ut(jd_ut: number, planet: number, flags: number): Position;
 
 /**
+ * AI 감사 리포트 — WASM에서 호출 가능
+ *
+ * eon-ai의 `DestinyAIAuditor`를 사용하여 LLM 프롬프트(context_dump)와
+ * 생애 peak/valley 나이를 반환합니다. API 키 없이 Google AI Studio 등에 붙여넣기 가능.
+ */
+export function get_ai_audit(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string): any;
+
+/**
  * 사주(四柱) 분석 — WASM에서 호출 가능
  *
  * 생년월일시 + 성별 + 좌표 + 타임존을 받아 사주 분석 결과를 반환합니다.
@@ -96,6 +104,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
+  readonly get_ai_audit: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => [number, number, number];
   readonly get_saju_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => [number, number, number];
   readonly get_saju_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number, w: number, x: number, y: number, z: number) => [number, number, number];
   readonly get_transit_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number) => [number, number, number];

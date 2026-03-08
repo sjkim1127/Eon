@@ -113,10 +113,14 @@ export class WasmBackendClient implements BackendClient {
         );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async getAiAudit(_args: SajuArgs): Promise<unknown> {
-        console.warn("AI Audit is only available in the Tauri desktop app.");
-        return null;
+    async getAiAudit(args: SajuArgs): Promise<unknown> {
+        const wasm = await getWasmModule();
+        return (wasm as unknown as Record<string, (...a: unknown[]) => unknown>).get_ai_audit(
+            args.year, args.month, args.day, args.hour, args.minute,
+            args.is_lunar, args.is_leap_month, args.is_male,
+            args.use_night_rat_hour ?? false,
+            args.lon, args.lat, args.timezone
+        );
     }
 }
 

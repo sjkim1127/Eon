@@ -354,6 +354,35 @@ export function calc_ut(jd_ut, planet, flags) {
 }
 
 /**
+ * AI 감사 리포트 — WASM에서 호출 가능
+ *
+ * eon-ai의 `DestinyAIAuditor`를 사용하여 LLM 프롬프트(context_dump)와
+ * 생애 peak/valley 나이를 반환합니다. API 키 없이 Google AI Studio 등에 붙여넣기 가능.
+ * @param {number} year
+ * @param {number} month
+ * @param {number} day
+ * @param {number} hour
+ * @param {number} minute
+ * @param {boolean} is_lunar
+ * @param {boolean} is_leap_month
+ * @param {boolean} is_male
+ * @param {boolean} use_night_rat_hour
+ * @param {number} lon
+ * @param {number} lat
+ * @param {string} timezone
+ * @returns {any}
+ */
+export function get_ai_audit(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone) {
+    const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.get_ai_audit(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return takeFromExternrefTable0(ret[0]);
+}
+
+/**
  * 사주(四柱) 분석 — WASM에서 호출 가능
  *
  * 생년월일시 + 성별 + 좌표 + 타임존을 받아 사주 분석 결과를 반환합니다.
