@@ -1051,6 +1051,7 @@ mod tests {
             vimshopaka_scores: vec![],
             aspects: vec![],
             sav: crate::analysis::ashtakavarga::Sarvashtakavarga { points: [0; 12] },
+            bav: vec![],
             avasthas: vec![],
             analysis_report: None,
             panchanga: Panchanga {

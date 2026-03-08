@@ -52,6 +52,15 @@ export interface Sarvashtakavarga {
   points: number[]; // 12개 하우스별 합산 빈두 포인트
 }
 
+/** 행성별 빈나슈타카바르가 (BAV) 점수 */
+export interface BavEntry {
+  planet: string;        // 행성 이름
+  points: number[];      // raw 빈두 포인트 [12]
+  trikona_points: number[];   // Trikona Shodhana 후
+  shodhana_points: number[];  // Ekadhipatya Shodhana 후
+  sodya_pinda: number;        // 최종 Pinda 점수
+}
+
 /** 하우스(바바) 강점 상세 */
 export interface BhavaStrength {
   house: number;        // 1~12
@@ -132,6 +141,7 @@ export interface VedicChartData {
   planets: VedicPosition[];
   aspects: AspectRelation[];
   sav: Sarvashtakavarga;
+  bav: BavEntry[];    // 행성별 BAV [Sun~Saturn]
   house_cusps: number[];
   karakas: KarakaAssignment[];
   bhava_strengths: BhavaStrength[];
