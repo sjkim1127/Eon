@@ -433,6 +433,86 @@ pub fn get_transit_analysis(
     Ok(serde_wasm_bindgen::to_value(&result)?)
 }
 
+/// AI 감사 리포트 — WASM에서 호출 가능
+///
+/// eon-ai의 `DestinyAIAuditor`를 사용하여 LLM 프롬프트(context_dump)와
+/// 생애 peak/valley 나이를 반환합니다. API 키 없이 Google AI Studio 등에 붙여넣기 가능.
+#[wasm_bindgen]
+pub fn get_ai_audit(
+    year: i32,
+    month: u32,
+    day: u32,
+    hour: u32,
+    minute: u32,
+    is_lunar: bool,
+    is_leap_month: bool,
+    is_male: bool,
+    use_night_rat_hour: bool,
+    lon: f64,
+    lat: f64,
+    timezone: &str,
+) -> Result<JsValue, JsError> {
+    use eon_ai::DestinyAIAuditor;
+
+    let gender = if is_male {
+        eon_core::Gender::Male
+    } else {
+        eon_core::Gender::Female
+    };
+    let info = build_birth_info(
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        is_lunar,
+        is_leap_month,
+        gender,
+        lon,
+        lat,
+        timezone,
+    );
+
+    let is_dst = info.is_dst();
+    let dst_offset = info.dst_offset_hours();
+    let (cy, cm, cd, ch, cmin) = info.corrected_datetime();
+
+    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin)
+        .with_gender(gender)
+        .with_night_rat_hour(use_night_rat_hour);
+
+    let pillars = FourPillars::calculate(&input)
+        .map_err(|e| JsError::new(&format!("사주 계산 오류: {e}")))?;
+
+    let _ = (is_dst, dst_offset); // 미사용 변수 명시적 무시
+
+    let emulator = eon_saju::engine::emulator::LifePathEmulator::new(pillars.clone(), gender, year);
+    let life_report = emulator
+        .emulate()
+        .map_err(|e| JsError::new(&format!("시뮬레이션 오류: {e}")))?;
+
+    let context_dump = DestinyAIAuditor::build_agent_prompt(&pillars)
+        + "\n\n=== CORE DUMP ===\n"
+        + &DestinyAIAuditor::generate_context(&pillars, &life_report);
+
+    let peak_age = life_report.peak_age;
+    let valley_age = life_report.valley_age;
+
+    #[derive(serde::Serialize)]
+    struct AiAuditWasmResult {
+        context_dump: String,
+        peak_age: u32,
+        valley_age: u32,
+    }
+
+    let result = AiAuditWasmResult {
+        context_dump,
+        peak_age,
+        valley_age,
+    };
+    Ok(serde_wasm_bindgen::to_value(&result)?)
+}
+
 /// 사주 궁합 분석 - WASM에서 호출 가능
 #[wasm_bindgen]
 pub fn get_saju_compatibility(
