@@ -114,7 +114,7 @@ fn get_element(sign_idx: u8) -> u8 {
 fn is_odd_sign(sign_idx: u8) -> bool {
     // sign_idx 0 (Aries) -> 1st sign -> Odd
     // sign_idx 1 (Taurus) -> 2nd sign -> Even
-    (sign_idx + 1) % 2 != 0
+    !(sign_idx + 1).is_multiple_of(2)
 }
 
 /// D2 (Hora) - Wealth
@@ -128,9 +128,7 @@ fn calculate_hora(longitude: f64) -> u8 {
     
     if is_odd_sign(sign_idx) {
         if is_first_half { 5 } else { 4 } // Leo (5) / Cancer (4)
-    } else {
-        if is_first_half { 4 } else { 5 } // Cancer (4) / Leo (5)
-    }
+    } else if is_first_half { 4 } else { 5 }
 }
 
 /// D3 (Drekkana) - Siblings
@@ -367,13 +365,11 @@ fn calculate_trimsamsa(longitude: f64) -> u8 {
         else if sign_degree < 18.0 { 9 } // Jupiter (Sagittarius)
         else if sign_degree < 25.0 { 3 } // Mercury (Gemini)
         else { 7 } // Venus (Libra)
-    } else {
-        if sign_degree < 5.0 { 2 } // Venus (Taurus)
-        else if sign_degree < 12.0 { 6 } // Mercury (Virgo)
-        else if sign_degree < 20.0 { 12 } // Jupiter (Pisces)
-        else if sign_degree < 25.0 { 10 } // Saturn (Capricorn)
-        else { 8 } // Mars (Scorpio)
-    }
+    } else if sign_degree < 5.0 { 2 } // Venus (Taurus)
+    else if sign_degree < 12.0 { 6 } // Mercury (Virgo)
+    else if sign_degree < 20.0 { 12 } // Jupiter (Pisces)
+    else if sign_degree < 25.0 { 10 } // Saturn (Capricorn)
+    else { 8 }
 }
 
 /// D40 (Khavedamsa) - Auspicious/Inauspicious

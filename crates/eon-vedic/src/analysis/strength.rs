@@ -466,7 +466,7 @@ impl StrengthEngine {
 
             // Uttarayana 방향 보정: 동지점(마카라 270°)→하지점(미투나 90°)
             // 동일 적위에서 북진 중인 태양에 추가 강도를 부여
-            let is_uttarayana = lon >= 270.0 || lon < 90.0;
+            let is_uttarayana = !(90.0..270.0).contains(&lon);
             let direction_bonus = if is_uttarayana { 5.0 } else { 0.0 };
 
             return (base + direction_bonus).clamp(0.0, 60.0);
@@ -552,7 +552,7 @@ impl StrengthEngine {
         };
 
         // Shortest distance in houses (12 houses total)
-        let diff = (house as i32 - weak_house as i32).abs();
+        let diff = (house as i32 - weak_house).abs();
         let dist_houses = if diff > 6 { 12 - diff } else { diff };
 
         // Score = (Houses Dist / 6) * 60 = Houses Dist * 10
@@ -777,12 +777,10 @@ impl StrengthEngine {
                         } else {
                             (p2, p1)
                         }
+                    } else if size1 > size2 {
+                        (p1, p2)
                     } else {
-                        if size1 > size2 {
-                            (p1, p2)
-                        } else {
-                            (p2, p1)
-                        }
+                        (p2, p1)
                     };
 
                     // BPHS: Winner gains strength equal to the difference in their provisional Shadbalas

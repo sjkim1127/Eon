@@ -5,198 +5,20 @@ import { toast } from "sonner";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
 import { getNakshatraInfo, getVargaEffectiveLongitude, formatSiderealPosition, buildNakshatraMarkdownRows } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
+
+import { SouthIndianChart } from "../charts/SouthIndianChart";
+import { NorthIndianChart } from "../charts/NorthIndianChart";
+import { VargaSignPositionsTable } from "../vedic/VargaSignPositionsTable";
+import { BavHeatmap } from "../vedic/BavHeatmap";
+import { SavScoreChart } from "../vedic/SavScoreChart";
+import { VimshopakaTable } from "../vedic/VimshopakaTable";
+
 import { BhavaRadarSection } from "../sections/BhavaRadarSection";
 import { AspectsSection } from "../sections/AspectsSection";
 import { DashaTimelineSection } from "../sections/DashaTimelineSection";
 import { GocharaSection } from "../sections/GocharaSection";
 import { AvasthaKarakaSection } from "../sections/AvasthaKarakaSection";
 import { VargaNakshatraTable } from "../sections/VargaNakshatraTable";
-
-// ── 남인도 차트 상수 ────────────────────────────────────────────────────
-const SOUTH_GRID: (number | null)[][] = [
-  [12, 1, 2, 3],
-  [11, null, null, 4],
-  [10, null, null, 5],
-  [9, 8, 7, 6],
-];
-const PLANET_ABBR: Record<string, string> = {
-  Sun: "Su", Moon: "Mo", Mercury: "Me", Venus: "Ve", Mars: "Ma",
-  Jupiter: "Ju", Saturn: "Sa", Rahu: "Ra", Ketu: "Ke",
-};
-const SIGN_ABBR = ["", "Ar", "Ta", "Ge", "Cn", "Le", "Vi", "Li", "Sc", "Sg", "Cp", "Aq", "Pi"];
-
-function formatDeg(deg?: number) {
-  if (deg === undefined) return "";
-  const d = ((deg % 360) + 360) % 360;
-  return `${Math.floor(d % 30)}°`;
-}
-
-function SouthIndianChart({
-  lagnaRasi,
-  planetEntries,
-}: {
-  lagnaRasi: number;
-  planetEntries: { name: string; rasi: number; retro: boolean; deg?: number }[];
-}) {
-  const bySign: Record<number, string[]> = {};
-  if (!bySign[lagnaRasi]) bySign[lagnaRasi] = [];
-  bySign[lagnaRasi].unshift("Lg");
-  for (const p of planetEntries) {
-    if (!bySign[p.rasi]) bySign[p.rasi] = [];
-    const abbr = PLANET_ABBR[p.name] ?? p.name.substring(0, 2);
-    bySign[p.rasi].push(p.retro ? `${abbr}\u211e` : abbr);
-  }
-  return (
-    <div className="grid grid-cols-4 gap-1 w-full max-w-[280px] shrink-0">
-      {SOUTH_GRID.flatMap((row, ri) =>
-        row.map((signNum, ci) => {
-          if (signNum === null) return <div key={`${ri}-${ci}`} className="aspect-square" />;
-          const houseNum = ((signNum - lagnaRasi + 12) % 12) + 1;
-          const isLagna = signNum === lagnaRasi;
-
-          // Get the actual planet objects for this sign to show degrees
-          const planetsInSign = planetEntries.filter(p => p.rasi === signNum);
-          const hasLg = isLagna;
-          return (
-            <div
-              key={`${ri}-${ci}`}
-              className={`border min-h-[64px] rounded-lg p-1.5 flex flex-col ${isLagna ? "border-celestial-gold/50 bg-amber-500/[0.08]" : "border-white/10 bg-white/[0.03]"
-                }`}
-            >
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-[9px] text-white/35 font-mono">{SIGN_ABBR[signNum]}</span>
-                <span className="text-[9px] text-white/25 font-bold">{houseNum}</span>
-              </div>
-              <div className="flex flex-col gap-0.5 mt-1">
-                {hasLg && (
-                  <span className="text-[10px] font-bold leading-none text-celestial-gold">Lg</span>
-                )}
-                {planetsInSign.map((p, i) => {
-                  const abbr = PLANET_ABBR[p.name] ?? p.name.substring(0, 2);
-                  const isRetro = p.retro;
-                  return (
-                    <div key={i} className="flex items-center gap-1">
-                      <span className={`text-[10px] font-bold leading-none ${isRetro ? "text-amber-300" : "text-white/80"}`}>
-                        {abbr}{isRetro && "℞"}
-                      </span>
-                      {p.deg !== undefined && (
-                        <span className="text-[8px] text-white/40 leading-none">{formatDeg(p.deg)}</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })
-      )}
-    </div>
-  );
-}
-
-const NORTH_HOUSE_CENTERS = [
-  null,
-  { x: 200, y: 90 },  // H1
-  { x: 90, y: 50 },   // H2
-  { x: 50, y: 90 },   // H3
-  { x: 90, y: 200 },  // H4
-  { x: 50, y: 310 },  // H5
-  { x: 90, y: 350 },  // H6
-  { x: 200, y: 310 }, // H7
-  { x: 310, y: 350 }, // H8
-  { x: 350, y: 310 }, // H9
-  { x: 310, y: 200 }, // H10
-  { x: 350, y: 90 },  // H11
-  { x: 310, y: 50 },  // H12
-];
-
-const NORTH_SIGN_POS = [
-  null,
-  { x: 195, y: 175 }, // H1 bottom
-  { x: 170, y: 25 },  // H2 
-  { x: 25, y: 170 },  // H3 
-  { x: 175, y: 195 }, // H4 right
-  { x: 25, y: 235 },  // H5 
-  { x: 170, y: 385 }, // H6 
-  { x: 195, y: 235 }, // H7 top
-  { x: 240, y: 385 }, // H8 
-  { x: 385, y: 235 }, // H9 
-  { x: 235, y: 195 }, // H10 left
-  { x: 385, y: 170 }, // H11
-  { x: 240, y: 25 },  // H12
-];
-
-function NorthIndianChart({
-  lagnaRasi,
-  planetEntries,
-}: {
-  lagnaRasi: number;
-  planetEntries: { name: string; rasi: number; retro: boolean; deg?: number }[];
-}) {
-  const byHouse: Record<number, typeof planetEntries> = {};
-  for (const p of planetEntries) {
-    const houseNum = ((p.rasi - lagnaRasi + 12) % 12) + 1;
-    if (!byHouse[houseNum]) byHouse[houseNum] = [];
-    byHouse[houseNum].push(p);
-  }
-
-  return (
-    <div className="relative w-full max-w-[280px] shrink-0 aspect-square">
-      <svg viewBox="0 0 400 400" className="w-full h-full overflow-hidden rounded-lg bg-white/[0.02] border border-white/10">
-        <g stroke="rgba(255,255,255,0.15)" strokeWidth="2" fill="none">
-          <rect x="0" y="0" width="400" height="400" />
-          <line x1="0" y1="0" x2="400" y2="400" />
-          <line x1="400" y1="0" x2="0" y2="400" />
-          <line x1="200" y1="0" x2="400" y2="200" />
-          <line x1="400" y1="200" x2="200" y2="400" />
-          <line x1="200" y1="400" x2="0" y2="200" />
-          <line x1="0" y1="200" x2="200" y2="0" />
-        </g>
-
-        {/* Draw contents for all 12 houses */}
-        {NORTH_HOUSE_CENTERS.slice(1).map((center, index) => {
-          if (!center) return null;
-          const houseNum = index + 1;
-          const signNum = ((lagnaRasi + houseNum - 2) % 12) + 1;
-          const pList = byHouse[houseNum] || [];
-          const isLagna = houseNum === 1;
-          const signPos = NORTH_SIGN_POS[houseNum] || { x: center.x, y: center.y };
-
-          return (
-            <g key={`h${houseNum}`}>
-              {/* Sign Number */}
-              <text x={signPos.x} y={signPos.y} fill="rgba(255,255,255,0.3)" fontSize="14" fontWeight="bold">
-                {signNum}
-              </text>
-
-              {/* Planets */}
-              <foreignObject x={center.x - 45} y={center.y - 40} width="90" height="80">
-                <div className="w-full h-full flex flex-col items-center justify-center pointer-events-none">
-                  <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
-                    {isLagna && <span className="text-[11px] font-bold text-celestial-gold">Lg</span>}
-                    {pList.map((p, i) => {
-                      const abbr = PLANET_ABBR[p.name] ?? p.name.substring(0, 2);
-                      return (
-                        <div key={i} className="flex items-center gap-1">
-                          <span className={`text-[11px] font-bold leading-none ${p.retro ? "text-amber-300" : "text-white/80"}`}>
-                            {abbr}{p.retro && "℞"}
-                          </span>
-                          {p.deg !== undefined && (
-                            <span className="text-[9px] text-white/40 leading-none">{formatDeg(p.deg)}</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </foreignObject>
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
 
 interface VedicChartsTabProps {
   report: VedicAnalysisResult;
@@ -225,7 +47,6 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
     const d1Report = vargaReports?.reports?.["rasi"];
 
     if (d1Report?.rows?.length) {
-      // 백엔드 데이터가 있으면 공통 포맷터 사용
       const mdRows = buildNakshatraMarkdownRows(d1Report.rows, false);
       return [
         "## D1 낙샤트라 리포트 (전체 행성)",
@@ -235,7 +56,6 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       ].join("\n");
     }
 
-    // 폴백: 프론트엔드 계산
     const allPoints = [
       ...planets.map((p: any) => ({ name: p.planet as string, deg: p.sidereal_deg as number, retro: p.is_retrograde as boolean, combust: p.is_combust as boolean })),
       { name: "ASC", deg: ascendant?.sidereal_deg as number, retro: false, combust: false },
@@ -592,55 +412,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
           <span className="flex items-center gap-1"><span className="px-1.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40 font-bold">☀</span> 소각</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="text-xs">
-            <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left text-white/40 font-bold uppercase tracking-wider pb-3 pr-3 whitespace-nowrap">행성</th>
-                {VARGA_DEFS.map(v => (
-                  <th key={v.id} className="text-center text-white/40 font-bold pb-3 px-2 whitespace-nowrap">
-                    <span className="text-white/70">{v.label}</span>
-                  </th>
-                ))}
-              </tr>
-              <tr className="border-b border-white/5">
-                <th className="pb-2 pr-3"></th>
-                {VARGA_DEFS.map(v => (
-                  <th key={v.id} className="text-center text-white/25 font-normal pb-2 px-2 whitespace-nowrap text-[10px]">
-                    {v.name.substring(0, 8)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {[
-                ...planets.map((p: any) => ({ name: p.planet, data: p, retro: p.is_retrograde, combust: p.is_combust })),
-                ...(ascendant ? [{ name: "ASC", data: ascendant, retro: false, combust: false }] : []),
-              ].map((row, i) => (
-                <tr key={i} className="hover:bg-white/3 transition-colors">
-                  <td className="py-2 pr-3 font-bold text-white whitespace-nowrap">
-                    {row.name}
-                    {row.retro && <span className="ml-1 text-[9px] px-1 rounded bg-amber-500/20 text-amber-400">℞</span>}
-                    {row.combust && <span className="ml-0.5 text-[9px] px-1 rounded bg-orange-500/20 text-orange-400">☀</span>}
-                  </td>
-                  {VARGA_DEFS.map(v => {
-                    const signNum: number = row.data?.[v.key];
-                    const signName = SIGN_NAMES[signNum] ?? "—";
-                    return (
-                      <td key={v.id} className="py-2 px-2 text-center whitespace-nowrap" title={`${row.name} in ${v.name}: ${signName}`}>
-                        <span className="inline-block min-w-[24px] text-white/70 font-mono">
-                          {signNum ?? "—"}
-                        </span>
-                        <br />
-                        <span className="text-[9px] text-white/30">{signName.substring(0, 3)}</span>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <VargaSignPositionsTable planets={planets} ascendant={ascendant} />
       </div>
 
       {/* ── 행성별 빈나슈타카바르가 (BAV) 히트맵 ────────────── */}
@@ -653,69 +425,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
           <p className="text-xs text-white/40 mb-6">
             각 행성이 12개 하우스에 기여하는 빈두 포인트입니다. 녹색에 가까울수록 강한 하우스를 지원합니다.
           </p>
-          <div className="overflow-x-auto">
-            <table className="text-xs w-full">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left text-white/40 font-bold pb-3 pr-4 whitespace-nowrap">행성</th>
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <th key={i} className="text-center text-white/40 font-bold pb-3 px-1.5 whitespace-nowrap">H{i + 1}</th>
-                  ))}
-                  <th className="text-center text-white/40 font-bold pb-3 pl-3 whitespace-nowrap">Pinda</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {report.chart.bav.map((entry) => {
-                  const pts = entry.points as number[];
-                  const maxPt = Math.max(...pts, 1);
-                  return (
-                    <tr key={entry.planet} className="hover:bg-white/[0.03] transition-colors">
-                      <td className="py-2 pr-4 font-bold text-white whitespace-nowrap">{entry.planet}</td>
-                      {pts.map((pt, hi) => {
-                        const pct = pt / maxPt;
-                        const bg = pt >= 5
-                          ? `rgba(74,222,128,${0.15 + pct * 0.3})`
-                          : pt >= 3
-                            ? `rgba(250,204,21,${0.15 + pct * 0.25})`
-                            : `rgba(239,68,68,${0.1 + pct * 0.2})`;
-                        const textColor = pt >= 5 ? "text-green-300" : pt >= 3 ? "text-yellow-300" : pt === 0 ? "text-white/15" : "text-red-300";
-                        return (
-                          <td
-                            key={hi}
-                            className={`py-2 px-1.5 text-center font-mono font-bold rounded transition-all ${textColor}`}
-                            style={{ background: bg }}
-                            title={`${entry.planet} → H${hi + 1}: ${pt} bindu`}
-                          >
-                            {pt}
-                          </td>
-                        );
-                      })}
-                      <td className="py-2 pl-3 text-center font-mono text-white/50 text-[11px]">{entry.sodya_pinda}</td>
-                    </tr>
-                  );
-                })}
-                {/* 합산(SAV) 행 */}
-                {report.chart.sav?.points && (
-                  <tr className="border-t border-white/20">
-                    <td className="py-2 pr-4 font-bold text-celestial-gold whitespace-nowrap">SAV</td>
-                    {(report.chart.sav.points as number[]).map((pt, hi) => {
-                      const isStrong = pt >= 28;
-                      const isWeak = pt < 25;
-                      return (
-                        <td
-                          key={hi}
-                          className={`py-2 px-1.5 text-center font-mono font-bold ${isStrong ? "text-green-400" : isWeak ? "text-red-400" : "text-white/70"}`}
-                        >
-                          {pt}
-                        </td>
-                      );
-                    })}
-                    <td className="py-2 pl-3 text-center text-white/25 text-[10px]">—</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <BavHeatmap bav={report.chart.bav} savPoints={report.chart.sav?.points as number[]} />
         </div>
       )}
 
@@ -727,24 +437,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
             SAV (사르바아슈타카바르가) — 하우스별 에너지 점수
           </h5>
           <p className="text-xs text-white/40 mb-6">각 하우스의 빈두 포인트 합산입니다. 28점 이상이면 강력한 하우스, 25점 미만이면 약한 하우스로 볼 수 있습니다.</p>
-          <div className="grid grid-cols-12 gap-2 items-end h-48">
-            {sav.points.map((pt: number, i: number) => {
-              const maxPt = Math.max(...sav.points, 1);
-              const pct = (pt / maxPt) * 100;
-              const isStrong = pt >= 28;
-              const isWeak = pt < 25;
-              return (
-                <div key={i} className="flex flex-col items-center gap-1 h-full justify-end">
-                  <span className={`text-[10px] font-bold ${isStrong ? 'text-green-400' : isWeak ? 'text-red-400' : 'text-white/60'}`}>{pt}</span>
-                  <div
-                    className={`w-full rounded-t-lg transition-all ${isStrong ? 'bg-green-500/60' : isWeak ? 'bg-red-500/40' : 'bg-celestial-cyan/40'}`}
-                    style={{ height: `${pct}%`, minHeight: '4px' }}
-                  />
-                  <span className="text-[9px] text-white/30 font-bold">H{i + 1}</span>
-                </div>
-              );
-            })}
-          </div>
+          <SavScoreChart points={sav.points} />
         </div>
       )}
 
@@ -756,44 +449,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
             빔쇼파카 발라 — 행성별 종합 힘 (20점 만점)
           </h5>
           <p className="text-xs text-white/40 mb-6">각 행성이 여러 분할 차트(D1~D60)에서 얼마나 좋은 위치에 있는지를 종합한 점수입니다. 15점 이상이면 매우 강력합니다.</p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">행성</th>
-                  <th className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">6분할 점수</th>
-                  <th className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">16분할 점수</th>
-                  <th className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3">힘 그래프</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {vimshopaka.map(([planet, score]: [string, any], i: number) => {
-                  const shad = score?.shadvarga_score ?? 0;
-                  const shod = score?.shodashavarga_score ?? 0;
-                  const avg = (shad + shod) / 2;
-                  const pct = (avg / 20) * 100;
-                  return (
-                    <tr key={i} className="hover:bg-white/[0.03] transition-colors">
-                      <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">{planet}</td>
-                      <td className="py-2.5 pr-4 text-celestial-cyan font-mono">{shad.toFixed(1)}</td>
-                      <td className="py-2.5 pr-4 text-celestial-purple font-mono">{shod.toFixed(1)}</td>
-                      <td className="py-2.5 pr-4 w-48">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-white/10 h-2 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all ${avg >= 15 ? 'bg-green-500' : avg >= 10 ? 'bg-celestial-cyan' : avg >= 5 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-white/50 font-mono w-8 text-right">{avg.toFixed(1)}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <VimshopakaTable vimshopaka={vimshopaka} />
         </div>
       )}
 

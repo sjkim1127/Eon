@@ -2,31 +2,12 @@ import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { ASHTA_LABELS, ASHTA_MAX } from "../../constants";
 import { BirthInputForm } from "../shared/BirthInputForm";
-import type { BirthData, CompReport } from "../../types";
+import { useCompatibility, useBirthForm } from "../../hooks";
 
-interface CompatibilityTabProps {
-  birthData2: BirthData;
-  setBirthData2: React.Dispatch<React.SetStateAction<BirthData>>;
-  isMale2: boolean;
-  setIsMale2: (v: boolean) => void;
-  selectedCity2: string;
-  onCitySelect2: (city: { name: string; lat: number; lon: number; timezone: string }) => void;
-  compReport: CompReport | null;
-  compLoading: boolean;
-  onRunCompatibility: () => void;
-}
+export function CompatibilityTab() {
+  const { birthData2, setBirthData2, selectedCity2, handleCitySelect2, isMale2, setIsMale2 } = useBirthForm();
+  const { runCompatibilityAnalysis, compReport, compLoading } = useCompatibility();
 
-export function CompatibilityTab({
-  birthData2,
-  setBirthData2,
-  isMale2,
-  setIsMale2,
-  selectedCity2,
-  onCitySelect2,
-  compReport,
-  compLoading,
-  onRunCompatibility,
-}: CompatibilityTabProps) {
   return (
     <motion.div key="compatibility" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
       <h2 className="text-2xl font-bold text-white">궁합 분석</h2>
@@ -38,12 +19,12 @@ export function CompatibilityTab({
           birthData={birthData2}
           setBirthData={setBirthData2}
           selectedCity={selectedCity2}
-          onCitySelect={onCitySelect2}
+          onCitySelect={handleCitySelect2}
           isMale={isMale2}
           setIsMale={setIsMale2}
           isDST={false}
           loading={compLoading}
-          onAnalysis={onRunCompatibility}
+          onAnalysis={runCompatibilityAnalysis}
           sajuReport={null}
           compact
           submitLabel="궁합 분석 시작"

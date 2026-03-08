@@ -137,7 +137,7 @@ impl LunarCalendar {
 
     /// 음력을 양력으로 변환
     pub fn to_solar(year: i32, month: u32, day: u32, is_leap: bool) -> Option<NaiveDate> {
-        let mut test_date = NaiveDate::from_ymd_opt(year, month as u32, 1)
+        let test_date = NaiveDate::from_ymd_opt(year, month, 1)
             .unwrap_or(NaiveDate::from_ymd_opt(year, 1, 1).unwrap());
         
         // 해당 연도 전후 6개월 범위를 스캔 (음력 1월이 양력 2월경이므로 폭넓게 스캔)

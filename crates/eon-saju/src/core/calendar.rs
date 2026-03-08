@@ -138,7 +138,7 @@ pub fn get_solar_term_time(dt: DateTime<Utc>, term: SolarTerm) -> DateTime<Utc> 
     // SolarTerm::index: 0=입춘, 1=경칩...
     // 월의 시작 절기는 짝수 인덱스
     engine
-        .find_solar_term_time(dt, (term.index() * 2) as u8)
+        .find_solar_term_time(dt, (term.index() * 2))
         .unwrap_or(dt)
 }
 
@@ -165,7 +165,7 @@ pub fn get_month_branch_index(
     // Timezone offset 적용하여 FixedOffset 생성
     let offset_secs = tz_offset_minutes * 60;
     let tz = FixedOffset::east_opt(offset_secs)
-        .ok_or_else(|| CalendarError::InvalidTimezone(tz_offset_minutes))?;
+        .ok_or(CalendarError::InvalidTimezone(tz_offset_minutes))?;
 
     // 로컬 시간 생성 후 UTC로 변환
     // FixedOffset은 DST 변화가 없으므로 Ambiguous는 발생하지 않음

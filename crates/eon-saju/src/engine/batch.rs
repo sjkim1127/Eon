@@ -31,7 +31,7 @@ impl BatchSimulator {
         let years: Vec<i32> = (start_year..start_year + 1000).collect();
 
         let mapper = |&year: &i32| {
-            let age = (year - start_year).abs() as u32;
+            let age = (year - start_year).unsigned_abs();
             let yearly_ganzi = GanZi::from_year(year);
             let major_ganzi = major_luck
                 .at_age(age)
@@ -62,7 +62,7 @@ impl BatchSimulator {
         let years: Vec<i32> = (start_year..=end_year).collect();
 
         let mapper = |&year: &i32| {
-            let age = (year - start_year).abs() as u32;
+            let age = (year - start_year).unsigned_abs();
             let yearly_ganzi = GanZi::from_year(year);
             let major_ganzi = major_luck
                 .at_age(age)

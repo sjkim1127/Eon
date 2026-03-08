@@ -1,0 +1,46 @@
+--- crates/eon-wasm/src/lib.rs
++++ crates/eon-wasm/src/lib.rs
+@@ -35,6 +35,46 @@
+ 
+ // ── 공통 헬퍼 함수 ─────────────────────────────────────────────────────────────
+ 
++#[derive(serde::Deserialize)]
++pub struct AnalysisArgs {
++    pub year: i32,
++    pub month: u32,
++    pub day: u32,
++    pub hour: u32,
++    pub minute: u32,
++    pub is_lunar: bool,
++    pub is_leap_month: bool,
++    pub lat: f64,
++    pub lon: f64,
++    pub timezone: String,
++}
++
++#[derive(serde::Deserialize)]
++pub struct SajuArgs {
++    #[serde(flatten)]
++    pub base: AnalysisArgs,
++    pub is_male: bool,
++    pub use_night_rat_hour: bool,
++}
++
++#[derive(serde::Deserialize)]
++pub struct TransitArgs {
++    #[serde(flatten)]
++    pub saju: SajuArgs,
++    pub current_year: i32,
++    pub current_month: u32,
++    pub current_day: u32,
++}
++
++#[derive(serde::Deserialize)]
++pub struct CompArgs {
++    pub p1: SajuArgs,
++    pub p2: SajuArgs,
++}
++
+ /// `BirthInfo`를 생성하고 DST + 경도 기반 진태양시 보정을 적용합니다.
+ ///
+ /// `get_saju_analysis`, `get_transit_analysis` 양쪽에서 동일하게 반복되던

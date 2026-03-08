@@ -5,6 +5,7 @@ import type {
     TransitResult,
     CompatibilityAudit,
     AshtaKutaResult,
+    AiAuditReport,
 } from "../types";
 
 export interface AnalysisArgs {
@@ -39,25 +40,30 @@ export interface BackendClient {
     getTransitAnalysis(args: TransitArgs): Promise<TransitResult>;
     getSajuCompatibility(args: CompArgs): Promise<CompatibilityAudit>;
     getVedicCompatibility(args: CompArgs): Promise<AshtaKutaResult>;
-    getAiAudit(args: SajuArgs): Promise<unknown>;
+    getAiAudit(args: SajuArgs): Promise<AiAuditReport>;
 }
 
-// WASM Module Loading Cache — init(default) 호출 후 사용해야 __wbindgen_malloc 등 사용 가능
+// WASM Module Loading Cache
 let wasmPromiseCache: Promise<typeof import("eon-wasm")> | null = null;
-const getWasmModule = async () => {
+
+const getWasmModule = async (): Promise<typeof import("eon-wasm")> => {
     if (!wasmPromiseCache) {
         wasmPromiseCache = (async () => {
-            const mod = await import("eon-wasm");
-            const init = (mod as { default?: () => Promise<unknown> }).default;
-            if (typeof init === "function") {
-                await init();
+            try {
+                const mod = await import("eon-wasm");
+                // Ensure the default init function is called if present
+                if (mod.default && typeof mod.default === "function") {
+                    await mod.default();
+                }
+                return mod;
+            } catch (err) {
+                console.error("Failed to load or initialize WASM module:", err);
+                throw new Error("WASM module initialization failed.");
             }
-            return mod;
         })();
     }
     return wasmPromiseCache;
 };
-
 
 export class WasmBackendClient implements BackendClient {
     async getVedicAnalysis(args: AnalysisArgs): Promise<VedicAnalysisResult> {
@@ -65,7 +71,7 @@ export class WasmBackendClient implements BackendClient {
         return wasm.get_vedic_analysis(
             args.year, args.month, args.day, args.hour, args.minute,
             args.is_lunar, args.is_leap_month, args.lat, args.lon, args.timezone
-        );
+        ) as Promise<VedicAnalysisResult>;
     }
 
     async getSajuAnalysis(args: SajuArgs): Promise<SajuAnalysisResult> {
@@ -75,7 +81,7 @@ export class WasmBackendClient implements BackendClient {
             args.is_lunar, args.is_leap_month, args.is_male,
             args.use_night_rat_hour ?? false,
             args.lon, args.lat, args.timezone
-        ) as SajuAnalysisResult;
+        ) as Promise<SajuAnalysisResult>;
     }
 
     async getTransitAnalysis(args: TransitArgs): Promise<TransitResult> {
@@ -86,7 +92,7 @@ export class WasmBackendClient implements BackendClient {
             args.use_night_rat_hour ?? false,
             args.lon, args.lat, args.timezone,
             args.current_year, args.current_month, args.current_day
-        );
+        ) as Promise<TransitResult>;
     }
 
     async getSajuCompatibility(args: CompArgs): Promise<CompatibilityAudit> {
@@ -99,7 +105,7 @@ export class WasmBackendClient implements BackendClient {
             args.is_lunar2, args.is_leap_month2, args.is_male2, args.lon2, args.lat2,
             args.use_night_rat_hour2 ?? false,
             args.timezone1, args.timezone2
-        );
+        ) as Promise<CompatibilityAudit>;
     }
 
     async getVedicCompatibility(args: CompArgs): Promise<AshtaKutaResult> {
@@ -110,17 +116,17 @@ export class WasmBackendClient implements BackendClient {
             args.year2, args.month2, args.day2, args.hour2, args.minute2,
             args.is_lunar2, args.is_leap_month2, args.lat2, args.lon2,
             args.timezone1, args.timezone2
-        );
+        ) as Promise<AshtaKutaResult>;
     }
 
-    async getAiAudit(args: SajuArgs): Promise<unknown> {
+    async getAiAudit(args: SajuArgs): Promise<AiAuditReport> {
         const wasm = await getWasmModule();
-        return (wasm as unknown as Record<string, (...a: unknown[]) => unknown>).get_ai_audit(
+        return (wasm as any).get_ai_audit(
             args.year, args.month, args.day, args.hour, args.minute,
             args.is_lunar, args.is_leap_month, args.is_male,
             args.use_night_rat_hour ?? false,
             args.lon, args.lat, args.timezone
-        );
+        ) as Promise<AiAuditReport>;
     }
 }
 
@@ -145,7 +151,7 @@ export class TauriBackendClient implements BackendClient {
         return invoke("get_vedic_compatibility", args as unknown as Record<string, unknown>);
     }
 
-    async getAiAudit(args: SajuArgs): Promise<unknown> {
+    async getAiAudit(args: SajuArgs): Promise<AiAuditReport> {
         return invoke("get_ai_audit", args as unknown as Record<string, unknown>);
     }
 }

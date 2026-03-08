@@ -95,7 +95,7 @@ impl DeukRyeong {
         Self {
             acquired,
             month_branch,
-            month_element: month_element,
+            month_element,
             day_master_element: day_element,
         }
     }
@@ -296,7 +296,7 @@ impl DeukSi {
         Self {
             acquired,
             hour_branch,
-            hour_element: hour_element,
+            hour_element,
             day_master_element: day_element,
         }
     }
@@ -508,7 +508,7 @@ impl StrengthAnalysis {
         
         // 강약 판정
         let strength_type = match acquired_count {
-            4 | 3 | 2 => StrengthType::Strong,
+            2..=4 => StrengthType::Strong,
             1 | 0 => StrengthType::Weak,
             _ => StrengthType::Balanced,
         };

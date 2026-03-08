@@ -216,7 +216,7 @@ const YIN_STEM_CHANGSHENG: [EarthlyBranch; 5] = [
 /// 일간과 지지로부터 12운성 계산
 pub fn calculate_twelve_stage(day_stem: HeavenlyStem, branch: EarthlyBranch) -> TwelveStage {
     // 양간과 음간 구분
-    let is_yang = day_stem.index() % 2 == 0;
+    let is_yang = day_stem.index().is_multiple_of(2);
     
     // 오행별 인덱스 (甲乙=0, 丙丁=1, 戊己=2, 庚辛=3, 壬癸=4)
     let element_idx = (day_stem.index() / 2) as usize;
