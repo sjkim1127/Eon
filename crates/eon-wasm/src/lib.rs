@@ -29,7 +29,40 @@ use eon_saju::engine::vm::SajuVM;
 use eon_saju::report::SajuReport;
 
 // === Core imports (BirthInfo, Location, DST) ===
-use eon_core::{BirthInfo, Gender, Location, standard_meridian_from_tz};
+use eon_core::{standard_meridian_from_tz, BirthInfo, Gender, Location};
+
+// ── 공통 헬퍼 함수 ─────────────────────────────────────────────────────────────
+
+/// `BirthInfo`를 생성하고 DST + 경도 기반 진태양시 보정을 적용합니다.
+///
+/// `get_saju_analysis`, `get_transit_analysis` 양쪽에서 동일하게 반복되던
+/// BirthInfo 구성 로직을 단일 함수로 추출하여 중복을 제거합니다.
+fn build_birth_info(
+    year: i32,
+    month: u32,
+    day: u32,
+    hour: u32,
+    minute: u32,
+    is_lunar: bool,
+    is_leap: bool,
+    gender: Gender,
+    lon: f64,
+    lat: f64,
+    timezone: &str,
+) -> BirthInfo {
+    let location = Location::new("출생지", lat, lon, standard_meridian_from_tz(timezone));
+    let info = if is_lunar {
+        BirthInfo::lunar(year, month, day, hour, minute, is_leap)
+    } else {
+        BirthInfo::solar(year, month, day, hour, minute)
+    };
+    info.with_timezone(timezone)
+        .with_location(location)
+        .with_true_solar_time(true)
+        .with_gender(gender)
+}
+
+// ── 사주 분석 결과 래퍼 ────────────────────────────────────────────────────────
 
 /// DST 메타데이터 + 고급 분석을 포함한 사주 분석 결과 래퍼
 #[derive(Serialize)]
@@ -47,8 +80,6 @@ struct SajuAnalysisResult {
     relationships: RelationshipAnalysis,
     void_analysis: VoidAnalysis,
     complexity: Option<ComplexityAnalysis>,
-    /// serde_wasm_bindgen workaround: timeline은 JSON 문자열로 전달
-    timeline_json: String,
 }
 
 #[wasm_bindgen]
@@ -149,17 +180,19 @@ pub fn get_saju_analysis(
     };
 
     // BirthInfo로 DST + 진태양시 보정
-    let location = Location::new("출생지", lat, lon, standard_meridian_from_tz(timezone));
-    let mut birth_info = if is_lunar {
-        BirthInfo::lunar(year, month, day, hour, minute, is_leap_month)
-    } else {
-        BirthInfo::solar(year, month, day, hour, minute)
-    };
-    birth_info = birth_info
-        .with_timezone(timezone)
-        .with_location(location)
-        .with_true_solar_time(true)
-        .with_gender(gender);
+    let birth_info = build_birth_info(
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        is_lunar,
+        is_leap_month,
+        gender,
+        lon,
+        lat,
+        timezone,
+    );
 
     let is_dst = birth_info.is_dst();
     let dst_offset = birth_info.dst_offset_hours();
@@ -215,10 +248,6 @@ pub fn get_saju_analysis(
         }
     }
 
-    // timeline을 JSON 문자열로 직렬화 (serde_wasm_bindgen 우회)
-    let timeline_json =
-        serde_json::to_string(&report.timeline).unwrap_or_else(|_| "[]".to_string());
-
     // 결과 래퍼
     let result = SajuAnalysisResult {
         report,
@@ -234,10 +263,15 @@ pub fn get_saju_analysis(
         relationships,
         void_analysis,
         complexity,
-        timeline_json,
     };
 
-    Ok(serde_wasm_bindgen::to_value(&result)?)
+    // json_compatible: Vec<YearlyScore> 등 timeline 타입을 네이티브 JS 객체로 직렬화
+    // (기존 timeline_json: String 우회 방식 제거 → 타입 안정성 & JSON.parse 비용 제거)
+    use serde::Serialize as _;
+    let js_val = result
+        .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+        .map_err(|e| JsError::new(&format!("직렬화 오류: {e}")))?;
+    Ok(js_val)
 }
 
 /// 현재 운세(세운/월운/일운) 분석 — WASM에서 호출 가능
@@ -265,17 +299,19 @@ pub fn get_transit_analysis(
         Gender::Female
     };
 
-    let location = Location::new("출생지", lat, lon, standard_meridian_from_tz(timezone));
-    let mut birth_info = if is_lunar {
-        BirthInfo::lunar(year, month, day, hour, minute, is_leap_month)
-    } else {
-        BirthInfo::solar(year, month, day, hour, minute)
-    };
-    birth_info = birth_info
-        .with_timezone(timezone)
-        .with_location(location)
-        .with_true_solar_time(true)
-        .with_gender(gender);
+    let birth_info = build_birth_info(
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        is_lunar,
+        is_leap_month,
+        gender,
+        lon,
+        lat,
+        timezone,
+    );
 
     let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
     // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
@@ -439,17 +475,7 @@ pub fn get_saju_compatibility(
                         tz: &str|
      -> Result<FourPillars, JsError> {
         let gender = if male { Gender::Male } else { Gender::Female };
-        let location = Location::new("출생지", lat, lon, standard_meridian_from_tz(tz));
-        let mut birth_info = if lunar {
-            BirthInfo::lunar(y, mo, d, h, mi, leap)
-        } else {
-            BirthInfo::solar(y, mo, d, h, mi)
-        };
-        birth_info = birth_info
-            .with_timezone(tz)
-            .with_location(location)
-            .with_true_solar_time(true)
-            .with_gender(gender);
+        let birth_info = build_birth_info(y, mo, d, h, mi, lunar, leap, gender, lon, lat, tz);
         let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
         // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
         let input = SajuInput::new_solar(cy, cm, cd, ch, cmin)

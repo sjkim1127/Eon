@@ -58,18 +58,6 @@ const getWasmModule = async () => {
     return wasmPromiseCache;
 };
 
-// JSON 파싱 헬퍼 함수
-const processSajuResult = (result: unknown): SajuAnalysisResult => {
-    const r = result as { timeline_json?: string; report?: { timeline?: unknown } };
-    if (r?.timeline_json && r?.report) {
-        try {
-            r.report.timeline = JSON.parse(r.timeline_json);
-        } catch (e) {
-            console.warn("[WASM] timeline_json parse failed:", e);
-        }
-    }
-    return result as SajuAnalysisResult;
-};
 
 export class WasmBackendClient implements BackendClient {
     async getVedicAnalysis(args: AnalysisArgs): Promise<VedicAnalysisResult> {
@@ -82,13 +70,12 @@ export class WasmBackendClient implements BackendClient {
 
     async getSajuAnalysis(args: SajuArgs): Promise<SajuAnalysisResult> {
         const wasm = await getWasmModule();
-        const result = wasm.get_saju_analysis(
+        return wasm.get_saju_analysis(
             args.year, args.month, args.day, args.hour, args.minute,
             args.is_lunar, args.is_leap_month, args.is_male,
             args.use_night_rat_hour ?? false,
             args.lon, args.lat, args.timezone
-        );
-        return processSajuResult(result);
+        ) as SajuAnalysisResult;
     }
 
     async getTransitAnalysis(args: TransitArgs): Promise<TransitResult> {
@@ -139,8 +126,7 @@ export class TauriBackendClient implements BackendClient {
     }
 
     async getSajuAnalysis(args: SajuArgs): Promise<SajuAnalysisResult> {
-        const result = await invoke("get_saju_analysis", args as unknown as Record<string, unknown>);
-        return processSajuResult(result);
+        return invoke("get_saju_analysis", args as unknown as Record<string, unknown>);
     }
 
     async getTransitAnalysis(args: TransitArgs): Promise<TransitResult> {
