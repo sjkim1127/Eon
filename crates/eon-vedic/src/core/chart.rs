@@ -82,6 +82,7 @@ pub struct VedicChart {
     pub planets: Vec<VedicPosition>,
     pub aspects: Vec<crate::analysis::aspects::AspectRelation>,
     pub sav: crate::analysis::ashtakavarga::Sarvashtakavarga,
+    pub bav: Vec<crate::analysis::ashtakavarga::AshtakavargaPoints>, // 행성별 BAV
     pub house_cusps: Vec<f64>,
     pub karakas: Vec<crate::analysis::jaimini::KarakaAssignment>,
     pub bhava_strengths: Vec<crate::analysis::bhava::BhavaStrength>,
@@ -361,6 +362,7 @@ impl VedicChartCalculator {
             planets,
             aspects: Vec::new(),
             sav: crate::analysis::ashtakavarga::Sarvashtakavarga { points: [0; 12] },
+            bav: Vec::new(),
             house_cusps: sidereal_cusps,
             karakas: Vec::new(),
             bhava_strengths: Vec::new(),
@@ -373,6 +375,20 @@ impl VedicChartCalculator {
         // Post-calculation analysis
         chart.aspects = crate::analysis::aspects::AspectEngine::calculate_aspects(&chart);
         chart.sav = crate::analysis::ashtakavarga::AshtakavargaEngine::calculate_sav(&chart);
+        // 행성별 BAV (Bhinnashtakavarga) — Sun/Moon/Mars/Mercury/Jupiter/Venus/Saturn
+        let bav_planets = [
+            crate::planets::VedicPlanet::Sun,
+            crate::planets::VedicPlanet::Moon,
+            crate::planets::VedicPlanet::Mars,
+            crate::planets::VedicPlanet::Mercury,
+            crate::planets::VedicPlanet::Jupiter,
+            crate::planets::VedicPlanet::Venus,
+            crate::planets::VedicPlanet::Saturn,
+        ];
+        chart.bav = bav_planets
+            .iter()
+            .map(|&p| crate::analysis::ashtakavarga::AshtakavargaEngine::calculate_bav(p, &chart))
+            .collect();
         chart.karakas = crate::analysis::jaimini::JaiminiEngine::calculate_karakas(&chart, true); // Default 8-karaka
         chart.bhava_strengths = crate::analysis::bhava::BhavaEngine::calculate_all(&chart);
         chart.avasthas = chart

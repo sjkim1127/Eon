@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle, Compass } from "lucide-react";
+import { toast } from "sonner";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
 import { getNakshatraInfo, getVargaEffectiveLongitude, formatSiderealPosition, buildNakshatraMarkdownRows } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
@@ -304,9 +305,13 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
 
   const copyReport = async () => {
     const text = [buildD1ReportText(), "", buildVargaNakshatraText()].join("\n");
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      toast.error("클립보드 복사에 실패했습니다.");
+    }
   };
 
   const vargaReports = report.varga_nakshatra_reports;
@@ -437,57 +442,57 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
         const rows = backendReport?.rows?.length
           ? backendReport.rows
           : [
-              ...planets.map((p: any) => {
-                const rasi: number = p[vargaDef.key] ?? 1;
-                const deg: number = p.sidereal_deg ?? 0;
-                const effectiveDeg = vargaDef.id === "rasi"
-                  ? deg
-                  : getVargaEffectiveLongitude(deg, rasi, vargaDef.divisionCount);
-                const ni = getNakshatraInfo(effectiveDeg);
-                const house = ((rasi - lagnaRasi + 12) % 12) + 1;
-                return {
-                  planet: p.planet as string,
-                  position_str: formatSiderealPosition(effectiveDeg),
-                  sign: rasi,
-                  house,
-                  nakshatra: 0,
-                  nakshatra_name: ni.name,
-                  pada: ni.pada,
-                  pada_range: ni.range,
-                  nakshatra_lord: ni.lord,
-                  pada_lord: ni.padaLord,
-                  deity: ni.deity,
-                  purpose: ni.purpose,
-                  is_retrograde: p.is_retrograde as boolean,
-                  is_combust: p.is_combust as boolean,
-                };
-              }),
-              ...(ascendant ? (() => {
-                const rasi: number = ascendant[vargaDef.key] ?? 1;
-                const deg: number = ascendant.sidereal_deg ?? 0;
-                const effectiveDeg = vargaDef.id === "rasi"
-                  ? deg
-                  : getVargaEffectiveLongitude(deg, rasi, vargaDef.divisionCount);
-                const ni = getNakshatraInfo(effectiveDeg);
-                const house = ((rasi - lagnaRasi + 12) % 12) + 1;
-                return [{
-                  planet: "ASC",
-                  position_str: formatSiderealPosition(effectiveDeg),
-                  sign: rasi,
-                  house,
-                  nakshatra: 0,
-                  nakshatra_name: ni.name,
-                  pada: ni.pada,
-                  pada_range: ni.range,
-                  nakshatra_lord: ni.lord,
-                  pada_lord: ni.padaLord,
-                  deity: ni.deity,
-                  purpose: ni.purpose,
-                  is_retrograde: false,
-                  is_combust: false,
-                }];
-              })() : []),
-            ];
+            ...planets.map((p: any) => {
+              const rasi: number = p[vargaDef.key] ?? 1;
+              const deg: number = p.sidereal_deg ?? 0;
+              const effectiveDeg = vargaDef.id === "rasi"
+                ? deg
+                : getVargaEffectiveLongitude(deg, rasi, vargaDef.divisionCount);
+              const ni = getNakshatraInfo(effectiveDeg);
+              const house = ((rasi - lagnaRasi + 12) % 12) + 1;
+              return {
+                planet: p.planet as string,
+                position_str: formatSiderealPosition(effectiveDeg),
+                sign: rasi,
+                house,
+                nakshatra: 0,
+                nakshatra_name: ni.name,
+                pada: ni.pada,
+                pada_range: ni.range,
+                nakshatra_lord: ni.lord,
+                pada_lord: ni.padaLord,
+                deity: ni.deity,
+                purpose: ni.purpose,
+                is_retrograde: p.is_retrograde as boolean,
+                is_combust: p.is_combust as boolean,
+              };
+            }),
+            ...(ascendant ? (() => {
+              const rasi: number = ascendant[vargaDef.key] ?? 1;
+              const deg: number = ascendant.sidereal_deg ?? 0;
+              const effectiveDeg = vargaDef.id === "rasi"
+                ? deg
+                : getVargaEffectiveLongitude(deg, rasi, vargaDef.divisionCount);
+              const ni = getNakshatraInfo(effectiveDeg);
+              const house = ((rasi - lagnaRasi + 12) % 12) + 1;
+              return [{
+                planet: "ASC",
+                position_str: formatSiderealPosition(effectiveDeg),
+                sign: rasi,
+                house,
+                nakshatra: 0,
+                nakshatra_name: ni.name,
+                pada: ni.pada,
+                pada_range: ni.range,
+                nakshatra_lord: ni.lord,
+                pada_lord: ni.padaLord,
+                deity: ni.deity,
+                purpose: ni.purpose,
+                is_retrograde: false,
+                is_combust: false,
+              }];
+            })() : []),
+          ];
 
         return (
           <div className="glass p-8 rounded-[2rem]">
@@ -637,6 +642,82 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
           </table>
         </div>
       </div>
+
+      {/* ── 행성별 빈나슈타카바르가 (BAV) 히트맵 ────────────── */}
+      {report.chart.bav && report.chart.bav.length > 0 && (
+        <div className="glass p-8 rounded-[2rem]">
+          <h5 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
+            <BarChart3 className="w-6 h-6 text-celestial-gold" />
+            빈나슈타카바르가 (BAV) — 행성×하우스 빈두 히트맵
+          </h5>
+          <p className="text-xs text-white/40 mb-6">
+            각 행성이 12개 하우스에 기여하는 빈두 포인트입니다. 녹색에 가까울수록 강한 하우스를 지원합니다.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="text-xs w-full">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left text-white/40 font-bold pb-3 pr-4 whitespace-nowrap">행성</th>
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <th key={i} className="text-center text-white/40 font-bold pb-3 px-1.5 whitespace-nowrap">H{i + 1}</th>
+                  ))}
+                  <th className="text-center text-white/40 font-bold pb-3 pl-3 whitespace-nowrap">Pinda</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {report.chart.bav.map((entry) => {
+                  const pts = entry.points as number[];
+                  const maxPt = Math.max(...pts, 1);
+                  return (
+                    <tr key={entry.planet} className="hover:bg-white/[0.03] transition-colors">
+                      <td className="py-2 pr-4 font-bold text-white whitespace-nowrap">{entry.planet}</td>
+                      {pts.map((pt, hi) => {
+                        const pct = pt / maxPt;
+                        const bg = pt >= 5
+                          ? `rgba(74,222,128,${0.15 + pct * 0.3})`
+                          : pt >= 3
+                            ? `rgba(250,204,21,${0.15 + pct * 0.25})`
+                            : `rgba(239,68,68,${0.1 + pct * 0.2})`;
+                        const textColor = pt >= 5 ? "text-green-300" : pt >= 3 ? "text-yellow-300" : pt === 0 ? "text-white/15" : "text-red-300";
+                        return (
+                          <td
+                            key={hi}
+                            className={`py-2 px-1.5 text-center font-mono font-bold rounded transition-all ${textColor}`}
+                            style={{ background: bg }}
+                            title={`${entry.planet} → H${hi + 1}: ${pt} bindu`}
+                          >
+                            {pt}
+                          </td>
+                        );
+                      })}
+                      <td className="py-2 pl-3 text-center font-mono text-white/50 text-[11px]">{entry.sodya_pinda}</td>
+                    </tr>
+                  );
+                })}
+                {/* 합산(SAV) 행 */}
+                {report.chart.sav?.points && (
+                  <tr className="border-t border-white/20">
+                    <td className="py-2 pr-4 font-bold text-celestial-gold whitespace-nowrap">SAV</td>
+                    {(report.chart.sav.points as number[]).map((pt, hi) => {
+                      const isStrong = pt >= 28;
+                      const isWeak = pt < 25;
+                      return (
+                        <td
+                          key={hi}
+                          className={`py-2 px-1.5 text-center font-mono font-bold ${isStrong ? "text-green-400" : isWeak ? "text-red-400" : "text-white/70"}`}
+                        >
+                          {pt}
+                        </td>
+                      );
+                    })}
+                    <td className="py-2 pl-3 text-center text-white/25 text-[10px]">—</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ── SAV (Sarvashtakavarga) 12하우스 점수 ────────────── */}
       {sav?.points && sav.points.length === 12 && (

@@ -87,6 +87,7 @@ fn test_libra_lagna_saturn_yogakaraka() {
         planets,
         aspects: vec![],
         sav: Sarvashtakavarga { points: [0; 12] },
+        bav: vec![],
         house_cusps: vec![],
         karakas: vec![],
         bhava_strengths: vec![],
