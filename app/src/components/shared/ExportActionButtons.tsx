@@ -9,11 +9,14 @@ import {
 } from "../../utils";
 import type { SajuAnalysisResult, VedicAnalysisResult, TransitResult, CompatibilityAudit, AshtaKutaResult } from "../../types";
 
+import { TierResult } from "../../utils/tierScore";
+
 interface ExportActionButtonsProps {
     sajuReport: SajuAnalysisResult | null;
     report: VedicAnalysisResult | null;
     transitReport: TransitResult | null;
     compReport: { saju: CompatibilityAudit; vedic: AshtaKutaResult } | null;
+    tierResult?: TierResult | null;
 }
 
 /** 클립보드에 텍스트를 복사하고 실패 시 toast.error를 표시합니다. */
@@ -39,6 +42,7 @@ export function ExportActionButtons({
     report,
     transitReport,
     compReport,
+    tierResult,
 }: ExportActionButtonsProps) {
     const [mdCopied, setMdCopied] = useState(false);
     const [sajuCopied, setSajuCopied] = useState(false);
@@ -46,7 +50,7 @@ export function ExportActionButtons({
     const [compCopied, setCompCopied] = useState(false);
 
     const handleCopyAll = async () => {
-        const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null, transitReport ?? null, compReport ?? null);
+        const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null, transitReport ?? null, compReport ?? null, tierResult);
         const ok = await copyToClipboard(md);
         if (ok) {
             setMdCopied(true);

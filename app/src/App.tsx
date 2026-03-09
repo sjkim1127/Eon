@@ -56,6 +56,7 @@ function App() {
   const {
     runAnalysis,
     report, sajuReport, transitReport, transitError,
+    tierReport,
     aiAuditReport,
     loading,
   } = useAstrologyAnalysis();
@@ -118,6 +119,7 @@ function App() {
                   report={report}
                   transitReport={transitReport}
                   compReport={compReport}
+                  tierResult={tierReport}
                 />
               }
             />
@@ -168,6 +170,7 @@ function App() {
                     sajuReport={sajuReport}
                     report={report}
                     transitReport={transitReport}
+                    tierReport={tierReport}
                     unknownTime={birthData.unknown_time}
                   />
                 } />

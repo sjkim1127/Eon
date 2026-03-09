@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { BirthData, TabId, VedicAnalysisResult, SajuAnalysisResult, TransitResult, CompatibilityAudit, AshtaKutaResult } from '../types';
+import type { TierResult } from '../utils/tierScore';
 
 export const DEFAULT_BIRTH: BirthData = {
   year: 1990, month: 1, day: 1, hour: 12, minute: 0,
@@ -41,6 +42,8 @@ interface AppState {
   setTransitReport: (report: TransitResult | null) => void;
   transitError: string | null;
   setTransitError: (err: string | null) => void;
+  tierReport: TierResult | null;
+  setTierReport: (report: TierResult | null) => void;
   loading: boolean;
   setLoading: (loading: boolean) => void;
 
@@ -87,6 +90,8 @@ export const useAppStore = create<AppState>((set) => ({
   setTransitReport: (transitReport) => set({ transitReport }),
   transitError: null,
   setTransitError: (transitError) => set({ transitError }),
+  tierReport: null,
+  setTierReport: (tierReport) => set({ tierReport }),
   loading: false,
   setLoading: (loading) => set({ loading }),
 
