@@ -1,0 +1,570 @@
+use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
+
+use eon_saju::report::SajuReport;
+use eon_saju::engine::entropy::EntropyAnalysis;
+use eon_saju::engine::topology::TopologyAnalysis;
+use eon_saju::engine::fuzzer::VulnerabilityReport;
+use eon_saju::engine::complexity::ComplexityAnalysis;
+use eon_saju::engine::linter::{SajuLint, LintSeverity};
+use eon_saju::analysis::periodic_luck::{YearlyLuck, MonthlyLuck};
+use eon_saju::engine::load_balancer::{LoadBalanceDiagnostic, TrafficStatus};
+
+use eon_vedic::analysis::report::VedicAnalysisReport;
+use eon_vedic::core::chart::VedicChart;
+use eon_vedic::analysis::yogas::YogaQuality;
+use eon_vedic::analysis::avasthas::BaladiAvastha;
+use eon_vedic::analysis::gochara::SadeSatiPhase;
+
+#[derive(Deserialize)]
+pub struct SajuInputResult {
+    pub report: Option<SajuReport>,
+    pub qi_topology: Option<TopologyAnalysis>,
+    pub vulnerability_report: Option<VulnerabilityReport>,
+    pub complexity: Option<ComplexityAnalysis>,
+    pub entropy: Option<EntropyAnalysis>,
+    pub lints: Option<Vec<SajuLint>>,
+}
+
+#[derive(Deserialize)]
+pub struct VedicInputResult {
+    pub report: Option<VedicAnalysisReport>,
+    pub chart: Option<VedicChart>,
+}
+
+#[derive(Deserialize)]
+pub struct TransitInputResult {
+    pub current_frame: Option<FramePartial>,
+    pub nearby_diagnostics: Option<Vec<LoadBalanceDiagnostic>>,
+    pub yearly_luck: Option<YearlyLuck>,
+    pub monthly_luck: Option<MonthlyLuck>,
+    pub current_age: Option<u32>,
+}
+
+#[derive(Deserialize)]
+pub struct FramePartial {
+    pub score: f32,
+}
+
+#[derive(Serialize)]
+pub struct TierGrade {
+    pub grade: String,
+    pub label: String,
+    pub desc: String,
+}
+
+impl TierGrade {
+    pub fn new(grade: &str, label: &str, desc: &str) -> Self {
+        Self {
+            grade: grade.to_string(),
+            label: label.to_string(),
+            desc: desc.to_string(),
+        }
+    }
+}
+
+pub fn get_tier_from_score(score: f32) -> TierGrade {
+    let s = score.round() as i32;
+    if s >= 93 { TierGrade::new("S+", "천기", "사주와 별운이 완전히 일치하는 극희귀 최상의 조합") }
+    else if s >= 85 { TierGrade::new("S", "천운", "사주와 별운이 모두 유리한 극상의 조합") }
+    else if s >= 77 { TierGrade::new("A+", "대길상", "용신·대운·요가가 거의 완벽하게 지원하는 강운") }
+    else if s >= 69 { TierGrade::new("A", "대길", "전반적으로 아주 강한 기운의 조합") }
+    else if s >= 61 { TierGrade::new("B+", "길상", "균형이 잡히고 강점이 뚜렷하게 빛나는 운세") }
+    else if s >= 53 { TierGrade::new("B", "길", "전반적으로 안정적이고 활용 가능한 운세") }
+    else if s >= 45 { TierGrade::new("C+", "중상", "보통 이상의 기운, 노력으로 충분히 도약 가능") }
+    else if s >= 37 { TierGrade::new("C", "중평", "일부 어려움이 있으나 극복 가능한 조합") }
+    else if s >= 29 { TierGrade::new("D+", "성장예비", "성장 여지가 많으며 조건이 갖춰지면 빠른 상향 가능") }
+    else { TierGrade::new("D", "다다익선", "성장 여지가 많은 시기, 주의 시점 활용 권장") }
+}
+
+#[derive(Serialize)]
+pub struct ScoreResult {
+    pub score: f32,
+    pub highlights: Vec<String>,
+}
+
+#[derive(Serialize)]
+pub struct DomainTier {
+    pub house: u8,
+    pub domain: String,
+    pub tier: String,
+}
+
+#[derive(Serialize)]
+#[allow(non_snake_case)]
+pub struct TierResult {
+    pub natalScore: f32,
+    pub currentScore: f32,
+    pub destinyScore: f32,
+    pub destinyTier: TierGrade,
+    pub potentialScore: f32,
+    pub potentialTier: TierGrade,
+    pub domainTiers: Vec<DomainTier>,
+    pub sajuResult: ScoreResult,
+    pub vedicResult: ScoreResult,
+    pub transitResult: ScoreResult,
+    pub strengths: Vec<String>,
+    pub weaknesses: Vec<String>,
+    pub growthGap: f32,
+    pub riskLevel: String, // "low" | "medium" | "high"
+    pub profile: String,   // "stable" | "balanced" | "growth"
+    pub version: String,   // "v2_rust"
+}
+
+fn clamp_score(score: f32) -> f32 {
+    score.clamp(0.0, 100.0)
+}
+
+fn soft_normalize(score: f32) -> f32 {
+    let clamped = clamp_score(score);
+    if clamped <= 50.0 { return clamped; }
+    let excess = (clamped - 50.0) / 50.0;
+    let compressed = excess.powf(1.4) * 35.0;
+    (50.0 + compressed).round()
+}
+
+fn compute_saju_score(saju: &SajuInputResult) -> ScoreResult {
+    let mut score = 0.0;
+    let mut highlights = Vec::new();
+
+    if let Some(r) = &saju.report {
+        let st = &r.strength;
+        
+        let strength_norm = clamp_score(st.strength_score * 2.0);
+        score += strength_norm * 0.28;
+
+        let acquired = vec![st.deuk_ryeong.acquired, st.deuk_ji.acquired, st.deuk_si.acquired]
+            .into_iter().filter(|&x| x).count() as f32;
+        score += acquired * 4.0;
+        if acquired == 3.0 { highlights.push("삼득(득령·득지·득시) 완성".to_string()); }
+        else if acquired >= 2.0 { highlights.push(format!("득령·득지·득시 {}개 달성", acquired)); }
+
+        let support_pct = if st.deuk_se.support_ratio > 1.0 { st.deuk_se.support_ratio } else { st.deuk_se.support_ratio * 100.0 };
+        score += (support_pct / 100.0) * 10.0;
+        if support_pct > 60.0 { highlights.push(format!("득세 지지비율 {:.0}% (우세)", support_pct)); }
+
+        if let Some(topo) = &saju.qi_topology {
+            score += topo.throughput * 12.0;
+            if topo.throughput > 0.75 { highlights.push(format!("오행 흐름 {:.0}% (원활)", topo.throughput * 100.0)); }
+            if topo.bottleneck.is_some() { score -= 2.0; }
+        }
+
+        let struc = &r.structure;
+        let name = format!("{:?}", struc.structure);
+        if name.contains("Follower") { score -= 3.0; }
+        else { score += 2.0; }
+
+        let sm = &r.spirit_markers;
+        let aus = sm.auspicious.len() as f32;
+        let inaus = sm.inauspicious.len() as f32;
+        score += 5.0_f32.min(aus * 1.0);
+        score -= 4.0_f32.min(inaus * 0.8);
+        if aus > 0.0 { highlights.push(format!("길신 {}개", aus)); }
+        if inaus >= 3.0 { highlights.push(format!("흉신 {}개 주의", inaus)); }
+
+        if let Some(gt) = &r.golden_time {
+            let len = (gt.end_age - gt.start_age) as f32;
+            score += 6.0_f32.min(len * 0.4);
+            highlights.push(format!("골든타임 {}~{}세 ({}년)", gt.start_age, gt.end_age, len));
+        }
+
+        if !r.simulation_frames.is_empty() {
+            let avg: f32 = r.simulation_frames.iter().map(|f| f.score).sum::<f32>() / r.simulation_frames.len() as f32;
+            let good_pct = r.simulation_frames.iter().filter(|f| f.score >= 65.0).count() as f32 / r.simulation_frames.len() as f32;
+            score += 8.0_f32.min((avg - 50.0) * 0.16);
+            score += good_pct * 5.0;
+            if avg >= 70.0 { highlights.push(format!("시뮬레이션 평균 {:.0}점", avg)); }
+        }
+
+        if let Some(vr) = &saju.vulnerability_report {
+            if vr.total_crashes == 0 {
+                score += 4.0;
+                highlights.push("충돌 주의 시점 없음".to_string());
+            } else if vr.total_crashes > 40 {
+                score -= 5.0;
+                highlights.push(format!("주의 시점 {}개", vr.total_crashes));
+            } else if vr.total_crashes > 20 {
+                score -= 2.0;
+            }
+        }
+
+        let entropy_score = saju.entropy.as_ref().map(|e| e.score).unwrap_or(1.0);
+        let is_high_entropy = entropy_score > 1.5;
+
+        if let Some(cx) = &saju.complexity {
+            if cx.stability_grade.starts_with("A") { score += 4.0; highlights.push("안정성 A등급".to_string()); }
+            else if cx.stability_grade.starts_with("B") { score += 2.0; }
+            else if cx.stability_grade.starts_with("D") { score -= if is_high_entropy { 1.5 } else { 3.0 }; }
+        }
+
+        if let Some(lints) = &saju.lints {
+            let errs = lints.iter().filter(|l| matches!(l.severity, LintSeverity::Error)).count() as f32;
+            let warns = lints.iter().filter(|l| matches!(l.severity, LintSeverity::Warning)).count() as f32;
+            if errs == 0.0 && warns == 0.0 {
+                score += 2.0; highlights.push("사주 구조 클린".to_string());
+            }
+            score -= 5.0_f32.min(errs * 1.5 + warns * 0.4);
+        }
+
+        if entropy_score < 1.0 { score += 2.0; highlights.push("운명 패턴 안정".to_string()); }
+        else if entropy_score > 2.0 { score -= 2.0; highlights.push("운명 변수 많음".to_string()); }
+
+        let ys = &r.yongshin;
+        if ys.recommendations.len() >= 2 { score += 2.0; }
+    }
+
+    highlights.truncate(6);
+    ScoreResult { score: clamp_score(score.round()), highlights }
+}
+
+fn compute_vedic_score(vedic: &VedicInputResult) -> ScoreResult {
+    let mut score = 0.0;
+    let mut highlights = Vec::new();
+
+    if let Some(r) = &vedic.report {
+        score += clamp_score(r.overall_strength_score as f32 / 6.0) * 0.35;
+
+        let vh_yogas = r.yogas.iter().filter(|y| matches!(y.quality, YogaQuality::VeryHigh)).count() as f32;
+        let h_yogas = r.yogas.iter().filter(|y| matches!(y.quality, YogaQuality::High)).count() as f32;
+        score += 12.0_f32.min(vh_yogas * 4.0 + h_yogas * 2.0);
+        if vh_yogas > 0.0 { highlights.push(format!("최상급 요가 {}개", vh_yogas)); }
+        else if h_yogas > 0.0 { highlights.push(format!("우수 요가 {}개", h_yogas)); }
+
+        let ex_houses = r.house_summary.iter().filter(|h| h.rating == "Excellent").count() as f32;
+        let st_houses = r.house_summary.iter().filter(|h| h.rating == "Strong").count() as f32;
+        let wk_houses = r.house_summary.iter().filter(|h| h.rating == "Weak").count() as f32;
+        score += 10.0_f32.min(ex_houses * 2.0 + st_houses * 0.8);
+        score -= 6.0_f32.min(wk_houses * 1.2);
+        if ex_houses >= 4.0 { highlights.push(format!("최강 하우스 {}개", ex_houses)); }
+        else if st_houses + ex_houses >= 6.0 { highlights.push(format!("강한 하우스 {}개", st_houses + ex_houses)); }
+
+        if let Some(c) = &vedic.chart {
+            let mut key_house_bonus = 0.0;
+            for h in [1, 5, 9, 10] {
+                if let Some(bh) = c.bhava_strengths.iter().find(|b| b.house == h) {
+                    if bh.total_score >= 60.0 { key_house_bonus += 1.5; }
+                    else if bh.total_score >= 40.0 { key_house_bonus += 0.5; }
+                }
+            }
+            score += 6.0_f32.min(key_house_bonus);
+            if key_house_bonus >= 4.0 { highlights.push("핵심 하우스(1·5·9·10) 강화".to_string()); }
+
+            let strong_sav = c.sav.points.iter().filter(|&&p| p >= 28).count() as f32;
+            let weak_sav = c.sav.points.iter().filter(|&&p| p <= 22).count() as f32;
+            score += 5.0_f32.min(strong_sav * 0.8);
+            score -= 4.0_f32.min(weak_sav * 0.8);
+            if strong_sav >= 6.0 { highlights.push(format!("SAV 강점 하우스 {}개", strong_sav)); }
+
+            if !c.vimshopaka_scores.is_empty() {
+                let mut sum = 0.0;
+                for (_, v) in &c.vimshopaka_scores {
+                    sum += v.shadvarga_score + v.shodashavarga_score;
+                }
+                let avg = (sum / 2.0) as f32 / c.vimshopaka_scores.len() as f32;
+                score += 6.0_f32.min((avg / 20.0) * 6.0);
+                if avg >= 14.0 { highlights.push(format!("빔쇼파카 평균 {:.1}", avg)); }
+            }
+
+            let retro = c.planets.iter().filter(|p| p.is_retrograde).count() as f32;
+            let combust = c.planets.iter().filter(|p| p.is_combust).count() as f32;
+            score -= 4.0_f32.min(retro * 0.8);
+            score -= 3.0_f32.min(combust * 0.8);
+            if retro + combust >= 3.0 { highlights.push(format!("역행 {}+연소 {}개", retro, combust)); }
+
+            let bala = c.avasthas.iter().filter(|a| matches!(a.baladi, BaladiAvastha::Bala | BaladiAvastha::Yuva)).count() as f32;
+            let mrta = c.avasthas.iter().filter(|a| matches!(a.baladi, BaladiAvastha::Mrita | BaladiAvastha::Vriddha)).count() as f32;
+            score += 3.0_f32.min(bala * 0.6);
+            score -= 3.0_f32.min(mrta * 0.7);
+            if bala >= 4.0 { highlights.push(format!("활성 행성 {}개", bala)); }
+        }
+
+        match r.sade_sati {
+            SadeSatiPhase::None => { score += 5.0; highlights.push("사데사티 비해당".to_string()); },
+            SadeSatiPhase::Peak => { score -= 6.0; highlights.push("사데사티 절정".to_string()); },
+            SadeSatiPhase::Rising => { score -= 3.0; highlights.push("사데사티 상승".to_string()); },
+            SadeSatiPhase::Setting => { score -= 1.0; },
+        }
+
+        let benefics = ["Jupiter", "Venus", "Mercury", "Moon"];
+        if benefics.iter().any(|&b| r.dasha_focus.contains(b)) {
+            score += 4.0;
+            highlights.push("길성 다샤".to_string());
+        }
+    }
+
+    highlights.truncate(6);
+    ScoreResult { score: clamp_score(score.round()), highlights }
+}
+
+fn compute_transit_score(transit: &TransitInputResult) -> ScoreResult {
+    let mut highlights = Vec::new();
+    let mut score = if let Some(f) = &transit.current_frame { clamp_score(f.score) } else { 50.0 };
+
+    if score >= 75.0 { highlights.push("현재 운세 긍정적".to_string()); }
+    else if score >= 55.0 { highlights.push("현재 운세 보통".to_string()); }
+    else if score < 40.0 { highlights.push("현재 운세 주의".to_string()); }
+
+    if let Some(nb) = &transit.nearby_diagnostics {
+        let bad = nb.iter().filter(|d| matches!(d.status, TrafficStatus::Overloaded | TrafficStatus::SystemDown)).count() as f32;
+        let down = nb.iter().filter(|d| matches!(d.status, TrafficStatus::SystemDown)).count() as f32;
+        if bad > 0.0 { score -= 15.0_f32.min(bad * 5.0); highlights.push(format!("부하 구간 {}개", bad)); }
+        score -= down * 3.0;
+    }
+
+    if let Some(yl) = &transit.yearly_luck {
+        let ts = yl.twelve_stage.as_ref().map(|s| s.as_str()).unwrap_or("");
+        if ["장생", "건록", "제왕", "관대", "목욕"].contains(&ts) { score += 5.0; highlights.push(format!("세운: {} (길)", ts)); }
+        else if ["절", "묘", "태"].contains(&ts) { score -= 5.0; highlights.push(format!("세운: {} (흉)", ts)); }
+
+        if !yl.special_events.is_empty() {
+            score += 4.0_f32.min(yl.special_events.len() as f32 * 1.5);
+            highlights.push(format!("길조 이벤트 {}개", yl.special_events.len()));
+        }
+
+        if let Some(inf) = &yl.influence {
+            let rels = &inf.relations_with_natal;
+            let good = rels.iter().filter(|r| r.contains("합") || r.contains("록") || r.contains("귀인")).count() as f32;
+            let bad = rels.iter().filter(|r| r.contains("충") || r.contains("형") || r.contains("해") || r.contains("파")).count() as f32;
+            score += 4.0_f32.min(good * 1.5);
+            score -= 4.0_f32.min(bad * 1.5);
+        }
+    }
+
+    if let Some(ml) = &transit.monthly_luck {
+        let ts = ml.twelve_stage.as_ref().map(|s| s.as_str()).unwrap_or("");
+        if ["장생", "건록", "제왕", "관대", "목욕"].contains(&ts) { score += 3.0; }
+        else if ["절", "묘", "태"].contains(&ts) { score -= 3.0; }
+    }
+
+    highlights.truncate(4);
+    ScoreResult { score: clamp_score(score.round()), highlights }
+}
+
+fn compute_potential_score(saju: &SajuInputResult, vedic: &VedicInputResult) -> ScoreResult {
+    let mut highlights = Vec::new();
+    let mut score = 50.0;
+
+    if let Some(r) = &saju.report {
+        if let Some(topo) = &saju.qi_topology {
+            score += topo.throughput * 12.0;
+            if topo.throughput > 0.7 { highlights.push("오행 흐름 원활 (잠재력 발현)".to_string()); }
+        }
+        if let Some(cx) = &saju.complexity {
+            if cx.stability_grade.starts_with("A") { score += 8.0; highlights.push("안정성 A등급".to_string()); }
+            else if cx.stability_grade.starts_with("B") { score += 4.0; }
+            else if cx.stability_grade.starts_with("D") { score -= 4.0; }
+        }
+        if let Some(gt) = &r.golden_time {
+            let len = (gt.end_age - gt.start_age) as f32;
+            score += 12.0_f32.min(len * 0.5);
+            highlights.push(format!("골든타임 {}년", len));
+        }
+        let ys = &r.yongshin;
+        if ys.recommendations.len() >= 2 { score += 4.0; }
+        if let Some(vr) = &saju.vulnerability_report {
+            if vr.total_crashes == 0 { score += 5.0; }
+            else if vr.total_crashes < 10 { score += 3.0; }
+            else if vr.total_crashes > 40 { score -= 5.0; }
+        }
+        let sm = &r.spirit_markers;
+        score += 5.0_f32.min(sm.auspicious.len() as f32 * 1.2);
+        
+        if let Some(lints) = &saju.lints {
+            let errs = lints.iter().filter(|l| matches!(l.severity, LintSeverity::Error)).count() as f32;
+            if errs == 0.0 { score += 3.0; } else { score -= errs * 2.0; }
+        }
+        if !r.simulation_frames.is_empty() {
+            let good_pct = r.simulation_frames.iter().filter(|f| f.score >= 70.0).count() as f32 / r.simulation_frames.len() as f32;
+            score += good_pct * 8.0;
+        }
+    }
+
+    if let Some(r) = &vedic.report {
+        let high_yogas = r.yogas.iter().filter(|y| matches!(y.quality, YogaQuality::VeryHigh | YogaQuality::High)).count() as f32;
+        score += 10.0_f32.min(high_yogas * 3.0);
+        if high_yogas > 0.0 { highlights.push(format!("상급 요가 {}개", high_yogas)); }
+
+        let ex_houses = r.house_summary.iter().filter(|h| h.rating == "Excellent").count() as f32;
+        score += 8.0_f32.min(ex_houses * 2.5);
+
+        if matches!(r.sade_sati, SadeSatiPhase::None) { score += 3.0; }
+        else if matches!(r.sade_sati, SadeSatiPhase::Peak) { score -= 5.0; }
+    }
+
+    highlights.truncate(5);
+    ScoreResult { score: clamp_score(score.round()), highlights }
+}
+
+#[wasm_bindgen]
+pub fn get_destiny_tier_analysis(
+    saju_val: JsValue,
+    vedic_val: JsValue,
+    transit_val: JsValue,
+) -> Result<JsValue, JsValue> {
+    let saju: SajuInputResult = serde_wasm_bindgen::from_value(saju_val).map_err(|e| JsError::new(&format!("Saju Parse Err: {}", e)))?;
+    let vedic: VedicInputResult = serde_wasm_bindgen::from_value(vedic_val).map_err(|e| JsError::new(&format!("Vedic Parse Err: {}", e)))?;
+    let transit: TransitInputResult = serde_wasm_bindgen::from_value(transit_val).map_err(|e| JsError::new(&format!("Transit Parse Err: {}", e)))?;
+
+    let saju_res = compute_saju_score(&saju);
+    let vedic_res = compute_vedic_score(&vedic);
+    let transit_res = compute_transit_score(&transit);
+    let pot_res = compute_potential_score(&saju, &vedic);
+
+    let current_age = transit.current_age.unwrap_or(30);
+
+    let mut is_major_luck_transition = false;
+    let mut is_saju_golden = false;
+    if let Some(r) = &saju.report {
+        if let Some(ml) = &r.major_luck {
+            for cycle in &ml.cycles {
+                let diff = (cycle.start_age as i32 - current_age as i32).abs();
+                if diff <= 1 {
+                    is_major_luck_transition = true;
+                    break;
+                }
+            }
+        }
+        if let Some(gt) = &r.golden_time {
+            if current_age >= gt.start_age && current_age <= gt.end_age {
+                is_saju_golden = true;
+            }
+        }
+    }
+
+    let is_vedic_benefic_dasha = vedic.report.as_ref().map(|r| {
+        let benefics = ["Jupiter", "Venus", "Mercury", "Moon"];
+        benefics.iter().any(|&b| r.dasha_focus.contains(b))
+    }).unwrap_or(false);
+
+    let has_saju_vuln = saju.vulnerability_report.as_ref().map(|v| v.total_crashes > 20).unwrap_or(false);
+    let has_vedic_sati = vedic.report.as_ref().map(|r| matches!(r.sade_sati, SadeSatiPhase::Peak | SadeSatiPhase::Rising)).unwrap_or(false);
+
+    let mut strengths = Vec::new();
+    strengths.extend(saju_res.highlights.iter().take(2).cloned());
+    strengths.extend(vedic_res.highlights.iter().take(2).cloned());
+    strengths.extend(transit_res.highlights.iter().filter(|h| !h.contains("주의") && !h.contains("부하")).take(1).cloned());
+
+    let mut weaknesses = Vec::new();
+    if let Some(vr) = &saju.vulnerability_report {
+        if vr.total_crashes > 30 { weaknesses.push(format!("주의 시점 {}개", vr.total_crashes)); }
+    }
+    if let Some(r) = &vedic.report {
+        if matches!(r.sade_sati, SadeSatiPhase::Peak) { weaknesses.push("사데사티 절정".to_string()); }
+    }
+
+    let mut cross_bonus = 0.0;
+    if has_saju_vuln && has_vedic_sati {
+        cross_bonus -= 5.0;
+        weaknesses.push("사주/베딕 복합 위기 (주의 요망)".to_string());
+    }
+    if is_saju_golden && is_vedic_benefic_dasha {
+        cross_bonus += 5.0;
+        strengths.push("사주/베딕 복합 길운 (시너지 폭발)".to_string());
+    }
+
+    let natal_raw = saju_res.score * 0.5 + vedic_res.score * 0.5;
+    let mut natal_w = 0.7;
+    let mut curr_w = 0.3;
+    let mut profile = "balanced".to_string();
+
+    if is_major_luck_transition {
+        natal_w = 0.5;
+        curr_w = 0.5;
+        profile = "transition".to_string();
+    } else if current_age < 35 { 
+        natal_w = 0.6; curr_w = 0.4; profile = "growth".to_string(); 
+    } else if current_age > 55 { 
+        natal_w = 0.8; curr_w = 0.2; profile = "stable".to_string(); 
+    }
+
+    let has_transit = transit.current_frame.is_some();
+    let mut curr_destiny = transit_res.score;
+    if has_transit { curr_destiny = curr_destiny.clamp(25.0, 90.0); }
+
+    let natal_norm = soft_normalize(natal_raw);
+    let curr_norm = if has_transit { soft_normalize(curr_destiny) } else { 0.0 };
+
+    let mut destiny_score = if has_transit {
+        natal_norm * natal_w + curr_norm * curr_w
+    } else {
+        natal_norm
+    };
+
+    let mut domain_tiers = Vec::new();
+    let mut domain_adj: f32 = 0.0;
+    let mut penalty_focus: f32 = 0.0;
+
+    if let Some(r) = &vedic.report {
+        for h in &r.house_summary {
+            let tier = match h.rating.as_str() {
+                "Excellent" => "S",
+                "Strong" => "A",
+                "Average" => "B",
+                "Weak" => "C",
+                _ => "D",
+            };
+            
+            let domain_name = match h.house {
+                1 => "자아·건강", 2 => "재물", 3 => "형제·용기", 4 => "가정·학업",
+                5 => "자녀·창작", 6 => "건강·노동", 7 => "관계·결혼", 8 => "변화·유산",
+                9 => "학문·행운", 10 => "직업·명예", 11 => "소원·수입", 12 => "영성·은둔",
+                _ => "기타"
+            };
+
+            domain_tiers.push(DomainTier { house: h.house as u8, domain: domain_name.to_string(), tier: tier.to_string() });
+
+            if tier == "S" { domain_adj += 0.5; }
+            else if tier == "A" { domain_adj += 0.2; }
+            else if tier == "C" { domain_adj -= 0.5; }
+            else if tier == "D" { domain_adj -= 1.0; }
+
+            if [1, 2, 6, 10, 11].contains(&h.house) {
+                if tier == "C" { penalty_focus -= 0.5; }
+                else if tier == "D" { penalty_focus -= 1.0; }
+            }
+        }
+    }
+
+    domain_adj = (domain_adj + penalty_focus).clamp(-4.0, 5.0);
+    destiny_score += domain_adj;
+    destiny_score += cross_bonus;
+    destiny_score = clamp_score(destiny_score);
+
+    let mut risk_points = 0;
+    if let Some(vr) = &saju.vulnerability_report {
+        if vr.total_crashes >= 10 { risk_points += 1; }
+        if vr.total_crashes >= 20 { risk_points += 1; }
+        if vr.total_crashes >= 40 { risk_points += 1; }
+    }
+    if transit_res.score < 40.0 { risk_points += 1; }
+    if transit_res.score < 30.0 { risk_points += 1; }
+    if let Some(r) = &vedic.report {
+        if matches!(r.sade_sati, SadeSatiPhase::Peak | SadeSatiPhase::Rising) { risk_points += 2; }
+    }
+
+    let risk_level = if risk_points <= 1 { "low" } else if risk_points <= 3 { "medium" } else { "high" };
+
+    let result = TierResult {
+        natalScore: clamp_score(natal_raw.round()),
+        currentScore: transit_res.score,
+        destinyScore: destiny_score.round(),
+        destinyTier: get_tier_from_score(destiny_score),
+        potentialScore: pot_res.score.round(),
+        potentialTier: get_tier_from_score(pot_res.score),
+        domainTiers: domain_tiers,
+        sajuResult: saju_res,
+        vedicResult: vedic_res,
+        transitResult: transit_res,
+        strengths,
+        weaknesses,
+        growthGap: (pot_res.score - destiny_score).round(),
+        riskLevel: risk_level.to_string(),
+        profile,
+        version: "v2_rust".to_string(),
+    };
+
+    use serde::Serialize as _;
+    let js_val = result.serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+        .map_err(|e| JsError::new(&format!("직렬화 오류: {}", e)))?;
+    Ok(js_val)
+}

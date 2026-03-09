@@ -948,15 +948,16 @@ export function buildFullAnalysisMarkdown(
     vedicReport: VedicAnalysisResult | null,
     transitReport: TransitResult | null = null,
     compReport?: CompReport | null,
+    tierResult?: TierResult | null,
 ): string {
     const parts: string[] = [];
 
     parts.push("# Eon 통합 분석 리포트\n");
     parts.push(`- 생성 시각: ${new Date().toLocaleString()}`);
     parts.push("- 이 문서는 앱 화면의 분석 결과를 복사/공유하기 쉬운 형태로 정리한 것입니다.");
-    parts.push("");
+    parts.push(SEP);
 
-    const destinyTierMd = buildDestinyTierMarkdown(sajuReport, vedicReport, transitReport);
+    const destinyTierMd = buildDestinyTierMarkdown(sajuReport, vedicReport, transitReport, tierResult);
     if (destinyTierMd) {
         parts.push(destinyTierMd);
         parts.push(SEP);

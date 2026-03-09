@@ -7,7 +7,7 @@ export function useAstrologyAnalysis() {
   const store = useAppStore();
 
   const runAnalysis = async () => {
-    const { birthData, isMale, setErrorMessage, setLoading, setReport, setSajuReport, setTransitReport, setAiAuditReport, setTransitError } = store;
+    const { birthData, isMale, setErrorMessage, setLoading, setReport, setSajuReport, setTransitReport, setAiAuditReport, setTransitError, setTierReport } = store;
     
     const now = new Date();
     const validationError = getBirthValidationError(birthData, "내 정보");
@@ -78,6 +78,19 @@ export function useAstrologyAnalysis() {
       if (aiAuditResult.status === "fulfilled") setAiAuditReport(aiAuditResult.value);
       else console.error("AI Audit 분석 실패:", aiAuditResult.reason);
 
+      if (sajuResult.status === "fulfilled" && vedicResult.status === "fulfilled") {
+        try {
+          const tier = await backendClient.getDestinyTier(
+            sajuResult.value,
+            vedicResult.value,
+            transitResult.status === "fulfilled" ? transitResult.value : null
+          );
+          setTierReport(tier);
+        } catch (e) {
+          console.error("Tier 분석 실패:", e);
+        }
+      }
+
       const allFailed = vedicResult.status === "rejected" && sajuResult.status === "rejected" && transitResult.status === "rejected";
       if (allFailed) {
         const message = "분석 중 오류가 발생했습니다.";
@@ -103,6 +116,7 @@ export function useAstrologyAnalysis() {
     aiAuditReport: store.aiAuditReport,
     transitReport: store.transitReport,
     transitError: store.transitError,
+    tierReport: store.tierReport,
     loading: store.loading,
   };
 }

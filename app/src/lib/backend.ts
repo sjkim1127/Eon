@@ -38,6 +38,7 @@ export interface BackendClient {
     getVedicAnalysis(args: AnalysisArgs): Promise<VedicAnalysisResult>;
     getSajuAnalysis(args: SajuArgs): Promise<SajuAnalysisResult>;
     getTransitAnalysis(args: TransitArgs): Promise<TransitResult>;
+    getDestinyTier(saju: any, vedic: any, transit: any): Promise<any>;
     getSajuCompatibility(args: CompArgs): Promise<CompatibilityAudit>;
     getVedicCompatibility(args: CompArgs): Promise<AshtaKutaResult>;
     getAiAudit(args: SajuArgs): Promise<AiAuditReport>;
@@ -95,6 +96,11 @@ export class WasmBackendClient implements BackendClient {
         ) as Promise<TransitResult>;
     }
 
+    async getDestinyTier(saju: any, vedic: any, transit: any): Promise<any> {
+        const wasm = await getWasmModule();
+        return (wasm as any).get_destiny_tier_analysis(saju, vedic, transit);
+    }
+
     async getSajuCompatibility(args: CompArgs): Promise<CompatibilityAudit> {
         const wasm = await getWasmModule();
         return wasm.get_saju_compatibility(
@@ -141,6 +147,10 @@ export class TauriBackendClient implements BackendClient {
 
     async getTransitAnalysis(args: TransitArgs): Promise<TransitResult> {
         return invoke("get_transit_analysis", args as unknown as Record<string, unknown>);
+    }
+
+    async getDestinyTier(saju: any, vedic: any, transit: any): Promise<any> {
+        return invoke("get_destiny_tier_analysis", { sajuVal: saju, vedicVal: vedic, transitVal: transit });
     }
 
     async getSajuCompatibility(args: CompArgs): Promise<CompatibilityAudit> {

@@ -1,3 +1,5 @@
+pub mod tier;
+
 use eon_vedic::analysis::compatibility::CompatibilityEngine;
 use eon_vedic::analysis::report::VedicAnalysisReport;
 use eon_vedic::core::chart::{VedicChart, VedicChartCalculator};
@@ -590,6 +592,7 @@ pub fn run() {
             get_ai_audit,
             get_saju_compatibility,
             get_vedic_compatibility,
+            tier::get_destiny_tier_analysis,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

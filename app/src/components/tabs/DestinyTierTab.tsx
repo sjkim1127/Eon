@@ -12,11 +12,12 @@ export interface DestinyTierTabProps {
   sajuReport: SajuAnalysisResult | null;
   report: VedicAnalysisResult | null;
   transitReport?: TransitResult | null;
+  tierReport?: any; // The calculated tier result from backend
   unknownTime?: boolean;
 }
 
-export function DestinyTierTab({ sajuReport, report, transitReport, unknownTime }: DestinyTierTabProps) {
-  const result = computeTierResult(sajuReport, report, transitReport);
+export function DestinyTierTab({ sajuReport, report, transitReport, tierReport, unknownTime }: DestinyTierTabProps) {
+  const result = tierReport ?? computeTierResult(sajuReport, report, transitReport);
 
   if (!result) {
     return (

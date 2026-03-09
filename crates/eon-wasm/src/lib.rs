@@ -1,3 +1,5 @@
+pub mod tier;
+
 use eon_vedic::analysis::compatibility::CompatibilityEngine;
 use eon_vedic::analysis::report::VedicAnalysisReport;
 use eon_vedic::core::chart::{VedicChart, VedicChartCalculator};
