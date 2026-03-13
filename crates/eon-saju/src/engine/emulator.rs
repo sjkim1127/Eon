@@ -88,16 +88,13 @@ impl LifePathEmulator {
             let yearly_ganzi = GanZi::from_year(year);
 
             // 현재 대운 및 주변 대운 정보 탐색
-            let mut current_major_cycle = None;
-            let mut start_age_of_major = 0;
-            for c in &major_luck.cycles {
-                if age >= c.start_age {
-                    current_major_cycle = Some(c.clone());
-                    start_age_of_major = c.start_age;
-                }
-            }
+            // Precondition: major_luck.cycles is non-empty and sorted ascending by start_age
+            // (guaranteed by MajorLuckAnalysis::calculate_astro). Using partition_point gives
+            // O(log n) lookup and lets us borrow cycles instead of cloning them.
+            let cycle_pos = major_luck.cycles.partition_point(|c| c.start_age <= age);
+            let current_major_cycle = if cycle_pos > 0 { Some(&major_luck.cycles[cycle_pos - 1]) } else { None };
+            let start_age_of_major = current_major_cycle.map_or(0, |c| c.start_age);
             let major_ganzi = current_major_cycle
-                .as_ref()
                 .map(|c| c.ganzi)
                 .unwrap_or(self.vm.natal.month);
 
@@ -105,8 +102,8 @@ impl LifePathEmulator {
             let mut dt = (age as i32 - start_age_of_major as i32).abs();
             if dt > 5 {
                 // 교운기는 대운 시작 전후이므로 나중 대운과의 거리도 고려
-                // 다음 대운까지 남은 시간
-                if let Some(next_c) = major_luck.cycles.iter().find(|c| c.start_age > age) {
+                // 다음 대운까지 남은 시간 (cycle_pos is the index of the first cycle with start_age > age)
+                if let Some(next_c) = major_luck.cycles.get(cycle_pos) {
                     dt = (next_c.start_age as i32 - age as i32).abs();
                 }
             }
@@ -122,18 +119,13 @@ impl LifePathEmulator {
                 let mut alt_ganzi = self.vm.natal.month;
                 if age >= start_age_of_major && dt <= 2 && age < start_age_of_major + 3 {
                     // 방금 시작한 교운기 -> 이전 대운과의 차이
-                    if let Some(prev_idx) = major_luck
-                        .cycles
-                        .iter()
-                        .position(|c| c.start_age == start_age_of_major)
-                        .unwrap_or(0)
-                        .checked_sub(1)
-                    {
-                        alt_ganzi = major_luck.cycles[prev_idx].ganzi;
+                    // current cycle is at cycle_pos - 1; previous is at cycle_pos - 2
+                    if cycle_pos >= 2 {
+                        alt_ganzi = major_luck.cycles[cycle_pos - 2].ganzi;
                     }
                 } else if dt <= 2 {
                     // 곧 시작할 교운기 -> 다음 대운과의 차이
-                    if let Some(next_c) = major_luck.cycles.iter().find(|c| c.start_age > age) {
+                    if let Some(next_c) = major_luck.cycles.get(cycle_pos) {
                         alt_ganzi = next_c.ganzi;
                     }
                 }
