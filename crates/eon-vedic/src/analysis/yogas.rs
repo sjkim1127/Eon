@@ -392,13 +392,18 @@ impl YogaEngine {
         let mut results = Vec::new();
         let mut processed = std::collections::HashSet::new();
 
+        // Pre-build a map from planet to its position for O(1) lookups instead of
+        // repeated O(n) linear scans inside the nested loop.
+        let planet_map: std::collections::HashMap<_, _> =
+            chart.planets.iter().map(|p| (p.planet, p)).collect();
+
         for h1 in 1..=12 {
             let lord1 = Self::get_lord_of_house(chart.ascendant.rasi, h1);
-            if let Some(pos1) = chart.planets.iter().find(|p| p.planet == lord1) {
+            if let Some(pos1) = planet_map.get(&lord1) {
                 let h2 = pos1.house_index;
                 if h1 != h2 {
                     let lord2 = Self::get_lord_of_house(chart.ascendant.rasi, h2);
-                    if let Some(pos2) = chart.planets.iter().find(|p| p.planet == lord2) {
+                    if let Some(pos2) = planet_map.get(&lord2) {
                         if pos2.house_index == h1 && !processed.contains(&(h1.min(h2), h1.max(h2)))
                         {
                             // This is a valid exchange

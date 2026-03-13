@@ -67,6 +67,9 @@ const WEAK_STRUCTURES = new Set(["Follower", "FollowerResource", "FollowerStreng
 const GOOD_12_STAGES = new Set(["장생", "건록", "제왕", "관대", "목욕"]);
 // 흉한 12운성
 const BAD_12_STAGES = new Set(["절", "묘", "태"]);
+// 길한/흉한 세운 원국 관계 패턴 (모듈 수준에서 한 번만 컴파일)
+const GOOD_RELATIONS_RE = /합|록|귀인|삼합|육합/;
+const BAD_RELATIONS_RE = /충|형|해|파/;
 
 function computeSajuScore(saju: SajuAnalysisResult | null): { score: number; highlights: string[] } {
   if (!saju?.report) return { score: 0, highlights: [] };
@@ -148,8 +151,11 @@ function computeSajuScore(saju: SajuAnalysisResult | null): { score: number; hig
 
   // ── 11. 린트 — Error 페널티, 클린 보너스 ──
   const lints = saju.lints ?? [];
-  const errorCount = lints.filter(l => l.severity === "Error").length;
-  const warnCount = lints.filter(l => l.severity === "Warning").length;
+  let errorCount = 0, warnCount = 0;
+  for (const l of lints) {
+    if (l.severity === "Error") errorCount++;
+    else if (l.severity === "Warning") warnCount++;
+  }
   if (errorCount === 0 && warnCount === 0) { sajuScore += 2; highlights.push("사주 구조 클린"); }
   sajuScore -= Math.min(5, errorCount * 1.5 + warnCount * 0.4);
 
@@ -178,23 +184,24 @@ function computeVedicScore(report: VedicAnalysisResult | null): { score: number;
 
   // ── 2. 요가 품질 ──
   const yogas = r.yogas ?? [];
-  const veryHighYogas = yogas.filter((y: { quality: string | object }) => {
+  let veryHighYogaCount = 0, highYogaCount = 0;
+  for (const y of yogas as { quality: string | object }[]) {
     const q = typeof y.quality === "string" ? y.quality : Object.keys(y.quality ?? {})[0];
-    return q === "VeryHigh";
-  });
-  const highYogas = yogas.filter((y: { quality: string | object }) => {
-    const q = typeof y.quality === "string" ? y.quality : Object.keys(y.quality ?? {})[0];
-    return q === "High";
-  });
-  vedicScore += Math.min(12, veryHighYogas.length * 4 + highYogas.length * 2);
-  if (veryHighYogas.length > 0) highlights.push(`최상급 요가 ${veryHighYogas.length}개`);
-  else if (highYogas.length > 0) highlights.push(`우수 요가 ${highYogas.length}개`);
+    if (q === "VeryHigh") veryHighYogaCount++;
+    else if (q === "High") highYogaCount++;
+  }
+  vedicScore += Math.min(12, veryHighYogaCount * 4 + highYogaCount * 2);
+  if (veryHighYogaCount > 0) highlights.push(`최상급 요가 ${veryHighYogaCount}개`);
+  else if (highYogaCount > 0) highlights.push(`우수 요가 ${highYogaCount}개`);
 
   // ── 3. 하우스 강도 분류 ──
   const houseSummary = r.house_summary ?? [];
-  const excellentHouses = houseSummary.filter((h: { rating: string }) => h.rating === "Excellent").length;
-  const strongHouses = houseSummary.filter((h: { rating: string }) => h.rating === "Strong").length;
-  const weakHouses = houseSummary.filter((h: { rating: string }) => h.rating === "Weak").length;
+  let excellentHouses = 0, strongHouses = 0, weakHouses = 0;
+  for (const h of houseSummary as { rating: string }[]) {
+    if (h.rating === "Excellent") excellentHouses++;
+    else if (h.rating === "Strong") strongHouses++;
+    else if (h.rating === "Weak") weakHouses++;
+  }
   vedicScore += Math.min(10, excellentHouses * 2 + strongHouses * 0.8);
   vedicScore -= Math.min(6, weakHouses * 1.2);
   if (excellentHouses >= 4) highlights.push(`최강 하우스 ${excellentHouses}개`);
@@ -225,8 +232,11 @@ function computeVedicScore(report: VedicAnalysisResult | null): { score: number;
   // ── 7. SAV 포인트 — 28+ 하우스가 많을수록 강함 ──
   const savPoints = chart?.sav?.points ?? [];
   if (Array.isArray(savPoints) && savPoints.length === 12) {
-    const strongSav = savPoints.filter((p: number) => p >= 28).length;
-    const weakSav = savPoints.filter((p: number) => p <= 22).length;
+    let strongSav = 0, weakSav = 0;
+    for (const p of savPoints as number[]) {
+      if (p >= 28) strongSav++;
+      else if (p <= 22) weakSav++;
+    }
     vedicScore += Math.min(5, strongSav * 0.8);
     vedicScore -= Math.min(4, weakSav * 0.8);
     if (strongSav >= 6) highlights.push(`SAV 강점 하우스 ${strongSav}개`);
@@ -244,8 +254,11 @@ function computeVedicScore(report: VedicAnalysisResult | null): { score: number;
 
   // ── 9. 역행·연소 행성 페널티 ──
   const planets = chart?.planets ?? [];
-  const retroCount = planets.filter((p: { is_retrograde: boolean }) => p.is_retrograde).length;
-  const combustCount = planets.filter((p: { is_combust: boolean }) => p.is_combust).length;
+  let retroCount = 0, combustCount = 0;
+  for (const p of planets as { is_retrograde: boolean; is_combust: boolean }[]) {
+    if (p.is_retrograde) retroCount++;
+    if (p.is_combust) combustCount++;
+  }
   vedicScore -= Math.min(4, retroCount * 0.8);
   vedicScore -= Math.min(3, combustCount * 0.8);
   if (retroCount + combustCount >= 3) highlights.push(`역행 ${retroCount}+연소 ${combustCount}개 (약화)`);
@@ -253,8 +266,11 @@ function computeVedicScore(report: VedicAnalysisResult | null): { score: number;
   // ── 10. 아바스타 (행성 상태) — Bala=활성, Mrita=사망 ──
   const avasthas = chart?.avasthas ?? [];
   if (avasthas.length > 0) {
-    const balaCount = avasthas.filter((a: { baladi: string }) => a.baladi === "Bala" || a.baladi === "Yuva").length;
-    const mrtaCount = avasthas.filter((a: { baladi: string }) => a.baladi === "Mrita" || a.baladi === "Vridha").length;
+    let balaCount = 0, mrtaCount = 0;
+    for (const a of avasthas as { baladi: string }[]) {
+      if (a.baladi === "Bala" || a.baladi === "Yuva") balaCount++;
+      else if (a.baladi === "Mrita" || a.baladi === "Vridha") mrtaCount++;
+    }
     vedicScore += Math.min(3, balaCount * 0.6);
     vedicScore -= Math.min(3, mrtaCount * 0.7);
     if (balaCount >= 4) highlights.push(`활성 행성 ${balaCount}개 (Bala·Yuva)`);
@@ -276,9 +292,12 @@ function computeTransitScore(transit: TransitResult | null | undefined): { score
   else if (score < 40) highlights.push("현재 운세 주의 필요");
 
   // ── 2. 근처 부하 진단 ──
-  const badCount = nearby.filter((d: { status: string }) => d.status === "Overloaded" || d.status === "SystemDown").length;
+  let badCount = 0, downCount = 0;
+  for (const d of nearby as { status: string }[]) {
+    if (d.status === "SystemDown") { badCount++; downCount++; }
+    else if (d.status === "Overloaded") badCount++;
+  }
   if (badCount > 0) { score -= Math.min(15, badCount * 5); highlights.push(`근처 부하 구간 ${badCount}개`); }
-  const downCount = nearby.filter((d: { status: string }) => d.status === "SystemDown").length;
   if (downCount > 0) score -= downCount * 3; // SystemDown 추가 페널티
 
   // ── 3. 세운 12운성 ──
@@ -300,8 +319,11 @@ function computeTransitScore(transit: TransitResult | null | undefined): { score
 
   // ── 6. 세운·월운 원국 관계 (합이 있을수록 활성화) ──
   const yearRelations = transit.yearly_luck?.influence?.relations_with_natal ?? [];
-  const goodRelations = yearRelations.filter((rel: string) => /합|록|귀인|삼합|육합/.test(rel)).length;
-  const badRelations = yearRelations.filter((rel: string) => /충|형|해|파/.test(rel)).length;
+  let goodRelations = 0, badRelations = 0;
+  for (const rel of yearRelations as string[]) {
+    if (GOOD_RELATIONS_RE.test(rel)) goodRelations++;
+    if (BAD_RELATIONS_RE.test(rel)) badRelations++;
+  }
   score += Math.min(4, goodRelations * 1.5);
   score -= Math.min(4, badRelations * 1.5);
 
