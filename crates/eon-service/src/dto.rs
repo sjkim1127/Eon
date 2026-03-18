@@ -1,0 +1,180 @@
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnalysisInput {
+    pub year: i32,
+    pub month: u32,
+    pub day: u32,
+    pub hour: u32,
+    pub minute: u32,
+    pub is_lunar: bool,
+    pub is_leap_month: bool,
+    pub lat: f64,
+    pub lon: f64,
+    pub timezone: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SajuAnalysisInput {
+    #[serde(flatten)]
+    pub base: AnalysisInput,
+    pub is_male: bool,
+    pub use_night_rat_hour: bool,
+    pub precision: BirthTimePrecision,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransitAnalysisInput {
+    #[serde(flatten)]
+    pub base: SajuAnalysisInput,
+    pub current: CurrentContext,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CompatibilityInput {
+    pub person1: SajuAnalysisInput,
+    pub person2: SajuAnalysisInput,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VedicCompatibilityInput {
+    pub person1: AnalysisInput,
+    pub person2: AnalysisInput,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CurrentContext {
+    pub now_utc: DateTime<Utc>,
+    pub analysis_timezone: String,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum BirthTimePrecision {
+    Exact,
+    UnknownTimeNoonProxy,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnalysisMeta {
+    pub precision: BirthTimePrecision,
+    pub corrected_time: String,
+    pub is_dst: bool,
+    pub dst_offset_hours: Option<i32>,
+    pub analysis_timezone: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SajuAnalysisOutput {
+    pub meta: AnalysisMeta,
+    pub report: eon_saju::report::SajuReport,
+    pub lints: Vec<eon_saju::engine::linter::SajuLint>,
+    pub entropy: eon_saju::engine::entropy::EntropyAnalysis,
+    pub qi_topology: eon_saju::engine::topology::TopologyAnalysis,
+    pub load_diagnostics: Vec<eon_saju::engine::load_balancer::LoadBalanceDiagnostic>,
+    pub crash_count: u32,
+    pub vulnerability_report: Option<eon_saju::engine::fuzzer::VulnerabilityReport>,
+    pub relationships: eon_saju::analysis::relationships::RelationshipAnalysis,
+    pub void_analysis: eon_saju::analysis::void::VoidAnalysis,
+    pub complexity: Option<eon_saju::engine::complexity::ComplexityAnalysis>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VedicAnalysisOutput {
+    pub meta: AnalysisMeta,
+    pub report: eon_vedic::analysis::report::VedicAnalysisReport,
+    pub chart: eon_vedic::core::chart::VedicChart,
+    pub gochara: eon_vedic::analysis::gochara::GocharaSummary,
+    pub varga_nakshatra_reports:
+        eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReports,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DailyLuckDto {
+    pub year: i32,
+    pub month: u32,
+    pub day: u32,
+    pub ganzi: eon_saju::core::ganzi::GanZi,
+    pub stem_god: eon_saju::core::ten_gods::TenGod,
+    pub branch_god: eon_saju::core::ten_gods::TenGod,
+    pub influence: Option<eon_saju::analysis::dynamic_luck::LuckInfluence>,
+    pub twelve_stage: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LifeFrameDto {
+    pub age: u32,
+    pub ganzi: eon_saju::core::ganzi::GanZi,
+    pub major_ganzi: eon_saju::core::ganzi::GanZi,
+    pub score: f32,
+    pub tags: Vec<String>,
+    pub esil_trace: String,
+    pub register_state: eon_saju::engine::vm::QiRegisters,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransitAnalysisOutput {
+    pub meta: AnalysisMeta,
+    pub yearly_luck: eon_saju::analysis::periodic_luck::YearlyLuck,
+    pub monthly_luck: eon_saju::analysis::periodic_luck::MonthlyLuck,
+    pub monthly_lucks: Vec<eon_saju::analysis::periodic_luck::MonthlyLuck>,
+    pub daily_luck: DailyLuckDto,
+    pub current_age: u32,
+    pub current_frame: Option<LifeFrameDto>,
+    pub nearby_diagnostics: Vec<eon_saju::engine::load_balancer::LoadBalanceDiagnostic>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiAuditOutput {
+    pub meta: AnalysisMeta,
+    pub context_dump: String,
+    pub peak_age: u32,
+    pub valley_age: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CompatibilityOutput {
+    pub saju: eon_saju::engine::interprocess::CompatibilityAudit,
+    pub vedic: eon_vedic::analysis::compatibility::CompatibilityResult,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TierGrade {
+    pub grade: String,
+    pub label: String,
+    pub desc: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScoreResult {
+    pub score: f32,
+    pub highlights: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DomainTier {
+    pub house: u8,
+    pub domain: String,
+    pub tier: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TierResult {
+    pub natal_score: f32,
+    pub current_score: f32,
+    pub destiny_score: f32,
+    pub destiny_tier: TierGrade,
+    pub potential_score: f32,
+    pub potential_tier: TierGrade,
+    pub domain_tiers: Vec<DomainTier>,
+    pub saju_result: ScoreResult,
+    pub vedic_result: ScoreResult,
+    pub transit_result: ScoreResult,
+    pub strengths: Vec<String>,
+    pub weaknesses: Vec<String>,
+    pub growth_gap: f32,
+    pub risk_level: String,
+    pub profile: String,
+    pub version: String,
+}

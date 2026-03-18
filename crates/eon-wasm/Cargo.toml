@@ -13,6 +13,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
 chrono = { workspace = true }
 chrono-tz = { workspace = true }
+eon-service = { path = "../eon-service" }
 eon-vedic = { path = "../eon-vedic" }
 eon-astro = { path = "../eon-astro" }
 eon-saju = { path = "../eon-saju", default-features = false }

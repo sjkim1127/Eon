@@ -1,159 +1,14 @@
 pub mod tier;
 
-use eon_vedic::analysis::compatibility::CompatibilityEngine;
-use eon_vedic::analysis::report::VedicAnalysisReport;
-use eon_vedic::core::chart::{VedicChart, VedicChartCalculator};
-use serde::Serialize;
+use eon_service::dto::{
+    AnalysisInput, BirthTimePrecision, CurrentContext, SajuAnalysisInput,
+    TransitAnalysisInput,
+};
+use eon_service::facade;
 use wasm_bindgen::prelude::*;
 
-/// WASM 패닉 메시지를 브라우저 콘솔에 표시
-#[wasm_bindgen(start)]
-pub fn init_panic_hook() {
-    console_error_panic_hook::set_once();
-}
-
-// === Saju (四柱) imports ===
-use eon_saju::analysis::analytics::Analyzer;
-use eon_saju::analysis::major_luck::MajorLuckAnalysis;
-use eon_saju::analysis::periodic_luck::{MonthlyLuck, YearlyLuck};
-use eon_saju::analysis::relationships::RelationshipAnalysis;
-use eon_saju::analysis::void::VoidAnalysis;
-use eon_saju::core::pillars::{FourPillars, SajuInput};
-use eon_saju::engine::complexity::{ComplexityAnalysis, DestinyComplexity};
-use eon_saju::engine::emulator::LifePathEmulator;
-use eon_saju::engine::entropy::{DestinyEntropy, EntropyAnalysis};
-use eon_saju::engine::fuzzer::DestinyFuzzer;
-use eon_saju::engine::interprocess::{CompatibilityAudit, CompatibilityAuditor};
-use eon_saju::engine::linter::{DestinyLinter, SajuLint};
-use eon_saju::engine::load_balancer::{KarmaLoadBalancer, LoadBalanceDiagnostic};
-use eon_saju::engine::topology::{QiTopology, TopologyAnalysis};
-use eon_saju::engine::vm::SajuVM;
-use eon_saju::report::SajuReport;
-
-// === Core imports (BirthInfo, Location, DST) ===
-use eon_core::{standard_meridian_from_tz, BirthInfo, Gender, Location};
-
-// ── 공통 헬퍼 함수 ─────────────────────────────────────────────────────────────
-
-use serde::Deserialize;
-
-#[derive(Deserialize)]
-pub struct AnalysisArgs {
-    pub year: i32,
-    pub month: u32,
-    pub day: u32,
-    pub hour: u32,
-    pub minute: u32,
-    pub is_lunar: bool,
-    pub is_leap_month: bool,
-    pub lat: f64,
-    pub lon: f64,
-    pub timezone: String,
-}
-
-#[derive(Deserialize)]
-pub struct SajuArgs {
-    pub year: i32,
-    pub month: u32,
-    pub day: u32,
-    pub hour: u32,
-    pub minute: u32,
-    pub is_lunar: bool,
-    pub is_leap_month: bool,
-    pub lat: f64,
-    pub lon: f64,
-    pub timezone: String,
-    pub is_male: bool,
-    pub use_night_rat_hour: bool,
-}
-
-#[derive(Deserialize)]
-pub struct TransitArgs {
-    pub year: i32,
-    pub month: u32,
-    pub day: u32,
-    pub hour: u32,
-    pub minute: u32,
-    pub is_lunar: bool,
-    pub is_leap_month: bool,
-    pub lat: f64,
-    pub lon: f64,
-    pub timezone: String,
-    pub is_male: bool,
-    pub use_night_rat_hour: bool,
-    pub current_year: i32,
-    pub current_month: u32,
-    pub current_day: u32,
-}
-
-#[derive(Deserialize)]
-pub struct CompArgs {
-    pub year1: i32, pub month1: u32, pub day1: u32, pub hour1: u32, pub minute1: u32,
-    pub is_lunar1: bool, pub is_leap_month1: bool,
-    pub is_male1: bool, pub lon1: f64, pub lat1: f64, pub timezone1: String,
-    pub year2: i32, pub month2: u32, pub day2: u32, pub hour2: u32, pub minute2: u32,
-    pub is_lunar2: bool, pub is_leap_month2: bool,
-    pub is_male2: bool, pub lon2: f64, pub lat2: f64, pub timezone2: String,
-    pub use_night_rat_hour1: bool,
-    pub use_night_rat_hour2: bool,
-}
-
-/// `BirthInfo`를 생성하고 DST + 경도 기반 진태양시 보정을 적용합니다.
-///
-/// `get_saju_analysis`, `get_transit_analysis` 양쪽에서 동일하게 반복되던
-/// BirthInfo 구성 로직을 단일 함수로 추출하여 중복을 제거합니다.
-fn build_birth_info(
-    year: i32,
-    month: u32,
-    day: u32,
-    hour: u32,
-    minute: u32,
-    is_lunar: bool,
-    is_leap: bool,
-    gender: Gender,
-    lon: f64,
-    lat: f64,
-    timezone: &str,
-) -> BirthInfo {
-    let location = Location::new("출생지", lat, lon, standard_meridian_from_tz(timezone));
-    let info = if is_lunar {
-        BirthInfo::lunar(year, month, day, hour, minute, is_leap)
-    } else {
-        BirthInfo::solar(year, month, day, hour, minute)
-    };
-    info.with_timezone(timezone)
-        .with_location(location)
-        .with_true_solar_time(true)
-        .with_gender(gender)
-}
-
-// ── 사주 분석 결과 래퍼 ────────────────────────────────────────────────────────
-
-/// DST 메타데이터 + 고급 분석을 포함한 사주 분석 결과 래퍼
-#[derive(Serialize)]
-struct SajuAnalysisResult {
-    report: SajuReport,
-    is_dst: bool,
-    dst_offset_hours: Option<i32>,
-    corrected_time: String,
-    lints: Vec<SajuLint>,
-    entropy: EntropyAnalysis,
-    qi_topology: TopologyAnalysis,
-    load_diagnostics: Vec<LoadBalanceDiagnostic>,
-    crash_count: u32,
-    vulnerability_report: Option<eon_saju::engine::fuzzer::VulnerabilityReport>,
-    relationships: RelationshipAnalysis,
-    void_analysis: VoidAnalysis,
-    complexity: Option<ComplexityAnalysis>,
-}
-
 #[wasm_bindgen]
-pub fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from WASM!", name)
-}
-
-#[wasm_bindgen]
-pub async fn get_vedic_analysis(
+pub fn get_vedic_analysis(
     year: i32,
     month: u32,
     day: u32,
@@ -163,66 +18,30 @@ pub async fn get_vedic_analysis(
     is_leap_month: bool,
     lat: f64,
     lon: f64,
-    timezone: &str,
+    timezone: String,
 ) -> Result<JsValue, JsValue> {
-    let mut birth_info = if is_lunar {
-        BirthInfo::lunar(year, month, day, hour, minute, is_leap_month)
-    } else {
-        BirthInfo::solar(year, month, day, hour, minute)
-    };
-    birth_info = birth_info.with_timezone(timezone);
-    let dt = birth_info
-        .to_utc()
-        .ok_or_else(|| JsError::new("Invalid date/time"))?;
-
-    let calculator = VedicChartCalculator::new();
-    let chart = calculator.calculate(dt, lat, lon);
-
-    let report = VedicAnalysisReport::generate(&chart, dt);
-
-    // Gochara: compute current transit chart and analyze
-    let gochara = {
-        let natal_moon_rasi = chart
-            .planets
-            .iter()
-            .find(|p| p.planet == eon_vedic::planets::VedicPlanet::Moon)
-            .map(|m| m.rasi)
-            .unwrap_or(1);
-        let transit_chart = calculator.calculate(chrono::Utc::now(), lat, lon);
-        eon_vedic::analysis::gochara::GocharaEngine::analyze(natal_moon_rasi, &transit_chart)
+    let input = AnalysisInput {
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        is_lunar,
+        is_leap_month,
+        lat,
+        lon,
+        timezone,
     };
 
-    let varga_nakshatra_reports =
-        eon_vedic::analysis::varga_nakshatra_report::build_varga_nakshatra_reports(&chart);
+    let result = facade::analyze_vedic(input, None).map_err(|e| JsError::new(&e.to_string()))?;
 
-    #[derive(Serialize)]
-    struct VedicAnalysisResult {
-        report: VedicAnalysisReport,
-        chart: VedicChart,
-        gochara: eon_vedic::analysis::gochara::GocharaSummary,
-        varga_nakshatra_reports: eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReports,
-    }
-
-    let result = VedicAnalysisResult {
-        report,
-        chart,
-        gochara,
-        varga_nakshatra_reports,
-    };
-
-    // json_compatible: HashMap<K,V>을 JS Map이 아닌 plain 객체로 직렬화
-    // (serde-wasm-bindgen 0.4+ 기본값은 Map 객체 → 프론트엔드 bracket 접근 호환 안 됨)
     use serde::Serialize as _;
     let js_val = result
         .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
-        .map_err(|e| JsError::new(&format!("직렬화 오류: {e}")))?;
+        .map_err(|e| JsError::new(&format!("직렬화 오류: {}", e)))?;
     Ok(js_val)
 }
 
-/// 사주(四柱) 분석 — WASM에서 호출 가능
-///
-/// 생년월일시 + 성별 + 좌표 + 타임존을 받아 사주 분석 결과를 반환합니다.
-/// BirthInfo를 사용하여 DST(서머타임) + 경도 기반 진태양시 보정을 자동 적용합니다.
 #[wasm_bindgen]
 pub fn get_saju_analysis(
     year: i32,
@@ -236,110 +55,42 @@ pub fn get_saju_analysis(
     use_night_rat_hour: bool,
     lon: f64,
     lat: f64,
-    timezone: &str,
+    timezone: String,
+    unknown_time: Option<bool>,
 ) -> Result<JsValue, JsValue> {
-    let gender = if is_male {
-        Gender::Male
+    let precision = if unknown_time.unwrap_or(false) {
+        BirthTimePrecision::UnknownTimeNoonProxy
     } else {
-        Gender::Female
+        BirthTimePrecision::Exact
     };
 
-    // BirthInfo로 DST + 진태양시 보정
-    let birth_info = build_birth_info(
-        year,
-        month,
-        day,
-        hour,
-        minute,
-        is_lunar,
-        is_leap_month,
-        gender,
-        lon,
-        lat,
-        timezone,
-    );
-
-    let is_dst = birth_info.is_dst();
-    let dst_offset = birth_info.dst_offset_hours();
-    let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
-
-    // corrected_datetime()이 이미 진태양시 보정 완료
-    // new_solar_at(lon) 사용 시 이중 보정 발생 → new_solar 사용
-    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin)
-        .with_gender(gender)
-        .with_night_rat_hour(use_night_rat_hour);
-
-    let pillars = FourPillars::calculate(&input)
-        .map_err(|e| JsError::new(&format!("사주 계산 실패: {}", e)))?;
-
-    // 고급 정적 엔진 계산 (원국 기반)
-    let lints: Vec<SajuLint> = DestinyLinter::lint(&pillars);
-    let entropy: EntropyAnalysis = DestinyEntropy::analyze(&pillars);
-    let qi_topology: TopologyAnalysis = QiTopology::analyze(&pillars);
-    let relationships = pillars.relationships();
-    let void_analysis = pillars.void_analysis();
-
-    let mut report = SajuReport::new(pillars.clone());
-    let mut load_diagnostics: Vec<LoadBalanceDiagnostic> = Vec::new();
-    let mut crash_count: u32 = 0;
-    let mut vulnerability_report: Option<eon_saju::engine::fuzzer::VulnerabilityReport> = None;
-    let mut complexity: Option<ComplexityAnalysis> = None;
-
-    if let Ok(major_luck) =
-        MajorLuckAnalysis::calculate_astro(&pillars, gender, cy, cm, cd, ch, cmin)
-    {
-        let emulator = LifePathEmulator::new(pillars.clone(), gender, cy);
-        if let Ok(life_report) = emulator.emulate() {
-            let golden_time = Analyzer::find_golden_time(&life_report.timeline, 10);
-
-            // 동적 엔진 계산 (시뮬레이션 기반)
-            load_diagnostics = KarmaLoadBalancer::diagnose(&life_report.frames);
-            complexity = Some(DestinyComplexity::analyze(&life_report.frames));
-
-            let vm_fuzz = SajuVM::new(pillars.clone());
-            let fuzzer = DestinyFuzzer::new(vm_fuzz);
-            let fuzzer_report = fuzzer.audit(pillars.month);
-            crash_count = fuzzer_report.total_crashes as u32;
-            vulnerability_report = Some(fuzzer_report);
-
-            report = report
-                .with_major_luck(major_luck)
-                .with_timeline(life_report.timeline)
-                .with_vm_simulation(life_report.frames);
-
-            if let Some(gt) = golden_time {
-                report = report.with_golden_time(gt);
-            }
-        }
-    }
-
-    // 결과 래퍼
-    let result = SajuAnalysisResult {
-        report,
-        is_dst,
-        dst_offset_hours: dst_offset,
-        corrected_time: format!("{:04}-{:02}-{:02} {:02}:{:02}", cy, cm, cd, ch, cmin),
-        lints,
-        entropy,
-        qi_topology,
-        load_diagnostics,
-        crash_count,
-        vulnerability_report,
-        relationships,
-        void_analysis,
-        complexity,
+    let input = SajuAnalysisInput {
+        base: AnalysisInput {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            is_lunar,
+            is_leap_month,
+            lat,
+            lon,
+            timezone,
+        },
+        is_male,
+        use_night_rat_hour,
+        precision,
     };
 
-    // json_compatible: Vec<YearlyScore> 등 timeline 타입을 네이티브 JS 객체로 직렬화
-    // (기존 timeline_json: String 우회 방식 제거 → 타입 안정성 & JSON.parse 비용 제거)
+    let result = facade::analyze_saju(input).map_err(|e| JsError::new(&e.to_string()))?;
+
     use serde::Serialize as _;
     let js_val = result
         .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
-        .map_err(|e| JsError::new(&format!("직렬화 오류: {e}")))?;
+        .map_err(|e| JsError::new(&format!("직렬화 오류: {}", e)))?;
     Ok(js_val)
 }
 
-/// 현재 운세(세운/월운/일운) 분석 — WASM에서 호출 가능
 #[wasm_bindgen]
 pub fn get_transit_analysis(
     year: i32,
@@ -353,155 +104,60 @@ pub fn get_transit_analysis(
     use_night_rat_hour: bool,
     lon: f64,
     lat: f64,
-    timezone: &str,
-    current_year: i32,
-    current_month: u32,
-    current_day: u32,
+    timezone: String,
+    _current_year: i32,
+    _current_month: u32,
+    _current_day: u32,
+    unknown_time: Option<bool>,
+    now_utc_str: Option<String>, // WASM에서는 ISO string으로 받는 게 편할 수 있음
 ) -> Result<JsValue, JsValue> {
-    let gender = if is_male {
-        Gender::Male
+    let precision = if unknown_time.unwrap_or(false) {
+        BirthTimePrecision::UnknownTimeNoonProxy
     } else {
-        Gender::Female
+        BirthTimePrecision::Exact
     };
 
-    let birth_info = build_birth_info(
-        year,
-        month,
-        day,
-        hour,
-        minute,
-        is_lunar,
-        is_leap_month,
-        gender,
-        lon,
-        lat,
-        timezone,
-    );
-
-    let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
-    // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
-    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin)
-        .with_gender(gender)
-        .with_night_rat_hour(use_night_rat_hour);
-    let pillars = FourPillars::calculate(&input)
-        .map_err(|e| JsError::new(&format!("사주 계산 실패: {}", e)))?;
-
-    // 세운/월운 계산
-    let yearly = YearlyLuck::calculate(current_year, &pillars);
-    let monthly = MonthlyLuck::calculate(current_year, current_month, &pillars);
-
-    // 12개월 전체 월운
-    let monthly_lucks: Vec<MonthlyLuck> = (1..=12)
-        .map(|m| MonthlyLuck::calculate(current_year, m, &pillars))
-        .collect();
-
-    // 일운 계산
-    let day_ganzi =
-        eon_saju::core::ganzi_utils::calculate_day_ganzi(current_year, current_month, current_day);
-    let day_master = pillars.day_master();
-    let daily_stem_god = eon_saju::core::ten_gods::TenGod::from_stems(day_master, day_ganzi.stem);
-    let daily_branch_god =
-        eon_saju::core::ten_gods::TenGod::from_stem_and_branch(day_master, day_ganzi.branch);
-    let daily_twelve_stage =
-        eon_saju::core::twelve_stages::calculate_twelve_stage(day_master, day_ganzi.branch)
-            .hangul()
-            .to_string();
-    let daily_influence = Some(
-        eon_saju::analysis::dynamic_luck::DynamicLuckAnalysis::get_influence(
-            day_ganzi, "일운", &pillars,
-        ),
-    );
-
-    // 현재 나이 계산
-    let current_age = (current_year - year).max(0) as u32;
-
-    // SajuVM을 통해 전체 인생 프레임 시뮬레이션
-    let vm = SajuVM::new(pillars.clone());
-    let frames = vm.simulate_life(0, 105);
-
-    // 현재 나이에 해당하는 프레임 추출
-    let current_frame = frames.iter().find(|f| f.age == current_age).cloned();
-
-    // 전후 5년(과거 3년 ~ 미래 5년) 범위의 부하 진단
-    let all_diagnostics = KarmaLoadBalancer::diagnose(&frames);
-    let nearby_diagnostics: Vec<LoadBalanceDiagnostic> = all_diagnostics
-        .into_iter()
-        .filter(|d| d.age >= current_age.saturating_sub(3) && d.age <= current_age + 5)
-        .collect();
-
-    // LifeFrameDto 정의 (Tauri와 동일한 구조)
-    #[derive(Serialize)]
-    struct LifeFrameDto {
-        age: u32,
-        ganzi: eon_saju::core::ganzi::GanZi,
-        major_ganzi: eon_saju::core::ganzi::GanZi,
-        score: f32,
-        tags: Vec<String>,
-        esil_trace: String,
-        register_state: eon_saju::engine::vm::QiRegisters,
-    }
-
-    #[derive(Serialize)]
-    struct DailyLuckDto {
-        year: i32,
-        month: u32,
-        day: u32,
-        ganzi: eon_saju::core::ganzi::GanZi,
-        stem_god: eon_saju::core::ten_gods::TenGod,
-        branch_god: eon_saju::core::ten_gods::TenGod,
-        influence: Option<eon_saju::analysis::dynamic_luck::LuckInfluence>,
-        twelve_stage: Option<String>,
-    }
-
-    #[derive(Serialize)]
-    struct TransitResult {
-        yearly_luck: YearlyLuck,
-        monthly_luck: MonthlyLuck,
-        monthly_lucks: Vec<MonthlyLuck>,
-        daily_luck: DailyLuckDto,
-        current_age: u32,
-        current_frame: Option<LifeFrameDto>,
-        nearby_diagnostics: Vec<LoadBalanceDiagnostic>,
-    }
-
-    let current_frame_dto = current_frame.map(|f| LifeFrameDto {
-        age: f.age,
-        ganzi: f.ganzi,
-        major_ganzi: f.major_ganzi,
-        score: f.score,
-        tags: f.tags_as_strings(),
-        esil_trace: f.esil_trace,
-        register_state: f.register_state,
-    });
-
-    let daily_luck_dto = DailyLuckDto {
-        year: current_year,
-        month: current_month,
-        day: current_day,
-        ganzi: day_ganzi,
-        stem_god: daily_stem_god,
-        branch_god: daily_branch_god,
-        influence: daily_influence,
-        twelve_stage: Some(daily_twelve_stage),
+    let now_utc = if let Some(s) = now_utc_str {
+        chrono::DateTime::parse_from_rfc3339(&s)
+            .map(|dt| dt.with_timezone(&chrono::Utc))
+            .unwrap_or_else(|_| chrono::Utc::now())
+    } else {
+        chrono::Utc::now()
     };
 
-    let result = TransitResult {
-        yearly_luck: yearly,
-        monthly_luck: monthly,
-        monthly_lucks,
-        daily_luck: daily_luck_dto,
-        current_age,
-        current_frame: current_frame_dto,
-        nearby_diagnostics,
+    let input = TransitAnalysisInput {
+        base: SajuAnalysisInput {
+            base: AnalysisInput {
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                is_lunar,
+                is_leap_month,
+                lat,
+                lon,
+                timezone: timezone.clone(),
+            },
+            is_male,
+            use_night_rat_hour,
+            precision,
+        },
+        current: CurrentContext {
+            now_utc,
+            analysis_timezone: timezone,
+        },
     };
 
-    Ok(serde_wasm_bindgen::to_value(&result)?)
+    let result = facade::analyze_transit(input).map_err(|e| JsError::new(&e.to_string()))?;
+
+    use serde::Serialize as _;
+    let js_val = result
+        .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+        .map_err(|e| JsError::new(&format!("직렬화 오류: {}", e)))?;
+    Ok(js_val)
 }
 
-/// AI 감사 리포트 — WASM에서 호출 가능
-///
-/// eon-ai의 `DestinyAIAuditor`를 사용하여 LLM 프롬프트(context_dump)와
-/// 생애 peak/valley 나이를 반환합니다. API 키 없이 Google AI Studio 등에 붙여넣기 가능.
 #[wasm_bindgen]
 pub fn get_ai_audit(
     year: i32,
@@ -515,70 +171,42 @@ pub fn get_ai_audit(
     use_night_rat_hour: bool,
     lon: f64,
     lat: f64,
-    timezone: &str,
+    timezone: String,
+    unknown_time: Option<bool>,
 ) -> Result<JsValue, JsValue> {
-    use eon_ai::DestinyAIAuditor;
-
-    let gender = if is_male {
-        eon_core::Gender::Male
+    let precision = if unknown_time.unwrap_or(false) {
+        BirthTimePrecision::UnknownTimeNoonProxy
     } else {
-        eon_core::Gender::Female
+        BirthTimePrecision::Exact
     };
-    let info = build_birth_info(
-        year,
-        month,
-        day,
-        hour,
-        minute,
-        is_lunar,
-        is_leap_month,
-        gender,
-        lon,
-        lat,
-        timezone,
-    );
 
-    let is_dst = info.is_dst();
-    let dst_offset = info.dst_offset_hours();
-    let (cy, cm, cd, ch, cmin) = info.corrected_datetime();
-
-    let input = SajuInput::new_solar(cy, cm, cd, ch, cmin)
-        .with_gender(gender)
-        .with_night_rat_hour(use_night_rat_hour);
-
-    let pillars = FourPillars::calculate(&input)
-        .map_err(|e| JsError::new(&format!("사주 계산 오류: {e}")))?;
-
-    let _ = (is_dst, dst_offset); // 미사용 변수 명시적 무시
-
-    let emulator = eon_saju::engine::emulator::LifePathEmulator::new(pillars.clone(), gender, year);
-    let life_report = emulator
-        .emulate()
-        .map_err(|e| JsError::new(&format!("시뮬레이션 오류: {e}")))?;
-
-    let context_dump = DestinyAIAuditor::build_agent_prompt(&pillars)
-        + "\n\n=== CORE DUMP ===\n"
-        + &DestinyAIAuditor::generate_context(&pillars, &life_report);
-
-    let peak_age = life_report.peak_age;
-    let valley_age = life_report.valley_age;
-
-    #[derive(serde::Serialize)]
-    struct AiAuditWasmResult {
-        context_dump: String,
-        peak_age: u32,
-        valley_age: u32,
-    }
-
-    let result = AiAuditWasmResult {
-        context_dump,
-        peak_age,
-        valley_age,
+    let input = SajuAnalysisInput {
+        base: AnalysisInput {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            is_lunar,
+            is_leap_month,
+            lat,
+            lon,
+            timezone,
+        },
+        is_male,
+        use_night_rat_hour,
+        precision,
     };
-    Ok(serde_wasm_bindgen::to_value(&result)?)
+
+    let result = facade::analyze_ai_audit(input).map_err(|e| JsError::new(&e.to_string()))?;
+
+    use serde::Serialize as _;
+    let js_val = result
+        .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+        .map_err(|e| JsError::new(&format!("직렬화 오류: {}", e)))?;
+    Ok(js_val)
 }
 
-/// 사주 궁합 분석 - WASM에서 호출 가능
 #[wasm_bindgen]
 pub fn get_saju_compatibility(
     year1: i32,
@@ -592,6 +220,7 @@ pub fn get_saju_compatibility(
     lon1: f64,
     lat1: f64,
     use_night_rat_hour1: bool,
+    timezone1: String,
     year2: i32,
     month2: u32,
     day2: u32,
@@ -603,68 +232,56 @@ pub fn get_saju_compatibility(
     lon2: f64,
     lat2: f64,
     use_night_rat_hour2: bool,
-    timezone1: &str,
-    timezone2: &str,
+    timezone2: String,
 ) -> Result<JsValue, JsValue> {
-    let make_pillars = |y: i32,
-                        mo: u32,
-                        d: u32,
-                        h: u32,
-                        mi: u32,
-                        lunar: bool,
-                        leap: bool,
-                        male: bool,
-                        lon: f64,
-                        lat: f64,
-                        night_rat: bool,
-                        tz: &str|
-     -> Result<FourPillars, JsError> {
-        let gender = if male { Gender::Male } else { Gender::Female };
-        let birth_info = build_birth_info(y, mo, d, h, mi, lunar, leap, gender, lon, lat, tz);
-        let (cy, cm, cd, ch, cmin) = birth_info.corrected_datetime();
-        // corrected_datetime()이 이미 진태양시 보정 완료 → 이중 보정 방지
-        let input = SajuInput::new_solar(cy, cm, cd, ch, cmin)
-            .with_gender(gender)
-            .with_night_rat_hour(night_rat);
-        FourPillars::calculate(&input).map_err(|e| JsError::new(&format!("사주 계산 실패: {}", e)))
+    let input = eon_service::dto::CompatibilityInput {
+        person1: SajuAnalysisInput {
+            base: AnalysisInput {
+                year: year1,
+                month: month1,
+                day: day1,
+                hour: hour1,
+                minute: minute1,
+                is_lunar: is_lunar1,
+                is_leap_month: is_leap_month1,
+                lat: lat1,
+                lon: lon1,
+                timezone: timezone1,
+            },
+            is_male: is_male1,
+            use_night_rat_hour: use_night_rat_hour1,
+            precision: BirthTimePrecision::Exact,
+        },
+        person2: SajuAnalysisInput {
+            base: AnalysisInput {
+                year: year2,
+                month: month2,
+                day: day2,
+                hour: hour2,
+                minute: minute2,
+                is_lunar: is_lunar2,
+                is_leap_month: is_leap_month2,
+                lat: lat2,
+                lon: lon2,
+                timezone: timezone2,
+            },
+            is_male: is_male2,
+            use_night_rat_hour: use_night_rat_hour2,
+            precision: BirthTimePrecision::Exact,
+        },
     };
-    let pillars1 = make_pillars(
-        year1,
-        month1,
-        day1,
-        hour1,
-        minute1,
-        is_lunar1,
-        is_leap_month1,
-        is_male1,
-        lon1,
-        lat1,
-        use_night_rat_hour1,
-        timezone1,
-    )?;
-    let pillars2 = make_pillars(
-        year2,
-        month2,
-        day2,
-        hour2,
-        minute2,
-        is_lunar2,
-        is_leap_month2,
-        is_male2,
-        lon2,
-        lat2,
-        use_night_rat_hour2,
-        timezone2,
-    )?;
-    let vm1 = SajuVM::new(pillars1);
-    let vm2 = SajuVM::new(pillars2);
-    let audit: CompatibilityAudit = CompatibilityAuditor::audit(&vm1, &vm2);
-    Ok(serde_wasm_bindgen::to_value(&audit)?)
+
+    let result = facade::analyze_compatibility(input).map_err(|e| JsError::new(&e.to_string()))?;
+
+    use serde::Serialize as _;
+    let js_val = result.saju
+        .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+        .map_err(|e| JsError::new(&format!("직렬화 오류: {}", e)))?;
+    Ok(js_val)
 }
 
-/// 베딕 궁합 분석 (Ashta Kuta) - WASM에서 호출 가능
 #[wasm_bindgen]
-pub async fn get_vedic_compatibility(
+pub fn get_vedic_compatibility(
     year1: i32,
     month1: u32,
     day1: u32,
@@ -674,6 +291,7 @@ pub async fn get_vedic_compatibility(
     is_leap_month1: bool,
     lat1: f64,
     lon1: f64,
+    timezone1: String,
     year2: i32,
     month2: u32,
     day2: u32,
@@ -683,30 +301,40 @@ pub async fn get_vedic_compatibility(
     is_leap_month2: bool,
     lat2: f64,
     lon2: f64,
-    timezone1: &str,
-    timezone2: &str,
+    timezone2: String,
 ) -> Result<JsValue, JsValue> {
-    let calculator = VedicChartCalculator::new();
-    let birth1 = if is_lunar1 {
-        BirthInfo::lunar(year1, month1, day1, hour1, minute1, is_leap_month1)
-    } else {
-        BirthInfo::solar(year1, month1, day1, hour1, minute1)
+    let input = eon_service::dto::VedicCompatibilityInput {
+        person1: AnalysisInput {
+            year: year1,
+            month: month1,
+            day: day1,
+            hour: hour1,
+            minute: minute1,
+            is_lunar: is_lunar1,
+            is_leap_month: is_leap_month1,
+            lat: lat1,
+            lon: lon1,
+            timezone: timezone1,
+        },
+        person2: AnalysisInput {
+            year: year2,
+            month: month2,
+            day: day2,
+            hour: hour2,
+            minute: minute2,
+            is_lunar: is_lunar2,
+            is_leap_month: is_leap_month2,
+            lat: lat2,
+            lon: lon2,
+            timezone: timezone2,
+        },
     };
-    let dt1 = birth1
-        .with_timezone(timezone1)
-        .to_utc()
-        .ok_or_else(|| JsError::new("Invalid date/time (person 1)"))?;
-    let birth2 = if is_lunar2 {
-        BirthInfo::lunar(year2, month2, day2, hour2, minute2, is_leap_month2)
-    } else {
-        BirthInfo::solar(year2, month2, day2, hour2, minute2)
-    };
-    let dt2 = birth2
-        .with_timezone(timezone2)
-        .to_utc()
-        .ok_or_else(|| JsError::new("Invalid date/time (person 2)"))?;
-    let chart1 = calculator.calculate(dt1, lat1, lon1);
-    let chart2 = calculator.calculate(dt2, lat2, lon2);
-    let result = CompatibilityEngine::analyze(&chart1, &chart2);
-    Ok(serde_wasm_bindgen::to_value(&result)?)
+
+    let result = facade::analyze_vedic_compatibility(input).map_err(|e| JsError::new(&e.to_string()))?;
+
+    use serde::Serialize as _;
+    let js_val = result
+        .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+        .map_err(|e| JsError::new(&format!("직렬화 오류: {}", e)))?;
+    Ok(js_val)
 }

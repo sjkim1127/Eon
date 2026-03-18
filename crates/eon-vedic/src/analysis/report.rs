@@ -4,7 +4,7 @@ use crate::planets::VedicPlanet;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VedicAnalysisReport {
     pub primary_karakas: KarakaSummary,
     #[serde(default)]
@@ -19,14 +19,14 @@ pub struct VedicAnalysisReport {
     pub yogas: Vec<YogaResult>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KarakaSummary {
     pub atmakaraka: VedicPlanet,
     pub amatyakaraka: VedicPlanet,
     pub darakaraka: VedicPlanet,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HouseRating {
     pub house: u8,
     pub rating: String, // e.g. "Excellent", "Strong", "Average", "Weak"

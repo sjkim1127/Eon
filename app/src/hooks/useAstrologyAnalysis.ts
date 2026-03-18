@@ -2,115 +2,130 @@ import { toast } from "sonner";
 import { backendClient } from "../lib/backend";
 import { useAppStore } from "../store/useAppStore";
 import { getBirthValidationError } from "../utils/validation";
+import type { RunAnalysisResult } from "../types/analysis";
 
 export function useAstrologyAnalysis() {
   const store = useAppStore();
+  const { birthData, isMale } = store;
 
-  const runAnalysis = async () => {
-    const { birthData, isMale, setErrorMessage, setLoading, setReport, setSajuReport, setTransitReport, setAiAuditReport, setTransitError, setTierReport } = store;
+  const runAnalysis = async (): Promise<RunAnalysisResult> => {
+    const error = getBirthValidationError(birthData);
+    if (error) {
+      toast.error(error);
+      return { ok: false, partial: false, completed: [], failed: [] };
+    }
+
+    store.setLoading(true);
+    store.resetAnalysisState();
     
     const now = new Date();
-    const validationError = getBirthValidationError(birthData, "내 정보");
-    if (validationError) {
-      setErrorMessage(validationError);
-      toast.error(validationError);
-      return;
-    }
+    const nowIso = now.toISOString();
 
-    setLoading(true);
-    setErrorMessage(null);
-    setTransitError(null);
-    try {
-      const [vedicResult, sajuResult, transitResult, aiAuditResult] = await Promise.allSettled([
-        backendClient.getVedicAnalysis({
-          year: birthData.year, month: birthData.month, day: birthData.day,
-          hour: birthData.hour, minute: birthData.minute,
-          is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
-          lat: birthData.lat, lon: birthData.lon,
-          timezone: birthData.timezone,
-        }),
-        backendClient.getSajuAnalysis({
-          year: birthData.year, month: birthData.month, day: birthData.day,
-          hour: birthData.hour, minute: birthData.minute,
-          is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
-          is_male: isMale,
-          use_night_rat_hour: birthData.use_night_rat_hour ?? false,
-          lat: birthData.lat, lon: birthData.lon,
-          timezone: birthData.timezone,
-        }),
-        backendClient.getTransitAnalysis({
-          year: birthData.year, month: birthData.month, day: birthData.day,
-          hour: birthData.hour, minute: birthData.minute,
-          is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
-          is_male: isMale,
-          use_night_rat_hour: birthData.use_night_rat_hour ?? false,
-          lat: birthData.lat, lon: birthData.lon,
-          timezone: birthData.timezone,
-          current_year: now.getFullYear(),
-          current_month: now.getMonth() + 1,
-          current_day: now.getDate(),
-        }),
-        backendClient.getAiAudit({
-          year: birthData.year, month: birthData.month, day: birthData.day,
-          hour: birthData.hour, minute: birthData.minute,
-          is_lunar: birthData.is_lunar ?? false, is_leap_month: birthData.is_leap_month ?? false,
-          is_male: isMale,
-          use_night_rat_hour: birthData.use_night_rat_hour ?? false,
-          lat: birthData.lat, lon: birthData.lon,
-          timezone: birthData.timezone,
-        }),
-      ]);
+    const commonArgs = {
+      year: birthData.year,
+      month: birthData.month,
+      day: birthData.day,
+      hour: birthData.hour,
+      minute: birthData.minute,
+      is_lunar: birthData.is_lunar ?? false,
+      is_leap_month: birthData.is_leap_month ?? false,
+      lat: birthData.lat,
+      lon: birthData.lon,
+      timezone: birthData.timezone,
+      unknown_time: birthData.unknown_time ?? false,
+    };
 
-      if (vedicResult.status === "fulfilled") {
-        setReport(vedicResult.value);
-      } else console.error("베딕 분석 실패:", vedicResult.reason);
+    const sajuArgs = {
+      ...commonArgs,
+      is_male: isMale,
+      use_night_rat_hour: birthData.use_night_rat_hour ?? false,
+    };
 
-      if (sajuResult.status === "fulfilled") setSajuReport(sajuResult.value);
-      else console.error("사주 분석 실패:", sajuResult.reason);
+    const transitArgs = {
+      ...sajuArgs,
+      current_year: now.getFullYear(),
+      current_month: now.getMonth() + 1,
+      current_day: now.getDate(),
+      now_utc: nowIso,
+    };
 
-      if (transitResult.status === "fulfilled") setTransitReport(transitResult.value);
-      else {
-        const errMsg = transitResult.reason instanceof Error ? transitResult.reason.message : String(transitResult.reason);
-        console.error("운세 분석 실패:", transitResult.reason);
-        setTransitError(errMsg);
-      }
+    const completed: Array<any> = [];
+    const failed: Array<any> = [];
 
-      if (aiAuditResult.status === "fulfilled") setAiAuditReport(aiAuditResult.value);
-      else console.error("AI Audit 분석 실패:", aiAuditResult.reason);
+    // 1. Core Parallel Tasks (Vedic, Saju, AI Audit)
+    store.setAnalysisTaskState("vedic", { status: "loading" });
+    store.setAnalysisTaskState("saju", { status: "loading" });
+    store.setAnalysisTaskState("aiAudit", { status: "loading" });
+    store.setAnalysisTaskState("transit", { status: "loading" });
 
-      if (sajuResult.status === "fulfilled" && vedicResult.status === "fulfilled") {
-        try {
-          const tier = await backendClient.getDestinyTier(
-            sajuResult.value,
-            vedicResult.value,
-            transitResult.status === "fulfilled" ? transitResult.value : null
-          );
-          setTierReport(tier);
-        } catch (e) {
-          console.error("Tier 분석 실패:", e);
-        }
-      }
+    const tasks = [
+      { key: "vedic", fn: () => backendClient.getVedicAnalysis(commonArgs) },
+      { key: "saju", fn: () => backendClient.getSajuAnalysis(sajuArgs) },
+      { key: "aiAudit", fn: () => backendClient.getAiAudit(sajuArgs) },
+      { key: "transit", fn: () => backendClient.getTransitAnalysis(transitArgs) },
+    ];
 
-      const allFailed = vedicResult.status === "rejected" && sajuResult.status === "rejected" && transitResult.status === "rejected";
-      if (allFailed) {
-        const message = "분석 중 오류가 발생했습니다.";
-        setErrorMessage(message);
-        toast.error("분석에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    const results = await Promise.allSettled(tasks.map(t => t.fn()));
+
+    results.forEach((res, idx) => {
+      const key = tasks[idx].key as any;
+      if (res.status === "fulfilled") {
+        store.setAnalysisTaskState(key, { status: "success", data: res.value });
+        completed.push(key);
+        
+        // Sync with legacy store
+        if (key === "vedic") store.setReport(res.value);
+        if (key === "saju") store.setSajuReport(res.value);
+        if (key === "aiAudit") store.setAiAuditReport(res.value);
+        if (key === "transit") store.setTransitReport(res.value);
       } else {
-        toast.success("분석이 완료되었습니다.");
+        const errMsg = String(res.reason);
+        store.setAnalysisTaskState(key, { status: "error", error: errMsg });
+        failed.push(key);
+        if (key === "transit") store.setTransitError(errMsg);
       }
-    } catch (e) {
-      console.error(e);
-      const message = e instanceof Error ? e.message : "분석 중 오류가 발생했습니다.";
-      setErrorMessage(message);
-      toast.error("분석에 실패했습니다. 잠시 후 다시 시도해주세요.");
-    } finally {
-      setLoading(false);
+    });
+
+    // 2. Dependent Task: Destiny Tier (Requires Saju & Vedic)
+    const sajuData = store.analysisState.saju.data;
+    const vedicData = store.analysisState.vedic.data;
+    const transitData = store.analysisState.transit.data;
+
+    if (sajuData && vedicData) {
+      store.setAnalysisTaskState("tier", { status: "loading" });
+      try {
+        const tier = await backendClient.getDestinyTier(sajuData, vedicData, transitData);
+        store.setAnalysisTaskState("tier", { status: "success", data: tier });
+        store.setTierReport(tier);
+        completed.push("tier");
+      } catch (e) {
+        store.setAnalysisTaskState("tier", { status: "error", error: String(e) });
+        failed.push("tier");
+      }
+    } else {
+      store.setAnalysisTaskState("tier", { status: "error", error: "Required data (Saju/Vedic) missing" });
+      failed.push("tier");
     }
+
+    store.setLoading(false);
+
+    const ok = completed.length > 0;
+    const partial = failed.length > 0;
+
+    if (!ok) {
+      toast.error("분석에 실패했습니다. 입력 정보를 확인해주세요.");
+    } else if (partial) {
+      toast.warning(`일부 분석(${failed.join(", ")})에 실패했습니다.`);
+    } else {
+      toast.success("분석이 완료되었습니다.");
+    }
+
+    return { ok, partial, completed, failed };
   };
 
   return {
     runAnalysis,
+    analysisState: store.analysisState,
     report: store.report,
     sajuReport: store.sajuReport,
     aiAuditReport: store.aiAuditReport,
