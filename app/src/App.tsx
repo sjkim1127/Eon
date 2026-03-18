@@ -1,8 +1,8 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, useMemo } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Compass, UserPlus } from "lucide-react";
+import { Compass, UserPlus, AlertCircle } from "lucide-react";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import { useBirthForm, useAstrologyAnalysis, useCompatibility } from "./hooks";
@@ -10,6 +10,7 @@ import { useTabPrefetcher } from "./hooks/useTabPrefetcher";
 import { useAppStore } from "./store/useAppStore";
 import { ShootingStars, BirthDrawer, Sidebar, CompactBirthInfoBar, ExportActionButtons } from "./components/shared";
 import type { TabId } from "./types";
+import type { AnalysisBundleState } from "./types/analysis";
 
 const OverviewTab = lazy(() => import("./components/tabs/OverviewTab").then((m) => ({ default: m.OverviewTab })));
 const SajuTab = lazy(() => import("./components/tabs/SajuTab").then((m) => ({ default: m.SajuTab })));
@@ -31,6 +32,16 @@ function TabSkeleton() {
   );
 }
 
+function UnavailableTabFallback({ reason }: { reason: string }) {
+  return (
+    <div className="h-[40vh] flex flex-col items-center justify-center text-center p-8 glass rounded-[2rem]">
+      <AlertCircle className="w-12 h-12 text-white/20 mb-4" />
+      <h3 className="text-xl font-semibold text-white mb-2">분석 결과 없음</h3>
+      <p className="text-brand-400 max-w-sm">{reason}</p>
+    </div>
+  );
+}
+
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -40,12 +51,12 @@ function App() {
   const currentTab: TabId = (pathParts.length > 0 ? pathParts[0] : "overview") as TabId;
 
   const setActiveTab = (tab: TabId) => {
-    useAppStore.getState().setActiveTab(tab); // keep store in sync if needed elsewhere
+    useAppStore.getState().setActiveTab(tab); 
     navigate(`/${tab === 'overview' ? '' : tab}`);
   };
 
-  // Global Store States
   const errorMessage = useAppStore(state => state.errorMessage);
+  const analysisState = useAppStore(state => state.analysisState);
 
   const {
     birthData, setBirthData,
@@ -63,21 +74,33 @@ function App() {
 
   const { compReport } = useCompatibility();
 
-  const isDST = sajuReport?.is_dst ?? false;
+  const isDST = sajuReport?.meta?.is_dst ?? sajuReport?.is_dst ?? false;
 
-  // 드로어 상태: 첫 로드시 자동 오픈 (온보딩)
   const [formOpen, setFormOpen] = useState(true);
 
-  const hasReport = !!(report || sajuReport);
+  const availability = useMemo(() => ({
+    overview: analysisState.vedic.status === "success",
+    saju: analysisState.saju.status === "success",
+    vedic_charts: analysisState.vedic.status === "success" && !birthData.unknown_time,
+    strength: analysisState.saju.status === "success",
+    transit: analysisState.transit.status === "success",
+    compatibility: true,
+    destiny_tier: analysisState.tier.status === "success",
+    ai_audit: analysisState.aiAudit.status === "success",
+  }), [analysisState, birthData.unknown_time]);
 
-  // 마르코프 체인 기반 탭 프리패칭 훅
+  const hasAnyReport = useMemo(() => 
+    Object.values(analysisState).some(s => s.status === "success"),
+    [analysisState]
+  );
+
   const { prefetchTab } = useTabPrefetcher(currentTab, {
-    hasReport,
+    hasReport: !!(report || sajuReport),
     hasTransit: !!transitReport,
     hasComp: !!compReport,
   });
 
-  // 시간미상 → vedic_charts 탭 자동 회피
+  // 시간미상 가드
   useEffect(() => {
     if (birthData.unknown_time && currentTab === "vedic_charts") {
       setActiveTab("saju");
@@ -88,7 +111,6 @@ function App() {
     <div className="h-screen w-full relative flex overflow-hidden">
       <ShootingStars />
 
-      {/* Sidebar */}
       <Sidebar
         activeTab={currentTab}
         setActiveTab={setActiveTab}
@@ -96,7 +118,6 @@ function App() {
         unknownTime={birthData.unknown_time}
       />
 
-      {/* Main Content */}
       <main className="flex-1 p-4 md:p-10 pb-24 md:pb-10 overflow-y-auto z-10">
         <header className="mb-8">
           <div className="flex justify-between items-end mb-5">
@@ -106,7 +127,7 @@ function App() {
             </div>
           </div>
 
-          {hasReport ? (
+          {hasAnyReport ? (
             <CompactBirthInfoBar
               birthData={birthData}
               selectedCity={selectedCity}
@@ -124,7 +145,6 @@ function App() {
               }
             />
           ) : (
-            /* 첫 진입 CTA */
             <button
               onClick={() => setFormOpen(true)}
               className="w-full py-5 rounded-2xl mb-5 border border-dashed border-white/15 hover:border-celestial-purple/40 hover:bg-celestial-purple/5 text-white/40 hover:text-white/70 transition-all text-sm font-medium flex items-center justify-center gap-2"
@@ -142,7 +162,7 @@ function App() {
         </header>
 
         <AnimatePresence mode="wait">
-          {!report && !sajuReport ? (
+          {!hasAnyReport && !loading ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -159,22 +179,36 @@ function App() {
           ) : (
             <Suspense fallback={<TabSkeleton />}>
               <Routes location={location} key={location.pathname}>
-                <Route path="/" element={<OverviewTab report={report!} />} />
-                <Route path="/saju" element={<SajuTab sajuReport={sajuReport} unknownTime={birthData.unknown_time} />} />
-                <Route path="/vedic_charts" element={<VedicChartsTab report={report!} />} />
-                <Route path="/strength" element={<StrengthTab sajuReport={sajuReport} unknownTime={birthData.unknown_time} />} />
-                <Route path="/transit" element={<TransitTab transitReport={transitReport} transitError={transitError} />} />
+                <Route path="/" element={
+                  availability.overview ? <OverviewTab report={report!} /> : <UnavailableTabFallback reason="베딕 분석 결과가 필요합니다." />
+                } />
+                <Route path="/saju" element={
+                  availability.saju ? <SajuTab sajuReport={sajuReport} unknownTime={birthData.unknown_time} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
+                } />
+                <Route path="/vedic_charts" element={
+                  availability.vedic_charts ? <VedicChartsTab report={report!} /> : <UnavailableTabFallback reason="시간 미상인 경우 베딕 차트를 생성할 수 없습니다." />
+                } />
+                <Route path="/strength" element={
+                  availability.strength ? <StrengthTab sajuReport={sajuReport} unknownTime={birthData.unknown_time} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
+                } />
+                <Route path="/transit" element={
+                  availability.transit ? <TransitTab transitReport={transitReport} transitError={transitError} /> : <UnavailableTabFallback reason="트랜짓 분석 결과가 필요합니다." />
+                } />
                 <Route path="/compatibility" element={<CompatibilityTab />} />
                 <Route path="/destiny_tier" element={
-                  <DestinyTierTab
-                    sajuReport={sajuReport}
-                    report={report}
-                    transitReport={transitReport}
-                    tierReport={tierReport}
-                    unknownTime={birthData.unknown_time}
-                  />
+                  availability.destiny_tier ? (
+                    <DestinyTierTab
+                      sajuReport={sajuReport}
+                      report={report}
+                      transitReport={transitReport}
+                      tierReport={tierReport}
+                      unknownTime={birthData.unknown_time}
+                    />
+                  ) : <UnavailableTabFallback reason="종합 등급 산출을 위해 사주와 베딕 분석이 모두 성공해야 합니다." />
                 } />
-                <Route path="/ai_audit" element={<AiAuditTab aiAuditReport={aiAuditReport} />} />
+                <Route path="/ai_audit" element={
+                  availability.ai_audit ? <AiAuditTab aiAuditReport={aiAuditReport} /> : <UnavailableTabFallback reason="AI 진단 결과가 필요합니다." />
+                } />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
@@ -182,7 +216,6 @@ function App() {
         </AnimatePresence>
       </main>
 
-      {/* 출생 정보 드로어 */}
       <BirthDrawer
         open={formOpen}
         onClose={() => setFormOpen(false)}

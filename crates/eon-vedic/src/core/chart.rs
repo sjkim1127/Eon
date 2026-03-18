@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use eon_astro::AstroEngine;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VedicPosition {
     pub planet: VedicPlanet,
     pub tropical_deg: f64,
@@ -76,7 +76,7 @@ impl VedicPosition {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VedicChart {
     pub ascendant: VedicPosition,
     pub planets: Vec<VedicPosition>,

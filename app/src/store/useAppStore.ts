@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import type { BirthData, TabId, VedicAnalysisResult, SajuAnalysisResult, TransitResult, CompatibilityAudit, AshtaKutaResult } from '../types';
-import type { TierResult } from '../utils/tierScore';
+import type { AnalysisBundleState, AnalysisTaskState } from '../types/analysis';
 
 export const DEFAULT_BIRTH: BirthData = {
   year: 1990, month: 1, day: 1, hour: 12, minute: 0,
   lat: 37.5665, lon: 126.978,
   is_lunar: false, is_leap_month: false,
   timezone: "Asia/Seoul",
+  unknown_time: false,
 };
 
 export const DEFAULT_BIRTH2: BirthData = {
@@ -14,6 +15,21 @@ export const DEFAULT_BIRTH2: BirthData = {
   lat: 37.5665, lon: 126.978,
   is_lunar: false, is_leap_month: false,
   timezone: "Asia/Seoul",
+  unknown_time: false,
+};
+
+const INITIAL_TASK_STATE: AnalysisTaskState<any> = {
+  status: "idle",
+  data: null,
+  error: null,
+};
+
+const INITIAL_ANALYSIS_STATE: AnalysisBundleState = {
+  vedic: { ...INITIAL_TASK_STATE },
+  saju: { ...INITIAL_TASK_STATE },
+  transit: { ...INITIAL_TASK_STATE },
+  aiAudit: { ...INITIAL_TASK_STATE },
+  tier: { ...INITIAL_TASK_STATE },
 };
 
 interface AppState {
@@ -31,7 +47,15 @@ interface AppState {
   isMale: boolean;
   setIsMale: (val: boolean) => void;
   
-  // Person 1 Analysis State
+  // Analysis Bundle (New)
+  analysisState: AnalysisBundleState;
+  setAnalysisTaskState: <K extends keyof AnalysisBundleState>(
+    key: K,
+    patch: Partial<AnalysisBundleState[K]>
+  ) => void;
+  resetAnalysisState: () => void;
+
+  // Legacy Analysis State (maintained for compatibility)
   report: VedicAnalysisResult | null;
   setReport: (report: VedicAnalysisResult | null) => void;
   sajuReport: SajuAnalysisResult | null;
@@ -42,8 +66,8 @@ interface AppState {
   setTransitReport: (report: TransitResult | null) => void;
   transitError: string | null;
   setTransitError: (err: string | null) => void;
-  tierReport: TierResult | null;
-  setTierReport: (report: TierResult | null) => void;
+  tierReport: any;
+  setTierReport: (report: any) => void;
   loading: boolean;
   setLoading: (loading: boolean) => void;
 
@@ -79,7 +103,17 @@ export const useAppStore = create<AppState>((set) => ({
   isMale: true,
   setIsMale: (val) => set({ isMale: val }),
 
-  // Person 1 Analysis
+  // New Analysis State
+  analysisState: INITIAL_ANALYSIS_STATE,
+  setAnalysisTaskState: (key, patch) => set((state) => ({
+    analysisState: {
+      ...state.analysisState,
+      [key]: { ...state.analysisState[key], ...patch }
+    }
+  })),
+  resetAnalysisState: () => set({ analysisState: INITIAL_ANALYSIS_STATE }),
+
+  // Legacy Analysis
   report: null,
   setReport: (report) => set({ report }),
   sajuReport: null,
