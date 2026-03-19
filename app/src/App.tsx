@@ -134,6 +134,7 @@ function App() {
               selectedCity={selectedCity}
               isMale={isMale}
               isDST={isDST}
+              meta={sajuData?.meta}
               onEdit={() => setFormOpen(true)}
               actionSlot={
                 <ExportActionButtons

@@ -819,7 +819,24 @@ export function buildCompatibilityMarkdown(comp: CompatibilityOutput): string {
             lines.push(`| ${label} | ${val?.toFixed(1) ?? "—"} | ${max} | ${typeof val === "number" ? pct + "%" : "—"} |`);
         }
         lines.push("");
+        
+        // Vedic Warning (e.g., Unknown Time warning)
+        if (vd.message && (vd.message.includes("중요") || vd.message.includes("주의"))) {
+            lines.push(`> ⚠️ **정밀도 공지**: ${vd.message}\n`);
+        }
     }
+
+    // Person Metadata for Consistency
+    lines.push("## 분석 대상 정보");
+    if (comp.person1_meta) {
+        const m = comp.person1_meta;
+        lines.push(`- **본인**: ${m.precision === "Exact" ? "정밀 시각" : "시간 미상(정오)"} / ${m.analysis_timezone} (${m.is_dst ? "DST 적용" : "표준시"})`);
+    }
+    if (comp.person2_meta) {
+        const m = comp.person2_meta;
+        lines.push(`- **상대**: ${m.precision === "Exact" ? "정밀 시각" : "시간 미상(정오)"} / ${m.analysis_timezone} (${m.is_dst ? "DST 적용" : "표준시"})`);
+    }
+    lines.push("");
 
     return lines.join("\n");
 }
@@ -953,8 +970,18 @@ export function buildFullAnalysisMarkdown(
     const parts: string[] = [];
 
     parts.push("# Eon 통합 분석 리포트\n");
-    parts.push(`- 생성 시각: ${new Date().toLocaleString()}`);
-    parts.push("- 이 문서는 앱 화면의 분석 결과를 복사/공유하기 쉬운 형태로 정리한 것입니다.");
+    parts.push(`- **생성 시각**: ${new Date().toLocaleString()}`);
+    
+    // 계산 정밀도 및 메타데이터 요약 (사주 리포트 기준)
+    if (sajuReport?.meta) {
+        const m = sajuReport.meta;
+        parts.push(`- **계산 정밀도**: ${m.precision === "Exact" ? "✅ 높은 신뢰도 (정밀 시각)" : "⚠️ 근사치 (시간 미상)"}`);
+        parts.push(`- **입력 시각**: ${m.input_time.replace('T', ' ')}`);
+        parts.push(`- **보정 시각**: ${m.corrected_time.replace('T', ' ')} (진태양시/경도 보정)`);
+        parts.push(`- **타임존**: ${m.analysis_timezone} (${m.is_dst ? "서머타임 적용됨" : "표준시"})`);
+    }
+
+    parts.push("\n- 이 문서는 앱 화면의 분석 결과를 복사/공유하기 쉬운 형태로 정리한 것입니다.");
     parts.push(SEP);
 
     const destinyTierMd = buildDestinyTierMarkdown(sajuReport, vedicReport, transitReport, tierResult);
