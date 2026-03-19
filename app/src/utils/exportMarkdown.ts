@@ -117,8 +117,8 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
     lines.push("# 사주명리 분석 리포트\n");
 
     // 보정 시간 / DST
-    lines.push(`**보정된 출생 시간**: ${s.corrected_time} (입력 시간/시간대 보정을 반영한 기준 시간)`);
-    if (s.is_dst) lines.push(`**서머타임(DST)**: 적용 (${s.dst_offset_hours ?? 1}시간, 지역 규칙 기반 보정)`);
+    lines.push(`**보정된 출생 시간**: ${s.meta.corrected_time} (입력 시간/시간대 보정을 반영한 기준 시간)`);
+    if (s.meta.is_dst) lines.push(`**서머타임(DST)**: 적용 (${s.meta.dst_offset_hours ?? 1}시간, 지역 규칙 기반 보정)`);
     else lines.push(`**서머타임(DST)**: 미적용`);
     lines.push("");
 
@@ -927,12 +927,12 @@ export function buildDestinyTierMarkdown(
     lines.push("");
 
     // ⑥ 분야별 집중 전략
-    const topDomains = result.domainTiers.filter(d => d.tier === "S" || d.tier === "A").slice(0, 3);
-    const weakDomains = result.domainTiers.filter(d => d.tier === "D" || d.tier === "C").slice(0, 3);
+    const topDomains = result.domainTiers.filter((d: any) => d.tier === "S" || d.tier === "A").slice(0, 3);
+    const weakDomains = result.domainTiers.filter((d: any) => d.tier === "D" || d.tier === "C").slice(0, 3);
     if (topDomains.length > 0 || weakDomains.length > 0) {
         lines.push(`### 🎯 분야별 집중 전략`);
-        if (topDomains.length > 0) lines.push(`- **강점 분야**: ${topDomains.map(d => `${d.domain}(${d.tier})`).join(", ")} — 주력 무대로 삼으세요.`);
-        if (weakDomains.length > 0) lines.push(`- **보완 분야**: ${weakDomains.map(d => `${d.domain}(${d.tier})`).join(", ")} — 방어적 관리를 권합니다.`);
+        if (topDomains.length > 0) lines.push(`- **강점 분야**: ${topDomains.map((d: any) => `${d.domain}(${d.tier})`).join(", ")} — 주력 무대로 삼으세요.`);
+        if (weakDomains.length > 0) lines.push(`- **보완 분야**: ${weakDomains.map((d: any) => `${d.domain}(${d.tier})`).join(", ")} — 방어적 관리를 권합니다.`);
         lines.push("");
     }
 
