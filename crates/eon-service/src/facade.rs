@@ -5,10 +5,7 @@ pub fn analyze_saju(input: SajuAnalysisInput) -> Result<SajuAnalysisOutput, Serv
     crate::services::saju::analyze(input)
 }
 
-pub fn analyze_vedic(
-    input: AnalysisInput,
-    _current: Option<CurrentContext>,
-) -> Result<VedicAnalysisOutput, ServiceError> {
+pub fn analyze_vedic(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, ServiceError> {
     crate::services::vedic::analyze(input)
 }
 
@@ -24,12 +21,6 @@ pub fn analyze_compatibility(
     input: CompatibilityInput,
 ) -> Result<CompatibilityOutput, ServiceError> {
     crate::services::compatibility::analyze(input)
-}
-
-pub fn analyze_vedic_compatibility(
-    input: VedicCompatibilityInput,
-) -> Result<eon_vedic::analysis::compatibility::CompatibilityResult, ServiceError> {
-    crate::services::compatibility::analyze_vedic(input)
 }
 
 pub fn analyze_destiny_tier(

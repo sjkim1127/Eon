@@ -2,7 +2,7 @@ pub mod tier;
 
 use eon_service::dto::{
     AnalysisInput, BirthTimePrecision, CurrentContext, SajuAnalysisInput,
-    TransitAnalysisInput,
+    TransitAnalysisInput, VedicAnalysisInput,
 };
 use eon_service::facade;
 use wasm_bindgen::prelude::*;
@@ -19,21 +19,42 @@ pub fn get_vedic_analysis(
     lat: f64,
     lon: f64,
     timezone: String,
+    unknown_time: Option<bool>,
+    now_utc_str: Option<String>,
 ) -> Result<JsValue, JsValue> {
-    let input = AnalysisInput {
-        year,
-        month,
-        day,
-        hour,
-        minute,
-        is_lunar,
-        is_leap_month,
-        lat,
-        lon,
-        timezone,
+    let now_utc = if let Some(s) = now_utc_str {
+        chrono::DateTime::parse_from_rfc3339(&s)
+            .map(|dt| dt.with_timezone(&chrono::Utc))
+            .unwrap_or_else(|_| chrono::Utc::now())
+    } else {
+        chrono::Utc::now()
     };
 
-    let result = facade::analyze_vedic(input, None).map_err(|e| JsError::new(&e.to_string()))?;
+    let input = VedicAnalysisInput {
+        base: AnalysisInput {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            is_lunar,
+            is_leap_month,
+            lat,
+            lon,
+            timezone: timezone.clone(),
+        },
+        precision: if unknown_time.unwrap_or(false) {
+            BirthTimePrecision::UnknownTimeNoonProxy
+        } else {
+            BirthTimePrecision::Exact
+        },
+        current: Some(CurrentContext {
+            now_utc,
+            analysis_timezone: timezone,
+        }),
+    };
+
+    let result = facade::analyze_vedic(input).map_err(|e| JsError::new(&e.to_string()))?;
 
     use serde::Serialize as _;
     let js_val = result
@@ -205,7 +226,7 @@ pub fn get_ai_audit(
 }
 
 #[wasm_bindgen]
-pub fn get_saju_compatibility(
+pub fn get_compatibility_analysis(
     year1: i32,
     month1: u32,
     day1: u32,
@@ -269,65 +290,6 @@ pub fn get_saju_compatibility(
     };
 
     let result = facade::analyze_compatibility(input).map_err(|e| JsError::new(&e.to_string()))?;
-
-    use serde::Serialize as _;
-    let js_val = result.saju
-        .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
-        .map_err(|e| JsError::new(&format!("직렬화 오류: {}", e)))?;
-    Ok(js_val)
-}
-
-#[wasm_bindgen]
-pub fn get_vedic_compatibility(
-    year1: i32,
-    month1: u32,
-    day1: u32,
-    hour1: u32,
-    minute1: u32,
-    is_lunar1: bool,
-    is_leap_month1: bool,
-    lat1: f64,
-    lon1: f64,
-    timezone1: String,
-    year2: i32,
-    month2: u32,
-    day2: u32,
-    hour2: u32,
-    minute2: u32,
-    is_lunar2: bool,
-    is_leap_month2: bool,
-    lat2: f64,
-    lon2: f64,
-    timezone2: String,
-) -> Result<JsValue, JsValue> {
-    let input = eon_service::dto::VedicCompatibilityInput {
-        person1: AnalysisInput {
-            year: year1,
-            month: month1,
-            day: day1,
-            hour: hour1,
-            minute: minute1,
-            is_lunar: is_lunar1,
-            is_leap_month: is_leap_month1,
-            lat: lat1,
-            lon: lon1,
-            timezone: timezone1,
-        },
-        person2: AnalysisInput {
-            year: year2,
-            month: month2,
-            day: day2,
-            hour: hour2,
-            minute: minute2,
-            is_lunar: is_lunar2,
-            is_leap_month: is_leap_month2,
-            lat: lat2,
-            lon: lon2,
-            timezone: timezone2,
-        },
-    };
-
-    let result = facade::analyze_vedic_compatibility(input).map_err(|e| JsError::new(&e.to_string()))?;
 
     use serde::Serialize as _;
     let js_val = result

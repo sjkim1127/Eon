@@ -27,35 +27,22 @@ export function useCompatibility() {
     setCompLoading(true);
     setErrorMessage(null);
     try {
-      const [saju, vedic] = await Promise.all([
-        backendClient.getSajuCompatibility({
-          year1: birthData.year, month1: birthData.month, day1: birthData.day,
-          hour1: birthData.hour, minute1: birthData.minute,
-          is_lunar1: birthData.is_lunar ?? false, is_leap_month1: birthData.is_leap_month ?? false,
-          is_male1: isMale, lon1: birthData.lon, lat1: birthData.lat,
-          use_night_rat_hour1: birthData.use_night_rat_hour ?? false,
-          year2: birthData2.year, month2: birthData2.month, day2: birthData2.day,
-          hour2: birthData2.hour, minute2: birthData2.minute,
-          is_lunar2: birthData2.is_lunar ?? false, is_leap_month2: birthData2.is_leap_month ?? false,
-          is_male2: isMale2, lon2: birthData2.lon, lat2: birthData2.lat,
-          use_night_rat_hour2: birthData2.use_night_rat_hour ?? false,
-          timezone1: birthData.timezone,
-          timezone2: birthData2.timezone,
-        }),
-        backendClient.getVedicCompatibility({
-          year1: birthData.year, month1: birthData.month, day1: birthData.day,
-          hour1: birthData.hour, minute1: birthData.minute,
-          is_lunar1: birthData.is_lunar ?? false, is_leap_month1: birthData.is_leap_month ?? false,
-          is_male1: isMale, lon1: birthData.lon, lat1: birthData.lat,
-          year2: birthData2.year, month2: birthData2.month, day2: birthData2.day,
-          hour2: birthData2.hour, minute2: birthData2.minute,
-          is_lunar2: birthData2.is_lunar ?? false, is_leap_month2: birthData2.is_leap_month ?? false,
-          is_male2: isMale2, lon2: birthData2.lon, lat2: birthData2.lat,
-          timezone1: birthData.timezone,
-          timezone2: birthData2.timezone,
-        }),
-      ]);
-      setCompReport({ saju, vedic });
+      const response = await backendClient.getCompatibilityAnalysis({
+        year1: birthData.year, month1: birthData.month, day1: birthData.day,
+        hour1: birthData.hour, minute1: birthData.minute,
+        is_lunar1: birthData.is_lunar ?? false, is_leap_month1: birthData.is_leap_month ?? false,
+        is_male1: isMale, lon1: birthData.lon, lat1: birthData.lat,
+        use_night_rat_hour1: birthData.use_night_rat_hour ?? false,
+        year2: birthData2.year, month2: birthData2.month, day2: birthData2.day,
+        hour2: birthData2.hour, minute2: birthData2.minute,
+        is_lunar2: birthData2.is_lunar ?? false, is_leap_month2: birthData2.is_leap_month ?? false,
+        is_male2: isMale2, lon2: birthData2.lon, lat2: birthData2.lat,
+        use_night_rat_hour2: birthData2.use_night_rat_hour ?? false,
+        timezone1: birthData.timezone,
+        timezone2: birthData2.timezone,
+      });
+
+      setCompReport(response);
       toast.success("궁합 분석이 완료되었습니다.");
       setCompLoading(false);
       return { ok: true, partial: false, completed: [] as any, failed: [] };

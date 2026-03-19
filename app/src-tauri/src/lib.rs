@@ -2,7 +2,7 @@ pub mod tier;
 
 use eon_service::dto::{
     AnalysisInput, BirthTimePrecision, CurrentContext, SajuAnalysisInput,
-    TransitAnalysisInput,
+    TransitAnalysisInput, VedicAnalysisInput,
 };
 use eon_service::facade;
 use serde_json::Value;
@@ -24,21 +24,34 @@ async fn get_vedic_analysis(
     lat: f64,
     lon: f64,
     timezone: String,
+    unknown_time: Option<bool>,
+    now_utc: Option<chrono::DateTime<chrono::Utc>>,
 ) -> Result<Value, String> {
-    let input = AnalysisInput {
-        year,
-        month,
-        day,
-        hour,
-        minute,
-        is_lunar,
-        is_leap_month,
-        lat,
-        lon,
-        timezone,
+    let input = VedicAnalysisInput {
+        base: AnalysisInput {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            is_lunar,
+            is_leap_month,
+            lat,
+            lon,
+            timezone: timezone.clone(),
+        },
+        precision: if unknown_time.unwrap_or(false) {
+            BirthTimePrecision::UnknownTimeNoonProxy
+        } else {
+            BirthTimePrecision::Exact
+        },
+        current: Some(CurrentContext {
+            now_utc: now_utc.unwrap_or_else(chrono::Utc::now),
+            analysis_timezone: timezone,
+        }),
     };
 
-    let result = facade::analyze_vedic(input, None).map_err(|e| e.to_string())?;
+    let result = facade::analyze_vedic(input).map_err(|e| e.to_string())?;
     serde_json::to_value(result).map_err(|e| e.to_string())
 }
 
@@ -184,7 +197,7 @@ fn get_ai_audit(
 }
 
 #[tauri::command]
-fn get_saju_compatibility(
+fn get_compatibility_analysis(
     // 사람 1
     year1: i32,
     month1: u32,
@@ -250,60 +263,6 @@ fn get_saju_compatibility(
     };
 
     let result = facade::analyze_compatibility(input).map_err(|e| e.to_string())?;
-    serde_json::to_value(result.saju).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-async fn get_vedic_compatibility(
-    year1: i32,
-    month1: u32,
-    day1: u32,
-    hour1: u32,
-    minute1: u32,
-    is_lunar1: bool,
-    is_leap_month1: bool,
-    lat1: f64,
-    lon1: f64,
-    timezone1: String,
-    year2: i32,
-    month2: u32,
-    day2: u32,
-    hour2: u32,
-    minute2: u32,
-    is_lunar2: bool,
-    is_leap_month2: bool,
-    lat2: f64,
-    lon2: f64,
-    timezone2: String,
-) -> Result<Value, String> {
-    let input = eon_service::dto::VedicCompatibilityInput {
-        person1: AnalysisInput {
-            year: year1,
-            month: month1,
-            day: day1,
-            hour: hour1,
-            minute: minute1,
-            is_lunar: is_lunar1,
-            is_leap_month: is_leap_month1,
-            lat: lat1,
-            lon: lon1,
-            timezone: timezone1,
-        },
-        person2: AnalysisInput {
-            year: year2,
-            month: month2,
-            day: day2,
-            hour: hour2,
-            minute: minute2,
-            is_lunar: is_lunar2,
-            is_leap_month: is_leap_month2,
-            lat: lat2,
-            lon: lon2,
-            timezone: timezone2,
-        },
-    };
-
-    let result = facade::analyze_vedic_compatibility(input).map_err(|e| e.to_string())?;
     serde_json::to_value(result).map_err(|e| e.to_string())
 }
 
@@ -317,8 +276,7 @@ pub fn run() {
             get_saju_analysis,
             get_transit_analysis,
             get_ai_audit,
-            get_saju_compatibility,
-            get_vedic_compatibility,
+            get_compatibility_analysis,
             tier::get_destiny_tier_analysis,
         ])
         .run(tauri::generate_context!())

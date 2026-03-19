@@ -1,15 +1,33 @@
-use crate::dto::{CompatibilityInput, CompatibilityOutput, VedicCompatibilityInput};
+use crate::dto::{CompatibilityInput, CompatibilityOutput, SajuAnalysisInput};
 use crate::error::ServiceError;
 use crate::birth::prepare_birth_context;
 use eon_core::Gender;
 use eon_saju::core::pillars::{FourPillars, SajuInput};
 use eon_saju::engine::interprocess::CompatibilityAuditor;
 use eon_saju::engine::vm::SajuVM;
-use eon_vedic::analysis::compatibility::{CompatibilityEngine, CompatibilityResult};
+use eon_vedic::analysis::compatibility::CompatibilityEngine;
 use eon_vedic::core::chart::VedicChartCalculator;
 
 pub fn analyze(input: CompatibilityInput) -> Result<CompatibilityOutput, ServiceError> {
-    let make_pillars = |saju_in: &crate::dto::SajuAnalysisInput| -> Result<FourPillars, ServiceError> {
+    let saju = analyze_saju_only(&input.person1, &input.person2)?;
+    
+    let vedic_input = crate::dto::VedicCompatibilityInput {
+        person1: input.person1.base.clone(),
+        person2: input.person2.base.clone(),
+    };
+    let vedic = analyze_vedic_only(&vedic_input)?;
+    
+    Ok(CompatibilityOutput {
+        saju,
+        vedic,
+    })
+}
+
+fn analyze_saju_only(
+    p1: &SajuAnalysisInput,
+    p2: &SajuAnalysisInput,
+) -> Result<eon_saju::engine::interprocess::CompatibilityAudit, ServiceError> {
+    let make_pillars = |saju_in: &SajuAnalysisInput| -> Result<FourPillars, ServiceError> {
         let gender = if saju_in.is_male { Gender::Male } else { Gender::Female };
         let birth_ctx = prepare_birth_context(&saju_in.base, Some(gender))?;
         
@@ -27,33 +45,17 @@ pub fn analyze(input: CompatibilityInput) -> Result<CompatibilityOutput, Service
             .map_err(|e| ServiceError::Saju(format!("사주 계산 실패: {}", e)))
     };
 
-    let pillars1 = make_pillars(&input.person1)?;
-    let pillars2 = make_pillars(&input.person2)?;
+    let pillars1 = make_pillars(p1)?;
+    let pillars2 = make_pillars(p2)?;
 
     let vm1 = SajuVM::new(pillars1);
     let vm2 = SajuVM::new(pillars2);
-    let saju_audit = CompatibilityAuditor::audit(&vm1, &vm2);
-
-    // Vedic 통합 계산 (지시서 v1 DTO 구조 대응)
-    let calculator = VedicChartCalculator::new();
-    let birth1_ctx = prepare_birth_context(&input.person1.base, None)?;
-    let dt1 = birth1_ctx.birth_info.to_utc()
-        .ok_or_else(|| ServiceError::BirthInfo("Invalid date 1".to_string()))?;
-    let birth2_ctx = prepare_birth_context(&input.person2.base, None)?;
-    let dt2 = birth2_ctx.birth_info.to_utc()
-        .ok_or_else(|| ServiceError::BirthInfo("Invalid date 2".to_string()))?;
-    
-    let chart1 = calculator.calculate(dt1, input.person1.base.lat, input.person1.base.lon);
-    let chart2 = calculator.calculate(dt2, input.person2.base.lat, input.person2.base.lon);
-    let vedic_audit = CompatibilityEngine::analyze(&chart1, &chart2);
-    
-    Ok(CompatibilityOutput {
-        saju: saju_audit,
-        vedic: vedic_audit,
-    })
+    Ok(CompatibilityAuditor::audit(&vm1, &vm2))
 }
 
-pub fn analyze_vedic(input: VedicCompatibilityInput) -> Result<CompatibilityResult, ServiceError> {
+fn analyze_vedic_only(
+    input: &crate::dto::VedicCompatibilityInput,
+) -> Result<eon_vedic::analysis::compatibility::CompatibilityResult, ServiceError> {
     let calculator = VedicChartCalculator::new();
     
     let birth1_ctx = prepare_birth_context(&input.person1, None)?;
