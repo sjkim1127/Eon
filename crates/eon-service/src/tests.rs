@@ -36,10 +36,10 @@ mod tests {
         let vedic_input = VedicAnalysisInput {
             base: birth.clone(),
             precision: BirthTimePrecision::Exact,
-            current: Some(CurrentContext {
+            current: CurrentContext {
                 now_utc: Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap(),
                 analysis_timezone: "Asia/Seoul".to_string(),
-            }),
+            },
         };
 
         let vedic_res = facade::analyze_vedic(vedic_input).expect("Vedic analysis failed");
@@ -86,9 +86,15 @@ mod tests {
             person2,
         };
 
-        let comp_res = facade::analyze_compatibility(comp_input).expect("Compatibility failed");
+        let comp_res = facade::analyze_compatibility(comp_input.clone()).expect("Compatibility failed");
         assert!(comp_res.saju.sync_score > 0.0, "Saju compatibility score should be > 0");
         assert!(comp_res.vedic.total_score >= 0.0, "Vedic compatibility score should be >= 0");
+
+        // Verify Warning for Unknown Time
+        let mut unknown_input = comp_input;
+        unknown_input.person2.precision = BirthTimePrecision::UnknownTimeNoonProxy;
+        let unknown_res = facade::analyze_compatibility(unknown_input).expect("Unknown time compatibility failed");
+        assert!(unknown_res.vedic.message.contains("부정확할 수 있습니다"), "Warning message should be present for unknown time");
     }
 
     #[test]
@@ -97,10 +103,10 @@ mod tests {
         let vedic_input = VedicAnalysisInput {
             base: birth.clone(),
             precision: BirthTimePrecision::Exact,
-            current: Some(CurrentContext {
+            current: CurrentContext {
                 now_utc: Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap(),
                 analysis_timezone: "Asia/Seoul".to_string(),
-            }),
+            },
         };
 
         let saju = facade::analyze_saju(saju_input).expect("Saju res failed");

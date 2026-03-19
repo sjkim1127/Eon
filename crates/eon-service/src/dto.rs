@@ -36,7 +36,7 @@ pub struct VedicAnalysisInput {
     #[serde(flatten)]
     pub base: AnalysisInput,
     pub precision: BirthTimePrecision,
-    pub current: Option<CurrentContext>,
+    pub current: CurrentContext,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

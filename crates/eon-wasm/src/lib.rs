@@ -48,10 +48,10 @@ pub fn get_vedic_analysis(
         } else {
             BirthTimePrecision::Exact
         },
-        current: Some(CurrentContext {
+        current: CurrentContext {
             now_utc,
             analysis_timezone: timezone,
-        }),
+        },
     };
 
     let result = facade::analyze_vedic(input).map_err(|e| JsError::new(&e.to_string()))?;
