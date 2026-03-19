@@ -73,7 +73,7 @@ export function buildInsightBlocks(result: TierResult): { title: string; icon: s
 
   // 4. 강점 요약
   if (strengths.length > 0) {
-    const strengthText = strengths.map(s => `· ${s}`).join("  ") + "  이 요소들이 운명 티어를 지탱하는 핵심 기둥입니다.";
+    const strengthText = strengths.map((s: string) => `· ${s}`).join("  ") + "  이 요소들이 운명 티어를 지탱하는 핵심 기둥입니다.";
     blocks.push({ title: "핵심 강점", icon: "✨", text: strengthText, color: "text-amber-300" });
   }
 

@@ -4,6 +4,7 @@
 import type { SajuAnalysisResult, TransitResult } from "../types";
 import type { VedicAnalysisResult } from "../types";
 import type { TierResult, TierGrade } from "../types/analysis";
+export type { TierResult, TierGrade };
 
 export const TIER_GRADES = [
   { grade: "S+", label: "천기",   desc: "사주와 별운이 완전히 일치하는 극희귀 최상의 조합" },
