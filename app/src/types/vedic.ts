@@ -1,6 +1,5 @@
-// ──────────────────────────────────────────────
-// 베딕 점성학 관련 타입 정의
-// ──────────────────────────────────────────────
+import type { AnalysisMeta } from "./analysis";
+import type { CompatibilityAudit } from "./saju";
 
 /** 요가 품질 */
 export type YogaQuality = "VeryHigh" | "High" | "Medium" | { Weak: string };
@@ -184,7 +183,7 @@ export interface VargaNakshatraReports {
 
 /** 베딕 분석 결과 (VedicAnalysisOutput Rust struct) */
 export interface VedicAnalysisResult {
-  meta: import("./saju").AnalysisMeta;
+  meta: AnalysisMeta;
   report: VedicAnalysisReport;
   chart: VedicChartData;
   gochara: GocharaSummary;
@@ -237,7 +236,7 @@ export interface AshtaKutaResult {
 
 /** 궁합 분석 결과 (사주 + 베딕) */
 export interface CompReport {
-  saju: import("./saju").CompatibilityAudit;
+  saju: CompatibilityAudit;
   vedic: AshtaKutaResult;
 }
 
