@@ -137,13 +137,7 @@ export interface MajorLuckAnalysis {
   day_master: string;
 }
 
-export interface AnalysisMeta {
-  precision: "Exact" | "UnknownTimeNoonProxy";
-  corrected_time: string;
-  is_dst: boolean;
-  dst_offset_hours: number | null;
-  analysis_timezone: string;
-}
+import type { AnalysisMeta } from "./analysis";
 
 // ── 골든타임 / 시뮬레이션 ─────────────────────
 
@@ -393,4 +387,3 @@ export interface CompatibilityAudit {
   conflicts: string[];
   deadlocks: string[];
 }
-
