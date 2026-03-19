@@ -42,7 +42,5 @@ export type TabId =
   | "destiny_tier"
   | "ai_audit";
 
-/** AI Audit Report 데이터 구조 (프론트엔드 파싱용) */
-export interface AiAuditReport {
-  [key: string]: any;
-}
+
+

@@ -1,11 +1,12 @@
 import { Calendar, Pencil } from "lucide-react";
-import type { BirthData } from "../../types";
+import type { BirthData, AnalysisMeta } from "../../types";
 
 interface CompactBirthInfoBarProps {
     birthData: BirthData;
     selectedCity: string;
     isMale: boolean;
     isDST: boolean;
+    meta?: AnalysisMeta | null;
     onEdit: () => void;
     /** 복사 버튼 슬롯 — ExportActionButtons를 여기에 전달합니다 */
     actionSlot?: React.ReactNode;
@@ -24,9 +25,13 @@ export function CompactBirthInfoBar({
     selectedCity,
     isMale,
     isDST,
+    meta,
     onEdit,
     actionSlot,
 }: CompactBirthInfoBarProps) {
+    const isExact = meta?.precision === "Exact";
+    const correctedTime = meta?.corrected_time;
+
     return (
         <div
             className="flex items-center gap-3 px-4 py-2.5 rounded-2xl mb-5"
@@ -53,6 +58,24 @@ export function CompactBirthInfoBar({
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
                         DST
                     </span>
+                )}
+                
+                {/* Confidence Badge */}
+                {meta && (
+                    <div className="flex items-center gap-1.5 ml-2">
+                        <span className="text-white/25">|</span>
+                        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
+                            isExact ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                        }`}>
+                            <div className={`w-1 h-1 rounded-full ${isExact ? "bg-green-400 animate-pulse" : "bg-amber-400"}`} />
+                            {isExact ? "높은 정밀도" : "시간 미상 (근사치)"}
+                        </div>
+                        {correctedTime && (
+                            <span className="text-[10px] text-white/30 hidden sm:inline">
+                                기준시: {correctedTime.split('T')[1]?.slice(0, 5) ?? correctedTime}
+                            </span>
+                        )}
+                    </div>
                 )}
             </div>
             <button
