@@ -6,9 +6,75 @@ function addToExternrefTable0(obj) {
     return idx;
 }
 
-const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(state => state.dtor(state.a, state.b));
+function debugString(val) {
+    // primitive types
+    const type = typeof val;
+    if (type == 'number' || type == 'boolean' || val == null) {
+        return  `${val}`;
+    }
+    if (type == 'string') {
+        return `"${val}"`;
+    }
+    if (type == 'symbol') {
+        const description = val.description;
+        if (description == null) {
+            return 'Symbol';
+        } else {
+            return `Symbol(${description})`;
+        }
+    }
+    if (type == 'function') {
+        const name = val.name;
+        if (typeof name == 'string' && name.length > 0) {
+            return `Function(${name})`;
+        } else {
+            return 'Function';
+        }
+    }
+    // objects
+    if (Array.isArray(val)) {
+        const length = val.length;
+        let debug = '[';
+        if (length > 0) {
+            debug += debugString(val[0]);
+        }
+        for(let i = 1; i < length; i++) {
+            debug += ', ' + debugString(val[i]);
+        }
+        debug += ']';
+        return debug;
+    }
+    // Test for built-in
+    const builtInMatches = /\[object ([^\]]+)\]/.exec(toString.call(val));
+    let className;
+    if (builtInMatches && builtInMatches.length > 1) {
+        className = builtInMatches[1];
+    } else {
+        // Failed to match the standard '[object ClassName]'
+        return toString.call(val);
+    }
+    if (className == 'Object') {
+        // we're a user defined class or Object
+        // JSON.stringify avoids problems with cycles, and is generally much
+        // easier than looping through ownProperties of `val`.
+        try {
+            return 'Object(' + JSON.stringify(val) + ')';
+        } catch (_) {
+            return 'Object';
+        }
+    }
+    // errors
+    if (val instanceof Error) {
+        return `${val.name}: ${val.message}\n${val.stack}`;
+    }
+    // TODO we could test for more things here, like `Set`s and `Map`s.
+    return className;
+}
+
+function getArrayU8FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
+}
 
 let cachedDataViewMemory0 = null;
 function getDataViewMemory0() {
@@ -42,34 +108,6 @@ function handleError(f, args) {
 
 function isLikeNone(x) {
     return x === undefined || x === null;
-}
-
-function makeMutClosure(arg0, arg1, dtor, f) {
-    const state = { a: arg0, b: arg1, cnt: 1, dtor };
-    const real = (...args) => {
-
-        // First up with a closure we increment the internal reference
-        // count. This ensures that the Rust closure environment won't
-        // be deallocated while we're invoking it.
-        state.cnt++;
-        const a = state.a;
-        state.a = 0;
-        try {
-            return f(a, state.b, ...args);
-        } finally {
-            state.a = a;
-            real._wbg_cb_unref();
-        }
-    };
-    real._wbg_cb_unref = () => {
-        if (--state.cnt === 0) {
-            state.dtor(state.a, state.b);
-            state.a = 0;
-            CLOSURE_DTORS.unregister(state);
-        }
-    };
-    CLOSURE_DTORS.register(real, state, state);
-    return real;
 }
 
 function passStringToWasm0(arg, malloc, realloc) {
@@ -143,14 +181,6 @@ if (!('encodeInto' in cachedTextEncoder)) {
 }
 
 let WASM_VECTOR_LEN = 0;
-
-function wasm_bindgen__convert__closures_____invoke__h4cd75a9079ae9638(arg0, arg1, arg2) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h4cd75a9079ae9638(arg0, arg1, arg2);
-}
-
-function wasm_bindgen__convert__closures_____invoke__h22aa556dbecabb1f(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen__convert__closures_____invoke__h22aa556dbecabb1f(arg0, arg1, arg2, arg3);
-}
 
 const PositionFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
@@ -354,10 +384,6 @@ export function calc_ut(jd_ut, planet, flags) {
 }
 
 /**
- * AI 감사 리포트 — WASM에서 호출 가능
- *
- * eon-ai의 `DestinyAIAuditor`를 사용하여 LLM 프롬프트(context_dump)와
- * 생애 peak/valley 나이를 반환합니다. API 키 없이 Google AI Studio 등에 붙여넣기 가능.
  * @param {number} year
  * @param {number} month
  * @param {number} day
@@ -370,12 +396,13 @@ export function calc_ut(jd_ut, planet, flags) {
  * @param {number} lon
  * @param {number} lat
  * @param {string} timezone
+ * @param {boolean | null} [unknown_time]
  * @returns {any}
  */
-export function get_ai_audit(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone) {
+export function get_ai_audit(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone, unknown_time) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_ai_audit(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0);
+    const ret = wasm.get_ai_audit(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0, isLikeNone(unknown_time) ? 0xFFFFFF : unknown_time ? 1 : 0);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -383,10 +410,20 @@ export function get_ai_audit(year, month, day, hour, minute, is_lunar, is_leap_m
 }
 
 /**
- * 사주(四柱) 분석 — WASM에서 호출 가능
- *
- * 생년월일시 + 성별 + 좌표 + 타임존을 받아 사주 분석 결과를 반환합니다.
- * BirthInfo를 사용하여 DST(서머타임) + 경도 기반 진태양시 보정을 자동 적용합니다.
+ * @param {any} saju_val
+ * @param {any} vedic_val
+ * @param {any} transit_val
+ * @returns {any}
+ */
+export function get_destiny_tier_analysis(saju_val, vedic_val, transit_val) {
+    const ret = wasm.get_destiny_tier_analysis(saju_val, vedic_val, transit_val);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return takeFromExternrefTable0(ret[0]);
+}
+
+/**
  * @param {number} year
  * @param {number} month
  * @param {number} day
@@ -399,12 +436,13 @@ export function get_ai_audit(year, month, day, hour, minute, is_lunar, is_leap_m
  * @param {number} lon
  * @param {number} lat
  * @param {string} timezone
+ * @param {boolean | null} [unknown_time]
  * @returns {any}
  */
-export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone) {
+export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone, unknown_time) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0);
+    const ret = wasm.get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0, isLikeNone(unknown_time) ? 0xFFFFFF : unknown_time ? 1 : 0);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -412,7 +450,6 @@ export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_l
 }
 
 /**
- * 사주 궁합 분석 - WASM에서 호출 가능
  * @param {number} year1
  * @param {number} month1
  * @param {number} day1
@@ -424,6 +461,7 @@ export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_l
  * @param {number} lon1
  * @param {number} lat1
  * @param {boolean} use_night_rat_hour1
+ * @param {string} timezone1
  * @param {number} year2
  * @param {number} month2
  * @param {number} day2
@@ -435,16 +473,15 @@ export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_l
  * @param {number} lon2
  * @param {number} lat2
  * @param {boolean} use_night_rat_hour2
- * @param {string} timezone1
  * @param {string} timezone2
  * @returns {any}
  */
-export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, use_night_rat_hour1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, use_night_rat_hour2, timezone1, timezone2) {
+export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, use_night_rat_hour1, timezone1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, use_night_rat_hour2, timezone2) {
     const ptr0 = passStringToWasm0(timezone1, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ptr1 = passStringToWasm0(timezone2, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
-    const ret = wasm.get_saju_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, use_night_rat_hour1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, use_night_rat_hour2, ptr0, len0, ptr1, len1);
+    const ret = wasm.get_saju_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, use_night_rat_hour1, ptr0, len0, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, use_night_rat_hour2, ptr1, len1);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -452,7 +489,6 @@ export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_l
 }
 
 /**
- * 현재 운세(세운/월운/일운) 분석 — WASM에서 호출 가능
  * @param {number} year
  * @param {number} month
  * @param {number} day
@@ -465,15 +501,19 @@ export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_l
  * @param {number} lon
  * @param {number} lat
  * @param {string} timezone
- * @param {number} current_year
- * @param {number} current_month
- * @param {number} current_day
+ * @param {number} _current_year
+ * @param {number} _current_month
+ * @param {number} _current_day
+ * @param {boolean | null} [unknown_time]
+ * @param {string | null} [now_utc_str]
  * @returns {any}
  */
-export function get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone, current_year, current_month, current_day) {
+export function get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone, _current_year, _current_month, _current_day, unknown_time, now_utc_str) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0, current_year, current_month, current_day);
+    var ptr1 = isLikeNone(now_utc_str) ? 0 : passStringToWasm0(now_utc_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    var len1 = WASM_VECTOR_LEN;
+    const ret = wasm.get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0, _current_year, _current_month, _current_day, isLikeNone(unknown_time) ? 0xFFFFFF : unknown_time ? 1 : 0, ptr1, len1);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -491,17 +531,19 @@ export function get_transit_analysis(year, month, day, hour, minute, is_lunar, i
  * @param {number} lat
  * @param {number} lon
  * @param {string} timezone
- * @returns {Promise<any>}
+ * @returns {any}
  */
 export function get_vedic_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, lat, lon, timezone) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ret = wasm.get_vedic_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, lat, lon, ptr0, len0);
-    return ret;
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return takeFromExternrefTable0(ret[0]);
 }
 
 /**
- * 베딕 궁합 분석 (Ashta Kuta) - WASM에서 호출 가능
  * @param {number} year1
  * @param {number} month1
  * @param {number} day1
@@ -511,6 +553,7 @@ export function get_vedic_analysis(year, month, day, hour, minute, is_lunar, is_
  * @param {boolean} is_leap_month1
  * @param {number} lat1
  * @param {number} lon1
+ * @param {string} timezone1
  * @param {number} year2
  * @param {number} month2
  * @param {number} day2
@@ -520,43 +563,19 @@ export function get_vedic_analysis(year, month, day, hour, minute, is_lunar, is_
  * @param {boolean} is_leap_month2
  * @param {number} lat2
  * @param {number} lon2
- * @param {string} timezone1
  * @param {string} timezone2
- * @returns {Promise<any>}
+ * @returns {any}
  */
-export function get_vedic_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, lat1, lon1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, lat2, lon2, timezone1, timezone2) {
+export function get_vedic_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, lat1, lon1, timezone1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, lat2, lon2, timezone2) {
     const ptr0 = passStringToWasm0(timezone1, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ptr1 = passStringToWasm0(timezone2, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
-    const ret = wasm.get_vedic_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, lat1, lon1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, lat2, lon2, ptr0, len0, ptr1, len1);
-    return ret;
-}
-
-/**
- * @param {string} name
- * @returns {string}
- */
-export function greet(name) {
-    let deferred2_0;
-    let deferred2_1;
-    try {
-        const ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.greet(ptr0, len0);
-        deferred2_0 = ret[0];
-        deferred2_1 = ret[1];
-        return getStringFromWasm0(ret[0], ret[1]);
-    } finally {
-        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    const ret = wasm.get_vedic_compatibility(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, lat1, lon1, ptr0, len0, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, lat2, lon2, ptr1, len1);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
     }
-}
-
-/**
- * WASM 패닉 메시지를 브라우저 콘솔에 표시
- */
-export function init_panic_hook() {
-    wasm.init_panic_hook();
+    return takeFromExternrefTable0(ret[0]);
 }
 
 /**
@@ -625,6 +644,10 @@ function __wbg_get_imports() {
         const ret = Error(getStringFromWasm0(arg0, arg1));
         return ret;
     };
+    imports.wbg.__wbg_Number_2d1dcfcf4ec51736 = function(arg0) {
+        const ret = Number(arg0);
+        return ret;
+    };
     imports.wbg.__wbg_String_8f0eb39a4a4c2f66 = function(arg0, arg1) {
         const ret = String(arg1);
         const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -632,8 +655,39 @@ function __wbg_get_imports() {
         getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
         getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
     };
+    imports.wbg.__wbg___wbindgen_bigint_get_as_i64_6e32f5e6aff02e1d = function(arg0, arg1) {
+        const v = arg1;
+        const ret = typeof(v) === 'bigint' ? v : undefined;
+        getDataViewMemory0().setBigInt64(arg0 + 8 * 1, isLikeNone(ret) ? BigInt(0) : ret, true);
+        getDataViewMemory0().setInt32(arg0 + 4 * 0, !isLikeNone(ret), true);
+    };
+    imports.wbg.__wbg___wbindgen_boolean_get_dea25b33882b895b = function(arg0) {
+        const v = arg0;
+        const ret = typeof(v) === 'boolean' ? v : undefined;
+        return isLikeNone(ret) ? 0xFFFFFF : ret ? 1 : 0;
+    };
+    imports.wbg.__wbg___wbindgen_debug_string_adfb662ae34724b6 = function(arg0, arg1) {
+        const ret = debugString(arg1);
+        const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
+        getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
+    };
+    imports.wbg.__wbg___wbindgen_in_0d3e1e8f0c669317 = function(arg0, arg1) {
+        const ret = arg0 in arg1;
+        return ret;
+    };
+    imports.wbg.__wbg___wbindgen_is_bigint_0e1a2e3f55cfae27 = function(arg0) {
+        const ret = typeof(arg0) === 'bigint';
+        return ret;
+    };
     imports.wbg.__wbg___wbindgen_is_function_8d400b8b1af978cd = function(arg0) {
         const ret = typeof(arg0) === 'function';
+        return ret;
+    };
+    imports.wbg.__wbg___wbindgen_is_object_ce774f3490692386 = function(arg0) {
+        const val = arg0;
+        const ret = typeof(val) === 'object' && val !== null;
         return ret;
     };
     imports.wbg.__wbg___wbindgen_is_string_704ef9c8fc131030 = function(arg0) {
@@ -644,33 +698,97 @@ function __wbg_get_imports() {
         const ret = arg0 === undefined;
         return ret;
     };
+    imports.wbg.__wbg___wbindgen_jsval_eq_b6101cc9cef1fe36 = function(arg0, arg1) {
+        const ret = arg0 === arg1;
+        return ret;
+    };
+    imports.wbg.__wbg___wbindgen_jsval_loose_eq_766057600fdd1b0d = function(arg0, arg1) {
+        const ret = arg0 == arg1;
+        return ret;
+    };
+    imports.wbg.__wbg___wbindgen_number_get_9619185a74197f95 = function(arg0, arg1) {
+        const obj = arg1;
+        const ret = typeof(obj) === 'number' ? obj : undefined;
+        getDataViewMemory0().setFloat64(arg0 + 8 * 1, isLikeNone(ret) ? 0 : ret, true);
+        getDataViewMemory0().setInt32(arg0 + 4 * 0, !isLikeNone(ret), true);
+    };
+    imports.wbg.__wbg___wbindgen_string_get_a2a31e16edf96e42 = function(arg0, arg1) {
+        const obj = arg1;
+        const ret = typeof(obj) === 'string' ? obj : undefined;
+        var ptr1 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len1 = WASM_VECTOR_LEN;
+        getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
+        getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
+    };
     imports.wbg.__wbg___wbindgen_throw_dd24417ed36fc46e = function(arg0, arg1) {
         throw new Error(getStringFromWasm0(arg0, arg1));
     };
-    imports.wbg.__wbg__wbg_cb_unref_87dfb5aaa0cbcea7 = function(arg0) {
-        arg0._wbg_cb_unref();
-    };
-    imports.wbg.__wbg_call_3020136f7a2d6e44 = function() { return handleError(function (arg0, arg1, arg2) {
-        const ret = arg0.call(arg1, arg2);
-        return ret;
-    }, arguments) };
     imports.wbg.__wbg_call_abb4ff46ce38be40 = function() { return handleError(function (arg0, arg1) {
         const ret = arg0.call(arg1);
         return ret;
     }, arguments) };
-    imports.wbg.__wbg_error_7534b8e9a36f1ab4 = function(arg0, arg1) {
-        let deferred0_0;
-        let deferred0_1;
-        try {
-            deferred0_0 = arg0;
-            deferred0_1 = arg1;
-            console.error(getStringFromWasm0(arg0, arg1));
-        } finally {
-            wasm.__wbindgen_free(deferred0_0, deferred0_1, 1);
-        }
+    imports.wbg.__wbg_done_62ea16af4ce34b24 = function(arg0) {
+        const ret = arg0.done;
+        return ret;
+    };
+    imports.wbg.__wbg_entries_83c79938054e065f = function(arg0) {
+        const ret = Object.entries(arg0);
+        return ret;
     };
     imports.wbg.__wbg_getTime_ad1e9878a735af08 = function(arg0) {
         const ret = arg0.getTime();
+        return ret;
+    };
+    imports.wbg.__wbg_get_6b7bd52aca3f9671 = function(arg0, arg1) {
+        const ret = arg0[arg1 >>> 0];
+        return ret;
+    };
+    imports.wbg.__wbg_get_af9dab7e9603ea93 = function() { return handleError(function (arg0, arg1) {
+        const ret = Reflect.get(arg0, arg1);
+        return ret;
+    }, arguments) };
+    imports.wbg.__wbg_get_with_ref_key_1dc361bd10053bfe = function(arg0, arg1) {
+        const ret = arg0[arg1];
+        return ret;
+    };
+    imports.wbg.__wbg_instanceof_ArrayBuffer_f3320d2419cd0355 = function(arg0) {
+        let result;
+        try {
+            result = arg0 instanceof ArrayBuffer;
+        } catch (_) {
+            result = false;
+        }
+        const ret = result;
+        return ret;
+    };
+    imports.wbg.__wbg_instanceof_Uint8Array_da54ccc9d3e09434 = function(arg0) {
+        let result;
+        try {
+            result = arg0 instanceof Uint8Array;
+        } catch (_) {
+            result = false;
+        }
+        const ret = result;
+        return ret;
+    };
+    imports.wbg.__wbg_isArray_51fd9e6422c0a395 = function(arg0) {
+        const ret = Array.isArray(arg0);
+        return ret;
+    };
+    imports.wbg.__wbg_isSafeInteger_ae7d3f054d55fa16 = function(arg0) {
+        const ret = Number.isSafeInteger(arg0);
+        return ret;
+    };
+    imports.wbg.__wbg_iterator_27b7c8b35ab3e86b = function() {
+        const ret = Symbol.iterator;
+        return ret;
+    };
+    imports.wbg.__wbg_length_22ac23eaec9d8053 = function(arg0) {
+        const ret = arg0.length;
+        return ret;
+    };
+    imports.wbg.__wbg_length_d45040a40c570362 = function(arg0) {
+        const ret = arg0.length;
         return ret;
     };
     imports.wbg.__wbg_new_0_23cedd11d9b40c9d = function() {
@@ -685,46 +803,24 @@ function __wbg_get_imports() {
         const ret = new Array();
         return ret;
     };
-    imports.wbg.__wbg_new_8a6f238a6ece86ea = function() {
-        const ret = new Error();
+    imports.wbg.__wbg_new_6421f6084cc5bc5a = function(arg0) {
+        const ret = new Uint8Array(arg0);
         return ret;
     };
     imports.wbg.__wbg_new_b546ae120718850e = function() {
         const ret = new Map();
         return ret;
     };
-    imports.wbg.__wbg_new_ff12d2b041fb48f1 = function(arg0, arg1) {
-        try {
-            var state0 = {a: arg0, b: arg1};
-            var cb0 = (arg0, arg1) => {
-                const a = state0.a;
-                state0.a = 0;
-                try {
-                    return wasm_bindgen__convert__closures_____invoke__h22aa556dbecabb1f(a, state0.b, arg0, arg1);
-                } finally {
-                    state0.a = a;
-                }
-            };
-            const ret = new Promise(cb0);
-            return ret;
-        } finally {
-            state0.a = state0.b = 0;
-        }
-    };
-    imports.wbg.__wbg_new_no_args_cb138f77cf6151ee = function(arg0, arg1) {
-        const ret = new Function(getStringFromWasm0(arg0, arg1));
+    imports.wbg.__wbg_next_138a17bbf04e926c = function(arg0) {
+        const ret = arg0.next;
         return ret;
     };
-    imports.wbg.__wbg_queueMicrotask_9b549dfce8865860 = function(arg0) {
-        const ret = arg0.queueMicrotask;
+    imports.wbg.__wbg_next_3cfe5c0fe2a4cc53 = function() { return handleError(function (arg0) {
+        const ret = arg0.next();
         return ret;
-    };
-    imports.wbg.__wbg_queueMicrotask_fca69f5bfad613a5 = function(arg0) {
-        queueMicrotask(arg0);
-    };
-    imports.wbg.__wbg_resolve_fd5bfbaa4ce36e1e = function(arg0) {
-        const ret = Promise.resolve(arg0);
-        return ret;
+    }, arguments) };
+    imports.wbg.__wbg_prototypesetcall_dfe9b766cdc1f1fd = function(arg0, arg1, arg2) {
+        Uint8Array.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), arg2);
     };
     imports.wbg.__wbg_set_3f1d0b984ed272ed = function(arg0, arg1, arg2) {
         arg0[arg1] = arg2;
@@ -736,35 +832,12 @@ function __wbg_get_imports() {
         const ret = arg0.set(arg1, arg2);
         return ret;
     };
-    imports.wbg.__wbg_stack_0ed75d68575b0f3c = function(arg0, arg1) {
-        const ret = arg1.stack;
-        const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len1 = WASM_VECTOR_LEN;
-        getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
-        getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
-    };
-    imports.wbg.__wbg_static_accessor_GLOBAL_769e6b65d6557335 = function() {
-        const ret = typeof global === 'undefined' ? null : global;
-        return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-    };
-    imports.wbg.__wbg_static_accessor_GLOBAL_THIS_60cf02db4de8e1c1 = function() {
-        const ret = typeof globalThis === 'undefined' ? null : globalThis;
-        return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-    };
-    imports.wbg.__wbg_static_accessor_SELF_08f5a74c69739274 = function() {
-        const ret = typeof self === 'undefined' ? null : self;
-        return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-    };
-    imports.wbg.__wbg_static_accessor_WINDOW_a8924b26aa92d024 = function() {
-        const ret = typeof window === 'undefined' ? null : window;
-        return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
-    };
     imports.wbg.__wbg_swissepherror_new = function(arg0) {
         const ret = SwissEphError.__wrap(arg0);
         return ret;
     };
-    imports.wbg.__wbg_then_4f95312d68691235 = function(arg0, arg1) {
-        const ret = arg0.then(arg1);
+    imports.wbg.__wbg_value_57b7b035e117f7ee = function(arg0) {
+        const ret = arg0.value;
         return ret;
     };
     imports.wbg.__wbindgen_cast_2241b6af4c4b2941 = function(arg0, arg1) {
@@ -775,11 +848,6 @@ function __wbg_get_imports() {
     imports.wbg.__wbindgen_cast_4625c577ab2ec9ee = function(arg0) {
         // Cast intrinsic for `U64 -> Externref`.
         const ret = BigInt.asUintN(64, arg0);
-        return ret;
-    };
-    imports.wbg.__wbindgen_cast_9683f9df46693b7f = function(arg0, arg1) {
-        // Cast intrinsic for `Closure(Closure { dtor_idx: 26, function: Function { arguments: [Externref], shim_idx: 27, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-        const ret = makeMutClosure(arg0, arg1, wasm.wasm_bindgen__closure__destroy__h5e9e2a75c5727948, wasm_bindgen__convert__closures_____invoke__h4cd75a9079ae9638);
         return ret;
     };
     imports.wbg.__wbindgen_cast_d6cd19b81560fd6e = function(arg0) {

@@ -9,7 +9,7 @@ export function useAstrologyAnalysis() {
   const { birthData, isMale } = store;
 
   const runAnalysis = async (): Promise<RunAnalysisResult> => {
-    const error = getBirthValidationError(birthData);
+    const error = getBirthValidationError(birthData, "출생 정보");
     if (error) {
       toast.error(error);
       return { ok: false, partial: false, completed: [], failed: [] };
@@ -74,10 +74,10 @@ export function useAstrologyAnalysis() {
         completed.push(key);
         
         // Sync with legacy store
-        if (key === "vedic") store.setReport(res.value);
-        if (key === "saju") store.setSajuReport(res.value);
-        if (key === "aiAudit") store.setAiAuditReport(res.value);
-        if (key === "transit") store.setTransitReport(res.value);
+        if (key === "vedic") store.setReport(res.value as any);
+        if (key === "saju") store.setSajuReport(res.value as any);
+        if (key === "aiAudit") store.setAiAuditReport(res.value as any);
+        if (key === "transit") store.setTransitReport(res.value as any);
       } else {
         const errMsg = String(res.reason);
         store.setAnalysisTaskState(key, { status: "error", error: errMsg });

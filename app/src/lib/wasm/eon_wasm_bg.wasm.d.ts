@@ -1,13 +1,13 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
-export const get_saju_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => [number, number, number];
+export const get_ai_audit: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => [number, number, number];
+export const get_destiny_tier_analysis: (a: any, b: any, c: any) => [number, number, number];
+export const get_saju_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => [number, number, number];
 export const get_saju_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number, w: number, x: number, y: number, z: number) => [number, number, number];
-export const get_transit_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number) => [number, number, number];
-export const get_vedic_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => any;
-export const get_vedic_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number) => any;
-export const greet: (a: number, b: number) => [number, number];
-export const init_panic_hook: () => void;
+export const get_transit_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number) => [number, number, number];
+export const get_vedic_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => [number, number, number];
+export const get_vedic_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number) => [number, number, number];
 export const __wbg_get_position_distance: (a: number) => number;
 export const __wbg_get_position_distance_speed: (a: number) => number;
 export const __wbg_get_position_latitude: (a: number) => number;
@@ -41,14 +41,11 @@ export const wasm_swe_set_ephe_path: (a: number) => void;
 export const wasm_swe_set_topo: (a: number, b: number, c: number) => void;
 export const wasm_swe_sidtime: (a: number) => number;
 export const wasm_swe_version: (a: number) => number;
-export const wasm_bindgen__convert__closures_____invoke__h4cd75a9079ae9638: (a: number, b: number, c: any) => void;
-export const wasm_bindgen__closure__destroy__h5e9e2a75c5727948: (a: number, b: number) => void;
-export const wasm_bindgen__convert__closures_____invoke__h22aa556dbecabb1f: (a: number, b: number, c: any, d: any) => void;
 export const __wbindgen_malloc: (a: number, b: number) => number;
 export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
 export const __wbindgen_exn_store: (a: number) => void;
 export const __externref_table_alloc: () => number;
 export const __wbindgen_externrefs: WebAssembly.Table;
-export const __wbindgen_free: (a: number, b: number, c: number) => void;
 export const __externref_table_dealloc: (a: number) => void;
+export const __wbindgen_free: (a: number, b: number, c: number) => void;
 export const __wbindgen_start: () => void;

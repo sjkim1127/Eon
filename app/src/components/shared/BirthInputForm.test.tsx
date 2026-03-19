@@ -28,7 +28,7 @@ describe("BirthInputForm", () => {
         setIsMale={() => {}}
         isDST={false}
         loading={false}
-        onAnalysis={() => {}}
+        onAnalysis={() => Promise.resolve({ ok: true, partial: false, completed: [], failed: [] })}
         sajuReport={null}
         compact
         submitLabel="궁합 분석 시작"
@@ -50,7 +50,7 @@ describe("BirthInputForm", () => {
         setIsMale={() => {}}
         isDST={false}
         loading={false}
-        onAnalysis={() => {}}
+        onAnalysis={() => Promise.resolve({ ok: true, partial: false, completed: [], failed: [] })}
         sajuReport={null}
       />
     );
