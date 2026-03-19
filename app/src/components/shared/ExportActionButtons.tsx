@@ -7,7 +7,8 @@ import {
     buildVedicMarkdown,
     buildCompatibilityMarkdown,
 } from "../../utils";
-import type { SajuAnalysisResult, VedicAnalysisResult, TransitResult, CompatibilityAudit, AshtaKutaResult } from "../../types";
+import type { SajuAnalysisResult, VedicAnalysisResult, TransitResult } from "../../types";
+import type { CompatibilityOutput } from "../../types/analysis";
 
 import { TierResult } from "../../utils/tierScore";
 
@@ -15,7 +16,7 @@ interface ExportActionButtonsProps {
     sajuReport: SajuAnalysisResult | null;
     report: VedicAnalysisResult | null;
     transitReport: TransitResult | null;
-    compReport: { saju: CompatibilityAudit; vedic: AshtaKutaResult } | null;
+    compReport: CompatibilityOutput | null;
     tierResult?: TierResult | null;
 }
 

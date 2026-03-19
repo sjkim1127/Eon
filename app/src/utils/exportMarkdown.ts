@@ -7,7 +7,7 @@ import {
 import type { SajuAnalysisResult } from "../types";
 import type { VedicAnalysisResult } from "../types";
 import type { TransitResult } from "../types";
-import type { CompReport } from "../types";
+import type { CompatibilityOutput } from "../types/analysis";
 import { computeTierResult, type TierResult } from "./tierScore";
 import { getNakshatraInfo } from "./nakshatra";
 import { formatSiderealPosition, buildNakshatraMarkdownRows } from "./vedicFormat";
@@ -772,7 +772,7 @@ export function buildTransitMarkdown(t: TransitResult): string {
 
 // ── 궁합 섹션 ────────────────────────────────────────
 
-export function buildCompatibilityMarkdown(comp: CompReport): string {
+export function buildCompatibilityMarkdown(comp: CompatibilityOutput): string {
     const lines: string[] = [];
     lines.push("# 궁합 분석 리포트\n");
 
@@ -947,7 +947,7 @@ export function buildFullAnalysisMarkdown(
     sajuReport: SajuAnalysisResult | null,
     vedicReport: VedicAnalysisResult | null,
     transitReport: TransitResult | null = null,
-    compReport?: CompReport | null,
+    compReport?: CompatibilityOutput | null,
     tierResult?: TierResult | null,
 ): string {
     const parts: string[] = [];

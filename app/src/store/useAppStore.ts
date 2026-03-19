@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { BirthData, TabId, VedicAnalysisResult, SajuAnalysisResult, TransitResult, CompatibilityAudit, AshtaKutaResult } from '../types';
-import type { AnalysisBundleState, AnalysisTaskState } from '../types/analysis';
+import type { BirthData, TabId, VedicAnalysisResult, SajuAnalysisResult, TransitResult } from '../types';
+import type { AnalysisBundleState, AnalysisTaskState, CompatibilityOutput } from '../types/analysis';
 
 export const DEFAULT_BIRTH: BirthData = {
   year: 1990, month: 1, day: 1, hour: 12, minute: 0,
@@ -80,8 +80,8 @@ interface AppState {
   setIsMale2: (val: boolean) => void;
 
   // Compatibility Analysis State
-  compReport: { saju: CompatibilityAudit; vedic: AshtaKutaResult } | null;
-  setCompReport: (report: { saju: CompatibilityAudit; vedic: AshtaKutaResult } | null) => void;
+  compReport: CompatibilityOutput | null;
+  setCompReport: (report: CompatibilityOutput | null) => void;
   compLoading: boolean;
   setCompLoading: (loading: boolean) => void;
 }

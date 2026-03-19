@@ -239,6 +239,7 @@ pub fn get_compatibility_analysis(
     lat1: f64,
     use_night_rat_hour1: bool,
     timezone1: String,
+    unknown_time1: Option<bool>,
     year2: i32,
     month2: u32,
     day2: u32,
@@ -251,6 +252,7 @@ pub fn get_compatibility_analysis(
     lat2: f64,
     use_night_rat_hour2: bool,
     timezone2: String,
+    unknown_time2: Option<bool>,
 ) -> Result<JsValue, JsValue> {
     let input = eon_service::dto::CompatibilityInput {
         person1: SajuAnalysisInput {
@@ -268,7 +270,7 @@ pub fn get_compatibility_analysis(
             },
             is_male: is_male1,
             use_night_rat_hour: use_night_rat_hour1,
-            precision: BirthTimePrecision::Exact,
+            precision: if unknown_time1.unwrap_or(false) { BirthTimePrecision::UnknownTimeNoonProxy } else { BirthTimePrecision::Exact },
         },
         person2: SajuAnalysisInput {
             base: AnalysisInput {
@@ -285,7 +287,7 @@ pub fn get_compatibility_analysis(
             },
             is_male: is_male2,
             use_night_rat_hour: use_night_rat_hour2,
-            precision: BirthTimePrecision::Exact,
+            precision: if unknown_time2.unwrap_or(false) { BirthTimePrecision::UnknownTimeNoonProxy } else { BirthTimePrecision::Exact },
         },
     };
 

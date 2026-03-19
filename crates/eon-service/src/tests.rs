@@ -10,6 +10,13 @@ mod tests {
 
         // 1. Saju
         let saju_res = facade::analyze_saju(saju_input.clone()).expect("Saju analysis failed");
+        
+        // Verify precise Saju calculation outputs (TST + DST consideration)
+        assert_eq!(format!("{:?}", saju_res.report.pillars.year.stem), "Yi");
+        assert_eq!(format!("{:?}", saju_res.report.pillars.year.branch), "Hai");
+        assert_eq!(format!("{:?}", saju_res.report.pillars.day.stem), "Ren");
+        assert_eq!(format!("{:?}", saju_res.report.strength.day_master), "Ren");
+        
         assert!(saju_res.meta.corrected_time.contains(":"), "Corrected time should be present");
         
         // 2. Transit
@@ -36,6 +43,18 @@ mod tests {
         };
 
         let vedic_res = facade::analyze_vedic(vedic_input).expect("Vedic analysis failed");
+        
+        // Verify precise Vedic calculation outputs (Standard Time -> UTC directly, without TST)
+        assert_eq!(vedic_res.chart.ascendant.rasi, 10); // Capricorn
+        assert_eq!(vedic_res.chart.ascendant.nakshatra, 21); // Uttarashadha
+        
+        if let Some(moon) = vedic_res.chart.planets.iter().find(|p| p.planet == eon_vedic::planets::VedicPlanet::Moon) {
+            assert_eq!(moon.rasi, 10);
+            assert_eq!(moon.nakshatra, 22); // Shravana
+        } else {
+            panic!("Moon not found in Vedic chart");
+        }
+        
         assert_eq!(vedic_res.meta.precision, BirthTimePrecision::Exact);
         assert!(!vedic_res.chart.planets.is_empty(), "Chart planets should not be empty");
         assert!(!vedic_res.gochara.transits.is_empty(), "Gochara transits should not be empty");

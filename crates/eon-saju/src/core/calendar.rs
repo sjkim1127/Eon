@@ -138,7 +138,7 @@ pub fn get_solar_term_time(dt: DateTime<Utc>, term: SolarTerm) -> DateTime<Utc> 
     // SolarTerm::index: 0=입춘, 1=경칩...
     // 월의 시작 절기는 짝수 인덱스
     engine
-        .find_solar_term_time(dt, (term.index() * 2))
+        .find_solar_term_time(dt, term.index() * 2)
         .unwrap_or(dt)
 }
 

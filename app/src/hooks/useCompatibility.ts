@@ -33,11 +33,13 @@ export function useCompatibility() {
         is_lunar1: birthData.is_lunar ?? false, is_leap_month1: birthData.is_leap_month ?? false,
         is_male1: isMale, lon1: birthData.lon, lat1: birthData.lat,
         use_night_rat_hour1: birthData.use_night_rat_hour ?? false,
+        unknown_time1: birthData.unknown_time ?? false,
         year2: birthData2.year, month2: birthData2.month, day2: birthData2.day,
         hour2: birthData2.hour, minute2: birthData2.minute,
         is_lunar2: birthData2.is_lunar ?? false, is_leap_month2: birthData2.is_leap_month ?? false,
         is_male2: isMale2, lon2: birthData2.lon, lat2: birthData2.lat,
         use_night_rat_hour2: birthData2.use_night_rat_hour ?? false,
+        unknown_time2: birthData2.unknown_time ?? false,
         timezone1: birthData.timezone,
         timezone2: birthData2.timezone,
       });

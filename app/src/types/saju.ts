@@ -379,11 +379,3 @@ export interface TransitResult {
 }
 
 // ── 궁합 ─────────────────────────────────────
-
-/** 사주 궁합 (CompatibilityAudit Rust struct) */
-export interface CompatibilityAudit {
-  sync_score: number;
-  synergies: string[];
-  conflicts: string[];
-  deadlocks: string[];
-}
