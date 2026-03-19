@@ -105,11 +105,8 @@ pub fn get_transit_analysis(
     lon: f64,
     lat: f64,
     timezone: String,
-    _current_year: i32,
-    _current_month: u32,
-    _current_day: u32,
     unknown_time: Option<bool>,
-    now_utc_str: Option<String>, // WASM에서는 ISO string으로 받는 게 편할 수 있음
+    now_utc_str: Option<String>,
 ) -> Result<JsValue, JsValue> {
     let precision = if unknown_time.unwrap_or(false) {
         BirthTimePrecision::UnknownTimeNoonProxy

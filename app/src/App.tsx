@@ -57,6 +57,12 @@ function App() {
   const errorMessage = useAppStore(state => state.errorMessage);
   const analysisState = useAppStore(state => state.analysisState);
 
+  const vedicData = analysisState.vedic.data;
+  const sajuData = analysisState.saju.data;
+  const transitData = analysisState.transit.data;
+  const aiAuditData = analysisState.aiAudit.data;
+  const tierData = analysisState.tier.data;
+
   const {
     birthData, setBirthData,
     selectedCity, handleCitySelect,
@@ -65,37 +71,34 @@ function App() {
 
   const {
     runAnalysis,
-    report, sajuReport, transitReport, transitError,
-    tierReport,
-    aiAuditReport,
     loading,
   } = useAstrologyAnalysis();
 
   const { compReport } = useCompatibility();
 
-  const isDST = sajuReport?.is_dst ?? false;
+  const isDST = sajuData?.meta.is_dst ?? false;
 
   const [formOpen, setFormOpen] = useState(true);
 
   const availability = useMemo(() => ({
-    overview: analysisState.vedic.status === "success",
-    saju: analysisState.saju.status === "success",
-    vedic_charts: analysisState.vedic.status === "success" && !birthData.unknown_time,
-    strength: analysisState.saju.status === "success",
-    transit: analysisState.transit.status === "success",
+    overview: analysisState.vedic.status === "success" && !!vedicData,
+    saju: analysisState.saju.status === "success" && !!sajuData,
+    vedic_charts: analysisState.vedic.status === "success" && !!vedicData && !birthData.unknown_time,
+    strength: analysisState.saju.status === "success" && !!sajuData,
+    transit: analysisState.transit.status === "success" && !!transitData,
     compatibility: true,
-    destiny_tier: analysisState.tier.status === "success",
-    ai_audit: analysisState.aiAudit.status === "success",
-  }), [analysisState, birthData.unknown_time]);
+    destiny_tier: analysisState.tier.status === "success" && !!tierData,
+    ai_audit: analysisState.aiAudit.status === "success" && !!aiAuditData,
+  }), [analysisState, birthData.unknown_time, vedicData, sajuData, transitData, tierData, aiAuditData]);
 
   const hasAnyReport = useMemo(() => 
-    Object.values(analysisState).some(s => s.status === "success"),
+    Object.values(analysisState).some(s => s.status === "success" && s.data),
     [analysisState]
   );
 
   const { prefetchTab } = useTabPrefetcher(currentTab, {
-    hasReport: !!(report || sajuReport),
-    hasTransit: !!transitReport,
+    hasReport: !!(vedicData || sajuData),
+    hasTransit: !!transitData,
     hasComp: !!compReport,
   });
 
@@ -135,11 +138,11 @@ function App() {
               onEdit={() => setFormOpen(true)}
               actionSlot={
                 <ExportActionButtons
-                  sajuReport={sajuReport}
-                  report={report}
-                  transitReport={transitReport}
+                  sajuReport={sajuData}
+                  report={vedicData}
+                  transitReport={transitData}
                   compReport={compReport}
-                  tierResult={tierReport}
+                  tierResult={tierData}
                 />
               }
             />
@@ -151,6 +154,14 @@ function App() {
               <UserPlus className="w-4 h-4" />
               출생 정보 입력하여 분석 시작
             </button>
+          )}
+          {sajuData?.meta?.corrected_time && (
+            <span className="text-celestial-cyan/60">
+              보정시: {sajuData.meta.corrected_time}
+            </span>
+          )}
+          {sajuData?.meta?.is_dst && (
+            <span className="text-amber-400/80">DST 적용됨</span>
           )}
 
           {errorMessage && (
@@ -179,34 +190,34 @@ function App() {
             <Suspense fallback={<TabSkeleton />}>
               <Routes location={location} key={location.pathname}>
                 <Route path="/" element={
-                  availability.overview ? <OverviewTab report={report!} /> : <UnavailableTabFallback reason="베딕 분석 결과가 필요합니다." />
+                  availability.overview ? <OverviewTab report={vedicData!} /> : <UnavailableTabFallback reason="베딕 분석 결과가 필요합니다." />
                 } />
                 <Route path="/saju" element={
-                  availability.saju ? <SajuTab sajuReport={sajuReport} unknownTime={birthData.unknown_time} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
+                  availability.saju ? <SajuTab sajuReport={sajuData!} unknownTime={birthData.unknown_time} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
                 } />
                 <Route path="/vedic_charts" element={
-                  availability.vedic_charts ? <VedicChartsTab report={report!} /> : <UnavailableTabFallback reason="시간 미상인 경우 베딕 차트를 생성할 수 없습니다." />
+                  availability.vedic_charts ? <VedicChartsTab report={vedicData!} /> : <UnavailableTabFallback reason="시간 미상인 경우 베딕 차트를 생성할 수 없습니다." />
                 } />
                 <Route path="/strength" element={
-                  availability.strength ? <StrengthTab sajuReport={sajuReport} unknownTime={birthData.unknown_time} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
+                  availability.strength ? <StrengthTab sajuReport={sajuData!} unknownTime={birthData.unknown_time} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
                 } />
                 <Route path="/transit" element={
-                  availability.transit ? <TransitTab transitReport={transitReport} transitError={transitError} /> : <UnavailableTabFallback reason="트랜짓 분석 결과가 필요합니다." />
+                  availability.transit ? <TransitTab transitReport={transitData!} transitError={null} /> : <UnavailableTabFallback reason="트랜짓 분석 결과가 필요합니다." />
                 } />
                 <Route path="/compatibility" element={<CompatibilityTab />} />
                 <Route path="/destiny_tier" element={
                   availability.destiny_tier ? (
                     <DestinyTierTab
-                      sajuReport={sajuReport}
-                      report={report}
-                      transitReport={transitReport}
-                      tierReport={tierReport}
+                      sajuReport={sajuData}
+                      report={vedicData}
+                      transitReport={transitData}
+                      tierReport={tierData}
                       unknownTime={birthData.unknown_time}
                     />
                   ) : <UnavailableTabFallback reason="종합 등급 산출을 위해 사주와 베딕 분석이 모두 성공해야 합니다." />
                 } />
                 <Route path="/ai_audit" element={
-                  availability.ai_audit ? <AiAuditTab aiAuditReport={aiAuditReport} /> : <UnavailableTabFallback reason="AI 진단 결과가 필요합니다." />
+                  availability.ai_audit ? <AiAuditTab aiAuditReport={aiAuditData!} /> : <UnavailableTabFallback reason="AI 진단 결과가 필요합니다." />
                 } />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
@@ -227,7 +238,7 @@ function App() {
         isDST={isDST}
         loading={loading}
         onAnalysis={runAnalysis}
-        sajuReport={sajuReport}
+        sajuReport={sajuData}
       />
 
       <Analytics />
