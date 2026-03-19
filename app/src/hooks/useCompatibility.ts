@@ -2,25 +2,26 @@ import { toast } from "sonner";
 import { backendClient } from "../lib/backend";
 import { useAppStore } from "../store/useAppStore";
 import { getBirthValidationError } from "../utils/validation";
+import type { RunAnalysisResult } from "../types/analysis";
 
 export function useCompatibility() {
   const store = useAppStore();
 
-  const runCompatibilityAnalysis = async () => {
+  const runCompatibilityAnalysis = async (): Promise<RunAnalysisResult> => {
     const { birthData, birthData2, isMale, isMale2, setErrorMessage, setCompLoading, setCompReport } = store;
 
     const firstValidation = getBirthValidationError(birthData, "내 정보");
     if (firstValidation) {
       setErrorMessage(firstValidation);
       toast.error(firstValidation);
-      return;
+      return { ok: false, partial: false, completed: [], failed: [] };
     }
 
     const secondValidation = getBirthValidationError(birthData2, "상대 정보");
     if (secondValidation) {
       setErrorMessage(secondValidation);
       toast.error(secondValidation);
-      return;
+      return { ok: false, partial: false, completed: [], failed: [] };
     }
 
     setCompLoading(true);
@@ -56,13 +57,15 @@ export function useCompatibility() {
       ]);
       setCompReport({ saju, vedic });
       toast.success("궁합 분석이 완료되었습니다.");
+      setCompLoading(false);
+      return { ok: true, partial: false, completed: [] as any, failed: [] };
     } catch (e) {
       console.error(e);
       const message = e instanceof Error ? e.message : "궁합 분석 중 오류가 발생했습니다.";
       setErrorMessage(message);
       toast.error("궁합 분석에 실패했습니다. 입력값을 확인해주세요.");
-    } finally {
       setCompLoading(false);
+      return { ok: false, partial: false, completed: [], failed: [] };
     }
   };
 

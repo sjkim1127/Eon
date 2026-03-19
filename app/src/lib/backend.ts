@@ -118,10 +118,11 @@ export class WasmBackendClient implements BackendClient {
             args.year1, args.month1, args.day1, args.hour1, args.minute1,
             args.is_lunar1, args.is_leap_month1, args.is_male1, args.lon1, args.lat1,
             args.use_night_rat_hour1 ?? false,
+            args.timezone1,
             args.year2, args.month2, args.day2, args.hour2, args.minute2,
             args.is_lunar2, args.is_leap_month2, args.is_male2, args.lon2, args.lat2,
             args.use_night_rat_hour2 ?? false,
-            args.timezone1, args.timezone2
+            args.timezone2
         ) as Promise<CompatibilityAudit>;
     }
 
@@ -130,9 +131,10 @@ export class WasmBackendClient implements BackendClient {
         return wasm.get_vedic_compatibility(
             args.year1, args.month1, args.day1, args.hour1, args.minute1,
             args.is_lunar1, args.is_leap_month1, args.lat1, args.lon1,
+            args.timezone1,
             args.year2, args.month2, args.day2, args.hour2, args.minute2,
             args.is_lunar2, args.is_leap_month2, args.lat2, args.lon2,
-            args.timezone1, args.timezone2
+            args.timezone2
         ) as Promise<AshtaKutaResult>;
     }
 

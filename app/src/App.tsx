@@ -10,7 +10,6 @@ import { useTabPrefetcher } from "./hooks/useTabPrefetcher";
 import { useAppStore } from "./store/useAppStore";
 import { ShootingStars, BirthDrawer, Sidebar, CompactBirthInfoBar, ExportActionButtons } from "./components/shared";
 import type { TabId } from "./types";
-import type { AnalysisBundleState } from "./types/analysis";
 
 const OverviewTab = lazy(() => import("./components/tabs/OverviewTab").then((m) => ({ default: m.OverviewTab })));
 const SajuTab = lazy(() => import("./components/tabs/SajuTab").then((m) => ({ default: m.SajuTab })));
@@ -74,7 +73,7 @@ function App() {
 
   const { compReport } = useCompatibility();
 
-  const isDST = sajuReport?.meta?.is_dst ?? sajuReport?.is_dst ?? false;
+  const isDST = sajuReport?.is_dst ?? false;
 
   const [formOpen, setFormOpen] = useState(true);
 

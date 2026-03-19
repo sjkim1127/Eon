@@ -50,45 +50,19 @@ export class SwissEphError {
  */
 export function calc_ut(jd_ut: number, planet: number, flags: number): Position;
 
-/**
- * AI 감사 리포트 — WASM에서 호출 가능
- *
- * eon-ai의 `DestinyAIAuditor`를 사용하여 LLM 프롬프트(context_dump)와
- * 생애 peak/valley 나이를 반환합니다. API 키 없이 Google AI Studio 등에 붙여넣기 가능.
- */
-export function get_ai_audit(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string): any;
+export function get_ai_audit(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string, unknown_time?: boolean | null): any;
 
-/**
- * 사주(四柱) 분석 — WASM에서 호출 가능
- *
- * 생년월일시 + 성별 + 좌표 + 타임존을 받아 사주 분석 결과를 반환합니다.
- * BirthInfo를 사용하여 DST(서머타임) + 경도 기반 진태양시 보정을 자동 적용합니다.
- */
-export function get_saju_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string): any;
+export function get_destiny_tier_analysis(saju_val: any, vedic_val: any, transit_val: any): any;
 
-/**
- * 사주 궁합 분석 - WASM에서 호출 가능
- */
-export function get_saju_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, is_male1: boolean, lon1: number, lat1: number, use_night_rat_hour1: boolean, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, is_male2: boolean, lon2: number, lat2: number, use_night_rat_hour2: boolean, timezone1: string, timezone2: string): any;
+export function get_saju_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string, unknown_time?: boolean | null): any;
 
-/**
- * 현재 운세(세운/월운/일운) 분석 — WASM에서 호출 가능
- */
-export function get_transit_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string, current_year: number, current_month: number, current_day: number): any;
+export function get_saju_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, is_male1: boolean, lon1: number, lat1: number, use_night_rat_hour1: boolean, timezone1: string, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, is_male2: boolean, lon2: number, lat2: number, use_night_rat_hour2: boolean, timezone2: string): any;
 
-export function get_vedic_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, lat: number, lon: number, timezone: string): Promise<any>;
+export function get_transit_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string, _current_year: number, _current_month: number, _current_day: number, unknown_time?: boolean | null, now_utc_str?: string | null): any;
 
-/**
- * 베딕 궁합 분석 (Ashta Kuta) - WASM에서 호출 가능
- */
-export function get_vedic_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, lat1: number, lon1: number, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, lat2: number, lon2: number, timezone1: string, timezone2: string): Promise<any>;
+export function get_vedic_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, lat: number, lon: number, timezone: string): any;
 
-export function greet(name: string): string;
-
-/**
- * WASM 패닉 메시지를 브라우저 콘솔에 표시
- */
-export function init_panic_hook(): void;
+export function get_vedic_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, lat1: number, lon1: number, timezone1: string, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, lat2: number, lon2: number, timezone2: string): any;
 
 /**
  * Set the ephemeris path
@@ -104,14 +78,13 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
-  readonly get_ai_audit: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => [number, number, number];
-  readonly get_saju_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => [number, number, number];
+  readonly get_ai_audit: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => [number, number, number];
+  readonly get_destiny_tier_analysis: (a: any, b: any, c: any) => [number, number, number];
+  readonly get_saju_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => [number, number, number];
   readonly get_saju_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number, w: number, x: number, y: number, z: number) => [number, number, number];
-  readonly get_transit_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number) => [number, number, number];
-  readonly get_vedic_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => any;
-  readonly get_vedic_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number) => any;
-  readonly greet: (a: number, b: number) => [number, number];
-  readonly init_panic_hook: () => void;
+  readonly get_transit_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number) => [number, number, number];
+  readonly get_vedic_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => [number, number, number];
+  readonly get_vedic_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number) => [number, number, number];
   readonly __wbg_get_position_distance: (a: number) => number;
   readonly __wbg_get_position_distance_speed: (a: number) => number;
   readonly __wbg_get_position_latitude: (a: number) => number;
@@ -145,16 +118,13 @@ export interface InitOutput {
   readonly wasm_swe_set_topo: (a: number, b: number, c: number) => void;
   readonly wasm_swe_sidtime: (a: number) => number;
   readonly wasm_swe_version: (a: number) => number;
-  readonly wasm_bindgen__convert__closures_____invoke__h4cd75a9079ae9638: (a: number, b: number, c: any) => void;
-  readonly wasm_bindgen__closure__destroy__h5e9e2a75c5727948: (a: number, b: number) => void;
-  readonly wasm_bindgen__convert__closures_____invoke__h22aa556dbecabb1f: (a: number, b: number, c: any, d: any) => void;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
   readonly __wbindgen_exn_store: (a: number) => void;
   readonly __externref_table_alloc: () => number;
   readonly __wbindgen_externrefs: WebAssembly.Table;
-  readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __externref_table_dealloc: (a: number) => void;
+  readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __wbindgen_start: () => void;
 }
 

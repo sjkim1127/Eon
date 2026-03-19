@@ -15,7 +15,7 @@ interface BirthDrawerProps {
   setIsMale: (v: boolean) => void;
   isDST: boolean;
   loading: boolean;
-  onAnalysis: () => void;
+  onAnalysis: () => Promise<import("../../types/analysis").RunAnalysisResult>;
   sajuReport: import("../../types").SajuAnalysisResult | null;
 }
 
