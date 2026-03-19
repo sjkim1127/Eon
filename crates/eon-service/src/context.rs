@@ -1,6 +1,6 @@
 use crate::dto::CurrentContext;
 use crate::error::ServiceError;
-use chrono::{Datelike, Timelike};
+use chrono::Datelike;
 use chrono_tz::Tz;
 use std::str::FromStr;
 

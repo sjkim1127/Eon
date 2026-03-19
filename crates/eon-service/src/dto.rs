@@ -32,6 +32,14 @@ pub struct TransitAnalysisInput {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VedicAnalysisInput {
+    #[serde(flatten)]
+    pub base: AnalysisInput,
+    pub precision: BirthTimePrecision,
+    pub current: Option<CurrentContext>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompatibilityInput {
     pub person1: SajuAnalysisInput,
     pub person2: SajuAnalysisInput,
@@ -133,12 +141,14 @@ pub struct AiAuditOutput {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CompatibilityOutput {
     pub saju: eon_saju::engine::interprocess::CompatibilityAudit,
     pub vedic: eon_vedic::analysis::compatibility::CompatibilityResult,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TierGrade {
     pub grade: String,
     pub label: String,
@@ -146,12 +156,14 @@ pub struct TierGrade {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScoreResult {
     pub score: f32,
     pub highlights: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DomainTier {
     pub house: u8,
     pub domain: String,
