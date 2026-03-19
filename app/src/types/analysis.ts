@@ -18,6 +18,7 @@ export interface AiAuditReport {
 
 export interface AnalysisMeta {
   precision: "Exact" | "UnknownTimeNoonProxy";
+  input_time: string;
   corrected_time: string;
   is_dst: boolean;
   dst_offset_hours: number | null;
@@ -74,3 +75,31 @@ export type RunAnalysisResult = {
   completed: Array<keyof AnalysisBundleState>;
   failed: Array<keyof AnalysisBundleState>;
 };
+
+export interface CompatibilityAuditDto {
+  sync_score: number;
+  synergies: string[];
+  conflicts: string[];
+  deadlocks: string[];
+  merged_esil_trace: string;
+}
+
+export interface VedicCompatibilityResultDto {
+  total_score: number;
+  varna: number;
+  vashya: number;
+  tara: number;
+  yoni: number;
+  maitri: number;
+  gana: number;
+  bhakoot: number;
+  nadi: number;
+  message: string;
+}
+
+export interface CompatibilityOutput {
+  person1_meta: AnalysisMeta;
+  person2_meta: AnalysisMeta;
+  saju: CompatibilityAuditDto;
+  vedic: VedicCompatibilityResultDto;
+}

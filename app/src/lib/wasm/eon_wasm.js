@@ -422,6 +422,7 @@ export function get_ai_audit(year, month, day, hour, minute, is_lunar, is_leap_m
  * @param {number} lat1
  * @param {boolean} use_night_rat_hour1
  * @param {string} timezone1
+ * @param {boolean | null | undefined} unknown_time1
  * @param {number} year2
  * @param {number} month2
  * @param {number} day2
@@ -434,14 +435,15 @@ export function get_ai_audit(year, month, day, hour, minute, is_lunar, is_leap_m
  * @param {number} lat2
  * @param {boolean} use_night_rat_hour2
  * @param {string} timezone2
+ * @param {boolean | null} [unknown_time2]
  * @returns {any}
  */
-export function get_compatibility_analysis(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, use_night_rat_hour1, timezone1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, use_night_rat_hour2, timezone2) {
+export function get_compatibility_analysis(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, use_night_rat_hour1, timezone1, unknown_time1, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, use_night_rat_hour2, timezone2, unknown_time2) {
     const ptr0 = passStringToWasm0(timezone1, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ptr1 = passStringToWasm0(timezone2, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
-    const ret = wasm.get_compatibility_analysis(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, use_night_rat_hour1, ptr0, len0, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, use_night_rat_hour2, ptr1, len1);
+    const ret = wasm.get_compatibility_analysis(year1, month1, day1, hour1, minute1, is_lunar1, is_leap_month1, is_male1, lon1, lat1, use_night_rat_hour1, ptr0, len0, isLikeNone(unknown_time1) ? 0xFFFFFF : unknown_time1 ? 1 : 0, year2, month2, day2, hour2, minute2, is_lunar2, is_leap_month2, is_male2, lon2, lat2, use_night_rat_hour2, ptr1, len1, isLikeNone(unknown_time2) ? 0xFFFFFF : unknown_time2 ? 1 : 0);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }

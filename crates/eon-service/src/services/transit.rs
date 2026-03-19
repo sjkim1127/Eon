@@ -15,7 +15,7 @@ pub fn analyze(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, Ser
         Gender::Female
     };
 
-    let birth_ctx = prepare_birth_context(&input.base.base, Some(gender))?;
+    let birth_ctx = prepare_birth_context(&input.base.base, Some(gender), true)?;
 
     let saju_input = SajuInput::new_solar(
         birth_ctx.corrected_year,
@@ -84,6 +84,7 @@ pub fn analyze(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, Ser
     Ok(TransitAnalysisOutput {
         meta: AnalysisMeta {
             precision: input.base.precision,
+            input_time: birth_ctx.input_time_string,
             corrected_time: birth_ctx.corrected_time_string,
             is_dst: birth_ctx.is_dst,
             dst_offset_hours: birth_ctx.dst_offset_hours,

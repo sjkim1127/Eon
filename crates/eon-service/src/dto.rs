@@ -66,6 +66,7 @@ pub enum BirthTimePrecision {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisMeta {
     pub precision: BirthTimePrecision,
+    pub input_time: String,
     pub corrected_time: String,
     pub is_dst: bool,
     pub dst_offset_hours: Option<i32>,
@@ -142,9 +143,36 @@ pub struct AiAuditOutput {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct CompatibilityAuditDto {
+    pub sync_score: f32,
+    pub synergies: Vec<String>,
+    pub conflicts: Vec<String>,
+    pub deadlocks: Vec<String>,
+    pub merged_esil_trace: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VedicCompatibilityResultDto {
+    pub total_score: f64,
+    pub varna: f64,
+    pub vashya: f64,
+    pub tara: f64,
+    pub yoni: f64,
+    pub maitri: f64,
+    pub gana: f64,
+    pub bhakoot: f64,
+    pub nadi: f64,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CompatibilityOutput {
-    pub saju: eon_saju::engine::interprocess::CompatibilityAudit,
-    pub vedic: eon_vedic::analysis::compatibility::CompatibilityResult,
+    pub person1_meta: AnalysisMeta,
+    pub person2_meta: AnalysisMeta,
+    pub saju: CompatibilityAuditDto,
+    pub vedic: VedicCompatibilityResultDto,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

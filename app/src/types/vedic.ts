@@ -1,5 +1,4 @@
 import type { AnalysisMeta } from "./analysis";
-import type { CompatibilityAudit } from "./saju";
 
 /** 요가 품질 */
 export type YogaQuality = "VeryHigh" | "High" | "Medium" | { Weak: string };
@@ -218,26 +217,6 @@ export interface VargaDef {
   key: string;
   /** 분할 수 (D3=3, D9=9 등) — 바르가별 낙샤트라 계산용 */
   divisionCount: number;
-}
-
-/** Ashta Kuta 궁합 결과 (CompatibilityResult Rust struct) */
-export interface AshtaKutaResult {
-  total_score: number;
-  message?: string;
-  varna?: number;
-  vashya?: number;
-  tara?: number;
-  yoni?: number;
-  maitri?: number;
-  gana?: number;
-  bhakoot?: number;
-  nadi?: number;
-}
-
-/** 궁합 분석 결과 (사주 + 베딕) */
-export interface CompReport {
-  saju: CompatibilityAudit;
-  vedic: AshtaKutaResult;
 }
 
 // ── 고차라 트랜싯 (Gochara) ──────────────────────
