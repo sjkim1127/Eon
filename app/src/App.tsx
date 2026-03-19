@@ -9,6 +9,7 @@ import { useBirthForm, useAstrologyAnalysis, useCompatibility } from "./hooks";
 import { useTabPrefetcher } from "./hooks/useTabPrefetcher";
 import { useAppStore } from "./store/useAppStore";
 import { ShootingStars, BirthDrawer, Sidebar, CompactBirthInfoBar, ExportActionButtons } from "./components/shared";
+import { getTabAvailability } from "./utils/analysis";
 import type { TabId } from "./types";
 
 const OverviewTab = lazy(() => import("./components/tabs/OverviewTab").then((m) => ({ default: m.OverviewTab })));
@@ -80,16 +81,14 @@ function App() {
 
   const [formOpen, setFormOpen] = useState(true);
 
-  const availability = useMemo(() => ({
-    overview: analysisState.vedic.status === "success" && !!vedicData,
-    saju: analysisState.saju.status === "success" && !!sajuData,
-    vedic_charts: analysisState.vedic.status === "success" && !!vedicData && !birthData.unknown_time,
-    strength: analysisState.saju.status === "success" && !!sajuData,
-    transit: analysisState.transit.status === "success" && !!transitData,
-    compatibility: true,
-    destiny_tier: analysisState.tier.status === "success" && !!tierData,
-    ai_audit: analysisState.aiAudit.status === "success" && !!aiAuditData,
-  }), [analysisState, birthData.unknown_time, vedicData, sajuData, transitData, tierData, aiAuditData]);
+  const availability = useMemo(() => getTabAvailability({
+    sajuData,
+    vedicData,
+    transitData,
+    aiAuditData,
+    tierData,
+    unknownTime: !!birthData.unknown_time,
+  }), [sajuData, vedicData, transitData, aiAuditData, tierData, birthData.unknown_time]);
 
   const hasAnyReport = useMemo(() => 
     Object.values(analysisState).some(s => s.status === "success" && s.data),
