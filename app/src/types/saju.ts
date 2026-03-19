@@ -137,6 +137,14 @@ export interface MajorLuckAnalysis {
   day_master: string;
 }
 
+export interface AnalysisMeta {
+  precision: "Exact" | "UnknownTimeNoonProxy";
+  corrected_time: string;
+  is_dst: boolean;
+  dst_offset_hours: number | null;
+  analysis_timezone: string;
+}
+
 // ── 골든타임 / 시뮬레이션 ─────────────────────
 
 /** 골든타임 (GoldenTime Rust struct) */
@@ -298,12 +306,10 @@ export interface ComplexityAnalysis {
   decision_nodes: number[];
 }
 
-/** 사주 분석 결과 최상위 래퍼 (SajuAnalysisResult Rust struct) */
+/** 사주 분석 결과 최상위 래퍼 (SajuAnalysisOutput Rust struct) */
 export interface SajuAnalysisResult {
+  meta: AnalysisMeta;
   report: SajuReport;
-  is_dst: boolean;
-  dst_offset_hours: number | null;
-  corrected_time: string;
   lints: SajuLint[];
   entropy: EntropyAnalysis | null;
   qi_topology: TopologyAnalysis | null;
@@ -354,10 +360,25 @@ export interface MonthlyLuck {
   twelve_stage: string | null;
 }
 
-/** 운세 분석 결과 (TransitResult Rust struct) */
+/** 일운 (DailyLuckDto Rust struct) */
+export interface DailyLuck {
+  year: number;
+  month: number;
+  day: number;
+  ganzi: GanZi;
+  stem_god: string;
+  branch_god: string;
+  influence: LuckInfluence | null;
+  twelve_stage: string | null;
+}
+
+/** 운세 분석 결과 (TransitAnalysisOutput Rust struct) */
 export interface TransitResult {
+  meta: AnalysisMeta;
   yearly_luck: YearlyLuck;
   monthly_luck: MonthlyLuck;
+  monthly_lucks: MonthlyLuck[];
+  daily_luck: DailyLuck;
   current_age: number;
   current_frame: LifeFrame | null;
   nearby_diagnostics: LoadBalanceDiagnostic[];

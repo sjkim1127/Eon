@@ -1,9 +1,9 @@
 /**
  * 운명/잠재력/분야별 티어 계산 — exportMarkdown 및 DestinyTierTab 공용
  */
-import type { SajuAnalysisResult } from "../types";
+import type { SajuAnalysisResult, TransitResult } from "../types";
 import type { VedicAnalysisResult } from "../types";
-import type { TransitResult } from "../types";
+import type { TierResult, TierGrade } from "../types/analysis";
 
 export const TIER_GRADES = [
   { grade: "S+", label: "천기",   desc: "사주와 별운이 완전히 일치하는 극희귀 최상의 조합" },
@@ -414,24 +414,7 @@ function getDomainTiers(report: VedicAnalysisResult | null): { house: number; do
   }));
 }
 
-export interface TierResult {
-  natalScore: number;
-  currentScore: number;
-  destinyScore: number;
-  destinyTier: (typeof TIER_GRADES)[number];
-  potentialScore: number;
-  potentialTier: (typeof TIER_GRADES)[number];
-  domainTiers: { house: number; domain: string; tier: string }[];
-  sajuResult: { score: number; highlights: string[] };
-  vedicResult: { score: number; highlights: string[] };
-  transitResult: { score: number; highlights: string[] };
-  strengths: string[];
-  weaknesses: string[];
-  growthGap: number;
-  riskLevel: "low" | "medium" | "high";
-  profile: "stable" | "balanced" | "growth";
-  version: "v1" | "v2";
-}
+// Local interface for internal use if needed, but we'll try to use the shared one
 
 export function computeTierResult(
   sajuReport: SajuAnalysisResult | null,

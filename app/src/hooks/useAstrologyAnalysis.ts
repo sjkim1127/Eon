@@ -2,7 +2,8 @@ import { toast } from "sonner";
 import { backendClient } from "../lib/backend";
 import { useAppStore } from "../store/useAppStore";
 import { getBirthValidationError } from "../utils/validation";
-import type { RunAnalysisResult } from "../types/analysis";
+import type { SajuAnalysisResult, VedicAnalysisResult, TransitResult } from "../types";
+import type { RunAnalysisResult, AiAuditReport } from "../types/analysis";
 
 export function useAstrologyAnalysis() {
   const store = useAppStore();
@@ -43,9 +44,6 @@ export function useAstrologyAnalysis() {
 
     const transitArgs = {
       ...sajuArgs,
-      current_year: now.getFullYear(),
-      current_month: now.getMonth() + 1,
-      current_day: now.getDate(),
       now_utc: nowIso,
     };
 
@@ -67,17 +65,46 @@ export function useAstrologyAnalysis() {
 
     const results = await Promise.allSettled(tasks.map(t => t.fn()));
 
+    let sajuData: SajuAnalysisResult | null = null;
+    let vedicData: VedicAnalysisResult | null = null;
+    let transitData: TransitResult | null = null;
+
     results.forEach((res, idx) => {
-      const key = tasks[idx].key as any;
+      const key = tasks[idx].key as "vedic" | "saju" | "aiAudit" | "transit";
+      
       if (res.status === "fulfilled") {
-        store.setAnalysisTaskState(key, { status: "success", data: res.value });
+        const val = res.value;
         completed.push(key);
         
-        // Sync with legacy store
-        if (key === "vedic") store.setReport(res.value as any);
-        if (key === "saju") store.setSajuReport(res.value as any);
-        if (key === "aiAudit") store.setAiAuditReport(res.value as any);
-        if (key === "transit") store.setTransitReport(res.value as any);
+        switch (key) {
+          case "vedic": {
+            const data = val as VedicAnalysisResult;
+            vedicData = data;
+            store.setAnalysisTaskState("vedic", { status: "success", data });
+            store.setReport(data);
+            break;
+          }
+          case "saju": {
+            const data = val as SajuAnalysisResult;
+            sajuData = data;
+            store.setAnalysisTaskState("saju", { status: "success", data });
+            store.setSajuReport(data);
+            break;
+          }
+          case "transit": {
+            const data = val as TransitResult;
+            transitData = data;
+            store.setAnalysisTaskState("transit", { status: "success", data });
+            store.setTransitReport(data);
+            break;
+          }
+          case "aiAudit": {
+            const data = val as AiAuditReport;
+            store.setAnalysisTaskState("aiAudit", { status: "success", data });
+            store.setAiAuditReport(data);
+            break;
+          }
+        }
       } else {
         const errMsg = String(res.reason);
         store.setAnalysisTaskState(key, { status: "error", error: errMsg });
@@ -87,10 +114,6 @@ export function useAstrologyAnalysis() {
     });
 
     // 2. Dependent Task: Destiny Tier (Requires Saju & Vedic)
-    const sajuData = store.analysisState.saju.data;
-    const vedicData = store.analysisState.vedic.data;
-    const transitData = store.analysisState.transit.data;
-
     if (sajuData && vedicData) {
       store.setAnalysisTaskState("tier", { status: "loading" });
       try {

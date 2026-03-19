@@ -182,12 +182,13 @@ export interface VargaNakshatraReports {
   reports: Record<string, VargaNakshatraReport>;
 }
 
-/** 베딕 분석 결과 (report + raw chart) */
+/** 베딕 분석 결과 (VedicAnalysisOutput Rust struct) */
 export interface VedicAnalysisResult {
+  meta: import("./saju").AnalysisMeta;
   report: VedicAnalysisReport;
   chart: VedicChartData;
-  gochara?: GocharaSummary;
-  varga_nakshatra_reports?: VargaNakshatraReports;
+  gochara: GocharaSummary;
+  varga_nakshatra_reports: VargaNakshatraReports;
 }
 
 /** 낙샤트라 원시 데이터 */

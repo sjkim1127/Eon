@@ -100,9 +100,6 @@ fn get_transit_analysis(
     lon: f64,
     lat: f64,
     timezone: String,
-    current_year: i32,
-    current_month: u32,
-    current_day: u32,
     unknown_time: Option<bool>,
     now_utc: Option<chrono::DateTime<chrono::Utc>>,
 ) -> Result<Value, String> {
@@ -112,8 +109,6 @@ fn get_transit_analysis(
         BirthTimePrecision::Exact
     };
 
-    // 지시서에 따라 now_utc + timezone 기반으로 통일
-    // 프론트에서 아직 now_utc를 안 보낼 수 있으므로 하위 호환성 유지
     let final_now = now_utc.unwrap_or_else(chrono::Utc::now);
 
     let input = TransitAnalysisInput {

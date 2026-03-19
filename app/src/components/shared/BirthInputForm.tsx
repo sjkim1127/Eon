@@ -318,12 +318,12 @@ export function BirthInputForm({
               {birthData.is_leap_month ? "음력(윤달)" : "음력"}
             </span>
           )}
-          {sajuReport?.corrected_time && (
+          {sajuReport?.meta?.corrected_time && (
             <span className="text-celestial-cyan/60">
-              보정시: {sajuReport.corrected_time}
+              보정시: {sajuReport.meta.corrected_time}
             </span>
           )}
-          {sajuReport?.is_dst && (
+          {sajuReport?.meta?.is_dst && (
             <span className="text-amber-400/80">DST 적용됨</span>
           )}
         </div>

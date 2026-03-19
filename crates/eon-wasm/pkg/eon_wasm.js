@@ -501,19 +501,16 @@ export function get_saju_compatibility(year1, month1, day1, hour1, minute1, is_l
  * @param {number} lon
  * @param {number} lat
  * @param {string} timezone
- * @param {number} _current_year
- * @param {number} _current_month
- * @param {number} _current_day
  * @param {boolean | null} [unknown_time]
  * @param {string | null} [now_utc_str]
  * @returns {any}
  */
-export function get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone, _current_year, _current_month, _current_day, unknown_time, now_utc_str) {
+export function get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone, unknown_time, now_utc_str) {
     const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     var ptr1 = isLikeNone(now_utc_str) ? 0 : passStringToWasm0(now_utc_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     var len1 = WASM_VECTOR_LEN;
-    const ret = wasm.get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0, _current_year, _current_month, _current_day, isLikeNone(unknown_time) ? 0xFFFFFF : unknown_time ? 1 : 0, ptr1, len1);
+    const ret = wasm.get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0, isLikeNone(unknown_time) ? 0xFFFFFF : unknown_time ? 1 : 0, ptr1, len1);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }

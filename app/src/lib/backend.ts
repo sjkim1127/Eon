@@ -26,8 +26,6 @@ export interface SajuArgs extends AnalysisArgs {
 }
 
 export interface TransitArgs extends SajuArgs {
-    // legacy support
-    current_year: number; current_month: number; current_day: number;
     // new context
     now_utc?: string;
 }
@@ -101,7 +99,6 @@ export class WasmBackendClient implements BackendClient {
             args.is_lunar, args.is_leap_month, args.is_male,
             args.use_night_rat_hour ?? false,
             args.lon, args.lat, args.timezone,
-            args.current_year, args.current_month, args.current_day,
             args.unknown_time ?? false,
             args.now_utc ?? new Date().toISOString()
         ) as Promise<TransitResult>;
