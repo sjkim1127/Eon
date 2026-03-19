@@ -26,8 +26,8 @@ export interface SajuArgs extends AnalysisArgs {
 }
 
 export interface TransitArgs extends SajuArgs {
-    // new context
-    now_utc?: string;
+    // new context (required)
+    now_utc: string;
 }
 
 export interface CompArgs {

@@ -1,23 +1,23 @@
 import { describe, it, expect } from "vitest";
+import { getTabAvailability } from "../utils/analysis";
 
 describe("Tab Availability Logic", () => {
   it("should calculate availability correctly for exact birth time", () => {
-    const vedicData = { report: {} };
-    const sajuData = { report: {} };
-    const transitData = { current_frame: {} };
-    const tierData = { destinyTier: {} };
+    const vedicData = { report: {} } as any;
+    const sajuData = { report: {} } as any;
+    const transitData = { current_frame: {} } as any;
+    const tierData = { destinyTier: {} } as any;
     const birthData = { unknown_time: false };
-    const aiAuditData = { meta: {} };
+    const aiAuditData = { meta: {} } as any;
 
-    const availability = {
-      overview: !!vedicData,
-      saju: !!sajuData,
-      vedic_charts: !!vedicData && !birthData.unknown_time,
-      strength: !!sajuData,
-      transit: !!transitData,
-      destiny_tier: !!tierData,
-      ai_audit: !!aiAuditData,
-    };
+    const availability = getTabAvailability({
+      sajuData,
+      vedicData,
+      transitData,
+      aiAuditData,
+      tierData,
+      unknownTime: birthData.unknown_time,
+    });
 
     expect(availability.overview).toBe(true);
     expect(availability.saju).toBe(true);
@@ -29,12 +29,17 @@ describe("Tab Availability Logic", () => {
   });
 
   it("should disable vedic_charts if birth time is unknown", () => {
-    const vedicData = { report: {} };
+    const vedicData = { report: {} } as any;
     const birthData = { unknown_time: true };
 
-    const availability = {
-      vedic_charts: !!vedicData && !birthData.unknown_time,
-    };
+    const availability = getTabAvailability({
+      sajuData: null,
+      vedicData,
+      transitData: null,
+      aiAuditData: null,
+      tierData: null,
+      unknownTime: !!birthData.unknown_time,
+    });
 
     expect(availability.vedic_charts).toBe(false);
   });
