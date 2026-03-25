@@ -508,18 +508,35 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     // Avasthas (행성 상태)
     if (c?.avasthas?.length) {
         lines.push("## 행성 상태 (아바스타)\n");
-        lines.push("| 행성 | Baladi | Jagradi |");
-        lines.push("|---|---|---|");
+        lines.push("| 행성 | Baladi | Jagradi | 상태 |");
+        lines.push("|---|---|---|---|");
         for (const a of c.avasthas) {
-            lines.push(`| ${a.planet} | ${a.baladi} | ${a.jagradadi} |`);
+            const isRetro = (c.planets as any[]).find(p => p.planet === a.planet)?.is_retrograde;
+            const isCombust = (c.planets as any[]).find(p => p.planet === a.planet)?.is_combust;
+            const status = [isRetro ? "℞(역행)" : "", isCombust ? "☀(연소)" : ""].filter(Boolean).join(", ") || "정상";
+            lines.push(`| ${a.planet} | ${a.baladi} | ${a.jagradadi} | ${status} |`);
         }
+        lines.push("");
+    }
+
+    // 약화/특이 상태 행성 가이드
+    const retroPlanets = (c.planets as any[]).filter(p => p.is_retrograde).map(p => p.planet);
+    const combustPlanets = (c.planets as any[]).filter(p => p.is_combust).map(p => p.planet);
+    if (retroPlanets.length > 0 || combustPlanets.length > 0) {
+        lines.push("## 취약 및 특이 상태 행성\n");
+        if (retroPlanets.length > 0) lines.push(`- **역행(℞)**: ${retroPlanets.join(", ")} — 해당 행성의 에너지가 내면화되거나 발현이 지연될 수 있습니다.`);
+        if (combustPlanets.length > 0) lines.push(`- **연소(☀)**: ${combustPlanets.join(", ")} — 태양의 강력한 열기에 에너지가 흡수되어 직접적 표현이 약해질 수 있습니다.`);
         lines.push("");
     }
 
     // 하우스 커스프
     if (Array.isArray(c?.house_cusps) && c.house_cusps.length) {
-        lines.push("## 하우스 커스프 (경계 도수)\n");
-        lines.push(c.house_cusps.map((deg, i) => `- H${i + 1}: ${(deg ?? 0).toFixed(2)}°`).join("\n"));
+        lines.push("## 하우스 쿠스프 (경계 도수)\n");
+        lines.push("| 하우스 | 사이드리얼 경도 (Sidereal Position) |");
+        lines.push("|---|---|");
+        for (let i = 0; i < c.house_cusps.length; i++) {
+            lines.push(`| H${i + 1} | ${formatSiderealPosition(c.house_cusps[i])} |`);
+        }
         lines.push("");
     }
 
