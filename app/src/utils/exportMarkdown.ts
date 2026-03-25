@@ -864,7 +864,7 @@ export function buildDestinyTierMarkdown(
     }
 
     // ⑤ 약점 & 리스크
-    const riskLabel = result.riskLevel === "high" ? "높음 🔴" : result.riskLevel === "medium" ? "보통 🟡" : "낮음 🟢";
+    const riskLabel = result.riskLevel === "critical" ? "위기 경보 ☠️" : result.riskLevel === "high" ? "높음 🔴" : result.riskLevel === "medium" ? "보통 🟡" : "낮음 🟢";
     lines.push(`### ⚠️ 리스크 수준: ${riskLabel}`);
     if (result.weaknesses.length > 0) {
         for (const w of result.weaknesses) lines.push(`- ${w}`);
