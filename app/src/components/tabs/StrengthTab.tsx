@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Activity, Zap, Shield, TrendingUp, AlertTriangle } from "lucide-react";
 import {
@@ -32,7 +33,10 @@ const ELEMENT_KOREAN: Record<string, string> = {
   Water: "수(水)",
 };
 
+const LOAD_PAGE_SIZE = 8;
+
 export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProps) {
+  const [loadPage, setLoadPage] = useState(0);
   if (!sajuReport) return null;
   const entropy = sajuReport.entropy;
   const topology = sajuReport.qi_topology;
@@ -285,14 +289,22 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
       </div>
 
       {/* 인생 흐름 진단 */}
-      {loadDiag.length > 0 && (
-        <div className="glass p-8 rounded-[2rem]">
-          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-            <TrendingUp className="w-6 h-6 text-brand-400" />
-            인생 흐름 진단
-          </h5>
-          <div className="space-y-3">
-            {loadDiag.slice(0, 8).map((d: any, i: number) => (
+      {loadDiag.length > 0 && (() => {
+        const totalPages = Math.ceil(loadDiag.length / LOAD_PAGE_SIZE);
+        const paginated = loadDiag.slice(loadPage * LOAD_PAGE_SIZE, (loadPage + 1) * LOAD_PAGE_SIZE);
+        return (
+          <div className="glass p-8 rounded-[2rem]">
+            <div className="flex items-start justify-between mb-6">
+              <h5 className="text-xl font-bold text-white flex items-center gap-3">
+                <TrendingUp className="w-6 h-6 text-brand-400" />
+                인생 흐름 진단
+              </h5>
+              <span className="text-xs text-white/30">
+                총 {loadDiag.length}건
+              </span>
+            </div>
+            <div className="space-y-3">
+              {paginated.map((d: any, i: number) => (
               <div key={i} className={`p-4 rounded-xl border flex gap-4 items-center ${d.status === "SystemDown" ? "bg-red-500/10 border-red-500/30"
                 : d.status === "Overloaded" ? "bg-orange-500/10 border-orange-500/30"
                   : "bg-white/5 border-white/10"
@@ -306,10 +318,49 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
                 </div>
                 <span className="text-xs text-white/30 shrink-0">{d.status === "SystemDown" ? "위험" : d.status === "Overloaded" ? "주의" : "안정"}</span>
               </div>
-            ))}
+              ))}
+            </div>
+
+            {/* 페이지네이션 */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
+                <span className="text-[10px] text-white/30">
+                  {loadDiag.length}건 중 {loadPage * LOAD_PAGE_SIZE + 1}–{Math.min((loadPage + 1) * LOAD_PAGE_SIZE, loadDiag.length)}번
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    disabled={loadPage === 0}
+                    onClick={() => setLoadPage(p => p - 1)}
+                    className="px-2.5 py-1 rounded-lg text-xs border border-white/10 text-white/40 hover:border-white/20 hover:text-white/70 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                  >
+                    이전
+                  </button>
+                  {Array.from({ length: totalPages }, (_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setLoadPage(idx)}
+                      className={`w-7 h-7 rounded-lg text-xs border transition-all ${
+                        idx === loadPage
+                          ? "bg-white/15 border-white/30 text-white"
+                          : "border-white/10 text-white/30 hover:border-white/20 hover:text-white/60"
+                      }`}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
+                  <button
+                    disabled={loadPage === totalPages - 1}
+                    onClick={() => setLoadPage(p => p + 1)}
+                    className="px-2.5 py-1 rounded-lg text-xs border border-white/10 text-white/40 hover:border-white/20 hover:text-white/70 disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+                  >
+                    다음
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
     </motion.div>
   );
 }
