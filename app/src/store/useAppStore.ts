@@ -88,7 +88,7 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set) => ({
   // UI State
-  activeTab: 'overview',
+  activeTab: 'saju',
   setActiveTab: (tab) => set({ activeTab: tab }),
   errorMessage: null,
   setErrorMessage: (msg) => set({ errorMessage: msg }),
