@@ -435,13 +435,49 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("");
     }
 
-    // 대운/낙샤트라/사데사티
-    lines.push("## 현재 대운 & 주요 정보 (현재 시점의 흐름)\n");
-    lines.push(`- **대운 (Dasha)**: ${r.dasha_focus} (현재 집중되는 시기 구간)`);
-    lines.push(`- **낙샤트라**: ${r.nakshatra_info}`);
-    lines.push(`- **사데사티**: ${r.sade_sati}`);
-    lines.push(`- **전체 차트 강도**: ${Math.round(r.overall_strength_score)}/600`);
+    // 현재 대운 & 전체 강도
+    lines.push("## 분석 요약: 현재 대운 및 차트 강도\n");
+    lines.push(`- **현재 대운 (Dasha)**: ${r.dasha_focus} (인생의 현재 단계에서 가장 강력한 영향을 미치는 기운)`);
+    lines.push(`- **사데사티 (Sade Sati)**: ${r.sade_sati} (토성의 월지 트랜짓 영향권 여부)`);
+    lines.push(`- **전체 차트 강도**: ${Math.round(r.overall_strength_score)}/600 (중요 행성 및 하우스 강점 총합)`);
     lines.push("");
+
+    // 판창가 (Panchanga)
+    if (c?.panchanga) {
+        const p = c.panchanga;
+        lines.push("## 판창가 (Panchanga — 출생 시각의 천문 기상도)\n");
+        lines.push(`- **요일 (Vara)**: ${p.vara} (Day Lord: ${p.day_lord})`);
+        lines.push(`- **티티 (음력일)**: ${p.tithi} — ${p.tithi_name}`);
+        lines.push(`- **낙샤트라 번호**: No. ${p.nakshatra}`);
+        lines.push(`- **판창가 요가 (Nitya Yoga)**: No. ${p.yoga}`);
+        lines.push(`- **카라나 (Karana)**: ${p.karana_name}`);
+        lines.push(`- **일주/시주**: ${p.day_lord} / ${p.hour_lord}`);
+        lines.push(`- **출생 시간대**: ${p.is_day_birth ? "주간(Day) 출생" : "야간(Night) 출생"}`);
+        lines.push("");
+    }
+
+    // ── D1~D144 사인 포지션 요약 매트릭스 (New) ──
+    if (c?.planets?.length) {
+        lines.push("## D1-D144 분할차트별 사인 포지션 매트릭스\n");
+        lines.push("> 각 숫자는 해당 분할차트에서의 사인 번호입니다. (1=Aries ... 12=Pisces)\n");
+        const vHead = ["행성", ...VARGA_DEFS.map(v => v.label)].join(" | ");
+        const vSep = ["---", ...VARGA_DEFS.map(() => "---")].join(" | ");
+        lines.push(`| ${vHead} |`);
+        lines.push(`| ${vSep} |`);
+        
+        const allPts = [...(c.planets as any[]), ...(c.ascendant ? [c.ascendant] : [])];
+        for (const p of allPts) {
+            const name = p.planet || "ASC";
+            const row = VARGA_DEFS.map(v => {
+                const val = p[v.key];
+                const retro = p.is_retrograde ? "℞" : "";
+                const comb = p.is_combust ? "☀" : "";
+                return `${val ?? "-"}${retro}${comb}`;
+            });
+            lines.push(`| ${name} | ${row.join(" | ")} |`);
+        }
+        lines.push("");
+    }
 
     // 다샤 타임라인 — 마하다샤 + 안타르다샤 2단계
     if (Array.isArray(r.dasha_timeline) && r.dasha_timeline.length > 0) {
@@ -484,12 +520,24 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     if (c?.sav?.points) {
         const pts = c.sav.points;
         if (Array.isArray(pts) && pts.length === 12) {
-            lines.push("## SAV (사르바아슈타카바르가)\n");
+            lines.push("## SAV (사르바아슈타카바르가) — 하우스 종합 점수\n");
+            lines.push("> 28점 이상: 강력한 영향력 | 25점 미만: 에너지가 약한 영역\n");
             lines.push("| " + Array.from({ length: 12 }, (_, i) => `H${i + 1}`).join(" | ") + " |");
             lines.push("| " + Array.from({ length: 12 }, () => "---").join(" | ") + " |");
             lines.push("| " + pts.join(" | ") + " |");
             lines.push("");
         }
+    }
+
+    // BAV
+    if (c?.bav?.length) {
+        lines.push("## BAV (빈나슈타카바르가) — 행성별 하우스 기여 점수\n");
+        lines.push("| 행성 | H1 | H2 | H3 | H4 | H5 | H6 | H7 | H8 | H9 | H10 | H11 | H12 |");
+        lines.push("|---|---|---|---|---|---|---|---|---|---|---|---|---|");
+        for (const b of c.bav) {
+            lines.push(`| ${b.planet} | ${b.points.join(" | ")} |`);
+        }
+        lines.push("");
     }
 
     // Vimshopaka
@@ -553,25 +601,26 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
 
     // 요가
     if (r.yogas?.length) {
-        lines.push("## 베딕 요가\n");
+        lines.push("## 베딕 요가 (주요 행성 조합)\n");
         lines.push("| 요가명 | 품질 | 관련 행성 | 설명 |");
         lines.push("|---|---|---|---|");
         for (const yoga of r.yogas) {
-            const q = typeof yoga.quality === "string" ? yoga.quality : "Weak";
+            let q = typeof yoga.quality === "string" ? yoga.quality : "Weak";
+            if (typeof yoga.quality === 'object' && 'Weak' in yoga.quality) q = "약함";
+            else if (q === "VeryHigh") q = "매우 강함";
+            else if (q === "High") q = "강함";
+            else if (q === "Medium") q = "보통";
             lines.push(`| ${yoga.name} | ${q} | ${(yoga.planets_involved ?? []).join(", ")} | ${yoga.description} |`);
         }
         lines.push("");
     }
 
     // ── 낙샤트라 리포트 D1~D144 통합 섹션 ──
-    lines.push("## 낙샤트라 리포트 (D1~D144 전체)\n");
+    lines.push("## 낙샤트라 리포트 (D1~D144 전체 상세)\n");
     lines.push("> 컬럼: 행성 | 위치(사이드리얼) | 사인 | 하우스 | 낙샤트라(파다) | 파다 범위 | 낙샤트라 로드 | 파다 로드 | 신(Deity) | 목적(Purpose)\n");
     lines.push("> D1은 본 차트 기준, D2 이상은 해당 분할 좌표 기준입니다. (※ 백엔드 미제공 차트는 프론트엔드 근사값)\n");
     const allPos = [...(c?.planets ?? []), ...(c?.ascendant ? [c.ascendant] : [])];
     const rawReports = v.varga_nakshatra_reports?.reports;
-    // serde-wasm-bindgen >= 0.4 는 Rust HashMap을 JS Map 객체로 직렬화함
-    // → 대괄호 접근(map[key]) 불가, Map.get(key) 필요
-    // 양쪽 모두 지원하는 헬퍼 사용
     const getReport = (id: string): import("../types").VargaNakshatraReport | undefined => {
         if (!rawReports) return undefined;
         if (rawReports instanceof Map) return rawReports.get(id);
@@ -580,14 +629,12 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     for (const vargaDef of VARGA_DEFS) {
         const rep = getReport(vargaDef.id);
         if (rep?.rows?.length) {
-            // 백엔드 Rust 계산 우선
             const lagna = rep.lagna_rasi ? ` (라그나: ${SIGN_NAMES[rep.lagna_rasi] ?? rep.lagna_rasi})` : "";
             lines.push(`### ${rep.varga_label} · ${vargaDef.name}${lagna}`);
             const showHouse = vargaDef.id !== "rasi";
             const mdRows = buildNakshatraMarkdownRows(rep.rows, showHouse);
             for (const row of mdRows) lines.push(row);
         } else {
-            // 프론트엔드 근사 계산 폴백
             lines.push(`### ${vargaDef.label} · ${vargaDef.name} *(근사값)*`);
             const rows = computeFrontendVargaRows(allPos, vargaDef.divisionCount);
             const mdRows = buildNakshatraMarkdownRows(rows, vargaDef.id !== "rasi");
@@ -596,28 +643,18 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("");
     }
 
-    // 고차라(Gochara) 트랜싯
+    // 고차라(Gochara) 트랜싯 (최신 버전 사용)
     if (v.gochara?.transits?.length) {
-        lines.push("## 고차라 트랜싯 (현재 행성 이동)\n");
-        lines.push("| 행성 | 현재 라시 | 달 기준 하우스 | 길/흉 | 차단 | Murti |");
-        lines.push("|---|---|---:|---|---|---|");
+        lines.push("## 고차라 (Gochara) — 현재 트랜짓 분석\n");
+        lines.push("> Moon(달) 기준 하우스 트랜짓이며, 베다(Vedha)로 인해 영향력이 차단될 수 있습니다.\n");
+        lines.push("| 행성 | 현재 라시 | 월지기준 하우스 | 길흉 | 베다(차단) | 무르띠(Murti) |");
+        lines.push("|---|---|---|---|---|---|");
         for (const t of v.gochara.transits) {
-            const rasiName = SIGN_NAMES[t.current_rasi] ?? t.current_rasi;
-            lines.push(`| ${t.planet} | ${rasiName} | ${t.house_from_moon} | ${t.is_benefic_transit ? "✅" : "—"} | ${t.is_blocked ? "✅" : "—"} | ${t.murti} |`);
+            const rasi = SIGN_NAMES[t.current_rasi] ?? t.current_rasi;
+            const benefic = t.is_benefic_transit ? "길(吉) ✅" : "흉(凶) ⚠️";
+            const blocked = t.is_blocked ? "연결 차단(Vedha)" : "—";
+            lines.push(`| ${t.planet} | ${rasi} | H${t.house_from_moon} | ${benefic} | ${blocked} | ${t.murti} |`);
         }
-        lines.push("");
-    }
-
-    // Panchanga
-    if (c?.panchanga) {
-        const pan = c.panchanga;
-        lines.push("## 판창가 (Panchanga, 날짜의 질감)\n");
-        lines.push(`- **바라 (요일)**: ${pan.vara}`);
-        lines.push(`- **티티 (음력일)**: ${pan.tithi} — ${pan.tithi_name}`);
-        lines.push(`- **낙샤트라**: No. ${pan.nakshatra}`);
-        lines.push(`- **카라나**: ${pan.karana_name}`);
-        lines.push(`- **일주/시주 천주**: ${pan.day_lord} / ${pan.hour_lord}`);
-        lines.push(`- **출생 시간대**: ${pan.is_day_birth ? "주간" : "야간"}`);
         lines.push("");
     }
 
