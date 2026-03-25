@@ -240,6 +240,46 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
         </div>
       </div>
 
+      {/* ── 역행·연소 행성 요약 ─────────────────────────────── */}
+      {(() => {
+        const retro = planets.filter((p: any) => p.is_retrograde);
+        const combust = planets.filter((p: any) => p.is_combust);
+        if (retro.length === 0 && combust.length === 0) return null;
+        return (
+          <div className="glass p-6 rounded-[2rem]">
+            <h5 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-400" />
+              약화 행성 — 역행(Retrograde) / 연소(Combust)
+            </h5>
+            <div className="flex flex-wrap gap-3">
+              {retro.map((p: any) => (
+                <div key={`retro-${p.planet}`}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-violet-500/10 border border-violet-500/25"
+                  title="역행: 행성이 겉보기 역방향으로 이동하는 구간. 해당 행성의 카라카 영역이 내면화·지연되는 경향"
+                >
+                  <span className="text-[10px] font-black text-violet-400 bg-violet-500/20 px-1.5 py-0.5 rounded">℞</span>
+                  <span className="text-sm font-semibold text-white">{p.planet}</span>
+                  <span className="text-[10px] text-violet-300/60">역행</span>
+                </div>
+              ))}
+              {combust.map((p: any) => (
+                <div key={`comb-${p.planet}`}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-500/10 border border-orange-500/25"
+                  title="연소: 태양과 너무 가까워 행성의 빛이 소실되는 상태. 해당 행성의 시그니피케이터가 자아(태양)에 흡수됨"
+                >
+                  <span className="text-[10px] font-black text-orange-400 bg-orange-500/20 px-1.5 py-0.5 rounded">☀</span>
+                  <span className="text-sm font-semibold text-white">{p.planet}</span>
+                  <span className="text-[10px] text-orange-300/60">연소</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-[11px] text-white/30 mt-3 leading-relaxed">
+              역행(℞): 해당 행성 주제가 내면화·지연됩니다. 연소(☀): 태양의 광채에 행성력이 흡수돼 직접적 표현이 약해집니다.
+            </p>
+          </div>
+        );
+      })()}
+
       <section>
         <h5 className="text-xl font-bold text-white mb-6">하우스(Bhava)별 에너지 역량 상세</h5>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
