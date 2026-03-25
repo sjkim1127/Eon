@@ -11,16 +11,18 @@ import {
     ReferenceArea,
     ReferenceLine,
 } from "recharts";
-import { TrendingUp, Star, AlertTriangle } from "lucide-react";
+import { TrendingUp, Star, AlertTriangle, Moon } from "lucide-react";
 import type { YearlyScore, GoldenTime } from "../../types/saju";
+import type { VedicAnalysisResult } from "../../types/vedic";
 
 interface LifeGraphSectionProps {
     timeline: YearlyScore[];
     goldenTime?: GoldenTime | null;
     simulationFrames?: any[];
+    vedicReport?: VedicAnalysisResult | null;
 }
 
-export function LifeGraphSection({ timeline, goldenTime, simulationFrames }: LifeGraphSectionProps) {
+export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedicReport }: LifeGraphSectionProps) {
     const [visibleLines, setVisibleLines] = useState({
         trend_ma: true,
         wealth: true,
@@ -28,6 +30,7 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames }: Lif
         academic: true,
         health: true,
         volatility: true,
+        vedic_dasha: true,
     });
 
     const toggleLine = (dataKey: string) => {
@@ -72,6 +75,36 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames }: Lif
         { key: "health", label: "건강운", color: "bg-emerald-400" },
         { key: "volatility", label: "교운기 변동", color: "bg-rose-400" },
     ];
+
+    const VEDIC_PLANET_COLORS: Record<string, string> = {
+        Sun: "#f97316", // orange
+        Moon: "#94a3b8", // slate
+        Mars: "#ef4444", // red
+        Mercury: "#10b981", // emerald
+        Jupiter: "#eab308", // yellow/gold
+        Venus: "#ec4899", // pink
+        Saturn: "#3b82f6", // blue
+        Rahu: "#8b5cf6", // violet
+        Ketu: "#6b7280", // grey
+    };
+
+    // Calculate Dasha periods in age-space
+    const dashaPeriods = vedicReport?.report?.dasha_timeline ? (() => {
+        const timeline = vedicReport.report.dasha_timeline;
+        if (timeline.length === 0) return [];
+
+        const birthTime = new Date(timeline[0].start_time).getTime();
+        return timeline.map(p => {
+            const startAge = (new Date(p.start_time).getTime() - birthTime) / (365.2425 * 86400000);
+            const endAge = (new Date(p.end_time).getTime() - birthTime) / (365.2425 * 86400000);
+            return {
+                lord: p.lord,
+                start: Math.max(0, startAge),
+                end: Math.min(100, endAge),
+                color: VEDIC_PLANET_COLORS[p.lord] || "#888",
+            };
+        }).filter(p => p.start < 100 && p.end > 0);
+    })() : [];
 
     return (
         <div className="space-y-6">
@@ -184,6 +217,15 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames }: Lif
                                                             </p>
                                                         </>
                                                     )}
+                                                    {visibleLines.vedic_dasha && dashaPeriods.length > 0 && (() => {
+                                                        const currentDasha = dashaPeriods.find(p => label >= p.start && label < p.end);
+                                                        return currentDasha ? (
+                                                            <p className="flex justify-between items-center mt-2 pt-2 border-t border-white/5">
+                                                                <span className="text-white/40">Vedic Dasha:</span>
+                                                                <span style={{ color: currentDasha.color }} className="font-bold">{currentDasha.lord}운</span>
+                                                            </p>
+                                                        ) : null;
+                                                    })()}
                                                 </div>
                                             </div>
                                         );
@@ -211,6 +253,18 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames }: Lif
                                     x={age}
                                     stroke="rgba(244,63,94,0.3)"
                                     strokeDasharray="2 4"
+                                />
+                            ))}
+
+                            {/* 베딕 다샤(Mahadasha) 배경 밴드 */}
+                            {visibleLines.vedic_dasha && dashaPeriods.map((p, i) => (
+                                <ReferenceArea
+                                    key={`dasha-${i}`}
+                                    x1={p.start}
+                                    x2={p.end}
+                                    fill={p.color}
+                                    fillOpacity={0.06}
+                                    stroke="none"
                                 />
                             ))}
 
@@ -247,6 +301,16 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames }: Lif
                             {item.label}
                         </button>
                     ))}
+                    {vedicReport && (
+                        <button
+                            type="button"
+                            onClick={() => toggleLine("vedic_dasha")}
+                            className={`flex items-center gap-1 transition-opacity ${visibleLines.vedic_dasha ? "opacity-100 hover:opacity-80 text-celestial-gold" : "opacity-30 hover:opacity-60"}`}
+                        >
+                            <Moon className="w-3 h-3" />
+                            베딕 다샤 오버레이
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
