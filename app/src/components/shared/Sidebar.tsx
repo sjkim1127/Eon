@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, Activity, Star, Zap, Sun, Heart, Trophy, Menu, X, Github, LineChart } from "lucide-react";
+import { Sparkles, Activity, Star, Zap, Sun, Trophy, Menu, X, Github, LineChart } from "lucide-react";
 import { cn } from "../../utils";
 import type { TabId } from "../../types";
 
@@ -16,7 +16,6 @@ const TABS = [
   { id: "strength" as TabId, label: "역량 및 기운", icon: Zap },
   { id: "transit" as TabId, label: "현재 운세", icon: Sun },
   { id: "simulation" as TabId, label: "생애 시뮬레이션", icon: LineChart },
-  { id: "compatibility" as TabId, label: "궁합 분석", icon: Heart },
   { id: "destiny_tier" as TabId, label: "운명의 티어", icon: Trophy },
 ];
 
