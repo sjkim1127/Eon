@@ -1,6 +1,6 @@
 # 🌌 Eon: The Destiny Reversing Engine
 
-> **"Fate is not a prophecy; it is an Executable Binary."**
+> **"당신의 운명은 정해진 결말이 아니라, 새롭게 쓰일 수 있는 지도입니다."**
 
 `Eon`은 사주 명리학과 베딕 점성학을 **시스템 공학(System Engineering)** 및 **리버스 엔지니어링(Reverse Engineering)** 의 관점으로 재해석한 차세대 운명 분석 플랫폼입니다. 인생의 데이터를 소스 코드로 간주하고, 이를 실행·디버깅·최적화하는 강력한 툴체인을 제공합니다.
 
@@ -217,4 +217,4 @@ MIT License — [LICENSE](LICENSE) 참조
 
 ---
 
-> **"Debug your fate. Optimize your life."**
+> **"Eon과 함께 당신만의 고유한 삶의 나침반을 발견하세요."**
