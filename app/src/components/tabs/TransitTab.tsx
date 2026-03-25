@@ -8,7 +8,7 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  Cell,
+  ReferenceLine,
 } from "recharts";
 import { CHART_TOOLTIP_STYLE } from "../../lib/chartTheme";
 import { TENGOD_INFO } from "../../constants";
@@ -270,32 +270,64 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={[
-                      { label: "木", value: frame.register_state.r0_wood ?? 0, color: "#4ade80" },
-                      { label: "火", value: frame.register_state.r1_fire ?? 0, color: "#f87171" },
-                      { label: "土", value: frame.register_state.r2_earth ?? 0, color: "#facc15" },
-                      { label: "金", value: frame.register_state.r3_metal ?? 0, color: "#d1d5db" },
-                      { label: "水", value: frame.register_state.r4_water ?? 0, color: "#60a5fa" },
+                      { label: "木", value: frame.register_state.r0_wood ?? 0, gradient: "url(#gradWood)", shadow: "#16a34a" },
+                      { label: "火", value: frame.register_state.r1_fire ?? 0, gradient: "url(#gradFire)", shadow: "#dc2626" },
+                      { label: "土", value: frame.register_state.r2_earth ?? 0, gradient: "url(#gradEarth)", shadow: "#ca8a04" },
+                      { label: "金", value: frame.register_state.r3_metal ?? 0, gradient: "url(#gradMetal)", shadow: "#9ca3af" },
+                      { label: "水", value: frame.register_state.r4_water ?? 0, gradient: "url(#gradWater)", shadow: "#2563eb" },
                     ]}
-                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                    margin={{ top: 20, right: 10, left: -20, bottom: 0 }}
                   >
-                    <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
-                    <XAxis dataKey="label" tick={{ fill: "rgba(255,255,255,0.65)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "rgba(255,255,255,0.65)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <defs>
+                      <linearGradient id="gradWood" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#4ade80" />
+                        <stop offset="100%" stopColor="#16a34a" />
+                      </linearGradient>
+                      <linearGradient id="gradFire" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#fb7185" />
+                        <stop offset="100%" stopColor="#e11d48" />
+                      </linearGradient>
+                      <linearGradient id="gradEarth" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#fde047" />
+                        <stop offset="100%" stopColor="#d97706" />
+                      </linearGradient>
+                      <linearGradient id="gradMetal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#f3f4f6" />
+                        <stop offset="100%" stopColor="#6b7280" />
+                      </linearGradient>
+                      <linearGradient id="gradWater" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#38bdf8" />
+                        <stop offset="100%" stopColor="#2563eb" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fill: "rgba(255,255,255,0.65)", fontSize: 13, fontWeight: "bold" }} axisLine={false} tickLine={false} dy={5} />
+                    <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
                     <Tooltip
                       formatter={(value: number) => [`${value.toFixed(1)}`, "에너지"]}
-                      contentStyle={CHART_TOOLTIP_STYLE}
+                      contentStyle={{ ...CHART_TOOLTIP_STYLE, borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.8)" }}
+                      cursor={{ fill: "rgba(255,255,255,0.03)" }}
                     />
-                    <Bar dataKey="value" radius={[10, 10, 0, 0]}>
-                      {[
-                        { color: "#4ade80" },
-                        { color: "#f87171" },
-                        { color: "#facc15" },
-                        { color: "#d1d5db" },
-                        { color: "#60a5fa" },
-                      ].map((entry, idx) => (
-                        <Cell key={idx} fill={entry.color} />
-                      ))}
-                    </Bar>
+                    {/* Add ReferenceLine to make the zero line pop out and show negative values properly */}
+                    <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" strokeWidth={1} />
+                    {/* Conditional rounding based on value to prevent flat tops and rounded bottoms for negative numbers */}
+                    <Bar dataKey="value" shape={(props: any) => {
+                      const { x, y, width, height, payload } = props;
+                      const isNegative = payload.value < 0;
+                      const rad = 8;
+                      const yPos = isNegative ? y : y; 
+                      const h = isNegative ? Math.abs(height) : height;
+                      // Path with rounded top (or rounded bottom if negative)
+                      const path = isNegative
+                        ? `M${x},${yPos} h${width} v${h - rad} a${rad},${rad} 0 0 1 -${rad},${rad} h-${width - 2 * rad} a${rad},${rad} 0 0 1 -${rad},-${rad} Z`
+                        : `M${x},${yPos + rad} a${rad},${rad} 0 0 1 ${rad},-${rad} h${width - 2 * rad} a${rad},${rad} 0 0 1 ${rad},${rad} v${h - rad} h-${width} Z`;
+                      return (
+                        <g>
+                          <path d={path} fill={payload.gradient} />
+                          <path d={path} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" opacity={0.5} />
+                        </g>
+                      );
+                    }} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
