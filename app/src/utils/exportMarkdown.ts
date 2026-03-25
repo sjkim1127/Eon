@@ -635,34 +635,8 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
             const lagna = rep.lagna_rasi ? ` (라그나: ${SIGN_NAMES[rep.lagna_rasi] ?? rep.lagna_rasi})` : "";
             lines.push(`### ${rep.varga_label} · ${vargaDef.name}${lagna}`);
             
-            // D1인 경우 추가 커스프(IC, DSC, MC) 행 삽입 시도
-            let displayRows = [...rep.rows];
-            if (isD1 && Array.isArray(c.house_cusps) && c.house_cusps.length === 12) {
-                const addCusp = (label: string, idx: number) => {
-                    const deg = c.house_cusps[idx];
-                    const info = getNakshatraInfo(deg);
-                    displayRows.push({
-                        planet: label,
-                        position_str: formatSiderealPosition(deg),
-                        sign: Math.floor(deg / 30) + 1,
-                        house: idx + 1,
-                        nakshatra: idx + 1, // dummy
-                        nakshatra_name: info.name,
-                        pada: info.pada,
-                        pada_range: info.range,
-                        nakshatra_lord: info.lord,
-                        pada_lord: info.padaLord,
-                        deity: info.deity,
-                        purpose: info.purpose,
-                    } as any);
-                };
-                addCusp("IC (H4)", 3);
-                addCusp("DSC (H7)", 6);
-                addCusp("MC (H10)", 9);
-            }
-
             const showHouse = !isD1;
-            const mdRows = buildNakshatraMarkdownRows(displayRows, showHouse);
+            const mdRows = buildNakshatraMarkdownRows(rep.rows, showHouse);
             for (const row of mdRows) lines.push(row);
         } else {
             lines.push(`### ${vargaDef.label} · ${vargaDef.name} *(근사값)*`);
