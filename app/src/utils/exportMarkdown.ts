@@ -618,7 +618,8 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     // ── 낙샤트라 리포트 D1~D144 통합 섹션 ──
     lines.push("## 낙샤트라 리포트 (D1~D144 전체 상세)\n");
     lines.push("> 컬럼: 행성 | 위치(사이드리얼) | 사인 | 하우스 | 낙샤트라(파다) | 파다 범위 | 낙샤트라 로드 | 파다 로드 | 신(Deity) | 목적(Purpose)\n");
-    lines.push("> D1은 본 차트 기준, D2 이상은 해당 분할 좌표 기준입니다. (※ 백엔드 미제공 차트는 프론트엔드 근사값)\n");
+    lines.push("> ※ 현대 행성(천왕성, 해왕성, 명왕성)은 전통 베딕의 9군(Navagraha) 분석 체계에 포함되지 않으므로 표시되지 않습니다.\n");
+    
     const allPos = [...(c?.planets ?? []), ...(c?.ascendant ? [c.ascendant] : [])];
     const rawReports = v.varga_nakshatra_reports?.reports;
     const getReport = (id: string): import("../types").VargaNakshatraReport | undefined => {
@@ -628,11 +629,40 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     };
     for (const vargaDef of VARGA_DEFS) {
         const rep = getReport(vargaDef.id);
+        const isD1 = vargaDef.id === "rasi";
+        
         if (rep?.rows?.length) {
             const lagna = rep.lagna_rasi ? ` (라그나: ${SIGN_NAMES[rep.lagna_rasi] ?? rep.lagna_rasi})` : "";
             lines.push(`### ${rep.varga_label} · ${vargaDef.name}${lagna}`);
-            const showHouse = vargaDef.id !== "rasi";
-            const mdRows = buildNakshatraMarkdownRows(rep.rows, showHouse);
+            
+            // D1인 경우 추가 커스프(IC, DSC, MC) 행 삽입 시도
+            let displayRows = [...rep.rows];
+            if (isD1 && Array.isArray(c.house_cusps) && c.house_cusps.length === 12) {
+                const addCusp = (label: string, idx: number) => {
+                    const deg = c.house_cusps[idx];
+                    const info = getNakshatraInfo(deg);
+                    displayRows.push({
+                        planet: label,
+                        position_str: formatSiderealPosition(deg),
+                        sign: Math.floor(deg / 30) + 1,
+                        house: idx + 1,
+                        nakshatra: idx + 1, // dummy
+                        nakshatra_name: info.name,
+                        pada: info.pada,
+                        pada_range: info.range,
+                        nakshatra_lord: info.lord,
+                        pada_lord: info.padaLord,
+                        deity: info.deity,
+                        purpose: info.purpose,
+                    } as any);
+                };
+                addCusp("IC (H4)", 3);
+                addCusp("DSC (H7)", 6);
+                addCusp("MC (H10)", 9);
+            }
+
+            const showHouse = !isD1;
+            const mdRows = buildNakshatraMarkdownRows(displayRows, showHouse);
             for (const row of mdRows) lines.push(row);
         } else {
             lines.push(`### ${vargaDef.label} · ${vargaDef.name} *(근사값)*`);
