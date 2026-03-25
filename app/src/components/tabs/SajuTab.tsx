@@ -14,6 +14,32 @@ interface SajuTabProps {
   unknownTime?: boolean;
 }
 
+function RelationshipBadges({ relationships }: { relationships: any }) {
+  const summary = [];
+  if ((relationships.stem_clashes?.length || 0) + (relationships.branch_clashes?.length || 0) > 0) 
+    summary.push({ label: "충(沖)", color: "text-rose-400 bg-rose-500/10 border-rose-500/20" });
+  if ((relationships.branch_punishments?.length || 0) > 0) 
+    summary.push({ label: "형(刑)", color: "text-orange-400 bg-orange-500/10 border-orange-500/20" });
+  if ((relationships.stem_combinations?.length || 0) + (relationships.six_combinations?.length || 0) + (relationships.triple_combinations?.length || 0) + (relationships.seasonal_combinations?.length || 0) > 0) 
+    summary.push({ label: "합(合)", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" });
+  if ((relationships.branch_harms?.length || 0) > 0) 
+    summary.push({ label: "해(害)", color: "text-pink-400 bg-pink-500/10 border-pink-500/20" });
+  if ((relationships.branch_destructions?.length || 0) > 0) 
+    summary.push({ label: "파(破)", color: "text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20" });
+
+  if (summary.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {summary.map(s => (
+        <span key={s.label} className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${s.color}`}>
+          {s.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
 
   if (!sajuReport || !sajuReport.report) return null;
@@ -46,10 +72,15 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
 
       {/* 사주팔자 차트 */}
       <div className="glass p-8 rounded-[2rem]">
-        <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-          <Activity className="w-6 h-6 text-celestial-gold" />
-          사주팔자 (四柱八字)
-        </h5>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h5 className="text-xl font-bold text-white flex items-center gap-3">
+            <Activity className="w-6 h-6 text-celestial-gold" />
+            사주팔자 (四柱八字)
+          </h5>
+          
+          {/* 합충형해 요약 배지 */}
+          {!!sajuReport.relationships && <RelationshipBadges relationships={sajuReport.relationships as any} />}
+        </div>
         <PillarsChart p={p} t={t} unknownTime={unknownTime} />
       </div>
 

@@ -125,9 +125,112 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   };
 
   const copyReport = async () => {
-    const text = [buildD1ReportText(), "", buildVargaNakshatraText()].join("\n");
+    const r = report.report;
+    const ch = report.chart;
+    const lines: string[] = [];
+
+    // ① 메타 요약
+    lines.push("# 베딕 점성학 분석 리포트");
+    lines.push(`전체 차트 강도: ${Math.round(r?.overall_strength_score ?? 0)} / 600`);
+    lines.push(`사데사티: ${r?.sade_sati ?? "None"}`);
+    lines.push(`현재 다샤: ${(r?.dasha_focus ?? "").replace("Current Major Period: ", "")}`);
+    lines.push("");
+
+    // ② 카라카
+    if (r?.primary_karakas) {
+      lines.push("## 카라카 (Karakas)");
+      lines.push(`- 영혼 지표 (Atmakaraka): ${r.primary_karakas.atmakaraka}`);
+      lines.push(`- 직업 지표 (Amatyakaraka): ${r.primary_karakas.amatyakaraka}`);
+      lines.push(`- 파트너 지표 (Darakaraka): ${r.primary_karakas.darakaraka}`);
+      lines.push("");
+    }
+
+    // ③ 낙샤트라 청사진
+    if (r?.nakshatra_info) {
+      lines.push("## 낙샤트라 청사진");
+      lines.push(r.nakshatra_info);
+      lines.push("");
+    }
+
+    // ④ 역행·연소 행성
+    const retro = planets.filter((p: any) => p.is_retrograde).map((p: any) => p.planet);
+    const combust = planets.filter((p: any) => p.is_combust).map((p: any) => p.planet);
+    if (retro.length > 0 || combust.length > 0) {
+      lines.push("## 약화 행성");
+      if (retro.length > 0) lines.push(`- 역행(℞): ${retro.join(", ")} — 해당 행성 주제 내면화·지연 경향`);
+      if (combust.length > 0) lines.push(`- 연소(☀): ${combust.join(", ")} — 태양 광채에 행성력 흡수`);
+      lines.push("");
+    }
+
+    // ⑤ 하우스 요약
+    if (r?.house_summary?.length) {
+      lines.push("## 하우스 강도 요약");
+      lines.push("| 하우스 | 점수 | 등급 |");
+      lines.push("|--------|------|------|");
+      for (const h of r.house_summary as { house: number; total_score: number; rating: string }[]) {
+        lines.push(`| H${h.house} | ${Math.round(h.total_score)} | ${h.rating} |`);
+      }
+      lines.push("");
+    }
+
+    // ⑥ SAV 점수
+    const savPts = ch?.sav?.points ?? [];
+    if (Array.isArray(savPts) && savPts.length === 12) {
+      lines.push("## SAV (Sarvashtakavarga) 하우스별 빈두");
+      lines.push(savPts.map((p: number, i: number) => `H${i + 1}:${p}`).join("  "));
+      lines.push("");
+    }
+
+    // ⑦ 요가
+    if (r?.yogas?.length) {
+      lines.push("## 요가 (Yogas)");
+      for (const y of r.yogas as { name: string; quality: string | object; description: string; planets_involved: string[] }[]) {
+        const q = typeof y.quality === "string" ? y.quality : Object.keys(y.quality ?? {})[0];
+        lines.push(`### ${y.name} [${q}]`);
+        lines.push(`행성: ${y.planets_involved.join(", ")}`);
+        lines.push(y.description);
+        lines.push("");
+      }
+    }
+
+    // ⑧ 다샤 타임라인
+    if (dashaTimeline.length > 0) {
+      lines.push("## 다샤 타임라인 (Vimshottari Dasha)");
+      for (const d of dashaTimeline) {
+        const s = new Date(d.start_time);
+        const e = new Date(d.end_time);
+        const yrs = ((e.getTime() - s.getTime()) / (365.2425 * 86400000)).toFixed(1);
+        lines.push(`- ${d.lord}: ${s.getFullYear()}.${String(s.getMonth()+1).padStart(2,"0")} ~ ${e.getFullYear()}.${String(e.getMonth()+1).padStart(2,"0")} (${yrs}년)`);
+        for (const sub of (d.sub_dashas ?? [])) {
+          const ss = new Date(sub.start_time);
+          const se = new Date(sub.end_time);
+          lines.push(`  - ${sub.lord}: ${ss.getFullYear()}.${String(ss.getMonth()+1).padStart(2,"0")} ~ ${se.getFullYear()}.${String(se.getMonth()+1).padStart(2,"0")}`);
+        }
+      }
+      lines.push("");
+    }
+
+    // ⑨ 고차라 (Gochara)
+    const transits = report.gochara?.transits ?? [];
+    if (transits.length > 0) {
+      lines.push("## 고차라 트랜짓 (Gochara)");
+      lines.push("| 행성 | 현재 라시 | 달로부터 하우스 | 길흉 | Murti |");
+      lines.push("|------|-----------|-----------------|------|-------|");
+      for (const t of transits as { planet: string; current_rasi: number; house_from_moon: number; is_benefic_transit: boolean; murti: string }[]) {
+        const rasi = SIGN_NAMES[t.current_rasi] ?? t.current_rasi;
+        const benefic = t.is_benefic_transit ? "길 ✅" : "흉 ⚠️";
+        lines.push(`| ${t.planet} | ${rasi} | H${t.house_from_moon} | ${benefic} | ${t.murti} |`);
+      }
+      lines.push("");
+    }
+
+    // ⑩ D1 낙샤트라 + 바르가
+    lines.push(buildD1ReportText());
+    lines.push("");
+    lines.push(buildVargaNakshatraText());
+
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(lines.join("\n"));
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {

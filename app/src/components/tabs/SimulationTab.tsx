@@ -2,13 +2,14 @@ import { motion } from "framer-motion";
 import { LifeGraphSection } from "../sections/LifeGraphSection";
 import { SimulationTimelineSection } from "../sections/SimulationTimelineSection";
 import { VulnerabilitySection } from "../sections/VulnerabilitySection";
-import type { SajuAnalysisResult } from "../../types";
+import type { SajuAnalysisResult, VedicAnalysisResult } from "../../types";
 
 interface SimulationTabProps {
   sajuReport: SajuAnalysisResult | null;
+  vedicReport: VedicAnalysisResult | null;
 }
 
-export function SimulationTab({ sajuReport }: SimulationTabProps) {
+export function SimulationTab({ sajuReport, vedicReport }: SimulationTabProps) {
   if (!sajuReport || !sajuReport.report) return null;
   
   const reportData = sajuReport.report;
@@ -27,6 +28,7 @@ export function SimulationTab({ sajuReport }: SimulationTabProps) {
         timeline={reportData.timeline ?? []}
         goldenTime={gt}
         simulationFrames={reportData.simulation_frames}
+        vedicReport={vedicReport}
       />
 
       {/* 생애 시뮬레이션 타임라인 */}

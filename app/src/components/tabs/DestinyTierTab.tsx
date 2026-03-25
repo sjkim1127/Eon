@@ -42,33 +42,41 @@ export function DestinyTierTab({ sajuReport, report, transitReport, tierReport, 
   const hasVedic = !!report?.report;
   const hasTransit = !!transitReport?.current_frame;
 
-  // ── 점수 분해: 사주 ──
+  // ── 점수 분해: 사주 (v3 기준 정규화 가시화) ──
   const sajuSt = sajuReport?.report?.strength;
   const strengthNorm = Math.min(100, (sajuSt?.strength_score ?? 0) * 2);
   const rawSupportRatioUi = sajuSt?.deuk_se?.support_ratio ?? 0;
   const supportPctUi = rawSupportRatioUi > 1 ? rawSupportRatioUi : rawSupportRatioUi * 100;
-  const deukSum = (sajuSt?.deuk_ryeong?.acquired ? 8 : 0)
-    + (sajuSt?.deuk_ji?.acquired ? 8 : 0)
-    + (sajuSt?.deuk_si?.acquired ? 6 : 0)
-    + (supportPctUi / 100) * 15;
+  
+  // v3: deuk_ryeong/ji/si (10점 max), deuk_se (8점 max)
+  const deukSum = ((sajuSt?.deuk_ryeong?.acquired ? 1 : 0)
+    + (sajuSt?.deuk_ji?.acquired ? 1 : 0)
+    + (sajuSt?.deuk_si?.acquired ? 1 : 0)) * (10 / 3) 
+    + (supportPctUi / 100) * 8;
+    
   const throughput = sajuReport?.qi_topology?.throughput ?? 0;
-  const goldenTimePt = sajuReport?.report?.golden_time ? 10 : 0;
+  const goldenTimePt = sajuReport?.report?.golden_time ? 6 : 0; // v3 weight: 6
   const stabilityGrade = sajuReport?.complexity?.stability_grade ?? "";
-  const stabilityPt = /^[AB]$/.test(stabilityGrade) || /A|B/.test(stabilityGrade) ? 4 : 0;
+  const stabilityPt = /^A/.test(stabilityGrade) ? 4 : (/^B/.test(stabilityGrade) ? 2 : 0);
 
-  // ── 점수 분해: 베딕 ──
+  // ── 점수 분해: 베딕 (v3 기준 정규화 가시화) ──
   const vr = report?.report;
-  const planetStrengthNorm = Math.min(50, ((vr?.overall_strength_score ?? 0) / 6) * 0.5);
+  // v3 Planet Strength: overall / 6 * 35%
+  const planetStrengthNorm = ((vr?.overall_strength_score ?? 0) / 6) * 35;
+  
   const highYogaCount = (vr?.yogas ?? []).filter((y: { quality: string | object }) => {
     const q = typeof y.quality === "string" ? y.quality : Object.keys(y.quality ?? {})[0];
     return q === "VeryHigh" || q === "High";
   }).length;
-  const yogaPt = Math.min(20, highYogaCount * 5);
+  const yogaPt = Math.min(12, highYogaCount * 3); // v3 weight: 12
+  
   const strongHouses = (vr?.house_summary ?? []).filter((h: { rating: string }) =>
     h.rating === "Excellent" || h.rating === "Strong"
   ).length;
-  const housePt = (strongHouses / 12) * 20;
-  const satiPt = vr?.sade_sati === "None" ? 5 : (vr?.sade_sati === "Peak" || vr?.sade_sati === "Rising" ? 0 : 2.5);
+  // v3 House Strength weight: 10
+  const housePt = Math.min(10, strongHouses * 1.5);
+  
+  const satiPt = vr?.sade_sati === "None" ? 5 : 0; // v3 weight: 5
   const BENEFIC_PLANETS = ["Jupiter", "Venus", "Mercury", "Moon"];
   const dashaPt = BENEFIC_PLANETS.some((p) => (vr?.dasha_focus ?? "").includes(p)) ? 4 : 0;
 

@@ -55,7 +55,7 @@ export function AppRoutes({
               availability.transit ? <TransitTab transitReport={transitData!} transitError={null} /> : <UnavailableTabFallback reason="트랜짓 분석 결과가 필요합니다." />
             } />
             <Route path="/simulation" element={
-              availability.simulation ? <SimulationTab sajuReport={sajuData!} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
+              availability.simulation ? <SimulationTab sajuReport={sajuData!} vedicReport={vedicData!} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
             } />
             <Route path="/destiny_tier" element={
               availability.destiny_tier ? (
