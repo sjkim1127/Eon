@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle, Compass, Heart, Clock, Users } from "lucide-react";
-import { toast } from "sonner";
+import { Calendar, Star, Grid3x3, BarChart3, Zap, AlertCircle, Compass, Heart, Clock, Users } from "lucide-react";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
-import { getNakshatraInfo, getVargaEffectiveLongitude, formatSiderealPosition, buildNakshatraMarkdownRows, cn } from "../../utils";
+import { getNakshatraInfo, getVargaEffectiveLongitude, formatSiderealPosition, cn } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
 
 import { SouthIndianChart } from "../charts/SouthIndianChart";
@@ -25,7 +24,6 @@ interface VedicChartsTabProps {
 }
 
 export function VedicChartsTab({ report }: VedicChartsTabProps) {
-  const [copied, setCopied] = useState(false);
   const [selectedVargaId, setSelectedVargaId] = useState<string>("navamsa");
   const [chartStyle, setChartStyle] = useState<"south" | "north">("south");
 
@@ -42,201 +40,6 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const aspects = report.chart.aspects ?? [];
   const dashaTimeline = report.report?.dasha_timeline ?? [];
 
-  // ── 복사 텍스트 생성 헬퍼 ──────────────────────────────────────────
-  const buildD1ReportText = () => {
-    const vargaReports = report.varga_nakshatra_reports;
-    const d1Report = vargaReports?.reports?.["rasi"];
-
-    if (d1Report?.rows?.length) {
-      const mdRows = buildNakshatraMarkdownRows(d1Report.rows, false);
-      return [
-        "## D1 낙샤트라 리포트 (전체 행성)",
-        "> D1 낙샤트라는 본 차트 기준입니다.",
-        "",
-        ...mdRows,
-      ].join("\n");
-    }
-
-    const allPoints = [
-      ...planets.map((p: any) => ({ name: p.planet as string, deg: p.sidereal_deg as number, retro: p.is_retrograde as boolean, combust: p.is_combust as boolean })),
-      { name: "ASC", deg: ascendant?.sidereal_deg as number, retro: false, combust: false },
-    ].filter(x => x.deg != null);
-
-    const rows = allPoints.map(p => {
-      const ni = getNakshatraInfo(p.deg);
-      return {
-        planet: p.name,
-        position_str: formatSiderealPosition(p.deg),
-        nakshatra_name: ni.name,
-        pada: ni.pada,
-        pada_range: ni.range,
-        nakshatra_lord: ni.lord,
-        pada_lord: ni.padaLord,
-        deity: ni.deity,
-        purpose: ni.purpose,
-        is_retrograde: p.retro,
-        is_combust: p.combust,
-      };
-    });
-
-    const mdRows = buildNakshatraMarkdownRows(rows, false);
-    return [
-      "## D1 낙샤트라 리포트 (전체 행성)",
-      "> D1 낙샤트라는 본 차트 기준입니다.",
-      "",
-      ...mdRows,
-    ].join("\n");
-  };
-
-  const buildVargaTableText = () => {
-    const header = ["Planet", ...VARGA_DEFS.map(v => v.label)].join("\t");
-    const allPoints = [
-      ...planets.map((p: any) => ({ name: p.planet, data: p })),
-      { name: "ASC", data: ascendant },
-    ].filter(x => x.data != null);
-
-    const rows = allPoints.map(({ name, data }) => {
-      const signs = VARGA_DEFS.map(v => SIGN_NAMES[data[v.key]] ?? "-");
-      return [name, ...signs].join("\t");
-    });
-
-    return ["D1–D144 Sign Positions", header, ...rows].join("\n");
-  };
-
-  const buildVargaNakshatraText = (): string => {
-    const vargaReps = report.varga_nakshatra_reports?.reports;
-    if (!vargaReps || Object.keys(vargaReps).length === 0) return buildVargaTableText();
-
-    const out: string[] = [
-      "## 분할 차트 낙샤트라 리포트 (Varga D-Charts)",
-      "> 분할 차트 낙샤트라는 해당 분할 좌표 기준입니다.",
-      "",
-    ];
-    for (const vargaDef of VARGA_DEFS) {
-      const rep = vargaReps[vargaDef.id];
-      if (!rep?.rows?.length) continue;
-      const lagna = rep.lagna_rasi ? ` (라그나: ${SIGN_NAMES[rep.lagna_rasi] ?? rep.lagna_rasi})` : "";
-      out.push(`### ${rep.varga_label}${lagna}`);
-      const mdRows = buildNakshatraMarkdownRows(rep.rows, true);
-      out.push(...mdRows);
-      out.push("");
-    }
-    return out.join("\n");
-  };
-
-  const copyReport = async () => {
-    const r = report.report;
-    const ch = report.chart;
-    const lines: string[] = [];
-
-    // ① 메타 요약
-    lines.push("# 베딕 점성학 분석 리포트");
-    lines.push(`전체 차트 강도: ${Math.round(r?.overall_strength_score ?? 0)} / 600`);
-    lines.push(`사데사티: ${r?.sade_sati ?? "None"}`);
-    lines.push(`현재 다샤: ${(r?.dasha_focus ?? "").replace("Current Major Period: ", "")}`);
-    lines.push("");
-
-    // ② 카라카
-    if (r?.primary_karakas) {
-      lines.push("## 카라카 (Karakas)");
-      lines.push(`- 영혼 지표 (Atmakaraka): ${r.primary_karakas.atmakaraka}`);
-      lines.push(`- 직업 지표 (Amatyakaraka): ${r.primary_karakas.amatyakaraka}`);
-      lines.push(`- 파트너 지표 (Darakaraka): ${r.primary_karakas.darakaraka}`);
-      lines.push("");
-    }
-
-    // ③ 낙샤트라 청사진
-    if (r?.nakshatra_info) {
-      lines.push("## 낙샤트라 청사진");
-      lines.push(r.nakshatra_info);
-      lines.push("");
-    }
-
-    // ④ 역행·연소 행성
-    const retro = planets.filter((p: any) => p.is_retrograde).map((p: any) => p.planet);
-    const combust = planets.filter((p: any) => p.is_combust).map((p: any) => p.planet);
-    if (retro.length > 0 || combust.length > 0) {
-      lines.push("## 약화 행성");
-      if (retro.length > 0) lines.push(`- 역행(℞): ${retro.join(", ")} — 해당 행성 주제 내면화·지연 경향`);
-      if (combust.length > 0) lines.push(`- 연소(☀): ${combust.join(", ")} — 태양 광채에 행성력 흡수`);
-      lines.push("");
-    }
-
-    // ⑤ 하우스 요약
-    if (r?.house_summary?.length) {
-      lines.push("## 하우스 강도 요약");
-      lines.push("| 하우스 | 점수 | 등급 |");
-      lines.push("|--------|------|------|");
-      for (const h of r.house_summary as { house: number; total_score: number; rating: string }[]) {
-        lines.push(`| H${h.house} | ${Math.round(h.total_score)} | ${h.rating} |`);
-      }
-      lines.push("");
-    }
-
-    // ⑥ SAV 점수
-    const savPts = ch?.sav?.points ?? [];
-    if (Array.isArray(savPts) && savPts.length === 12) {
-      lines.push("## SAV (Sarvashtakavarga) 하우스별 빈두");
-      lines.push(savPts.map((p: number, i: number) => `H${i + 1}:${p}`).join("  "));
-      lines.push("");
-    }
-
-    // ⑦ 요가
-    if (r?.yogas?.length) {
-      lines.push("## 요가 (Yogas)");
-      for (const y of r.yogas as { name: string; quality: string | object; description: string; planets_involved: string[] }[]) {
-        const q = typeof y.quality === "string" ? y.quality : Object.keys(y.quality ?? {})[0];
-        lines.push(`### ${y.name} [${q}]`);
-        lines.push(`행성: ${y.planets_involved.join(", ")}`);
-        lines.push(y.description);
-        lines.push("");
-      }
-    }
-
-    // ⑧ 다샤 타임라인
-    if (dashaTimeline.length > 0) {
-      lines.push("## 다샤 타임라인 (Vimshottari Dasha)");
-      for (const d of dashaTimeline) {
-        const s = new Date(d.start_time);
-        const e = new Date(d.end_time);
-        const yrs = ((e.getTime() - s.getTime()) / (365.2425 * 86400000)).toFixed(1);
-        lines.push(`- ${d.lord}: ${s.getFullYear()}.${String(s.getMonth()+1).padStart(2,"0")} ~ ${e.getFullYear()}.${String(e.getMonth()+1).padStart(2,"0")} (${yrs}년)`);
-        for (const sub of (d.sub_dashas ?? [])) {
-          const ss = new Date(sub.start_time);
-          const se = new Date(sub.end_time);
-          lines.push(`  - ${sub.lord}: ${ss.getFullYear()}.${String(ss.getMonth()+1).padStart(2,"0")} ~ ${se.getFullYear()}.${String(se.getMonth()+1).padStart(2,"0")}`);
-        }
-      }
-      lines.push("");
-    }
-
-    // ⑨ 고차라 (Gochara)
-    const transits = report.gochara?.transits ?? [];
-    if (transits.length > 0) {
-      lines.push("## 고차라 트랜짓 (Gochara)");
-      lines.push("| 행성 | 현재 라시 | 달로부터 하우스 | 길흉 | Murti |");
-      lines.push("|------|-----------|-----------------|------|-------|");
-      for (const t of transits as { planet: string; current_rasi: number; house_from_moon: number; is_benefic_transit: boolean; murti: string }[]) {
-        const rasi = SIGN_NAMES[t.current_rasi] ?? t.current_rasi;
-        const benefic = t.is_benefic_transit ? "길 ✅" : "흉 ⚠️";
-        lines.push(`| ${t.planet} | ${rasi} | H${t.house_from_moon} | ${benefic} | ${t.murti} |`);
-      }
-      lines.push("");
-    }
-
-    // ⑩ D1 낙샤트라 + 바르가
-    lines.push(buildD1ReportText());
-    lines.push("");
-    lines.push(buildVargaNakshatraText());
-
-    try {
-      await navigator.clipboard.writeText(lines.join("\n"));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      toast.error("클립보드 복사에 실패했습니다.");
-    }
-  };
 
   const vargaReports = report.varga_nakshatra_reports;
   const reportsMap = vargaReports?.reports;
@@ -679,13 +482,6 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
                     </option>
                   ))}
                 </select>
-                <button
-                  onClick={copyReport}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-sm text-white font-semibold transition-all"
-                >
-                  {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-                  {copied ? "복사됨!" : "전체 리포트 복사"}
-                </button>
               </div>
             </div>
             <p className="text-xs text-white/40 mb-6 flex flex-wrap gap-4 items-center mt-2">
@@ -727,14 +523,6 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
             <Star className="w-6 h-6 text-celestial-purple" />
             D1 – D144 사인 포지션 (전체 분할 차트)
           </h5>
-          <button
-            type="button"
-            onClick={copyReport}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-celestial-purple/20 hover:bg-celestial-purple/30 border border-celestial-purple/40 text-celestial-purple text-sm font-semibold transition-colors"
-          >
-            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-            {copied ? "복사됨!" : "전체 리포트 복사"}
-          </button>
         </div>
         <p className="text-xs text-white/40 mb-6">각 셀 = 해당 분할 차트에서의 사인 번호 (1=Aries … 12=Pisces)</p>
 
