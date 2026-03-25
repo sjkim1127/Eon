@@ -3,7 +3,7 @@ import { backendClient } from "../lib/backend";
 import { useAppStore } from "../store/useAppStore";
 import { getBirthValidationError } from "../utils/validation";
 import type { SajuAnalysisResult, VedicAnalysisResult, TransitResult } from "../types";
-import type { RunAnalysisResult, AiAuditReport } from "../types/analysis";
+import type { RunAnalysisResult } from "../types/analysis";
 
 export function useAstrologyAnalysis() {
   const store = useAppStore();
@@ -16,7 +16,6 @@ export function useAstrologyAnalysis() {
       return { ok: false, partial: false, completed: [], failed: [] };
     }
 
-    store.setLoading(true);
     store.resetAnalysisState();
     
     const now = new Date();
@@ -53,13 +52,13 @@ export function useAstrologyAnalysis() {
     // 1. Core Parallel Tasks (Vedic, Saju, AI Audit)
     store.setAnalysisTaskState("vedic", { status: "loading" });
     store.setAnalysisTaskState("saju", { status: "loading" });
-    store.setAnalysisTaskState("aiAudit", { status: "loading" });
+
     store.setAnalysisTaskState("transit", { status: "loading" });
 
     const tasks = [
       { key: "vedic", fn: () => backendClient.getVedicAnalysis(commonArgs) },
       { key: "saju", fn: () => backendClient.getSajuAnalysis(sajuArgs) },
-      { key: "aiAudit", fn: () => backendClient.getAiAudit(sajuArgs) },
+
       { key: "transit", fn: () => backendClient.getTransitAnalysis(transitArgs) },
     ];
 
@@ -70,7 +69,7 @@ export function useAstrologyAnalysis() {
     let transitData: TransitResult | null = null;
 
     results.forEach((res, idx) => {
-      const key = tasks[idx].key as "vedic" | "saju" | "aiAudit" | "transit";
+      const key = tasks[idx].key as "vedic" | "saju" | "transit";
       
       if (res.status === "fulfilled") {
         const val = res.value;
@@ -81,35 +80,26 @@ export function useAstrologyAnalysis() {
             const data = val as VedicAnalysisResult;
             vedicData = data;
             store.setAnalysisTaskState("vedic", { status: "success", data });
-            store.setReport(data);
             break;
           }
           case "saju": {
             const data = val as SajuAnalysisResult;
             sajuData = data;
             store.setAnalysisTaskState("saju", { status: "success", data });
-            store.setSajuReport(data);
             break;
           }
           case "transit": {
             const data = val as TransitResult;
             transitData = data;
             store.setAnalysisTaskState("transit", { status: "success", data });
-            store.setTransitReport(data);
             break;
           }
-          case "aiAudit": {
-            const data = val as AiAuditReport;
-            store.setAnalysisTaskState("aiAudit", { status: "success", data });
-            store.setAiAuditReport(data);
-            break;
-          }
+
         }
       } else {
         const errMsg = String(res.reason);
         store.setAnalysisTaskState(key, { status: "error", error: errMsg });
         failed.push(key);
-        if (key === "transit") store.setTransitError(errMsg);
       }
     });
 
@@ -119,7 +109,6 @@ export function useAstrologyAnalysis() {
       try {
         const tier = await backendClient.getDestinyTier(sajuData, vedicData, transitData);
         store.setAnalysisTaskState("tier", { status: "success", data: tier });
-        store.setTierReport(tier);
         completed.push("tier");
       } catch (e) {
         store.setAnalysisTaskState("tier", { status: "error", error: String(e) });
@@ -130,7 +119,7 @@ export function useAstrologyAnalysis() {
       failed.push("tier");
     }
 
-    store.setLoading(false);
+
 
     const ok = completed.length > 0;
     const partial = failed.length > 0;
@@ -146,15 +135,11 @@ export function useAstrologyAnalysis() {
     return { ok, partial, completed, failed };
   };
 
+  const loading = Object.values(store.analysisState).some(t => t.status === "loading");
+
   return {
     runAnalysis,
     analysisState: store.analysisState,
-    report: store.report,
-    sajuReport: store.sajuReport,
-    aiAuditReport: store.aiAuditReport,
-    transitReport: store.transitReport,
-    transitError: store.transitError,
-    tierReport: store.tierReport,
-    loading: store.loading,
+    loading,
   };
 }

@@ -4,7 +4,7 @@ import type {
     SajuAnalysisResult,
     TransitResult,
 } from "../types";
-import type { AiAuditReport, TierResult, CompatibilityOutput } from "../types/analysis";
+import type { TierResult } from "../types/analysis";
 
 export interface CurrentContextDto {
     now_utc: string; // ISO 8601
@@ -28,26 +28,12 @@ export interface TransitArgs extends SajuArgs {
     now_utc: string;
 }
 
-export interface CompArgs {
-    year1: number; month1: number; day1: number; hour1: number; minute1: number;
-    is_lunar1: boolean; is_leap_month1: boolean;
-    is_male1: boolean; lon1: number; lat1: number; timezone1: string;
-    year2: number; month2: number; day2: number; hour2: number; minute2: number;
-    is_lunar2: boolean; is_leap_month2: boolean;
-    is_male2: boolean; lon2: number; lat2: number; timezone2: string;
-    use_night_rat_hour1?: boolean;
-    use_night_rat_hour2?: boolean;
-    unknown_time1?: boolean;
-    unknown_time2?: boolean;
-}
 
 export interface BackendClient {
     getVedicAnalysis(args: AnalysisArgs): Promise<VedicAnalysisResult>;
     getSajuAnalysis(args: SajuArgs): Promise<SajuAnalysisResult>;
     getTransitAnalysis(args: TransitArgs): Promise<TransitResult>;
     getDestinyTier(saju: SajuAnalysisResult, vedic: VedicAnalysisResult, transit: TransitResult | null): Promise<TierResult>;
-    getCompatibilityAnalysis(args: CompArgs): Promise<CompatibilityOutput>;
-    getAiAudit(args: SajuArgs): Promise<AiAuditReport>;
 }
 
 // WASM Module Loading Cache
@@ -110,32 +96,6 @@ export class WasmBackendClient implements BackendClient {
         return (wasm as any).get_destiny_tier_analysis(saju, vedic, transit) as Promise<TierResult>;
     }
 
-    async getCompatibilityAnalysis(args: CompArgs): Promise<CompatibilityOutput> {
-        const wasm = await getWasmModule();
-        return wasm.get_compatibility_analysis(
-            args.year1, args.month1, args.day1, args.hour1, args.minute1,
-            args.is_lunar1, args.is_leap_month1, args.is_male1, args.lon1, args.lat1,
-            args.use_night_rat_hour1 ?? false,
-            args.timezone1,
-            args.unknown_time1 ?? false,
-            args.year2, args.month2, args.day2, args.hour2, args.minute2,
-            args.is_lunar2, args.is_leap_month2, args.is_male2, args.lon2, args.lat2,
-            args.use_night_rat_hour2 ?? false,
-            args.timezone2,
-            args.unknown_time2 ?? false
-        ) as Promise<CompatibilityOutput>;
-    }
-
-    async getAiAudit(args: SajuArgs): Promise<AiAuditReport> {
-        const wasm = await getWasmModule();
-        return (wasm as any).get_ai_audit(
-            args.year, args.month, args.day, args.hour, args.minute,
-            args.is_lunar, args.is_leap_month, args.is_male,
-            args.use_night_rat_hour ?? false,
-            args.lon, args.lat, args.timezone,
-            args.unknown_time ?? false
-        ) as Promise<AiAuditReport>;
-    }
 }
 
 export class TauriBackendClient implements BackendClient {
@@ -162,13 +122,6 @@ export class TauriBackendClient implements BackendClient {
         return invoke("get_destiny_tier_analysis", { sajuVal: saju, vedicVal: vedic, transitVal: transit });
     }
 
-    async getCompatibilityAnalysis(args: CompArgs): Promise<CompatibilityOutput> {
-        return invoke("get_compatibility_analysis", args as unknown as Record<string, unknown>);
-    }
-
-    async getAiAudit(args: SajuArgs): Promise<AiAuditReport> {
-        return invoke("get_ai_audit", args as unknown as Record<string, unknown>);
-    }
 }
 
 declare global {
