@@ -8,13 +8,11 @@ describe("Tab Availability Logic", () => {
     const transitData = { current_frame: {} } as any;
     const tierData = { destinyTier: {} } as any;
     const birthData = { unknown_time: false };
-    const aiAuditData = { meta: {} } as any;
 
     const availability = getTabAvailability({
       sajuData,
       vedicData,
       transitData,
-      aiAuditData,
       tierData,
       unknownTime: birthData.unknown_time,
     });
@@ -24,8 +22,8 @@ describe("Tab Availability Logic", () => {
     expect(availability.vedic_charts).toBe(true);
     expect(availability.strength).toBe(true);
     expect(availability.transit).toBe(true);
+    expect(availability.simulation).toBe(true);
     expect(availability.destiny_tier).toBe(true);
-    expect(availability.ai_audit).toBe(true);
   });
 
   it("should disable vedic_charts if birth time is unknown", () => {
@@ -36,7 +34,6 @@ describe("Tab Availability Logic", () => {
       sajuData: null,
       vedicData,
       transitData: null,
-      aiAuditData: null,
       tierData: null,
       unknownTime: !!birthData.unknown_time,
     });

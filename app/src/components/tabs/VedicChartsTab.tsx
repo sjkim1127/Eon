@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle, Compass } from "lucide-react";
+import { Calendar, Star, Copy, Check, Grid3x3, BarChart3, Zap, AlertCircle, Compass, Heart, Clock, Users } from "lucide-react";
 import { toast } from "sonner";
 import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
-import { getNakshatraInfo, getVargaEffectiveLongitude, formatSiderealPosition, buildNakshatraMarkdownRows } from "../../utils";
+import { getNakshatraInfo, getVargaEffectiveLongitude, formatSiderealPosition, buildNakshatraMarkdownRows, cn } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
 
 import { SouthIndianChart } from "../charts/SouthIndianChart";
@@ -30,8 +30,9 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const [chartStyle, setChartStyle] = useState<"south" | "north">("south");
 
   if (!report || !report.chart || !report.chart.planets) return null;
-  const planets: any[] = report.chart.planets;
-  const ascendant: any = report.chart.ascendant;
+  const chart = report.chart;
+  const planets: any[] = chart.planets;
+  const ascendant: any = chart.ascendant;
   const panchanga = report.chart.panchanga;
   const sav = report.chart.sav;
   const vimshopaka = report.chart.vimshopaka_scores;
@@ -137,6 +138,13 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const vargaReports = report.varga_nakshatra_reports;
   const reportsMap = vargaReports?.reports;
 
+  const ratingLabel = (rating: string) => {
+    if (rating === "Excellent") return "최상";
+    if (rating === "Strong") return "강함";
+    if (rating === "Average") return "보통";
+    return "약함";
+  };
+
   return (
     <motion.div
       key="vedic-charts"
@@ -145,6 +153,186 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       exit={{ opacity: 0, y: -20 }}
       className="space-y-8"
     >
+      {/* ── Overview 통합 ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="glass p-8 rounded-[2rem] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 transform translate-x-4 -translate-y-4 opacity-5 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-500">
+            <Heart className="w-32 h-32" />
+          </div>
+          <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-2">
+            영혼의 지표 (Atmakaraka)
+          </p>
+          <h4 className="text-3xl font-bold text-white mb-4">
+            {report.report?.primary_karakas.atmakaraka}
+          </h4>
+          <p className="text-sm text-white/60 leading-relaxed">
+            이번 생에서 영혼이 추구하는 가장 강력한 욕망과 핵심 과제를 나타냅니다.
+          </p>
+        </div>
+
+        <div className="glass p-8 rounded-[2rem] border-celestial-purple/20 bg-celestial-purple/5">
+          <p className="text-celestial-purple/80 text-sm font-bold uppercase tracking-wider mb-2">
+            직업 지표 (Amatyakaraka)
+          </p>
+          <h4 className="text-3xl font-bold text-white mb-4">
+            {report.report?.primary_karakas.amatyakaraka}
+          </h4>
+          <p className="text-sm text-white/60 leading-relaxed">
+            직업·사회적 역할에서 영혼을 보필하는 행성입니다.
+          </p>
+        </div>
+
+        <div className="glass p-8 rounded-[2rem] border-celestial-cyan/20 bg-celestial-cyan/5">
+          <p className="text-celestial-cyan/80 text-sm font-bold uppercase tracking-wider mb-2">
+            파트너 지표 (Darakaraka)
+          </p>
+          <h4 className="text-3xl font-bold text-white mb-4">
+            {report.report?.primary_karakas.darakaraka}
+          </h4>
+          <p className="text-sm text-white/60 leading-relaxed">
+            배우자·가까운 파트너와의 관계 패턴을 나타내는 행성입니다.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="glass p-8 rounded-[2rem] border-celestial-purple/20 bg-celestial-purple/5">
+          <p className="text-celestial-purple/80 text-sm font-bold uppercase tracking-wider mb-2">
+            현재 대운 (Dasha)
+          </p>
+          <h4 className="text-3xl font-bold text-white mb-4">
+            {report.report?.dasha_focus.replace("Current Major Period: ", "")}
+          </h4>
+          <div className="flex items-center gap-2 text-sm text-white/60">
+            <Clock className="w-4 h-4" />
+            <span>인생의 현재 단계에서 가장 강력한 영향을 미치는 기운입니다.</span>
+          </div>
+        </div>
+
+        <div className="glass p-8 rounded-[2rem]">
+          <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-2">
+            전체 차트 강도
+          </p>
+          <div className="flex items-baseline gap-2 mb-4">
+            <h4 className="text-5xl font-black text-gradient leading-none">
+              {Math.round(report.report?.overall_strength_score ?? 0)}
+            </h4>
+            <span className="text-white/20 font-bold">/ 600</span>
+          </div>
+          <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+            <div
+              className="bg-celestial-purple h-full rounded-full transition-all duration-1000"
+              style={{ width: `${((report.report?.overall_strength_score ?? 0) / 600) * 100}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="glass p-10 rounded-[2.5rem]">
+        <h5 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
+          <Star className="w-6 h-6 text-celestial-gold" />
+          낙샤트라 청사진
+        </h5>
+        <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
+          <p className="text-white text-lg font-medium leading-relaxed">
+            {report.report?.nakshatra_info}
+          </p>
+        </div>
+      </div>
+
+      <section>
+        <h5 className="text-xl font-bold text-white mb-6">하우스(Bhava)별 에너지 역량 상세</h5>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {report.report?.house_summary.map((house: any) => {
+            const bhava = chart?.bhava_strengths?.find((b: any) => b.house === house.house);
+            return (
+              <div
+                key={house.house}
+                className="glass p-6 rounded-2xl text-center glass-hover cursor-help"
+              >
+                <p className="text-xs text-white/30 font-bold mb-1">하우스 {house.house}</p>
+                <p className="text-2xl font-bold text-white mb-2">
+                  {Math.round(house.total_score)}
+                </p>
+                <span
+                  className={cn(
+                    "px-2 py-0.5 rounded text-[10px] font-black uppercase",
+                    house.rating === "Excellent"
+                      ? "bg-green-500/20 text-green-400"
+                      : house.rating === "Strong"
+                        ? "bg-blue-500/20 text-blue-400"
+                        : house.rating === "Average"
+                          ? "bg-yellow-500/20 text-yellow-400"
+                          : "bg-red-500/20 text-red-400"
+                  )}
+                >
+                  {ratingLabel(house.rating)}
+                </span>
+                {bhava && (
+                  <div className="mt-3 space-y-1 text-left">
+                    {[
+                      { label: "주인 행성", value: bhava.lord_score },
+                      { label: "방위 힘", value: bhava.dig_score },
+                      { label: "시선 영향", value: bhava.drishti_score },
+                    ].map(({ label, value }) => (
+                      <div key={label}>
+                        <div className="flex justify-between text-[9px] text-white/40 mb-0.5">
+                          <span>{label}</span>
+                          <span>{(value ?? 0).toFixed(0)}</span>
+                        </div>
+                        <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-celestial-cyan/60 transition-all" style={{ width: `${Math.min(100, Math.max(0, (value ?? 0) / 60 * 100))}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {chart?.karakas && chart.karakas.length > 0 && (
+        <section className="glass p-10 rounded-[2.5rem]">
+          <h5 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
+            <Users className="w-6 h-6 text-celestial-purple" />
+            제미니 카라카 — 8가지 인생 역할 배정
+          </h5>
+          <p className="text-xs text-white/40 mb-6">태양계 행성들이 당신의 인생에서 맡는 구체적인 역할입니다. 사이드리얼 도수가 높을수록 그 역할의 영향이 큽니다.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {chart.karakas.map((k: any, i: number) => {
+              const roleKr: Record<string, string> = {
+                Atmakaraka: "영혼 (나 자신)",
+                Amatyakaraka: "직업 / 재능",
+                Bhratrukaraka: "형제 / 자매",
+                Matrukaraka: "어머니 / 보호",
+                Pitrikaraka: "아버지 / 권위",
+                Putrakaraka: "자식 / 창작",
+                Gnatikaraka: "경쟁자 / 친척",
+                Darakaraka: "배우자 / 파트너",
+              };
+              const colors = [
+                "border-celestial-gold/40 bg-celestial-gold/10",
+                "border-celestial-purple/40 bg-celestial-purple/10",
+                "border-green-500/30 bg-green-500/10",
+                "border-pink-500/30 bg-pink-500/10",
+                "border-blue-500/30 bg-blue-500/10",
+                "border-orange-500/30 bg-orange-500/10",
+                "border-red-500/30 bg-red-500/10",
+                "border-celestial-cyan/30 bg-celestial-cyan/10",
+              ];
+              return (
+                <div key={i} className={`p-4 rounded-2xl border ${colors[i % colors.length]}`}>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1">{roleKr[k.role] ?? k.role}</p>
+                  <p className="text-lg font-bold text-white">{k.planet}</p>
+                  <p className="text-xs text-white/40 mt-1">{(k.degree_in_rasi ?? 0).toFixed(2)}°</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
       {/* Panchanga 섹션 */}
       {panchanga && (
         <div className="glass p-8 rounded-[2rem]">

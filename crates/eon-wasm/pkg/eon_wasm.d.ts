@@ -52,17 +52,15 @@ export function calc_ut(jd_ut: number, planet: number, flags: number): Position;
 
 export function get_ai_audit(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string, unknown_time?: boolean | null): any;
 
+export function get_compatibility_analysis(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, is_male1: boolean, lon1: number, lat1: number, use_night_rat_hour1: boolean, timezone1: string, unknown_time1: boolean | null | undefined, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, is_male2: boolean, lon2: number, lat2: number, use_night_rat_hour2: boolean, timezone2: string, unknown_time2?: boolean | null): any;
+
 export function get_destiny_tier_analysis(saju_val: any, vedic_val: any, transit_val: any): any;
 
 export function get_saju_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string, unknown_time?: boolean | null): any;
 
-export function get_saju_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, is_male1: boolean, lon1: number, lat1: number, use_night_rat_hour1: boolean, timezone1: string, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, is_male2: boolean, lon2: number, lat2: number, use_night_rat_hour2: boolean, timezone2: string): any;
-
 export function get_transit_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, is_male: boolean, use_night_rat_hour: boolean, lon: number, lat: number, timezone: string, unknown_time?: boolean | null, now_utc_str?: string | null): any;
 
-export function get_vedic_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, lat: number, lon: number, timezone: string): any;
-
-export function get_vedic_compatibility(year1: number, month1: number, day1: number, hour1: number, minute1: number, is_lunar1: boolean, is_leap_month1: boolean, lat1: number, lon1: number, timezone1: string, year2: number, month2: number, day2: number, hour2: number, minute2: number, is_lunar2: boolean, is_leap_month2: boolean, lat2: number, lon2: number, timezone2: string): any;
+export function get_vedic_analysis(year: number, month: number, day: number, hour: number, minute: number, is_lunar: boolean, is_leap_month: boolean, lat: number, lon: number, timezone: string, unknown_time?: boolean | null, now_utc_str?: string | null): any;
 
 /**
  * Set the ephemeris path
@@ -79,12 +77,11 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly get_ai_audit: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => [number, number, number];
+  readonly get_compatibility_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number, w: number, x: number, y: number, z: number, a1: number, b1: number) => [number, number, number];
   readonly get_destiny_tier_analysis: (a: any, b: any, c: any) => [number, number, number];
   readonly get_saju_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => [number, number, number];
-  readonly get_saju_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number, w: number, x: number, y: number, z: number) => [number, number, number];
   readonly get_transit_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number) => [number, number, number];
-  readonly get_vedic_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => [number, number, number];
-  readonly get_vedic_compatibility: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number) => [number, number, number];
+  readonly get_vedic_analysis: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => [number, number, number];
   readonly __wbg_get_position_distance: (a: number) => number;
   readonly __wbg_get_position_distance_speed: (a: number) => number;
   readonly __wbg_get_position_latitude: (a: number) => number;

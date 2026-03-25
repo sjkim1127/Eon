@@ -12,14 +12,15 @@ import { ShootingStars, BirthDrawer, Sidebar, CompactBirthInfoBar, ExportActionB
 import { getTabAvailability } from "./utils/analysis";
 import type { TabId } from "./types";
 
-const OverviewTab = lazy(() => import("./components/tabs/OverviewTab").then((m) => ({ default: m.OverviewTab })));
+
 const SajuTab = lazy(() => import("./components/tabs/SajuTab").then((m) => ({ default: m.SajuTab })));
 const VedicChartsTab = lazy(() => import("./components/tabs/VedicChartsTab").then((m) => ({ default: m.VedicChartsTab })));
 const StrengthTab = lazy(() => import("./components/tabs/StrengthTab").then((m) => ({ default: m.StrengthTab })));
 const TransitTab = lazy(() => import("./components/tabs/TransitTab").then((m) => ({ default: m.TransitTab })));
+const SimulationTab = lazy(() => import("./components/tabs/SimulationTab").then((m) => ({ default: m.SimulationTab })));
 const CompatibilityTab = lazy(() => import("./components/tabs/CompatibilityTab").then((m) => ({ default: m.CompatibilityTab })));
 const DestinyTierTab = lazy(() => import("./components/tabs/DestinyTierTab").then((m) => ({ default: m.DestinyTierTab })));
-const AiAuditTab = lazy(() => import("./components/tabs/AiAuditTab").then((m) => ({ default: m.AiAuditTab })));
+
 
 function TabSkeleton() {
   return (
@@ -48,11 +49,11 @@ function App() {
 
   // Route -> TabId mapping
   const pathParts = location.pathname.split('/').filter(Boolean);
-  const currentTab: TabId = (pathParts.length > 0 ? pathParts[0] : "overview") as TabId;
+  const currentTab: TabId = (pathParts.length > 0 ? pathParts[0] : "saju") as TabId;
 
   const setActiveTab = (tab: TabId) => {
     useAppStore.getState().setActiveTab(tab); 
-    navigate(`/${tab === 'overview' ? '' : tab}`);
+    navigate(`/${tab === 'saju' ? '' : tab}`);
   };
 
   const errorMessage = useAppStore(state => state.errorMessage);
@@ -61,7 +62,6 @@ function App() {
   const vedicData = analysisState.vedic.data;
   const sajuData = analysisState.saju.data;
   const transitData = analysisState.transit.data;
-  const aiAuditData = analysisState.aiAudit.data;
   const tierData = analysisState.tier.data;
 
   const {
@@ -85,10 +85,9 @@ function App() {
     sajuData,
     vedicData,
     transitData,
-    aiAuditData,
     tierData,
     unknownTime: !!birthData.unknown_time,
-  }), [sajuData, vedicData, transitData, aiAuditData, tierData, birthData.unknown_time]);
+  }), [sajuData, vedicData, transitData, tierData, birthData.unknown_time]);
 
   const hasAnyReport = useMemo(() => 
     Object.values(analysisState).some(s => s.status === "success" && s.data),
@@ -190,9 +189,6 @@ function App() {
             <Suspense fallback={<TabSkeleton />}>
               <Routes location={location} key={location.pathname}>
                 <Route path="/" element={
-                  availability.overview ? <OverviewTab report={vedicData!} /> : <UnavailableTabFallback reason="베딕 분석 결과가 필요합니다." />
-                } />
-                <Route path="/saju" element={
                   availability.saju ? <SajuTab sajuReport={sajuData!} unknownTime={birthData.unknown_time} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
                 } />
                 <Route path="/vedic_charts" element={
@@ -203,6 +199,9 @@ function App() {
                 } />
                 <Route path="/transit" element={
                   availability.transit ? <TransitTab transitReport={transitData!} transitError={null} /> : <UnavailableTabFallback reason="트랜짓 분석 결과가 필요합니다." />
+                } />
+                <Route path="/simulation" element={
+                  availability.simulation ? <SimulationTab sajuReport={sajuData!} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
                 } />
                 <Route path="/compatibility" element={<CompatibilityTab />} />
                 <Route path="/destiny_tier" element={
@@ -215,9 +214,6 @@ function App() {
                       unknownTime={birthData.unknown_time}
                     />
                   ) : <UnavailableTabFallback reason="종합 등급 산출을 위해 사주와 베딕 분석이 모두 성공해야 합니다." />
-                } />
-                <Route path="/ai_audit" element={
-                  availability.ai_audit ? <AiAuditTab aiAuditReport={aiAuditData!} /> : <UnavailableTabFallback reason="AI 진단 결과가 필요합니다." />
                 } />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

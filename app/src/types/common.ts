@@ -33,14 +33,12 @@ export interface City {
 
 /** 사이드바 탭 ID */
 export type TabId =
-  | "overview"
   | "saju"
   | "vedic_charts"
   | "strength"
   | "transit"
+  | "simulation"
   | "compatibility"
-  | "destiny_tier"
-  | "ai_audit";
-
+  | "destiny_tier";
 
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, LayoutDashboard, Activity, Star, Zap, Sun, Heart, Trophy, Brain, Menu, X, Github } from "lucide-react";
+import { Sparkles, Activity, Star, Zap, Sun, Heart, Trophy, Menu, X, Github, LineChart } from "lucide-react";
 import { cn } from "../../utils";
 import type { TabId } from "../../types";
 
@@ -11,14 +11,13 @@ interface SidebarProps {
 }
 
 const TABS = [
-  { id: "overview" as TabId, label: "대시보드", icon: LayoutDashboard },
   { id: "saju" as TabId, label: "사주 분석", icon: Activity },
   { id: "vedic_charts" as TabId, label: "베딕 차트 (D1-144)", icon: Star },
   { id: "strength" as TabId, label: "역량 및 기운", icon: Zap },
   { id: "transit" as TabId, label: "현재 운세", icon: Sun },
+  { id: "simulation" as TabId, label: "생애 시뮬레이션", icon: LineChart },
   { id: "compatibility" as TabId, label: "궁합 분석", icon: Heart },
   { id: "destiny_tier" as TabId, label: "운명의 티어", icon: Trophy },
-  { id: "ai_audit" as TabId, label: "AI", icon: Brain },
 ];
 
 export function Sidebar({ activeTab, setActiveTab, onTabHover, unknownTime }: SidebarProps) {
