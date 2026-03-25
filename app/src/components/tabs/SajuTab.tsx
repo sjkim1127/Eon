@@ -1,8 +1,5 @@
 import { motion } from "framer-motion";
 import { Activity, AlertTriangle } from "lucide-react";
-import { LifeGraphSection } from "../sections/LifeGraphSection";
-import { SimulationTimelineSection } from "../sections/SimulationTimelineSection";
-import { VulnerabilitySection } from "../sections/VulnerabilitySection";
 
 import { PillarsChart } from "../saju/PillarsChart";
 import { SajuSummary } from "../saju/SajuSummary";
@@ -28,7 +25,6 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
   const st = reportData.structure;
   const sp = reportData.spirit_markers;
   const ml = reportData.major_luck;
-  const gt = reportData.golden_time;
 
   return (
     <motion.div
@@ -75,18 +71,6 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
       {/* 대운 */}
       <MajorLuckTimeline ml={ml} />
 
-      {/* 인생 흐름 그래프 + 골든타임 */}
-      <LifeGraphSection
-        timeline={reportData.timeline ?? []}
-        goldenTime={gt}
-        simulationFrames={reportData.simulation_frames}
-      />
-
-      {/* 생애 시뮬레이션 타임라인 */}
-      <SimulationTimelineSection frames={reportData.simulation_frames ?? []} />
-
-      {/* 주의가 필요한 시기 (대운·세운 전수 조사) */}
-      <VulnerabilitySection report={sajuReport.vulnerability_report ?? null} />
     </motion.div>
   );
 }

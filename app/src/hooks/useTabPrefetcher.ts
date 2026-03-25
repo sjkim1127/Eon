@@ -2,41 +2,39 @@ import { useEffect, useRef } from "react";
 import type { TabId } from "../types";
 
 // ── 탭 청크 로더 ─────────────────────────────────────────
-const loadOverviewTab = () => import("../components/tabs/OverviewTab");
 const loadSajuTab = () => import("../components/tabs/SajuTab");
 const loadVedicChartsTab = () => import("../components/tabs/VedicChartsTab");
 const loadStrengthTab = () => import("../components/tabs/StrengthTab");
 const loadTransitTab = () => import("../components/tabs/TransitTab");
+const loadSimulationTab = () => import("../components/tabs/SimulationTab");
 const loadCompatibilityTab = () => import("../components/tabs/CompatibilityTab");
 const loadDestinyTierTab = () => import("../components/tabs/DestinyTierTab");
-const loadAiAuditTab = () => import("../components/tabs/AiAuditTab");
+
 
 const TAB_LOADERS: Record<TabId, () => Promise<unknown>> = {
-    overview: loadOverviewTab,
     saju: loadSajuTab,
     vedic_charts: loadVedicChartsTab,
     strength: loadStrengthTab,
     transit: loadTransitTab,
+    simulation: loadSimulationTab,
     compatibility: loadCompatibilityTab,
     destiny_tier: loadDestinyTierTab,
-    ai_audit: loadAiAuditTab,
 };
 
 const ALL_TABS: TabId[] = [
-    "overview", "saju", "vedic_charts", "strength",
-    "transit", "compatibility", "destiny_tier", "ai_audit",
+    "saju", "vedic_charts", "strength",
+    "transit", "simulation", "compatibility", "destiny_tier",
 ];
 
 // 마르코프 체인 폴백 (데이터 부족 시 도메인 지식 기반 우선순위)
 const FALLBACK_NEXT_TABS: Record<TabId, TabId[]> = {
-    overview: ["saju", "strength"],
-    saju: ["strength", "transit"],
-    vedic_charts: ["overview", "strength"],
+    saju: ["strength", "simulation", "transit"],
+    vedic_charts: ["strength", "saju"],
     strength: ["transit", "saju"],
-    transit: ["compatibility", "overview"],
-    compatibility: ["destiny_tier", "overview"],
-    destiny_tier: ["overview", "strength"],
-    ai_audit: ["overview", "saju"],
+    transit: ["simulation", "compatibility", "saju"],
+    simulation: ["transit", "compatibility"],
+    compatibility: ["destiny_tier", "saju"],
+    destiny_tier: ["saju", "strength"],
 };
 
 // 리포트 존재 여부에 따른 탭 우선순위 가중치
@@ -47,7 +45,7 @@ const TRANSIT_READY_BONUS: Partial<Record<TabId, number>> = {
     transit: 5, strength: 2,
 };
 const COMPATIBILITY_READY_BONUS: Partial<Record<TabId, number>> = {
-    compatibility: 5, overview: 1,
+    compatibility: 5, saju: 1,
 };
 
 export interface TabPrefetcherDeps {
@@ -107,9 +105,9 @@ export function useTabPrefetcher(activeTab: TabId, deps: TabPrefetcherDeps) {
     // 초기 마운트: idle 시점에 가장 자주 쓰는 탭 3개를 사전 로드
     useEffect(() => {
         const preload = () => {
-            void loadOverviewTab();
             void loadSajuTab();
             void loadStrengthTab();
+            void loadVedicChartsTab();
         };
 
         if (typeof window !== "undefined" && "requestIdleCallback" in window) {
