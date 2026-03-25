@@ -20,9 +20,10 @@ export const PROFILE_META: Record<string, { icon: string; label: string; color: 
 };
 
 export const RISK_META: Record<string, { icon: string; label: string; color: string; bg: string }> = {
-  low:    { icon: "🟢", label: "리스크 낮음", color: "text-emerald-300", bg: "bg-emerald-500/15 border-emerald-500/30" },
-  medium: { icon: "🟡", label: "리스크 보통", color: "text-amber-300",   bg: "bg-amber-500/15 border-amber-500/30"   },
-  high:   { icon: "🔴", label: "리스크 높음", color: "text-rose-300",    bg: "bg-rose-500/15 border-rose-500/30"     },
+  low:      { icon: "🟢", label: "리스크 낮음",  color: "text-emerald-300", bg: "bg-emerald-500/15 border-emerald-500/30" },
+  medium:   { icon: "🟡", label: "리스크 보통",  color: "text-amber-300",   bg: "bg-amber-500/15 border-amber-500/30"   },
+  high:     { icon: "🔴", label: "리스크 높음",  color: "text-rose-300",    bg: "bg-rose-500/15 border-rose-500/30"     },
+  critical: { icon: "☠️", label: "위기 경보",   color: "text-red-300",     bg: "bg-red-600/20 border-red-600/40"       },
 };
 
 export const TIER_SCORE_MAP: Record<string, number> = {
@@ -79,12 +80,15 @@ export function buildInsightBlocks(result: TierResult): { title: string; icon: s
 
   // 5. 약점 & 리스크
   const riskMap: Record<string, string> = {
+    critical: "☠️ 복합 위기 경보입니다. 대운 교체, 사데사티, 치명적 취약점이 동시에 겹쳐 있습니다. 중요한 계약·투자·이직을 즉시 보류하고, 전문가 상담과 체력 관리를 최우선으로 삼으세요.",
     high: "⚠️ 현재 리스크 요소가 복합적으로 집중된 구간입니다. 주의 시점 탭의 대운·세운 충돌 지점을 반드시 사전에 파악하고, 중요한 계약·투자·이직 결정을 신중히 내리세요.",
-    medium: "일부 주의가 필요구간이 있습니다. 역량 탭의 부하 시점을 확인하고, 체력 관리와 재정 안전망을 점검하세요.",
+    medium: "일부 주의가 필요한 구간이 있습니다. 역량 탭의 부하 시점을 확인하고, 체력 관리와 재정 안전망을 점검하세요.",
     low: "리스크 요인이 적어 안정적인 환경입니다. 이 여유를 기반 강화와 장기 포트폴리오 구축에 활용하세요.",
   };
   const weaknessPart = weaknesses.length > 0 ? `  주요 약점: ${weaknesses.join(", ")}.` : "";
-  blocks.push({ title: "리스크 & 약점", icon: riskLevel === "high" ? "🔴" : riskLevel === "medium" ? "🟡" : "🟢", text: riskMap[riskLevel] + weaknessPart, color: riskLevel === "high" ? "text-rose-300" : riskLevel === "medium" ? "text-amber-300" : "text-emerald-300" });
+  const riskIcon = riskLevel === "critical" ? "☠️" : riskLevel === "high" ? "🔴" : riskLevel === "medium" ? "🟡" : "🟢";
+  const riskColor = riskLevel === "critical" ? "text-red-300" : riskLevel === "high" ? "text-rose-300" : riskLevel === "medium" ? "text-amber-300" : "text-emerald-300";
+  blocks.push({ title: "리스크 & 약점", icon: riskIcon, text: (riskMap[riskLevel] ?? riskMap["low"]) + weaknessPart, color: riskColor });
 
   // 6. 잠재력 격차 조언
   const potGrade = potentialTier.grade;
