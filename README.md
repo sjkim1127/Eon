@@ -14,9 +14,9 @@
 Eon/
 ├── app/                        # 프론트엔드 (React + Vite + TailwindCSS)
 │   ├── src/
-│   │   ├── App.tsx             # 단일 SPA — 5개 탭 (overview / saju / vedic_charts / strength / transit)
-│   │   └── lib/api.ts          # Tauri IPC ↔ WASM 자동 분기 API 레이어
-│   └── src-tauri/src/lib.rs    # Tauri 커맨드 (get_vedic_analysis, get_saju_analysis, get_transit_analysis, get_ai_audit)
+│   │   ├── App.tsx             # 단일 SPA — 6개 탭 (saju / vedic_charts / strength / transit / simulation / destiny_tier)
+│   │   └── utils/backend.ts    # Tauri IPC ↔ WASM 자동 분기 브릿지 (eon-service 기반)
+│   └── src-tauri/src/lib.rs    # Tauri 커맨드 (get_vedic_analysis, get_saju_analysis, get_transit_analysis, get_destiny_tier_analysis)
 │
 ├── crates/
 │   ├── eon-core/               # 공통 타입 (HeavenlyStem, EarthlyBranch, BirthInfo, Location, DST 보정)
@@ -24,8 +24,8 @@ Eon/
 │   ├── eon-astro/              # Swiss Ephemeris C API 바인딩 — 초정밀 행성 위치 연산
 │   ├── eon-saju/               # 사주 핵심 엔진 (아래 ⚙️ 섹션 참조)
 │   ├── eon-vedic/              # 베딕 점성학 엔진 (아래 🌌 섹션 참조)
-│   ├── eon-ai/                 # LLM 컨텍스트 생성기 (DestinyAIAuditor)
-│   └── eon-wasm/               # WASM 번들 — Vercel 웹 배포용 (get_saju_analysis, get_transit_analysis, get_vedic_analysis)
+│   ├── eon-service/            # 통합 Façade 및 DTO (프론트 통신 규격)
+│   └── eon-wasm/               # WASM 번들 — Vercel 배포용 (get_saju_analysis, get_transit_analysis, get_vedic_analysis, get_destiny_tier_analysis)
 ```
 
 **Tauri 환경** (데스크탑): `invoke()` → Rust 네이티브 백엔드  
@@ -50,7 +50,7 @@ Eon/
 | **Destiny Linter** | 코드 린터 | 사주 구조적 결함을 ERROR/WARN/INFO 레벨로 진단. `SajuLint { code, message, advice }` |
 | **Golden Time Finder** | 슬라이딩 윈도우 | 100년 시뮬레이션 프레임에서 최고 점수 구간(황금기) 자동 추출 |
 | **Cyclomatic Complexity** | 소프트웨어 복잡도 | 사주의 Cyclomatic M 및 Stability Grade 계산 |
-| **CompatibilityAuditor** | IPC/프로세스 간 통신 | 두 사주의 synergy/conflict/deadlock 분석. `sync_score` 0~100 |
+| **CompatibilityAuditor** | IPC/프로세스 | 두 사주의 synergy/conflict 분석 (추후 서비스 분리 예정) |
 
 ### 분석 모듈
 
@@ -86,7 +86,7 @@ BPHS(Brihat Parashara Hora Shastra) 표준에 맞춰 구현한 초정밀 베딕 
 - **Vimshottari Dasha**: 다샤 타임라인 (현재 대운 포커스 포함)
 - **Yoga Engine**: Raj Yoga, Dhana Yoga, Parivartana Yoga 등 자동 탐지
 - **Panchanga**: Tithi / Nakshatra / Yoga / Karana (판창가 5요소)
-- **Ashta Kuta 궁합**: 8항목 36점 체계 (Nadi~Varna)
+- **Ashta Kuta 궁합**: 8항목 36점 체계 (엔진 내장, UI 분리)
 - **Sade Sati**: 토성 7.5년 주기 경고
 
 ---
@@ -97,11 +97,12 @@ BPHS(Brihat Parashara Hora Shastra) 표준에 맞춰 구현한 초정밀 베딕 
 
 | 탭 | 표시 데이터 |
 |----|------------|
-| **대시보드** | Atmakaraka · 현재 Dasha · 전체 차트 강도(Shadbala) · 낙샤트라 · 사데사티 · 12하우스 Bhava Bala |
-| **사주 분석** | 사주팔자 8글자 · 신강/신약 4득 분석 · 용신/격국 · 신살 · 대운 10주기 · 골든타임 |
-| **베딕 차트** | D1/D9/D10/D30/D60/D144 분할 차트 2×3 그리드 (Sign별 행성 배치) |
-| **역량 및 기운** | Qi Topology 5원소 네트워크 · Entropy/DIE 등급 · Fuzzer 취약점 수 · Destiny Linter 진단 · KarmaLoadBalancer 상위 8건 |
-| **현재 운세** | 세운/월운 간지 카드 · LifeFrame Score/Tags/ESIL 트레이스 · 전후 시기 부하 진단 |
+| **사주 분석** | 사주팔자 8글자 · 신강/신약 4득 분석 · 용신/격국 · 12신살 그룹화 · 대운 주화입마 |
+| **베딕 차트** | 통합 대시보드 (Atmakaraka 등) · D1~D144 분할 차트 2×3 그리드 |
+| **역량 및 기운** | Qi Topology 오행 네트워크 · Entropy/DIE 등급 · 취약점 및 Linter 진단 |
+| **현재 운세** | 세출 간지 · 고차라(Gochara) 차트 · 오행 에너지 밸런스 그라데이션 차트 |
+| **생애 시뮬레이션** | 인생 흐름 그래프 (0~100세 점수형) · 생애 프레임 주의 시기 전수조사 |
+| **운명의 티어** | 메타 메트릭 기반 종합 점수 및 등급 뱃지 (S+ ~ D) |
 
 ---
 
@@ -143,8 +144,8 @@ cargo run --package eon-saju --example verify_user
 # 베딕 점성학 검증
 cargo run --package eon-vedic --example verify_vedic
 
-# AI 감사 데모
-cargo run --package eon-ai --example ai_audit_demo
+# 데스티니 티어 예제
+cargo run --package eon-service --example tier_calculation
 ```
 
 ---
@@ -166,11 +167,9 @@ cargo run --package eon-ai --example ai_audit_demo
 - [x] Vedic Chart D1~D144 전 계층
 - [x] Shadbala / Bhava Bala / Ashtakavarga / Vimshopaka
 - [x] Vimshottari Dasha / Yoga Engine / Panchanga
-- [x] Ashta Kuta 베딕 궁합 (백엔드)
-- [x] 사주 CompatibilityAuditor IPC (백엔드)
-- [x] AI 컨텍스트 생성 (DestinyAIAuditor + get_ai_audit 커맨드)
-- [x] Vercel WASM 배포 (get_saju_analysis, get_vedic_analysis, get_transit_analysis)
-- [x] Tauri 데스크탑 빌드
+- [x] AI 및 궁합 분석 (엔진 분리 및 경량화 완료)
+- [x] Vercel WASM 배포 연동 및 브릿지 구성
+- [x] Tauri 데스크탑 빌드 및 네이티브 호출
 
 ### 🔧 진행 중 / 버그 수정 예정
 
@@ -182,14 +181,9 @@ cargo run --package eon-ai --example ai_audit_demo
 - [ ] `strength` 탭 ComplexityAnalysis / DieAnalysis 카드 추가 (API 응답 확장 필요)
 - [ ] `vedic_charts` 탭 역행/연소 배지 + Panchanga 섹션
 
-### 📋 예정
-
-- [ ] **궁합 탭** — 두 번째 사람 입력 폼 + 사주 CompatibilityAuditor + Ashta Kuta 36점 UI
-- [ ] **AI Audit 탭** — `get_ai_audit` api.ts 노출 + 코어덤프 형식 UI
-- [ ] **Yoga 섹션** — `VedicAnalysisReport`에 `yogas` 필드 추가 + UI 카드
+- [ ] **Yoga 섹션** — `VedicAnalysisReport`에 `yogas` 필드 강화 UI 연동
 - [ ] **Ashtakavarga 그리드** — `chart.sav` 12하우스 히트맵
-- [ ] **Human Design 바디그래프** 연동
-- [ ] **주역 64괘 → 6비트 논리 게이트** 구현
+- [ ] **eon-service 브릿지 공통화** — WASM & Tauri 요청 DTO의 SSOT 일원화
 
 ---
 
