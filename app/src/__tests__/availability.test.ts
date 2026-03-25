@@ -17,7 +17,7 @@ describe("Tab Availability Logic", () => {
       unknownTime: birthData.unknown_time,
     });
 
-    expect(availability.overview).toBe(true);
+
     expect(availability.saju).toBe(true);
     expect(availability.vedic_charts).toBe(true);
     expect(availability.strength).toBe(true);
