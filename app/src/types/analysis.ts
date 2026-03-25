@@ -9,12 +9,7 @@ export interface AnalysisTaskState<T> {
   error: string | null;
 }
 
-export interface AiAuditReport {
-  meta: AnalysisMeta;
-  context_dump: string;
-  peak_age: number;
-  valley_age: number;
-}
+
 
 export interface AnalysisMeta {
   precision: "Exact" | "UnknownTimeNoonProxy";
@@ -65,7 +60,7 @@ export interface AnalysisBundleState {
   vedic: AnalysisTaskState<VedicAnalysisResult>;
   saju: AnalysisTaskState<SajuAnalysisResult>;
   transit: AnalysisTaskState<TransitResult>;
-  aiAudit: AnalysisTaskState<AiAuditReport>;
+
   tier: AnalysisTaskState<TierResult>;
 }
 
@@ -76,30 +71,3 @@ export type RunAnalysisResult = {
   failed: Array<keyof AnalysisBundleState>;
 };
 
-export interface CompatibilityAuditDto {
-  sync_score: number;
-  synergies: string[];
-  conflicts: string[];
-  deadlocks: string[];
-  merged_esil_trace: string;
-}
-
-export interface VedicCompatibilityResultDto {
-  total_score: number;
-  varna: number;
-  vashya: number;
-  tara: number;
-  yoni: number;
-  maitri: number;
-  gana: number;
-  bhakoot: number;
-  nadi: number;
-  message: string;
-}
-
-export interface CompatibilityOutput {
-  person1_meta: AnalysisMeta;
-  person2_meta: AnalysisMeta;
-  saju: CompatibilityAuditDto;
-  vedic: VedicCompatibilityResultDto;
-}

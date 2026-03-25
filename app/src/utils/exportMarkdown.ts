@@ -1,13 +1,13 @@
 import { ganziDisplay, ganziHangul } from "./ganzi";
 import {
-    SIGN_NAMES, VARGA_DEFS, ASHTA_LABELS, ASHTA_MAX,
+    SIGN_NAMES, VARGA_DEFS,
     STEM_INFO, ELEMENT_INFO, STRENGTH_INFO, TENGOD_INFO,
     STRUCTURE_INFO, SPIRIT_INFO, PILLAR_POS_INFO, YONGSHIN_TYPE_INFO,
 } from "../constants";
 import type { SajuAnalysisResult } from "../types";
 import type { VedicAnalysisResult } from "../types";
 import type { TransitResult } from "../types";
-import type { CompatibilityOutput } from "../types/analysis";
+
 import { computeTierResult, type TierResult } from "./tierScore";
 import { getNakshatraInfo } from "./nakshatra";
 import { formatSiderealPosition, buildNakshatraMarkdownRows } from "./vedicFormat";
@@ -770,76 +770,6 @@ export function buildTransitMarkdown(t: TransitResult): string {
     return lines.join("\n");
 }
 
-// ── 궁합 섹션 ────────────────────────────────────────
-
-export function buildCompatibilityMarkdown(comp: CompatibilityOutput): string {
-    const lines: string[] = [];
-    lines.push("# 궁합 분석 리포트\n");
-
-    // 사주 궁합
-    if (comp.saju) {
-        const sj = comp.saju;
-        const scoreColor = sj.sync_score > 70 ? "🟢" : sj.sync_score > 40 ? "🟡" : "🔴";
-        lines.push("## 사주 궁합 결과\n");
-        lines.push(`- **궁합 점수**: ${scoreColor} ${sj.sync_score?.toFixed(0) ?? "—"} / 100`);
-        lines.push("");
-
-        if (sj.synergies?.length) {
-            lines.push("### 시너지 (긍정 작용)\n");
-            for (const s of sj.synergies) lines.push(`- ✅ ${s}`);
-            lines.push("");
-        }
-        if (sj.conflicts?.length) {
-            lines.push("### 충돌 (부정 작용)\n");
-            for (const s of sj.conflicts) lines.push(`- ⚡ ${s}`);
-            lines.push("");
-        }
-        if (sj.deadlocks?.length) {
-            lines.push("### 갈등 요소\n");
-            for (const s of sj.deadlocks) lines.push(`- ⚠️ ${s}`);
-            lines.push("");
-        }
-    }
-
-    // 베딕 Ashta Kuta
-    if (comp.vedic) {
-        const vd = comp.vedic;
-        const totalIcon = (vd.total_score ?? 0) >= 26 ? "🟢" : (vd.total_score ?? 0) >= 18 ? "🟡" : "🔴";
-        lines.push("## 베딕 궁합 (Ashta Kuta)\n");
-        lines.push(`- **총점**: ${totalIcon} ${vd.total_score?.toFixed(1) ?? "—"} / 36`);
-        if (vd.message) lines.push(`- **종합 판정**: ${vd.message}`);
-        lines.push("");
-
-        lines.push("| 항목 | 점수 | 만점 | 비율 |");
-        lines.push("|---|---:|---:|---:|");
-        for (const [key, label] of Object.entries(ASHTA_LABELS)) {
-            const val = (vd as unknown as Record<string, number | undefined>)[key];
-            const max = ASHTA_MAX[key] ?? 1;
-            const pct = val != null ? ((val / max) * 100).toFixed(0) : "—";
-            lines.push(`| ${label} | ${val?.toFixed(1) ?? "—"} | ${max} | ${typeof val === "number" ? pct + "%" : "—"} |`);
-        }
-        lines.push("");
-        
-        // Vedic Warning (e.g., Unknown Time warning)
-        if (vd.message && (vd.message.includes("중요") || vd.message.includes("주의"))) {
-            lines.push(`> ⚠️ **정밀도 공지**: ${vd.message}\n`);
-        }
-    }
-
-    // Person Metadata for Consistency
-    lines.push("## 분석 대상 정보");
-    if (comp.person1_meta) {
-        const m = comp.person1_meta;
-        lines.push(`- **본인**: ${m.precision === "Exact" ? "정밀 시각" : "시간 미상(정오)"} / ${m.analysis_timezone} (${m.is_dst ? "DST 적용" : "표준시"})`);
-    }
-    if (comp.person2_meta) {
-        const m = comp.person2_meta;
-        lines.push(`- **상대**: ${m.precision === "Exact" ? "정밀 시각" : "시간 미상(정오)"} / ${m.analysis_timezone} (${m.is_dst ? "DST 적용" : "표준시"})`);
-    }
-    lines.push("");
-
-    return lines.join("\n");
-}
 
 // ── 운명 티어 섹션 ──────────────────────────────────────
 
@@ -964,7 +894,6 @@ export function buildFullAnalysisMarkdown(
     sajuReport: SajuAnalysisResult | null,
     vedicReport: VedicAnalysisResult | null,
     transitReport: TransitResult | null = null,
-    compReport?: CompatibilityOutput | null,
     tierResult?: TierResult | null,
 ): string {
     const parts: string[] = [];
@@ -1004,10 +933,7 @@ export function buildFullAnalysisMarkdown(
         parts.push(buildVedicMarkdown(vedicReport));
     }
 
-    if (compReport) {
-        parts.push(SEP);
-        parts.push(buildCompatibilityMarkdown(compReport));
-    }
+
 
     return parts.join("\n");
 }
