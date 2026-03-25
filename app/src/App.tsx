@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Compass, UserPlus, AlertCircle } from "lucide-react";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 
-import { useBirthForm, useAstrologyAnalysis, useCompatibility } from "./hooks";
+import { useBirthForm, useAstrologyAnalysis } from "./hooks";
 import { useTabPrefetcher } from "./hooks/useTabPrefetcher";
 import { useAppStore } from "./store/useAppStore";
 import { ShootingStars, BirthDrawer, Sidebar, CompactBirthInfoBar, ExportActionButtons } from "./components/shared";
@@ -18,7 +18,6 @@ const VedicChartsTab = lazy(() => import("./components/tabs/VedicChartsTab").the
 const StrengthTab = lazy(() => import("./components/tabs/StrengthTab").then((m) => ({ default: m.StrengthTab })));
 const TransitTab = lazy(() => import("./components/tabs/TransitTab").then((m) => ({ default: m.TransitTab })));
 const SimulationTab = lazy(() => import("./components/tabs/SimulationTab").then((m) => ({ default: m.SimulationTab })));
-const CompatibilityTab = lazy(() => import("./components/tabs/CompatibilityTab").then((m) => ({ default: m.CompatibilityTab })));
 const DestinyTierTab = lazy(() => import("./components/tabs/DestinyTierTab").then((m) => ({ default: m.DestinyTierTab })));
 
 
@@ -75,7 +74,7 @@ function App() {
     loading,
   } = useAstrologyAnalysis();
 
-  const { compReport } = useCompatibility();
+
 
   const isDST = sajuData?.meta.is_dst ?? false;
 
@@ -97,7 +96,6 @@ function App() {
   const { prefetchTab } = useTabPrefetcher(currentTab, {
     hasReport: !!(vedicData || sajuData),
     hasTransit: !!transitData,
-    hasComp: !!compReport,
   });
 
   // 시간미상 가드
@@ -140,7 +138,6 @@ function App() {
                   sajuReport={sajuData}
                   report={vedicData}
                   transitReport={transitData}
-                  compReport={compReport}
                   tierResult={tierData}
                 />
               }
@@ -203,7 +200,6 @@ function App() {
                 <Route path="/simulation" element={
                   availability.simulation ? <SimulationTab sajuReport={sajuData!} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
                 } />
-                <Route path="/compatibility" element={<CompatibilityTab />} />
                 <Route path="/destiny_tier" element={
                   availability.destiny_tier ? (
                     <DestinyTierTab

@@ -5,10 +5,8 @@ import {
     buildFullAnalysisMarkdown,
     buildSajuMarkdown,
     buildVedicMarkdown,
-    buildCompatibilityMarkdown,
 } from "../../utils";
 import type { SajuAnalysisResult, VedicAnalysisResult, TransitResult } from "../../types";
-import type { CompatibilityOutput } from "../../types/analysis";
 
 import { TierResult } from "../../utils/tierScore";
 
@@ -16,7 +14,6 @@ interface ExportActionButtonsProps {
     sajuReport: SajuAnalysisResult | null;
     report: VedicAnalysisResult | null;
     transitReport: TransitResult | null;
-    compReport: CompatibilityOutput | null;
     tierResult?: TierResult | null;
 }
 
@@ -42,16 +39,14 @@ export function ExportActionButtons({
     sajuReport,
     report,
     transitReport,
-    compReport,
     tierResult,
 }: ExportActionButtonsProps) {
     const [mdCopied, setMdCopied] = useState(false);
     const [sajuCopied, setSajuCopied] = useState(false);
     const [vedicCopied, setVedicCopied] = useState(false);
-    const [compCopied, setCompCopied] = useState(false);
 
     const handleCopyAll = async () => {
-        const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null, transitReport ?? null, compReport ?? null, tierResult);
+        const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null, transitReport ?? null, null, tierResult);
         const ok = await copyToClipboard(md);
         if (ok) {
             setMdCopied(true);
@@ -76,16 +71,6 @@ export function ExportActionButtons({
         if (ok) {
             setVedicCopied(true);
             setTimeout(() => setVedicCopied(false), 2500);
-        }
-    };
-
-    const handleCopyComp = async () => {
-        if (!compReport) return;
-        const md = buildCompatibilityMarkdown(compReport);
-        const ok = await copyToClipboard(md);
-        if (ok) {
-            setCompCopied(true);
-            setTimeout(() => setCompCopied(false), 2500);
         }
     };
 
@@ -122,16 +107,6 @@ export function ExportActionButtons({
                 </button>
             )}
 
-            {/* 궁합 복사 */}
-            {compReport && (
-                <button
-                    onClick={handleCopyComp}
-                    className="shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-pink-500/30 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 transition-all font-medium"
-                >
-                    {compCopied ? <Check className="w-3 h-3 text-green-400" /> : <ClipboardCopy className="w-3 h-3" />}
-                    {compCopied ? "궁합 복사됨!" : "궁합 복사"}
-                </button>
-            )}
         </>
     );
 }

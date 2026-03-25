@@ -7,7 +7,6 @@ const loadVedicChartsTab = () => import("../components/tabs/VedicChartsTab");
 const loadStrengthTab = () => import("../components/tabs/StrengthTab");
 const loadTransitTab = () => import("../components/tabs/TransitTab");
 const loadSimulationTab = () => import("../components/tabs/SimulationTab");
-const loadCompatibilityTab = () => import("../components/tabs/CompatibilityTab");
 const loadDestinyTierTab = () => import("../components/tabs/DestinyTierTab");
 
 
@@ -17,13 +16,12 @@ const TAB_LOADERS: Record<TabId, () => Promise<unknown>> = {
     strength: loadStrengthTab,
     transit: loadTransitTab,
     simulation: loadSimulationTab,
-    compatibility: loadCompatibilityTab,
     destiny_tier: loadDestinyTierTab,
 };
 
 const ALL_TABS: TabId[] = [
     "saju", "vedic_charts", "strength",
-    "transit", "simulation", "compatibility", "destiny_tier",
+    "transit", "simulation", "destiny_tier",
 ];
 
 // 마르코프 체인 폴백 (데이터 부족 시 도메인 지식 기반 우선순위)
@@ -31,9 +29,8 @@ const FALLBACK_NEXT_TABS: Record<TabId, TabId[]> = {
     saju: ["strength", "simulation", "transit"],
     vedic_charts: ["strength", "saju"],
     strength: ["transit", "saju"],
-    transit: ["simulation", "compatibility", "saju"],
-    simulation: ["transit", "compatibility"],
-    compatibility: ["destiny_tier", "saju"],
+    transit: ["simulation", "saju"],
+    simulation: ["transit"],
     destiny_tier: ["saju", "strength"],
 };
 
@@ -44,14 +41,10 @@ const REPORT_READY_BONUS: Partial<Record<TabId, number>> = {
 const TRANSIT_READY_BONUS: Partial<Record<TabId, number>> = {
     transit: 5, strength: 2,
 };
-const COMPATIBILITY_READY_BONUS: Partial<Record<TabId, number>> = {
-    compatibility: 5, saju: 1,
-};
 
 export interface TabPrefetcherDeps {
     hasReport: boolean;
     hasTransit: boolean;
-    hasComp: boolean;
 }
 
 /**
@@ -61,7 +54,7 @@ export interface TabPrefetcherDeps {
  * @returns prefetchTab — 특정 탭 청크를 즉시 사전 로드하는 함수 (Sidebar hover 등에 사용)
  */
 export function useTabPrefetcher(activeTab: TabId, deps: TabPrefetcherDeps) {
-    const { hasReport, hasTransit, hasComp } = deps;
+    const { hasReport, hasTransit } = deps;
 
     // 전이 빈도 행렬 (from → to 탭의 전환 횟수)
     const transitionRef = useRef<Record<TabId, Record<TabId, number>>>(
@@ -90,9 +83,8 @@ export function useTabPrefetcher(activeTab: TabId, deps: TabPrefetcherDeps) {
             const fallbackScore = FALLBACK_NEXT_TABS[currentTab].includes(tab) ? 2 : 0;
             const reportScore = hasReport ? (REPORT_READY_BONUS[tab] ?? 0) : 0;
             const transitScore = hasTransit ? (TRANSIT_READY_BONUS[tab] ?? 0) : 0;
-            const compatScore = hasComp ? (COMPATIBILITY_READY_BONUS[tab] ?? 0) : 0;
 
-            acc[tab] = learnedScore + fallbackScore + reportScore + transitScore + compatScore;
+            acc[tab] = learnedScore + fallbackScore + reportScore + transitScore;
             return acc;
         }, {} as Partial<Record<TabId, number>>);
 
@@ -132,7 +124,7 @@ export function useTabPrefetcher(activeTab: TabId, deps: TabPrefetcherDeps) {
             prefetchTab(nextTab);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeTab, hasReport, hasTransit, hasComp]);
+    }, [activeTab, hasReport, hasTransit]);
 
     return { prefetchTab };
 }

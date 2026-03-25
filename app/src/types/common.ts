@@ -38,7 +38,6 @@ export type TabId =
   | "strength"
   | "transit"
   | "simulation"
-  | "compatibility"
   | "destiny_tier";
 
 

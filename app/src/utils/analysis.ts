@@ -23,7 +23,6 @@ export interface AvailabilitySource {
  */
 export function getTabAvailability(source: AvailabilitySource): TabAvailability {
   const { sajuData, vedicData, transitData, tierData, unknownTime } = source;
-  
   return {
     saju: !!sajuData,
     vedic_charts: !!vedicData && !unknownTime,
