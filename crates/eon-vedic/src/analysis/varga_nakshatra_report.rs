@@ -3,7 +3,7 @@
 
 use crate::analysis::nakshatra::NakshatraEngine;
 use crate::calc::varga::VargaType;
-use crate::chart::{VedicChart, VedicPosition};
+use crate::chart::VedicChart;
 use crate::core::names::get_rasi_name;
 use serde::{Deserialize, Serialize};
 
@@ -77,21 +77,16 @@ fn fmt_degree(deg: f64) -> String {
     format!("{}°{:02}' {}", dd, mm, sign_name)
 }
 
-fn build_row(
-    pos: &VedicPosition,
+fn build_row_raw(
+    name: &str,
+    sidereal_deg: f64,
     varga_type: VargaType,
     lagna_rasi: u8,
-    _chart: &VedicChart,
+    is_retrograde: bool,
+    is_combust: bool,
 ) -> VargaNakshatraReportRow {
-    let planet_name = format!("{:?}", pos.planet);
-    let display_name = if planet_name == "Ascendant" {
-        "ASC".to_string()
-    } else {
-        planet_name
-    };
-
-    let varga_rasi = pos.varga_rasi(varga_type);
-    let effective_long = varga_type.effective_longitude_for_nakshatra(pos.sidereal_deg, varga_rasi);
+    let varga_rasi = varga_type.calculate_rasi(sidereal_deg);
+    let effective_long = varga_type.effective_longitude_for_nakshatra(sidereal_deg, varga_rasi);
     let (nakshatra, pada) = NakshatraEngine::nakshatra_and_pada(effective_long);
 
     let nakshatra_name = NakshatraEngine::get_name(nakshatra).to_string();
@@ -108,14 +103,14 @@ fn build_row(
     let pada_range = format!("{} – {}", fmt_degree(pada_start), fmt_degree(pada_end));
 
     let position_str = if matches!(varga_type, VargaType::D1) {
-        fmt_degree(pos.sidereal_deg)
+        fmt_degree(sidereal_deg)
     } else {
         fmt_degree(effective_long)
     };
     let house = ((varga_rasi as i32 - lagna_rasi as i32 + 12) % 12) as u8 + 1;
 
     VargaNakshatraReportRow {
-        planet: display_name,
+        planet: name.to_string(),
         position_str,
         sign: varga_rasi,
         house,
@@ -127,8 +122,8 @@ fn build_row(
         pada_lord,
         deity,
         purpose,
-        is_retrograde: pos.is_retrograde,
-        is_combust: pos.is_combust,
+        is_retrograde,
+        is_combust,
     }
 }
 
@@ -142,14 +137,53 @@ fn build_report_for_varga(
     let mut rows = Vec::new();
 
     for p in &chart.planets {
-        rows.push(build_row(p, varga_type, lagna_rasi, chart));
+        rows.push(build_row_raw(
+            &format!("{:?}", p.planet),
+            p.sidereal_deg,
+            varga_type,
+            lagna_rasi,
+            p.is_retrograde,
+            p.is_combust,
+        ));
     }
-    rows.push(build_row(
-        &chart.ascendant,
+
+    // Add ASC
+    rows.push(build_row_raw(
+        "ASC",
+        chart.ascendant.sidereal_deg,
         varga_type,
         lagna_rasi,
-        chart,
+        false,
+        false,
     ));
+
+    // Add IC (H4), DSC (H7), MC (H10) if house_cusps available
+    if chart.house_cusps.len() >= 12 {
+        rows.push(build_row_raw(
+            "IC (H4)",
+            chart.house_cusps[3],
+            varga_type,
+            lagna_rasi,
+            false,
+            false,
+        ));
+        rows.push(build_row_raw(
+            "DSC (H7)",
+            chart.house_cusps[6],
+            varga_type,
+            lagna_rasi,
+            false,
+            false,
+        ));
+        rows.push(build_row_raw(
+            "MC (H10)",
+            chart.house_cusps[9],
+            varga_type,
+            lagna_rasi,
+            false,
+            false,
+        ));
+    }
 
     VargaNakshatraReport {
         varga_id: varga_id.to_string(),
