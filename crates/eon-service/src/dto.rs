@@ -24,11 +24,62 @@ pub struct SajuAnalysisInput {
     pub precision: BirthTimePrecision,
 }
 
+impl SajuAnalysisInput {
+    pub fn new(
+        year: i32, month: u32, day: u32, hour: u32, minute: u32,
+        is_lunar: bool, is_leap_month: bool,
+        is_male: bool, use_night_rat_hour: bool,
+        lon: f64, lat: f64, timezone: String,
+        unknown_time: Option<bool>,
+    ) -> Self {
+        let precision = if unknown_time.unwrap_or(false) {
+            BirthTimePrecision::UnknownTimeNoonProxy
+        } else {
+            BirthTimePrecision::Exact
+        };
+
+        Self {
+            base: AnalysisInput {
+                year, month, day, hour, minute,
+                is_lunar, is_leap_month, lat, lon, timezone,
+            },
+            is_male,
+            use_night_rat_hour,
+            precision,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransitAnalysisInput {
     #[serde(flatten)]
     pub base: SajuAnalysisInput,
     pub current: CurrentContext,
+}
+
+impl TransitAnalysisInput {
+    pub fn new(
+        year: i32, month: u32, day: u32, hour: u32, minute: u32,
+        is_lunar: bool, is_leap_month: bool,
+        is_male: bool, use_night_rat_hour: bool,
+        lon: f64, lat: f64, timezone: String,
+        unknown_time: Option<bool>,
+        now_utc: Option<DateTime<Utc>>,
+    ) -> Self {
+        let base = SajuAnalysisInput::new(
+            year, month, day, hour, minute,
+            is_lunar, is_leap_month, is_male, use_night_rat_hour,
+            lon, lat, timezone.clone(), unknown_time,
+        );
+
+        Self {
+            base,
+            current: CurrentContext {
+                now_utc: now_utc.unwrap_or_else(Utc::now),
+                analysis_timezone: timezone,
+            },
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,6 +88,34 @@ pub struct VedicAnalysisInput {
     pub base: AnalysisInput,
     pub precision: BirthTimePrecision,
     pub current: CurrentContext,
+}
+
+impl VedicAnalysisInput {
+    pub fn new(
+        year: i32, month: u32, day: u32, hour: u32, minute: u32,
+        is_lunar: bool, is_leap_month: bool,
+        lat: f64, lon: f64, timezone: String,
+        unknown_time: Option<bool>,
+        now_utc: Option<DateTime<Utc>>,
+    ) -> Self {
+        let precision = if unknown_time.unwrap_or(false) {
+            BirthTimePrecision::UnknownTimeNoonProxy
+        } else {
+            BirthTimePrecision::Exact
+        };
+
+        Self {
+            base: AnalysisInput {
+                year, month, day, hour, minute,
+                is_lunar, is_leap_month, lat, lon, timezone: timezone.clone(),
+            },
+            precision,
+            current: CurrentContext {
+                now_utc: now_utc.unwrap_or_else(Utc::now),
+                analysis_timezone: timezone,
+            },
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

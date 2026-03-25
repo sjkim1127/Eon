@@ -1,9 +1,6 @@
 pub mod tier;
 
-use eon_service::dto::{
-    AnalysisInput, BirthTimePrecision, CurrentContext, SajuAnalysisInput,
-    TransitAnalysisInput, VedicAnalysisInput,
-};
+use eon_service::dto::{SajuAnalysisInput, TransitAnalysisInput, VedicAnalysisInput};
 use eon_service::facade;
 use wasm_bindgen::prelude::*;
 
@@ -30,29 +27,12 @@ pub fn get_vedic_analysis(
         chrono::Utc::now()
     };
 
-    let input = VedicAnalysisInput {
-        base: AnalysisInput {
-            year,
-            month,
-            day,
-            hour,
-            minute,
-            is_lunar,
-            is_leap_month,
-            lat,
-            lon,
-            timezone: timezone.clone(),
-        },
-        precision: if unknown_time.unwrap_or(false) {
-            BirthTimePrecision::UnknownTimeNoonProxy
-        } else {
-            BirthTimePrecision::Exact
-        },
-        current: CurrentContext {
-            now_utc,
-            analysis_timezone: timezone,
-        },
-    };
+    let input = VedicAnalysisInput::new(
+        year, month, day, hour, minute,
+        is_lunar, is_leap_month,
+        lat, lon, timezone,
+        unknown_time, Some(now_utc),
+    );
 
     let result = facade::analyze_vedic(input).map_err(|e| JsError::new(&e.to_string()))?;
 
@@ -79,29 +59,11 @@ pub fn get_saju_analysis(
     timezone: String,
     unknown_time: Option<bool>,
 ) -> Result<JsValue, JsValue> {
-    let precision = if unknown_time.unwrap_or(false) {
-        BirthTimePrecision::UnknownTimeNoonProxy
-    } else {
-        BirthTimePrecision::Exact
-    };
-
-    let input = SajuAnalysisInput {
-        base: AnalysisInput {
-            year,
-            month,
-            day,
-            hour,
-            minute,
-            is_lunar,
-            is_leap_month,
-            lat,
-            lon,
-            timezone,
-        },
-        is_male,
-        use_night_rat_hour,
-        precision,
-    };
+    let input = SajuAnalysisInput::new(
+        year, month, day, hour, minute,
+        is_lunar, is_leap_month, is_male, use_night_rat_hour,
+        lon, lat, timezone, unknown_time,
+    );
 
     let result = facade::analyze_saju(input).map_err(|e| JsError::new(&e.to_string()))?;
 
@@ -129,12 +91,6 @@ pub fn get_transit_analysis(
     unknown_time: Option<bool>,
     now_utc_str: Option<String>,
 ) -> Result<JsValue, JsValue> {
-    let precision = if unknown_time.unwrap_or(false) {
-        BirthTimePrecision::UnknownTimeNoonProxy
-    } else {
-        BirthTimePrecision::Exact
-    };
-
     let now_utc = if let Some(s) = now_utc_str {
         chrono::DateTime::parse_from_rfc3339(&s)
             .map(|dt| dt.with_timezone(&chrono::Utc))
@@ -143,29 +99,11 @@ pub fn get_transit_analysis(
         chrono::Utc::now()
     };
 
-    let input = TransitAnalysisInput {
-        base: SajuAnalysisInput {
-            base: AnalysisInput {
-                year,
-                month,
-                day,
-                hour,
-                minute,
-                is_lunar,
-                is_leap_month,
-                lat,
-                lon,
-                timezone: timezone.clone(),
-            },
-            is_male,
-            use_night_rat_hour,
-            precision,
-        },
-        current: CurrentContext {
-            now_utc,
-            analysis_timezone: timezone,
-        },
-    };
+    let input = TransitAnalysisInput::new(
+        year, month, day, hour, minute,
+        is_lunar, is_leap_month, is_male, use_night_rat_hour,
+        lon, lat, timezone, unknown_time, Some(now_utc),
+    );
 
     let result = facade::analyze_transit(input).map_err(|e| JsError::new(&e.to_string()))?;
 
