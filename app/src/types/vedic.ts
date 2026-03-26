@@ -236,6 +236,7 @@ export interface VedicAnalysisResult {
   meta: AnalysisMeta;
   report: VedicAnalysisReport;
   chart: VedicChartData;
+  annual_chart: VedicChartData | null;
   gochara: GocharaSummary;
   varga_nakshatra_reports: VargaNakshatraReports;
 }
