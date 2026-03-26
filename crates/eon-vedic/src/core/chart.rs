@@ -1,4 +1,3 @@
-use crate::calc::ayanamsa::get_lahiri_ayanamsa;
 use crate::core::config::{NodeCalculation, VedicConfig};
 use crate::planets::VedicPlanet;
 use chrono::{DateTime, Utc};
@@ -131,7 +130,7 @@ impl VedicChartCalculator {
     }
 
     pub fn calculate(&self, time: DateTime<Utc>, latitude: f64, longitude: f64) -> VedicChart {
-        let ayanamsa = get_lahiri_ayanamsa(&self.engine, time);
+        let ayanamsa = crate::calc::ayanamsa::get_ayanamsa(&self.engine, time, self.config.ayanamsa);
 
         let hsys = match self.config.house_system {
             crate::core::config::HouseSystem::WholeSign => b'W' as i32,
