@@ -52,7 +52,10 @@ impl SajuReport {
         );
         let voids = pillars.void_analysis();
         let relationships = RelationshipAnalysis::from_pillars(&pillars);
-        let supplementary_pillars = SupplementaryPillars::calculate(&pillars);
+        let mut supplementary_pillars = SupplementaryPillars::calculate(&pillars);
+
+        // 하위 호환성 및 SSOT를 위해 신살 정보를 명시적으로 전달하여 해석 생성
+        supplementary_pillars.analyze_interpretations(&spirit_markers.aux_shinsals);
 
         Self {
             pillars,
@@ -115,6 +118,18 @@ impl SajuReport {
         md.push_str(&format!("- **Taewon (Pregnancy)**: {} ({})\n", self.supplementary_pillars.taewon.hanja(), self.supplementary_pillars.taewon.hangul()));
         md.push_str(&format!("- **Myeonggung (Destiny)**: {} ({})\n", self.supplementary_pillars.myeonggung.hanja(), self.supplementary_pillars.myeonggung.hangul()));
         md.push_str(&format!("- **Shingung (Body)**: {} ({})\n", self.supplementary_pillars.shingung.hanja(), self.supplementary_pillars.shingung.hangul()));
+        
+        if !self.supplementary_pillars.interpretations.is_empty() {
+            md.push_str("\n#### Interpretations\n");
+            for interp in &self.supplementary_pillars.interpretations {
+                let emoji = match interp.level {
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "✨",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "⚠️",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "•",
+                };
+                md.push_str(&format!("- **{} {}**: {}\n", emoji, interp.pillar_name, interp.description));
+            }
+        }
         md.push('\n');
 
         md.push_str("## 2. Basic Analysis\n");

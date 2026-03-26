@@ -57,17 +57,43 @@ export function AuxiliaryPillars({ data, auxShinsals = [], unknownTime = false }
               <div className="flex flex-wrap gap-2 mt-4">
                 {auxShinsals
                   .filter(([pillarName]) => pillarName === p.key)
-                  .map(([_, criteria, shinsalName], sIdx) => (
-                    <div
-                      key={sIdx}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-celestial-gold/10 border border-celestial-gold/20 text-[10px] font-bold text-celestial-gold"
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      <span>{shinsalName}</span>
-                      <span className="text-white/20 font-normal">({criteria})</span>
-                    </div>
-                  ))}
+                  .map(([_, criteria, shinsalName], sIdx) => {
+                    const isAuspicious = ["천을귀인", "건록", "장성살", "반안살", "지살"].includes(shinsalName);
+                    return (
+                      <div
+                        key={sIdx}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold transition-all hover:scale-105 ${
+                          isAuspicious 
+                            ? "bg-celestial-gold/10 border-celestial-gold/20 text-celestial-gold" 
+                            : "bg-white/5 border-white/10 text-white/40"
+                        }`}
+                      >
+                        <Sparkles className={`w-3 h-3 ${isAuspicious ? "text-celestial-gold" : "text-white/20"}`} />
+                        <span>{shinsalName}</span>
+                        <span className="text-white/10 font-normal">({criteria})</span>
+                      </div>
+                    );
+                  })}
               </div>
+
+              {/* Dynamic Interpretation (SSOT from Engine) */}
+              {(() => {
+                const interp = data.interpretations?.find(i => i.pillar_name === p.key);
+                if (!interp) return null;
+
+                const isAuspicious = interp.level === "Auspicious";
+                
+                return (
+                  <div className={`mt-4 p-3 rounded-2xl text-[11px] leading-relaxed border ${
+                    isAuspicious ? "bg-celestial-gold/5 border-celestial-gold/10 text-celestial-gold/70" : "bg-rose-500/5 border-rose-500/10 text-rose-300/60"
+                  }`}>
+                    <p className="font-semibold mb-1 opacity-80">
+                      {interp.summary}
+                    </p>
+                    <p>{interp.description}</p>
+                  </div>
+                );
+              })()}
 
               {p.warning && (
                 <p className="mt-3 text-[10px] text-amber-500/60 font-medium">
