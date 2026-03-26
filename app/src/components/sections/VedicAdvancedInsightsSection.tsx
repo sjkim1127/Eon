@@ -14,7 +14,9 @@ export function VedicAdvancedInsightsSection({ report }: VedicAdvancedInsightsSe
     d10_career_analysis,
     sahams,
     harsha_bala_summary,
-    varga_interpretations
+    varga_interpretations,
+    year_lord,
+    muntha_rasi
   } = report;
 
   // Filter special planets
@@ -87,9 +89,20 @@ export function VedicAdvancedInsightsSection({ report }: VedicAdvancedInsightsSe
         <div className="glass p-6 rounded-[2rem] lg:col-span-1">
           <h5 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4 flex items-center gap-2">
             <Star className="w-4 h-4 text-celestial-gold" />
-            타지카 사함 (Annual Sahams)
+            타지카 연간 지표 (Annual)
           </h5>
+          <div className="space-y-3 mb-6">
+            <div className="p-3 rounded-xl bg-celestial-cyan/10 border border-celestial-cyan/20">
+              <p className="text-[10px] text-celestial-cyan font-black uppercase mb-1">연차 로드 (Year Lord)</p>
+              <p className="text-sm font-bold text-white">{year_lord || "N/A"}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <p className="text-[10px] text-amber-400 font-black uppercase mb-1">문타 (Muntha)</p>
+              <p className="text-sm font-bold text-white">사인 {muntha_rasi}</p>
+            </div>
+          </div>
           <div className="space-y-3">
+            <p className="text-[10px] text-white/40 font-bold uppercase mb-2">주요 사함 (Sahams)</p>
             {sahams?.map((s) => (
               <div key={s.name} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
                 <span className="text-xs font-bold text-white/70">{s.name}</span>

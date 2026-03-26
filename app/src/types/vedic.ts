@@ -72,6 +72,10 @@ export interface VedicAnalysisReport {
   varga_interpretations: VargaInterpretation[];
   d9_marriage_analysis: string;
   d10_career_analysis: string;
+
+  // Annual Chart
+  year_lord: string | null;
+  muntha_rasi: number;
 }
 
 // ── 하우스 점수 (SAV / Bhava) ─────────────────────

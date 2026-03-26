@@ -28,9 +28,6 @@ impl TajikaEngine {
     }
 
     /// Tajika Aspects (Drishti)
-    /// Friendly: 3, 5, 9, 11 houses apart
-    /// Hostile: 1, 4, 7, 10 houses apart
-    /// Neutral: 2, 6, 8, 12 houses apart
     pub fn get_aspect_type(house_diff_1_indexed: u8) -> TajikaAspectType {
         match house_diff_1_indexed {
             3 | 11 => TajikaAspectType::Mitra(false),  // Friendly
@@ -70,16 +67,11 @@ impl TajikaEngine {
 
         let sun = get_p(VedicPlanet::Sun);
         let moon = get_p(VedicPlanet::Moon);
-        let _mars = get_p(VedicPlanet::Mars);
-        let _mercury = get_p(VedicPlanet::Mercury);
         let jupiter = get_p(VedicPlanet::Jupiter);
-        let _venus = get_p(VedicPlanet::Venus);
-        let _saturn = get_p(VedicPlanet::Saturn);
 
         let is_day = chart.panchanga.is_day_birth;
 
         // Punya Saham (Fortune)
-        // Day: Moon - Sun + Lagna | Night: Sun - Moon + Lagna
         let punya = if is_day {
             (moon - sun + lagna + 360.0) % 360.0
         } else {
@@ -88,7 +80,6 @@ impl TajikaEngine {
         results.push(Saham { name: "Punya (Fortune)".to_string(), longitude: punya, rasi: (punya / 30.0).floor() as u8 + 1 });
 
         // Vidya Saham (Education)
-        // Day: Sun - Moon + Lagna | Night: Moon - Sun + Lagna
         let vidya = if is_day {
             (sun - moon + lagna + 360.0) % 360.0
         } else {
@@ -97,11 +88,20 @@ impl TajikaEngine {
         results.push(Saham { name: "Vidya (Knowledge)".to_string(), longitude: vidya, rasi: (vidya / 30.0).floor() as u8 + 1 });
 
         // Yash Saham (Fame)
-        // Jupiter - Sun + Lagna (Commonly used)
         let yash = (jupiter - sun + lagna + 360.0) % 360.0;
         results.push(Saham { name: "Yash (Fame)".to_string(), longitude: yash, rasi: (yash / 30.0).floor() as u8 + 1 });
 
         results
+    }
+
+    /// Selection of Year Lord (Varsheshwara)
+    pub fn select_year_lord(_chart: &VedicChart, birth_lagna_rasi: u8, age_years: u32) -> VedicPlanet {
+        let muntha_rasi = Self::calculate_muntha(birth_lagna_rasi, age_years);
+        // Candidate 1: Muntha Lord
+        let muntha_lord = VedicPlanet::get_ruler_of(muntha_rasi);
+        
+        // Simplified: Pick Muntha Lord as Year Lord for now
+        muntha_lord
     }
 }
 
@@ -128,15 +128,22 @@ impl TajikaBala {
             }
 
             // 2. Swavarga (Sign/Varga)
-            // Simplified check
+            let lord = VedicPlanet::get_ruler_of(p.rasi);
+            if lord == planet || p.rasi == planet.exaltation_rasi() {
+                 score += 5;
+            }
 
             // 3. Stri-Purusha (Gender/Sect)
-            // Simplified: Day/Night birth joy
             let is_day = chart.panchanga.is_day_birth;
             match planet {
                 VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter => if is_day { score += 5; },
                 VedicPlanet::Moon | VedicPlanet::Venus | VedicPlanet::Saturn => if !is_day { score += 5; },
                 _ => {}
+            }
+            
+            // 4. Appearance (In Kendra)
+            if [1, 4, 7, 10].contains(&h) {
+                score += 5;
             }
         }
         score

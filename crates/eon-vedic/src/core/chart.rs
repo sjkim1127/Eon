@@ -1,6 +1,6 @@
 use crate::core::config::{NodeCalculation, VedicConfig};
 use crate::planets::VedicPlanet;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, TimeZone, Datelike, Timelike};
 use eon_astro::AstroEngine;
 use serde::{Deserialize, Serialize};
 
@@ -29,6 +29,7 @@ pub struct VedicPosition {
     pub ashtamsa_rasi: u8,         // D8
     pub navamsa_rasi: u8,          // D9
     pub dasamsa_rasi: u8,          // D10
+    pub shashtamsa_rasi: u8,       // D6
     pub rudramsa_rasi: u8,         // D11
     pub dwadasamsa_rasi: u8,       // D12
     pub shodashamsa_rasi: u8,      // D16
@@ -54,6 +55,7 @@ impl VedicPosition {
             VargaType::D3 => self.drekkana_rasi,
             VargaType::D4 => self.chaturthamsha_rasi,
             VargaType::D5 => self.panchamsa_rasi,
+            VargaType::D6 => self.shashtamsa_rasi,
             VargaType::D7 => self.saptamsa_rasi,
             VargaType::D8 => self.ashtamsa_rasi,
             VargaType::D9 => self.navamsa_rasi,
@@ -245,6 +247,7 @@ impl VedicChartCalculator {
                 ashtamsa_rasi: crate::calc::varga::VargaType::D8.calculate_rasi(sidereal),
                 navamsa_rasi: crate::calc::varga::VargaType::D9.calculate_rasi(sidereal),
                 dasamsa_rasi: crate::calc::varga::VargaType::D10.calculate_rasi(sidereal),
+                shashtamsa_rasi: crate::calc::varga::VargaType::D6.calculate_rasi(sidereal),
                 rudramsa_rasi: crate::calc::varga::VargaType::D11.calculate_rasi(sidereal),
                 dwadasamsa_rasi: crate::calc::varga::VargaType::D12.calculate_rasi(sidereal),
                 shodashamsa_rasi: crate::calc::varga::VargaType::D16.calculate_rasi(sidereal),
@@ -409,6 +412,51 @@ impl VedicChartCalculator {
         ));
 
         chart
+    }
+
+    /// Calculate Solar Return (Varshaphala) chart for a specific year
+    pub fn calculate_solar_return(
+        &self,
+        birth_time: DateTime<Utc>,
+        latitude: f64,
+        longitude: f64,
+        target_year: i32,
+    ) -> VedicChart {
+        // 1. Get birth Sun sidereal longitude
+        let birth_chart = self.calculate(birth_time, latitude, longitude);
+        let birth_sun_sidereal = birth_chart
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Sun)
+            .map(|p| p.sidereal_deg)
+            .unwrap_or(0.0);
+
+        // 2. Find time when Sun returns to this sidereal longitude in the target year
+        let approx_time = Utc
+            .with_ymd_and_hms(
+                target_year,
+                birth_time.month(),
+                birth_time.day(),
+                birth_time.hour(),
+                birth_time.minute(),
+                0,
+            )
+            .unwrap();
+
+        let mut current_guess = approx_time;
+        for _ in 0..3 {
+            let ayanamsa = crate::calc::ayanamsa::get_ayanamsa(&self.engine, current_guess, self.config.ayanamsa);
+            let target_tropical = (birth_sun_sidereal + ayanamsa) % 360.0;
+            if let Ok(exact_time) = self.engine.find_time_for_longitude(
+                current_guess,
+                target_tropical,
+            ) {
+                current_guess = exact_time;
+            }
+        }
+
+        // 3. Calculate full chart for the exact return time
+        self.calculate(current_guess, latitude, longitude)
     }
 }
 
