@@ -31,12 +31,12 @@ describe("BirthInputForm", () => {
         onAnalysis={() => Promise.resolve({ ok: true, partial: false, completed: [], failed: [] })}
         sajuReport={null}
         compact
-        submitLabel="궁합 분석 시작"
+        submitLabel="분석 시작"
         hideUnknownTime
       />
     );
 
-    expect(screen.getByText("궁합 분석 시작")).toBeInTheDocument();
+    expect(screen.getByText("분석 시작")).toBeInTheDocument();
   });
 
   it("renders in full mode with wrapper title", () => {

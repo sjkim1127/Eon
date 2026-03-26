@@ -61,42 +61,7 @@ mod tests {
         assert!(!vedic_res.gochara.transits.is_empty(), "Gochara transits should not be empty");
     }
 
-    #[test]
-    fn test_compatibility_parity() {
-        let (_, saju_input, _) = setup_test_inputs();
-        let person2 = SajuAnalysisInput {
-            base: AnalysisInput {
-                year: 1996,
-                month: 5,
-                day: 5,
-                hour: 12,
-                minute: 0,
-                is_lunar: false,
-                is_leap_month: false,
-                lat: 35.6895,
-                lon: 139.6917,
-                timezone: "Asia/Tokyo".to_string(),
-            },
-            is_male: false,
-            use_night_rat_hour: false,
-            precision: BirthTimePrecision::Exact,
-        };
 
-        let comp_input = CompatibilityInput {
-            person1: saju_input,
-            person2,
-        };
-
-        let comp_res = facade::analyze_compatibility(comp_input.clone()).expect("Compatibility failed");
-        assert!(comp_res.saju.sync_score > 0.0, "Saju compatibility score should be > 0");
-        assert!(comp_res.vedic.total_score >= 0.0, "Vedic compatibility score should be >= 0");
-
-        // Verify Warning for Unknown Time
-        let mut unknown_input = comp_input;
-        unknown_input.person2.precision = BirthTimePrecision::UnknownTimeNoonProxy;
-        let unknown_res = facade::analyze_compatibility(unknown_input).expect("Unknown time compatibility failed");
-        assert!(unknown_res.vedic.message.contains("부정확할 수 있습니다"), "Warning message should be present for unknown time");
-    }
 
     #[test]
     fn test_tier_consistency() {

@@ -378,4 +378,3 @@ export interface TransitResult {
   nearby_diagnostics: LoadBalanceDiagnostic[];
 }
 
-// ── 궁합 ─────────────────────────────────────

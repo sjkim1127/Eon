@@ -2,7 +2,6 @@ pub mod ashtakavarga;
 pub mod aspects;
 pub mod avasthas;
 pub mod bhava;
-pub mod compatibility;
 pub mod dasha;
 pub mod gochara;
 pub mod jaimini;
