@@ -118,17 +118,7 @@ impl VedicAnalysisInput {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CompatibilityInput {
-    pub person1: SajuAnalysisInput,
-    pub person2: SajuAnalysisInput,
-}
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VedicCompatibilityInput {
-    pub person1: AnalysisInput,
-    pub person2: AnalysisInput,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurrentContext {
@@ -220,39 +210,6 @@ pub struct AiAuditOutput {
     pub valley_age: u32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CompatibilityAuditDto {
-    pub sync_score: f32,
-    pub synergies: Vec<String>,
-    pub conflicts: Vec<String>,
-    pub deadlocks: Vec<String>,
-    pub merged_esil_trace: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct VedicCompatibilityResultDto {
-    pub total_score: f64,
-    pub varna: f64,
-    pub vashya: f64,
-    pub tara: f64,
-    pub yoni: f64,
-    pub maitri: f64,
-    pub gana: f64,
-    pub bhakoot: f64,
-    pub nadi: f64,
-    pub message: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CompatibilityOutput {
-    pub person1_meta: AnalysisMeta,
-    pub person2_meta: AnalysisMeta,
-    pub saju: CompatibilityAuditDto,
-    pub vedic: VedicCompatibilityResultDto,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

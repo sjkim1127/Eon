@@ -17,11 +17,7 @@ pub fn analyze_ai_audit(input: SajuAnalysisInput) -> Result<AiAuditOutput, Servi
     crate::services::ai_audit::analyze(input)
 }
 
-pub fn analyze_compatibility(
-    input: CompatibilityInput,
-) -> Result<CompatibilityOutput, ServiceError> {
-    crate::services::compatibility::analyze(input)
-}
+
 
 pub fn analyze_destiny_tier(
     saju: SajuAnalysisOutput,
