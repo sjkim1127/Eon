@@ -217,5 +217,61 @@ mod tests {
         let res4 = &p4.supplementary_pillars;
         assert_eq!(res4.myeonggung.branch, B::Zi);
         assert_eq!(res4.shingung.branch, B::Yin);
+
+        // Case 5: 1970-01-01 00:30 (己酉年 丙子月 壬子日 庚子時) - 자월(子月) & 자시(子時)
+        // 월지(子:10), 시지(子:10)
+        // 명궁: 14 - (10+10)%12 = 14-8 = 6 -> 申
+        // 신궁: (10+10-2)%12 = 6 -> 申
+        let p5 = create_mock_pillars(
+            (S::Ji, B::You),
+            (S::Bing, B::Zi),
+            (S::Ren, B::Zi),
+            (S::Geng, B::Zi)
+        );
+        let res5 = &p5.supplementary_pillars;
+        assert_eq!(res5.myeonggung.branch, B::Shen);
+        assert_eq!(res5.shingung.branch, B::Shen);
+
+        // Case 6: 2010-08-15 14:30 (庚寅年 甲申月 丁未日 丁未時) - 신월(申月) & 미시(未時)
+        // 월지(申:6), 시지(未:5)
+        // 명궁: 14 - (6+5)%12 = 14-11 = 3 -> 巳
+        // 신궁: (6+5-2)%12 = 9 -> 亥
+        let p6 = create_mock_pillars(
+            (S::Geng, B::Yin),
+            (S::Jia, B::Shen),
+            (S::Ding, B::Wei),
+            (S::Ding, B::Wei)
+        );
+        let res6 = &p6.supplementary_pillars;
+        assert_eq!(res6.myeonggung.branch, B::Si);
+        assert_eq!(res6.shingung.branch, B::Hai);
+
+        // Case 7: 1999-03-20 09:30 (己卯年 丁卯月 丙午일 癸巳시) - 묘월(卯月) & 사시(巳時)
+        // 월지(卯:1), 시지(巳:3)
+        // 명궁: 14 - (1+3)%12 = 10 -> 子
+        // 신궁: (1+3-2)%12 = 2 -> 寅
+        let p7 = create_mock_pillars(
+            (S::Ji, B::Mao),
+            (S::Ding, B::Mao),
+            (S::Bing, B::Wu),
+            (S::Gui, B::Si)
+        );
+        let res7 = &p7.supplementary_pillars;
+        assert_eq!(res7.myeonggung.branch, B::Zi);
+        assert_eq!(res7.shingung.branch, B::Yin);
+
+        // Case 8: 2025-05-20 18:30 (乙巳年 辛巳月 己丑일 癸酉시) - 사월(巳月) & 유시(酉時)
+        // 월지(巳:3), 시지(酉:7)
+        // 명궁: 14 - (3+7)%12 = 4 -> 巳
+        // 신궁: (3+7-2)%12 = 8 -> 戌
+        let p8 = create_mock_pillars(
+            (S::Yi, B::Si),
+            (S::Xin, B::Si),
+            (S::Ji, B::Chou),
+            (S::Gui, B::You)
+        );
+        let res8 = &p8.supplementary_pillars;
+        assert_eq!(res8.myeonggung.branch, B::Si);
+        assert_eq!(res8.shingung.branch, B::Xu);
     }
 }
