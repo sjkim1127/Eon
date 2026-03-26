@@ -259,12 +259,24 @@ export interface SupplementaryPillarsMeta {
   hour_sensitive: boolean;
 }
 
+/** 보조 기둥 해석 레벨 */
+export type InterpretationLevel = "Auspicious" | "Caution" | "Neutral";
+
+/** 보조 기둥 해석 상세 */
+export interface SupplementaryInterpretation {
+  pillar_name: string;
+  level: InterpretationLevel;
+  summary: string;
+  description: string;
+}
+
 /** 보조 기둥 분석 결과 (SupplementaryPillars Rust struct) */
 export interface SupplementaryPillars {
   taewon: GanZi;
   myeonggung: GanZi;
   shingung: GanZi;
   meta: SupplementaryPillarsMeta;
+  interpretations: SupplementaryInterpretation[];
 }
 
 // ── 핵심 사주 리포트 ─────────────────────────

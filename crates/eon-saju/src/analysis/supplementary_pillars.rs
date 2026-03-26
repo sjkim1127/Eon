@@ -15,6 +15,23 @@ pub struct SupplementaryPillars {
     pub shingung: GanZi,
     /// 메타 정보
     pub meta: SupplementaryPillarsMeta,
+    /// 해석 요약
+    pub interpretations: Vec<SupplementaryInterpretation>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SupplementaryInterpretation {
+    pub pillar_name: String,
+    pub level: InterpretationLevel,
+    pub summary: String,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum InterpretationLevel {
+    Auspicious,   // 길조
+    Caution,      // 주의
+    Neutral,      // 보통
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -48,7 +65,41 @@ impl SupplementaryPillars {
                 formula_name: "Traditional (Yin-centric)".to_string(),
                 hour_sensitive: true,
             },
+            interpretations: Vec::new(), // Will be populated in SajuReport or later
         }
+    }
+
+    /// 신살 정보를 바탕으로 해석 생성
+    pub fn analyze_interpretations(&mut self, aux_shinsals: &[(String, String, String)]) {
+        let mut results = Vec::new();
+        let pillars = [("태원", "태원"), ("명궁", "명궁"), ("신궁", "신궁")];
+
+        for (key, display_name) in pillars {
+            let pillar_shinsals: Vec<_> = aux_shinsals
+                .iter()
+                .filter(|(p_name, _, _)| p_name == key)
+                .collect();
+
+            let has_noble = pillar_shinsals.iter().any(|(_, _, name)| name == "천을귀인");
+            let has_wonjin = pillar_shinsals.iter().any(|(_, _, name)| name == "원진살" || name == "귀문관살");
+
+            if has_noble {
+                results.push(SupplementaryInterpretation {
+                    pillar_name: display_name.to_string(),
+                    level: InterpretationLevel::Auspicious,
+                    summary: "✨ 길조(吉兆)".to_string(),
+                    description: "축복받은 기운이 함께하며 위기 상황에서 뜻밖의 도움을 얻게 됩니다.".to_string(),
+                });
+            } else if has_wonjin {
+                results.push(SupplementaryInterpretation {
+                    pillar_name: display_name.to_string(),
+                    level: InterpretationLevel::Caution,
+                    summary: "⚠️ 주의(注意)".to_string(),
+                    description: "해당 기둥의 기운이 다소 예민하거나 복잡하게 얽혀 있어 신중한 접근이 필요합니다.".to_string(),
+                });
+            }
+        }
+        self.interpretations = results;
     }
 
     /// 태원(胎元) 계산
@@ -125,6 +176,7 @@ impl Default for SupplementaryPillars {
                 formula_name: "None".to_string(),
                 hour_sensitive: false,
             },
+            interpretations: Vec::new(),
         }
     }
 }
