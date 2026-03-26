@@ -268,6 +268,7 @@ export interface SupplementaryInterpretation {
   level: InterpretationLevel;
   summary: string;
   description: string;
+  reasons: string[];
 }
 
 /** 보조 기둥 분석 결과 (SupplementaryPillars Rust struct) */

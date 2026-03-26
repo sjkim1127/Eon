@@ -82,15 +82,33 @@ export function AuxiliaryPillars({ data, auxShinsals = [], unknownTime = false }
                 if (!interp) return null;
 
                 const isAuspicious = interp.level === "Auspicious";
+                const isCaution = interp.level === "Caution";
                 
                 return (
                   <div className={`mt-4 p-3 rounded-2xl text-[11px] leading-relaxed border ${
-                    isAuspicious ? "bg-celestial-gold/5 border-celestial-gold/10 text-celestial-gold/70" : "bg-rose-500/5 border-rose-500/10 text-rose-300/60"
+                    isAuspicious 
+                      ? "bg-celestial-gold/5 border-celestial-gold/10 text-celestial-gold/70" 
+                      : isCaution 
+                        ? "bg-rose-500/5 border-rose-500/10 text-rose-300/60"
+                        : "bg-white/5 border-white/10 text-white/40"
                   }`}>
-                    <p className="font-semibold mb-1 opacity-80">
-                      {interp.summary}
-                    </p>
-                    <p>{interp.description}</p>
+                    <div className="flex justify-between items-start mb-1">
+                      <p className="font-semibold opacity-80">
+                        {interp.summary}
+                      </p>
+                    </div>
+                    <p className="mb-2 italic opacity-80">{interp.description}</p>
+                    
+                    {/* Reasons (Explainability) */}
+                    {interp.reasons.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
+                        {interp.reasons.map((r, rIdx) => (
+                          <span key={rIdx} className="px-1.5 py-0.5 rounded bg-white/5 text-[9px] text-white/30 border border-white/5">
+                            {r}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })()}

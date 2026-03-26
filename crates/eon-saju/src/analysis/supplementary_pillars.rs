@@ -25,6 +25,8 @@ pub struct SupplementaryInterpretation {
     pub level: InterpretationLevel,
     pub summary: String,
     pub description: String,
+    /// 해석의 근거가 된 신살 목록
+    pub reasons: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -82,6 +84,7 @@ impl SupplementaryPillars {
 
             let has_noble = pillar_shinsals.iter().any(|(_, _, name)| name == "천을귀인");
             let has_wonjin = pillar_shinsals.iter().any(|(_, _, name)| name == "원진살" || name == "귀문관살");
+            let reasons: Vec<String> = pillar_shinsals.iter().map(|(_, crit, name)| format!("{}({})", name, crit)).collect();
 
             if has_noble {
                 results.push(SupplementaryInterpretation {
@@ -89,6 +92,7 @@ impl SupplementaryPillars {
                     level: InterpretationLevel::Auspicious,
                     summary: "✨ 길조(吉兆)".to_string(),
                     description: "축복받은 기운이 함께하며 위기 상황에서 뜻밖의 도움을 얻게 됩니다.".to_string(),
+                    reasons,
                 });
             } else if has_wonjin {
                 results.push(SupplementaryInterpretation {
@@ -96,6 +100,15 @@ impl SupplementaryPillars {
                     level: InterpretationLevel::Caution,
                     summary: "⚠️ 주의(注意)".to_string(),
                     description: "해당 기둥의 기운이 다소 예민하거나 복잡하게 얽혀 있어 신중한 접근이 필요합니다.".to_string(),
+                    reasons,
+                });
+            } else {
+                results.push(SupplementaryInterpretation {
+                    pillar_name: display_name.to_string(),
+                    level: InterpretationLevel::Neutral,
+                    summary: "• 평이(平易)".to_string(),
+                    description: "기운이 무난하게 흐르고 있어 일상적인 운의 흐름을 따릅니다.".to_string(),
+                    reasons,
                 });
             }
         }
