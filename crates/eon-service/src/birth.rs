@@ -1,5 +1,6 @@
 use crate::dto::AnalysisInput;
 use crate::error::ServiceError;
+use chrono::Datelike;
 use eon_core::{standard_meridian_from_tz, BirthInfo, Gender, Location};
 
 pub struct PreparedBirthContext {
@@ -28,10 +29,15 @@ pub fn prepare_birth_context(
     );
 
     let mut birth_info = if input.is_lunar {
+        // 음력인 경우 eon_data를 이용해 양력으로 변환한 뒤 BirthInfo에 등록합니다.
+        use eon_data::LunarCalendar;
+        let solar_date = LunarCalendar::to_solar(input.year, input.month, input.day, input.is_leap_month)
+            .ok_or_else(|| ServiceError::BirthInfo("음력 날짜를 양력으로 변환할 수 없습니다.".to_string()))?;
+        
         BirthInfo::lunar(
-            input.year,
-            input.month,
-            input.day,
+            solar_date.year(),
+            solar_date.month(),
+            solar_date.day(),
             input.hour,
             input.minute,
             input.is_leap_month,
@@ -39,6 +45,7 @@ pub fn prepare_birth_context(
     } else {
         BirthInfo::solar(input.year, input.month, input.day, input.hour, input.minute)
     };
+
 
     birth_info = birth_info
         .with_timezone(&input.timezone)
