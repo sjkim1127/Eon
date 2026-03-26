@@ -50,6 +50,7 @@ export const VARGA_DEFS: VargaDef[] = [
   { id: "drekkana", label: "D3", name: "Drekkana (형제)", key: "drekkana_rasi", divisionCount: 3 },
   { id: "chaturthamsha", label: "D4", name: "Chaturthamsha (부동산)", key: "chaturthamsha_rasi", divisionCount: 4 },
   { id: "panchamsa", label: "D5", name: "Panchamsa", key: "panchamsa_rasi", divisionCount: 5 },
+  { id: "shashtamsa", label: "D6", name: "Shashtamsa (질병/적)", key: "shashtamsa_rasi", divisionCount: 6 },
   { id: "saptamsa", label: "D7", name: "Saptamsa (자녀)", key: "saptamsa_rasi", divisionCount: 7 },
   { id: "ashtamsa", label: "D8", name: "Ashtamsa", key: "ashtamsa_rasi", divisionCount: 8 },
   { id: "navamsa", label: "D9", name: "Navamsa (영혼/결혼)", key: "navamsa_rasi", divisionCount: 9 },

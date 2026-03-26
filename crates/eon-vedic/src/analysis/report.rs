@@ -4,7 +4,7 @@ use crate::planets::VedicPlanet;
 use crate::analysis::varga_interpretation::{VargaInterpretation, VargaInterpretationEngine};
 use crate::analysis::tajika::{Saham, TajikaEngine, TajikaBala};
 use crate::analysis::dasha::{DashaPeriod, YoginiDasha};
-use chrono::Utc;
+use chrono::{Utc, Datelike};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,6 +40,10 @@ pub struct VedicAnalysisReport {
     pub varga_interpretations: Vec<VargaInterpretation>,
     pub d9_marriage_analysis: String,
     pub d10_career_analysis: String,
+
+    // Annual Chart
+    pub year_lord: Option<VedicPlanet>,
+    pub muntha_rasi: u8,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -189,6 +193,11 @@ impl VedicAnalysisReport {
         let d9_marriage_analysis = VargaInterpretationEngine::analyze_marriage(chart);
         let d10_career_analysis = VargaInterpretationEngine::analyze_career(chart);
 
+        // Annual Analysis
+        let age_years = (chart.panchanga.current_time.year() - birth_time.year()).abs() as u32;
+        let muntha_rasi = TajikaEngine::calculate_muntha(chart.ascendant.rasi, age_years);
+        let year_lord = TajikaEngine::select_year_lord(chart, chart.ascendant.rasi, age_years);
+
         Self {
             primary_karakas: KarakaSummary {
                 atmakaraka: ak,
@@ -216,6 +225,8 @@ impl VedicAnalysisReport {
             varga_interpretations,
             d9_marriage_analysis,
             d10_career_analysis,
+            year_lord: Some(year_lord),
+            muntha_rasi,
         }
     }
 
@@ -282,6 +293,8 @@ impl VedicAnalysisReport {
         s.push_str(&format!("- **D10 Dasamsa**: {}\n\n", self.d10_career_analysis));
 
         s.push_str("## 🪐 Tajika Annual Factors\n");
+        s.push_str(&format!("- **Year Lord (Varsheshwara)**: {:?}\n", self.year_lord));
+        s.push_str(&format!("- **Muntha Position**: Sign {}\n", self.muntha_rasi));
         if let Some(p) = self.sahams.iter().find(|s| s.name.contains("Punya")) {
             s.push_str(&format!("- **Punya Saham (Fortune)**: Sign {}\n", p.rasi));
         }
