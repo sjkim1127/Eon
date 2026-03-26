@@ -88,6 +88,7 @@ pub struct VedicAnalysisInput {
     pub base: AnalysisInput,
     pub precision: BirthTimePrecision,
     pub current: CurrentContext,
+    pub target_year: Option<i32>,
 }
 
 impl VedicAnalysisInput {
@@ -104,6 +105,8 @@ impl VedicAnalysisInput {
             BirthTimePrecision::Exact
         };
 
+        let now = now_utc.unwrap_or_else(Utc::now);
+
         Self {
             base: AnalysisInput {
                 year, month, day, hour, minute,
@@ -111,9 +114,10 @@ impl VedicAnalysisInput {
             },
             precision,
             current: CurrentContext {
-                now_utc: now_utc.unwrap_or_else(Utc::now),
+                now_utc: now,
                 analysis_timezone: timezone,
             },
+            target_year: None,
         }
     }
 }
@@ -162,6 +166,7 @@ pub struct VedicAnalysisOutput {
     pub meta: AnalysisMeta,
     pub report: eon_vedic::analysis::report::VedicAnalysisReport,
     pub chart: eon_vedic::core::chart::VedicChart,
+    pub annual_chart: Option<eon_vedic::core::chart::VedicChart>,
     pub gochara: eon_vedic::analysis::gochara::GocharaSummary,
     pub varga_nakshatra_reports:
         eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReports,

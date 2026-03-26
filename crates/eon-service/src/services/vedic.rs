@@ -3,6 +3,7 @@ use crate::error::ServiceError;
 use crate::birth::prepare_birth_context;
 use eon_vedic::analysis::report::VedicAnalysisReport;
 use eon_vedic::core::chart::VedicChartCalculator;
+use chrono::Datelike;
 
 pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, ServiceError> {
     let birth_ctx = prepare_birth_context(&input.base, None, false)?;
@@ -13,7 +14,11 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
     let calculator = VedicChartCalculator::new();
     let chart = calculator.calculate(dt, input.base.lat, input.base.lon);
 
-    let report = VedicAnalysisReport::generate(&chart, dt);
+    let report = VedicAnalysisReport::generate(&chart, dt, chart.ascendant.rasi);
+
+    // Calculate Annual Chart
+    let target_year = input.target_year.unwrap_or_else(|| input.current.now_utc.year());
+    let annual_chart = calculator.calculate_solar_return(dt, input.base.lat, input.base.lon, target_year);
 
     // Gochara: natal moon rasi 기준으로 트랜짓 분석
         let gochara = {
@@ -44,6 +49,7 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
         },
         report,
         chart,
+        annual_chart: Some(annual_chart),
         gochara,
         varga_nakshatra_reports,
     })

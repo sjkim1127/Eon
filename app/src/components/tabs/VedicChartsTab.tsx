@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, Star, Grid3x3, BarChart3, Zap, AlertCircle, Compass, Heart, Clock, Users } from "lucide-react";
-import { SIGN_NAMES, VARGA_DEFS } from "../../constants";
-import { getNakshatraInfo, getVargaEffectiveLongitude, formatSiderealPosition, cn } from "../../utils";
+import { Star, Grid3x3, BarChart3, Zap, Compass, Heart, Clock, Users } from "lucide-react";
+import { VARGA_DEFS } from "../../constants";
+import { cn } from "../../utils";
 import type { VedicAnalysisResult, Yoga } from "../../types";
 
 import { SouthIndianChart } from "../charts/SouthIndianChart";
@@ -25,23 +25,30 @@ interface VedicChartsTabProps {
 }
 
 export function VedicChartsTab({ report }: VedicChartsTabProps) {
-  const [selectedVargaId, setSelectedVargaId] = useState<string>("navamsa");
+  const [selectedVargaId, setSelectedVargaId] = useState<string>("rasi");
   const [chartStyle, setChartStyle] = useState<"south" | "north">("south");
+  const [activeTab, setActiveTab] = useState<"natal" | "annual">("natal");
 
   if (!report || !report.chart || !report.chart.planets) return null;
-  const chart = report.chart;
-  const planets: any[] = chart.planets;
-  const ascendant: any = chart.ascendant;
-  const panchanga = report.chart.panchanga;
-  const sav = report.chart.sav;
-  const vimshopaka = report.chart.vimshopaka_scores;
+  
+  const natalChart = report.chart;
+  const annualChart = report.annual_chart;
+  const currentChart = (activeTab === "annual" && annualChart) ? annualChart : natalChart;
+
+  const planets: any[] = currentChart.planets;
+  const ascendant: any = currentChart.ascendant;
+  const panchanga = currentChart.panchanga;
+  const sav = currentChart.sav;
+  const vimshopaka = currentChart.vimshopaka_scores;
+  const avasthas = currentChart.avasthas;
+  const karakas = currentChart.karakas;
+  const arudhaPadas = currentChart.arudha_padas;
+
   const yogas: Yoga[] = report.report?.yogas ?? [];
-  const sadeSati = report.report?.sade_sati ?? "None";
-  const bhavaStrengths = report.chart.bhava_strengths ?? [];
-  const aspects = report.chart.aspects ?? [];
+  const bhavaStrengths = currentChart.bhava_strengths ?? [];
+  const aspects = currentChart.aspects ?? [];
   const dashaTimeline = report.report?.dasha_timeline ?? [];
   const yoginiTimeline = report.report?.yogini_timeline ?? [];
-
 
   const vargaReports = report.varga_nakshatra_reports;
   const reportsMap = vargaReports?.reports;
@@ -53,6 +60,9 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
     return "약함";
   };
 
+  const vargaDef = VARGA_DEFS.find((v) => v.id === selectedVargaId) || VARGA_DEFS[0];
+  const lagnaRasi = ascendant[vargaDef.key] as number;
+
   return (
     <motion.div
       key="vedic-charts"
@@ -61,6 +71,36 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       exit={{ opacity: 0, y: -20 }}
       className="space-y-8"
     >
+      {/* ── Chart Mode Switch ────────────────────────────────────────── */}
+      <div className="flex justify-center">
+        <div className="glass p-1.5 rounded-2xl flex gap-1 border-white/5 bg-white/5">
+          <button
+            onClick={() => setActiveTab("natal")}
+            className={cn(
+              "px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
+              activeTab === "natal" 
+                ? "bg-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.1)]" 
+                : "text-white/30 hover:text-white/50"
+            )}
+          >
+            <Users className="w-4 h-4" />
+            Natal Chart (출생)
+          </button>
+          <button
+            onClick={() => setActiveTab("annual")}
+            className={cn(
+              "px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
+              activeTab === "annual" 
+                ? "bg-celestial-gold/20 text-celestial-gold shadow-[0_0_20px_rgba(234,179,8,0.1)]" 
+                : "text-white/30 hover:text-white/50"
+            )}
+          >
+            <Compass className="w-4 h-4" />
+            Annual Chart (연간)
+          </button>
+        </div>
+      </div>
+
       {/* ── Overview 통합 ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="glass p-8 rounded-[2rem] relative overflow-hidden group">
@@ -141,198 +181,21 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
           <Star className="w-6 h-6 text-celestial-gold" />
           낙샤트라 청사진
         </h5>
-        <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
-          <p className="text-white text-lg font-medium leading-relaxed">
-            {report.report?.nakshatra_info}
-          </p>
-        </div>
-      </div>
-
-      {/* ── 역행·연소 행성 요약 ─────────────────────────────── */}
-      {(() => {
-        const retro = planets.filter((p: any) => p.is_retrograde);
-        const combust = planets.filter((p: any) => p.is_combust);
-        if (retro.length === 0 && combust.length === 0) return null;
-        return (
-          <div className="glass p-6 rounded-[2rem]">
-            <h5 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-400" />
-              약화 행성 — 역행(Retrograde) / 연소(Combust)
-            </h5>
-            <div className="flex flex-wrap gap-3">
-              {retro.map((p: any) => (
-                <div key={`retro-${p.planet}`}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-violet-500/10 border border-violet-500/25"
-                  title="역행: 행성이 겉보기 역방향으로 이동하는 구간. 해당 행성의 카라카 영역이 내면화·지연되는 경향"
-                >
-                  <span className="text-[10px] font-black text-violet-400 bg-violet-500/20 px-1.5 py-0.5 rounded">℞</span>
-                  <span className="text-sm font-semibold text-white">{p.planet}</span>
-                  <span className="text-[10px] text-violet-300/60">역행</span>
-                </div>
-              ))}
-              {combust.map((p: any) => (
-                <div key={`comb-${p.planet}`}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-500/10 border border-orange-500/25"
-                  title="연소: 태양과 너무 가까워 행성의 빛이 소실되는 상태. 해당 행성의 시그니피케이터가 자아(태양)에 흡수됨"
-                >
-                  <span className="text-[10px] font-black text-orange-400 bg-orange-500/20 px-1.5 py-0.5 rounded">☀</span>
-                  <span className="text-sm font-semibold text-white">{p.planet}</span>
-                  <span className="text-[10px] text-orange-300/60">연소</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-[11px] text-white/30 mt-3 leading-relaxed">
-              역행(℞): 해당 행성 주제가 내면화·지연됩니다. 연소(☀): 태양의 광채에 행성력이 흡수돼 직접적 표현이 약해집니다.
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="p-6 bg-white/5 rounded-2xl border border-white/10">
+            <p className="text-[10px] text-white/40 font-bold uppercase mb-2">Birth Star Details</p>
+            <p className="text-lg text-white font-bold leading-tight">
+              {report.report?.nakshatra_info}
             </p>
           </div>
-        );
-      })()}
-
-      <section>
-        <h5 className="text-xl font-bold text-white mb-6">하우스(Bhava)별 에너지 역량 상세</h5>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {report.report?.house_summary.map((house: any) => {
-            const bhava = chart?.bhava_strengths?.find((b: any) => b.house === house.house);
-            return (
-              <div
-                key={house.house}
-                className="glass p-6 rounded-2xl text-center glass-hover cursor-help"
-              >
-                <p className="text-xs text-white/30 font-bold mb-1">하우스 {house.house}</p>
-                <p className="text-2xl font-bold text-white mb-2">
-                  {Math.round(house.total_score)}
-                </p>
-                <span
-                  className={cn(
-                    "px-2 py-0.5 rounded text-[10px] font-black uppercase",
-                    house.rating === "Excellent"
-                      ? "bg-green-500/20 text-green-400"
-                      : house.rating === "Strong"
-                        ? "bg-blue-500/20 text-blue-400"
-                        : house.rating === "Average"
-                          ? "bg-yellow-500/20 text-yellow-400"
-                          : "bg-red-500/20 text-red-400"
-                  )}
-                >
-                  {ratingLabel(house.rating)}
-                </span>
-                {bhava && (
-                  <div className="mt-3 space-y-1 text-left">
-                    {[
-                      { label: "주인 행성", value: bhava.lord_score },
-                      { label: "방위 힘", value: bhava.dig_score },
-                      { label: "시선 영향", value: bhava.drishti_score },
-                    ].map(({ label, value }) => (
-                      <div key={label}>
-                        <div className="flex justify-between text-[9px] text-white/40 mb-0.5">
-                          <span>{label}</span>
-                          <span>{(value ?? 0).toFixed(0)}</span>
-                        </div>
-                        <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-celestial-cyan/60 transition-all" style={{ width: `${Math.min(100, Math.max(0, (value ?? 0) / 60 * 100))}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {chart?.karakas && chart.karakas.length > 0 && (
-        <section className="glass p-10 rounded-[2.5rem]">
-          <h5 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
-            <Users className="w-6 h-6 text-celestial-purple" />
-            제미니 카라카 — 8가지 인생 역할 배정
-          </h5>
-          <p className="text-xs text-white/40 mb-6">태양계 행성들이 당신의 인생에서 맡는 구체적인 역할입니다. 사이드리얼 도수가 높을수록 그 역할의 영향이 큽니다.</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {chart.karakas.map((k: any, i: number) => {
-              const roleKr: Record<string, string> = {
-                Atmakaraka: "영혼 (나 자신)",
-                Amatyakaraka: "직업 / 재능",
-                Bhratrukaraka: "형제 / 자매",
-                Matrukaraka: "어머니 / 보호",
-                Pitrikaraka: "아버지 / 권위",
-                Putrakaraka: "자식 / 창작",
-                Gnatikaraka: "경쟁자 / 친척",
-                Darakaraka: "배우자 / 파트너",
-              };
-              const colors = [
-                "border-celestial-gold/40 bg-celestial-gold/10",
-                "border-celestial-purple/40 bg-celestial-purple/10",
-                "border-green-500/30 bg-green-500/10",
-                "border-pink-500/30 bg-pink-500/10",
-                "border-blue-500/30 bg-blue-500/10",
-                "border-orange-500/30 bg-orange-500/10",
-                "border-red-500/30 bg-red-500/10",
-                "border-celestial-cyan/30 bg-celestial-cyan/10",
-              ];
-              return (
-                <div key={i} className={`p-4 rounded-2xl border ${colors[i % colors.length]}`}>
-                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider mb-1">{roleKr[k.role] ?? k.role}</p>
-                  <p className="text-lg font-bold text-white">{k.planet}</p>
-                  <p className="text-xs text-white/40 mt-1">{(k.degree_in_rasi ?? 0).toFixed(2)}°</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-      {/* Panchanga 섹션 */}
-      {panchanga && (
-        <div className="glass p-8 rounded-[2rem]">
-          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-            <Calendar className="w-6 h-6 text-celestial-gold" />
-            판창가 (Panchanga) — 출생 시각의 천문 요소
-          </h5>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            {[
-              { label: "바라 (요일)", value: panchanga.vara },
-              { label: "티티 (음력일)", value: `${panchanga.tithi} — ${panchanga.tithi_name}` },
-              { label: "낙샤트라 번호", value: `No. ${panchanga.nakshatra}` },
-              { label: "요가 (Nitya)", value: `No. ${panchanga.yoga}` },
-              { label: "카라나", value: panchanga.karana_name },
-            ].map(({ label, value }) => (
-              <div key={label} className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
-                <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">{label}</p>
-                <p className="text-sm font-semibold text-white leading-snug">{value ?? "—"}</p>
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">일주 천주 (Day Lord / Hour Lord)</p>
-              <p className="text-sm text-white">{panchanga.day_lord} / {panchanga.hour_lord}</p>
-            </div>
-            <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-              <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">출생 시간대</p>
-              <p className="text-sm text-white">{panchanga.is_day_birth ? "☀️ 주간 출생" : "🌙 야간 출생"}</p>
-            </div>
+          <div className="p-6 bg-celestial-gold/5 rounded-2xl border border-celestial-gold/10">
+            <p className="text-[10px] text-celestial-gold/60 font-bold uppercase mb-2">Lunar Phase & Day</p>
+            <p className="text-lg text-celestial-gold font-bold">
+              {panchanga.tithi_name} ({panchanga.is_day_birth ? "주간" : "야간"} 출생 · {panchanga.vara}요일)
+            </p>
           </div>
         </div>
-      )}
-
-      {/* 하우스 쿠스프 */}
-      {report.chart?.house_cusps?.length === 12 && (
-        <div className="glass p-8 rounded-[2rem]">
-          <h5 className="text-xl font-bold text-white mb-4 flex items-center gap-3">
-            <Compass className="w-6 h-6 text-celestial-cyan" />
-            하우스 쿠스프 (House Cusps)
-          </h5>
-          <p className="text-xs text-white/40 mb-4">각 하우스(바바) 경계의 사이드리얼 경도입니다.</p>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            {report.chart.house_cusps.map((deg: number, i: number) => (
-              <div key={i} className="p-3 bg-white/5 rounded-xl border border-white/10">
-                <p className="text-xs text-white/40 font-bold mb-1">H{i + 1}</p>
-                <p className="text-sm font-semibold text-white font-mono">{formatSiderealPosition(deg)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* ── 고급 분석 지표 (Jaimini, D9/D10, Tajika) ─────────────────── */}
       {report.report && (
@@ -344,205 +207,148 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
         <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
           {yogas.map((yoga: Yoga, idx: number) => {
             const isVeryHigh = yoga.quality === "VeryHigh";
-            const isHigh = yoga.quality === "High";
-            const isMedium = yoga.quality === "Medium";
-            const isWeak = typeof yoga.quality === 'object' && 'Weak' in yoga.quality;
-
-            let colorCls = "border-white/10 bg-white/5 text-white/70";
-            let qualityLabel = isWeak ? "약함" : "알 수 없음";
-            let badgeCls = "bg-white/10 text-white/50";
-
-            if (isVeryHigh) {
-              colorCls = "border-celestial-gold/40 bg-celestial-gold/5 text-celestial-gold";
-              qualityLabel = "매우 강함";
-              badgeCls = "bg-celestial-gold/20 text-celestial-gold";
-            } else if (isHigh) {
-              colorCls = "border-celestial-cyan/40 bg-celestial-cyan/5 text-celestial-cyan";
-              qualityLabel = "강함";
-              badgeCls = "bg-celestial-cyan/20 text-celestial-cyan";
-            } else if (isMedium) {
-              colorCls = "border-blue-400/40 bg-blue-400/5 text-blue-300";
-              qualityLabel = "보통";
-              badgeCls = "bg-blue-400/20 text-blue-300";
-            }
-
             return (
               <div
                 key={idx}
-                className={`min-w-[280px] max-w-[320px] snap-center shrink-0 p-5 rounded-2xl border backdrop-blur-sm ${colorCls} transition-all hover:scale-[1.02]`}
+                className={cn(
+                  "min-width-[280px] flex-shrink-0 snap-center glass p-6 rounded-2xl border transition-all glass-hover",
+                  isVeryHigh ? "border-celestial-gold/30 bg-celestial-gold/5" : "border-white/10 bg-white/5"
+                )}
               >
-                <div className="flex items-start justify-between mb-2">
-                  <h6 className="font-bold text-lg leading-tight tracking-tight drop-shadow-sm">{yoga.name}</h6>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeCls}`}>
-                    {qualityLabel}
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className={cn("w-4 h-4", isVeryHigh ? "text-celestial-gold" : "text-brand-400")} />
+                  <span className="text-sm font-bold text-white">{yoga.name}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/60">
+                    {yoga.yoga_type}
                   </span>
                 </div>
-                <p className="text-xs font-semibold opacity-80 mb-3">{yoga.yoga_type}</p>
-                <p className="text-sm opacity-90 leading-relaxed break-keep line-clamp-3 mb-4 flex-1">
+                <p className="text-xs text-white/60 line-clamp-2 leading-relaxed">
                   {yoga.description}
                 </p>
-                <div className="mt-auto flex flex-wrap gap-1.5">
-                  {yoga.planets_involved.map((p: string) => (
-                    <span key={p} className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/30 border border-white/5 opacity-80">
-                      {p}
-                    </span>
-                  ))}
-                </div>
               </div>
             );
           })}
         </div>
       )}
 
-      {/* ── 분할 차트 + 낙샤트라 리포트 (통합) ─────────────────────────────────── */}
-      {(() => {
-        const vargaDef = VARGA_DEFS.find((v) => v.id === selectedVargaId) ?? VARGA_DEFS[7];
-        const backendReport = reportsMap?.[vargaDef.id];
-        const lagnaRasi: number = backendReport?.lagna_rasi ?? ascendant?.[vargaDef.key] ?? 1;
-
-        const rows = backendReport?.rows?.length
-          ? backendReport.rows
-          : [
-            ...planets.map((p: any) => {
-              const rasi: number = p[vargaDef.key] ?? 1;
-              const deg: number = p.sidereal_deg ?? 0;
-              const effectiveDeg = vargaDef.id === "rasi"
-                ? deg
-                : getVargaEffectiveLongitude(deg, rasi, vargaDef.divisionCount);
-              const ni = getNakshatraInfo(effectiveDeg);
-              const house = ((rasi - lagnaRasi + 12) % 12) + 1;
-              return {
-                planet: p.planet as string,
-                position_str: formatSiderealPosition(effectiveDeg),
-                sign: rasi,
-                house,
-                nakshatra: 0,
-                nakshatra_name: ni.name,
-                pada: ni.pada,
-                pada_range: ni.range,
-                nakshatra_lord: ni.lord,
-                pada_lord: ni.padaLord,
-                deity: ni.deity,
-                purpose: ni.purpose,
-                is_retrograde: p.is_retrograde as boolean,
-                is_combust: p.is_combust as boolean,
-              };
-            }),
-            ...(ascendant ? (() => {
-              const rasi: number = ascendant[vargaDef.key] ?? 1;
-              const deg: number = ascendant.sidereal_deg ?? 0;
-              const effectiveDeg = vargaDef.id === "rasi"
-                ? deg
-                : getVargaEffectiveLongitude(deg, rasi, vargaDef.divisionCount);
-              const ni = getNakshatraInfo(effectiveDeg);
-              const house = ((rasi - lagnaRasi + 12) % 12) + 1;
-              return [{
-                planet: "ASC",
-                position_str: formatSiderealPosition(effectiveDeg),
-                sign: rasi,
-                house,
-                nakshatra: 0,
-                nakshatra_name: ni.name,
-                pada: ni.pada,
-                pada_range: ni.range,
-                nakshatra_lord: ni.lord,
-                pada_lord: ni.padaLord,
-                deity: ni.deity,
-                purpose: ni.purpose,
-                is_retrograde: false,
-                is_combust: false,
-              }];
-            })() : []),
-          ];
-
-        return (
-          <div className="glass p-8 rounded-[2rem]">
-            {/* 헤더 */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
-              <h5 className="text-xl font-bold text-white flex items-center gap-3">
-                <Grid3x3 className="w-6 h-6 text-celestial-cyan" />
-                분할 차트 (Varga Charts)
-              </h5>
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex bg-black/40 border border-white/20 rounded-xl overflow-hidden p-0.5">
-                  <button
-                    onClick={() => setChartStyle("south")}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${chartStyle === "south" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
-                  >
-                    남인도
-                  </button>
-                  <button
-                    onClick={() => setChartStyle("north")}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${chartStyle === "north" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
-                  >
-                    북인도
-                  </button>
-                </div>
-                <select
-                  value={selectedVargaId}
-                  onChange={(e) => setSelectedVargaId(e.target.value)}
-                  className="bg-black/40 border border-white/20 text-white text-sm font-semibold rounded-xl px-4 py-2 outline-none focus:border-celestial-cyan appearance-none cursor-pointer"
-                >
-                  {VARGA_DEFS.map((v) => (
-                    <option key={v.id} value={v.id} className="bg-slate-900 text-white">
-                      {v.label} - {v.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <p className="text-xs text-white/40 mb-6 flex flex-wrap gap-4 items-center mt-2">
-              <span>라그나: <span className="text-white/70 font-semibold">{SIGN_NAMES[lagnaRasi] ?? "—"}</span></span>
-              {backendReport && <span className="text-celestial-cyan/60 text-[10px]">✓ 백엔드 정밀값</span>}
-              <span className="text-white/30 hidden md:inline">|</span>
-              <span className="text-white/30">황금 테두리 = 라그나 · 오른쪽 숫자 = 하우스 번호</span>
+      {/* ── 분할 차트 시각화 (Varga Charts) ─────────────────────────────────── */}
+      <section className="glass p-10 rounded-[3rem] border-white/10 relative overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          <div>
+            <h5 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+              <Grid3x3 className="w-7 h-7 text-celestial-gold" />
+              분할 차트 시각화 (Varga Charts)
+            </h5>
+            <p className="text-sm text-white/40">
+              인생의 특정 영역을 현미경처럼 확대하여 분석하는 독립적인 차트들입니다.
             </p>
-            {/* 차트 + 낙샤트라 테이블 */}
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              {chartStyle === "south" ? (
-                <SouthIndianChart
-                  lagnaRasi={lagnaRasi}
-                  planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p[vargaDef.key], retro: p.is_retrograde, deg: p.sidereal_deg }))}
-                />
-              ) : (
-                <NorthIndianChart
-                  lagnaRasi={lagnaRasi}
-                  planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p[vargaDef.key], retro: p.is_retrograde, deg: p.sidereal_deg }))}
-                />
-              )}
-              <div className="flex-1 overflow-x-auto w-full">
-                <VargaNakshatraTable
-                  title=""
-                  vargaLabel={vargaDef.label}
-                  rows={rows}
-                  showHouse={vargaDef.id !== "rasi"}
-                />
-              </div>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex bg-black/40 border border-white/20 rounded-xl overflow-hidden p-0.5">
+              <button
+                onClick={() => setChartStyle("south")}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${chartStyle === "south" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+              >
+                남인도
+              </button>
+              <button
+                onClick={() => setChartStyle("north")}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${chartStyle === "north" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+              >
+                북인도
+              </button>
+            </div>
+            <select
+              value={selectedVargaId}
+              onChange={(e) => setSelectedVargaId(e.target.value)}
+              className="bg-white/5 border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-2 focus:ring-2 focus:ring-celestial-gold/50 outline-none transition-all cursor-pointer hover:bg-white/10"
+            >
+              {VARGA_DEFS.map((v) => (
+                <option key={v.id} value={v.id} className="bg-slate-900">
+                  {v.label} - {v.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-4 mb-8">
+          <p className="text-[11px] font-bold text-white/20 uppercase tracking-widest flex items-center gap-2">
+            <span className="w-8 h-px bg-white/10" />
+            현재 선택된 차트: {vargaDef.label} ({vargaDef.name})
+            <span className="text-white/30 hidden md:inline">|</span>
+            <span className="text-white/30">황금 테두리 = 라그나 · 오른쪽 숫자 = 하우스 번호</span>
+          </p>
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            {chartStyle === "south" ? (
+              <SouthIndianChart
+                lagnaRasi={lagnaRasi}
+                planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p[vargaDef.key], retro: p.is_retrograde, deg: p.sidereal_deg }))}
+              />
+            ) : (
+              <NorthIndianChart
+                lagnaRasi={lagnaRasi}
+                planetEntries={planets.map((p: any) => ({ name: p.planet, rasi: p[vargaDef.key], retro: p.is_retrograde, deg: p.sidereal_deg }))}
+              />
+            )}
+            <div className="flex-1 w-full overflow-x-auto">
+              <VargaNakshatraTable 
+                title={`${vargaDef.label} 낙샤트라 상세`} 
+                vargaLabel={vargaDef.label} 
+                rows={reportsMap?.[selectedVargaId]?.rows || []} 
+              />
             </div>
           </div>
-        );
-      })()}
-
-      {/* ── D1-D144 분할 차트 사인 위치 테이블 ──────────────────────── */}
-      <div className="glass p-8 rounded-[2rem]">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
-          <h5 className="text-xl font-bold text-white flex items-center gap-3">
-            <Star className="w-6 h-6 text-celestial-purple" />
-            D1 – D144 사인 포지션 (전체 분할 차트)
-          </h5>
-        </div>
-        <p className="text-xs text-white/40 mb-6">각 셀 = 해당 분할 차트에서의 사인 번호 (1=Aries … 12=Pisces)</p>
-
-        <div className="flex gap-4 text-xs text-white/40 mb-4">
-          <span className="flex items-center gap-1"><span className="px-1.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 font-bold">℞</span> 역행</span>
-          <span className="flex items-center gap-1"><span className="px-1.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40 font-bold">☀</span> 소각</span>
         </div>
 
         <VargaSignPositionsTable planets={planets} ascendant={ascendant} />
-      </div>
+      </section>
+
+      <section>
+        <h5 className="text-xl font-bold text-white mb-6">하우스(Bhava)별 에너지 역량 상세</h5>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {report.report?.house_summary.map((house: any) => {
+            const bhava = bhavaStrengths.find((b: any) => b.house === house.house);
+            return (
+              <div
+                key={house.house}
+                className="glass p-6 rounded-2xl text-center glass-hover cursor-help"
+              >
+                <p className="text-[10px] text-white/40 font-bold uppercase mb-1">House {house.house}</p>
+                <p className={cn("text-xs font-black mb-3",
+                  house.rating === "Excellent" ? "text-emerald-400" :
+                    house.rating === "Strong" ? "text-celestial-cyan" :
+                      house.rating === "Average" ? "text-white/60" : "text-orange-400"
+                )}>
+                  {ratingLabel(house.rating)}
+                </p>
+                <div className="flex flex-col gap-1.5 mt-4">
+                  <div className="flex justify-between text-[9px]">
+                    <span className="text-white/30">로드</span>
+                    <span className="text-white/60 font-bold">{bhava?.lord_score?.toFixed(0)}</span>
+                  </div>
+                  <div className="flex justify-between text-[9px]">
+                    <span className="text-white/30">방위</span>
+                    <span className="text-white/60 font-bold">{bhava?.dig_score?.toFixed(0)}</span>
+                  </div>
+                  <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden mt-1">
+                    <div
+                      className={cn("h-full rounded-full transition-all duration-1000",
+                        house.rating === "Excellent" ? "bg-emerald-500" :
+                          house.rating === "Strong" ? "bg-celestial-cyan" : "bg-white/20"
+                      )}
+                      style={{ width: `${(house.total_score / 600) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* ── 행성별 빈나슈타카바르가 (BAV) 히트맵 ────────────── */}
-      {report.chart.bav && report.chart.bav.length > 0 && (
+      {currentChart.bav && currentChart.bav.length > 0 && (
         <div className="glass p-8 rounded-[2rem]">
           <h5 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
             <BarChart3 className="w-6 h-6 text-celestial-gold" />
@@ -551,50 +357,24 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
           <p className="text-xs text-white/40 mb-6">
             각 행성이 12개 하우스에 기여하는 빈두 포인트입니다. 녹색에 가까울수록 강한 하우스를 지원합니다.
           </p>
-          <BavHeatmap bav={report.chart.bav} savPoints={report.chart.sav?.points as number[]} />
+          <BavHeatmap bav={currentChart.bav} savPoints={currentChart.sav?.points as number[]} />
         </div>
       )}
 
       {/* ── SAV (Sarvashtakavarga) 12하우스 점수 ────────────── */}
       {sav?.points && sav.points.length === 12 && (
         <div className="glass p-8 rounded-[2rem]">
-          <h5 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
-            <BarChart3 className="w-6 h-6 text-celestial-gold" />
-            SAV (사르바아슈타카바르가) — 하우스별 에너지 점수
+          <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <Grid3x3 className="w-6 h-6 text-celestial-cyan" />
+            사르바아슈타카바르가 (SAV) — 12하우스 합산 점수
           </h5>
-          <p className="text-xs text-white/40 mb-6">각 하우스의 빈두 포인트 합산입니다. 28점 이상이면 강력한 하우스, 25점 미만이면 약한 하우스로 볼 수 있습니다.</p>
           <SavScoreChart points={sav.points} />
         </div>
       )}
 
-      {/* ── 빔쇼파카 발라 (행성 종합 힘) ────────────────── */}
+      {/* ── 빔쇼파카 발라 (Vimshopaka) ────────────── */}
       {vimshopaka && vimshopaka.length > 0 && (
-        <div className="glass p-8 rounded-[2rem]">
-          <h5 className="text-xl font-bold text-white mb-2 flex items-center gap-3">
-            <Zap className="w-6 h-6 text-celestial-purple" />
-            빔쇼파카 발라 — 행성별 종합 힘 (20점 만점)
-          </h5>
-          <p className="text-xs text-white/40 mb-6">각 행성이 여러 분할 차트(D1~D60)에서 얼마나 좋은 위치에 있는지를 종합한 점수입니다. 15점 이상이면 매우 강력합니다.</p>
-          <VimshopakaTable vimshopaka={vimshopaka} />
-        </div>
-      )}
-
-      {/* ── 사데사티 (Sade Sati) 경고 배너 ─────────────────────── */}
-      {sadeSati !== "None" && (
-        <div className={`p-5 rounded-2xl border flex items-center gap-4 ${sadeSati === "Peak" ? "bg-red-500/10 border-red-500/30" : "bg-orange-500/10 border-orange-500/30"
-          }`}>
-          <AlertCircle className={`w-8 h-8 flex-shrink-0 ${sadeSati === "Peak" ? "text-red-400" : "text-orange-400"}`} />
-          <div>
-            <h6 className="text-base font-bold text-white mb-1">
-              Sade Sati ({sadeSati === "Rising" ? "상승기" : sadeSati === "Peak" ? "절정기" : "하강기"}) 활성 중
-            </h6>
-            <p className="text-sm text-white/60">
-              {sadeSati === "Rising" && "토성이 달의 12번째 하우스에 진입했습니다. 내적 변화의 시기가 시작됩니다."}
-              {sadeSati === "Peak" && "토성이 달 위를 지나고 있습니다. 감정적 회복력과 인내에 집중하세요."}
-              {sadeSati === "Setting" && "토성이 달의 2번째 하우스로 이동 중입니다. 강도가 점차 약해지고 있습니다."}
-            </p>
-          </div>
-        </div>
+        <VimshopakaTable vimshopaka={vimshopaka} />
       )}
 
       {/* ── 다샤 타임라인 (Vimshottari & Yogini Dasha) ───────────── */}
@@ -614,9 +394,9 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
 
       {/* ── 카라카 + 아바스타 (Karakas + Avasthas) ────────── */}
       <AvasthaKarakaSection
-        avasthas={report.chart.avasthas ?? []}
-        karakas={report.chart.karakas ?? []}
-        arudhaPadas={report.chart.arudha_padas ?? []}
+        avasthas={avasthas ?? []}
+        karakas={karakas ?? []}
+        arudhaPadas={arudhaPadas ?? []}
       />
     </motion.div>
   );
