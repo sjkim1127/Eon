@@ -20,8 +20,6 @@ pub struct TajikaEngine;
 
 impl TajikaEngine {
     /// Calculate the Muntha (Annual Progressed Point)
-    /// Rule: Muntha starts at Lagna at birth and progresses 1 sign per year.
-    /// Muntha = (Birth Lagna Sign + Years Elapsed - 1) % 12 + 1
     pub fn calculate_muntha(birth_lagna_rasi: u8, age_years: u32) -> u8 {
         let rasi = (birth_lagna_rasi as u32 + age_years - 1) % 12 + 1;
         rasi as u8
@@ -30,11 +28,11 @@ impl TajikaEngine {
     /// Tajika Aspects (Drishti)
     pub fn get_aspect_type(house_diff_1_indexed: u8) -> TajikaAspectType {
         match house_diff_1_indexed {
-            3 | 11 => TajikaAspectType::Mitra(false),  // Friendly
-            5 | 9 => TajikaAspectType::Mitra(true),    // Very Friendly
-            1 | 7 => TajikaAspectType::Shatru(true),   // Very Hostile
-            4 | 10 => TajikaAspectType::Shatru(false), // Hostile
-            _ => TajikaAspectType::Sama,               // Neutral
+            3 | 11 => TajikaAspectType::Mitra(false),
+            5 | 9 => TajikaAspectType::Mitra(true),
+            1 | 7 => TajikaAspectType::Shatru(true),
+            4 | 10 => TajikaAspectType::Shatru(false),
+            _ => TajikaAspectType::Sama,
         }
     }
 
@@ -79,7 +77,7 @@ impl TajikaEngine {
         };
         results.push(Saham { name: "Punya (Fortune)".to_string(), longitude: punya, rasi: (punya / 30.0).floor() as u8 + 1 });
 
-        // Vidya Saham (Education)
+        // Vidya Saham (Knowledge)
         let vidya = if is_day {
             (sun - moon + lagna + 360.0) % 360.0
         } else {
@@ -94,7 +92,27 @@ impl TajikaEngine {
         results
     }
 
-    /// Selection of Year Lord (Varsheshwara) - Proper Tajika Implementation
+    /// Tri-Rashi Pati Selection Table
+    /// Returns the lord based on Annual Lagna sign and Day/Night birth.
+    fn get_tri_rashi_pati(lagna_rasi: u8, is_day: bool) -> VedicPlanet {
+        match (lagna_rasi, is_day) {
+            (1, true) => VedicPlanet::Sun,     (1, false) => VedicPlanet::Jupiter,
+            (2, true) => VedicPlanet::Venus,   (2, false) => VedicPlanet::Moon,
+            (3, true) => VedicPlanet::Saturn,  (3, false) => VedicPlanet::Mercury,
+            (4, true) => VedicPlanet::Venus,   (4, false) => VedicPlanet::Mars,
+            (5, true) => VedicPlanet::Jupiter, (5, false) => VedicPlanet::Sun,
+            (6, true) => VedicPlanet::Moon,    (6, false) => VedicPlanet::Venus,
+            (7, true) => VedicPlanet::Mercury, (7, false) => VedicPlanet::Saturn,
+            (8, true) => VedicPlanet::Mars,    (8, false) => VedicPlanet::Venus,
+            (9, true) => VedicPlanet::Saturn,  (9, false) => VedicPlanet::Mercury,
+            (10, true) => VedicPlanet::Mars,   (10, false) => VedicPlanet::Moon,
+            (11, true) => VedicPlanet::Jupiter, (11, false) => VedicPlanet::Sun,
+            (12, true) => VedicPlanet::Moon,   (12, false) => VedicPlanet::Mars,
+            _ => VedicPlanet::Sun,
+        }
+    }
+
+    /// Selection of Year Lord (Varsheshwara) - Full Orthodox Tajika Implementation
     pub fn select_year_lord(chart: &VedicChart, birth_lagna_rasi: u8, age_years: u32) -> VedicPlanet {
         let annual_lagna_rasi = chart.ascendant.rasi;
         let muntha_rasi = Self::calculate_muntha(birth_lagna_rasi, age_years);
@@ -112,7 +130,7 @@ impl TajikaEngine {
         // 1.3 Varsha (Annual) Lagna Lord
         candidates.push(VedicPlanet::get_ruler_of(annual_lagna_rasi));
         
-        // 1.4 Sun/Moon Lord (Sun's for Day, Moon's for Night)
+        // 1.4 Dina/Ratri Pati (Day/Night Lord)
         if is_day {
             if let Some(sun) = chart.planets.iter().find(|p| p.planet == VedicPlanet::Sun) {
                 candidates.push(VedicPlanet::get_ruler_of(sun.rasi));
@@ -123,17 +141,11 @@ impl TajikaEngine {
             }
         }
         
-        // 1.5 Dina/Ratri Pati
-        if is_day {
-            // Day Birth: Dina Pati is Lord of Sun's sign (Simplified to Sun for now or keep same as 1.4)
-            candidates.push(VedicPlanet::Sun); 
-        } else {
-            // Night Birth: Ratri Pati is Lord of Moon's sign
-            candidates.push(VedicPlanet::Moon);
-        }
+        // 1.5 Tri-Rashi Pati
+        candidates.push(Self::get_tri_rashi_pati(annual_lagna_rasi, is_day));
 
         // 2. Filter candidates who aspect the Annual Lagna
-        // (In Tajika, any aspect (friendly or hostile) makes it eligible)
+        // (In Tajika, any aspect makes it eligible)
         let eligible: Vec<VedicPlanet> = candidates.into_iter().filter(|&p| {
             if let Some(pos) = chart.planets.iter().find(|pos| pos.planet == p) {
                 let dist = (pos.rasi as i16 - annual_lagna_rasi as i16 + 12) % 12;
@@ -145,7 +157,6 @@ impl TajikaEngine {
         }).collect();
 
         // 3. Selection: Strongest among eligible by Harsha Bala
-        // If none eligible, fallback to Muntha Lord
         if eligible.is_empty() {
             return VedicPlanet::get_ruler_of(muntha_rasi);
         }
@@ -155,7 +166,7 @@ impl TajikaEngine {
 
         for p in eligible {
             let bala = TajikaBala::calculate_harsha_bala(chart, p);
-            if bala > max_bala {
+            if bala >= max_bala {
                 max_bala = bala;
                 strongest = p;
             }
