@@ -34,7 +34,7 @@ fn test_varga_nakshatra_report_d1_ansan() {
     let d1 = &reports.reports["rasi"];
     // D1 checks - known values from user verification
     assert_eq!(d1.lagna_rasi, 4, "Lagna Cancer");
-    assert_eq!(d1.rows.len(), 10, "9 planets + ASC");
+    assert_eq!(d1.rows.len(), 13, "9 planets + ASC + IC + DSC + MC");
 
     let sun_row = d1.rows.iter().find(|r| r.planet == "Sun").unwrap();
     assert_eq!(sun_row.nakshatra_name, "Anuradha");
@@ -55,9 +55,9 @@ fn test_varga_nakshatra_report_d1_ansan() {
     let d9 = &reports.reports["navamsa"];
     let d10 = &reports.reports["dasamsa"];
     let d108 = &reports.reports["ashtottaramsa"];
-    assert_eq!(d9.rows.len(), 10);
-    assert_eq!(d10.rows.len(), 10);
-    assert_eq!(d108.rows.len(), 10);
+    assert_eq!(d9.rows.len(), 13);
+    assert_eq!(d10.rows.len(), 13);
+    assert_eq!(d108.rows.len(), 13);
 
     // D108: Lagna Taurus (from user's D108 table)
     assert_eq!(d108.lagna_rasi, 2, "D108 Lagna Taurus");

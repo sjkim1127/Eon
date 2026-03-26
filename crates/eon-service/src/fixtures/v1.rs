@@ -57,19 +57,20 @@ pub fn get_v1_fixtures() -> Vec<OracleFixture> {
             expected_saju: ExpectedSaju {
                 year_stem: "Wu".to_string(),
                 year_branch: "Chen".to_string(),
-                month_stem: "Jia".to_string(),
-                month_branch: "Yin".to_string(),
-                day_stem: "Geng".to_string(),
-                day_branch: "Zi".to_string(),
-                hour_stem: "Xin".to_string(),
+                month_stem: "Yi".to_string(),
+                month_branch: "Mao".to_string(),
+                day_stem: "Bing".to_string(),
+                day_branch: "Xu".to_string(),
+                hour_stem: "Gui".to_string(),
                 hour_branch: "Si".to_string(),
-                day_master: "Geng".to_string(),
+                day_master: "Bing".to_string(),
             },
             expected_vedic: ExpectedVedic {
-                ascendant_rasi: 1,
-                moon_rasi: 9,
-                moon_nakshatra: 20, // Purva Ashadha
+                ascendant_rasi: 2,
+                moon_rasi: 6,
+                moon_nakshatra: 12, // Hasta
             },
+
         },
         // 3. Overseas Timezone (NY)
         OracleFixture {
