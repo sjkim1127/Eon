@@ -1,7 +1,7 @@
-use crate::dto::{AnalysisMeta, DailyLuckDto, LifeFrameDto, TransitAnalysisInput, TransitAnalysisOutput};
+use crate::dto::{AnalysisMeta, LifeFrameDto, TransitAnalysisInput, TransitAnalysisOutput};
 use crate::error::ServiceError;
 use crate::birth::prepare_birth_context;
-use crate::context::{calculate_current_age, resolve_analysis_local_date};
+use crate::context::{calculate_current_age, resolve_analysis_local_datetime};
 use eon_core::Gender;
 use eon_saju::analysis::periodic_luck::{MonthlyLuck, YearlyLuck};
 use eon_saju::core::pillars::{FourPillars, SajuInput};
@@ -31,7 +31,7 @@ pub fn analyze(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, Ser
         .map_err(|e| ServiceError::Saju(format!("사주 계산 실패: {}", e)))?;
 
     // 분석 로컬 시각 결정
-    let (cy, cm, cd) = resolve_analysis_local_date(&input.current)?;
+    let (cy, cm, cd, ch) = resolve_analysis_local_datetime(&input.current)?;
 
     // 세운/월운 계산
     let yearly_luck = YearlyLuck::calculate(cy, &pillars);
@@ -40,17 +40,9 @@ pub fn analyze(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, Ser
         .map(|m| MonthlyLuck::calculate(cy, m, &pillars))
         .collect();
 
-    // 일운 계산
-    let day_ganzi = eon_saju::core::ganzi_utils::calculate_day_ganzi(cy, cm, cd);
-    let day_master = pillars.day_master();
-    let daily_stem_god = eon_saju::core::ten_gods::TenGod::from_stems(day_master, day_ganzi.stem);
-    let daily_branch_god = eon_saju::core::ten_gods::TenGod::from_stem_and_branch(day_master, day_ganzi.branch);
-    let daily_twelve_stage = eon_saju::core::twelve_stages::calculate_twelve_stage(day_master, day_ganzi.branch)
-        .hangul()
-        .to_string();
-    let daily_influence = Some(eon_saju::analysis::dynamic_luck::DynamicLuckAnalysis::get_influence(
-        day_ganzi, "일운", &pillars,
-    ));
+    // 일운/시운 계산
+    let daily_luck = eon_saju::analysis::periodic_luck::DailyLuck::calculate(cy, cm, cd, &pillars);
+    let hourly_luck = eon_saju::analysis::periodic_luck::HourlyLuck::calculate(cy, cm, cd, ch, &pillars);
 
     // 나이 계산
     let current_age = calculate_current_age(
@@ -93,16 +85,8 @@ pub fn analyze(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, Ser
         yearly_luck,
         monthly_luck,
         monthly_lucks,
-        daily_luck: DailyLuckDto {
-            year: cy,
-            month: cm,
-            day: cd,
-            ganzi: day_ganzi,
-            stem_god: daily_stem_god,
-            branch_god: daily_branch_god,
-            influence: daily_influence,
-            twelve_stage: Some(daily_twelve_stage),
-        },
+        daily_luck,
+        hourly_luck,
         current_age,
         current_frame: current_frame_dto,
         nearby_diagnostics,

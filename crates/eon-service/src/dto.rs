@@ -172,17 +172,6 @@ pub struct VedicAnalysisOutput {
         eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReports,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DailyLuckDto {
-    pub year: i32,
-    pub month: u32,
-    pub day: u32,
-    pub ganzi: eon_saju::core::ganzi::GanZi,
-    pub stem_god: eon_saju::core::ten_gods::TenGod,
-    pub branch_god: eon_saju::core::ten_gods::TenGod,
-    pub influence: Option<eon_saju::analysis::dynamic_luck::LuckInfluence>,
-    pub twelve_stage: Option<String>,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LifeFrameDto {
@@ -201,7 +190,8 @@ pub struct TransitAnalysisOutput {
     pub yearly_luck: eon_saju::analysis::periodic_luck::YearlyLuck,
     pub monthly_luck: eon_saju::analysis::periodic_luck::MonthlyLuck,
     pub monthly_lucks: Vec<eon_saju::analysis::periodic_luck::MonthlyLuck>,
-    pub daily_luck: DailyLuckDto,
+    pub daily_luck: eon_saju::analysis::periodic_luck::DailyLuck,
+    pub hourly_luck: eon_saju::analysis::periodic_luck::HourlyLuck,
     pub current_age: u32,
     pub current_frame: Option<LifeFrameDto>,
     pub nearby_diagnostics: Vec<eon_saju::engine::load_balancer::LoadBalanceDiagnostic>,

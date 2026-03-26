@@ -15,6 +15,18 @@ pub fn resolve_analysis_local_date(
     Ok((local_dt.year(), local_dt.month(), local_dt.day()))
 }
 
+pub fn resolve_analysis_local_datetime(
+    current: &CurrentContext,
+) -> Result<(i32, u32, u32, u32), ServiceError> {
+    let tz = Tz::from_str(&current.analysis_timezone)
+        .map_err(|e| ServiceError::InvalidInput(format!("Invalid timezone: {}", e)))?;
+    
+    let local_dt = current.now_utc.with_timezone(&tz);
+    
+    use chrono::Timelike;
+    Ok((local_dt.year(), local_dt.month(), local_dt.day(), local_dt.hour()))
+}
+
 pub fn calculate_current_age(
     birth_year: i32,
     birth_month: u32,
