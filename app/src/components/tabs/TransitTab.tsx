@@ -56,6 +56,7 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
   const yr = transitReport.yearly_luck;
   const mo = transitReport.monthly_luck;
   const dl = transitReport.daily_luck;
+  const hl = transitReport.hourly_luck;
   const monthlyAll: any[] = transitReport.monthly_lucks ?? [];
   const frame = transitReport.current_frame;
   const nearby: any[] = transitReport.nearby_diagnostics ?? [];
@@ -130,8 +131,8 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
         </div>
       )}
 
-      {/* 세운 / 월운 / 일운 카드 (가로 스크롤 또는 그리드로 재배치) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      {/* 세운 / 월운 / 일운 / 시운 카드 (그리드 배치) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="glass p-6 md:p-8 rounded-[2rem]">
           <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-3">세운 (年運) — {yr?.year}년</p>
           <h4 className="text-4xl font-black text-celestial-gold mb-3">{ganziHangul(yr?.ganzi) || "—"}</h4>
@@ -162,6 +163,9 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
             {mo?.twelve_stage && (
               <p>12운성: <span className="text-celestial-cyan font-semibold">{mo.twelve_stage}</span></p>
             )}
+            {mo?.special_events?.length > 0 && (
+              <p className="text-red-400 font-semibold">⚠️ {mo.special_events.join(" / ")}</p>
+            )}
           </div>
           {mo?.influence?.relations_with_natal?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-3">
@@ -183,11 +187,39 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
               {dl.twelve_stage && (
                 <p>12운성: <span className="text-celestial-cyan font-semibold">{dl.twelve_stage}</span></p>
               )}
+              {dl.special_events?.length > 0 && (
+                <p className="text-red-400 font-semibold">⚠️ {dl.special_events.join(" / ")}</p>
+              )}
             </div>
             {dl.influence?.relations_with_natal?.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {dl.influence.relations_with_natal.map((rel: string, i: number) => (
                   <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-celestial-cyan/15 text-celestial-cyan border border-celestial-cyan/30 font-medium">{rel}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 시운 카드 */}
+        {hl && (
+          <div className="glass p-6 md:p-8 rounded-[2rem] border-brand-400/20 bg-brand-400/5">
+            <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-3">시운 (時運) — {hl.hour}시</p>
+            <h4 className="text-4xl font-black text-white mb-3">{ganziHangul(hl.ganzi) || "—"}</h4>
+            <div className="space-y-1 text-sm text-white/60 mb-4">
+              <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[hl.stem_god]?.hangul ?? hl.stem_god ?? "—"}</span></p>
+              <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[hl.branch_god]?.hangul ?? hl.branch_god ?? "—"}</span></p>
+              {hl.twelve_stage && (
+                <p>12운성: <span className="text-celestial-cyan font-semibold">{hl.twelve_stage}</span></p>
+              )}
+              {hl.special_events?.length > 0 && (
+                <p className="text-red-400 font-semibold">⚠️ {hl.special_events.join(" / ")}</p>
+              )}
+            </div>
+            {hl.influence?.relations_with_natal?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {hl.influence.relations_with_natal.map((rel: string, i: number) => (
+                  <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-brand-400/15 text-brand-400 border border-brand-400/30 font-medium">{rel}</span>
                 ))}
               </div>
             )}

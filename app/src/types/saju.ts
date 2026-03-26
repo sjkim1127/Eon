@@ -351,6 +351,7 @@ export interface MonthlyLuck {
   stem_god: string;
   branch_god: string;
   influence: LuckInfluence | null;
+  special_events: string[];
   twelve_stage: string | null;
 }
 
@@ -363,6 +364,21 @@ export interface DailyLuck {
   stem_god: string;
   branch_god: string;
   influence: LuckInfluence | null;
+  special_events: string[];
+  twelve_stage: string | null;
+}
+
+/** 시운 (HourlyLuck Rust struct) */
+export interface HourlyLuck {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  ganzi: GanZi;
+  stem_god: string;
+  branch_god: string;
+  influence: LuckInfluence | null;
+  special_events: string[];
   twelve_stage: string | null;
 }
 
@@ -373,6 +389,7 @@ export interface TransitResult {
   monthly_luck: MonthlyLuck;
   monthly_lucks: MonthlyLuck[];
   daily_luck: DailyLuck;
+  hourly_luck: HourlyLuck;
   current_age: number;
   current_frame: LifeFrame | null;
   nearby_diagnostics: LoadBalanceDiagnostic[];

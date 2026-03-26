@@ -37,6 +37,16 @@ pub enum TwelveShinsal {
     Jaesal,
     /// 천살(天殺) - 천재지변, 불가항력 (양)
     Cheonsal,
+    /// 백호살(白虎殺) - 혈광지사, 급작스러운 사고
+    Baekhosal,
+    /// 괴강살(魁罡殺) - 강렬한 카리스마, 극단적 흥망
+    Goegangsal,
+    /// 양인살(羊刃殺) - 강한 고집, 칼을 든 형상
+    Yanginsal,
+    /// 귀록(歸祿) - 말년의 복록
+    Gwirok,
+    /// 공망(空亡) - 비어 있음, 실속 없음
+    Gongmang,
 }
 
 impl TwelveShinsal {
@@ -54,6 +64,33 @@ impl TwelveShinsal {
             Self::Geopsal => "겁살",
             Self::Jaesal => "재살",
             Self::Cheonsal => "천살",
+            Self::Baekhosal => "백호살",
+            Self::Goegangsal => "괴강살",
+            Self::Yanginsal => "양인살",
+            Self::Gwirok => "귀록",
+            Self::Gongmang => "공망",
+        }
+    }
+
+    pub const fn description(&self) -> &'static str {
+        match self {
+            Self::Jisal => "스스로 움직여 변화를 꾀함",
+            Self::Yeonsal => "인기와 매력, 타인의 시선",
+            Self::Wolsal => "고초 속에 얻는 실익",
+            Self::Mangshinsal => "치부가 드러나거나 망신",
+            Self::Jangseongsal => "권위와 강한 주도권",
+            Self::Banansal => "안락한 안장 위에 오름",
+            Self::Yeokmasal => "타의나 환경에 의한 이동",
+            Self::Yukhaesal => "여섯 가지 해로움, 지체",
+            Self::Hwagaesal => "화려함을 덮음, 예술과 종교",
+            Self::Geopsal => "빼앗기거나 강한 경쟁",
+            Self::Jaesal => "재앙이나 갇히는 기운",
+            Self::Cheonsal => "하늘의 뜻, 감당하기 어려운 일",
+            Self::Baekhosal => "강한 에너지와 급작스러운 사고 주의",
+            Self::Goegangsal => "총명하고 결단력이 강함",
+            Self::Yanginsal => "극강한 고집과 추진력",
+            Self::Gwirok => "말년의 복록과 안정",
+            Self::Gongmang => "비어 있어 채워지지 않는 허망함",
         }
     }
 
@@ -101,10 +138,16 @@ impl TwelveShinsal {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Gilsin {
-    /// 천을귀인(天乙貴人) - 최고의 길신, 재해 예방, 도움
-    CheoneulGwiin,
     /// 문창귀인(文昌貴人) - 학문, 지혜, 예술
     MunchangGwiin,
+    /// 천덕귀인(天德貴人) - 하늘의 덕, 흉이 길로 변함
+    CheondeokGwiin,
+    /// 월덕귀인(月德貴人) - 달의 덕, 재앙을 물리침
+    WoldeokGwiin,
+    /// 암록(暗祿) - 숨은 복록, 생각지 못한 도움
+    Amrok,
+    /// 천을귀인(天乙貴人) - 최고의 길신
+    CheoneulGwiin,
 }
 
 impl Gilsin {
@@ -112,6 +155,9 @@ impl Gilsin {
         match self {
             Self::CheoneulGwiin => "천을귀인",
             Self::MunchangGwiin => "문창귀인",
+            Self::CheondeokGwiin => "천덕귀인",
+            Self::WoldeokGwiin => "월덕귀인",
+            Self::Amrok => "암록",
         }
     }
 
@@ -136,6 +182,14 @@ pub enum EvilSpirit {
     Wonjin,
     /// 귀문관살(鬼門關殺) - 예민, 영감
     Gwimun,
+    /// 상문살(喪門殺) - 상례, 슬픔
+    Sangmunsal,
+    /// 조객살(弔客殺) - 문상, 우환
+    Jogaeksal,
+    /// 고란살(孤鸞殺) - 고독
+    Goeunsal,
+    /// 과숙살(寡宿殺) - 홀로 됨
+    Gwasuksal,
 }
 
 impl EvilSpirit {
@@ -143,6 +197,21 @@ impl EvilSpirit {
         match self {
             Self::Wonjin => "원진살",
             Self::Gwimun => "귀문관살",
+            Self::Sangmunsal => "상문살",
+            Self::Jogaeksal => "조객살",
+            Self::Goeunsal => "고란살",
+            Self::Gwasuksal => "과숙살",
+        }
+    }
+
+    pub const fn description(&self) -> &'static str {
+        match self {
+            Self::Wonjin => "까닭 없이 서로 미워함",
+            Self::Gwimun => "신경이 예민하고 직관이 강함",
+            Self::Sangmunsal => "상가집에 갈 일이 생기거나 슬픔",
+            Self::Jogaeksal => "먼 친척의 우환이나 슬픔",
+            Self::Goeunsal => "외로움, 배우자와의 소외",
+            Self::Gwasuksal => "여자의 고독, 홀로 됨",
         }
     }
 
@@ -247,6 +316,50 @@ impl ShinsalAnalysis {
             special_shinsals,
             gilsin,
         }
+    }
+
+    /// 특정 운(대운/세운 등)에 대한 신살 분석
+    pub fn calculate_for_luck(luck_ganzi: crate::core::ganzi::GanZi, pillars: &FourPillars) -> Vec<String> {
+        let mut results = Vec::new();
+        let day_master = pillars.day_master();
+        
+        // 1. 12신살 (일지 기준)
+        let s_day = TwelveShinsal::calculate(pillars.day.branch, luck_ganzi.branch);
+        results.push(format!("(일) {}", s_day.hangul()));
+
+        // 2. 12신살 (년지 기준)
+        let s_year = TwelveShinsal::calculate(pillars.year.branch, luck_ganzi.branch);
+        results.push(format!("(년) {}", s_year.hangul()));
+
+        // 3. 천을귀인 체크
+        let cheoneul = Gilsin::cheoneul_branches(day_master);
+        if cheoneul.contains(&luck_ganzi.branch) {
+            results.push("천을귀인".to_string());
+        }
+
+        // 4. 백호/괴강 등 특수 지지
+        use crate::core::stem::HeavenlyStem as S;
+        use crate::core::branch::EarthlyBranch as B;
+        
+        // 백호살 (Luck Ganzi 자체가 백호인 경우)
+        match (luck_ganzi.stem, luck_ganzi.branch) {
+            (S::Jia, B::Chen) | (S::Yi, B::Wei) | (S::Bing, B::Xu) | (S::Ding, B::Chou) | 
+            (S::Wu, B::Chen) | (S::Ren, B::Xu) | (S::Gui, B::Chou) => {
+                results.push("백호살".to_string());
+            },
+            _ => {}
+        }
+        
+        // 괴강살
+        match (luck_ganzi.stem, luck_ganzi.branch) {
+            (S::Wu, B::Xu) | (S::Wu, B::Chen) | (S::Geng, B::Xu) | (S::Geng, B::Chen) |
+            (S::Ren, B::Xu) | (S::Ren, B::Chen) => {
+                results.push("괴강살".to_string());
+            },
+            _ => {}
+        }
+
+        results
     }
 }
 

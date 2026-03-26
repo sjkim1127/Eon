@@ -52,6 +52,10 @@ impl YearlyLuck {
             special_events.push("천전지충(天戦地沖)".to_string());
         }
 
+        // 신살 분석 추가
+        let shinsal_events = crate::analysis::shinsal::ShinsalAnalysis::calculate_for_luck(ganzi, pillars);
+        special_events.extend(shinsal_events);
+
         Self {
             year,
             ganzi,
@@ -111,6 +115,8 @@ pub struct MonthlyLuck {
     pub branch_god: TenGod,
     /// 원국과의 상호작용
     pub influence: Option<LuckInfluence>,
+    /// 신살 등의 특수 정보
+    pub special_events: Vec<String>,
     /// 12운성
     pub twelve_stage: Option<String>,
 }
@@ -122,6 +128,7 @@ impl MonthlyLuck {
         let day_master = pillars.day_master();
         
         let influence = Some(DynamicLuckAnalysis::get_influence(ganzi, "월운", pillars));
+        let special_events = crate::analysis::shinsal::ShinsalAnalysis::calculate_for_luck(ganzi, pillars);
 
         Self {
             year,
@@ -130,6 +137,7 @@ impl MonthlyLuck {
             stem_god: TenGod::from_stems(day_master, ganzi.stem),
             branch_god: TenGod::from_stem_and_branch(day_master, ganzi.branch),
             influence,
+            special_events,
             twelve_stage: Some(crate::core::twelve_stages::calculate_twelve_stage(day_master, ganzi.branch).hangul().to_string()),
         }
     }
@@ -187,6 +195,81 @@ impl std::fmt::Display for MonthlyLuck {
     }
 }
 
+/// 일운 (해당 일의 운세)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DailyLuck {
+    pub year: i32,
+    pub month: u32,
+    pub day: u32,
+    pub ganzi: GanZi,
+    pub stem_god: TenGod,
+    pub branch_god: TenGod,
+    pub influence: Option<LuckInfluence>,
+    pub special_events: Vec<String>,
+    pub twelve_stage: Option<String>,
+}
+
+impl DailyLuck {
+    pub fn calculate(year: i32, month: u32, day: u32, pillars: &FourPillars) -> Self {
+        let ganzi = crate::core::ganzi_utils::calculate_day_ganzi(year, month, day);
+        let day_master = pillars.day_master();
+        
+        let influence = Some(DynamicLuckAnalysis::get_influence(ganzi, "일운", pillars));
+        let special_events = crate::analysis::shinsal::ShinsalAnalysis::calculate_for_luck(ganzi, pillars);
+
+        Self {
+            year,
+            month,
+            day,
+            ganzi,
+            stem_god: TenGod::from_stems(day_master, ganzi.stem),
+            branch_god: TenGod::from_stem_and_branch(day_master, ganzi.branch),
+            influence,
+            special_events,
+            twelve_stage: Some(crate::core::twelve_stages::calculate_twelve_stage(day_master, ganzi.branch).hangul().to_string()),
+        }
+    }
+}
+
+/// 시운 (해당 시간의 운세)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HourlyLuck {
+    pub year: i32,
+    pub month: u32,
+    pub day: u32,
+    pub hour: u32,
+    pub ganzi: GanZi,
+    pub stem_god: TenGod,
+    pub branch_god: TenGod,
+    pub influence: Option<LuckInfluence>,
+    pub special_events: Vec<String>,
+    pub twelve_stage: Option<String>,
+}
+
+impl HourlyLuck {
+    pub fn calculate(year: i32, month: u32, day: u32, hour: u32, pillars: &FourPillars) -> Self {
+        let day_ganzi = crate::core::ganzi_utils::calculate_day_ganzi(year, month, day);
+        let ganzi = crate::core::pillars::FourPillars::calculate_hour_pillar(&day_ganzi, hour);
+        let day_master = pillars.day_master();
+        
+        let influence = Some(DynamicLuckAnalysis::get_influence(ganzi, "시운", pillars));
+        let special_events = crate::analysis::shinsal::ShinsalAnalysis::calculate_for_luck(ganzi, pillars);
+
+        Self {
+            year,
+            month,
+            day,
+            hour,
+            ganzi,
+            stem_god: TenGod::from_stems(day_master, ganzi.stem),
+            branch_god: TenGod::from_stem_and_branch(day_master, ganzi.branch),
+            influence,
+            special_events,
+            twelve_stage: Some(crate::core::twelve_stages::calculate_twelve_stage(day_master, ganzi.branch).hangul().to_string()),
+        }
+    }
+}
+
 /// 전체 운세 분석 (대운 + 연운 + 월운)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LuckAnalysis {
@@ -198,6 +281,10 @@ pub struct LuckAnalysis {
     pub yearly_lucks: Vec<YearlyLuck>,
     /// 월운 목록 (현재 연도)
     pub monthly_lucks: Vec<MonthlyLuck>,
+    /// 일운 목록
+    pub daily_lucks: Vec<DailyLuck>,
+    /// 시운 목록
+    pub hourly_lucks: Vec<HourlyLuck>,
 }
 
 impl LuckAnalysis {
@@ -243,11 +330,16 @@ impl LuckAnalysis {
             .map(|m| MonthlyLuck::calculate(current_year, m, pillars))
             .collect();
 
+        let daily_lucks = Vec::new();
+        let hourly_lucks = Vec::new();
+
         Ok(Self {
             day_master,
             major_luck,
             yearly_lucks,
             monthly_lucks,
+            daily_lucks,
+            hourly_lucks,
         })
     }
 
