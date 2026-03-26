@@ -102,6 +102,8 @@ export interface SpiritMarkerAnalysis {
   markers: FoundMarker[];
   auspicious: string[];
   inauspicious: string[];
+  /** 보조 기둥 관련 신살 [기둥명, 기준, 신살명] */
+  aux_shinsals?: [string, string, string][];
 }
 
 // ── 격국 ─────────────────────────────────────
@@ -253,6 +255,7 @@ export interface IntegratedAnalysis {
 /** 보조 기둥 메타 정보 */
 export interface SupplementaryPillarsMeta {
   formula_version: string;
+  formula_name: string;
   hour_sensitive: boolean;
 }
 
