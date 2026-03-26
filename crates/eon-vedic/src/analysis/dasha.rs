@@ -8,6 +8,7 @@ pub struct DashaPeriod {
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
     pub sub_dashas: Vec<DashaPeriod>,
+    pub name: Option<String>,
 }
 
 pub struct VimshottariDasha;
@@ -60,6 +61,7 @@ impl VimshottariDasha {
             start_time: current_start,
             end_time: first_end,
             sub_dashas: Vec::new(),
+            name: None,
         };
 
         if levels > 1 {
@@ -86,6 +88,7 @@ impl VimshottariDasha {
                 start_time: current_start,
                 end_time,
                 sub_dashas: Vec::new(),
+                name: None,
             };
 
             if levels > 1 {
@@ -120,12 +123,7 @@ impl VimshottariDasha {
 
         // If it's the first dasha, we only show the remaining sub-dashas
         let start_offset = if let Some(portion) = initial_portion {
-            // portion is what's REMAINING of the Nakshatra.
-            // If portion = 0.4, it means 60% is elapsed.
-            // We need to find which sub-dasha we are currently in.
             let elapsed_portion = 1.0 - portion;
-
-            // Sub-dasha sequence starts with the main lord itself.
             let mut cumulative_portion = 0.0;
             let mut start_sub_idx = 0;
             let mut sub_elapsed_in_period = 0.0;
@@ -147,15 +145,10 @@ impl VimshottariDasha {
         };
 
         if let Some((start_sub_idx, sub_elapsed)) = start_offset {
-            // Handle the partial first sub-dasha
             let idx = (lord_idx + start_sub_idx) % 9;
             let (p_lord, years) = Self::CYCLE[idx];
             let full_sub_portion = years / Self::TOTAL_YEARS;
             let remaining_sub_portion = full_sub_portion - sub_elapsed;
-
-            // The total_duration here is for the REMAINING part of the mahadasha.
-            // We need to be careful with scaling.
-            // Total Mahadasha duration (full) would be total_duration / initial_portion.unwrap()
             let full_mahadasha_duration = total_duration / initial_portion.unwrap();
             let sub_duration = full_mahadasha_duration * remaining_sub_portion;
             let sub_end = current_start + Duration::seconds(sub_duration as i64);
@@ -165,6 +158,7 @@ impl VimshottariDasha {
                 start_time: current_start,
                 end_time: sub_end,
                 sub_dashas: Vec::new(),
+                name: None,
             };
 
             if levels_remaining > 1 {
@@ -180,7 +174,6 @@ impl VimshottariDasha {
             sub_periods.push(sub);
             current_start = sub_end;
 
-            // Subsequent sub-dashas
             for i in (start_sub_idx + 1)..9 {
                 let idx = (lord_idx + i) % 9;
                 let (p_lord, years) = Self::CYCLE[idx];
@@ -192,6 +185,7 @@ impl VimshottariDasha {
                     start_time: current_start,
                     end_time: sub_end,
                     sub_dashas: Vec::new(),
+                    name: None,
                 };
 
                 if levels_remaining > 1 {
@@ -208,7 +202,6 @@ impl VimshottariDasha {
                 current_start = sub_end;
             }
         } else {
-            // Full mahadasha, generate all 9 sub-dashas
             for i in 0..9 {
                 let idx = (lord_idx + i) % 9;
                 let (p_lord, years) = Self::CYCLE[idx];
@@ -220,6 +213,7 @@ impl VimshottariDasha {
                     start_time: current_start,
                     end_time: sub_end,
                     sub_dashas: Vec::new(),
+                    name: None,
                 };
 
                 if levels_remaining > 1 {
@@ -238,5 +232,61 @@ impl VimshottariDasha {
         }
 
         sub_periods
+    }
+}
+
+pub struct YoginiDasha;
+
+impl YoginiDasha {
+    const CYCLE: [(&'static str, VedicPlanet, f64); 8] = [
+        ("Mangala", VedicPlanet::Moon, 1.0),
+        ("Pingala", VedicPlanet::Sun, 2.0),
+        ("Dhanya", VedicPlanet::Jupiter, 3.0),
+        ("Bhramari", VedicPlanet::Mars, 4.0),
+        ("Bhadrika", VedicPlanet::Mercury, 5.0),
+        ("Ulka", VedicPlanet::Saturn, 6.0),
+        ("Siddha", VedicPlanet::Venus, 7.0),
+        ("Sankata", VedicPlanet::Rahu, 8.0),
+    ];
+
+    pub fn calculate_timeline(
+        birth_time: DateTime<Utc>,
+        moon_long: f64,
+    ) -> Vec<DashaPeriod> {
+        let nak_duration = 360.0 / 27.0;
+        let nak_index_1 = (moon_long / nak_duration).floor() as usize + 1;
+        let mut start_idx = (nak_index_1 + 3) % 8;
+        if start_idx == 0 { start_idx = 8; }
+        let start_idx_0 = start_idx - 1;
+
+        let elapsed_in_nak = moon_long % nak_duration;
+        let remaining_in_nak = nak_duration - elapsed_in_nak;
+        let portion_remaining = remaining_in_nak / nak_duration;
+
+        let mut timeline = Vec::new();
+        let mut current_start = birth_time;
+        let years_to_secs = |y: f64| (y * 365.2425 * 24.0 * 60.0 * 60.0) as i64;
+
+        for cycle_num in 0..3 {
+            for i in 0..8 {
+                let idx = (start_idx_0 + i) % 8;
+                let (name, lord, full_years) = Self::CYCLE[idx];
+                let actual_years = if cycle_num == 0 && i == 0 {
+                    full_years * portion_remaining
+                } else {
+                    full_years
+                };
+                let end_time = current_start + Duration::seconds(years_to_secs(actual_years));
+                timeline.push(DashaPeriod {
+                    lord,
+                    start_time: current_start,
+                    end_time,
+                    sub_dashas: Vec::new(),
+                    name: Some(name.to_string()),
+                });
+                current_start = end_time;
+            }
+        }
+        timeline
     }
 }
