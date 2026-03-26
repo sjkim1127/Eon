@@ -248,6 +248,22 @@ export interface IntegratedAnalysis {
   dominant_ten_god: string;
 }
 
+// ── 보조 기둥 (태원/명궁/신궁) ─────────────────
+
+/** 보조 기둥 메타 정보 */
+export interface SupplementaryPillarsMeta {
+  formula_version: string;
+  hour_sensitive: boolean;
+}
+
+/** 보조 기둥 분석 결과 (SupplementaryPillars Rust struct) */
+export interface SupplementaryPillars {
+  taewon: GanZi;
+  myeonggung: GanZi;
+  shingung: GanZi;
+  meta: SupplementaryPillarsMeta;
+}
+
 // ── 핵심 사주 리포트 ─────────────────────────
 
 /** 사주 분석 내부 리포트 (SajuReport Rust struct) */
@@ -266,6 +282,7 @@ export interface SajuReport {
   power: IntegratedAnalysis;
   voids?: any;
   relationships?: any;
+  supplementary_pillars: SupplementaryPillars;
 }
 
 /** 주의 시점 재현 벡터 (LuckVector Rust struct) */

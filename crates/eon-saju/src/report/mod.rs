@@ -12,6 +12,7 @@ use crate::analysis::{
     structure::StructureAnalysis,
     void::VoidAnalysis,
     yongshin::YongshinAnalysis,
+    supplementary_pillars::SupplementaryPillars,
 };
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGodAnalysis;
@@ -35,6 +36,7 @@ pub struct SajuReport {
     pub power: IntegratedAnalysis,
     pub voids: VoidAnalysis,
     pub relationships: RelationshipAnalysis,
+    pub supplementary_pillars: SupplementaryPillars,
 }
 
 impl SajuReport {
@@ -50,6 +52,7 @@ impl SajuReport {
         );
         let voids = pillars.void_analysis();
         let relationships = RelationshipAnalysis::from_pillars(&pillars);
+        let supplementary_pillars = SupplementaryPillars::calculate(&pillars);
 
         Self {
             pillars,
@@ -66,6 +69,7 @@ impl SajuReport {
             power,
             voids,
             relationships,
+            supplementary_pillars,
         }
     }
 
@@ -106,6 +110,12 @@ impl SajuReport {
         md.push('\n');
         md.push_str(&self.pillars.hangul());
         md.push_str("\n```\n\n");
+        
+        md.push_str("### 1.1 Auxiliary Pillars\n");
+        md.push_str(&format!("- **Taewon (Pregnancy)**: {} ({})\n", self.supplementary_pillars.taewon.hanja(), self.supplementary_pillars.taewon.hangul()));
+        md.push_str(&format!("- **Myeonggung (Destiny)**: {} ({})\n", self.supplementary_pillars.myeonggung.hanja(), self.supplementary_pillars.myeonggung.hangul()));
+        md.push_str(&format!("- **Shingung (Body)**: {} ({})\n", self.supplementary_pillars.shingung.hanja(), self.supplementary_pillars.shingung.hangul()));
+        md.push('\n');
 
         md.push_str("## 2. Basic Analysis\n");
         md.push_str(&format!(

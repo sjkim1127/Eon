@@ -8,6 +8,7 @@ import { SpiritsList } from "../saju/SpiritsList";
 import { RelationshipsAnalysis } from "../saju/RelationshipsAnalysis";
 import { VoidAnalysis } from "../saju/VoidAnalysis";
 import { MajorLuckTimeline } from "../saju/MajorLuckTimeline";
+import { AuxiliaryPillars } from "../saju/AuxiliaryPillars";
 
 interface SajuTabProps {
   sajuReport: import("../../types").SajuAnalysisResult | null;
@@ -83,6 +84,14 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
         </div>
         <PillarsChart p={p} t={t} unknownTime={unknownTime} />
       </div>
+
+      {/* 보조 기둥 (태원/명궁/신궁) */}
+      {reportData.supplementary_pillars && (
+        <AuxiliaryPillars 
+          data={reportData.supplementary_pillars} 
+          unknownTime={unknownTime} 
+        />
+      )}
 
       {/* 역량 + 용신 + 격국 */}
       <SajuSummary s={s} y={y} st={st} />
