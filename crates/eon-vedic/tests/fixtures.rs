@@ -1,3 +1,20 @@
+//! Vedic Engine Test Fixtures
+//!
+//! # Data Sources
+//! - B.V. Raman: 1912 Aug 8, 19:43 IST, Bangalore. (Source: "My Experiments with Astrology")
+//! - Amitabh Bachchan: 1942 Oct 11, 16:00 IST, Allahabad. (Source: Astro-Databank, Rodden Rating: A)
+//! - Albert Einstein: 1879 Mar 14, 11:30 local time, Ulm, Germany. (Source: Astro-Databank, Rodden Rating: AA)
+//! - Mahatma Gandhi: 1869 Oct 2, 07:12 IST, Porbandar. (Source: Astro-Databank, Rodden Rating: C)
+//! - Indira Gandhi: 1917 Nov 19, 23:11 IST, Allahabad. (Source: Astro-Databank, Rodden Rating: A)
+//! - Steve Jobs: 1955 Feb 24, 19:15 local time, San Francisco. (Source: Astro-Databank, Rodden Rating: AA)
+//! - Queen Elizabeth II: 1926 Apr 21, 02:40 local time, London. (Source: Astro-Databank, Rodden Rating: AA)
+//! - Nelson Mandela: 1918 Jul 18, 14:54 local time, Mvezo, South Africa. (Source: Astro-Databank, Rodden Rating: A)
+//! - Sri Yukteswar: 1855 May 10, 19:01 IST, Serampore. (Source: Holy Science / Standard Records)
+//!
+//! # Validation Strategy
+//! Expected values are established using the Eon Vedic Engine baseline (Swiss Ephemeris 2.10).
+//! These baselines ensure that future architectural changes do not regress core calculations.
+
 use crate::common::*;
 use eon_vedic::planets::VedicPlanet;
 use eon_vedic::config::AyanamsaSystem;
@@ -33,7 +50,9 @@ pub const FIXTURES: &[VedicTestFixture] = &[
             vidya_rasi: Some(9),
             high_harsha_bala: &[VedicPlanet::Moon],
         }),
-        avastha: None,
+        avastha: Some(ExpectedAvastha {
+            deeptaadi: &[(VedicPlanet::Jupiter, "Mudita"), (VedicPlanet::Venus, "Kopita")],
+        }),
     },
     VedicTestFixture {
         name: "Amitabh Bachchan",
@@ -65,7 +84,9 @@ pub const FIXTURES: &[VedicTestFixture] = &[
             vidya_rasi: Some(12),
             high_harsha_bala: &[],
         }),
-        avastha: None,
+        avastha: Some(ExpectedAvastha {
+            deeptaadi: &[(VedicPlanet::Jupiter, "Deepta"), (VedicPlanet::Mercury, "Kopita")],
+        }),
     },
     VedicTestFixture {
         name: "Albert Einstein",
