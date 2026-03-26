@@ -18,6 +18,7 @@ import { DashaTimelineSection } from "../sections/DashaTimelineSection";
 import { GocharaSection } from "../sections/GocharaSection";
 import { AvasthaKarakaSection } from "../sections/AvasthaKarakaSection";
 import { VargaNakshatraTable } from "../sections/VargaNakshatraTable";
+import { VedicAdvancedInsightsSection } from "../sections/VedicAdvancedInsightsSection";
 
 interface VedicChartsTabProps {
   report: VedicAnalysisResult;
@@ -39,6 +40,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const bhavaStrengths = report.chart.bhava_strengths ?? [];
   const aspects = report.chart.aspects ?? [];
   const dashaTimeline = report.report?.dasha_timeline ?? [];
+  const yoginiTimeline = report.report?.yogini_timeline ?? [];
 
 
   const vargaReports = report.varga_nakshatra_reports;
@@ -332,6 +334,11 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
         </div>
       )}
 
+      {/* ── 고급 분석 지표 (Jaimini, D9/D10, Tajika) ─────────────────── */}
+      {report.report && (
+        <VedicAdvancedInsightsSection report={report.report} />
+      )}
+
       {/* ── 요가 (Yogas) 하이라이트 ────────────────────────────────────────── */}
       {yogas.length > 0 && (
         <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
@@ -590,8 +597,11 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
         </div>
       )}
 
-      {/* ── 다샤 타임라인 (Vimshottari Dasha) ───────────── */}
-      <DashaTimelineSection periods={dashaTimeline} />
+      {/* ── 다샤 타임라인 (Vimshottari & Yogini Dasha) ───────────── */}
+      <DashaTimelineSection 
+        periods={dashaTimeline} 
+        yoginiPeriods={yoginiTimeline}
+      />
 
       {/* ── 12하우스 강도 레이더 (Bhava Strength) ───────────── */}
       <BhavaRadarSection strengths={bhavaStrengths} />
@@ -606,6 +616,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       <AvasthaKarakaSection
         avasthas={report.chart.avasthas ?? []}
         karakas={report.chart.karakas ?? []}
+        arudhaPadas={report.chart.arudha_padas ?? []}
       />
     </motion.div>
   );
