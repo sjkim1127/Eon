@@ -144,9 +144,14 @@ impl VedicTestFixture {
     }
 
     fn verify_avastha(&self, chart: &VedicChart, expected: &ExpectedAvastha) {
-        for (p, _expected_label) in expected.deeptaadi {
+        for (p, expected_label) in expected.deeptaadi {
             let avastha = chart.avasthas.iter().find(|a| a.planet == *p);
             assert!(avastha.is_some(), "Fixture [{}]: Avastha for {:?} not found", self.name, p);
+            
+            if let Some(a) = avastha {
+                let actual_label = format!("{:?}", a.deeptaadi);
+                assert_eq!(actual_label, *expected_label, "Fixture [{}]: Deeptaadi mismatch for {:?}", self.name, p);
+            }
         }
     }
 
