@@ -89,6 +89,7 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
       {reportData.supplementary_pillars && (
         <AuxiliaryPillars 
           data={reportData.supplementary_pillars} 
+          auxShinsals={sp?.aux_shinsals}
           unknownTime={unknownTime} 
         />
       )}

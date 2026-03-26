@@ -160,6 +160,8 @@ pub struct FourPillars {
     pub gender: eon_core::Gender,
     /// 원시 입력 데이터 (운세 재계산용)
     pub raw_input: SajuInput,
+    /// 보조 기둥 분석 결과
+    pub supplementary_pillars: crate::analysis::supplementary_pillars::SupplementaryPillars,
 }
 
 /// 년주 계산용 기준 연도 (4년 = 甲子년)
@@ -234,6 +236,7 @@ impl FourPillars {
             birth_time: dt_absolute_utc,
             gender: input.gender,
             raw_input: input.clone(),
+            supplementary_pillars: crate::analysis::supplementary_pillars::SupplementaryPillars::calculate_partial(&year_pillar, &month_pillar, &day_pillar, &hour_pillar),
         })
     }
 

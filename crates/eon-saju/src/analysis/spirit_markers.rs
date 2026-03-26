@@ -15,6 +15,7 @@ use crate::core::stem::HeavenlyStem;
 use crate::core::branch::EarthlyBranch;
 use crate::core::ganzi::GanZi;
 use crate::core::pillars::FourPillars;
+use crate::analysis::shinsal::{TwelveShinsal, Gilsin, EvilSpirit};
 
 /// 신살 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -260,6 +261,8 @@ pub struct SpiritMarkerAnalysis {
     pub auspicious: Vec<SpiritMarker>,
     /// 흉살 목록
     pub inauspicious: Vec<SpiritMarker>,
+    /// 보조 기둥 관련 신살 [기둥명, 기준명, 신살명]
+    pub aux_shinsals: Vec<(String, String, String)>,
 }
 
 impl SpiritMarkerAnalysis {
@@ -592,10 +595,45 @@ impl SpiritMarkerAnalysis {
         inauspicious.sort_by_key(|m| m.hangul());
         inauspicious.dedup();
 
+        // === 보조 기둥(태원/명궁/신궁) 신살 분석 ===
+        let mut aux_shinsals = Vec::new();
+        let sp = &pillars.supplementary_pillars;
+        let aux_pillars = [
+            ("태원", sp.taewon),
+            ("명궁", sp.myeonggung),
+            ("신궁", sp.shingung),
+        ];
+
+        // NOTE: tianyi_branches is calculated earlier in the from_pillars method.
+        // Assuming it's in scope.
+        let tianyi_branches = Self::get_tianyi_branches(day_stem);
+
+        for (name, aux_gz) in &aux_pillars {
+            // 1. 일지 기준 12신살
+            let marker_day = TwelveShinsal::calculate(day_branch, aux_gz.branch);
+            aux_shinsals.push((name.to_string(), "일지기준".to_string(), marker_day.hangul().to_string()));
+
+            // 2. 년지 기준 12신살
+            let marker_year = TwelveShinsal::calculate(year_branch, aux_gz.branch);
+            aux_shinsals.push((name.to_string(), "년지기준".to_string(), marker_year.hangul().to_string()));
+
+            // 3. 천을귀인 체크
+            let cheoneul = Gilsin::cheoneul_branches(day_stem);
+            if cheoneul.contains(&aux_gz.branch) {
+                aux_shinsals.push((name.to_string(), "일간기준".to_string(), "천을귀인".to_string()));
+            }
+
+            // 4. 원진/귀문 체크 (일지 기준)
+            if let Some(w) = EvilSpirit::check_wonjin(day_branch, aux_gz.branch) {
+                aux_shinsals.push((name.to_string(), "일지기준".to_string(), w.hangul().to_string()));
+            }
+        }
+
         Self {
             markers,
             auspicious,
             inauspicious,
+            aux_shinsals,
         }
     }
 
