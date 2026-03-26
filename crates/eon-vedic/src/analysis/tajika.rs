@@ -94,14 +94,74 @@ impl TajikaEngine {
         results
     }
 
-    /// Selection of Year Lord (Varsheshwara)
-    pub fn select_year_lord(_chart: &VedicChart, birth_lagna_rasi: u8, age_years: u32) -> VedicPlanet {
+    /// Selection of Year Lord (Varsheshwara) - Proper Tajika Implementation
+    pub fn select_year_lord(chart: &VedicChart, birth_lagna_rasi: u8, age_years: u32) -> VedicPlanet {
+        let annual_lagna_rasi = chart.ascendant.rasi;
         let muntha_rasi = Self::calculate_muntha(birth_lagna_rasi, age_years);
-        // Candidate 1: Muntha Lord
-        let muntha_lord = VedicPlanet::get_ruler_of(muntha_rasi);
+        let is_day = chart.panchanga.is_day_birth;
+
+        // 1. Pancha Adhikaris (5 Candidates)
+        let mut candidates = Vec::new();
         
-        // Simplified: Pick Muntha Lord as Year Lord for now
-        muntha_lord
+        // 1.1 Muntha Lord
+        candidates.push(VedicPlanet::get_ruler_of(muntha_rasi));
+        
+        // 1.2 Birth Lagna Lord
+        candidates.push(VedicPlanet::get_ruler_of(birth_lagna_rasi));
+        
+        // 1.3 Varsha (Annual) Lagna Lord
+        candidates.push(VedicPlanet::get_ruler_of(annual_lagna_rasi));
+        
+        // 1.4 Sun/Moon Lord (Sun's for Day, Moon's for Night)
+        if is_day {
+            if let Some(sun) = chart.planets.iter().find(|p| p.planet == VedicPlanet::Sun) {
+                candidates.push(VedicPlanet::get_ruler_of(sun.rasi));
+            }
+        } else {
+            if let Some(moon) = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon) {
+                candidates.push(VedicPlanet::get_ruler_of(moon.rasi));
+            }
+        }
+        
+        // 1.5 Dina/Ratri Pati
+        if is_day {
+            // Day Birth: Dina Pati is Lord of Sun's sign (Simplified to Sun for now or keep same as 1.4)
+            candidates.push(VedicPlanet::Sun); 
+        } else {
+            // Night Birth: Ratri Pati is Lord of Moon's sign
+            candidates.push(VedicPlanet::Moon);
+        }
+
+        // 2. Filter candidates who aspect the Annual Lagna
+        // (In Tajika, any aspect (friendly or hostile) makes it eligible)
+        let eligible: Vec<VedicPlanet> = candidates.into_iter().filter(|&p| {
+            if let Some(pos) = chart.planets.iter().find(|pos| pos.planet == p) {
+                let dist = (pos.rasi as i16 - annual_lagna_rasi as i16 + 12) % 12;
+                let aspect = Self::get_aspect_type((dist + 1) as u8);
+                !matches!(aspect, TajikaAspectType::Sama) || p == VedicPlanet::get_ruler_of(annual_lagna_rasi)
+            } else {
+                false
+            }
+        }).collect();
+
+        // 3. Selection: Strongest among eligible by Harsha Bala
+        // If none eligible, fallback to Muntha Lord
+        if eligible.is_empty() {
+            return VedicPlanet::get_ruler_of(muntha_rasi);
+        }
+
+        let mut strongest = eligible[0];
+        let mut max_bala = 0;
+
+        for p in eligible {
+            let bala = TajikaBala::calculate_harsha_bala(chart, p);
+            if bala > max_bala {
+                max_bala = bala;
+                strongest = p;
+            }
+        }
+
+        strongest
     }
 }
 
@@ -127,7 +187,7 @@ impl TajikaBala {
                 _ => {}
             }
 
-            // 2. Swavarga (Sign/Varga)
+            // 2. Swavarga (Own/Exaltation Sign in Annual Chart)
             let lord = VedicPlanet::get_ruler_of(p.rasi);
             if lord == planet || p.rasi == planet.exaltation_rasi() {
                  score += 5;

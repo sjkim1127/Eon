@@ -408,7 +408,7 @@ impl VedicChartCalculator {
         chart.vimshopaka_scores = v_scores;
 
         chart.analysis_report = Some(crate::analysis::report::VedicAnalysisReport::generate(
-            &chart, time,
+            &chart, time, chart.ascendant.rasi
         ));
 
         chart
@@ -456,7 +456,14 @@ impl VedicChartCalculator {
         }
 
         // 3. Calculate full chart for the exact return time
-        self.calculate(current_guess, latitude, longitude)
+        let mut annual_chart = self.calculate(current_guess, latitude, longitude);
+        
+        // Overwrite report with correct birth lagna context
+        annual_chart.analysis_report = Some(crate::analysis::report::VedicAnalysisReport::generate(
+            &annual_chart, birth_time, birth_chart.ascendant.rasi
+        ));
+        
+        annual_chart
     }
 }
 

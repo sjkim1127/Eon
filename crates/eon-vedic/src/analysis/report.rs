@@ -61,7 +61,7 @@ pub struct HouseRating {
 }
 
 impl VedicAnalysisReport {
-    pub fn generate(chart: &VedicChart, birth_time: chrono::DateTime<Utc>) -> Self {
+    pub fn generate(chart: &VedicChart, birth_time: chrono::DateTime<Utc>, birth_lagna_rasi: u8) -> Self {
         let ak = chart
             .karakas
             .iter()
@@ -195,8 +195,8 @@ impl VedicAnalysisReport {
 
         // Annual Analysis
         let age_years = (chart.panchanga.current_time.year() - birth_time.year()).abs() as u32;
-        let muntha_rasi = TajikaEngine::calculate_muntha(chart.ascendant.rasi, age_years);
-        let year_lord = TajikaEngine::select_year_lord(chart, chart.ascendant.rasi, age_years);
+        let muntha_rasi = TajikaEngine::calculate_muntha(birth_lagna_rasi, age_years);
+        let year_lord = TajikaEngine::select_year_lord(chart, birth_lagna_rasi, age_years);
 
         Self {
             primary_karakas: KarakaSummary {
