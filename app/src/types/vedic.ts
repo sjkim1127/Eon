@@ -25,6 +25,24 @@ export interface DashaPeriod {
   start_time: string; // ISO 8601 UTC
   end_time: string;   // ISO 8601 UTC
   sub_dashas: DashaPeriod[];
+  name?: string;      // For Yogini Dasha names like "Mangala"
+}
+
+/** 사함 (Sensitive Points in Annual Chart) */
+export interface Saham {
+  name: string;
+  longitude: number;
+  rasi: number;
+}
+
+/** 분할 차트 해석 결과 (Varga Interpretation) */
+export interface VargaInterpretation {
+  planet: string;
+  is_vargottama: boolean;
+  is_pushkar_navamsa: boolean;
+  d9_rasi: number;
+  d10_rasi: number;
+  d60_rasi: number;
 }
 
 /** 베딕 분석 리포트 (VedicAnalysisReport Rust struct) */
@@ -37,10 +55,23 @@ export interface VedicAnalysisReport {
   house_summary: HouseSummary[];
   dasha_focus: string;
   dasha_timeline: DashaPeriod[];
+  yogini_timeline: DashaPeriod[];
   nakshatra_info: string;
   overall_strength_score: number;
   sade_sati: "None" | "Rising" | "Peak" | "Setting";
   yogas: Yoga[];
+
+  // Advanced Metrics
+  arudha_lagna: number;
+  upapada_lagna: number;
+  special_lagnas_summary: [string, number][];
+
+  // Tajika & Varga Integration
+  sahams: Saham[];
+  harsha_bala_summary: [string, number][];
+  varga_interpretations: VargaInterpretation[];
+  d9_marriage_analysis: string;
+  d10_career_analysis: string;
 }
 
 // ── 하우스 점수 (SAV / Bhava) ─────────────────────
@@ -95,6 +126,20 @@ export interface KarakaAssignment {
   degree_in_rasi: number;
 }
 
+/** 아루다 파다 (Arudha Pada) */
+export interface ArudhaPada {
+  house: number;
+  rasi: number;
+  name: string;
+}
+
+/** 특별 라그나 (Special Lagna) */
+export interface SpecialLagna {
+  name: string;
+  longitude: number;
+  rasi: number;
+}
+
 /** 행성 시선(Drishti/Aspect) 관계 */
 export interface AspectRelation {
   aspecting_planet: string;
@@ -142,9 +187,11 @@ export interface VedicChartData {
   bav: BavEntry[];    // 행성별 BAV [Sun~Saturn]
   house_cusps: number[];
   karakas: KarakaAssignment[];
+  arudha_padas: ArudhaPada[];
+  special_lagnas: SpecialLagna[];
   bhava_strengths: BhavaStrength[];
   vimshopaka_scores: [string, VimshopakaScore][];
-  avasthas: { planet: string; baladi: string; jagradadi: string }[];
+  avasthas: { planet: string; baladi: string; jagradadi: string; deeptaadi: string }[];
   panchanga: VedicPanchanga;
   analysis_report: VedicAnalysisReport | null;
 }

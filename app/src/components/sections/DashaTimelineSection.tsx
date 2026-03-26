@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, ChevronDown, ChevronUp, Zap } from "lucide-react";
 import type { DashaPeriod } from "../../types/vedic";
 
 const PLANET_COLORS: Record<string, string> = {
@@ -41,33 +41,36 @@ function yearsBetween(startIso: string, endIso: string): number {
 
 interface DashaTimelineSectionProps {
     periods: DashaPeriod[];
+    yoginiPeriods?: DashaPeriod[];
 }
 
-export function DashaTimelineSection({ periods }: DashaTimelineSectionProps) {
+export function DashaTimelineSection({ periods, yoginiPeriods }: DashaTimelineSectionProps) {
+    const [dashaType, setDashaType] = useState<"vimshottari" | "yogini">("vimshottari");
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
     const [now] = useState(() => Date.now());
 
-    const hasPeriods = Array.isArray(periods) && periods.length > 0;
+    const activePeriods = dashaType === "vimshottari" ? periods : (yoginiPeriods ?? []);
+    const hasPeriods = Array.isArray(activePeriods) && activePeriods.length > 0;
 
-    if (!hasPeriods) {
+    if (!hasPeriods && !yoginiPeriods?.length) {
         return (
             <div className="glass p-8 rounded-[2rem]">
                 <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
                     <Clock className="w-6 h-6 text-celestial-gold" />
-                    다샤 타임라인 (Vimshottari Dasha)
+                    다샤 타임라인
                 </h5>
                 <p className="text-white/50 text-sm">
-                    다샤 타임라인을 계산할 수 없습니다. 출생 차트에 달 위치가 필요하며, 베딕 분석이 완료되면 여기에 표시됩니다.
+                    다샤 타임라인을 계산할 수 없습니다.
                 </p>
             </div>
         );
     }
 
     // Total duration for proportional widths
-    const totalYears = periods.reduce((sum, p) => sum + yearsBetween(p.start_time, p.end_time), 0);
+    const totalYears = activePeriods.reduce((sum, p) => sum + yearsBetween(p.start_time, p.end_time), 0);
 
     // Find current Mahadasha
-    const currentIdx = periods.findIndex(p => {
+    const currentIdx = activePeriods.findIndex(p => {
         const s = new Date(p.start_time).getTime();
         const e = new Date(p.end_time).getTime();
         return now >= s && now < e;
@@ -75,14 +78,40 @@ export function DashaTimelineSection({ periods }: DashaTimelineSectionProps) {
 
     return (
         <div className="glass p-8 rounded-[2rem]">
-            <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                <Clock className="w-6 h-6 text-celestial-gold" />
-                다샤 타임라인 (Vimshottari Dasha)
-            </h5>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <h5 className="text-xl font-bold text-white flex items-center gap-3">
+                    <Clock className="w-6 h-6 text-celestial-gold" />
+                    다샤 타임라인 ({dashaType === "vimshottari" ? "Vimshottari" : "Yogini"})
+                </h5>
+                
+                {yoginiPeriods && yoginiPeriods.length > 0 && (
+                    <div className="flex bg-black/40 border border-white/20 rounded-xl overflow-hidden p-0.5">
+                        <button
+                            onClick={() => { setDashaType("vimshottari"); setExpandedIndex(null); }}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${dashaType === "vimshottari" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+                        >
+                            빔쇼타리
+                        </button>
+                        <button
+                            onClick={() => { setDashaType("yogini"); setExpandedIndex(null); }}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${dashaType === "yogini" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+                        >
+                            요기니
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {dashaType === "yogini" && (
+                <p className="text-xs text-white/40 mb-4 bg-white/5 p-3 rounded-lg border border-white/5">
+                    <Zap className="w-3 h-3 inline mr-1 text-celestial-gold" />
+                    요기니 다샤(Yogini Dasha)는 36년 주기로 순환하며, 나크샤트라에 기반한 강력한 길흉 판단 도구입니다.
+                </p>
+            )}
 
             {/* Mahadasha 바 차트 */}
             <div className="flex w-full h-10 rounded-xl overflow-hidden border border-white/10 mb-4">
-                {periods.map((p, i) => {
+                {activePeriods.map((p, i) => {
                     const years = yearsBetween(p.start_time, p.end_time);
                     const pct = totalYears > 0 ? (years / totalYears) * 100 : 0;
                     const isCurrent = i === currentIdx;
@@ -90,7 +119,7 @@ export function DashaTimelineSection({ periods }: DashaTimelineSectionProps) {
 
                     return (
                         <button
-                            key={i}
+                            key={`${dashaType}-${i}`}
                             type="button"
                             onClick={() => setExpandedIndex(expandedIndex === i ? null : i)}
                             className={`relative flex items-center justify-center text-[10px] font-bold text-white transition-all hover:brightness-125 ${isCurrent ? "ring-2 ring-white/40 ring-inset" : ""}`}
@@ -98,11 +127,11 @@ export function DashaTimelineSection({ periods }: DashaTimelineSectionProps) {
                                 width: `${pct}%`,
                                 backgroundColor: color,
                                 opacity: isCurrent ? 1 : 0.65,
-                                minWidth: pct > 3 ? undefined : "18px",
+                                minWidth: pct > 2 ? undefined : "12px",
                             }}
-                            title={`${p.lord}: ${formatDate(p.start_time)} ~ ${formatDate(p.end_time)} (${years.toFixed(1)}년)`}
+                            title={`${p.name || p.lord}: ${formatDate(p.start_time)} ~ ${formatDate(p.end_time)} (${years.toFixed(1)}년)`}
                         >
-                            {pct > 5 && p.lord.substring(0, 2)}
+                            {pct > 5 && (p.name ? p.name.substring(0, 2) : p.lord.substring(0, 2))}
                             {isCurrent && (
                                 <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[8px] text-white/60">▲</span>
                             )}
@@ -113,14 +142,14 @@ export function DashaTimelineSection({ periods }: DashaTimelineSectionProps) {
 
             {/* Mahadasha 카드 리스트 */}
             <div className="space-y-2 mt-6">
-                {periods.map((p, i) => {
+                {activePeriods.map((p, i) => {
                     const years = yearsBetween(p.start_time, p.end_time);
                     const isCurrent = i === currentIdx;
                     const isExpanded = expandedIndex === i;
                     const colorClass = PLANET_COLORS[p.lord] ?? "bg-white/10 text-white/70 border-white/20";
 
                     return (
-                        <div key={i}>
+                        <div key={`${dashaType}-list-${i}`}>
                             <button
                                 type="button"
                                 onClick={() => setExpandedIndex(isExpanded ? null : i)}
@@ -128,13 +157,13 @@ export function DashaTimelineSection({ periods }: DashaTimelineSectionProps) {
                                     }`}
                             >
                                 <span className={`text-xs px-2 py-0.5 rounded-lg border font-bold ${colorClass}`}>
-                                    {p.lord}
+                                    {p.name ? `${p.name} (${p.lord})` : p.lord}
                                 </span>
-                                <span className="text-xs text-white/50 font-mono flex-1">
+                                <span className="text-xs text-white/50 font-mono flex-1 text-center sm:text-left">
                                     {formatDate(p.start_time)} ~ {formatDate(p.end_time)}
                                 </span>
-                                <span className="text-xs text-white/30">{years.toFixed(1)}년</span>
-                                {p.sub_dashas.length > 0 && (
+                                <span className="text-xs text-white/30 hidden sm:inline">{years.toFixed(1)}년</span>
+                                {p.sub_dashas && p.sub_dashas.length > 0 && (
                                     isExpanded ? <ChevronUp className="w-4 h-4 text-white/30" /> : <ChevronDown className="w-4 h-4 text-white/30" />
                                 )}
                                 {isCurrent && (
@@ -143,7 +172,7 @@ export function DashaTimelineSection({ periods }: DashaTimelineSectionProps) {
                             </button>
 
                             {/* Antardasha 확장 */}
-                            {isExpanded && p.sub_dashas.length > 0 && (
+                            {isExpanded && p.sub_dashas && p.sub_dashas.length > 0 && (
                                 <div className="ml-6 mt-1 pl-4 border-l-2 border-white/10 space-y-1">
                                     {p.sub_dashas.map((sub, j) => {
                                         const subYears = yearsBetween(sub.start_time, sub.end_time);
@@ -159,7 +188,7 @@ export function DashaTimelineSection({ periods }: DashaTimelineSectionProps) {
                                                     }`}
                                             >
                                                 <span className={`px-1.5 py-0.5 rounded border text-[10px] font-bold ${subColor}`}>
-                                                    {sub.lord}
+                                                    {sub.name ? `${sub.name} (${sub.lord})` : sub.lord}
                                                 </span>
                                                 <span className="font-mono text-white/30 flex-1">
                                                     {formatDate(sub.start_time)} ~ {formatDate(sub.end_time)}
