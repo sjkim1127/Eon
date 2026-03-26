@@ -85,6 +85,8 @@ pub struct VedicChart {
     pub bav: Vec<crate::analysis::ashtakavarga::AshtakavargaPoints>, // 행성별 BAV
     pub house_cusps: Vec<f64>,
     pub karakas: Vec<crate::analysis::jaimini::KarakaAssignment>,
+    pub arudha_padas: Vec<crate::analysis::jaimini::ArudhaPada>,
+    pub special_lagnas: Vec<crate::analysis::jaimini::SpecialLagna>,
     pub bhava_strengths: Vec<crate::analysis::bhava::BhavaStrength>,
     pub vimshopaka_scores: Vec<(VedicPlanet, crate::analysis::vimshopaka::VimshopakaScore)>,
     pub avasthas: Vec<crate::analysis::avasthas::PlanetAvastha>,
@@ -147,7 +149,6 @@ impl VedicChartCalculator {
             .collect();
         let asc_sidereal = (ascmc[0] - ayanamsa + 360.0) % 360.0;
 
-        // Calculate Sandhis (Junctions) for Bhava Chalit
         let mut sandhis = Vec::new();
         if self.config.house_system == crate::core::config::HouseSystem::Sripati
             && !sidereal_cusps.is_empty()
@@ -165,7 +166,6 @@ impl VedicChartCalculator {
 
         let asc_rasi = (asc_sidereal / 30.0).floor() as u8 + 1;
 
-        // Helper to Create Position
         let create_position = |planet: VedicPlanet,
                                sidereal: f64,
                                tropical: f64,
@@ -176,10 +176,8 @@ impl VedicChartCalculator {
             let (nakshatra, pada) = Self::calculate_nakshatra_and_pada(sidereal);
             let rasi = (sidereal / 30.0).floor() as u8 + 1;
 
-            // House Index Calculation
             let house_index = match self.config.house_system {
                 crate::core::config::HouseSystem::WholeSign => {
-                    // Simplified Modulo Arithmetic for Whole Sign
                     ((rasi as i32 - asc_rasi as i32 + 12) % 12) as u8 + 1
                 }
                 crate::core::config::HouseSystem::Sripati => {
@@ -264,7 +262,6 @@ impl VedicChartCalculator {
             }
         };
 
-        // 0. Find Sun's Sidereal Longitude first for combustion check
         let (sun_trop, _) = self
             .engine
             .get_planet_full(time, VedicPlanet::Sun.se_id(), 256 | 2)
@@ -275,8 +272,6 @@ impl VedicChartCalculator {
             .unwrap_or((0.0, 0.0));
         let sun_sidereal = (sun_trop - ayanamsa + 360.0) % 360.0;
 
-        // 1. Create Ascendant Position
-        // Ascendant declination is approximation or 0.0 (not usually used for strength)
         let asc_position = create_position(
             VedicPlanet::Ascendant,
             asc_sidereal,
@@ -299,16 +294,15 @@ impl VedicChartCalculator {
 
         let mut planets = Vec::new();
         for p in &planets_names {
-            // Use config to decide Mean vs True Node for Rahu/Ketu
             let se_id = if *p == VedicPlanet::Rahu {
                 match self.config.node_calc {
-                    NodeCalculation::MeanNode => 10, // SE_MEAN_NODE
-                    NodeCalculation::TrueNode => 11, // SE_TRUE_NODE
+                    NodeCalculation::MeanNode => 10,
+                    NodeCalculation::TrueNode => 11,
                 }
             } else {
                 p.se_id()
             };
-            let flag = 256 | 2; // SEFLG_SPEED | SEFLG_SIDEREAL (or just standard)
+            let flag = 256 | 2;
             let (trop, speed) = self
                 .engine
                 .get_planet_full(time, se_id, flag)
@@ -327,12 +321,10 @@ impl VedicChartCalculator {
                 Some(sun_sidereal),
             ));
 
-            // Add Ketu opposite to Rahu
             if *p == VedicPlanet::Rahu {
                 let ketu_sidereal = (sidereal + 180.0) % 360.0;
                 let ketu_tropical = (trop + 180.0) % 360.0;
-                let ketu_dec = -dec; // Ketu dec is opposite Rahu
-                                     // Ketu's speed is the same as Rahu's (since it's exactly opposite)
+                let ketu_dec = -dec;
                 planets.push(create_position(
                     VedicPlanet::Ketu,
                     ketu_sidereal,
@@ -344,10 +336,6 @@ impl VedicChartCalculator {
             }
         }
 
-        // Initialize Report option
-        let analysis_report = None;
-
-        // Calculate Panchanga
         let sun_deg = planets
             .iter()
             .find(|p| p.planet == VedicPlanet::Sun)
@@ -371,36 +359,41 @@ impl VedicChartCalculator {
             bav: Vec::new(),
             house_cusps: sidereal_cusps,
             karakas: Vec::new(),
+            arudha_padas: Vec::new(),
+            special_lagnas: Vec::new(),
             bhava_strengths: Vec::new(),
             vimshopaka_scores: Vec::new(),
             avasthas: Vec::new(),
             panchanga,
-            analysis_report,
+            analysis_report: None,
         };
 
-        // Post-calculation analysis
         chart.aspects = crate::analysis::aspects::AspectEngine::calculate_aspects(&chart);
         chart.sav = crate::analysis::ashtakavarga::AshtakavargaEngine::calculate_sav(&chart);
-        // 행성별 BAV (Bhinnashtakavarga) — Sun/Moon/Mars/Mercury/Jupiter/Venus/Saturn
+        
         let bav_planets = [
-            crate::planets::VedicPlanet::Sun,
-            crate::planets::VedicPlanet::Moon,
-            crate::planets::VedicPlanet::Mars,
-            crate::planets::VedicPlanet::Mercury,
-            crate::planets::VedicPlanet::Jupiter,
-            crate::planets::VedicPlanet::Venus,
-            crate::planets::VedicPlanet::Saturn,
+            VedicPlanet::Sun,
+            VedicPlanet::Moon,
+            VedicPlanet::Mars,
+            VedicPlanet::Mercury,
+            VedicPlanet::Jupiter,
+            VedicPlanet::Venus,
+            VedicPlanet::Saturn,
         ];
         chart.bav = bav_planets
             .iter()
             .map(|&p| crate::analysis::ashtakavarga::AshtakavargaEngine::calculate_bav(p, &chart))
             .collect();
-        chart.karakas = crate::analysis::jaimini::JaiminiEngine::calculate_karakas(&chart, true); // Default 8-karaka
+            
+        chart.karakas = crate::analysis::jaimini::JaiminiEngine::calculate_karakas(&chart, true);
+        chart.arudha_padas = crate::analysis::jaimini::JaiminiEngine::calculate_arudha_padas(&chart);
+        chart.special_lagnas = crate::analysis::jaimini::JaiminiEngine::calculate_special_lagnas(&chart);
         chart.bhava_strengths = crate::analysis::bhava::BhavaEngine::calculate_all(&chart);
+        
         chart.avasthas = chart
             .planets
             .iter()
-            .map(crate::analysis::avasthas::AvasthaEngine::calculate)
+            .map(|p| crate::analysis::avasthas::AvasthaEngine::calculate(p, &chart))
             .collect();
 
         let mut v_scores = Vec::new();
@@ -412,7 +405,6 @@ impl VedicChartCalculator {
         }
         chart.vimshopaka_scores = v_scores;
 
-        // Final High-level Report
         chart.analysis_report = Some(crate::analysis::report::VedicAnalysisReport::generate(
             &chart, time,
         ));

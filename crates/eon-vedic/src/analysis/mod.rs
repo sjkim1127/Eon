@@ -12,5 +12,6 @@ pub mod report;
 pub mod strength;
 pub mod tajika;
 pub mod vimshopaka;
+pub mod varga_interpretation;
 pub mod varga_nakshatra_report;
 pub mod yogas;

@@ -17,6 +17,14 @@ pub struct VedicAnalysisReport {
     pub sade_sati: crate::analysis::gochara::SadeSatiPhase,
     #[serde(default)]
     pub yogas: Vec<YogaResult>,
+    
+    // Advanced Metrics
+    #[serde(default)]
+    pub arudha_lagna: u8,
+    #[serde(default)]
+    pub upapada_lagna: u8,
+    #[serde(default)]
+    pub special_lagnas_summary: Vec<(String, u8)>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -135,6 +143,10 @@ impl VedicAnalysisReport {
         // Yoga 계산
         let yogas = YogaEngine::check_yogas(chart);
 
+        let al = chart.arudha_padas.iter().find(|a| a.house == 1).map(|a| a.rasi).unwrap_or(0);
+        let ul = chart.arudha_padas.iter().find(|a| a.house == 12).map(|a| a.rasi).unwrap_or(0);
+        let special_lagnas_summary = chart.special_lagnas.iter().map(|s| (s.name.clone(), s.rasi)).collect();
+
         Self {
             primary_karakas: KarakaSummary {
                 atmakaraka: ak,
@@ -153,6 +165,9 @@ impl VedicAnalysisReport {
                 / 12.0,
             sade_sati,
             yogas,
+            arudha_lagna: al,
+            upapada_lagna: ul,
+            special_lagnas_summary,
         }
     }
 
@@ -173,6 +188,18 @@ impl VedicAnalysisReport {
             "- **Darakaraka (Partner)**: {:?}\n\n",
             self.primary_karakas.darakaraka
         ));
+
+        s.push_str("## 🧭 Jaimini Indicators\n");
+        if self.arudha_lagna > 0 {
+            s.push_str(&format!("- **Arudha Lagna (AL)**: Sign {}\n", self.arudha_lagna));
+        }
+        if self.upapada_lagna > 0 {
+            s.push_str(&format!("- **Upapada Lagna (UL)**: Sign {}\n", self.upapada_lagna));
+        }
+        for (name, rasi) in &self.special_lagnas_summary {
+            s.push_str(&format!("- **{}**: Sign {}\n", name, rasi));
+        }
+        s.push('\n');
 
         s.push_str("## 🌌 Cosmic Blueprints (Nakshatra & Dasha)\n");
         s.push_str(&format!("- **Nakshatra**: {}\n", self.nakshatra_info));
