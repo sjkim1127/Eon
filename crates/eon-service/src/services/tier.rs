@@ -91,20 +91,23 @@ pub fn analyze(
         });
     }
 
+    let potential_tier_score = spread_normalize(pot_res.score);
+    let potential_tier = get_tier_from_score(potential_tier_score);
+
     TierResult {
-        natal_score: clamp_score(destiny_tier_score), // natal_score now follows tier_score
+        natal_score: clamp_score(destiny_tier_score),
         current_score: transit_res.score,
         destiny_score: destiny_tier_score,
         destiny_tier: destiny_tier.clone(),
-        potential_score: pot_res.score.round(),
-        potential_tier: get_tier_from_score(pot_res.score),
+        potential_score: potential_tier_score,
+        potential_tier,
         domain_tiers,
         saju_result: saju_res.clone(),
         vedic_result: vedic_res.clone(),
         transit_result: transit_res.clone(),
         strengths,
         weaknesses,
-        growth_gap: (pot_res.score - destiny_tier_score).round(),
+        growth_gap: (potential_tier_score - destiny_tier_score).round(),
         risk_level: compute_risk_level(&saju, &vedic, &transit_res),
         profile,
         version: "v3_spread_model".to_string(),

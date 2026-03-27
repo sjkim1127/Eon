@@ -8,7 +8,7 @@ import type { SajuAnalysisResult } from "../types";
 import type { VedicAnalysisResult } from "../types";
 import type { TransitResult } from "../types";
 
-import { computeTierResult, type TierResult } from "./tierScore";
+import { type TierResult } from "./tierScore";
 import { getNakshatraInfo } from "./nakshatra";
 import { formatSiderealPosition, buildNakshatraMarkdownRows } from "./vedicFormat";
 
@@ -852,13 +852,16 @@ export function buildTransitMarkdown(t: TransitResult): string {
 // ── 운명 티어 섹션 ──────────────────────────────────────
 
 export function buildDestinyTierMarkdown(
-    sajuReport: SajuAnalysisResult | null,
-    vedicReport: VedicAnalysisResult | null,
+    _sajuReport: SajuAnalysisResult | null,
+    _vedicReport: VedicAnalysisResult | null,
     transitReport: TransitResult | null | undefined,
     tierResult?: TierResult | null,
 ): string {
-    const result = tierResult ?? computeTierResult(sajuReport, vedicReport, transitReport ?? null);
-    if (!result) return "";
+    // v3 SSOT: Strictly rely on backend-provided tier result.
+    if (!tierResult) {
+        return "\n# 운명 티어 분석 요약\n\n> 상세 분석 결과가 아직 생성되지 않았거나, 서버와 연결되지 않아 출력할 수 없습니다.\n";
+    }
+    const result = tierResult;
 
     const lines: string[] = [];
     const hasTransit = !!transitReport?.current_frame;

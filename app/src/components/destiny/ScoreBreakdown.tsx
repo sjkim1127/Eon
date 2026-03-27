@@ -1,11 +1,12 @@
 import { Activity, Star, Sparkles, Target } from "lucide-react";
 import { ScoreBar } from "./ScoreBar";
+import type { ScoreResult } from "../../types/analysis";
 
 interface Props {
   hasSaju: boolean;
   hasVedic: boolean;
-  sajuResult: any;
-  vedicResult: any;
+  sajuResult: ScoreResult;
+  vedicResult: ScoreResult;
   strengthNorm: number;
   deukSum: number;
   throughput: number;
@@ -46,7 +47,7 @@ export function ScoreBreakdown({
           </div>
           {sajuResult.highlights.length > 0 && (
             <ul className="mt-4 space-y-1">
-              {sajuResult.highlights.map((h: string, i: number) => (
+              {sajuResult.highlights.map((h, i) => (
                 <li key={i} className="text-xs text-white/60 flex items-center gap-2">
                   <Sparkles className="w-3 h-3 text-celestial-purple shrink-0" />
                   {h}
@@ -75,7 +76,7 @@ export function ScoreBreakdown({
           </div>
           {vedicResult.highlights.length > 0 && (
             <ul className="mt-4 space-y-1">
-              {vedicResult.highlights.map((h: string, i: number) => (
+              {vedicResult.highlights.map((h, i) => (
                 <li key={i} className="text-xs text-white/60 flex items-center gap-2">
                   <Target className="w-3 h-3 text-celestial-cyan shrink-0" />
                   {h}
