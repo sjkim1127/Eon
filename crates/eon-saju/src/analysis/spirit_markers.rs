@@ -610,23 +610,66 @@ impl SpiritMarkerAnalysis {
         inauspicious.sort_by_key(|m| m.hangul());
         inauspicious.dedup();
 
+        // === 맥락 분석을 위한 정보 수집 (용신/희신 등) ===
+        let yongshin = pillars.yongshin();
+        let primary_el = yongshin.primary;
+        let assistant_el = yongshin.assistant;
+
         // === 상세 설명 모델(mapped_markers) 생성 ===
         let mapped_markers = markers.iter()
             .map(|m| {
-                let level = if m.marker.is_auspicious() {
-                    InterpretationLevel::Auspicious
+                let pillar_ganzi = match m.position {
+                    PillarPosition::Year => pillars.year,
+                    PillarPosition::Month => pillars.month,
+                    PillarPosition::Day => pillars.day,
+                    PillarPosition::Hour => pillars.hour,
+                };
+                let element = if m.is_stem { pillar_ganzi.stem.element() } else { pillar_ganzi.branch.element() };
+                
+                let is_yong_hee = element == primary_el || element == assistant_el;
+                
+                let mut level = if m.marker.is_auspicious() {
+                    if is_yong_hee { InterpretationLevel::Auspicious } else { InterpretationLevel::Neutral }
                 } else {
-                    InterpretationLevel::Caution
+                    if is_yong_hee { InterpretationLevel::Neutral } else { InterpretationLevel::Caution }
                 };
 
                 let mut reasons = vec![format!("{} {}", m.position.hangul(), if m.is_stem { "천간" } else { "지지" })];
+                reasons.push(format!("오행: {}", element.hangul()));
                 
-                // 특수 조건 추가 (기준점 명시) - 괴강살 등
-                if m.marker == SpiritMarker::Kuigang {
-                    reasons.push("북두칠성 우두머리 별".to_string());
-                } else if m.marker == SpiritMarker::Tianyi {
-                    reasons.push("일간 기준 최고의 길신".to_string());
+                if is_yong_hee {
+                    reasons.push("용/희신 적용".to_string());
+                } else {
+                    reasons.push("기신/한신 영향".to_string());
                 }
+
+                // 특수 조건 추가 (기준점 명시)
+                if m.marker == SpiritMarker::Tianyi {
+                    reasons.push("일간 기준 최고의 길신".to_string());
+                } else if m.marker == SpiritMarker::Kuigang {
+                    reasons.push("우두머리 별의 기운".to_string());
+                }
+
+                let mut description = m.marker.description().to_string();
+                
+                // 상황별 문구 보정
+                if m.marker.is_auspicious() && is_yong_hee {
+                    description = format!("{} (용신/희신에 해당하여 그 작용력이 더욱 강력하고 순수하게 나타납니다.)", description);
+                } else if !m.marker.is_auspicious() && is_yong_hee {
+                    description = format!("{} (불리한 살성이나, 용신/희신의 기운 위에 있어 그 흉함이 크게 억제되거나 오히려 추진력으로 승화됩니다.)", description);
+                    level = InterpretationLevel::Neutral; // 흉살이라도 용신이면 중립으로 승격
+                } else if m.marker.is_auspicious() && !is_yong_hee {
+                    description = format!("{} (길한 신살이지만, 기운이 비협조적이라 실제 체감되는 도움은 다소 제한적일 수 있습니다.)", description);
+                }
+
+                // 위치별 뉘앙스 추가
+                let pos_context = match m.position {
+                    PillarPosition::Year => "어린 시절이나 조상의 음덕, 사회적 배경에 영향을 줍니다.",
+                    PillarPosition::Month => "직업적 환경이나 부모 형제, 사회 활동의 중심에서 작용합니다.",
+                    PillarPosition::Day => "나의 내면적인 기질이나 배우자와의 관계에 깊이 관여합니다.",
+                    PillarPosition::Hour => "자식운이나 노년의 삶, 비밀스러운 내실을 상징하는 영역에서 나타납니다.",
+                };
+                description = format!("{} \n\n* {}", description, pos_context);
 
                 SpiritMarkerDetail {
                     marker: m.marker,
@@ -634,7 +677,7 @@ impl SpiritMarkerAnalysis {
                     is_stem: m.is_stem,
                     level,
                     summary: m.marker.hangul().to_string(),
-                    description: m.marker.description().to_string(),
+                    description,
                     reasons,
                 }
             })
