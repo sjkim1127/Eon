@@ -8,12 +8,13 @@ import { ScoreBreakdown } from "../destiny/ScoreBreakdown";
 import { StrengthsWeaknesses } from "../destiny/StrengthsWeaknesses";
 import { InsightsList } from "../destiny/InsightsList";
 import { HighFidelityBreakdown } from "../destiny/HighFidelityBreakdown";
+import type { TierResult } from "../../types/analysis";
 
 export interface DestinyTierTabProps {
   sajuReport: SajuAnalysisResult | null;
   report: VedicAnalysisResult | null;
   transitReport?: TransitResult | null;
-  tierReport?: any; // The calculated tier result from backend
+  tierReport?: TierResult | null; 
   unknownTime?: boolean;
 }
 
