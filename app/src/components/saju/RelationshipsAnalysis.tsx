@@ -1,14 +1,100 @@
-import { Link2 } from "lucide-react";
+import { Link2, Sparkles, AlertCircle, Layers } from "lucide-react";
 import { REL_INFO, BRANCH_INFO } from "../../constants";
+import { RelationshipAnalysis, RelationshipDetail } from "../../types/saju";
 
 interface Props {
-  relationships: any;
+  relationships: RelationshipAnalysis;
 }
 
 export function RelationshipsAnalysis({ relationships }: Props) {
   if (!relationships) return null;
 
-  const rel = relationships as Record<string, unknown[] | undefined>;
+  const hasDetails = !!relationships?.mapped_relationships && relationships.mapped_relationships.length > 0;
+  
+  // 새 필드가 있으면 고해상도 카드 렌더링
+  if (hasDetails) {
+    return (
+      <div className="glass p-8 rounded-[2rem] border border-white/10">
+        <div className="flex items-center justify-between mb-8">
+          <h5 className="text-2xl font-bold text-white flex items-center gap-3">
+            <Link2 className="w-8 h-8 text-emerald-400" />
+            합충형해 (合沖刑害) 분석
+          </h5>
+          <div className="flex gap-4 text-[10px] font-bold tracking-tighter uppercase">
+            <span className="text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Auspicious</span>
+            <span className="text-rose-400/80 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">Caution</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {relationships.mapped_relationships.map((rel: RelationshipDetail, i: number) => {
+            const isAuspicious = rel.level === "Auspicious";
+            return (
+              <div
+                key={i}
+                className={`group relative p-6 rounded-2xl border transition-all duration-300 hover:scale-[1.01] ${
+                  isAuspicious 
+                    ? "bg-emerald-500/5 border-emerald-500/20 hover:bg-emerald-500/10 shadow-[0_0_20px_rgba(52,211,153,0.05)]" 
+                    : "bg-rose-500/5 border-rose-500/20 hover:bg-rose-500/10 shadow-[0_0_20px_rgba(251,113,133,0.05)]"
+                }`}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h6 className={`text-lg font-bold ${isAuspicious ? "text-emerald-400" : "text-rose-400"}`}>
+                        {rel.name}
+                      </h6>
+                      <div className="flex gap-1">
+                        {rel.positions.map((pos, idx) => (
+                          <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-white/40 border border-white/5">
+                            {pos}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-sm font-bold text-white/80 leading-snug">
+                      {rel.summary}
+                    </p>
+                  </div>
+                  {isAuspicious ? (
+                    <Sparkles className="w-5 h-5 text-emerald-400/40" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-rose-400/40" />
+                  )}
+                </div>
+
+                <p className="text-xs text-white/50 mb-5 leading-relaxed font-medium">
+                  {rel.description}
+                </p>
+
+                <div className="flex items-center justify-between mt-auto">
+                  <div className="flex flex-wrap gap-1.5">
+                    {rel.reasons.map((reason, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 rounded-md bg-black/20 border border-white/5 text-[10px] text-white/40 font-semibold"
+                      >
+                        {reason}
+                      </span>
+                    ))}
+                  </div>
+                  {rel.transformed_element && (
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 border border-white/10">
+                      <Layers className="w-3 h-3 text-white/40" />
+                      <span className="text-[10px] text-white/60 font-bold">{rel.transformed_element}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // 레거시 폴백 (하위 호환)
+  const rel = relationships as any;
   type RelGroup = { label: string; color: string; items: string[] };
 
   const formatRel = (r: any) => {

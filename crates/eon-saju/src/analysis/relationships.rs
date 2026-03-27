@@ -21,6 +21,7 @@ use crate::core::stem::HeavenlyStem;
 use crate::core::branch::EarthlyBranch;
 use crate::core::element::Element;
 use crate::core::pillars::FourPillars;
+use crate::analysis::supplementary_pillars::InterpretationLevel;
 
 // ============================================
 // 천간 합 (天干合)
@@ -674,16 +675,31 @@ pub struct MyungAmHap {
     pub combination: StemCombination,
 }
 
-/// 발견된 관계 정보
+/// 발견된 관계 정보 (레거시)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FoundRelation {
     pub description: String,
     pub positions: (String, String),
 }
 
+/// 합충형해 상세 정보 (Explainable Relationship)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RelationshipDetail {
+    pub relation_type: String,
+    pub name: String,
+    pub positions: Vec<String>,
+    pub level: InterpretationLevel,
+    pub summary: String,
+    pub description: String,
+    pub reasons: Vec<String>,
+    pub transformed_element: Option<Element>,
+}
+
 /// 합충형해 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RelationshipAnalysis {
+    /// 발견된 모든 합충형해 상세 정보 (고도의 설명 가능성 포함)
+    pub mapped_relationships: Vec<RelationshipDetail>,
     /// 천간합
     pub stem_combinations: Vec<(StemCombination, String, String)>,
     /// 천간충
@@ -833,7 +849,115 @@ impl RelationshipAnalysis {
             }
         }
 
+        // === 상세 설명 모델(mapped_relationships) 생성 ===
+        let mut mapped_relationships = Vec::new();
+
+        // 1. 지지충 (BranchClash) - 파괴력 1순위
+        for (clash, p1, p2) in &branch_clashes {
+            let info = clash.clash_type();
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "BranchClash".to_string(),
+                name: clash.hangul().to_string(),
+                positions: vec![p1.clone(), p2.clone()],
+                level: InterpretationLevel::Caution,
+                summary: format!("{}으로 두 기운이 정면 충돌", clash.hangul()),
+                description: format!(
+                    "{}에 해당하는 충입니다. 뿌리 기운이 {}% 가량 흔들리며 강한 변화를 동반합니다.", 
+                    info.hangul(), (info.damage_ratio() * 100.0) as u32
+                ),
+                reasons: vec![format!("{} ({})", info.hangul(), info.damage_ratio())],
+                transformed_element: None,
+            });
+        }
+
+        // 2. 천간합 (StemCombination)
+        for (comb, p1, p2) in &stem_combinations {
+            let elem = comb.transformed_element();
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "StemCombination".to_string(),
+                name: comb.hangul().to_string(),
+                positions: vec![p1.clone(), p2.clone()],
+                level: InterpretationLevel::Auspicious,
+                summary: format!("{}으로 새로운 기운 형성", comb.hangul()),
+                description: format!("두 천간이 결합하여 {}의 성질로 변화하려는 흐름이 생깁니다.", elem.hangul()),
+                reasons: vec![format!("{} 합화", elem.hangul())],
+                transformed_element: Some(elem),
+            });
+        }
+
+        // 3. 육합 (SixCombination)
+        for (six, p1, p2) in &six_combinations {
+            let elem = six.transformed_element();
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "SixCombination".to_string(),
+                name: six.hangul().to_string(),
+                positions: vec![p1.clone(), p2.clone()],
+                level: InterpretationLevel::Auspicious,
+                summary: format!("{}으로 지지의 화합", six.hangul()),
+                description: "서로 다른 지지의 기운이 조화롭게 묶여 안정감을 줍니다.".to_string(),
+                reasons: vec!["육합(六合)".to_string()],
+                transformed_element: elem,
+            });
+        }
+
+        // 4. 삼합 (TripleCombination)
+        for triple in &triple_combinations {
+            let elem = triple.element();
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "TripleCombination".to_string(),
+                name: triple.hangul().to_string(),
+                positions: vec!["전체".to_string()], // 삼합은 전체 분포
+                level: InterpretationLevel::Auspicious,
+                summary: format!("{} 성립으로 {} 기운 강화", triple.hangul(), elem.hangul()),
+                description: "세 지지가 목적 의식을 가지고 하나의 강력한 오행 국(局)을 형성합니다.".to_string(),
+                reasons: vec!["삼합 완결".to_string()],
+                transformed_element: Some(elem),
+            });
+        }
+
+        // 5. 방합 (SeasonalCombination)
+        for seasonal in &seasonal_combinations {
+            let elem = seasonal.element();
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "SeasonalCombination".to_string(),
+                name: seasonal.hangul().to_string(),
+                positions: vec!["전체".to_string()],
+                level: InterpretationLevel::Auspicious,
+                summary: format!("{} 성립으로 계절적 세력 결집", seasonal.hangul()),
+                description: "계절의 힘을 상징하는 지지들이 모여 해당 오행의 세력이 매우 강력해집니다.".to_string(),
+                reasons: vec!["방합(方合)".to_string()],
+                transformed_element: Some(elem),
+            });
+        }
+
+        // 6. 형/해/파 (Punishments, Harms, Destructions)
+        for (pun, p1, p2) in &branch_punishments {
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "BranchPunishment".to_string(),
+                name: pun.hangul(),
+                positions: vec![p1.clone(), p2.clone()],
+                level: InterpretationLevel::Caution,
+                summary: "지지 사이의 복잡한 간섭(刑)".to_string(),
+                description: "기운이 매끄럽지 못하게 얽히거나 조정되는 과정에서 스트레스가 발생할 수 있습니다.".to_string(),
+                reasons: vec!["형살(刑殺)".to_string()],
+                transformed_element: None,
+            });
+        }
+        for (harm, p1, p2) in &branch_harms {
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "BranchHarm".to_string(),
+                name: harm.hangul().to_string(),
+                positions: vec![p1.clone(), p2.clone()],
+                level: InterpretationLevel::Caution,
+                summary: "서로의 기운을 해치거나 방해함(害)".to_string(),
+                description: "육합을 방해하는 기운들이 만나 실익이 줄어들거나 갈등이 생길 수 있습니다.".to_string(),
+                reasons: vec!["해살(害殺)".to_string()],
+                transformed_element: None,
+            });
+        }
+
         Self {
+            mapped_relationships,
             stem_combinations,
             stem_clashes,
             triple_combinations,

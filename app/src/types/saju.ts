@@ -365,9 +365,52 @@ export interface SajuAnalysisResult {
   vulnerability_report: VulnerabilityReport | null;
   complexity?: ComplexityAnalysis | null;
   /** 합충형해 분석 (RelationshipAnalysis) */
-  relationships?: unknown;
+  relationships?: RelationshipAnalysis;
   /** 공망 분석 (VoidAnalysis) */
-  void_analysis?: unknown;
+  void_analysis?: VoidAnalysis;
+}
+
+/** 합충형해 상세 정보 */
+export interface RelationshipDetail {
+  relation_type: string;
+  name: string;
+  positions: string[];
+  level: InterpretationLevel;
+  summary: string;
+  description: string;
+  reasons: string[];
+  transformed_element: string | null;
+}
+
+/** 합충형해 분석 결과 */
+export interface RelationshipAnalysis {
+  mapped_relationships: RelationshipDetail[];
+  // 레거시 필드들
+  stem_combinations: [string, string, string][];
+  stem_clashes: [string, string, string][];
+  triple_combinations: string[];
+  seasonal_combinations: string[];
+  dominant_semi_combinations: [string, string, string][];
+  weak_semi_combinations: [string, string, string][];
+  six_combinations: [string, string, string][];
+  branch_clashes: [string, string, string][];
+  branch_punishments: [string, string, string][];
+  branch_harms: [string, string, string][];
+  branch_destructions: [string, string, string][];
+}
+
+/** 공망 상세 정보 */
+export interface VoidDetail {
+  branch: string;
+  summary: string;
+  description: string;
+  reasons: string[];
+}
+
+/** 공망 분석 결과 */
+export interface VoidAnalysis {
+  voids: string[];
+  mapped_voids: VoidDetail[];
 }
 
 /** 부하 진단 항목 (LoadBalanceDiagnostic Rust struct) */
