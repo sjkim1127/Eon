@@ -109,9 +109,6 @@ impl DynamicLuckAnalysis {
         stems: &[(&'static str, HeavenlyStem)],
         branches: &[(&'static str, EarthlyBranch)],
     ) -> RelationshipAnalysis {
-        // 이 부분은 기존 RelationshipAnalysis::from_pillars와 유사하지만 
-        // 입력 배열의 크기가 동적임(4~6개)
-        
         let mut analysis = RelationshipAnalysis {
             stem_combinations: Vec::new(),
             stem_clashes: Vec::new(),
@@ -126,12 +123,13 @@ impl DynamicLuckAnalysis {
             branch_destructions: Vec::new(),
             am_combinations: Vec::new(),
             myung_am_combinations: Vec::new(),
+            mapped_relationships: Vec::new(),
         };
 
         // 모든 쌍에 대한 분석 로직 호출
         use crate::analysis::relationships::{
             StemCombination, StemClash, SemiCombination, SixCombination, 
-            BranchClash, BranchPunishment, BranchHarm, 
+            BranchClash, BranchPunishment, BranchHarm, BranchDestruction,
             Amhap, MyungAmHap
         };
 
@@ -170,6 +168,9 @@ impl DynamicLuckAnalysis {
                 if let Some(h) = BranchHarm::check(b1, b2) {
                     analysis.branch_harms.push((h, p1.to_string(), p2.to_string()));
                 }
+                if let Some(d) = BranchDestruction::check(b1, b2) {
+                    analysis.branch_destructions.push((d, p1.to_string(), p2.to_string()));
+                }
                 if let Some(p) = BranchPunishment::check_self(b1, b2) {
                     analysis.branch_punishments.push((p, p1.to_string(), p2.to_string()));
                 }
@@ -196,6 +197,9 @@ impl DynamicLuckAnalysis {
         let all_b: Vec<_> = branches.iter().map(|(_, b)| *b).collect();
         analysis.triple_combinations = TripleCombination::check(&all_b);
         analysis.seasonal_combinations = SeasonalCombination::check(&all_b);
+
+        // TODO: 운운(運運) 결합에 대한 구체적인 mapped_relationships 생성 로직 추가
+        analysis.mapped_relationships = Vec::new();
 
         analysis
     }
@@ -224,7 +228,7 @@ impl DynamicLuckAnalysis {
             if let Some(_c) = SixCombination::check(luck.branch, *b) {
                 relations.push(format!("육합: {} - {}", luck.branch.hanja(), b.hanja()));
             }
-            // 반합 (왕지 포함 여부 등은 check 함수가 처리한다고 가정)
+            // 반합
             if let Some(semi) = SemiCombination::check(luck.branch, *b) {
                 relations.push(format!("반합: {} ({}-{})", semi.hangul(), luck.branch.hanja(), b.hanja()));
             }
@@ -249,7 +253,7 @@ impl DynamicLuckAnalysis {
         LuckInfluence {
             ganzi: luck,
             label: label.to_string(),
-            relations_with_natal: relations, // 중복 제거는 하지 않음 (어느 주와 합인지 알기 위해)
+            relations_with_natal: relations,
         }
     }
 }

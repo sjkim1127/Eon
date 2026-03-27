@@ -104,7 +104,7 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
       <SpiritsList sp={sp} />
 
       {/* 합충형해 (合沖刑害) 분석 */}
-      <RelationshipsAnalysis relationships={sajuReport.relationships} />
+      {sajuReport.relationships && <RelationshipsAnalysis relationships={sajuReport.relationships} />}
 
       {/* 공망 (空亡) 분석 */}
       <VoidAnalysis voidAnalysis={sajuReport.void_analysis ?? sajuReport.report?.voids} />
