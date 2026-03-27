@@ -631,7 +631,6 @@ export function computeTierResult(
 
   destinyScore = clampScore(destinyScore);
   const destinyTier   = getTierFromScore(destinyScore);
-  const potentialTier = getTierFromScore(potentialResult.score);
 
   // 강점 / 약점
   const strengths = [
@@ -656,16 +655,19 @@ export function computeTierResult(
   // C. 4축 리스크 레벨
   const riskLevel = computeRiskLevel(sajuReport, report, transitReport, transitResult.score);
 
+  const potentialScore = spreadNormalize(potentialResult.score);
+  const potentialTier = getTierFromScore(potentialScore);
+
   // 갭 (잠재력 - 운명)
-  const growthGap = clampScore(potentialResult.score) - destinyScore;
+  const growthGap = potentialScore - destinyScore;
 
   return {
     natalScore: Math.round(destinyScore), // natalScore now follows destiny tier score for consistency
     currentScore: transitResult.score,
     destinyScore,
     destinyTier,
-    potentialScore: potentialResult.score,
-    potentialTier: potentialTier,
+    potentialScore,
+    potentialTier,
     domainTiers,
     sajuResult,
     vedicResult,
