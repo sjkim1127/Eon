@@ -65,13 +65,18 @@ const SCORE_TO_TIER = (s: number) => s >= 80 ? "S" : s >= 65 ? "A" : s >= 45 ? "
 // ── 공통 유틸 ──────────────────────────────────────────────
 const clampScore = (score: number): number => Math.min(100, Math.max(0, score));
 
-// 상위 구간만 압축 (50 이하는 그대로, 50 초과는 x^1.4 압축)
-const softNormalize = (score: number): number => {
-  const c = clampScore(score);
-  if (c <= 50) return c;
-  const excess = (c - 50) / 50;
-  return Math.round(50 + Math.pow(excess, 1.4) * 35);
-};
+/**
+ * Deterministic Spread Normalization
+ * 양 끝단으로 점수를 더 밀어내어 변별력을 강화 (v3 핵심 알고리즘)
+ */
+export function spreadNormalize(score: number): number {
+  const s = Math.min(100, Math.max(0, score));
+  // 50점을 기준으로 Sigmoid-like stretch 적용
+  const normalized = s < 50
+    ? 50 * Math.pow(s / 50, 1.4) // 아래로 볼록 (C/D/E/F 분산)
+    : 50 + 50 * Math.pow((s - 50) / 50, 0.7); // 위로 볼록 (A/S 견인)
+  return Math.round(normalized);
+}
 
 const BENEFIC_PLANETS = ["Jupiter", "Venus", "Mercury", "Moon"];
 const GOOD_12_STAGES = new Set(["장생", "건록", "제왕", "관대", "목욕"]);
@@ -410,6 +415,149 @@ function getDomainTiers(report: VedicAnalysisResult | null): { house: number; do
 }
 
 // ── C. 4축 다차원 리스크 인덱스 ──────────────────────────────
+function computeDetailedComponents(
+  saju: SajuAnalysisResult | null,
+  vedic: VedicAnalysisResult | null,
+  _transit: TransitResult | null | undefined,
+  transitScore: number
+): TierResult["detailedComponents"] {
+  const components: TierResult["detailedComponents"] = [];
+  const r = saju?.report;
+
+  // 1. 사주 원국 강점 (0.12)
+  const sajuStrength = saju?.report?.strength?.strength_score ?? 0;
+  const sajuStrengthScore = Math.min(100, Math.abs(sajuStrength) * 2);
+  components.push({
+    key: "saju_strength",
+    label: "사주 원국 강점",
+    score: sajuStrengthScore,
+    weight: 0.12,
+    reasons: [`신강약 지수: ${sajuStrength.toFixed(1)}`],
+  });
+
+  // 2. 오행 유통성 (0.08)
+  const throughput = saju?.qi_topology?.throughput ?? 0;
+  components.push({
+    key: "element_flow",
+    label: "오행 유통성",
+    score: throughput * 100,
+    weight: 0.08,
+    reasons: [`오행 흐름 효율: ${(throughput * 100).toFixed(1)}%`],
+  });
+
+  // 3. 격국 및 용신 (0.10)
+  const structure = r?.structure?.structure ?? "";
+  const structureScore = structure.includes("Follower") ? 40 : 85;
+  components.push({
+    key: "structure",
+    label: "격국 및 용신",
+    score: structureScore,
+    weight: 0.10,
+    reasons: [`격국: ${structure || "일반격"}`],
+  });
+
+  // 4. 길흉신 분포 (0.06)
+  const auspicious = r?.spirit_markers?.auspicious?.length ?? 0;
+  const inauspicious = r?.spirit_markers?.inauspicious?.length ?? 0;
+  const spiritScore = Math.max(0, Math.min(100, auspicious * 20 - inauspicious * 10));
+  components.push({
+    key: "spirit_markers",
+    label: "길흉신 분포",
+    score: spiritScore,
+    weight: 0.06,
+    reasons: [`길신 ${auspicious}개, 흉신 ${inauspicious}개`],
+  });
+
+  // 5. 베딕 하우스 역량 (0.12)
+  const houseScore = (vedic?.report?.overall_strength_score ?? 0) / 6;
+  components.push({
+    key: "vedic_houses",
+    label: "베딕 하우스 역량",
+    score: Math.min(100, houseScore),
+    weight: 0.12,
+    reasons: [`전체 하우스 평균 강도: ${houseScore.toFixed(1)}`],
+  });
+
+  // 6. 행성 조합(요가) (0.10)
+  const veryHighYogas = (vedic?.report?.yogas ?? []).filter((y: any) => {
+    const q = typeof y.quality === "string" ? y.quality : Object.keys(y.quality ?? {})[0];
+    return q === "VeryHigh";
+  }).length;
+  const yogaScore = Math.min(100, veryHighYogas * 30);
+  components.push({
+    key: "vedic_yogas",
+    label: "행성 조합(요가)",
+    score: yogaScore,
+    weight: 0.10,
+    reasons: [`최상급 요가 ${veryHighYogas}개 감지`],
+  });
+
+  // 7. 행성 활성도 (0.07)
+  const balaYuva = (vedic?.chart?.avasthas ?? []).filter((a: any) => a.baladi === "Bala" || a.baladi === "Yuva").length;
+  const avasthaScore = (balaYuva / 7) * 100;
+  components.push({
+    key: "planet_status",
+    label: "행성 활성도",
+    score: Math.min(100, avasthaScore),
+    weight: 0.07,
+    reasons: [`활성 상태(Bala/Yuva) 행성 ${balaYuva}개`],
+  });
+
+  // 8. 현재 운 흐름 (0.12)
+  components.push({
+    key: "luck_cycle",
+    label: "현재 운 흐름",
+    score: transitScore,
+    weight: 0.12,
+    reasons: [`트랜짓 종합 점수: ${transitScore.toFixed(1)}`],
+  });
+
+  // 9. 인생 안정성 (0.08)
+  const crashes = saju?.vulnerability_report?.total_crashes ?? 0;
+  const stabilityScore = Math.max(0, 100 - crashes * 2);
+  components.push({
+    key: "stability",
+    label: "인생 안정성",
+    score: stabilityScore,
+    weight: 0.08,
+    reasons: [`취약점(Crash) 지수: ${crashes}`],
+  });
+
+  // 10. 발전 가능성 (0.05)
+  const entropy = saju?.entropy?.score ?? 1.0;
+  components.push({
+    key: "potential",
+    label: "발전 가능성",
+    score: Math.min(100, entropy * 50),
+    weight: 0.05,
+    reasons: [`운명 엔트로피: ${entropy.toFixed(2)}`],
+  });
+
+  // 11. 인생 골든타임 (0.05)
+  const goldenTime = r?.golden_time;
+  const goldenScore = goldenTime?.average_score ?? 50;
+  components.push({
+    key: "golden_time",
+    label: "인생 골든타임",
+    score: goldenScore,
+    weight: 0.05,
+    reasons: [goldenTime ? `최상의 시기: ${goldenTime.start_age}~${goldenTime.end_age}세` : "골든타임 미정"],
+  });
+
+  // 12. 종합적 조화 (0.05)
+  const lints = saju?.lints?.length ?? 0;
+  const balanceScore = Math.max(0, 100 - lints * 5);
+  components.push({
+    key: "holistic_balance",
+    label: "종합적 조화",
+    score: balanceScore,
+    weight: 0.05,
+    reasons: [`사주 구조 분석 린트 ${lints}건`],
+  });
+
+  return components;
+}
+
 function computeRiskLevel(
   saju: SajuAnalysisResult | null,
   report: VedicAnalysisResult | null,
@@ -417,47 +565,23 @@ function computeRiskLevel(
   transitScore: number,
 ): "low" | "medium" | "high" | "critical" {
   let risk = 0;
-
-  // 축 1: 취약점 — 치명적(0점) 벡터 비율
   if (saju?.vulnerability_report) {
     const total = saju.vulnerability_report.total_crashes ?? 0;
-    const fatalVectors = (saju.vulnerability_report.critical_vectors ?? []).filter(v => v.crash_score <= 5).length;
-    const fatalRatio = total > 0 ? fatalVectors / total : 0;
-    if (fatalRatio > 0.5) risk += 3;       // 절반 이상 치명적
-    else if (fatalRatio > 0.25) risk += 2;
-    else if (fatalRatio > 0.1) risk += 1;
-    if (total >= 30) risk += 1;
-    if (total >= 50) risk += 1;
+    if (total >= 30) risk += 2;
+    if (total >= 50) risk += 2;
   }
-
-  // 축 2: 대운 교체 — 현재 나이가 대운 시작 나이의 ±2년 이내
   if (transit && saju?.report?.major_luck) {
     const age = transit.current_age ?? -1;
     const majors = saju.report.major_luck.cycles ?? [];
-    const isNearTransition = majors.some(m => Math.abs(age - m.start_age) <= 2);
-    if (isNearTransition) risk += 2; // 대운 교체 직후는 불안정
+    if (majors.some(m => Math.abs(age - m.start_age) <= 2)) risk += 2;
   }
-
-  // 축 3: 베딩 압박 — 사데사티 + 역행·연소
   if (report?.report) {
     if (report.report.sade_sati === "Peak") risk += 3;
-    else if (report.report.sade_sati === "Rising") risk += 2;
-    const planets = (report.chart?.planets ?? []) as { is_retrograde: boolean; is_combust: boolean }[];
+    const planets = (report.chart?.planets ?? []) as any[];
     if (planets.filter(p => p.is_retrograde).length >= 3) risk += 1;
   }
-
-  // 축 4: 현재운 — 트랜짓 점수 + 부하 진단
   if (transitScore < 35) risk += 2;
-  else if (transitScore < 45) risk += 1;
-  const nearbyDown = (transit?.nearby_diagnostics ?? [] as { status: string }[])
-    .filter((d: { status: string }) => d.status === "SystemDown").length;
-  if (nearbyDown >= 2) risk += 2;
-  else if (nearbyDown >= 1) risk += 1;
-
-  if (risk >= 8) return "critical";
-  if (risk >= 5) return "high";
-  if (risk >= 3) return "medium";
-  return "low";
+  return risk >= 8 ? "critical" : risk >= 5 ? "high" : risk >= 3 ? "medium" : "low";
 }
 
 // ── 메인 함수 ──────────────────────────────────────────────────
@@ -476,35 +600,22 @@ export function computeTierResult(
   const potentialResult = computePotentialScore(sajuReport, report);
   const domainTiers   = getDomainTiers(report);
 
-  // 원국 점수 합산
-  const natalScoreRaw = hasSaju && hasVedic
-    ? (sajuResult.score * 0.5 + vedicResult.score * 0.5)
-    : hasSaju ? sajuResult.score : vedicResult.score;
-
   // 나이 프로파일 가중치
-  let natalWeight = 0.7, currentWeight = 0.3;
-  let profile: TierResult["profile"] = "balanced";
+  let profile = "balanced";
   const age = transitReport?.current_age;
   if (typeof age === "number") {
-    if (age < 35)      { natalWeight = 0.6; currentWeight = 0.4; profile = "growth"; }
-    else if (age > 55) { natalWeight = 0.8; currentWeight = 0.2; profile = "stable"; }
+    if (age < 35)      { profile = "growth"; }
+    else if (age > 55) { profile = "stable"; }
   }
 
-  const hasTransit = !!transitReport?.current_frame;
-  let currentScore = transitResult.score;
-  // 극단값 완화 캡
-  if (hasTransit) {
-    currentScore = Math.max(25, Math.min(90, currentScore));
-  }
-
-  const natalNorm   = softNormalize(natalScoreRaw);
-  const currentNorm = hasTransit ? softNormalize(currentScore) : 0;
-
-  let destinyScore = hasTransit
-    ? natalNorm * natalWeight + currentNorm * currentWeight
-    : natalNorm;
-
+  // v3 정밀 분석 컴포넌트
+  const detailedComponents = computeDetailedComponents(sajuReport, report, transitReport, transitResult.score);
+  
+  // v3 핵심 계산: 12개 컴포넌트 가중합
+  const destinyRawScore = detailedComponents.reduce((acc, c) => acc + c.score * c.weight, 0);
+  
   // B. 도메인 그룹 기반 보정 (핵심 도메인 약세 시 추가 패널티)
+  let destinyScore = spreadNormalize(destinyRawScore);
   if (domainTiers.length > 0) {
     let adj = 0;
     for (const d of domainTiers) {
@@ -549,12 +660,12 @@ export function computeTierResult(
   const growthGap = clampScore(potentialResult.score) - destinyScore;
 
   return {
-    natalScore: clampScore(Math.round(natalScoreRaw)),
+    natalScore: Math.round(destinyScore), // natalScore now follows destiny tier score for consistency
     currentScore: transitResult.score,
     destinyScore,
     destinyTier,
     potentialScore: potentialResult.score,
-    potentialTier,
+    potentialTier: potentialTier,
     domainTiers,
     sajuResult,
     vedicResult,
@@ -564,10 +675,10 @@ export function computeTierResult(
     growthGap,
     riskLevel,
     profile,
-    version: "v3",
-    destinyRawScore: destinyScore,
+    version: "v3_spread_model",
+    destinyRawScore,
     destinyTierScore: destinyScore,
-    detailedComponents: [],
+    detailedComponents,
     tierModelVersion: "3.0.0",
   };
 }
