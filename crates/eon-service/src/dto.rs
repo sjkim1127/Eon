@@ -216,6 +216,14 @@ pub struct TierGrade {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DomainTier {
+    pub house: u8,
+    pub domain: String,
+    pub tier: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScoreResult {
     pub score: f32,
     pub highlights: Vec<String>,
@@ -223,10 +231,12 @@ pub struct ScoreResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DomainTier {
-    pub house: u8,
-    pub domain: String,
-    pub tier: String,
+pub struct DestinyComponent {
+    pub key: String,
+    pub label: String,
+    pub score: f32,
+    pub weight: f32,
+    pub reasons: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -248,4 +258,9 @@ pub struct TierResult {
     pub risk_level: String,
     pub profile: String,
     pub version: String,
+    // --- 확장된 티어 모델 필드 ---
+    pub destiny_raw_score: f32,
+    pub destiny_tier_score: f32,
+    pub detailed_components: Vec<DestinyComponent>,
+    pub tier_model_version: String,
 }

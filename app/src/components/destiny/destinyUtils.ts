@@ -1,16 +1,18 @@
 import { TierResult } from "../../utils/tierScore";
 
 export const TIER_GRADES_UI = [
-  { grade: "S+", label: "천기",    color: "from-orange-300 to-amber-500",    desc: "극희귀 최상의 조합" },
-  { grade: "S",  label: "천운",    color: "from-amber-400 to-yellow-600",    desc: "사주와 별운이 모두 유리한 극상의 조합" },
-  { grade: "A+", label: "대길상",  color: "from-lime-400 to-emerald-500",    desc: "용신·대운·요가가 거의 완벽하게 지원하는 강운" },
-  { grade: "A",  label: "대길",    color: "from-emerald-400 to-green-600",   desc: "전반적으로 아주 강한 기운의 조합" },
-  { grade: "B+", label: "길상",    color: "from-sky-400 to-celestial-cyan",  desc: "균형이 잡히고 강점이 뚜렷하게 빛나는 운세" },
-  { grade: "B",  label: "길",      color: "from-celestial-cyan to-indigo-500", desc: "전반적으로 안정적이고 활용 가능한 운세" },
-  { grade: "C+", label: "중상",    color: "from-violet-400 to-purple-500",   desc: "보통 이상의 기운, 노력으로 충분히 도약 가능" },
-  { grade: "C",  label: "중평",    color: "from-slate-400 to-slate-600",     desc: "일부 어려움이 있으나 극복 가능한 조합" },
-  { grade: "D+", label: "성장예비", color: "from-orange-400 to-rose-500",    desc: "성장 여지가 많으며 빠른 상향 가능" },
-  { grade: "D",  label: "다다익선", color: "from-rose-400 to-pink-600",      desc: "성장 여지가 많은 시기, 주의 시점 활용 권장" },
+  { grade: "S+", label: "천기",    color: "from-orange-300 to-amber-500",    desc: "하늘의 기틀이 잡힌 극귀(極貴)의 운명" },
+  { grade: "S",  label: "천운",    color: "from-amber-400 to-yellow-600",    desc: "하늘이 돕고 땅이 비추는 대귀(大貴)의 운명" },
+  { grade: "A+", label: "대길상",  color: "from-lime-400 to-emerald-500",    desc: "복이 넘치며 만인이 부러워할 기세의 운명" },
+  { grade: "A",  label: "대길",    color: "from-emerald-400 to-green-600",   desc: "크게 길하며 성취가 확실한 운명" },
+  { grade: "B+", label: "길상",    color: "from-sky-400 to-celestial-cyan",  desc: "순한 기세 속에서 재능을 펼치는 운명" },
+  { grade: "B",  label: "길",      color: "from-celestial-cyan to-indigo-500", desc: "안정적이고 무난하게 번영할 운명" },
+  { grade: "C+", label: "중상",    color: "from-violet-400 to-purple-500",   desc: "보통 이상의 저력이 있으며 노력이 빛을 발함" },
+  { grade: "C",  label: "중평",    color: "from-slate-400 to-slate-600",     desc: "굴곡이 있으나 능히 헤쳐 나갈 수 있는 운명" },
+  { grade: "D+", label: "중하",    color: "from-orange-400 to-rose-500",    desc: "고비가 잦으나 인내로써 길을 열어야 함" },
+  { grade: "D",  label: "하평",    color: "from-rose-400 to-pink-600",      desc: "많은 주의를 요하며 신중한 처세가 필요한 시기" },
+  { grade: "E",  label: "하하",    color: "from-gray-400 to-gray-600",      desc: "크나큰 인고와 역경 뒤에 겨우 싹을 틔울 운명" },
+  { grade: "F",  label: "난국",    color: "from-red-900 to-black",          desc: "길이 험난하니 수양과 지혜로 화를 피해야 함" },
 ] as const;
 
 export const PROFILE_META: Record<string, { icon: string; label: string; color: string }> = {
@@ -27,7 +29,7 @@ export const RISK_META: Record<string, { icon: string; label: string; color: str
 };
 
 export const TIER_SCORE_MAP: Record<string, number> = {
-  "S+": 10, S: 9, "A+": 8, A: 7, "B+": 6, B: 5, "C+": 4, C: 3, "D+": 2, D: 1,
+  "S+": 12, S: 11, "A+": 10, A: 9, "B+": 8, B: 7, "C+": 6, C: 5, "D+": 4, D: 3, E: 2, F: 1,
 };
 
 export function buildInsightBlocks(result: TierResult): { title: string; icon: string; text: string; color: string }[] {
@@ -40,16 +42,18 @@ export function buildInsightBlocks(result: TierResult): { title: string; icon: s
   // 1. 종합 판정
   const base = grade.replace("+", "") as string;
   const baseMap: Record<string, string> = {
-    "S+": `사주와 별운이 완전히 일치하는 극희귀 최상의 조합입니다(${Math.round(destinyScore)}점). 모든 조건이 이상적으로 결합된 천기(天機) 수준의 운세입니다.`,
-    S:  `사주와 별운이 서로 보완하며 극상의 기운을 이룹니다(${Math.round(destinyScore)}점). 대부분의 조건이 이상적으로 결합된 희귀한 조합입니다.`,
-    "A+": `용신·대운·요가가 거의 완벽하게 지원하는 강한 차트입니다(${Math.round(destinyScore)}점). 적극적인 도전과 확장이 결실을 맺기 매우 좋은 환경입니다.`,
-    A:  `전반적으로 매우 강한 차트입니다(${Math.round(destinyScore)}점). 용신·대운·요가가 유리하게 맞물리는 시기에 적극적인 도전이 빛납니다.`,
-    "B+": `균형이 잡혀 있고 강점이 뚜렷하게 빛나는 운세입니다(${Math.round(destinyScore)}점). 강점 분야를 주력으로 삼으면 기대 이상의 결과를 낼 수 있습니다.`,
-    B:  `전반적으로 안정적이고 활용 가능한 운세입니다(${Math.round(destinyScore)}점). 강점을 살리고 주의 시점을 사전에 파악해 보완하면 좋은 결과를 기대할 수 있습니다.`,
-    "C+": `보통 이상의 기운으로 노력에 따라 충분히 도약 가능합니다(${Math.round(destinyScore)}점). 골든타임·용신 방향을 정확하게 파악하고 실행하는 것이 키포인트입니다.`,
-    C:  `일부 어려운 구간이 있으나 충분히 극복 가능합니다(${Math.round(destinyScore)}점). 주의 시점과 골든타임·대운 흐름을 함께 참고하세요.`,
-    "D+": `성장 여지가 많으며 조건이 갖춰지면 빠른 상향이 가능합니다(${Math.round(destinyScore)}점). 지금은 기반을 다지고 골든타임을 기다리는 준비 단계입니다.`,
-    D:  `성장 여지가 많은 시기입니다(${Math.round(destinyScore)}점). 주의 구간을 피하고 용신·요가가 도와주는 구간을 집중 활용하면 큰 변화를 만들 수 있습니다.`,
+    "S+": `하늘의 기틀이 잡힌 극귀(極貴)의 운명입니다(${Math.round(destinyScore)}점). 모든 조건이 이상적으로 결합된 천기(天機) 수준의 운세입니다.`,
+    S:  `하늘이 돕고 땅이 비추는 대귀(大貴)의 운명입니다(${Math.round(destinyScore)}점). 대부분의 조건이 이상적으로 결합된 희귀한 조합입니다.`,
+    "A+": `복이 넘치며 만인이 부러워할 기세의 운명입니다(${Math.round(destinyScore)}점). 적극적인 도전과 확장이 결실을 맺기 매우 좋은 환경입니다.`,
+    A:  `크게 길하며 성취가 확실한 운명입니다(${Math.round(destinyScore)}점). 용신·대운·요가가 유리하게 맞물리는 시기에 적극적인 도전이 빛납니다.`,
+    "B+": `순한 기세 속에서 재능을 펼치는 운명입니다(${Math.round(destinyScore)}점). 강점 분야를 주력으로 삼으면 기대 이상의 결과를 낼 수 있습니다.`,
+    B:  `안정적이고 무난하게 번영할 운명입니다(${Math.round(destinyScore)}점). 강점을 살리고 주의 시점을 사전에 파악해 보완하면 좋은 결과를 기대할 수 있습니다.`,
+    "C+": `보통 이상의 저력이 있으며 노력이 빛을 발하는 운명입니다(${Math.round(destinyScore)}점). 골든타임·용신 방향을 정확하게 파악하고 실행하는 것이 키포인트입니다.`,
+    C:  `굴곡이 있으나 능히 헤쳐 나갈 수 있는 운명입니다(${Math.round(destinyScore)}점). 주의 시점과 골든타임·대운 흐름을 함께 참고하세요.`,
+    "D+": `고비가 잦으나 인내로써 길을 열어야 하는 운명입니다(${Math.round(destinyScore)}점). 지금은 기반을 다지고 골든타임을 기다리는 준비 단계입니다.`,
+    D:  `많은 주의를 요하며 신중한 처세가 필요한 시기입니다(${Math.round(destinyScore)}점). 주의 구간을 피하고 용신·요가가 도와주는 구간을 집중 활용하세요.`,
+    E:  `크나큰 인고와 역경 뒤에 겨우 싹을 틔울 운명입니다(${Math.round(destinyScore)}점). 자중하며 때를 기다리는 지혜가 필요합니다.`,
+    F:  `길이 험난하니 수양과 지혜로 화를 피해야 하는 난국입니다(${Math.round(destinyScore)}점). 무리한 확장보다는 자신을 보호하는 데 집중하세요.`,
   };
   blocks.push({ title: "종합 판정", icon: "🏆", text: baseMap[grade] ?? baseMap[base] ?? "", color: "text-celestial-gold" });
 

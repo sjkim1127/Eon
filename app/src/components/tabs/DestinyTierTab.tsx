@@ -7,6 +7,7 @@ import { RadarChartSection } from "../destiny/RadarChartSection";
 import { ScoreBreakdown } from "../destiny/ScoreBreakdown";
 import { StrengthsWeaknesses } from "../destiny/StrengthsWeaknesses";
 import { InsightsList } from "../destiny/InsightsList";
+import { HighFidelityBreakdown } from "../destiny/HighFidelityBreakdown";
 
 export interface DestinyTierTabProps {
   sajuReport: SajuAnalysisResult | null;
@@ -100,13 +101,17 @@ export function DestinyTierTab({ sajuReport, report, transitReport, tierReport, 
       {/* ── 분야별 티어 레이더 차트 ── */}
       <RadarChartSection domainTiers={domainTiers} />
 
-      {/* ── 사주/베딕 점수 세부 분해 ── */}
-      <ScoreBreakdown
-        hasSaju={hasSaju} hasVedic={hasVedic}
-        sajuResult={sajuResult} vedicResult={vedicResult}
-        strengthNorm={strengthNorm} deukSum={deukSum} throughput={throughput} goldenTimePt={goldenTimePt} stabilityPt={stabilityPt}
-        planetStrengthNorm={planetStrengthNorm} highYogaCount={highYogaCount} yogaPt={yogaPt} strongHouses={strongHouses} housePt={housePt} satiPt={satiPt} dashaPt={dashaPt}
-      />
+      {/* ── 정밀 분석 (v3 이상) ── */}
+      {result.detailedComponents && result.detailedComponents.length > 0 ? (
+        <HighFidelityBreakdown components={result.detailedComponents} />
+      ) : (
+        <ScoreBreakdown
+          hasSaju={hasSaju} hasVedic={hasVedic}
+          sajuResult={sajuResult} vedicResult={vedicResult}
+          strengthNorm={strengthNorm} deukSum={deukSum} throughput={throughput} goldenTimePt={goldenTimePt} stabilityPt={stabilityPt}
+          planetStrengthNorm={planetStrengthNorm} highYogaCount={highYogaCount} yogaPt={yogaPt} strongHouses={strongHouses} housePt={housePt} satiPt={satiPt} dashaPt={dashaPt}
+        />
+      )}
 
       {/* ── 강점·약점 ── */}
       <StrengthsWeaknesses strengths={strengths} weaknesses={weaknesses} />

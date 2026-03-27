@@ -14,30 +14,34 @@ export type { TierResult, TierGrade };
 
 // ── 티어 등급표 ────────────────────────────────────────────
 export const TIER_GRADES = [
-  { grade: "S+", label: "천기",    desc: "사주와 별운이 완전히 일치하는 극희귀 최상의 조합" },
-  { grade: "S",  label: "천운",    desc: "사주와 별운이 모두 유리한 극상의 조합" },
-  { grade: "A+", label: "대길상",  desc: "용신·대운·요가가 거의 완벽하게 지원하는 강운" },
-  { grade: "A",  label: "대길",    desc: "전반적으로 아주 강한 기운의 조합" },
-  { grade: "B+", label: "길상",    desc: "균형이 잡히고 강점이 뚜렷하게 빛나는 운세" },
-  { grade: "B",  label: "길",      desc: "전반적으로 안정적이고 활용 가능한 운세" },
-  { grade: "C+", label: "중상",    desc: "보통 이상의 기운, 노력으로 충분히 도약 가능" },
-  { grade: "C",  label: "중평",    desc: "일부 어려움이 있으나 극복 가능한 조합" },
-  { grade: "D+", label: "성장예비", desc: "성장 여지가 많으며 조건이 갖춰지면 빠른 상향 가능" },
-  { grade: "D",  label: "다다익선", desc: "성장 여지가 많은 시기, 주의 시점 활용 권장" },
+  { grade: "S+", label: "천기",    desc: "하늘의 기틀이 잡힌 극귀(極貴)의 운명" },
+  { grade: "S",  label: "천운",    desc: "하늘이 돕고 땅이 비추는 대귀(大貴)의 운명" },
+  { grade: "A+", label: "대길상",  desc: "복이 넘치며 만인이 부러워할 기세의 운명" },
+  { grade: "A",  label: "대길",    desc: "크게 길하며 성취가 확실한 운명" },
+  { grade: "B+", label: "길상",    desc: "순한 기세 속에서 재능을 펼치는 운명" },
+  { grade: "B",  label: "길",      desc: "안정적이고 무난하게 번영할 운명" },
+  { grade: "C+", label: "중상",    desc: "보통 이상의 저력이 있으며 노력이 빛을 발함" },
+  { grade: "C",  label: "중평",    desc: "굴곡이 있으나 능히 헤쳐 나갈 수 있는 운명" },
+  { grade: "D+", label: "중하",    desc: "고비가 잦으나 인내로써 길을 열어야 함" },
+  { grade: "D",  label: "하평",    desc: "많은 주의를 요하며 신중한 처세가 필요한 시기" },
+  { grade: "E",  label: "하하",    desc: "크나큰 인고와 역경 뒤에 겨우 싹을 틔울 운명" },
+  { grade: "F",  label: "난국",    desc: "길이 험난하니 수양과 지혜로 화를 피해야 함" },
 ] as const;
 
 // S+: 93+, S: 85+, A+: 77+, A: 69+, B+: 61+, B: 53+, C+: 45+, C: 37+, D+: 29+, D: <29
 export function getTierFromScore(score: number): (typeof TIER_GRADES)[number] {
-  if (score >= 93) return TIER_GRADES[0];
-  if (score >= 85) return TIER_GRADES[1];
-  if (score >= 77) return TIER_GRADES[2];
-  if (score >= 69) return TIER_GRADES[3];
-  if (score >= 61) return TIER_GRADES[4];
-  if (score >= 53) return TIER_GRADES[5];
-  if (score >= 45) return TIER_GRADES[6];
-  if (score >= 37) return TIER_GRADES[7];
-  if (score >= 29) return TIER_GRADES[8];
-  return TIER_GRADES[9];
+  if (score >= 97) return TIER_GRADES[0];
+  if (score >= 90) return TIER_GRADES[1];
+  if (score >= 83) return TIER_GRADES[2];
+  if (score >= 75) return TIER_GRADES[3];
+  if (score >= 67) return TIER_GRADES[4];
+  if (score >= 59) return TIER_GRADES[5];
+  if (score >= 51) return TIER_GRADES[6];
+  if (score >= 43) return TIER_GRADES[7];
+  if (score >= 35) return TIER_GRADES[8];
+  if (score >= 27) return TIER_GRADES[9];
+  if (score >= 18) return TIER_GRADES[10];
+  return TIER_GRADES[11];
 }
 
 // ── B. 도메인 그룹 정의 ────────────────────────────────────
@@ -561,5 +565,9 @@ export function computeTierResult(
     riskLevel,
     profile,
     version: "v3",
+    destinyRawScore: destinyScore,
+    destinyTierScore: destinyScore,
+    detailedComponents: [],
+    tierModelVersion: "3.0.0",
   };
 }
