@@ -46,22 +46,38 @@ export function SajuSummary({ s, y, st }: Props) {
         </h4>
         {/* 용신 상세 목록 (조후/억부/통관/병약) */}
         {y?.recommendations && y.recommendations.length > 0 && (
-          <div className="space-y-2 mb-3">
+          <div className="space-y-4 mb-3">
             {y.recommendations.map((rec: any, i: number) => (
-              <div key={i} className="flex items-start gap-2 text-xs">
-                <span className="shrink-0 px-1.5 py-0.5 rounded bg-celestial-purple/30 text-celestial-purple/90 font-bold">
-                  {YONGSHIN_TYPE_INFO[rec.yongshin_type] || rec.yongshin_type}
-                </span>
-                <span className="text-white/70 font-semibold">
-                  {ELEMENT_INFO[rec.element]?.hangul || rec.element}
-                </span>
+              <div key={i} className="flex flex-col gap-1.5 p-3 rounded-2xl bg-white/5 border border-white/10">
+                <div className="flex items-center gap-2">
+                  <span className="shrink-0 px-1.5 py-0.5 rounded bg-celestial-purple/30 text-celestial-purple/90 text-[10px] font-bold">
+                    {YONGSHIN_TYPE_INFO[rec.yongshin_type] || rec.yongshin_type}
+                  </span>
+                  <span className="text-white font-bold text-xs">
+                    {ELEMENT_INFO[rec.element]?.hangul || rec.element} ({ELEMENT_INFO[rec.element]?.hanja})
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/80 font-semibold leading-tight">{rec.summary}</p>
+                <p className="text-[10px] text-white/40 leading-relaxed italic line-clamp-2">{rec.description}</p>
+                {rec.reasons?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {rec.reasons.map((reason: string, idx: number) => (
+                      <span key={idx} className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/5 text-white/30 border border-white/10">
+                        {reason}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
-        <p className="text-xs text-white/40 leading-relaxed">
-          희신(喜神): {ELEMENT_INFO[y?.assistant]?.hangul || y?.assistant || "—"}
-        </p>
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/5">
+          <p className="text-[10px] text-white/30 uppercase tracking-tighter font-bold">희신 (喜神)</p>
+          <p className="text-xs text-white/60 font-bold italic">
+            {ELEMENT_INFO[y?.assistant]?.hangul || y?.assistant || "—"} ({ELEMENT_INFO[y?.assistant]?.hanja})
+          </p>
+        </div>
       </div>
 
       {/* 격국 */}
@@ -69,13 +85,37 @@ export function SajuSummary({ s, y, st }: Props) {
         <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-2">
           격국 (格局)
         </p>
-        <h4 className="text-3xl font-bold text-white mb-4">
+        <h4 className="text-3xl font-bold text-white mb-3">
           {STRUCTURE_INFO[st?.structure]?.hangul || st?.structure || "—"}
-          <span className="text-sm text-white/40 ml-2">{STRUCTURE_INFO[st?.structure]?.hanja}</span>
+          <span className="text-sm text-white/40 ml-2 font-medium">{STRUCTURE_INFO[st?.structure]?.hanja}</span>
         </h4>
-        <p className="text-sm text-white/60 leading-relaxed">
-          {st?.reason || ""}
-        </p>
+        
+        <div className="space-y-3">
+          <p className="text-xs text-white shadow-sm p-3 rounded-2xl bg-brand-500/10 border border-brand-500/20 font-bold leading-snug">
+            {st?.summary || "격국이 뚜렷하지 않은 일반 사주입니다."}
+          </p>
+          <p className="text-[11px] text-white/50 leading-relaxed px-1">
+            {st?.description || ""}
+          </p>
+          
+          {st?.reasons?.length > 0 && (
+            <div className="pt-3 border-t border-white/5 space-y-2">
+              <p className="text-[9px] text-white/20 font-bold uppercase tracking-wider">판정 근거</p>
+              <div className="flex flex-wrap gap-1.5">
+                {st.reasons.map((reason: string, idx: number) => (
+                  <span key={idx} className="text-[9px] px-2 py-0.5 rounded-md bg-white/5 text-white/40 border border-white/5 font-medium">
+                    {reason}
+                  </span>
+                ))}
+                {st.projection_path && (
+                  <span className="text-[9px] px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold">
+                    {st.projection_path} 투출
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
