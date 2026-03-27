@@ -37,6 +37,14 @@ export interface DomainTier {
   tier: string;
 }
 
+export interface DestinyComponent {
+  key: string;
+  label: string;
+  score: number;
+  weight: number;
+  reasons: string[];
+}
+
 export interface TierResult {
   natalScore: number;
   currentScore: number;
@@ -54,6 +62,11 @@ export interface TierResult {
   riskLevel: string;
   profile: string;
   version: string;
+  // Extended tier model fields
+  destinyRawScore: number;
+  destinyTierScore: number;
+  detailedComponents: DestinyComponent[];
+  tierModelVersion: string;
 }
 
 export interface AnalysisBundleState {
