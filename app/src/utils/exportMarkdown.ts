@@ -177,22 +177,22 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
     if (r.structure.projected_stem) lines.push(`- **투출 천간**: ${stemKr(r.structure.projected_stem)}`);
     lines.push("");
 
-    // 신살
-    if (r.spirit_markers?.markers?.length) {
-        lines.push("## 신살 (특수 패턴 태그)\n");
-        lines.push("| 신살명 | 위치 | 천간/지지 |");
-        lines.push("|---|---|---|");
-        // 중복 제거
-        const seenMarkers = new Set<string>();
-        for (const m of r.spirit_markers.markers) {
-            const key = `${m.marker}|${m.position}|${m.is_stem}`;
-            if (seenMarkers.has(key)) continue;
-            seenMarkers.add(key);
+    // 신살 (Spirit Markers)
+    if (r.spirit_markers?.mapped_markers?.length) {
+        lines.push("## 신살 분석 (특수 패턴 태그)\n");
+        for (const m of r.spirit_markers.mapped_markers) {
+            const emoji = m.level === "Auspicious" ? "✨" : m.level === "Caution" ? "⚠️" : "•";
             const mKr = SPIRIT_INFO[m.marker]?.hangul ?? m.marker;
             const posKr = PILLAR_POS_INFO[m.position] ?? m.position;
-            lines.push(`| ${mKr} | ${posKr} | ${m.is_stem ? "천간" : "지지"} |`);
+
+            lines.push(`### ${emoji} ${mKr} (${posKr})`);
+            lines.push(`- **요약**: ${m.summary}`);
+            lines.push(`- **설명**: ${m.description}`);
+            if (m.reasons?.length) {
+                lines.push(`- **근거**: ${m.reasons.join(", ")}`);
+            }
+            lines.push("");
         }
-        lines.push("");
     }
 
     // 대운
@@ -392,18 +392,30 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
         lines.push("");
     }
 
-    // 기타(raw) - 구조가 고정되지 않아 JSON으로 덤프
-    if (r.voids != null) {
-        lines.push("## 기타: 공망/결손 정보 (Raw)\n");
-        lines.push("```");
-        lines.push(typeof r.voids === "string" ? r.voids : JSON.stringify(r.voids, null, 2));
-        lines.push("```");
-        lines.push("");
+    // 합충형해 (Relationships)
+    if (r.relationships?.mapped_relationships?.length) {
+        lines.push("## 합충형해 분석 (기둥 간의 상호작용)\n");
+        for (const rel of r.relationships.mapped_relationships) {
+            const emoji = rel.level === "Auspicious" ? "🤝" : rel.level === "Caution" ? "⚡" : "•";
+            lines.push(`### ${emoji} ${rel.name} (${rel.positions.join(", ")})`);
+            lines.push(`- **요약**: ${rel.summary}`);
+            lines.push(`- **설명**: ${rel.description}`);
+            if (rel.reasons?.length) {
+                lines.push(`- **근거**: ${rel.reasons.join(", ")}`);
+            }
+            if (rel.transformed_element) {
+                const el = ELEMENT_INFO[rel.transformed_element];
+                lines.push(`- **변화**: ${el ? `${el.hangul}(${el.hanja})` : rel.transformed_element} 기운으로 변화`);
+            }
+            lines.push("");
+        }
     }
-    if (r.relationships != null) {
-        lines.push("## 기타: 합충형해/관계 분석 (Raw)\n");
-        lines.push("```");
-        lines.push(typeof r.relationships === "string" ? r.relationships : JSON.stringify(r.relationships, null, 2));
+
+    // 공망 (Void) - 아직 Raw
+    if (r.voids != null) {
+        lines.push("## 공망 분석 (Energy Void Analysis)\n");
+        lines.push("```json");
+        lines.push(typeof r.voids === "string" ? r.voids : JSON.stringify(r.voids, null, 2));
         lines.push("```");
         lines.push("");
     }
