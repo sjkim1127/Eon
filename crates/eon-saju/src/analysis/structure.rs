@@ -126,8 +126,12 @@ pub struct StructureAnalysis {
     pub projected_stem: Option<HeavenlyStem>,
     /// 투출 위치 (년간, 월간, 시간)
     pub projection_path: Option<String>,
-    /// 격국 성립 이유
-    pub reason: String,
+    /// 격국 요약
+    pub summary: String,
+    /// 격국 상세 설명
+    pub description: String,
+    /// 격국 성립 이유 (근거 목록)
+    pub reasons: Vec<String>,
 }
 
 impl StructureAnalysis {
@@ -156,18 +160,22 @@ impl StructureAnalysis {
                 let yinxing = strength.deuk_se.yinxing_count;
                 let bijie = strength.deuk_se.bijie_count;
                 
-                let (structure, name) = if bijie >= yinxing {
-                    (StructureType::JongWang, "종왕격(從旺格)")
+                let (structure, name, desc) = if bijie >= yinxing {
+                    (StructureType::JongWang, "종왕격(從旺格)", "자신의 기운이 극도로 강하여 그 기세를 유지해야 하는 격국입니다.")
                 } else {
-                    (StructureType::JongGang, "종강격(從强格)")
+                    (StructureType::JongGang, "종강격(從强格)", "자신을 돕는 인성의 기운이 극도로 강하여 그 기세를 따르는 격국입니다.")
                 };
 
                 return Self {
                     structure,
                     projected_stem: None,
                     projection_path: None,
-                    reason: format!("일간의 세력({:.1}%)이 극단적으로 강하여 {}에 해당함 (임계치: {:.1}%)", 
-                        strength.deuk_se.support_ratio, name, config.strength.polarized_high),
+                    summary: format!("일간이 극강하여 기세를 따르는 {}", name),
+                    description: desc.to_string(),
+                    reasons: vec![
+                        format!("일간 세력비율: {:.1}%", strength.deuk_se.support_ratio),
+                        format!("전왕 임계치: {:.1}% 이상", config.strength.polarized_high),
+                    ],
                 };
             } else {
                 // 식상 vs 재성 vs 관성 비중 확인
@@ -175,20 +183,24 @@ impl StructureAnalysis {
                 let cai = strength.deuk_se.caisheng_count;
                 let guan = strength.deuk_se.guanxing_count;
 
-                let (structure, name) = if shishang >= cai && shishang >= guan {
-                    (StructureType::JongAh, "종아격(從兒格)")
+                let (structure, name, desc) = if shishang >= cai && shishang >= guan {
+                    (StructureType::JongAh, "종아격(從兒格)", "일간보다 자식(식상)의 세력을 따르는 격국입니다.")
                 } else if cai >= shishang && cai >= guan {
-                    (StructureType::JongJae, "종재격(從財格)")
+                    (StructureType::JongJae, "종재격(從財格)", "일간보다 재물의 세력을 따르는 격국입니다.")
                 } else {
-                    (StructureType::JongSal, "종살격(從殺格)")
+                    (StructureType::JongSal, "종살격(從殺格)", "일간보다 관성의 세력을 따르는 격국입니다.")
                 };
 
                 return Self {
                     structure,
                     projected_stem: None,
                     projection_path: None,
-                    reason: format!("일간의 세력({:.1}%)이 극단적으로 약하여 월지 세력을 따르는 {}에 해당함 (임계치: {:.1}%)", 
-                        strength.deuk_se.support_ratio, name, config.strength.polarized_low),
+                    summary: format!("일간이 극약하여 세력을 따르는 {}", name),
+                    description: desc.to_string(),
+                    reasons: vec![
+                        format!("일간 세력비율: {:.1}%", strength.deuk_se.support_ratio),
+                        format!("종격 임계치: {:.1}% 이하", config.strength.polarized_low),
+                    ],
                 };
             }
         }
@@ -200,7 +212,9 @@ impl StructureAnalysis {
                 structure: StructureType::JianLu,
                 projected_stem: None,
                 projection_path: None,
-                reason: format!("일간 {}이 월지 {}에서 건록에 해당함", dm.hanja(), month_branch.hanja()),
+                summary: "일간이 월지에서 기운을 얻은 건록격".to_string(),
+                description: "일간이 가장 왕성한 기운을 가진 시기에 태어나 주관이 뚜렷하고 자수성가할 힘이 있습니다.".to_string(),
+                reasons: vec![format!("일간 {}가 월지 {}에서 12운성 건록(建祿)임", dm.hanja(), month_branch.hanja())],
             };
         }
         if stage == crate::core::twelve_stages::TwelveStage::Diwang && dm.polarity() == Polarity::Yang {
@@ -208,7 +222,9 @@ impl StructureAnalysis {
                 structure: StructureType::YangIn,
                 projected_stem: None,
                 projection_path: None,
-                reason: format!("일간 {}이 월지 {}에서 제왕(양인)에 해당함", dm.hanja(), month_branch.hanja()),
+                summary: "가장 강렬한 기운을 품은 양인격".to_string(),
+                description: "기운이 너무 강하여 칼을 든 것과 같으니, 이를 잘 다스리면 큰 권위를 얻습니다.".to_string(),
+                reasons: vec![format!("양간 {}가 월지 {}에서 12운성 제왕(帝旺)임", dm.hanja(), month_branch.hanja())],
             };
         }
 
@@ -223,7 +239,9 @@ impl StructureAnalysis {
                             structure,
                             projected_stem: Some(*stem_on_top),
                             projection_path: Some(path.to_string()),
-                            reason: format!("월지 지지 {}의 지장간 {}이 {}에 투출함", month_branch.hanja(), stem_in_branch.hanja(), path),
+                            summary: format!("지장간의 기운이 {}에 투출된 {}", path, structure.hangul()),
+                            description: "월지의 숨은 기운이 천간으로 고개를 내밀어 사주의 핵심 성격이 되었습니다.".to_string(),
+                            reasons: vec![format!("월지 {}의 지장간 {}이 {} {}에 투출함", month_branch.hanja(), stem_in_branch.hanja(), path, stem_on_top.hanja())],
                         };
                     }
                 }
@@ -239,7 +257,9 @@ impl StructureAnalysis {
             structure,
             projected_stem: None,
             projection_path: None,
-            reason: format!("투출된 기운이 없어 월지 본기 {}를 격으로 삼음", primary_stem.hanja()),
+            summary: format!("월지의 본기를 격으로 삼은 {}", structure.hangul()),
+            description: "천간에 드러난 기운은 없으나 태어난 계절의 기운이 가장 강력한 성격을 형성합니다.".to_string(),
+            reasons: vec![format!("투출된 기운이 없어 월지 본기 {}를 기준으로 판정함", primary_stem.hanja())],
         }
     }
 }
@@ -249,7 +269,11 @@ impl std::fmt::Display for StructureAnalysis {
         writeln!(f, "【격국(格局) 분석】")?;
         writeln!(f, "─────────────────────────────────")?;
         writeln!(f, "▶ {} ({})", self.structure.hangul(), self.structure.hanja())?;
-        writeln!(f, "  성립 이유: {}", self.reason)?;
+        writeln!(f, "  요약: {}", self.summary)?;
+        writeln!(f, "  설명: {}", self.description)?;
+        if !self.reasons.is_empty() {
+            writeln!(f, "  근거: {}", self.reasons.join(", "))?;
+        }
         Ok(())
     }
 }

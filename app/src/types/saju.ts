@@ -78,7 +78,9 @@ export interface StrengthAnalysis {
 export interface YongshinRecommendation {
   yongshin_type: string; // "Eokbu" | "Johu" | "Tonggwan" | "Byeongyak"
   element: string;       // Element 변형명
-  reason: string;
+  summary: string;
+  description: string;
+  reasons: string[];
 }
 
 /** 용신 분석 결과 (YongshinAnalysis Rust struct) */
@@ -113,7 +115,9 @@ export interface StructureAnalysis {
   structure: string;
   projected_stem: string | null;
   projection_path: string | null;
-  reason: string;
+  summary: string;
+  description: string;
+  reasons: string[];
 }
 
 // ── 대운 ─────────────────────────────────────
