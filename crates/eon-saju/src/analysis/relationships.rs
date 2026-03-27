@@ -950,9 +950,91 @@ impl RelationshipAnalysis {
                 positions: vec![p1.clone(), p2.clone()],
                 level: InterpretationLevel::Caution,
                 summary: "서로의 기운을 해치거나 방해함(害)".to_string(),
-                description: "육합을 방해하는 기운들이 만나 실익이 줄어들거나 갈등이 생길 수 있습니다.".to_string(),
+                description: "육합을 방해하는 기운들이 만나 실익이 줄어들거나 갈등이 생집니다.".to_string(),
                 reasons: vec!["해살(害殺)".to_string()],
                 transformed_element: None,
+            });
+        }
+
+        // 7. 반합 (眞/假)
+        for (semi, p1, p2) in &dominant_semi_combinations {
+            let triple = match semi {
+                SemiCombination::YinWu | SemiCombination::WuXu | SemiCombination::YinXu => TripleCombination::YinWuXu,
+                SemiCombination::ShenZi | SemiCombination::ZiChen | SemiCombination::ShenChen => TripleCombination::ShenZiChen,
+                SemiCombination::SiYou | SemiCombination::YouChou | SemiCombination::SiChou => TripleCombination::SiYouChou,
+                SemiCombination::HaiMao | SemiCombination::MaoWei | SemiCombination::HaiWei => TripleCombination::HaiMaoWei,
+            };
+            let elem = triple.element();
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "SemiCombination".to_string(),
+                name: format!("{}(眞)", semi.hangul()),
+                positions: vec![p1.clone(), p2.clone()],
+                level: InterpretationLevel::Auspicious,
+                summary: format!("{} 성립으로 {} 기운 발동", semi.hangul(), elem.hangul()),
+                description: "왕지(子午卯酉)를 포함한 강력한 결합입니다. 삼합에 준하는 실질적인 오행 변화가 일어납니다.".to_string(),
+                reasons: vec!["진반합(眞半合)".to_string(), format!("{} 포함", elem.hangul())],
+                transformed_element: Some(elem),
+            });
+        }
+        for (semi, p1, p2) in &weak_semi_combinations {
+            let triple = match semi {
+                SemiCombination::YinWu | SemiCombination::WuXu | SemiCombination::YinXu => TripleCombination::YinWuXu,
+                SemiCombination::ShenZi | SemiCombination::ZiChen | SemiCombination::ShenChen => TripleCombination::ShenZiChen,
+                SemiCombination::SiYou | SemiCombination::YouChou | SemiCombination::SiChou => TripleCombination::SiYouChou,
+                SemiCombination::HaiMao | SemiCombination::MaoWei | SemiCombination::HaiWei => TripleCombination::HaiMaoWei,
+            };
+            let elem = triple.element();
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "SemiCombination".to_string(),
+                name: format!("{}(假)", semi.hangul()),
+                positions: vec![p1.clone(), p2.clone()],
+                level: InterpretationLevel::Neutral,
+                summary: format!("{} 형성 (세력 미약)", semi.hangul()),
+                description: "중심 기운인 왕지가 빠진 결합입니다. 작용력은 약하지만 해당 오행으로 향하려는 경향성을 띱니다.".to_string(),
+                reasons: vec!["가반합(假半合)".to_string(), "왕지 미포함".to_string()],
+                transformed_element: Some(elem),
+            });
+        }
+
+        // 8. 파 (BranchDestruction)
+        for (dest, p1, p2) in &branch_destructions {
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "BranchDestruction".to_string(),
+                name: dest.hangul().to_string(),
+                positions: vec![p1.clone(), p2.clone()],
+                level: InterpretationLevel::Caution,
+                summary: "기운의 분열과 파괴(破)".to_string(),
+                description: "완성된 기운을 깨뜨리거나 내부적인 분열을 야기할 수 있는 작용입니다. 세밀한 조정이 필요합니다.".to_string(),
+                reasons: vec!["파살(破殺)".to_string()],
+                transformed_element: None,
+            });
+        }
+
+        // 9. 암합 / 명암합
+        for (am, p1, p2) in &am_combinations {
+            let elem = am.combination.transformed_element();
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "Amhap".to_string(),
+                name: format!("암합({})", am.combination.hangul()),
+                positions: vec![p1.clone(), p2.clone()],
+                level: InterpretationLevel::Auspicious,
+                summary: "지장간끼리의 비밀스러운 결합".to_string(),
+                description: "겉으로 드러나지 않는 은밀한 유대감이나 애정, 혹은 보이지 않는 곳에서의 협력을 의미합니다.".to_string(),
+                reasons: vec!["암합(暗合)".to_string(), format!("{} 합화", elem.hangul())],
+                transformed_element: Some(elem),
+            });
+        }
+        for (ma, p1, p2) in &myung_am_combinations {
+            let elem = ma.combination.transformed_element();
+            mapped_relationships.push(RelationshipDetail {
+                relation_type: "MyungAmHap".to_string(),
+                name: format!("명암합({})", ma.combination.hangul()),
+                positions: vec![p1.clone(), p2.clone()],
+                level: InterpretationLevel::Auspicious,
+                summary: "천간과 지지 속 지장간의 결합".to_string(),
+                description: "드러난 의지와 보이지 않는 환경 사이의 강한 유대입니다. 떼려야 뗄 수 없는 밀접한 관계를 뜻합니다.".to_string(),
+                reasons: vec!["명암합(明暗合)".to_string(), format!("{} 합화", elem.hangul())],
+                transformed_element: Some(elem),
             });
         }
 
