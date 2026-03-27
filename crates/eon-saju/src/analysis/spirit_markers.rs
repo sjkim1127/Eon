@@ -604,9 +604,7 @@ impl SpiritMarkerAnalysis {
             ("신궁", sp.shingung),
         ];
 
-        // NOTE: tianyi_branches is calculated earlier in the from_pillars method.
-        // Assuming it's in scope.
-        let tianyi_branches = Self::get_tianyi_branches(day_stem);
+        // tianyi_branches is already in scope from the beginning of the method
 
         for (name, aux_gz) in &aux_pillars {
             // 1. 일지 기준 12신살

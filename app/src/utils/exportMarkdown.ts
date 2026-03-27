@@ -156,7 +156,11 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
     if (y.recommendations?.length) {
         for (const rec of y.recommendations) {
             const ynTypeKr = YONGSHIN_TYPE_INFO[rec.yongshin_type] ?? rec.yongshin_type;
-            lines.push(`- ${ynTypeKr} (${elKr(rec.element)}): ${rec.reason}`);
+            lines.push(`- **${ynTypeKr}** (${elKr(rec.element)}): ${rec.summary}`);
+            lines.push(`  - *설명*: ${rec.description}`);
+            if (rec.reasons?.length) {
+                lines.push(`  - *근거*: ${rec.reasons.join(", ")}`);
+            }
         }
     }
     lines.push("");
@@ -165,7 +169,11 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
     const structInfo = STRUCTURE_INFO[r.structure.structure];
     lines.push("## 격국 (구조/패턴)\n");
     lines.push(`- **격국명**: ${structInfo ? `${structInfo.hangul}(${structInfo.hanja})` : r.structure.structure}`);
-    lines.push(`- **사유**: ${r.structure.reason}`);
+    lines.push(`- **요약**: ${r.structure.summary}`);
+    lines.push(`- **설명**: ${r.structure.description}`);
+    if (r.structure.reasons?.length) {
+        lines.push(`- **근거**: ${r.structure.reasons.join(", ")}`);
+    }
     if (r.structure.projected_stem) lines.push(`- **투출 천간**: ${stemKr(r.structure.projected_stem)}`);
     lines.push("");
 

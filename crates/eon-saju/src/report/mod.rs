@@ -188,7 +188,11 @@ impl SajuReport {
             self.structure.structure.hangul(),
             self.structure.structure.hanja()
         ));
-        md.push_str(&format!("- **Reason**: {}\n", self.structure.reason));
+        md.push_str(&format!("- **Summary**: {}\n", self.structure.summary));
+        md.push_str(&format!("- **Description**: {}\n", self.structure.description));
+        if !self.structure.reasons.is_empty() {
+            md.push_str(&format!("- **Reasons**: {}\n", self.structure.reasons.join(", ")));
+        }
 
         md.push_str("\n## 4. Spirit Markers (Shensha)\n");
         if self.spirit_markers.markers.is_empty() {
