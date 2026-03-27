@@ -16,6 +16,7 @@ use crate::core::branch::EarthlyBranch;
 use crate::core::ganzi::GanZi;
 use crate::core::pillars::FourPillars;
 use crate::analysis::shinsal::{TwelveShinsal, Gilsin, EvilSpirit};
+use crate::analysis::supplementary_pillars::InterpretationLevel;
 
 /// 신살 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -252,10 +253,24 @@ impl std::fmt::Display for FoundMarker {
     }
 }
 
+/// 신살 상세 정보 (Explainable Spirit Marker)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpiritMarkerDetail {
+    pub marker: SpiritMarker,
+    pub position: PillarPosition,
+    pub is_stem: bool,
+    pub level: InterpretationLevel,
+    pub summary: String,
+    pub description: String,
+    pub reasons: Vec<String>,
+}
+
 /// 신살 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpiritMarkerAnalysis {
-    /// 발견된 모든 신살
+    /// 발견된 모든 신살 상세 정보 (고도의 설명 가능성 포함)
+    pub mapped_markers: Vec<SpiritMarkerDetail>,
+    /// 발견된 모든 신살 (레거시 호환용)
     pub markers: Vec<FoundMarker>,
     /// 길신 목록
     pub auspicious: Vec<SpiritMarker>,
@@ -595,6 +610,36 @@ impl SpiritMarkerAnalysis {
         inauspicious.sort_by_key(|m| m.hangul());
         inauspicious.dedup();
 
+        // === 상세 설명 모델(mapped_markers) 생성 ===
+        let mapped_markers = markers.iter()
+            .map(|m| {
+                let level = if m.marker.is_auspicious() {
+                    InterpretationLevel::Auspicious
+                } else {
+                    InterpretationLevel::Caution
+                };
+
+                let mut reasons = vec![format!("{} {}", m.position.hangul(), if m.is_stem { "천간" } else { "지지" })];
+                
+                // 특수 조건 추가 (기준점 명시) - 괴강살 등
+                if m.marker == SpiritMarker::Kuigang {
+                    reasons.push("북두칠성 우두머리 별".to_string());
+                } else if m.marker == SpiritMarker::Tianyi {
+                    reasons.push("일간 기준 최고의 길신".to_string());
+                }
+
+                SpiritMarkerDetail {
+                    marker: m.marker,
+                    position: m.position,
+                    is_stem: m.is_stem,
+                    level,
+                    summary: m.marker.hangul().to_string(),
+                    description: m.marker.description().to_string(),
+                    reasons,
+                }
+            })
+            .collect();
+
         // === 보조 기둥(태원/명궁/신궁) 신살 분석 ===
         let mut aux_shinsals = Vec::new();
         let sp = &pillars.supplementary_pillars;
@@ -628,6 +673,7 @@ impl SpiritMarkerAnalysis {
         }
 
         Self {
+            mapped_markers,
             markers,
             auspicious,
             inauspicious,

@@ -99,10 +99,26 @@ export interface FoundMarker {
   is_stem: boolean;
 }
 
+/** 신살 상세 정보 (Explainable Spirit Marker) */
+export interface SpiritMarkerDetail {
+  marker: string;   // SpiritMarker 변형명
+  position: string; // PillarPosition 변형명
+  is_stem: boolean;
+  level: InterpretationLevel;
+  summary: string;
+  description: string;
+  reasons: string[];
+}
+
 /** 신살 분석 (SpiritMarkerAnalysis Rust struct) */
 export interface SpiritMarkerAnalysis {
+  /** 발견된 모든 신살 상세 정보 */
+  mapped_markers: SpiritMarkerDetail[];
+  /** 발견된 모든 신살 (레거시 호환용) */
   markers: FoundMarker[];
+  /** 길신 목록 */
   auspicious: string[];
+  /** 흉살 목록 */
   inauspicious: string[];
   /** 보조 기둥 관련 신살 [기둥명, 기준, 신살명] */
   aux_shinsals?: [string, string, string][];
