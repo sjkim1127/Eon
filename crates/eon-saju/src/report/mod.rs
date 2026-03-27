@@ -195,22 +195,57 @@ impl SajuReport {
         }
 
         md.push_str("\n## 4. Spirit Markers (Shensha)\n");
-        if self.spirit_markers.markers.is_empty() {
+        if self.spirit_markers.mapped_markers.is_empty() {
             md.push_str("- None detected.\n");
         } else {
-            for marker in &self.spirit_markers.markers {
+            for m in &self.spirit_markers.mapped_markers {
+                let emoji = match m.level {
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "✨",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "⚠️",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "•",
+                };
                 md.push_str(&format!(
-                    "- **{}** ({}): {}\n",
-                    marker.marker.hangul(),
-                    marker.position.hangul(),
-                    marker.marker.description()
+                    "### {} {} ({})\n",
+                    emoji, m.marker.hangul(), m.position.hangul()
                 ));
+                md.push_str(&format!("- **Summary**: {}\n", m.summary));
+                md.push_str(&format!("- **Description**: {}\n", m.description));
+                if !m.reasons.is_empty() {
+                    md.push_str(&format!("- **Reasons**: {}\n", m.reasons.join(", ")));
+                }
+                md.push('\n');
+            }
+        }
+
+        md.push_str("## 5. Relationships (Relationships Analysis)\n");
+        if self.relationships.mapped_relationships.is_empty() {
+            md.push_str("- No significant relationships detected.\n");
+        } else {
+            for rel in &self.relationships.mapped_relationships {
+                let emoji = match rel.level {
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "🤝",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "⚡",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "•",
+                };
+                md.push_str(&format!(
+                    "### {} {} ({})\n",
+                    emoji, rel.name, rel.positions.join(", ")
+                ));
+                md.push_str(&format!("- **Summary**: {}\n", rel.summary));
+                md.push_str(&format!("- **Description**: {}\n", rel.description));
+                if !rel.reasons.is_empty() {
+                    md.push_str(&format!("- **Reasons**: {}\n", rel.reasons.join(", ")));
+                }
+                if let Some(elem) = rel.transformed_element {
+                    md.push_str(&format!("- **Change**: Transformed to {}\n", elem.hangul()));
+                }
+                md.push('\n');
             }
         }
         md.push('\n');
 
         if let Some(major) = &self.major_luck {
-            md.push_str("## 5. Major Luck Cycles (Daeyun)\n");
+            md.push_str("## 6. Major Luck Cycles (Daeyun)\n");
             md.push_str(&format!("- **Direction**: {}\n", major.direction));
             md.push_str(&format!("- **Start Age**: {}\n", major.start_age));
             md.push_str("\n| Order | Age | GanZi | Start Date |\n");
@@ -228,7 +263,7 @@ impl SajuReport {
         }
 
         if let Some(golden) = &self.golden_time {
-            md.push_str("## 6. Golden Time Analysis (AI/VM)\n");
+            md.push_str("## 7. Golden Time Analysis (AI/VM)\n");
             md.push_str(&format!(
                 "- **Period**: Age {} - {}\n",
                 golden.start_age, golden.end_age
@@ -239,8 +274,8 @@ impl SajuReport {
         }
 
         if !self.simulation_frames.is_empty() {
-            md.push_str("## 7. Life Simulation Details\n");
-            md.push_str("### 7.1 Energy Balance (Qi Registers)\n");
+            md.push_str("## 8. Life Simulation Details\n");
+            md.push_str("### 8.1 Energy Balance (Qi Registers)\n");
             md.push_str("| Age | Year | Score | Wood | Fire | Earth | Metal | Water |\n");
             md.push_str("|---|---|---|---|---|---|---|---|\n");
 
@@ -260,7 +295,7 @@ impl SajuReport {
                 ));
             }
 
-            md.push_str("\n### 7.2 Key Life Events (ESIL Trace Summary)\n");
+            md.push_str("\n### 8.2 Key Life Events (ESIL Trace Summary)\n");
             // 큰 변화가 있거나 상위 5개 프레임 추출
             let mut key_frames: Vec<_> = self.simulation_frames.iter().collect();
             key_frames.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
@@ -283,7 +318,7 @@ impl SajuReport {
         }
 
         if let Some(summary) = &self.vm_summary {
-            md.push_str("## 8. Simulation Summary\n");
+            md.push_str("## 9. Simulation Summary\n");
             md.push_str(summary);
             md.push('\n');
         }

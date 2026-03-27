@@ -402,14 +402,20 @@ export interface RelationshipAnalysis {
 /** 공망 상세 정보 */
 export interface VoidDetail {
   branch: string;
+  position: string;
+  ten_god: string; // TenGod 변형명
   summary: string;
   description: string;
   reasons: string[];
+  level: InterpretationLevel;
 }
 
 /** 공망 분석 결과 */
 export interface VoidAnalysis {
-  voids: string[];
+  void_branches: string[];
+  void_positions: string[];
+  void_ten_gods: string[];
+  xun_group: string;
   mapped_voids: VoidDetail[];
 }
 

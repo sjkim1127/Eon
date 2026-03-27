@@ -20,6 +20,19 @@ pub struct VoidAnalysis {
     pub void_ten_gods: Vec<TenGod>,
     /// 공망 그룹 이름 (예: 갑자순)
     pub xun_group: String,
+    /// 상세 해석 (Explainable DTO)
+    pub mapped_voids: Vec<VoidDetail>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VoidDetail {
+    pub branch: EarthlyBranch,
+    pub position: String,
+    pub ten_god: crate::core::ten_gods::TenGod,
+    pub summary: String,
+    pub description: String,
+    pub reasons: Vec<String>,
+    pub level: crate::analysis::supplementary_pillars::InterpretationLevel,
 }
 
 impl VoidAnalysis {
@@ -30,7 +43,8 @@ impl VoidAnalysis {
         
         let mut void_positions = Vec::new();
         let mut void_ten_gods = Vec::new();
-        
+        let mut mapped_voids = Vec::new();
+
         let checks = [
             ("년주", pillars.year),
             ("월주", pillars.month),
@@ -41,8 +55,31 @@ impl VoidAnalysis {
         
         for (pos, ganzi) in checks {
             if void_branches.contains(&ganzi.branch) {
+                let tg = TenGod::from_stem_and_branch(dm, ganzi.branch);
                 void_positions.push(pos.to_string());
-                void_ten_gods.push(TenGod::from_stem_and_branch(dm, ganzi.branch));
+                void_ten_gods.push(tg);
+
+                // 상세 해석 생성
+                let summary = format!("{}에 위치한 {} 공망", pos, tg.hangul());
+                let description = match pos {
+                    "년주" => "선조나 국가적 혜택이 약하거나, 어린 시절의 근간이 흔들릴 수 있음을 의미합니다.",
+                    "월주" => "부모/형제운이 약하거나 직업적 정착에 더 많은 노력이 필요할 수 있습니다.",
+                    "시주" => "자녀나 말년의 결실이 예상보다 늦게 나타나거나 허망함이 있을 수 있습니다.",
+                    _ => "",
+                };
+
+                mapped_voids.push(VoidDetail {
+                    branch: ganzi.branch,
+                    position: pos.to_string(),
+                    ten_god: tg,
+                    summary,
+                    description: description.to_string(),
+                    reasons: vec![
+                        format!("일주 기준 공망: {}", ganzi.branch.hangul()),
+                        format!("{} 위치 중복", pos),
+                    ],
+                    level: crate::analysis::supplementary_pillars::InterpretationLevel::Caution,
+                });
             }
         }
         
@@ -51,6 +88,7 @@ impl VoidAnalysis {
             void_positions,
             void_ten_gods,
             xun_group,
+            mapped_voids,
         }
     }
 }
