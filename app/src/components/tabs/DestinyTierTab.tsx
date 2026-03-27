@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { Trophy } from "lucide-react";
 import type { SajuAnalysisResult, VedicAnalysisResult, TransitResult } from "../../types";
-import { computeTierResult } from "../../utils/tierScore";
 import { TierCard } from "../destiny/TierCard";
 import { RadarChartSection } from "../destiny/RadarChartSection";
 import { ScoreBreakdown } from "../destiny/ScoreBreakdown";
@@ -19,7 +18,9 @@ export interface DestinyTierTabProps {
 }
 
 export function DestinyTierTab({ sajuReport, report, transitReport, tierReport, unknownTime }: DestinyTierTabProps) {
-  const result = tierReport ?? computeTierResult(sajuReport, report, transitReport);
+  // v3: Strictly use backend response (tierReport). 
+  // Do not fallback to frontend calculation to maintain SSOT.
+  const result = tierReport;
 
   if (!result) {
     return (
@@ -32,7 +33,9 @@ export function DestinyTierTab({ sajuReport, report, transitReport, tierReport, 
         <Trophy className="w-16 h-16 text-white/20 mb-4" />
         <h3 className="text-xl font-bold text-white mb-2">운명 티어 분석</h3>
         <p className="text-white/50 max-w-sm">
-          출생 정보를 입력하고 통합 분석을 실행하면, 사주와 베딕을 종합한 운명·잠재력·분야별 티어를 확인할 수 있습니다.
+          {(!sajuReport && !report) 
+            ? "출생 정보를 입력하고 통합 분석을 실행하면, 사주와 베딕을 종합한 운명·잠재력·분야별 티어를 확인할 수 있습니다."
+            : "운명 티어 정보를 서버에서 불러오는 중이거나, 통합 분석 결과가 아직 생성되지 않았습니다."}
         </p>
       </motion.div>
     );
