@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Clock, ChevronDown, ChevronUp, Zap } from "lucide-react";
-import type { DashaPeriod, SignDashaPeriod } from "../../types/vedic";
+import type { DashaPeriod, SignDashaPeriod } from "../../../types/vedic";
 
 const PLANET_COLORS: Record<string, string> = {
     Sun: "bg-orange-500/20 text-orange-300 border-orange-500/30",

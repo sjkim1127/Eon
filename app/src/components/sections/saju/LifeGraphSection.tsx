@@ -12,8 +12,8 @@ import {
     ReferenceLine,
 } from "recharts";
 import { TrendingUp, Star, AlertTriangle, Moon } from "lucide-react";
-import type { YearlyScore, GoldenTime } from "../../types/saju";
-import type { VedicAnalysisResult } from "../../types/vedic";
+import type { YearlyScore, GoldenTime } from "../../../types/saju";
+import type { VedicAnalysisResult } from "../../../types/vedic";
 
 interface LifeGraphSectionProps {
     timeline: YearlyScore[];

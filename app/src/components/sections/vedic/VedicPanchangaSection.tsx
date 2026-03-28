@@ -1,5 +1,5 @@
 import { Star } from "lucide-react";
-import type { VedicPanchanga } from "../../types/vedic";
+import type { VedicPanchanga } from "../../../types/vedic";
 
 interface VedicPanchangaSectionProps {
     panchanga: VedicPanchanga;

@@ -1,7 +1,7 @@
 import { Globe, ShieldAlert, Sparkles, AlertCircle } from "lucide-react";
-import { SIGN_NAMES } from "../../constants";
-import type { GocharaSummary } from "../../types/vedic";
-import { cn } from "../../utils";
+import { SIGN_NAMES } from "../../../constants";
+import type { GocharaSummary } from "../../../types/vedic";
+import { cn } from "../../../utils";
 
 const MURTI_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
     Gold: { label: "금", emoji: "🥇", color: "text-yellow-300" },

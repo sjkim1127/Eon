@@ -1,6 +1,6 @@
 import { Heart, Clock } from "lucide-react";
-import { cn } from "../../utils";
-import type { VedicAnalysisReport } from "../../types/vedic";
+import { cn } from "../../../utils";
+import type { VedicAnalysisReport } from "../../../types/vedic";
 
 interface VedicOverviewSectionProps {
     report: VedicAnalysisReport;

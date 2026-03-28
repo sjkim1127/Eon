@@ -1,5 +1,5 @@
 import { Eye } from "lucide-react";
-import type { AspectRelation } from "../../types/vedic";
+import type { AspectRelation } from "../../../types/vedic";
 
 const SIGN_NAMES: Record<number, string> = {
     1: "Aries", 2: "Taurus", 3: "Gemini", 4: "Cancer",

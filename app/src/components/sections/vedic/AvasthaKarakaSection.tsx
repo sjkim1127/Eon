@@ -1,5 +1,5 @@
 import { Sparkles, Users, Target } from "lucide-react";
-import type { ArudhaPada } from "../../types/vedic";
+import type { ArudhaPada } from "../../../types/vedic";
 
 // ── Avasthas Types ──
 interface PlanetAvastha {

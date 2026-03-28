@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Grid3x3 } from "lucide-react";
-import { VARGA_DEFS } from "../../constants";
-import { SouthIndianChart } from "../charts/SouthIndianChart";
-import { NorthIndianChart } from "../charts/NorthIndianChart";
-import { VargaNakshatraTable } from "../sections/VargaNakshatraTable";
-import { VargaSignPositionsTable } from "../vedic/VargaSignPositionsTable";
+import { VARGA_DEFS } from "../../../constants";
+import { SouthIndianChart } from "../../charts/SouthIndianChart";
+import { NorthIndianChart } from "../../charts/NorthIndianChart";
+import { VargaNakshatraTable } from "./VargaNakshatraTable";
+import { VargaSignPositionsTable } from "../../vedic/VargaSignPositionsTable";
 
 interface VargaVisualizationSectionProps {
     planets: any[];
