@@ -49,6 +49,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const aspects = currentChart.aspects ?? [];
   const dashaTimeline = report.report?.dasha_timeline ?? [];
   const yoginiTimeline = report.report?.yogini_timeline ?? [];
+  const charaDashaTimeline = report.report?.chara_dasha_timeline ?? [];
 
   const vargaReports = report.varga_nakshatra_reports;
   const reportsMap = vargaReports?.reports;
@@ -132,7 +133,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
 
         <div className="glass p-8 rounded-[2rem] border-celestial-cyan/20 bg-celestial-cyan/5">
           <p className="text-celestial-cyan/80 text-sm font-bold uppercase tracking-wider mb-2">
-            파트너 지표 (Darakaraka)
+            배우자 지표 (Darakaraka)
           </p>
           <h4 className="text-3xl font-bold text-white mb-4">
             {report.report?.primary_karakas.darakaraka}
@@ -141,6 +142,22 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
             배우자·가까운 파트너와의 관계 패턴을 나타내는 행성입니다.
           </p>
         </div>
+      </div>
+
+      {/* ── Jaimini Secondary Karakas (BK, MK, PiK, PK, GK) ────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {[
+          { label: "형제 (Bhratrukaraka)", value: report.report?.primary_karakas.bhratrukaraka, color: "text-orange-400", bg: "bg-orange-500/5", border: "border-orange-500/10" },
+          { label: "어머니 (Matrukaraka)", value: report.report?.primary_karakas.matrukaraka, color: "text-emerald-400", bg: "bg-emerald-500/5", border: "border-emerald-500/10" },
+          { label: "아버지 (Pitrikaraka)", value: report.report?.primary_karakas.pitrikaraka, color: "text-blue-400", bg: "bg-blue-500/5", border: "border-blue-500/10" },
+          { label: "자녀 (Putrakaraka)", value: report.report?.primary_karakas.putrakaraka, color: "text-yellow-400", bg: "bg-yellow-500/5", border: "border-yellow-500/10" },
+          { label: "경쟁자 (Gnatikaraka)", value: report.report?.primary_karakas.gnatikaraka, color: "text-red-400", bg: "bg-red-500/5", border: "border-red-500/10" },
+        ].filter(k => k.value).map((k, i) => (
+          <div key={i} className={cn("glass p-4 rounded-2xl border bg-white/5", k.bg, k.border)}>
+            <p className="text-[10px] text-white/40 font-bold uppercase mb-1">{k.label}</p>
+            <p className={cn("text-lg font-bold", k.color)}>{k.value}</p>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -381,6 +398,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       <DashaTimelineSection 
         periods={dashaTimeline} 
         yoginiPeriods={yoginiTimeline}
+        charaPeriods={charaDashaTimeline}
       />
 
       {/* ── 12하우스 강도 레이더 (Bhava Strength) ───────────── */}
@@ -390,12 +408,12 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       <AspectsSection aspects={aspects} />
 
       {/* ── 고차라 트랜싯 (Gochara) ─────────────────── */}
-      <GocharaSection summary={(report as any).gochara ?? null} />
+      <GocharaSection summary={report.gochara ?? null} />
 
       {/* ── 카라카 + 아바스타 (Karakas + Avasthas) ────────── */}
       <AvasthaKarakaSection
         avasthas={avasthas ?? []}
-        karakas={karakas ?? []}
+        karakas={report.report?.all_karakas ?? karakas ?? []}
         arudhaPadas={arudhaPadas ?? []}
       />
     </motion.div>

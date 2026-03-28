@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Clock, ChevronDown, ChevronUp, Zap } from "lucide-react";
-import type { DashaPeriod } from "../../types/vedic";
+import type { DashaPeriod, SignDashaPeriod } from "../../types/vedic";
 
 const PLANET_COLORS: Record<string, string> = {
     Sun: "bg-orange-500/20 text-orange-300 border-orange-500/30",
@@ -42,14 +42,15 @@ function yearsBetween(startIso: string, endIso: string): number {
 interface DashaTimelineSectionProps {
     periods: DashaPeriod[];
     yoginiPeriods?: DashaPeriod[];
+    charaPeriods?: SignDashaPeriod[];
 }
 
-export function DashaTimelineSection({ periods, yoginiPeriods }: DashaTimelineSectionProps) {
-    const [dashaType, setDashaType] = useState<"vimshottari" | "yogini">("vimshottari");
+export function DashaTimelineSection({ periods, yoginiPeriods, charaPeriods }: DashaTimelineSectionProps) {
+    const [dashaType, setDashaType] = useState<"vimshottari" | "yogini" | "chara">("vimshottari");
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
     const [now] = useState(() => Date.now());
 
-    const activePeriods = dashaType === "vimshottari" ? periods : (yoginiPeriods ?? []);
+    const activePeriods = dashaType === "vimshottari" ? periods : (dashaType === "yogini" ? (yoginiPeriods ?? []) : (charaPeriods ?? []));
     const hasPeriods = Array.isArray(activePeriods) && activePeriods.length > 0;
 
     if (!hasPeriods && !yoginiPeriods?.length) {
@@ -84,22 +85,30 @@ export function DashaTimelineSection({ periods, yoginiPeriods }: DashaTimelineSe
                     다샤 타임라인 ({dashaType === "vimshottari" ? "Vimshottari" : "Yogini"})
                 </h5>
                 
-                {yoginiPeriods && yoginiPeriods.length > 0 && (
-                    <div className="flex bg-black/40 border border-white/20 rounded-xl overflow-hidden p-0.5">
-                        <button
-                            onClick={() => { setDashaType("vimshottari"); setExpandedIndex(null); }}
-                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${dashaType === "vimshottari" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
-                        >
-                            빔쇼타리
-                        </button>
+                <div className="flex bg-black/40 border border-white/20 rounded-xl overflow-hidden p-0.5">
+                    <button
+                        onClick={() => { setDashaType("vimshottari"); setExpandedIndex(null); }}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${dashaType === "vimshottari" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+                    >
+                        빔쇼타리
+                    </button>
+                    {yoginiPeriods && yoginiPeriods.length > 0 && (
                         <button
                             onClick={() => { setDashaType("yogini"); setExpandedIndex(null); }}
                             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${dashaType === "yogini" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
                         >
                             요기니
                         </button>
-                    </div>
-                )}
+                    )}
+                    {charaPeriods && charaPeriods.length > 0 && (
+                        <button
+                            onClick={() => { setDashaType("chara"); setExpandedIndex(null); }}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${dashaType === "chara" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}
+                        >
+                            제미니
+                        </button>
+                    )}
+                </div>
             </div>
 
             {dashaType === "yogini" && (
@@ -109,13 +118,26 @@ export function DashaTimelineSection({ periods, yoginiPeriods }: DashaTimelineSe
                 </p>
             )}
 
+            {dashaType === "chara" && (
+                <p className="text-xs text-white/40 mb-4 bg-white/5 p-3 rounded-lg border border-white/5">
+                    <Zap className="w-3 h-3 inline mr-1 text-celestial-purple" />
+                    차라 다샤(Chara Dasha)는 사지(Signs)의 이동을 통해 영혼의 여정과 변화를 분석하는 제미니 체계의 핵심 도구입니다.
+                </p>
+            )}
+
             {/* Mahadasha 바 차트 */}
             <div className="flex w-full h-10 rounded-xl overflow-hidden border border-white/10 mb-4">
-                {activePeriods.map((p, i) => {
+                {(activePeriods as any[]).map((p, i) => {
                     const years = yearsBetween(p.start_time, p.end_time);
                     const pct = totalYears > 0 ? (years / totalYears) * 100 : 0;
                     const isCurrent = i === currentIdx;
-                    const color = PLANET_BAR_COLORS[p.lord] ?? "#888";
+                    
+                    const lordOfRasi: Record<number, string> = {
+                        1: "Mars", 2: "Venus", 3: "Mercury", 4: "Moon", 5: "Sun", 6: "Mercury",
+                        7: "Venus", 8: "Mars", 9: "Jupiter", 10: "Saturn", 11: "Saturn", 12: "Jupiter"
+                    };
+                    const lord = (p as any).lord || lordOfRasi[(p as any).rasi] || "Saturn";
+                    const color = PLANET_BAR_COLORS[lord] ?? "#888";
 
                     return (
                         <button
@@ -129,9 +151,9 @@ export function DashaTimelineSection({ periods, yoginiPeriods }: DashaTimelineSe
                                 opacity: isCurrent ? 1 : 0.65,
                                 minWidth: pct > 2 ? undefined : "12px",
                             }}
-                            title={`${p.name || p.lord}: ${formatDate(p.start_time)} ~ ${formatDate(p.end_time)} (${years.toFixed(1)}년)`}
+                            title={`${(p as any).name || (p as any).lord || `Sign ${(p as any).rasi}`}: ${formatDate(p.start_time)} ~ ${formatDate(p.end_time)} (${years.toFixed(1)}년)`}
                         >
-                            {pct > 5 && (p.name ? p.name.substring(0, 2) : p.lord.substring(0, 2))}
+                            {pct > 5 && ((p as any).name ? (p as any).name.substring(0, 2) : ((p as any).rasi ? `S${(p as any).rasi}` : (p as any).lord?.substring(0, 2)))}
                             {isCurrent && (
                                 <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[8px] text-white/60">▲</span>
                             )}
@@ -142,11 +164,17 @@ export function DashaTimelineSection({ periods, yoginiPeriods }: DashaTimelineSe
 
             {/* Mahadasha 카드 리스트 */}
             <div className="space-y-2 mt-6">
-                {activePeriods.map((p, i) => {
+                {(activePeriods as any[]).map((p, i) => {
                     const years = yearsBetween(p.start_time, p.end_time);
                     const isCurrent = i === currentIdx;
                     const isExpanded = expandedIndex === i;
-                    const colorClass = PLANET_COLORS[p.lord] ?? "bg-white/10 text-white/70 border-white/20";
+                    
+                    const lordOfRasi: Record<number, string> = {
+                        1: "Mars", 2: "Venus", 3: "Mercury", 4: "Moon", 5: "Sun", 6: "Mercury",
+                        7: "Venus", 8: "Mars", 9: "Jupiter", 10: "Saturn", 11: "Saturn", 12: "Jupiter"
+                    };
+                    const lord = (p as any).lord || lordOfRasi[(p as any).rasi] || "Saturn";
+                    const colorClass = PLANET_COLORS[lord] ?? "bg-white/10 text-white/70 border-white/20";
 
                     return (
                         <div key={`${dashaType}-list-${i}`}>
@@ -157,13 +185,13 @@ export function DashaTimelineSection({ periods, yoginiPeriods }: DashaTimelineSe
                                     }`}
                             >
                                 <span className={`text-xs px-2 py-0.5 rounded-lg border font-bold ${colorClass}`}>
-                                    {p.name ? `${p.name} (${p.lord})` : p.lord}
+                                    {(p as any).rasi ? `사인 ${(p as any).rasi} (Chara)` : ((p as any).name ? `${(p as any).name} (${(p as any).lord})` : (p as any).lord)}
                                 </span>
                                 <span className="text-xs text-white/50 font-mono flex-1 text-center sm:text-left">
                                     {formatDate(p.start_time)} ~ {formatDate(p.end_time)}
                                 </span>
                                 <span className="text-xs text-white/30 hidden sm:inline">{years.toFixed(1)}년</span>
-                                {p.sub_dashas && p.sub_dashas.length > 0 && (
+                                {(p as any).sub_dashas && (p as any).sub_dashas.length > 0 && (
                                     isExpanded ? <ChevronUp className="w-4 h-4 text-white/30" /> : <ChevronDown className="w-4 h-4 text-white/30" />
                                 )}
                                 {isCurrent && (
@@ -172,14 +200,15 @@ export function DashaTimelineSection({ periods, yoginiPeriods }: DashaTimelineSe
                             </button>
 
                             {/* Antardasha 확장 */}
-                            {isExpanded && p.sub_dashas && p.sub_dashas.length > 0 && (
+                            {isExpanded && (p as any).sub_dashas && (p as any).sub_dashas.length > 0 && (
                                 <div className="ml-6 mt-1 pl-4 border-l-2 border-white/10 space-y-1">
-                                    {p.sub_dashas.map((sub, j) => {
+                                    {(p as any).sub_dashas.map((sub: DashaPeriod, j: number) => {
                                         const subYears = yearsBetween(sub.start_time, sub.end_time);
                                         const subNow = new Date(sub.start_time).getTime();
                                         const subEnd = new Date(sub.end_time).getTime();
                                         const isSubCurrent = now >= subNow && now < subEnd;
-                                        const subColor = PLANET_COLORS[sub.lord] ?? "bg-white/10 text-white/50 border-white/10";
+                                        const subLord = sub.lord || "Saturn";
+                                        const subColor = PLANET_COLORS[subLord] ?? "bg-white/10 text-white/50 border-white/10";
 
                                         return (
                                             <div
