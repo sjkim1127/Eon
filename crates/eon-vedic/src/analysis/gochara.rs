@@ -28,6 +28,9 @@ pub struct TransitPosition {
     pub is_benefic_transit: bool, // Simple check based on Gochara rules
     pub is_blocked: bool, // Blocked by Vedha (obstruction)
     pub murti: MurtiType, // Murti Nirnaya
+    pub summary: String,
+    pub description: String,
+    pub reasons: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -111,6 +114,37 @@ impl GocharaEngine {
                 sade_sati = Self::calculate_sade_sati(natal_moon_rasi, pos.rasi);
             }
 
+            let mut reasons = Vec::new();
+            if is_benefic {
+                reasons.push(format!("{:?} is in a natural benefic house ({}) from Moon.", pos.planet, house_from_moon));
+            } else {
+                reasons.push(format!("{:?} is in a challenging house ({}) from Moon.", pos.planet, house_from_moon));
+            }
+
+            if is_blocked {
+                reasons.push("This transit's influence is obstructed by Vedha.".to_string());
+            }
+
+            let murti_desc = match murti {
+                MurtiType::Gold => "Suvarna (Gold) - Highly Auspicious",
+                MurtiType::Silver => "Rajata (Silver) - Auspicious",
+                MurtiType::Copper => "Tamra (Copper) - Moderate",
+                MurtiType::Iron => "Loha (Iron) - Challenging",
+                MurtiType::Unknown => "Stable",
+            };
+            reasons.push(format!("Murti Status: {}", murti_desc));
+
+            let summary = if is_benefic && !is_blocked {
+                format!("{:?} Auspicious Transit", pos.planet)
+            } else if is_blocked {
+                format!("{:?} Blocked Transit", pos.planet)
+            } else {
+                format!("{:?} Challenging Transit", pos.planet)
+            };
+
+            let description = format!("{:?} is transiting {} house from natal Moon in {:?} form.", 
+                pos.planet, house_from_moon, murti);
+
             transits.push(TransitPosition {
                 planet: pos.planet,
                 current_rasi: pos.rasi,
@@ -118,6 +152,9 @@ impl GocharaEngine {
                 is_benefic_transit: is_benefic,
                 is_blocked,
                 murti,
+                summary,
+                description,
+                reasons,
             });
         }
         
