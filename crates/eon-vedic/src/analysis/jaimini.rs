@@ -181,11 +181,10 @@ impl JaiminiEngine {
                 rasi: (hl_long / 30.0).floor() as u8 + 1,
             });
 
-            // Ghati Lagna (GL): 1 Rasi (30 deg) per 12 mins (0.5 Ghati)
-            // BPHS convention: 1 Ghadi = 24 mins. Standard GL is 1.25 Rasi per Ghadi.
-            // 1.25 signs / 24 mins = 5 signs / 96 mins = 1 sign per 19.2 mins? 
-            // Wait, let's stick to the 1 sign per 12 mins (5 signs per 60 mins) which is more common in modern software for GL.
-            let gl_long = (sun.sidereal_deg + diff_mins * (30.0 / 12.0)) % 360.0;
+            // Ghati Lagna (GL): Rate of 1.25 signs per Ghati (24 mins)
+            // This is equivalent to 1 sign per 19.2 mins.
+            // BPHS standard: 1.25 * (30 deg) / 24 mins = 1.5625 deg / min.
+            let gl_long = (sun.sidereal_deg + diff_mins * 1.5625) % 360.0;
             results.push(SpecialLagna {
                 name: "Ghati Lagna (GL)".to_string(),
                 longitude: gl_long,
@@ -196,7 +195,10 @@ impl JaiminiEngine {
         results
     }
 
-    /// Calculate Chara Dasha (KN Rao method)
+    /// Calculate Chara Dasha (Simplified KN Rao method version 1)
+    /// NOTE: This is an foundational implementation. 
+    /// Traditional systems use special cases for Scorpio (Ketu/Mars) and Aquarius (Saturn/Rahu),
+    /// which are not yet fully implemented here.
     pub fn calculate_chara_dasha(chart: &VedicChart) -> Vec<SignDashaPeriod> {
         let lagna_rasi = chart.ascendant.rasi;
         let birth_time = chart.panchanga.current_time;
