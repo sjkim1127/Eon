@@ -1,23 +1,25 @@
 import { Compass, Briefcase, Heart, Star, Zap } from "lucide-react";
-import type { VedicAnalysisReport } from "../../../types/vedic";
+import type { VedicAnalysisReport, TajikaReport, Saham } from "../../../types/vedic";
 
 interface VedicAdvancedInsightsSectionProps {
   report: VedicAnalysisReport;
+  tajikaReport?: TajikaReport | null;
 }
 
-export function VedicAdvancedInsightsSection({ report }: VedicAdvancedInsightsSectionProps) {
+export function VedicAdvancedInsightsSection({ report, tajikaReport }: VedicAdvancedInsightsSectionProps) {
   const {
     arudha_lagna,
     upapada_lagna,
     special_lagnas_summary,
     d9_marriage_analysis,
     d10_career_analysis,
-    sahams,
-    harsha_bala_summary,
     varga_interpretations,
-    year_lord,
-    muntha_rasi
   } = report;
+
+  const sahams = tajikaReport?.sahams ?? [];
+  const harsha_bala_summary = tajikaReport?.harsha_bala_summary ?? [];
+  const year_lord = tajikaReport?.year_lord;
+  const muntha_rasi = tajikaReport?.muntha_rasi;
 
   // Filter special planets
   const specialPlanets = varga_interpretations?.filter(vi => vi.is_vargottama || vi.is_pushkar_navamsa) || [];
@@ -103,7 +105,7 @@ export function VedicAdvancedInsightsSection({ report }: VedicAdvancedInsightsSe
           </div>
           <div className="space-y-3">
             <p className="text-[10px] text-white/40 font-bold uppercase mb-2">주요 사함 (Sahams)</p>
-            {sahams?.map((s) => (
+            {sahams?.map((s: Saham) => (
               <div key={s.name} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
                 <span className="text-xs font-bold text-white/70">{s.name}</span>
                 <span className="text-xs font-mono text-celestial-gold">사인 {s.rasi}</span>
@@ -121,15 +123,31 @@ export function VedicAdvancedInsightsSection({ report }: VedicAdvancedInsightsSe
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {specialPlanets.length > 0 ? (
               specialPlanets.map((vi) => (
-                <div key={vi.planet} className="p-4 rounded-xl bg-brand-400/5 border border-brand-400/20">
-                  <p className="text-sm font-bold text-white mb-2">{vi.planet}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {vi.is_vargottama && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">Vargottama</span>
-                    )}
-                    {vi.is_pushkar_navamsa && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-celestial-gold/20 text-celestial-gold border border-celestial-gold/30">Pushkar Navamsa</span>
-                    )}
+                <div key={vi.planet} className="p-5 rounded-2xl bg-brand-400/5 border border-brand-400/20 flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-3">
+                    <p className="text-sm font-bold text-white tracking-tight">{vi.planet}</p>
+                    <div className="flex gap-1.5">
+                      {vi.is_vargottama && (
+                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30 font-black uppercase">Vargottama</span>
+                      )}
+                      {vi.is_pushkar_navamsa && (
+                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-celestial-gold/20 text-celestial-gold border border-celestial-gold/30 font-black uppercase">Pushkar</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <h6 className="text-[11px] font-bold text-white/80 mb-1">{vi.summary}</h6>
+                  <p className="text-[10px] text-white/40 leading-relaxed mb-4 flex-1">
+                    {vi.description}
+                  </p>
+
+                  <div className="space-y-1 mt-auto pt-3 border-t border-white/5">
+                    {vi.reasons.map((reason, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-[9px] text-brand-400/60">
+                        <Zap className="w-2 h-2" />
+                        <span>{reason}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))
@@ -141,7 +159,7 @@ export function VedicAdvancedInsightsSection({ report }: VedicAdvancedInsightsSe
           <div className="mt-6">
             <h6 className="text-[10px] font-bold text-white/40 uppercase mb-3">Harsha Bala (기쁨의 강도)</h6>
             <div className="flex flex-wrap gap-2">
-              {harsha_bala_summary?.filter(([_, score]) => score >= 5).map(([planet, score]) => (
+              {harsha_bala_summary?.filter(([_, score]: [string, number]) => score >= 5).map(([planet, score]: [string, number]) => (
                 <div key={planet} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 flex items-center gap-2">
                   <span className="text-xs font-bold text-white/80">{planet}</span>
                   <span className={`text-[10px] font-black ${score >= 15 ? 'text-green-400' : score >= 10 ? 'text-celestial-cyan' : 'text-white/40'}`}>{score}</span>

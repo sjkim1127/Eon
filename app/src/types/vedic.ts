@@ -17,6 +17,9 @@ export interface HouseSummary {
   house: number;
   rating: string;
   total_score: number;
+  summary: string;
+  description: string;
+  reasons: string[];
 }
 
 /** 다샤 기간 (DashaPeriod Rust struct) */
@@ -52,6 +55,18 @@ export interface VargaInterpretation {
   d9_rasi: number;
   d10_rasi: number;
   d60_rasi: number;
+  summary: string;
+  description: string;
+  reasons: string[];
+}
+
+/** 타지카 연간 분석 리포트 (TajikaReport Rust struct) */
+export interface TajikaReport {
+  year_lord: string | null;
+  muntha_rasi: number;
+  sahams: Saham[];
+  harsha_bala_summary: [string, number][];
+  summary: string;
 }
 
 /** 베딕 분석 리포트 (VedicAnalysisReport Rust struct) */
@@ -82,16 +97,10 @@ export interface VedicAnalysisReport {
   upapada_lagna: number;
   special_lagnas_summary: [string, number][];
 
-  // Tajika & Varga Integration
-  sahams: Saham[];
-  harsha_bala_summary: [string, number][];
+  // Varga Integration
   varga_interpretations: VargaInterpretation[];
   d9_marriage_analysis: string;
   d10_career_analysis: string;
-
-  // Annual Chart
-  year_lord: string | null;
-  muntha_rasi: number;
 }
 
 // ── 하우스 점수 (SAV / Bhava) ─────────────────────
@@ -117,6 +126,7 @@ export interface BhavaStrength {
   dig_score: number;    // 방위 힘 (Dig Bala)
   drishti_score: number; // 행성 시선의 영향
   total_score: number;
+  reasons: string[];
 }
 
 // ── 행성 힘 (Vimshopaka / Karakas / Aspects) ──────
@@ -251,6 +261,7 @@ export interface VargaNakshatraReports {
 export interface VedicAnalysisResult {
   meta: AnalysisMeta;
   report: VedicAnalysisReport;
+  tajika_report?: TajikaReport | null;
   chart: VedicChartData;
   annual_chart: VedicChartData | null;
   gochara: GocharaSummary;

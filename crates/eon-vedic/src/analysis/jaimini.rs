@@ -137,13 +137,12 @@ impl JaiminiEngine {
                 // Arudha = Lord + Distance
                 let mut arudha_rasi = ((lord_rasi as i16 + dist - 1) % 12 + 1) as u8;
                 
-                // Exceptions (Parashara)
-                // If Arudha is in the house itself, move 10 houses from it.
-                // If Arudha is in the 7th from house, move 4 houses from it (which is also 10th from house).
                 if arudha_rasi == house_rasi {
-                    arudha_rasi = ((arudha_rasi as i16 + 8) % 12 + 1) as u8;
-                } else if arudha_rasi == ((house_rasi as i16 + 5) % 12 + 1) as u8 {
-                    arudha_rasi = ((arudha_rasi as i16 + 3) % 12 + 1) as u8;
+                    // If Arudha is in the house itself, move 10 houses (Parashara)
+                    arudha_rasi = ((arudha_rasi as i16 + 9 - 1) % 12 + 1) as u8;
+                } else if arudha_rasi == ((house_rasi as i16 + 6 - 1) % 12 + 1) as u8 {
+                    // If Arudha is in the 7th from house, move 4 houses from Arudha (which is 10th from house)
+                    arudha_rasi = ((arudha_rasi as i16 + 4 - 1) % 12 + 1) as u8;
                 }
 
                 results.push(ArudhaPada {
@@ -183,8 +182,9 @@ impl JaiminiEngine {
             });
 
             // Ghati Lagna (GL): 1 Rasi (30 deg) per 12 mins (0.5 Ghati)
-            // Note: BPHS says 1.25 Ghadi = 30 mins, but standard GL is often 1.25 Rasi per Ghadi.
-            // Let's use standard: 1 Rasi per 24 mins * 2 = 12 mins per Rasi.
+            // BPHS convention: 1 Ghadi = 24 mins. Standard GL is 1.25 Rasi per Ghadi.
+            // 1.25 signs / 24 mins = 5 signs / 96 mins = 1 sign per 19.2 mins? 
+            // Wait, let's stick to the 1 sign per 12 mins (5 signs per 60 mins) which is more common in modern software for GL.
             let gl_long = (sun.sidereal_deg + diff_mins * (30.0 / 12.0)) % 360.0;
             results.push(SpecialLagna {
                 name: "Ghati Lagna (GL)".to_string(),

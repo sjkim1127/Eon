@@ -3,13 +3,20 @@ use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VargaInterpretation {
-    pub planet: VedicPlanet,
+    pub planet: crate::planets::VedicPlanet,
     pub is_vargottama: bool,
     pub is_pushkar_navamsa: bool,
     pub d9_rasi: u8,
     pub d10_rasi: u8,
     pub d60_rasi: u8,
+    #[serde(default)]
+    pub summary: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub reasons: Vec<String>,
 }
 
 pub struct VargaInterpretationEngine;
@@ -29,6 +36,14 @@ impl VargaInterpretationEngine {
                 d9_rasi: p.navamsa_rasi,
                 d10_rasi: p.dasamsa_rasi,
                 d60_rasi: p.shashtyamsa_rasi,
+                summary: if is_vargottama { "Stable and Strong".to_string() } else { "Standard".to_string() },
+                description: format!("{:?} occupies the same sign in D1 and D9 charts.", planet),
+                reasons: {
+                    let mut r = Vec::new();
+                    if is_vargottama { r.push("Vargottama (Sign-identical)".to_string()); }
+                    if is_pushkar_navamsa { r.push("Pushkar Navamsa (Spiritual Strength)".to_string()); }
+                    r
+                },
             }
         } else {
             // Fallback for ASC or others
@@ -39,6 +54,9 @@ impl VargaInterpretationEngine {
                 d9_rasi: 0,
                 d10_rasi: 0,
                 d60_rasi: 0,
+                summary: "N/A".to_string(),
+                description: "Planet position missing".to_string(),
+                reasons: Vec::new(),
             }
         }
     }

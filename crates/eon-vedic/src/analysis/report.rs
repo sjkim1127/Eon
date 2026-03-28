@@ -4,7 +4,7 @@ use crate::planets::VedicPlanet;
 use crate::analysis::varga_interpretation::{VargaInterpretation, VargaInterpretationEngine};
 use crate::analysis::tajika::{Saham, TajikaEngine, TajikaBala};
 use crate::analysis::dasha::{DashaPeriod, YoginiDasha};
-use chrono::{Utc, Datelike};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,19 +38,22 @@ pub struct VedicAnalysisReport {
     #[serde(default)]
     pub special_lagnas_summary: Vec<(String, u8)>,
     
-    // Tajika & Varga Integration
-    #[serde(default)]
-    pub sahams: Vec<Saham>,
-    #[serde(default)]
-    pub harsha_bala_summary: Vec<(VedicPlanet, u32)>,
+    // Varga Integration
     #[serde(default)]
     pub varga_interpretations: Vec<VargaInterpretation>,
     pub d9_marriage_analysis: String,
     pub d10_career_analysis: String,
+}
 
-    // Annual Chart
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TajikaReport {
     pub year_lord: Option<VedicPlanet>,
     pub muntha_rasi: u8,
+    pub sahams: Vec<Saham>,
+    pub harsha_bala_summary: Vec<(VedicPlanet, u32)>,
+    #[serde(default)]
+    pub summary: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,10 +75,16 @@ pub struct HouseRating {
     pub house: u8,
     pub rating: String, // e.g. "Excellent", "Strong", "Average", "Weak"
     pub total_score: f64,
+    #[serde(default)]
+    pub summary: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub reasons: Vec<String>,
 }
 
 impl VedicAnalysisReport {
-    pub fn generate(chart: &VedicChart, birth_time: chrono::DateTime<Utc>, birth_lagna_rasi: u8) -> Self {
+    pub fn generate(chart: &VedicChart, birth_time: chrono::DateTime<Utc>, _birth_lagna_rasi: u8) -> Self {
         let get_karaka = |role: crate::analysis::jaimini::JaiminiKarakaRole| {
             chart.karakas.iter()
                 .find(|k| std::mem::discriminant(&k.role) == std::mem::discriminant(&role))
@@ -119,10 +128,29 @@ impl VedicAnalysisReport {
                 "Weak"
             };
 
+            let summary = match h.house {
+                1 => "Vitality & Personality",
+                2 => "Wealth & Speech",
+                3 => "Effort & Siblings",
+                4 => "Mother & Domestic Joy",
+                5 => "Creativity & Progeny",
+                6 => "Enemies, Debt & Health",
+                7 => "Partnership & Public",
+                8 => "Longevity & Transformation",
+                9 => "Wisdom & Fortune",
+                10 => "Career & Visibility",
+                11 => "Gains & Fulfillment",
+                12 => "Expenses & Spiritual Depth",
+                _ => "Life Area",
+            }.to_string();
+
             house_summary.push(HouseRating {
                 house: h.house,
                 rating: rating.to_string(),
                 total_score: h.total_score,
+                summary,
+                description: format!("Capacity for specific life themes related to House {}.", h.house),
+                reasons: h.reasons.clone(),
             });
         }
 
@@ -167,20 +195,13 @@ impl VedicAnalysisReport {
         // Jaimini Integration
         let al = chart.arudha_padas.iter().find(|a| a.house == 1).map(|a| a.rasi).unwrap_or(0);
         let ul = chart.arudha_padas.iter().find(|a| a.house == 12).map(|a| a.rasi).unwrap_or(0);
-        let special_lagnas_summary = chart.special_lagnas.iter().map(|s| (s.name.clone(), s.rasi)).collect();
+        let special_lagnas_summary: Vec<_> = chart.special_lagnas.iter().map(|s| (s.name.clone(), s.rasi)).collect();
 
-        // Tajika Integration
-        let sahams = TajikaEngine::calculate_sahams(chart);
-        let mut harsha_bala_summary = Vec::new();
+        // Varga Interpretation Integration
         let planets_to_check = [
             VedicPlanet::Sun, VedicPlanet::Moon, VedicPlanet::Mars,
             VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus, VedicPlanet::Saturn
         ];
-        for p in planets_to_check {
-            harsha_bala_summary.push((p, TajikaBala::calculate_harsha_bala(chart, p)));
-        }
-
-        // Varga Interpretation Integration
         let mut varga_interpretations = Vec::new();
         for p in planets_to_check {
             varga_interpretations.push(VargaInterpretationEngine::interpret_planet(chart, p));
@@ -190,11 +211,6 @@ impl VedicAnalysisReport {
 
         // Chara Dasha (Jaimini)
         let chara_dasha_timeline = crate::analysis::jaimini::JaiminiEngine::calculate_chara_dasha(chart);
-
-        // Annual Analysis
-        let age_years = (chart.panchanga.current_time.year() - birth_time.year()).abs() as u32;
-        let muntha_rasi = TajikaEngine::calculate_muntha(birth_lagna_rasi, age_years);
-        let year_lord = TajikaEngine::select_year_lord(chart, birth_lagna_rasi, age_years);
 
         Self {
             primary_karakas: KarakaSummary {
@@ -225,16 +241,43 @@ impl VedicAnalysisReport {
             arudha_lagna: al,
             upapada_lagna: ul,
             special_lagnas_summary,
-            sahams,
-            harsha_bala_summary,
             varga_interpretations,
             d9_marriage_analysis,
             d10_career_analysis,
+        }
+    }
+}
+
+impl TajikaReport {
+    pub fn generate(chart: &VedicChart, birth_lagna_rasi: u8, age_years: u32) -> Self {
+        let sahams = TajikaEngine::calculate_sahams(chart);
+        let mut harsha_bala_summary = Vec::new();
+        let planets_to_check = [
+            VedicPlanet::Sun, VedicPlanet::Moon, VedicPlanet::Mars,
+            VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus, VedicPlanet::Saturn
+        ];
+        for p in planets_to_check {
+            harsha_bala_summary.push((p, TajikaBala::calculate_harsha_bala(chart, p)));
+        }
+
+        let muntha_rasi = TajikaEngine::calculate_muntha(birth_lagna_rasi, age_years);
+        let year_lord = TajikaEngine::select_year_lord(chart, birth_lagna_rasi, age_years);
+
+        Self {
             year_lord: Some(year_lord),
             muntha_rasi,
+            sahams,
+            harsha_bala_summary,
+            summary: format!("Annual Chart Summary: Year Lord is {:?}, Muntha in Sign {}.", year_lord, muntha_rasi),
         }
     }
 
+    pub fn to_text_summary(&self) -> String {
+        self.summary.clone()
+    }
+}
+
+impl VedicAnalysisReport {
     pub fn to_text_summary(&self) -> String {
         let mut s = String::new();
         s.push_str("# Vedic Chart Analysis Summary\n\n");
@@ -294,21 +337,6 @@ impl VedicAnalysisReport {
         s.push_str(&format!("- **D9 Navamsa**: {}\n", self.d9_marriage_analysis));
         s.push_str(&format!("- **D10 Dasamsa**: {}\n\n", self.d10_career_analysis));
 
-        s.push_str("## 🪐 Tajika Annual Factors\n");
-        s.push_str(&format!("- **Year Lord (Varsheshwara)**: {:?}\n", self.year_lord));
-        s.push_str(&format!("- **Muntha Position**: Sign {}\n", self.muntha_rasi));
-        if let Some(p) = self.sahams.iter().find(|s| s.name.contains("Punya")) {
-            s.push_str(&format!("- **Punya Saham (Fortune)**: Sign {}\n", p.rasi));
-        }
-        let strong_bala = self.harsha_bala_summary.iter().filter(|(_, score)| *score >= 10).collect::<Vec<_>>();
-        if !strong_bala.is_empty() {
-             s.push_str("- **High Harsha Bala**: ");
-             let lords: Vec<String> = strong_bala.iter().map(|(p, _)| format!("{:?}", p)).collect();
-             s.push_str(&lords.join(", "));
-             s.push('\n');
-        }
-        s.push('\n');
-
         s.push_str("## 🚀 Special Status (Vargottama / Pushkar)\n");
         let special_planets: Vec<String> = self.varga_interpretations.iter()
             .filter(|vi| vi.is_vargottama || vi.is_pushkar_navamsa)
@@ -325,7 +353,7 @@ impl VedicAnalysisReport {
         }
         s.push('\n');
 
-        s.push_str("## 🪐 Transit Alerts\n");
+        s.push_str("## 🪐 Transit Alerts & Gochara\n");
         // Sade Sati
         match self.sade_sati {
             crate::analysis::gochara::SadeSatiPhase::Rising => s.push_str("- **Sade Sati (Rising)**: Saturn has entered the 12th from Moon. A period of internal shifts begins.\n"),
@@ -333,10 +361,8 @@ impl VedicAnalysisReport {
             crate::analysis::gochara::SadeSatiPhase::Setting => s.push_str("- **Sade Sati (Setting)**: The intensity is fading as Saturn reaches the 2nd from Moon.\n"),
             crate::analysis::gochara::SadeSatiPhase::None => s.push_str("- No Sade Sati active.\n"),
         }
-        
-        // Notable Transits
-        for t in self.yogas.iter().take(0) { /* placeholder if we had gochara yogas */ }
         s.push('\n');
+        s.push_str("Detailed planetary transits including Murti Nirnaya and Vedha obstructions are available in the interactive dashboard.\n\n");
 
         s.push_str(&format!(
             "## 📊 Overall Chart Strength: {:.1}/600\n",
