@@ -127,7 +127,7 @@ export function DashaTimelineSection({ periods, yoginiPeriods, charaPeriods }: D
 
             {/* Mahadasha 바 차트 */}
             <div className="flex w-full h-10 rounded-xl overflow-hidden border border-white/10 mb-4">
-                {(activePeriods as any[]).map((p, i) => {
+                {activePeriods.map((p, i) => {
                     const years = yearsBetween(p.start_time, p.end_time);
                     const pct = totalYears > 0 ? (years / totalYears) * 100 : 0;
                     const isCurrent = i === currentIdx;
@@ -136,7 +136,21 @@ export function DashaTimelineSection({ periods, yoginiPeriods, charaPeriods }: D
                         1: "Mars", 2: "Venus", 3: "Mercury", 4: "Moon", 5: "Sun", 6: "Mercury",
                         7: "Venus", 8: "Mars", 9: "Jupiter", 10: "Saturn", 11: "Saturn", 12: "Jupiter"
                     };
-                    const lord = (p as any).lord || lordOfRasi[(p as any).rasi] || "Saturn";
+
+                    let lord = "Saturn";
+                    let label = "";
+                    let title = "";
+
+                    if (p.type === "planet") {
+                        lord = p.lord;
+                        label = p.name ? p.name.substring(0, 2) : p.lord.substring(0, 2);
+                        title = `${p.name || p.lord}: ${formatDate(p.start_time)} ~ ${formatDate(p.end_time)}`;
+                    } else if (p.type === "sign") {
+                        lord = lordOfRasi[p.rasi] || "Saturn";
+                        label = `S${p.rasi}`;
+                        title = `Sign ${p.rasi}: ${formatDate(p.start_time)} ~ ${formatDate(p.end_time)}`;
+                    }
+
                     const color = PLANET_BAR_COLORS[lord] ?? "#888";
 
                     return (
@@ -151,9 +165,9 @@ export function DashaTimelineSection({ periods, yoginiPeriods, charaPeriods }: D
                                 opacity: isCurrent ? 1 : 0.65,
                                 minWidth: pct > 2 ? undefined : "12px",
                             }}
-                            title={`${(p as any).name || (p as any).lord || `Sign ${(p as any).rasi}`}: ${formatDate(p.start_time)} ~ ${formatDate(p.end_time)} (${years.toFixed(1)}년)`}
+                            title={`${title} (${years.toFixed(1)}년)`}
                         >
-                            {pct > 5 && ((p as any).name ? (p as any).name.substring(0, 2) : ((p as any).rasi ? `S${(p as any).rasi}` : (p as any).lord?.substring(0, 2)))}
+                            {pct > 5 && label}
                             {isCurrent && (
                                 <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[8px] text-white/60">▲</span>
                             )}
@@ -164,7 +178,7 @@ export function DashaTimelineSection({ periods, yoginiPeriods, charaPeriods }: D
 
             {/* Mahadasha 카드 리스트 */}
             <div className="space-y-2 mt-6">
-                {(activePeriods as any[]).map((p, i) => {
+                {activePeriods.map((p, i) => {
                     const years = yearsBetween(p.start_time, p.end_time);
                     const isCurrent = i === currentIdx;
                     const isExpanded = expandedIndex === i;
@@ -173,7 +187,18 @@ export function DashaTimelineSection({ periods, yoginiPeriods, charaPeriods }: D
                         1: "Mars", 2: "Venus", 3: "Mercury", 4: "Moon", 5: "Sun", 6: "Mercury",
                         7: "Venus", 8: "Mars", 9: "Jupiter", 10: "Saturn", 11: "Saturn", 12: "Jupiter"
                     };
-                    const lord = (p as any).lord || lordOfRasi[(p as any).rasi] || "Saturn";
+
+                    let lord = "Saturn";
+                    let displayLabel = "";
+
+                    if (p.type === "planet") {
+                        lord = p.lord;
+                        displayLabel = p.name ? `${p.name} (${p.lord})` : p.lord;
+                    } else if (p.type === "sign") {
+                        lord = lordOfRasi[p.rasi] || "Saturn";
+                        displayLabel = `사인 ${p.rasi} (Chara)`;
+                    }
+
                     const colorClass = PLANET_COLORS[lord] ?? "bg-white/10 text-white/70 border-white/20";
 
                     return (
@@ -185,13 +210,13 @@ export function DashaTimelineSection({ periods, yoginiPeriods, charaPeriods }: D
                                     }`}
                             >
                                 <span className={`text-xs px-2 py-0.5 rounded-lg border font-bold ${colorClass}`}>
-                                    {(p as any).rasi ? `사인 ${(p as any).rasi} (Chara)` : ((p as any).name ? `${(p as any).name} (${(p as any).lord})` : (p as any).lord)}
+                                    {displayLabel}
                                 </span>
                                 <span className="text-xs text-white/50 font-mono flex-1 text-center sm:text-left">
                                     {formatDate(p.start_time)} ~ {formatDate(p.end_time)}
                                 </span>
                                 <span className="text-xs text-white/30 hidden sm:inline">{years.toFixed(1)}년</span>
-                                {(p as any).sub_dashas && (p as any).sub_dashas.length > 0 && (
+                                {p.type === "planet" && p.sub_dashas && p.sub_dashas.length > 0 && (
                                     isExpanded ? <ChevronUp className="w-4 h-4 text-white/30" /> : <ChevronDown className="w-4 h-4 text-white/30" />
                                 )}
                                 {isCurrent && (
@@ -200,9 +225,9 @@ export function DashaTimelineSection({ periods, yoginiPeriods, charaPeriods }: D
                             </button>
 
                             {/* Antardasha 확장 */}
-                            {isExpanded && (p as any).sub_dashas && (p as any).sub_dashas.length > 0 && (
+                            {isExpanded && p.type === "planet" && p.sub_dashas && p.sub_dashas.length > 0 && (
                                 <div className="ml-6 mt-1 pl-4 border-l-2 border-white/10 space-y-1">
-                                    {(p as any).sub_dashas.map((sub: DashaPeriod, j: number) => {
+                                    {p.sub_dashas.map((sub, j) => {
                                         const subYears = yearsBetween(sub.start_time, sub.end_time);
                                         const subNow = new Date(sub.start_time).getTime();
                                         const subEnd = new Date(sub.end_time).getTime();
