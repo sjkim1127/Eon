@@ -28,6 +28,13 @@ export interface DashaPeriod {
   name?: string;      // For Yogini Dasha names like "Mangala"
 }
 
+/** Jaimini Sign Dasha Period */
+export interface SignDashaPeriod {
+  rasi: number;
+  start_time: string;
+  end_time: string;
+}
+
 /** 사함 (Sensitive Points in Annual Chart) */
 export interface Saham {
   name: string;
@@ -50,12 +57,19 @@ export interface VedicAnalysisReport {
   primary_karakas: {
     atmakaraka: string;
     amatyakaraka: string;
+    bhratrukaraka: string | null;
+    matrukaraka: string | null;
+    pitrikaraka: string | null;
+    putrakaraka: string | null;
+    gnatikaraka: string | null;
     darakaraka: string;
   };
   house_summary: HouseSummary[];
   dasha_focus: string;
   dasha_timeline: DashaPeriod[];
   yogini_timeline: DashaPeriod[];
+  chara_dasha_timeline: SignDashaPeriod[];
+  all_karakas: KarakaAssignment[];
   nakshatra_info: string;
   overall_strength_score: number;
   sade_sati: "None" | "Rising" | "Peak" | "Setting";

@@ -23,6 +23,12 @@ pub struct VedicAnalysisReport {
     #[serde(default)]
     pub yogas: Vec<YogaResult>,
     
+    // --- Jaimini Extension ---
+    #[serde(default)]
+    pub chara_dasha_timeline: Vec<crate::analysis::jaimini::SignDashaPeriod>,
+    #[serde(default)]
+    pub all_karakas: Vec<crate::analysis::jaimini::KarakaAssignment>,
+
     // Advanced Metrics
     #[serde(default)]
     pub arudha_lagna: u8,
@@ -50,6 +56,11 @@ pub struct VedicAnalysisReport {
 pub struct KarakaSummary {
     pub atmakaraka: VedicPlanet,
     pub amatyakaraka: VedicPlanet,
+    pub bhratrukaraka: Option<VedicPlanet>,
+    pub matrukaraka: Option<VedicPlanet>,
+    pub pitrikaraka: Option<VedicPlanet>,
+    pub putrakaraka: Option<VedicPlanet>,
+    pub gnatikaraka: Option<VedicPlanet>,
     pub darakaraka: VedicPlanet,
 }
 
@@ -62,39 +73,20 @@ pub struct HouseRating {
 
 impl VedicAnalysisReport {
     pub fn generate(chart: &VedicChart, birth_time: chrono::DateTime<Utc>, birth_lagna_rasi: u8) -> Self {
-        let ak = chart
-            .karakas
-            .iter()
-            .find(|k| {
-                matches!(
-                    k.role,
-                    crate::analysis::jaimini::JaiminiKarakaRole::Atmakaraka
-                )
-            })
-            .map(|k| k.planet)
-            .unwrap_or(VedicPlanet::Sun);
-        let amk = chart
-            .karakas
-            .iter()
-            .find(|k| {
-                matches!(
-                    k.role,
-                    crate::analysis::jaimini::JaiminiKarakaRole::Amatyakaraka
-                )
-            })
-            .map(|k| k.planet)
-            .unwrap_or(VedicPlanet::Sun);
-        let dk = chart
-            .karakas
-            .iter()
-            .find(|k| {
-                matches!(
-                    k.role,
-                    crate::analysis::jaimini::JaiminiKarakaRole::Darakaraka
-                )
-            })
-            .map(|k| k.planet)
-            .unwrap_or(VedicPlanet::Sun);
+        let get_karaka = |role: crate::analysis::jaimini::JaiminiKarakaRole| {
+            chart.karakas.iter()
+                .find(|k| std::mem::discriminant(&k.role) == std::mem::discriminant(&role))
+                .map(|k| k.planet)
+        };
+
+        let ak = get_karaka(crate::analysis::jaimini::JaiminiKarakaRole::Atmakaraka).unwrap_or(VedicPlanet::Sun);
+        let amk = get_karaka(crate::analysis::jaimini::JaiminiKarakaRole::Amatyakaraka).unwrap_or(VedicPlanet::Sun);
+        let bk = get_karaka(crate::analysis::jaimini::JaiminiKarakaRole::Bhratrukaraka);
+        let mk = get_karaka(crate::analysis::jaimini::JaiminiKarakaRole::Matrukaraka);
+        let pik = get_karaka(crate::analysis::jaimini::JaiminiKarakaRole::Pitrikaraka);
+        let pk = get_karaka(crate::analysis::jaimini::JaiminiKarakaRole::Putrakaraka);
+        let gk = get_karaka(crate::analysis::jaimini::JaiminiKarakaRole::Gnatikaraka);
+        let dk = get_karaka(crate::analysis::jaimini::JaiminiKarakaRole::Darakaraka).unwrap_or(VedicPlanet::Sun);
 
         // Calculate Sade Sati if Moon and Saturn are present
         let moon_rasi = chart
@@ -193,6 +185,9 @@ impl VedicAnalysisReport {
         let d9_marriage_analysis = VargaInterpretationEngine::analyze_marriage(chart);
         let d10_career_analysis = VargaInterpretationEngine::analyze_career(chart);
 
+        // Chara Dasha (Jaimini)
+        let chara_dasha_timeline = crate::analysis::jaimini::JaiminiEngine::calculate_chara_dasha(chart);
+
         // Annual Analysis
         let age_years = (chart.panchanga.current_time.year() - birth_time.year()).abs() as u32;
         let muntha_rasi = TajikaEngine::calculate_muntha(birth_lagna_rasi, age_years);
@@ -202,12 +197,19 @@ impl VedicAnalysisReport {
             primary_karakas: KarakaSummary {
                 atmakaraka: ak,
                 amatyakaraka: amk,
+                bhratrukaraka: bk,
+                matrukaraka: mk,
+                pitrikaraka: pik,
+                putrakaraka: pk,
+                gnatikaraka: gk,
                 darakaraka: dk,
             },
             house_summary,
             dasha_focus,
             dasha_timeline,
             yogini_timeline,
+            chara_dasha_timeline,
+            all_karakas: chart.karakas.clone(),
             nakshatra_info,
             overall_strength_score: chart
                 .bhava_strengths
