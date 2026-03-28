@@ -295,6 +295,9 @@ export interface TransitPosition {
   is_benefic_transit: boolean;
   is_blocked: boolean;
   murti: "Gold" | "Silver" | "Copper" | "Iron" | "Unknown";
+  summary: string;
+  description: string;
+  reasons: string[];
 }
 
 /** 고차라 요약 (GocharaSummary Rust struct) */

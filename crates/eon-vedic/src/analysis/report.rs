@@ -236,19 +236,14 @@ impl VedicAnalysisReport {
         let mut s = String::new();
         s.push_str("# Vedic Chart Analysis Summary\n\n");
 
-        s.push_str("## 💠 Key Indicators (Atman/Career/Relationship)\n");
-        s.push_str(&format!(
-            "- **Atmakaraka (Self)**: {:?}\n",
-            self.primary_karakas.atmakaraka
-        ));
-        s.push_str(&format!(
-            "- **Amatyakaraka (Career)**: {:?}\n",
-            self.primary_karakas.amatyakaraka
-        ));
-        s.push_str(&format!(
-            "- **Darakaraka (Partner)**: {:?}\n\n",
-            self.primary_karakas.darakaraka
-        ));
+        s.push_str("## 💠 Key Indicators (Jaimini Karakas)\n");
+        s.push_str(&format!("- **Atmakaraka (Self)**: {:?}\n", self.primary_karakas.atmakaraka));
+        s.push_str(&format!("- **Amatyakaraka (Career)**: {:?}\n", self.primary_karakas.amatyakaraka));
+        if let Some(bk) = self.primary_karakas.bhratrukaraka { s.push_str(&format!("- **Bhratrukaraka (Siblings/Effort)**: {:?}\n", bk)); }
+        if let Some(mk) = self.primary_karakas.matrukaraka { s.push_str(&format!("- **Matrukaraka (Mother/Home)**: {:?}\n", mk)); }
+        if let Some(pk) = self.primary_karakas.putrakaraka { s.push_str(&format!("- **Putrakaraka (Children/Intelligence)**: {:?}\n", pk)); }
+        s.push_str(&format!("- **Darakaraka (Partner)**: {:?}\n", self.primary_karakas.darakaraka));
+        s.push('\n');
 
         s.push_str("## 🧭 Jaimini Indicators\n");
         if self.arudha_lagna > 0 {
@@ -262,11 +257,13 @@ impl VedicAnalysisReport {
         }
         s.push('\n');
 
-        s.push_str("## 🌌 Cosmic Blueprints (Nakshatra & Dasha)\n");
         s.push_str(&format!("- **Nakshatra**: {}\n", self.nakshatra_info));
         s.push_str(&format!("- **Vimshottari Dasha**: {}\n", self.dasha_focus));
         if let Some(y) = self.yogini_timeline.first() {
             s.push_str(&format!("- **Current Yogini**: {} (ruled by {:?})\n", y.name.as_ref().unwrap_or(&"Unknown".to_string()), y.lord));
+        }
+        if let Some(c) = self.chara_dasha_timeline.first() {
+            s.push_str(&format!("- **Chara Dasha**: Sign {} until {}\n", c.rasi, c.end_time.format("%Y-%m-%d")));
         }
         s.push('\n');
 
@@ -326,12 +323,16 @@ impl VedicAnalysisReport {
         s.push('\n');
 
         s.push_str("## 🪐 Transit Alerts\n");
+        // Sade Sati
         match self.sade_sati {
             crate::analysis::gochara::SadeSatiPhase::Rising => s.push_str("- **Sade Sati (Rising)**: Saturn has entered the 12th from Moon. A period of internal shifts begins.\n"),
             crate::analysis::gochara::SadeSatiPhase::Peak => s.push_str("- **Sade Sati (Peak)**: Saturn is over the Moon. Focus on emotional resilience and discipline.\n"),
             crate::analysis::gochara::SadeSatiPhase::Setting => s.push_str("- **Sade Sati (Setting)**: The intensity is fading as Saturn reaches the 2nd from Moon.\n"),
-            crate::analysis::gochara::SadeSatiPhase::None => s.push_str("- No Sade Sati active. Normal transit rules apply.\n"),
+            crate::analysis::gochara::SadeSatiPhase::None => s.push_str("- No Sade Sati active.\n"),
         }
+        
+        // Notable Transits
+        for t in self.yogas.iter().take(0) { /* placeholder if we had gochara yogas */ }
         s.push('\n');
 
         s.push_str(&format!(
