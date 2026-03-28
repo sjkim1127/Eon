@@ -10,6 +10,8 @@ pub struct BhavaStrength {
     pub dig_score: f64,
     pub drishti_score: f64,
     pub total_score: f64,
+    #[serde(default)]
+    pub reasons: Vec<String>,
 }
 
 pub struct BhavaEngine;
@@ -103,12 +105,20 @@ impl BhavaEngine {
             }
         }
 
+        let mut reasons = Vec::new();
+        reasons.push(format!("Lord ({:?}) contribution: {:.1}", lord, lord_score));
+        reasons.push(format!("Directional strength (Dig Bala): {:.1}", dig_score));
+        if drishti_score.abs() > 0.1 {
+            reasons.push(format!("Planetary aspects (Drishti): {:.1}", drishti_score));
+        }
+
         BhavaStrength {
             house,
             lord_score,
             dig_score,
             drishti_score,
             total_score: lord_score + dig_score + drishti_score,
+            reasons,
         }
     }
 

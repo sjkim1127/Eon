@@ -1,8 +1,9 @@
 import { cn } from "../../../utils";
+import type { HouseSummary, BhavaStrength } from "../../../types/vedic";
 
 interface HouseStrengthGridProps {
-    houseSummary: any[];
-    bhavaStrengths: any[];
+    houseSummary: HouseSummary[];
+    bhavaStrengths: BhavaStrength[];
 }
 
 export function HouseStrengthGrid({ houseSummary, bhavaStrengths }: HouseStrengthGridProps) {
@@ -16,38 +17,54 @@ export function HouseStrengthGrid({ houseSummary, bhavaStrengths }: HouseStrengt
     return (
         <section>
             <h5 className="text-xl font-bold text-white mb-6">하우스(Bhava)별 에너지 역량 상세</h5>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {houseSummary.map((house: any) => {
-                    const bhava = bhavaStrengths.find((b: any) => b.house === house.house);
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {houseSummary.map((house) => {
+                    const bhava = bhavaStrengths.find((b) => b.house === house.house);
                     return (
                         <div
                             key={house.house}
-                            className="glass p-6 rounded-2xl text-center glass-hover cursor-help"
+                            className="glass p-6 rounded-[2rem] glass-hover group border-white/5"
                         >
-                            <p className="text-[10px] text-white/40 font-bold uppercase mb-1">House {house.house}</p>
-                            <p className={cn("text-xs font-black mb-3",
-                                house.rating === "Excellent" ? "text-emerald-400" :
-                                    house.rating === "Strong" ? "text-celestial-cyan" :
-                                        house.rating === "Average" ? "text-white/60" : "text-orange-400"
-                            )}>
-                                {ratingLabel(house.rating)}
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mb-1">House {house.house}</p>
+                                    <h6 className="text-sm font-bold text-white/90">{house.summary}</h6>
+                                </div>
+                                <div className={cn("px-3 py-1 rounded-full text-[10px] font-black",
+                                    house.rating === "Excellent" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" :
+                                        house.rating === "Strong" ? "bg-celestial-cyan/20 text-celestial-cyan border border-celestial-cyan/30" :
+                                            house.rating === "Average" ? "bg-white/10 text-white/60 border border-white/20" : 
+                                            "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                                )}>
+                                    {ratingLabel(house.rating)}
+                                </div>
+                            </div>
+
+                            <p className="text-[11px] text-white/50 leading-relaxed mb-4 line-clamp-2">
+                                {house.description}
                             </p>
-                            <div className="flex flex-col gap-1.5 mt-4">
-                                <div className="flex justify-between text-[9px]">
-                                    <span className="text-white/30">로드</span>
-                                    <span className="text-white/60 font-bold">{bhava?.lord_score?.toFixed(0)}</span>
+
+                            <div className="space-y-2 mb-4 bg-black/20 p-3 rounded-xl border border-white/5">
+                                {house.reasons.map((reason, idx) => (
+                                    <div key={idx} className="flex items-start gap-2 text-[10px] text-white/40">
+                                        <div className="w-1 h-1 rounded-full bg-white/20 mt-1.5 shrink-0" />
+                                        <span>{reason}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
+                                <div className="flex justify-between text-[10px]">
+                                    <span className="text-white/30">로드 파워 (Lord)</span>
+                                    <span className="text-white/70 font-mono italic">{bhava?.lord_score?.toFixed(1)}</span>
                                 </div>
-                                <div className="flex justify-between text-[9px]">
-                                    <span className="text-white/30">방위</span>
-                                    <span className="text-white/60 font-bold">{bhava?.dig_score?.toFixed(0)}</span>
-                                </div>
-                                <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden mt-1">
+                                <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
                                     <div
                                         className={cn("h-full rounded-full transition-all duration-1000",
                                             house.rating === "Excellent" ? "bg-emerald-500" :
                                                 house.rating === "Strong" ? "bg-celestial-cyan" : "bg-white/20"
                                         )}
-                                        style={{ width: `${(house.total_score / 600) * 100}%` }}
+                                        style={{ width: `${Math.min(100, (house.total_score / 600) * 100)}%` }}
                                     />
                                 </div>
                             </div>

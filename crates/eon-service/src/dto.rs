@@ -165,6 +165,7 @@ pub struct SajuAnalysisOutput {
 pub struct VedicAnalysisOutput {
     pub meta: AnalysisMeta,
     pub report: eon_vedic::analysis::report::VedicAnalysisReport,
+    pub tajika_report: Option<eon_vedic::analysis::report::TajikaReport>,
     pub chart: eon_vedic::core::chart::VedicChart,
     pub annual_chart: Option<eon_vedic::core::chart::VedicChart>,
     pub gochara: eon_vedic::analysis::gochara::GocharaSummary,

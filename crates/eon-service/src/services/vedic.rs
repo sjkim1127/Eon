@@ -14,14 +14,10 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
     let calculator = VedicChartCalculator::new();
     let chart = calculator.calculate(dt, input.base.lat, input.base.lon);
 
-    let report = VedicAnalysisReport::generate(&chart, dt, chart.ascendant.rasi);
-
-    // Calculate Annual Chart
-    let target_year = input.target_year.unwrap_or_else(|| input.current.now_utc.year());
-    let annual_chart = calculator.calculate_solar_return(dt, input.base.lat, input.base.lon, target_year);
-
-    // Gochara: natal moon rasi 기준으로 트랜짓 분석
-        let gochara = {
+    let report = {
+        let mut r = VedicAnalysisReport::generate(&chart, dt, chart.ascendant.rasi);
+        // Gochara: natal moon rasi 기준으로 트랜짓 분석
+        let gochara_inner = {
             let natal_moon_rasi = chart
                 .planets
                 .iter()
@@ -30,10 +26,33 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
                 .unwrap_or(1);
                 
             let now_utc = input.current.now_utc;
-            
             let transit_chart = calculator.calculate(now_utc, input.base.lat, input.base.lon);
             eon_vedic::analysis::gochara::GocharaEngine::analyze(natal_moon_rasi, &transit_chart)
         };
+        // Unify Sade Sati for text summary
+        r.sade_sati = gochara_inner.sade_sati;
+        r
+    };
+
+    // Calculate Annual Chart & Tajika Report
+    let target_year = input.target_year.unwrap_or_else(|| input.current.now_utc.year());
+    let annual_chart = calculator.calculate_solar_return(dt, input.base.lat, input.base.lon, target_year);
+    
+    let age_years = (target_year - dt.year()).abs() as u32;
+    let tajika_report = Some(eon_vedic::analysis::report::TajikaReport::generate(&annual_chart, chart.ascendant.rasi, age_years));
+
+    // Final gochara for output (same as used in report unification)
+    let gochara = {
+        let natal_moon_rasi = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == eon_vedic::planets::VedicPlanet::Moon)
+            .map(|m| m.rasi)
+            .unwrap_or(1);
+        let now_utc = input.current.now_utc;
+        let transit_chart = calculator.calculate(now_utc, input.base.lat, input.base.lon);
+        eon_vedic::analysis::gochara::GocharaEngine::analyze(natal_moon_rasi, &transit_chart)
+    };
 
     let varga_nakshatra_reports =
         eon_vedic::analysis::varga_nakshatra_report::build_varga_nakshatra_reports(&chart);
@@ -48,6 +67,7 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
             analysis_timezone: input.current.analysis_timezone,
         },
         report,
+        tajika_report,
         chart,
         annual_chart: Some(annual_chart),
         gochara,

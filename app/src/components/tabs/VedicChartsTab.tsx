@@ -30,8 +30,8 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const annualChart = report.annual_chart;
   const currentChart = (activeTab === "annual" && annualChart) ? annualChart : natalChart;
 
-  const planets: any[] = currentChart.planets;
-  const ascendant: any = currentChart.ascendant;
+  const planets = currentChart.planets;
+  const ascendant = currentChart.ascendant;
   const panchanga = currentChart.panchanga;
   const dashaTimeline = report.report?.dasha_timeline ?? [];
   const yoginiTimeline = report.report?.yogini_timeline ?? [];
@@ -86,7 +86,10 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
 
       {/* ── 고급 분석 지표 (Jaimini, D9/D10, Tajika) ─────────────────── */}
       {report.report && (
-        <VedicAdvancedInsightsSection report={report.report} />
+        <VedicAdvancedInsightsSection 
+          report={report.report} 
+          tajikaReport={report.tajika_report}
+        />
       )}
 
       {/* ── 요가 (Yogas) 하이라이트 ────────────────────────────────────────── */}
