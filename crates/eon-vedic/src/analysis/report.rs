@@ -100,22 +100,6 @@ impl VedicAnalysisReport {
         let gk = get_karaka(crate::analysis::jaimini::JaiminiKarakaRole::Gnatikaraka);
         let dk = get_karaka(crate::analysis::jaimini::JaiminiKarakaRole::Darakaraka).unwrap_or(VedicPlanet::Sun);
 
-        // Calculate Sade Sati if Moon and Saturn are present
-        let moon_rasi = chart
-            .planets
-            .iter()
-            .find(|p| p.planet == VedicPlanet::Moon)
-            .map(|p| p.rasi)
-            .unwrap_or(1);
-        let saturn_rasi = chart
-            .planets
-            .iter()
-            .find(|p| p.planet == VedicPlanet::Saturn)
-            .map(|p| p.rasi)
-            .unwrap_or(1);
-        let sade_sati =
-            crate::analysis::gochara::GocharaEngine::calculate_sade_sati(moon_rasi, saturn_rasi);
-
         let mut house_summary = Vec::new();
         for h in &chart.bhava_strengths {
             let rating = if h.total_score > 400.0 {
@@ -236,7 +220,7 @@ impl VedicAnalysisReport {
                 .map(|h| h.total_score)
                 .sum::<f64>()
                 / 12.0,
-            sade_sati,
+            sade_sati: crate::analysis::gochara::SadeSatiPhase::None, // Expected to be populated by service/caller
             yogas,
             arudha_lagna: al,
             upapada_lagna: ul,
