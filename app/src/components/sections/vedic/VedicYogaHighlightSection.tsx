@@ -1,6 +1,6 @@
 import { Zap } from "lucide-react";
-import { cn } from "../../utils";
-import type { Yoga } from "../../types/vedic";
+import { cn } from "../../../utils";
+import type { Yoga } from "../../../types/vedic";
 
 interface VedicYogaHighlightSectionProps {
     yogas: Yoga[];

@@ -8,7 +8,7 @@ import {
     Tooltip,
 } from "recharts";
 import { Home } from "lucide-react";
-import type { BhavaStrength } from "../../types/vedic";
+import type { BhavaStrength } from "../../../types/vedic";
 
 const HOUSE_LABELS: Record<number, string> = {
     1: "1H 자아", 2: "2H 재물", 3: "3H 형제", 4: "4H 가정",

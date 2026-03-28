@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { LifeGraphSection } from "../sections/LifeGraphSection";
-import { SimulationTimelineSection } from "../sections/SimulationTimelineSection";
-import { VulnerabilitySection } from "../sections/VulnerabilitySection";
+import { LifeGraphSection } from "../sections/saju/LifeGraphSection";
+import { SimulationTimelineSection } from "../sections/saju/SimulationTimelineSection";
+import { VulnerabilitySection } from "../sections/common/VulnerabilitySection";
 import type { SajuAnalysisResult, VedicAnalysisResult } from "../../types";
 
 interface SimulationTabProps {

@@ -10,8 +10,8 @@ import {
   Cell,
 } from "recharts";
 import { Activity } from "lucide-react";
-import { CHART_TOOLTIP_STYLE } from "../../lib/chartTheme";
-import { ganziDisplay } from "../../utils";
+import { CHART_TOOLTIP_STYLE } from "../../../lib/chartTheme";
+import { ganziDisplay } from "../../../utils";
 
 export interface SimulationFrame {
   age: number;

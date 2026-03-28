@@ -4,18 +4,18 @@ import { Compass, Users } from "lucide-react";
 import { cn } from "../../utils";
 import type { VedicAnalysisResult } from "../../types";
 
-import { BhavaRadarSection } from "../sections/BhavaRadarSection";
-import { AspectsSection } from "../sections/AspectsSection";
-import { DashaTimelineSection } from "../sections/DashaTimelineSection";
-import { GocharaSection } from "../sections/GocharaSection";
-import { AvasthaKarakaSection } from "../sections/AvasthaKarakaSection";
-import { VedicAdvancedInsightsSection } from "../sections/VedicAdvancedInsightsSection";
-import { VedicOverviewSection } from "../sections/VedicOverviewSection";
-import { VedicPanchangaSection } from "../sections/VedicPanchangaSection";
-import { VedicYogaHighlightSection } from "../sections/VedicYogaHighlightSection";
-import { VargaVisualizationSection } from "../sections/VargaVisualizationSection";
-import { HouseStrengthGrid } from "../sections/HouseStrengthGrid";
-import { VedicMetricsGrid } from "../sections/VedicMetricsGrid";
+import { BhavaRadarSection } from "../sections/vedic/BhavaRadarSection";
+import { AspectsSection } from "../sections/vedic/AspectsSection";
+import { DashaTimelineSection } from "../sections/vedic/DashaTimelineSection";
+import { GocharaSection } from "../sections/vedic/GocharaSection";
+import { AvasthaKarakaSection } from "../sections/vedic/AvasthaKarakaSection";
+import { VedicAdvancedInsightsSection } from "../sections/vedic/VedicAdvancedInsightsSection";
+import { VedicOverviewSection } from "../sections/vedic/VedicOverviewSection";
+import { VedicPanchangaSection } from "../sections/vedic/VedicPanchangaSection";
+import { VedicYogaHighlightSection } from "../sections/vedic/VedicYogaHighlightSection";
+import { VargaVisualizationSection } from "../sections/vedic/VargaVisualizationSection";
+import { HouseStrengthGrid } from "../sections/vedic/HouseStrengthGrid";
+import { VedicMetricsGrid } from "../sections/vedic/VedicMetricsGrid";
 
 interface VedicChartsTabProps {
   report: VedicAnalysisResult;

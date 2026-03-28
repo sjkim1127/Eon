@@ -1,5 +1,5 @@
 import { Compass, Briefcase, Heart, Star, Zap } from "lucide-react";
-import type { VedicAnalysisReport } from "../../types/vedic";
+import type { VedicAnalysisReport } from "../../../types/vedic";
 
 interface VedicAdvancedInsightsSectionProps {
   report: VedicAnalysisReport;

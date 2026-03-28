@@ -1,7 +1,7 @@
 import { BarChart3, Grid3x3 } from "lucide-react";
-import { BavHeatmap } from "../vedic/BavHeatmap";
-import { SavScoreChart } from "../vedic/SavScoreChart";
-import { VimshopakaTable } from "../vedic/VimshopakaTable";
+import { BavHeatmap } from "../../vedic/BavHeatmap";
+import { SavScoreChart } from "../../vedic/SavScoreChart";
+import { VimshopakaTable } from "../../vedic/VimshopakaTable";
 
 interface VedicMetricsGridProps {
     bav: any[];

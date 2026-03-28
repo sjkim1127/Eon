@@ -1,6 +1,6 @@
-import type { VargaNakshatraReportRow } from "../../types/vedic";
-import { SIGN_NAMES } from "../../constants";
-import { NAKSHATRA_TABLE_COLUMNS } from "../../utils/vedicFormat";
+import type { VargaNakshatraReportRow } from "../../../types/vedic";
+import { SIGN_NAMES } from "../../../constants";
+import { NAKSHATRA_TABLE_COLUMNS } from "../../../utils/vedicFormat";
 
 interface VargaNakshatraTableProps {
   title: string;
