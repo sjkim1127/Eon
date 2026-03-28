@@ -21,6 +21,7 @@ export interface HouseSummary {
 
 /** 다샤 기간 (DashaPeriod Rust struct) */
 export interface DashaPeriod {
+  type: "planet";
   lord: string;
   start_time: string; // ISO 8601 UTC
   end_time: string;   // ISO 8601 UTC
@@ -30,6 +31,7 @@ export interface DashaPeriod {
 
 /** Jaimini Sign Dasha Period */
 export interface SignDashaPeriod {
+  type: "sign";
   rasi: number;
   start_time: string;
   end_time: string;
