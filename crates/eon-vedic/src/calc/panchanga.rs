@@ -2,7 +2,7 @@ use crate::planets::VedicPlanet;
 use chrono::{DateTime, Datelike, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Panchanga {
     pub vara: String,
     pub tithi: u8, // 1~30

@@ -138,11 +138,11 @@ impl JaiminiEngine {
                 let mut arudha_rasi = ((lord_rasi as i16 + dist - 1) % 12 + 1) as u8;
                 
                 if arudha_rasi == house_rasi {
-                    // If Arudha is in the house itself, move 10 houses (Parashara)
-                    arudha_rasi = ((arudha_rasi as i16 + 9 - 1) % 12 + 1) as u8;
-                } else if arudha_rasi == ((house_rasi as i16 + 6 - 1) % 12 + 1) as u8 {
-                    // If Arudha is in the 7th from house, move 4 houses from Arudha (which is 10th from house)
-                    arudha_rasi = ((arudha_rasi as i16 + 4 - 1) % 12 + 1) as u8;
+                    // If Arudha is in the house itself, final Arudha is 10th from house
+                    arudha_rasi = ((house_rasi as i16 + 10 - 2) % 12 + 1) as u8;
+                } else if arudha_rasi == ((house_rasi as i16 + 7 - 2) % 12 + 1) as u8 {
+                    // If Arudha is in the 7th from house, final Arudha is 4th from house
+                    arudha_rasi = ((house_rasi as i16 + 4 - 2) % 12 + 1) as u8;
                 }
 
                 results.push(ArudhaPada {
@@ -339,5 +339,120 @@ impl JaiminiEngine {
         results.push((target, format!("Secondary Argala ({})", secondary.1)));
 
         results
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::chart::VedicChart;
+    use crate::core::planets::VedicPlanet;
+    use crate::core::chart::VedicPosition;
+    use chrono::{TimeZone, Utc};
+
+    fn mock_position(planet: VedicPlanet, rasi: u8, deg: f64) -> VedicPosition {
+        VedicPosition {
+            planet,
+            rasi,
+            sidereal_deg: (rasi as f64 - 1.0) * 30.0 + deg,
+            tropical_deg: 0.0,
+            nakshatra: 1,
+            pada: 1,
+            house_index: 1,
+            speed: 1.0,
+            is_retrograde: false,
+            is_combust: false,
+            declination: 0.0,
+            hora_rasi: 1,
+            drekkana_rasi: 1,
+            chaturthamsha_rasi: 1,
+            panchamsa_rasi: 1,
+            saptamsa_rasi: 1,
+            ashtamsa_rasi: 1,
+            navamsa_rasi: 1,
+            dasamsa_rasi: 1,
+            shashtamsa_rasi: 1,
+            rudramsa_rasi: 1,
+            dwadasamsa_rasi: 1,
+            shodashamsa_rasi: 1,
+            vimsamsa_rasi: 1,
+            chaturvimshamsa_rasi: 1,
+            saptavimsamsa_rasi: 1,
+            trimsamsa_rasi: 1,
+            khavedamsa_rasi: 1,
+            akshavedamsa_rasi: 1,
+            shashtyamsa_rasi: 1,
+            navanavamsa_rasi: 1,
+            ashtottaramsa_rasi: 1,
+            dwadasdwadasamsa_rasi: 1,
+        }
+    }
+
+    fn mock_chart(planets: Vec<VedicPosition>, lagna_rasi: u8) -> VedicChart {
+        let ascendant = mock_position(VedicPlanet::Ascendant, lagna_rasi, 10.0);
+        VedicChart {
+            ascendant,
+            planets,
+            aspects: vec![],
+            sav: crate::analysis::ashtakavarga::Sarvashtakavarga { points: [0u8; 12] },
+            bav: vec![],
+            house_cusps: vec![0.0; 12],
+            karakas: vec![],
+            arudha_padas: vec![],
+            special_lagnas: vec![],
+            bhava_strengths: vec![],
+            vimshopaka_scores: vec![],
+            avasthas: vec![],
+            panchanga: crate::calc::panchanga::Panchanga {
+                current_time: Utc.with_ymd_and_hms(2000, 1, 1, 12, 0, 0).unwrap(),
+                ..Default::default()
+            },
+            analysis_report: None,
+        }
+    }
+
+    #[test]
+    fn test_chara_dasha_years_basic() {
+        // Aries (1) lord Mars in Gemini (3)
+        // 1 is forward sign. Dist: (3 - 1) = 2. Years: 2 - 1 = 1 year? 
+        // Wait, my impl says (dist == 0 ? 12 : dist). 
+        // 3-1 = 2. dist = 2. 
+        let planets = vec![
+            mock_position(VedicPlanet::Mars, 3, 5.0),
+        ];
+        let chart = mock_chart(planets, 1);
+        let years = JaiminiEngine::calculate_chara_dasha_years(&chart, 1);
+        assert_eq!(years, 2); // 1st to 3rd is 3 signs, but Rao uses diff. 
+        // Actually dist is sign index difference. 1 to 3 is 2. 
+        // If dist=2, years=2. 
+    }
+
+    #[test]
+    fn test_scorpio_co_ruler_strength() {
+        // Scorpio (8) lords Mars (4) and Ketu (12)
+        // Put Ketu with Sun in 12. Ketu has 1 conjunction. Mars is alone in 4.
+        // Ketu should win.
+        let planets = vec![
+            mock_position(VedicPlanet::Mars, 4, 10.0),
+            mock_position(VedicPlanet::Ketu, 12, 15.0),
+            mock_position(VedicPlanet::Sun, 12, 20.0),
+        ];
+        let chart = mock_chart(planets, 1);
+        let lord_rasi = JaiminiEngine::evaluate_co_ruler_strength(&chart, 8, VedicPlanet::Mars, VedicPlanet::Ketu);
+        assert_eq!(lord_rasi, 12);
+    }
+
+    #[test]
+    fn test_arudha_pada_7th_exception() {
+        // Lagna (1) lord Mars in 4. 
+        // 4 is 4th from 1. 4th from 4 is 7. 
+        // This is the 7th house exception. Should move 4 houses from 7 -> 10.
+        let planets = vec![
+            mock_position(VedicPlanet::Mars, 4, 10.0),
+        ];
+        let chart = mock_chart(planets, 1);
+        let padas = JaiminiEngine::calculate_arudha_padas(&chart);
+        let l1_arudha = padas.iter().find(|p| p.house == 1).unwrap();
+        assert_eq!(l1_arudha.rasi, 4);
     }
 }
