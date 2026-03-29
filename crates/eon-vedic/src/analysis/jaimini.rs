@@ -195,17 +195,15 @@ impl JaiminiEngine {
         results
     }
 
-    /// Calculate Chara Dasha (Simplified KN Rao method version 1)
-    /// NOTE: This is an foundational implementation. 
-    /// Traditional systems use special cases for Scorpio (Ketu/Mars) and Aquarius (Saturn/Rahu),
-    /// which are not yet fully implemented here.
+    /// Calculate Chara Dasha (True KN Rao method)
+    /// 
+    /// Sequence (KN Rao):
+    /// - Forward: Ar, Le, Vi, Li, Aq, Pi (1, 5, 6, 7, 11, 12)
+    /// - Backward: Ta, Ge, Cn, Sc, Sg, Cp (2, 3, 4, 8, 9, 10)
     pub fn calculate_chara_dasha(chart: &VedicChart) -> Vec<SignDashaPeriod> {
         let lagna_rasi = chart.ascendant.rasi;
         let birth_time = chart.panchanga.current_time;
         
-        // Sequence logic (KN Rao):
-        // Forward: 1, 5, 6, 7, 11, 12
-        // Backward: 2, 3, 4, 8, 9, 10
         let forward_signs = [1, 5, 6, 7, 11, 12];
         let is_forward_seq = forward_signs.contains(&lagna_rasi);
         
@@ -223,23 +221,7 @@ impl JaiminiEngine {
         let mut current_start = birth_time;
 
         for rasi in sequence {
-            let lord = VedicPlanet::get_ruler_of(rasi);
-            let lord_pos = chart.planets.iter().find(|p| p.planet == lord);
-            
-            let years = if let Some(lp) = lord_pos {
-                let lord_rasi = lp.rasi;
-                let is_forward_count = forward_signs.contains(&rasi);
-                
-                let dist = if is_forward_count {
-                    (lord_rasi as i16 - rasi as i16 + 12) % 12
-                } else {
-                    (rasi as i16 - lord_rasi as i16 + 12) % 12
-                };
-                
-                if dist == 0 { 12 } else { dist as u32 }
-            } else {
-                7 // Fallback
-            };
+            let years = Self::calculate_chara_dasha_years(chart, rasi);
 
             let end_time = current_start + Duration::seconds((years as f64 * 365.2425 * 24.0 * 60.0 * 60.0) as i64);
             
@@ -253,6 +235,67 @@ impl JaiminiEngine {
         }
 
         timeline
+    }
+
+    /// Calculate years for a sign in Chara Dasha
+    fn calculate_chara_dasha_years(chart: &VedicChart, rasi: u8) -> u32 {
+        let forward_signs = [1, 5, 6, 7, 11, 12];
+        let is_counting_forward = forward_signs.contains(&rasi);
+
+        let lord_rasi = match rasi {
+            8 => Self::evaluate_co_ruler_strength(chart, 8, VedicPlanet::Mars, VedicPlanet::Ketu),
+            11 => Self::evaluate_co_ruler_strength(chart, 11, VedicPlanet::Saturn, VedicPlanet::Rahu),
+            _ => {
+                let lord = VedicPlanet::get_ruler_of(rasi);
+                chart.planets.iter().find(|p| p.planet == lord).map(|p| p.rasi).unwrap_or(rasi)
+            }
+        };
+
+        let dist = if is_counting_forward {
+            (lord_rasi as i16 - rasi as i16 + 12) % 12
+        } else {
+            (rasi as i16 - lord_rasi as i16 + 12) % 12
+        };
+
+        if dist == 0 { 12 } else { dist as u32 }
+    }
+
+    /// Selection rules for Scorpio/Aquarius co-rulers (Jaimini / KN Rao)
+    /// 1. Sign with more planets (excluding the sign itself) wins.
+    /// 2. If equal, the node/planet that is stronger wins (Exaltation > Own Sign > Others).
+    /// 3. If still equal, the one with more degrees in the sign wins (Jaimini logic).
+    fn evaluate_co_ruler_strength(chart: &VedicChart, rasi: u8, p1: VedicPlanet, p2: VedicPlanet) -> u8 {
+        let pos1 = chart.planets.iter().find(|p| p.planet == p1).unwrap();
+        let pos2 = chart.planets.iter().find(|p| p.planet == p2).unwrap();
+
+        // Count conjunctions in the rasi where the lord is placed (excluding the lord itself)
+        let count_conj = |p_rasi: u8, planet: VedicPlanet| {
+            chart.planets.iter()
+                .filter(|p| p.rasi == p_rasi && p.planet != planet)
+                .count()
+        };
+
+        let c1 = count_conj(pos1.rasi, p1);
+        let c2 = count_conj(pos2.rasi, p2);
+
+        if c1 > c2 { return pos1.rasi; }
+        if c2 > c1 { return pos2.rasi; }
+
+        // If conjunctions are equal, check if one is in their own sign/exalted
+        let is_stronger = |p: VedicPlanet, prasi: u8| {
+            if prasi == rasi { 2 } // Own sign
+            else if prasi == p.exaltation_rasi() { 3 } // Exalted
+            else { 1 }
+        };
+
+        let s1 = is_stronger(p1, pos1.rasi);
+        let s2 = is_stronger(p2, pos2.rasi);
+
+        if s1 > s2 { return pos1.rasi; }
+        if s2 > s1 { return pos2.rasi; }
+
+        // Last resort: Higher degree in the rasi
+        if pos1.sidereal_deg % 30.0 > pos2.sidereal_deg % 30.0 { pos1.rasi } else { pos2.rasi }
     }
 
     /// Jaimini Rashi Drishti (Sign Aspects)
