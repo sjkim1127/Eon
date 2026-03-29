@@ -51,19 +51,20 @@ impl VargaType {
             Self::D45 => calculate_akshavedamsa(longitude),
             Self::D60 => calculate_shashtyamsa(longitude),
             Self::D81 => {
-                let d9_rasi = Self::D9.calculate_rasi(longitude);
-                let fake_long = (d9_rasi as f64 - 1.0) * 30.0 + 15.0; // Center of rasi
-                Self::D9.calculate_rasi(fake_long)
+                // D9 of D9 (Nava-Navamsa)
+                // 1. Calculate the degree within the first D9 division (0..30)
+                let d9_internal_deg = (longitude * 9.0) % 30.0;
+                calculate_navamsa(d9_internal_deg)
             },
             Self::D108 => {
-                let d12_rasi = Self::D12.calculate_rasi(longitude);
-                let fake_long = (d12_rasi as f64 - 1.0) * 30.0 + 15.0;
-                Self::D9.calculate_rasi(fake_long)
+                // D9 of D12 (Ashtottaramsa)
+                let d12_internal_deg = (longitude * 12.0) % 30.0;
+                calculate_navamsa(d12_internal_deg)
             },
             Self::D144 => {
-                let d12_rasi = Self::D12.calculate_rasi(longitude);
-                let fake_long = (d12_rasi as f64 - 1.0) * 30.0 + 15.0;
-                Self::D12.calculate_rasi(fake_long)
+                // D12 of D12 (Dwadas-Dwadasamsa)
+                let d12_internal_deg = (longitude * 12.0) % 30.0;
+                calculate_dwadasamsa(d12_internal_deg)
             },
         }
     }
