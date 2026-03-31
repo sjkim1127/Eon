@@ -19,8 +19,8 @@ export function BavHeatmap({ bav, savPoints }: Props) {
           </tr>
         </thead>
         <tbody className="divide-y divide-white/5">
-          {bav.map((entry) => {
-            const pts = entry.points as number[];
+          {(bav || []).map((entry) => {
+            const pts = (entry.points || []) as number[];
             const maxPt = Math.max(...pts, 1);
             return (
               <tr key={entry.planet} className="hover:bg-white/[0.03] transition-colors">

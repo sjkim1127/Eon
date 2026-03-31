@@ -110,9 +110,9 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
 
       {/* ── BAV Heatmap, SAV, Vimshopaka ───────────────────────────── */}
       <VedicMetricsGrid 
-        bav={currentChart.bav ?? []} 
-        savPoints={currentChart.sav?.points ?? []} 
-        vimshopaka={currentChart.vimshopaka_scores ?? []} 
+        bav={currentChart?.bav || []} 
+        savPoints={currentChart?.sav?.points || []} 
+        vimshopaka={currentChart?.vimshopaka_scores || []} 
       />
 
       {/* ── 다샤 타임라인 (Vimshottari, Yogini, Chara) ───────────── */}

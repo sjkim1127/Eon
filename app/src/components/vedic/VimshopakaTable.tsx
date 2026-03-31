@@ -17,7 +17,7 @@ export function VimshopakaTable({ vimshopaka }: Props) {
           </tr>
         </thead>
         <tbody className="divide-y divide-white/5">
-          {vimshopaka.map(([planet, score]: [string, any], i: number) => {
+          {(vimshopaka || []).map(([planet, score]: [string, any], i: number) => {
             const shad = score?.shadvarga_score ?? 0;
             const shod = score?.shodashavarga_score ?? 0;
             const avg = (shad + shod) / 2;
