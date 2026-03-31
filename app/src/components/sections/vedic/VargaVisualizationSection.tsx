@@ -18,7 +18,7 @@ export function VargaVisualizationSection({ planets, ascendant, vargaNakshatraRe
     const [chartStyle, setChartStyle] = useState<"south" | "north">("south");
 
     const vargaDef = VARGA_DEFS.find((v) => v.id === selectedVargaId) || VARGA_DEFS[0];
-    const lagnaRasi = ascendant[vargaDef.key] as number;
+    const lagnaRasi = (ascendant ? (ascendant[vargaDef.key] as number) : 1) || 1;
 
     return (
         <section className="glass p-10 rounded-[3rem] border-white/10 relative overflow-hidden">
@@ -72,12 +72,22 @@ export function VargaVisualizationSection({ planets, ascendant, vargaNakshatraRe
                     {chartStyle === "south" ? (
                         <SouthIndianChart
                             lagnaRasi={lagnaRasi}
-                            planetEntries={planets.map((p) => ({ name: p.planet, rasi: p[vargaDef.key] as number, retro: p.is_retrograde, deg: p.sidereal_deg }))}
+                            planetEntries={(planets || []).map((p) => ({ 
+                                name: p.planet, 
+                                rasi: (p[vargaDef.key] as number) || 1, 
+                                retro: p.is_retrograde, 
+                                deg: p.sidereal_deg 
+                            }))}
                         />
                     ) : (
                         <NorthIndianChart
                             lagnaRasi={lagnaRasi}
-                            planetEntries={planets.map((p) => ({ name: p.planet, rasi: p[vargaDef.key] as number, retro: p.is_retrograde, deg: p.sidereal_deg }))}
+                            planetEntries={(planets || []).map((p) => ({ 
+                                name: p.planet, 
+                                rasi: (p[vargaDef.key] as number) || 1, 
+                                retro: p.is_retrograde, 
+                                deg: p.sidereal_deg 
+                            }))}
                         />
                     )}
                     <div className="flex-1 w-full overflow-x-auto">

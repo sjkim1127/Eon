@@ -29,7 +29,7 @@ export function VargaSignPositionsTable({ planets, ascendant }: Props) {
         </thead>
         <tbody className="divide-y divide-white/5">
           {[
-            ...planets.map((p: any) => ({ name: p.planet, data: p, retro: p.is_retrograde, combust: p.is_combust })),
+            ...(planets || []).map((p: any) => ({ name: p.planet, data: p, retro: p.is_retrograde, combust: p.is_combust })),
             ...(ascendant ? [{ name: "ASC", data: ascendant, retro: false, combust: false }] : []),
           ].map((row, i) => (
             <tr key={i} className="hover:bg-white/3 transition-colors">
@@ -39,7 +39,7 @@ export function VargaSignPositionsTable({ planets, ascendant }: Props) {
                 {row.combust && <span className="ml-0.5 text-[9px] px-1 rounded bg-orange-500/20 text-orange-400">☀</span>}
               </td>
               {VARGA_DEFS.map(v => {
-                const signNum: number = row.data?.[v.key];
+                const signNum: number = (row.data?.[v.key] as number) || 1;
                 const signName = SIGN_NAMES[signNum] ?? "—";
                 return (
                   <td key={v.id} className="py-2 px-2 text-center whitespace-nowrap" title={`${row.name} in ${v.name}: ${signName}`}>

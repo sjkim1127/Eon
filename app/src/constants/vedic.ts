@@ -65,9 +65,9 @@ export const VARGA_DEFS: VargaDef[] = [
   { id: "khavedamsa", label: "D40", name: "Khavedamsa", key: "khavedamsa_rasi", divisionCount: 40 },
   { id: "akshavedamsa", label: "D45", name: "Akshavedamsa", key: "akshavedamsa_rasi", divisionCount: 45 },
   { id: "shashtyamsa", label: "D60", name: "Shashtyamsa (카르마)", key: "shashtyamsa_rasi", divisionCount: 60 },
-  { id: "navanavamsa", label: "D81", name: "Navanavamsa", key: "navanavamsa_rasi", divisionCount: 81 },
-  { id: "ashtottaramsa", label: "D108", name: "Ashtottaramsa", key: "ashtottaramsa_rasi", divisionCount: 108 },
-  { id: "dwadasdwadasamsa", label: "D144", name: "Dwadasdwadasamsa", key: "dwadasdwadasamsa_rasi", divisionCount: 144 },
+  { id: "navanavamsa", label: "D81", name: "Navanavamsa (D9 of D9)", key: "navanavamsa_rasi", divisionCount: 81 },
+  { id: "ashtottaramsa", label: "D108", name: "Ashtottaramsa (D9 of D12)", key: "ashtottaramsa_rasi", divisionCount: 108 },
+  { id: "dwadasdwadasamsa", label: "D144", name: "Dwadasdwadasamsa (D12 of D12)", key: "dwadasdwadasamsa_rasi", divisionCount: 144 },
 ];
 
 /** Ashta Kuta 항목 라벨 */
