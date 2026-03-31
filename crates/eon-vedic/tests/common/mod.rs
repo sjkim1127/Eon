@@ -2,6 +2,7 @@ use eon_vedic::calc::varga::VargaType;
 use eon_vedic::core::chart::{VedicChart, VedicChartCalculator};
 use chrono::{Utc, TimeZone};
 
+#[allow(dead_code)]
 pub fn get_varga_type(id: &str) -> Option<VargaType> {
     match id.to_lowercase().as_str() {
         "d1" | "rasi" => Some(VargaType::D1),
@@ -31,12 +32,14 @@ pub fn get_varga_type(id: &str) -> Option<VargaType> {
     }
 }
 
+#[allow(dead_code)]
 pub fn create_test_chart(year: i32, month: u32, day: u32, hour: u32, lat: f64, lon: f64) -> VedicChart {
     let calc = VedicChartCalculator::default();
     let dt = Utc.with_ymd_and_hms(year, month, day, hour, 0, 0).unwrap();
     calc.calculate(dt, lat, lon)
 }
 
+#[allow(dead_code)]
 pub fn assert_approx_eq(actual: f64, expected: f64, epsilon: f64, msg: &str) {
     if (actual - expected).abs() > epsilon {
         panic!("{}: expected {}, got {}", msg, expected, actual);
