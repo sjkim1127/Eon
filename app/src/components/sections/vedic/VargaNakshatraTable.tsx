@@ -64,7 +64,7 @@ export function VargaNakshatraTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/10">
-              {columns.map((h) => (
+              {(columns || []).map((h) => (
                 <th
                   key={h}
                   className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4 whitespace-nowrap"
@@ -75,7 +75,7 @@ export function VargaNakshatraTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {rows.map((row, i) => (
+            {(rows || []).map((row, i) => (
               <tr key={i} className="hover:bg-white/3 transition-colors">
                 <td className="py-3 pr-4 font-bold text-white whitespace-nowrap">
                   {row.planet}
