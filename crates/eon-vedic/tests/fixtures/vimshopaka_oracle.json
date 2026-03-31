@@ -1,0 +1,54 @@
+[
+  {
+    "case_id": "sun_exalted_aries_2024",
+    "description": "Sun in Aries (Exalted in D1) - Lahiri Sidereal",
+    "input": {
+      "year": 2024, "month": 4, "day": 15, "hour": 12,
+      "lat": 37.5665, "lon": 126.9780
+    },
+    "test_planet": "Sun",
+    "expected_dignity_points": {
+      "d1": 20.0,
+      "d9": 20.0,
+      "d30": 20.0
+    },
+    "notes": "Verified: Sun is at 1.81 deg Aries sidereal."
+  },
+  {
+    "case_id": "saturn_debilitated_aries_1998",
+    "description": "Saturn in Aries (Debilitated in D1)",
+    "input": {
+      "year": 1998, "month": 6, "day": 15, "hour": 12,
+      "lat": 37.5665, "lon": 126.9780
+    },
+    "test_planet": "Saturn",
+    "expected_dignity_points": {
+      "d1": 0.0
+    },
+    "notes": "Saturn was in Aries sidereal in mid-1998."
+  },
+  {
+    "case_id": "jupiter_exalted_cancer_2014",
+    "description": "Jupiter in Cancer (Exalted in D1)",
+    "input": {
+      "year": 2014, "month": 8, "day": 15, "hour": 12,
+      "lat": 37.5665, "lon": 126.9780
+    },
+    "test_planet": "Jupiter",
+    "expected_dignity_points": {
+      "d1": 20.0
+    }
+  },
+  {
+    "case_id": "mars_own_sign_aries_2024",
+    "description": "Mars in Aries (Own Sign in D1)",
+    "input": {
+      "year": 2024, "month": 6, "day": 10, "hour": 12,
+      "lat": 37.5665, "lon": 126.9780
+    },
+    "test_planet": "Mars",
+    "expected_dignity_points": {
+      "d1": 20.0
+    }
+  }
+]

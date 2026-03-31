@@ -432,11 +432,19 @@ impl VedicChartCalculator {
             .unwrap_or(0.0);
 
         // 2. Find time when Sun returns to this sidereal longitude in the target year
+        // Handle Feb 29 leap year birthday for non-leap years
+        let (m, d) = if birth_time.month() == 2 && birth_time.day() == 29 {
+            let is_leap = (target_year % 4 == 0 && target_year % 100 != 0) || (target_year % 400 == 0);
+            if is_leap { (2, 29) } else { (3, 1) }
+        } else {
+            (birth_time.month(), birth_time.day())
+        };
+
         let approx_time = Utc
             .with_ymd_and_hms(
                 target_year,
-                birth_time.month(),
-                birth_time.day(),
+                m,
+                d,
                 birth_time.hour(),
                 birth_time.minute(),
                 0,
@@ -458,9 +466,9 @@ impl VedicChartCalculator {
         // 3. Calculate full chart for the exact return time
         let mut annual_chart = self.calculate(current_guess, latitude, longitude);
         
-        // Overwrite report with correct birth lagna context
+        // Overwrite report with correct birth lagna context and correct return time
         annual_chart.analysis_report = Some(crate::analysis::report::VedicAnalysisReport::generate(
-            &annual_chart, birth_time, birth_chart.ascendant.rasi
+            &annual_chart, current_guess, birth_chart.ascendant.rasi
         ));
         
         annual_chart
