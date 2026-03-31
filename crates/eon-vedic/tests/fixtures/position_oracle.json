@@ -1,0 +1,22 @@
+[
+  {
+    "case_id": "standard_positions_2024_04_15",
+    "description": "Standard position check for Sun, Moon and Nodes (Gold Standard)",
+    "input": {
+      "year": 2024, "month": 4, "day": 15, "hour": 12,
+      "lat": 37.5665, "lon": 126.9780
+    },
+    "expected": {
+      "ayanamsa": 24.1964,
+      "planets": {
+        "Sun": { "tropical": 26.0081, "sidereal": 1.8117 },
+        "Moon": { "tropical": 112.5583, "sidereal": 88.3619 },
+        "Rahu": { "tropical": 15.2904, "sidereal": 351.0940 },
+        "Mars": { "sidereal": 324.0869 },
+        "Saturn": { "sidereal": 320.9665 }
+      },
+      "ascendant": { "sidereal": 205.2538 }
+    },
+    "notes": "Verified against engine output using Swiss Ephemeris Lahiri Ayanamsa."
+  }
+]
