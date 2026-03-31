@@ -319,6 +319,176 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_composite_varga_accuracy() {
+        let vargas = [
+            (VargaType::D81, vec![
+                (1.0, 3),   // Ar 1.0 -> D9:Ar(1), deg:1.0, scaled:9.0 -> D9:Ge(3)
+                (5.0, 2),   // Ar 5.0 -> D9:Ta(2), deg:1.666, scaled:15.0 -> D9:Ta(2)
+                (10.0, 4),  // Ar 10.0 -> D9:Ca(4), deg:0.0, scaled:0.0 -> D9:Ca(4)
+            ]),
+            (VargaType::D108, vec![
+                (1.0, 4),   // Ar 1.0 -> D12:Ar(1), deg:1.0, scaled:12.0 -> D9:Ca(4)
+                (5.0, 7),   // Ar 5.0 -> D12:Ge(3), deg:0.0, scaled:0.0 -> D9:Li(7)
+                (30.0, 10), // Ta 0.0 -> D12:Ta(2), deg:0.0, scaled:0.0 -> D9:Cp(10)
+            ]),
+            (VargaType::D144, vec![
+                (2.6, 2),   // Ar 2.6 -> D12:Ta(2), deg:0.1, scaled:1.2 -> D12:Ta(2)
+                (1.0, 5),   // Ar 1.0 -> D12:Ar(1), deg:1.0, scaled:12.0 -> D12:Le(5)
+            ]),
+        ];
+
+        for (v_type, cases) in vargas {
+            for (long, expected) in cases {
+                let actual = v_type.calculate_rasi(long);
+                assert_eq!(actual, expected, "Varga {:?} at {} deg failed", v_type, long);
+            }
+        }
+    }
+
+    #[test]
+    fn test_varga_boundary_exhaustively() {
+        let vargas_to_check = [
+            (VargaType::D2, 15.0),
+            (VargaType::D3, 10.0),
+            (VargaType::D9, 30.0/9.0),
+            (VargaType::D10, 3.0),
+            (VargaType::D12, 2.5),
+            (VargaType::D16, 30.0/16.0),
+            (VargaType::D20, 1.5),
+            (VargaType::D24, 1.25),
+            (VargaType::D27, 30.0/27.0),
+            (VargaType::D60, 0.5),
+        ];
+
+        let epsilon = 1e-7;
+
+        for (v_type, div) in vargas_to_check {
+            // Test 0.0
+            assert_eq!(v_type.calculate_rasi(0.0), v_type.calculate_rasi(epsilon), "0.0 vs epsilon mismatch for {:?}", v_type);
+            
+            // Test boundary transitions for first 2 divisions
+            let b1 = div;
+            let r_before = v_type.calculate_rasi(b1 - epsilon);
+            let r_after = v_type.calculate_rasi(b1 + epsilon);
+            assert_ne!(r_before, r_after, "Boundary transition failed for {:?} at {}", v_type, b1);
+            
+            // Test wrap around and normalization
+            assert_eq!(v_type.calculate_rasi(360.0), v_type.calculate_rasi(0.0));
+            assert_eq!(v_type.calculate_rasi(-0.1), v_type.calculate_rasi(359.9));
+            assert_eq!(v_type.calculate_rasi(-1.0), v_type.calculate_rasi(359.0));
+        }
+    }
+
+    #[test]
+    fn test_d30_cutpoints_and_projection() {
+        // Odd sign (Aries)
+        let odd_cases = [
+            (4.999, 1),   (5.0, 11),  // 0-5 (Ar), 5-10 (Aq)
+            (9.999, 11),  (10.0, 9),  // 5-10 (Aq), 10-18 (Sg)
+            (17.999, 9),  (18.0, 3),  // 10-18 (Sg), 18-25 (Ge)
+            (24.999, 3),  (25.0, 7),  // 18-25 (Ge), 25-30 (Li)
+        ];
+        for (long, expected) in odd_cases {
+            assert_eq!(VargaType::D30.calculate_rasi(long), expected, "D30 Odd Sign {} failed", long);
+        }
+
+        // Even sign (Taurus)
+        let taurus_base = 30.0;
+        let even_cases = [
+            (taurus_base + 4.999, 2),  (taurus_base + 5.0, 6),   // 0-5 (Ta), 5-12 (Vi)
+            (taurus_base + 11.999, 6), (taurus_base + 12.0, 12), // 5-12 (Vi), 12-20 (Pi)
+            (taurus_base + 19.999, 12),(taurus_base + 20.0, 10), // 12-20 (Pi), 20-25 (Cp)
+            (taurus_base + 24.999, 10),(taurus_base + 25.0, 8),  // 20-25 (Cp), 25-30 (Sc)
+        ];
+        for (long, expected) in even_cases {
+            assert_eq!(VargaType::D30.calculate_rasi(long), expected, "D30 Even Sign {} failed", long);
+        }
+
+        // Check effective longitude projection for D30
+        // Aries 2.5 is exactly middle of 0-5 division -> should be 15.0 (Aries 15.0)
+        let eff_mid = VargaType::D30.effective_longitude_for_nakshatra(2.5, 1);
+        assert!((eff_mid - 15.0).abs() < 1e-5);
+        
+        // Taurus 22.5 is middle of 20-25 division (Cp) -> should be Cp 15.0
+        // (10-1)*30 + 15 = 285.0
+        let eff_mid_even = VargaType::D30.effective_longitude_for_nakshatra(30.0 + 22.5, 10);
+        assert!((eff_mid_even - 285.0).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_projection_consistency() {
+        let vargas = [VargaType::D9, VargaType::D12, VargaType::D60];
+        for v in vargas {
+            let div_size = 30.0 / v.division_count() as f64;
+            // Start of a division
+            let eff_start = v.effective_longitude_for_nakshatra(0.01, v.calculate_rasi(0.01));
+            let r_idx = v.calculate_rasi(0.01) as f64 - 1.0;
+            assert!(eff_start >= r_idx * 30.0 && eff_start < r_idx * 30.0 + 5.0);
+
+            // End of a division
+            let end_val = div_size - 0.0001;
+            let eff_end = v.effective_longitude_for_nakshatra(end_val, v.calculate_rasi(end_val));
+            assert!(eff_end > r_idx * 30.0 + 29.9);
+            assert!(eff_end < r_idx * 30.0 + 30.0);
+            
+            // Across boundary
+            let next_val = div_size + 0.0001;
+            let eff_next = v.effective_longitude_for_nakshatra(next_val, v.calculate_rasi(next_val));
+            let next_r_idx = v.calculate_rasi(next_val) as f64 - 1.0;
+            assert!(eff_next >= next_r_idx * 30.0 && eff_next < next_r_idx * 30.0 + 1.0);
+        }
+    }
+
+    #[test]
+    fn test_varga_gold_standards() {
+        // Sample 1: 15.0 deg Aries
+        let p1 = 15.0;
+        assert_eq!(VargaType::D1.calculate_rasi(p1), 1);
+        assert_eq!(VargaType::D9.calculate_rasi(p1), 5);
+        assert_eq!(VargaType::D12.calculate_rasi(p1), 7);
+        assert_eq!(VargaType::D30.calculate_rasi(p1), 9);
+        assert_eq!(VargaType::D60.calculate_rasi(p1), 7);
+        assert_eq!(VargaType::D108.calculate_rasi(p1), 7);
+        assert_eq!(VargaType::D144.calculate_rasi(p1), 7);
+
+        // Sample 2: 28.0 deg Aries
+        let p2 = 28.0;
+        assert_eq!(VargaType::D1.calculate_rasi(p2), 1);
+        assert_eq!(VargaType::D9.calculate_rasi(p2), 9);
+        assert_eq!(VargaType::D12.calculate_rasi(p2), 12);
+        assert_eq!(VargaType::D30.calculate_rasi(p2), 7);
+        assert_eq!(VargaType::D60.calculate_rasi(p2), 9);
+        assert_eq!(VargaType::D108.calculate_rasi(p2), 5);
+        assert_eq!(VargaType::D144.calculate_rasi(p2), 2);
+        
+        // Sample 3: 2.5 deg Leo (122.5)
+        let p3 = 122.5; // 2.5 in Leo (idx 4)
+        // D1: Leo(5)
+        // D9: Leo idx 4. match 4%4=0 -> start Ar(0). floor(2.5/3.333)=0. index 0 is Ar(1).
+        assert_eq!(VargaType::D9.calculate_rasi(p3), 1);
+        // D12: Leo idx 4. floor(2.5/2.5)=1. 4+1=5 -> Virgo(6).
+        assert_eq!(VargaType::D12.calculate_rasi(p3), 6);
+        // D30: Leo(odd). 0-2.5-5 is Aries(1).
+        assert_eq!(VargaType::D30.calculate_rasi(p3), 1);
+        // D144: D12 is Virgo(6). deg_in_div = 0. Scaled = 0. Start Virgo(idx 5). index 0 -> Virgo(6).
+        assert_eq!(VargaType::D144.calculate_rasi(p3), 6);
+
+        // Sample 4: 10.0 deg Scorpio (220.0)
+        let p4 = 220.0; 
+        assert_eq!(VargaType::D9.calculate_rasi(p4), 7);
+        assert_eq!(VargaType::D12.calculate_rasi(p4), 12);
+        assert_eq!(VargaType::D30.calculate_rasi(p4), 6);
+        assert_eq!(VargaType::D108.calculate_rasi(p4), 4);
+
+        // Sample 5: 25.0 deg Gemini (85.0)
+        let p5 = 85.0;
+        assert_eq!(VargaType::D9.calculate_rasi(p5), 2);
+        assert_eq!(VargaType::D12.calculate_rasi(p5), 1);
+        assert_eq!(VargaType::D30.calculate_rasi(p5), 7);
+        assert_eq!(VargaType::D144.calculate_rasi(p5), 1);
+    }
+
+    #[test]
     fn test_composite_varga_distinction() {
         // Two points in the same D9 division (Aries 0-3.333...)
         // Point A: 1.0 degree
