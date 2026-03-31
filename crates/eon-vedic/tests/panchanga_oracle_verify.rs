@@ -23,10 +23,15 @@ struct InputData {
 #[derive(Debug, Deserialize)]
 struct ExpectedData {
     sunrise_utc: String,
-    sunset_utc: String,
+    sunset_utc: Option<String>,
     vara: Option<String>,
     tithi: Option<u8>,
+    nakshatra: Option<u8>,
+    yoga: Option<u8>,
+    karana: Option<u8>,
     day_lord: Option<String>,
+    hora_lord: Option<String>,
+    is_day_birth: Option<bool>,
 }
 
 fn get_planet_name(p: VedicPlanet) -> String {
@@ -55,29 +60,49 @@ fn verify_panchanga_oracle_fixtures() {
             case.input.lon
         );
 
-        // 1. Verify Sunrise/Sunset (Allow 2 minute error for simplified NOAA)
+        // 1. Verify Sunrise (Always present in fixtures)
         let expected_sunrise = DateTime::parse_from_rfc3339(&case.expected.sunrise_utc).unwrap().with_timezone(&Utc);
-        let expected_sunset = DateTime::parse_from_rfc3339(&case.expected.sunset_utc).unwrap().with_timezone(&Utc);
-
         let rise_diff = (actual.sunrise - expected_sunrise).num_seconds().abs();
-        let set_diff = (actual.sunset - expected_sunset).num_seconds().abs();
+        assert!(rise_diff < 120, "Case {} sunrise error: {}s (actual: {}, expected: {})", 
+                case.case_id, rise_diff, actual.sunrise, expected_sunrise);
 
-        assert!(rise_diff < 120, "Case {} sunrise error: {}s", case.case_id, rise_diff);
-        assert!(set_diff < 120, "Case {} sunset error: {}s", case.case_id, set_diff);
+        // 2. Verify Sunset (Optional in fixtures)
+        if let Some(expected_sunset_str) = &case.expected.sunset_utc {
+            let expected_sunset = DateTime::parse_from_rfc3339(expected_sunset_str).unwrap().with_timezone(&Utc);
+            let set_diff = (actual.sunset - expected_sunset).num_seconds().abs();
+            assert!(set_diff < 120, "Case {} sunset error: {}s", case.case_id, set_diff);
+        }
 
-        // 2. Verify Vara
+        // 3. Verify Vara & Day Lord
         if let Some(expected_vara) = &case.expected.vara {
             assert_eq!(actual.vara, *expected_vara, "Case {} vara mismatch", case.case_id);
         }
-
-        // 3. Verify Tithi
-        if let Some(expected_tithi) = case.expected.tithi {
-            assert_eq!(actual.tithi, expected_tithi, "Case {} tithi mismatch", case.case_id);
-        }
-
-        // 4. Verify Day Lord
         if let Some(expected_lord) = &case.expected.day_lord {
             assert_eq!(get_planet_name(actual.day_lord), *expected_lord, "Case {} day lord mismatch", case.case_id);
+        }
+
+        // 4. Verify Tithi, Nakshatra, Yoga, Karana
+        if let Some(val) = case.expected.tithi {
+            assert_eq!(actual.tithi, val, "Case {} tithi mismatch", case.case_id);
+        }
+        if let Some(val) = case.expected.nakshatra {
+            assert_eq!(actual.nakshatra, val, "Case {} nakshatra mismatch", case.case_id);
+        }
+        if let Some(val) = case.expected.yoga {
+            assert_eq!(actual.yoga, val, "Case {} yoga mismatch", case.case_id);
+        }
+        if let Some(val) = case.expected.karana {
+            assert_eq!(actual.karana, val, "Case {} karana mismatch", case.case_id);
+        }
+
+        // 5. Verify Day/Night Birth
+        if let Some(val) = case.expected.is_day_birth {
+            assert_eq!(actual.is_day_birth, val, "Case {} is_day_birth mismatch", case.case_id);
+        }
+
+        // 6. Verify Hora Lord
+        if let Some(expected_hora) = &case.expected.hora_lord {
+            assert_eq!(get_planet_name(actual.hour_lord), *expected_hora, "Case {} hora lord mismatch", case.case_id);
         }
     }
 }
