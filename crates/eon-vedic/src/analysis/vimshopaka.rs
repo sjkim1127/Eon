@@ -92,9 +92,13 @@ impl VimshopakaEngine {
             VargaType::D2 => pos.hora_rasi,
             VargaType::D3 => pos.drekkana_rasi,
             VargaType::D4 => pos.chaturthamsha_rasi,
+            VargaType::D5 => pos.panchamsa_rasi,
+            VargaType::D6 => pos.shashtamsa_rasi,
             VargaType::D7 => pos.saptamsa_rasi,
+            VargaType::D8 => pos.ashtamsa_rasi,
             VargaType::D9 => pos.navamsa_rasi,
             VargaType::D10 => pos.dasamsa_rasi,
+            VargaType::D11 => pos.rudramsa_rasi,
             VargaType::D12 => pos.dwadasamsa_rasi,
             VargaType::D16 => pos.shodashamsa_rasi,
             VargaType::D20 => pos.vimsamsa_rasi,
@@ -104,7 +108,9 @@ impl VimshopakaEngine {
             VargaType::D40 => pos.khavedamsa_rasi,
             VargaType::D45 => pos.akshavedamsa_rasi,
             VargaType::D60 => pos.shashtyamsa_rasi,
-            _ => pos.rasi, // Fallback
+            VargaType::D81 => pos.navanavamsa_rasi,
+            VargaType::D108 => pos.ashtottaramsa_rasi,
+            VargaType::D144 => pos.dwadasdwadasamsa_rasi,
         }
     }
 

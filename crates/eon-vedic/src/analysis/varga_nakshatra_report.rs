@@ -42,12 +42,13 @@ pub struct VargaNakshatraReports {
 }
 
 /// VargaType -> (varga_id, varga_label) for frontend VARGA_DEFS compatibility
-const VARGA_MAPPING: [(VargaType, &str, &str); 22] = [
+const VARGA_MAPPING: [(VargaType, &str, &str); 23] = [
     (VargaType::D1, "rasi", "D1 - Rasi"),
     (VargaType::D2, "hora", "D2 - Hora"),
     (VargaType::D3, "drekkana", "D3 - Drekkana"),
     (VargaType::D4, "chaturthamsha", "D4 - Chaturthamsha"),
     (VargaType::D5, "panchamsa", "D5 - Panchamsa"),
+    (VargaType::D6, "shashtamsa", "D6 - Shashtamsa"),
     (VargaType::D7, "saptamsa", "D7 - Saptamsa"),
     (VargaType::D8, "ashtamsa", "D8 - Ashtamsa"),
     (VargaType::D9, "navamsa", "D9 - Navamsa"),
@@ -69,10 +70,20 @@ const VARGA_MAPPING: [(VargaType, &str, &str); 22] = [
 
 fn fmt_degree(deg: f64) -> String {
     let total = ((deg % 360.0) + 360.0) % 360.0;
-    let sign_1based = (total / 30.0).floor() as u8 % 12 + 1;
+    let mut sign_1based = (total / 30.0).floor() as u8 % 12 + 1;
     let deg_in_sign = total % 30.0;
-    let dd = deg_in_sign.floor() as u32;
-    let mm = ((deg_in_sign - dd as f64) * 60.0).round() as u32;
+    let mut dd = deg_in_sign.floor() as u32;
+    let mut mm = ((deg_in_sign - dd as f64) * 60.0).round() as u32;
+    
+    if mm >= 60 {
+        mm = 0;
+        dd += 1;
+        if dd >= 30 {
+            dd = 0;
+            sign_1based = (sign_1based % 12) + 1;
+        }
+    }
+    
     let sign_name = get_rasi_name(sign_1based);
     format!("{}°{:02}' {}", dd, mm, sign_name)
 }
