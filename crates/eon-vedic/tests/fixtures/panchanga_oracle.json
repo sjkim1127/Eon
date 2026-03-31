@@ -1,0 +1,36 @@
+[
+  {
+    "case_id": "seoul_spring_equinox_2026",
+    "description": "Seoul, Spring Equinox 2026",
+    "input": {
+      "year": 2026, "month": 3, "day": 20, "hour": 12,
+      "lat": 37.5665, "lon": 126.9780,
+      "sun_deg": 359.9, "moon_deg": 10.5
+    },
+    "expected": {
+      "sunrise_utc": "2026-03-19T21:36:00Z",
+      "sunset_utc": "2026-03-20T09:44:00Z",
+      "vara": "Friday",
+      "tithi": 1,
+      "nakshatra": 1,
+      "day_lord": "Venus"
+    },
+    "notes": "Approximate values for Seoul equinox. Vara should be Friday if sunrise is around 6:36 AM KST (21:36 UTC previous day)."
+  },
+  {
+    "case_id": "london_summer_solstice_2026",
+    "description": "London, Summer Solstice 2026 (High Latitude)",
+    "input": {
+      "year": 2026, "month": 6, "day": 21, "hour": 12,
+      "lat": 51.5074, "lon": -0.1278,
+      "sun_deg": 90.0, "moon_deg": 150.0
+    },
+    "expected": {
+      "sunrise_utc": "2026-06-21T03:43:00Z",
+      "sunset_utc": "2026-06-21T20:21:00Z",
+      "vara": "Sunday",
+      "day_lord": "Sun"
+    },
+    "notes": "High latitude check. Sunrise is very early, sunset is very late."
+  }
+]

@@ -51,7 +51,15 @@ impl PanchangaEngine {
         } else {
             time
         };
-        let vara = effective_date.weekday().to_string();
+        let vara = match effective_date.weekday() {
+            chrono::Weekday::Sun => "Sunday",
+            chrono::Weekday::Mon => "Monday",
+            chrono::Weekday::Tue => "Tuesday",
+            chrono::Weekday::Wed => "Wednesday",
+            chrono::Weekday::Thu => "Thursday",
+            chrono::Weekday::Fri => "Friday",
+            chrono::Weekday::Sat => "Saturday",
+        }.to_string();
 
         let day_lord = match effective_date.weekday() {
             chrono::Weekday::Sun => VedicPlanet::Sun,
@@ -274,12 +282,8 @@ impl PanchangaEngine {
         let sunrise_min = solar_noon - 4.0 * ha_deg;
         let sunset_min = solar_noon + 4.0 * ha_deg;
 
-        // Use local midnight based on longitude to avoid date shift
-        // (e.g. KST 2026-03-03 08:00 = UTC 2026-03-02 23:00 → would wrongly use Mar 2 sunset)
-        let local_offset = chrono::Duration::seconds((lon * 240.0) as i64); // 1° = 4min = 240s
-        let local_date = (date + local_offset).date_naive();
-        let local_midnight = local_date.and_hms_opt(0, 0, 0).unwrap();
-        let midnight = local_midnight.and_utc() - local_offset;
+        // Use UTC midnight of the given date
+        let midnight = date.date_naive().and_hms_opt(0, 0, 0).unwrap().and_utc();
 
         let rise_secs = (sunrise_min * 60.0) as i64;
         let set_secs = (sunset_min * 60.0) as i64;
