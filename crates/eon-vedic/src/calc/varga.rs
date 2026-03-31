@@ -52,19 +52,21 @@ impl VargaType {
             Self::D60 => calculate_shashtyamsa(longitude),
             Self::D81 => {
                 // D9 of D9 (Nava-Navamsa)
-                // 1. Calculate the degree within the first D9 division (0..30)
-                let d9_internal_deg = (longitude * 9.0) % 30.0;
-                calculate_navamsa(d9_internal_deg)
+                // Harmonic equivalent: (longitude * 81) mod 360
+                let harmonic_long = (longitude * 81.0) % 360.0;
+                ((harmonic_long / 30.0).floor() as u8 % 12) + 1
             },
             Self::D108 => {
                 // D9 of D12 (Ashtottaramsa)
-                let d12_internal_deg = (longitude * 12.0) % 30.0;
-                calculate_navamsa(d12_internal_deg)
+                // Harmonic equivalent: (longitude * 108) mod 360
+                let harmonic_long = (longitude * 108.0) % 360.0;
+                ((harmonic_long / 30.0).floor() as u8 % 12) + 1
             },
             Self::D144 => {
                 // D12 of D12 (Dwadas-Dwadasamsa)
-                let d12_internal_deg = (longitude * 12.0) % 30.0;
-                calculate_dwadasamsa(d12_internal_deg)
+                // Harmonic equivalent: (longitude * 144) mod 360
+                let harmonic_long = (longitude * 144.0) % 360.0;
+                ((harmonic_long / 30.0).floor() as u8 % 12) + 1
             },
         }
     }
@@ -277,4 +279,49 @@ fn calculate_shashtyamsa(longitude: f64) -> u8 {
     let sign_idx = get_sign_idx(longitude);
     let part = (sign_degree * 2.0).floor() as u8;
     (sign_idx + part) % 12 + 1
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_harmonic_varga_distinction() {
+        // Two points in the same D9 division (Aries 0-3.333...)
+        // Point A: 1.0 degree
+        // Point B: 2.0 degree
+        let long_a = 1.0;
+        let long_b = 2.0;
+
+        let d9_a = VargaType::D9.calculate_rasi(long_a);
+        let d9_b = VargaType::D9.calculate_rasi(long_b);
+        assert_eq!(d9_a, d9_b, "Should be in the same D9 division");
+
+        let d81_a = VargaType::D81.calculate_rasi(long_a);
+        let d81_b = VargaType::D81.calculate_rasi(long_b);
+
+        // Point A: 1 * 81 = 81 mod 360 = 81 (Gemini)
+        // Point B: 2 * 81 = 162 mod 360 = 162 (Virgo)
+        assert_ne!(d81_a, d81_b, "D81 should distinguish points within the same D9 division");
+        assert_eq!(d81_a, 3, "1.0 degree in D81 should be Gemini(3)");
+        assert_eq!(d81_b, 6, "2.0 degree in D81 should be Virgo(6)");
+    }
+
+    #[test]
+    fn test_d144_harmonic() {
+        // Point in D12 division (Aries 0-2.5 deg)
+        let long_a = 0.5; // 0.5 * 144 = 72 (Gemini-3)
+        let long_b = 1.5; // 1.5 * 144 = 216 (Scorpio-8)
+
+        let d12_a = VargaType::D12.calculate_rasi(long_a);
+        let d12_b = VargaType::D12.calculate_rasi(long_b);
+        assert_eq!(d12_a, d12_b, "Should be in the same D12 division");
+
+        let d144_a = VargaType::D144.calculate_rasi(long_a);
+        let d144_b = VargaType::D144.calculate_rasi(long_b);
+
+        assert_ne!(d144_a, d144_b);
+        assert_eq!(d144_a, 3);
+        assert_eq!(d144_b, 8);
+    }
 }
