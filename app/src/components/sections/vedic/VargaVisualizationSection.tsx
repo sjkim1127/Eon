@@ -100,7 +100,7 @@ export function VargaVisualizationSection({ planets, ascendant, vargaNakshatraRe
                 </div>
             </div>
 
-            <VargaSignPositionsTable planets={planets} ascendant={ascendant} />
+            <VargaSignPositionsTable planets={planets || []} ascendant={ascendant} />
         </section>
     );
 }

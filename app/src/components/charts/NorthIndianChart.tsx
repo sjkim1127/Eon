@@ -39,7 +39,8 @@ export interface ChartProps {
 
 export function NorthIndianChart({ lagnaRasi, planetEntries }: ChartProps) {
   const byHouse: Record<number, typeof planetEntries> = {};
-  for (const p of planetEntries) {
+  const planetsToRender = planetEntries || [];
+  for (const p of planetsToRender) {
     const houseNum = ((p.rasi - lagnaRasi + 12) % 12) + 1;
     if (!byHouse[houseNum]) byHouse[houseNum] = [];
     byHouse[houseNum].push(p);

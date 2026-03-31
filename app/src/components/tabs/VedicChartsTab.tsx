@@ -93,7 +93,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       )}
 
       {/* ── 요가 (Yogas) 하이라이트 ────────────────────────────────────────── */}
-      <VedicYogaHighlightSection yogas={report.report?.yogas ?? []} />
+      <VedicYogaHighlightSection yogas={report.report?.yogas || []} />
 
       {/* ── 분할 차트 시각화 (Varga Charts) ─────────────────────────────────── */}
       <VargaVisualizationSection 
@@ -104,8 +104,8 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
 
       {/* ── 하우스(Bhava) 에너지 상세 ────────────────────────────────── */}
       <HouseStrengthGrid 
-        houseSummary={report.report?.house_summary ?? []} 
-        bhavaStrengths={currentChart.bhava_strengths ?? []} 
+        houseSummary={report.report?.house_summary || []} 
+        bhavaStrengths={currentChart?.bhava_strengths || []} 
       />
 
       {/* ── BAV Heatmap, SAV, Vimshopaka ───────────────────────────── */}

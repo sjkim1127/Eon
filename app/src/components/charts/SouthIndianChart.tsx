@@ -16,9 +16,11 @@ export interface ChartProps {
 
 export function SouthIndianChart({ lagnaRasi, planetEntries }: ChartProps) {
   const bySign: Record<number, string[]> = {};
-  if (!bySign[lagnaRasi]) bySign[lagnaRasi] = [];
-  bySign[lagnaRasi].unshift("Lg");
-  for (const p of planetEntries) {
+  if (lagnaRasi != null && !bySign[lagnaRasi]) bySign[lagnaRasi] = [];
+  if (lagnaRasi != null) bySign[lagnaRasi].unshift("Lg");
+
+  const planetsToRender = planetEntries || [];
+  for (const p of planetsToRender) {
     if (!bySign[p.rasi]) bySign[p.rasi] = [];
     const abbr = PLANET_ABBR[p.name] ?? p.name.substring(0, 2);
     bySign[p.rasi].push(p.retro ? `${abbr}\u211e` : abbr);
