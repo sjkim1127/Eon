@@ -23,8 +23,13 @@ struct ExpectedShadbala {
     uchcha_bala: Option<f64>,
     dig_bala: Option<f64>,
     naisargika_bala: Option<f64>,
-    kala_bala_min: Option<f64>,
+    kala_score: Option<f64>,
     chesta_bala: Option<f64>,
+    paksha_bala: Option<f64>,
+    ayana_bala: Option<f64>,
+    saptavargaja_bala: Option<f64>,
+    drik_bala: Option<f64>,
+    yuddha_bala_abs_min: Option<f64>,
     is_night_birth: Option<bool>,
     total_score: Option<f64>,
 }
@@ -58,63 +63,62 @@ fn verify_shadbala_oracle_fixtures() {
         );
         
         let target_planet = get_planet_enum(&case.test_planet);
-        
-        // Find the strength entry for the target planet
         let planet_pos = chart.planets.iter().find(|p| p.planet == target_planet)
             .expect(&format!("Planet {} not found in chart", case.test_planet));
             
         let strength = eon_vedic::analysis::strength::StrengthEngine::calculate(planet_pos, &chart);
 
-        // 1. Verify Uchcha Bala
+        // 1. Position/Dignity
         if let Some(expected_val) = case.expected.uchcha_bala {
-            common::assert_approx_eq(
-                strength.exaltation_score, expected_val, 1.0, 
-                &format!("Case {} failed for {} Uchcha Bala", case.case_id, case.test_planet)
-            );
+            common::assert_approx_eq(strength.exaltation_score, expected_val, 1.0, &case.case_id);
         }
-
-        // 2. Verify Dig Bala
         if let Some(expected_val) = case.expected.dig_bala {
-            common::assert_approx_eq(
-                strength.directional_score, expected_val, 0.1, 
-                &format!("Case {} failed for {} Dig Bala", case.case_id, case.test_planet)
-            );
+            common::assert_approx_eq(strength.directional_score, expected_val, 0.1, &case.case_id);
         }
-
-        // 3. Verify Naisargika Bala
         if let Some(expected_val) = case.expected.naisargika_bala {
-            common::assert_approx_eq(
-                strength.naisargika_score, expected_val, 0.1, 
-                &format!("Case {} failed for {} Naisargika Bala", case.case_id, case.test_planet)
-            );
+            common::assert_approx_eq(strength.naisargika_score, expected_val, 0.1, &case.case_id);
         }
 
-        // 4. Verify Chesta Bala
+        // 2. Motion/Phase
         if let Some(expected_val) = case.expected.chesta_bala {
-            common::assert_approx_eq(
-                strength.chesta_score, expected_val, 0.1, 
-                &format!("Case {} failed for {} Chesta Bala", case.case_id, case.test_planet)
-            );
+            common::assert_approx_eq(strength.chesta_score, expected_val, 0.1, &case.case_id);
+        }
+        if let Some(expected_val) = case.expected.paksha_bala {
+            common::assert_approx_eq(strength.paksha_score, expected_val, 1.0, &case.case_id);
         }
 
-        // 4. Verify Kala Bala (Min check for Nathonnata)
-        if let Some(min_val) = case.expected.kala_bala_min {
-            assert!(strength.kala_score >= min_val, 
-                    "Case {} failed: {} Kala Bala {} is less than min {}", 
-                    case.case_id, case.test_planet, strength.kala_score, min_val);
+        // 3. Time/Declination
+        if let Some(expected_val) = case.expected.kala_score {
+            common::assert_approx_eq(strength.kala_score, expected_val, 1.0, &case.case_id);
+        }
+        if let Some(expected_val) = case.expected.ayana_bala {
+            common::assert_approx_eq(strength.ayana_score, expected_val, 1.0, &case.case_id);
         }
 
-        // 5. Verify Day/Night Birth context
+        // 4. Varga/Relations
+        if let Some(expected_val) = case.expected.saptavargaja_bala {
+            common::assert_approx_eq(strength.saptavargaja_score, expected_val, 5.0, &case.case_id);
+        }
+
+        // 5. External Factors (War/Aspect)
+        if let Some(expected_val) = case.expected.drik_bala {
+            common::assert_approx_eq(strength.drik_score, expected_val, 5.0, &case.case_id);
+        }
+        if let Some(min_abs_yuddha) = case.expected.yuddha_bala_abs_min {
+            assert!(strength.yuddha_bala.abs() >= min_abs_yuddha, 
+                    "Case {} failed: Yuddha Bala {} abs should be >= {}", 
+                    case.case_id, strength.yuddha_bala, min_abs_yuddha);
+        }
+
+        // 6. Context
         if let Some(expected_night) = case.expected.is_night_birth {
-            assert_eq!(chart.panchanga.is_night_birth, expected_night, 
-                       "Case {} failed: is_night_birth mismatch", case.case_id);
+            assert_eq!(chart.panchanga.is_night_birth, expected_night, "Case {} is_night_birth mismatch", case.case_id);
         }
 
-        // 6. Log Total Score (Soft check - current engine uses simple sum)
+        // Soft log for total
         if let Some(expected_total) = case.expected.total_score {
-            let diff = (strength.total_score - expected_total).abs();
-            println!("Case {}: Overall Shadbala - Actual: {:.2}, Expected: {:.2} (Diff: {:.2})", 
-                     case.case_id, strength.total_score, expected_total, diff);
+            println!("Case {}: Overall Shadbala Actual: {:.2}, Expected: {:.2}", 
+                     case.case_id, strength.total_score, expected_total);
         }
     }
 }
