@@ -311,7 +311,7 @@ impl VedicChartCalculator {
                 .unwrap_or((0.0, 0.0));
             let (_, dec) = self
                 .engine
-                .get_planet_equatorial(time, p.se_id())
+                .get_planet_equatorial(time, se_id)
                 .unwrap_or((0.0, 0.0));
             let sidereal = (trop - ayanamsa + 360.0) % 360.0;
             planets.push(create_position(
