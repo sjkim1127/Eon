@@ -29,6 +29,9 @@ pub enum VargaType {
 
 impl VargaType {
     pub fn calculate_rasi(&self, longitude: f64) -> u8 {
+        // Normalize longitude to 0..360 range for robustness across all sub-functions
+        let longitude = (longitude % 360.0 + 360.0) % 360.0;
+        
         match self {
             Self::D1 => ((longitude / 30.0).floor() as u8 % 12) + 1,
             Self::D2 => calculate_hora(longitude),
@@ -316,7 +319,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_harmonic_varga_distinction() {
+    fn test_composite_varga_distinction() {
         // Two points in the same D9 division (Aries 0-3.333...)
         // Point A: 1.0 degree
         // Point B: 2.0 degree
@@ -330,8 +333,14 @@ mod tests {
         let d81_a = VargaType::D81.calculate_rasi(long_a);
         let d81_b = VargaType::D81.calculate_rasi(long_b);
 
-        // Point A: 1 * 81 = 81 mod 360 = 81 (Gemini)
-        // Point B: 2 * 81 = 162 mod 360 = 162 (Virgo)
+        // Point A (1.0): D9 is Aries. Degree in D9 = 1.0. 
+        // Scaled to 30: 1.0 * 9 = 9.0.
+        // D9 of 9.0 in Aries (starts at 0): floor(9.0/3.333)=2. 0+2=2 (Gemini-3).
+        
+        // Point B (2.0): D9 is Aries. Degree in D9 = 2.0.
+        // Scaled to 30: 2.0 * 9 = 18.0.
+        // D9 of 18.0 in Aries (starts at 0): floor(18.0/3.333)=5. 0+5=5 (Virgo-6).
+
         assert_ne!(d81_a, d81_b, "D81 should distinguish points within the same D9 division");
         assert_eq!(d81_a, 3, "1.0 degree in D81 should be Gemini(3)");
         assert_eq!(d81_b, 6, "2.0 degree in D81 should be Virgo(6)");
