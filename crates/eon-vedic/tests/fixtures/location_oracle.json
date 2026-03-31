@@ -1,0 +1,30 @@
+[
+  {
+    "case_id": "tokyo_snapshot_2024",
+    "description": "Tokyo local time to UTC and Chart coordinates",
+    "input": {
+      "year": 2024, "month": 4, "day": 15, "hour": 12, "minute": 0,
+      "lat": 35.6764, "lon": 139.6500,
+      "timezone": "Asia/Tokyo"
+    },
+    "expected": {
+      "utc_time": "2024-04-15T03:00:00Z",
+      "asc_sidereal": 105.1947,
+      "cusps_sidereal": [95.8036, 125.8036, 155.8036, 185.8036, 215.8036, 245.8036, 275.8036, 305.8036, 335.8036, 5.8036, 35.8036, 65.8036],
+      "sunrise_jst": "2024-04-15T05:07:52+09:00"
+    }
+  },
+  {
+    "case_id": "london_snapshot_bst",
+    "description": "London in Summer Time (BST, UTC+1)",
+    "input": {
+      "year": 2024, "month": 6, "day": 21, "hour": 12, "minute": 0,
+      "lat": 51.5074, "lon": -0.1278,
+      "timezone": "Europe/London"
+    },
+    "expected": {
+      "utc_time": "2024-06-21T11:00:00Z",
+      "asc_sidereal": 145.2316
+    }
+  }
+]
