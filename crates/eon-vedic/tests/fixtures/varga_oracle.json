@@ -1,0 +1,155 @@
+[
+  {
+    "case_id": "aries_0.0",
+    "input_longitude": 0.0,
+    "expected_rasi": { "d1": 1, "d9": 1, "d12": 1, "d30": 1, "d81": 1, "d108": 1, "d144": 1 },
+    "expected_effective_long": { "d30": 0.0, "d108": 0.0, "d144": 0.0 },
+    "notes": "Start of Zodiac boundary"
+  },
+  {
+    "case_id": "aries_1.0",
+    "input_longitude": 1.0,
+    "expected_rasi": { "d1": 1, "d9": 1, "d12": 1, "d30": 1, "d81": 3, "d108": 4, "d144": 5 },
+    "expected_effective_long": { "d30": 6.0, "d108": 108.0, "d144": 144.0 },
+    "notes": "Aries 1.0 deg: D108:D12(Ar)->D9(Ca=4), D144:D12(Ar)->D12(Le=5)"
+  },
+  {
+    "case_id": "aries_2.5_boundary_low",
+    "input_longitude": 2.499999,
+    "expected_rasi": { "d1": 1, "d12": 1 },
+    "notes": "Aries 2.5 transition (D12 boundary)"
+  },
+  {
+    "case_id": "aries_2.5_boundary_high",
+    "input_longitude": 2.5,
+    "expected_rasi": { "d1": 1, "d12": 2 },
+    "notes": "Aries 2.5 transition (D12 boundary)"
+  },
+  {
+    "case_id": "aries_5.0_d30_boundary_low",
+    "input_longitude": 4.999999,
+    "expected_rasi": { "d1": 1, "d30": 1 },
+    "notes": "Aries 5.0 transition (D30 Odd Sign: 0-5 Ar, 5-10 Aq)"
+  },
+  {
+    "case_id": "aries_5.0_d30_boundary_high",
+    "input_longitude": 5.0,
+    "expected_rasi": { "d1": 1, "d30": 11 },
+    "notes": "Aries 5.0 transition (D30 Odd Sign: 0-5 Ar, 5-10 Aq)"
+  },
+  {
+    "case_id": "aries_10.0",
+    "input_longitude": 10.0,
+    "expected_rasi": { "d1": 1, "d9": 4, "d81": 4 },
+    "expected_effective_long": { "d30": 240.0, "d81": 90.0 },
+    "notes": "Aries 10.0 deg: D30 is 10.0 exact start of Sg(9) -> 240.0"
+  },
+  {
+    "case_id": "aries_15.0",
+    "input_longitude": 15.0,
+    "expected_rasi": { "d1": 1, "d9": 5, "d12": 7, "d30": 9, "d60": 7, "d108": 7, "d144": 7 },
+    "notes": "Aries 15.0 deg (Gold Sample 1)"
+  },
+  {
+    "case_id": "aries_28.0",
+    "input_longitude": 28.0,
+    "expected_rasi": { "d1": 1, "d9": 9, "d12": 12, "d30": 7, "d60": 9, "d108": 5, "d144": 2 },
+    "notes": "Aries 28.0 deg (Gold Sample 2)"
+  },
+  {
+    "case_id": "taurus_0.0",
+    "input_longitude": 30.0,
+    "expected_rasi": { "d1": 2, "d9": 10, "d12": 2, "d30": 2, "d108": 10, "d144": 2 },
+    "notes": "Start of Taurus (Even sign D30)"
+  },
+  {
+    "case_id": "taurus_5.0_d30_boundary_low",
+    "input_longitude": 34.999999,
+    "expected_rasi": { "d1": 2, "d30": 2 },
+    "notes": "Taurus 5.0 transition (D30 Even Sign: 0-5 Ta, 5-12 Vi)"
+  },
+  {
+    "case_id": "taurus_5.0_d30_boundary_high",
+    "input_longitude": 35.0,
+    "expected_rasi": { "d1": 2, "d30": 6 },
+    "notes": "Taurus 5.0 transition (D30 Even Sign: 0-5 Ta, 5-12 Vi)"
+  },
+  {
+    "case_id": "gemini_25.0",
+    "input_longitude": 85.0,
+    "expected_rasi": { "d1": 3, "d9": 2, "d12": 1, "d30": 7, "d144": 1 },
+    "notes": "Gemini 25.0 deg (Gold Sample 5)"
+  },
+  {
+    "case_id": "leo_2.5",
+    "input_longitude": 122.5,
+    "expected_rasi": { "d1": 5, "d9": 1, "d12": 6, "d30": 1, "d144": 6 },
+    "notes": "Leo 2.5 deg (Gold Sample 3)"
+  },
+  {
+    "case_id": "scorpio_10.0",
+    "input_longitude": 220.0,
+    "expected_rasi": { "d1": 8, "d9": 7, "d12": 12, "d30": 6, "d108": 4 },
+    "notes": "Scorpio 10.0 deg (Gold Sample 4)"
+  },
+  {
+    "case_id": "pisces_29.9",
+    "input_longitude": 359.9,
+    "expected_rasi": { "d1": 12, "d9": 12 },
+    "notes": "End of Zodiac"
+  },
+  {
+    "case_id": "wrap_around_360",
+    "input_longitude": 360.0,
+    "expected_rasi": { "d1": 1, "d9": 1 },
+    "notes": "Exact 360 wrap around"
+  },
+  {
+    "case_id": "negative_longitude",
+    "input_longitude": -1.0,
+    "expected_rasi": { "d1": 12, "d9": 12 },
+    "notes": "Negative input normalization"
+  },
+  {
+    "case_id": "d30_even_12.0_low",
+    "input_longitude": 41.999999,
+    "expected_rasi": { "d1": 2, "d30": 6 },
+    "notes": "Taurus (Even) D30: 5-12 Vi, 12-20 Pi"
+  },
+  {
+    "case_id": "d30_even_12.0_high",
+    "input_longitude": 42.0,
+    "expected_rasi": { "d1": 2, "d30": 12 },
+    "notes": "Taurus (Even) D30: 5-12 Vi, 12-20 Pi"
+  },
+  {
+    "case_id": "d30_odd_18.0_low",
+    "input_longitude": 17.999999,
+    "expected_rasi": { "d1": 1, "d30": 9 },
+    "notes": "Aries (Odd) D30: 10-18 Sg, 18-25 Ge"
+  },
+  {
+    "case_id": "d30_odd_18.0_high",
+    "input_longitude": 18.0,
+    "expected_rasi": { "d1": 1, "d30": 3 },
+    "notes": "Aries (Odd) D30: 10-18 Sg, 18-25 Ge"
+  },
+  {
+    "case_id": "d9_division_end",
+    "input_longitude": 3.333333,
+    "expected_rasi": { "d9": 1 },
+    "notes": "End of 1st Navamsa of Aries"
+  },
+  {
+    "case_id": "d9_division_start",
+    "input_longitude": 3.333334,
+    "expected_rasi": { "d9": 2 },
+    "notes": "Start of 2nd Navamsa of Aries"
+  },
+  {
+    "case_id": "d60_division",
+    "input_longitude": 0.25,
+    "expected_rasi": { "d60": 1 },
+    "notes": "D60 check: 0.25 deg in Aries"
+  }
+]
