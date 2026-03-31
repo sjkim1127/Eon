@@ -52,21 +52,30 @@ impl VargaType {
             Self::D60 => calculate_shashtyamsa(longitude),
             Self::D81 => {
                 // D9 of D9 (Nava-Navamsa)
-                // Harmonic equivalent: (longitude * 81) mod 360
-                let harmonic_long = (longitude * 81.0) % 360.0;
-                ((harmonic_long / 30.0).floor() as u8 % 12) + 1
+                let sign_degree = longitude % 30.0;
+                let pada_idx = (sign_degree * 9.0 / 30.0).floor();
+                let r1 = calculate_navamsa(longitude);
+                let d_rem = sign_degree - (pada_idx * 30.0 / 9.0);
+                let d_scaled = d_rem * 9.0;
+                calculate_navamsa(((r1 as f64 - 1.0) * 30.0 + d_scaled) % 360.0)
             },
             Self::D108 => {
                 // D9 of D12 (Ashtottaramsa)
-                // Harmonic equivalent: (longitude * 108) mod 360
-                let harmonic_long = (longitude * 108.0) % 360.0;
-                ((harmonic_long / 30.0).floor() as u8 % 12) + 1
+                let sign_degree = longitude % 30.0;
+                let div_idx = (sign_degree * 12.0 / 30.0).floor();
+                let r1 = calculate_dwadasamsa(longitude);
+                let d_rem = sign_degree - (div_idx * 30.0 / 12.0);
+                let d_scaled = d_rem * 12.0;
+                calculate_navamsa(((r1 as f64 - 1.0) * 30.0 + d_scaled) % 360.0)
             },
             Self::D144 => {
                 // D12 of D12 (Dwadas-Dwadasamsa)
-                // Harmonic equivalent: (longitude * 144) mod 360
-                let harmonic_long = (longitude * 144.0) % 360.0;
-                ((harmonic_long / 30.0).floor() as u8 % 12) + 1
+                let sign_degree = longitude % 30.0;
+                let div_idx = (sign_degree * 12.0 / 30.0).floor();
+                let r1 = calculate_dwadasamsa(longitude);
+                let d_rem = sign_degree - (div_idx * 30.0 / 12.0);
+                let d_scaled = d_rem * 12.0;
+                calculate_dwadasamsa(((r1 as f64 - 1.0) * 30.0 + d_scaled) % 360.0)
             },
         }
     }
@@ -94,9 +103,30 @@ impl VargaType {
         }
         let deg = (sidereal_deg % 360.0 + 360.0) % 360.0;
         let sign_degree = deg % 30.0;
-        let division_size = 30.0 / self.division_count() as f64;
-        let degree_in_division = sign_degree % division_size;
-        let scaled_degree = degree_in_division * self.division_count() as f64;
+        let sign_idx = get_sign_idx(deg);
+
+        let (scaled_degree, _div_size) = if matches!(self, Self::D30) {
+            let (start, width) = if is_odd_sign(sign_idx) {
+                if sign_degree < 5.0 { (0.0, 5.0) }
+                else if sign_degree < 10.0 { (5.0, 5.0) }
+                else if sign_degree < 18.0 { (10.0, 8.0) }
+                else if sign_degree < 25.0 { (18.0, 7.0) }
+                else { (25.0, 5.0) }
+            } else {
+                if sign_degree < 5.0 { (0.0, 5.0) }
+                else if sign_degree < 12.0 { (5.0, 7.0) }
+                else if sign_degree < 20.0 { (12.0, 8.0) }
+                else if sign_degree < 25.0 { (20.0, 5.0) }
+                else { (25.0, 5.0) }
+            };
+            let degree_in_division = sign_degree - start;
+            ((degree_in_division / width) * 30.0, width)
+        } else {
+            let division_size = 30.0 / self.division_count() as f64;
+            let degree_in_division = sign_degree % division_size;
+            (degree_in_division * self.division_count() as f64, division_size)
+        };
+
         ((varga_rasi as f64 - 1.0) * 30.0 + scaled_degree) % 360.0
     }
 
@@ -308,20 +338,38 @@ mod tests {
     }
 
     #[test]
-    fn test_d144_harmonic() {
-        // Point in D12 division (Aries 0-2.5 deg)
-        let long_a = 0.5; // 0.5 * 144 = 72 (Gemini-3)
-        let long_b = 1.5; // 1.5 * 144 = 216 (Scorpio-8)
+    fn test_d81_composite() {
+        // Aries 10.0 degrees
+        let long = 10.0;
+        // D9 of 10.0 is Cancer (4).
+        // Degree within Navamsa: 10.0 - 3*(30/9) = 0.0.
+        // D9 of 0.0 in Cancer is Cancer (4).
+        let d81 = VargaType::D81.calculate_rasi(long);
+        assert_eq!(d81, 4);
+    }
 
-        let d12_a = VargaType::D12.calculate_rasi(long_a);
-        let d12_b = VargaType::D12.calculate_rasi(long_b);
-        assert_eq!(d12_a, d12_b, "Should be in the same D12 division");
+    #[test]
+    fn test_d144_composite() {
+        // Aries 2.6 degrees
+        let long = 2.6;
+        // D12 of 2.6 is Taurus (2).
+        // Degree within D12: 2.6 % 2.5 = 0.1.
+        // Scaled: 0.1 * 12 = 1.2.
+        // D12 of 1.2 in Taurus is Taurus (2).
+        let d144 = VargaType::D144.calculate_rasi(long);
+        assert_eq!(d144, 2);
+    }
 
-        let d144_a = VargaType::D144.calculate_rasi(long_a);
-        let d144_b = VargaType::D144.calculate_rasi(long_b);
-
-        assert_ne!(d144_a, d144_b);
-        assert_eq!(d144_a, 3);
-        assert_eq!(d144_b, 8);
+    #[test]
+    fn test_d30_effective_longitude() {
+        // D30 Trimsamsa: Odd sign, 0-5 degrees is Aries (1).
+        // 2.0 degrees in Aries (1) is 40% into the 5-degree division.
+        // 40% of 30 degrees is 12.0 degrees.
+        let long = 2.0;
+        let varga_rasi = VargaType::D30.calculate_rasi(long);
+        assert_eq!(varga_rasi, 1);
+        
+        let eff_long = VargaType::D30.effective_longitude_for_nakshatra(long, varga_rasi);
+        assert_eq!(eff_long, 12.0); 
     }
 }
