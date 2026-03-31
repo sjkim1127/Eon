@@ -37,21 +37,31 @@ impl PanchangaEngine {
         let sun = sun_deg;
         let moon = moon_deg;
 
-        // 1. Sunrise/Sunset Calculation (NOAA Algorithm)
-        let (sunrise, sunset) = Self::calculate_sunrise_sunset(time, latitude, longitude);
-        let (next_sunrise, _) =
-            Self::calculate_sunrise_sunset(time + chrono::Duration::days(1), latitude, longitude);
+        // 1. Fetch sunrise/sunset for the current LOCAL date
+        let local_offset_mins = (longitude * 4.0) as i64;
+        let local_time = time + chrono::Duration::minutes(local_offset_mins);
+        
+        let (mut sunrise, mut sunset) = Self::calculate_sunrise_sunset(local_time, latitude, longitude);
+        
+        // If current time is before the sunrise of its local date, 
+        // the astrological day started at yesterday's sunrise
+        if time < sunrise {
+            let (prev_rise, prev_set) = Self::calculate_sunrise_sunset(local_time - chrono::Duration::days(1), latitude, longitude);
+            sunrise = prev_rise;
+            sunset = prev_set;
+        }
+        
+        let (next_sunrise, _) = Self::calculate_sunrise_sunset(sunrise + chrono::Duration::days(1), latitude, longitude);
 
         // 2. Vara (Weekday) - Vedic Day starts at Sunrise
-        // If born before sunrise, it belongs to previous day
         let is_day_birth = time >= sunrise && time < sunset;
         let is_night_birth = !is_day_birth;
-        let effective_date = if time < sunrise {
-            time - chrono::Duration::days(1)
-        } else {
-            time
-        };
-        let vara = match effective_date.weekday() {
+        
+        // Use the actual sunrise time to determine the local weekday
+        let local_offset_mins = (longitude * 4.0) as i64;
+        let sunrise_local = sunrise + chrono::Duration::minutes(local_offset_mins);
+        let vara_date = sunrise_local.date_naive();
+        let vara = match vara_date.weekday() {
             chrono::Weekday::Sun => "Sunday",
             chrono::Weekday::Mon => "Monday",
             chrono::Weekday::Tue => "Tuesday",
@@ -61,7 +71,7 @@ impl PanchangaEngine {
             chrono::Weekday::Sat => "Saturday",
         }.to_string();
 
-        let day_lord = match effective_date.weekday() {
+        let day_lord = match vara_date.weekday() {
             chrono::Weekday::Sun => VedicPlanet::Sun,
             chrono::Weekday::Mon => VedicPlanet::Moon,
             chrono::Weekday::Tue => VedicPlanet::Mars,
@@ -282,7 +292,7 @@ impl PanchangaEngine {
         let sunrise_min = solar_noon - 4.0 * ha_deg;
         let sunset_min = solar_noon + 4.0 * ha_deg;
 
-        // Use UTC midnight of the given date
+        // Use UTC midnight of the given date reference
         let midnight = date.date_naive().and_hms_opt(0, 0, 0).unwrap().and_utc();
 
         let rise_secs = (sunrise_min * 60.0) as i64;

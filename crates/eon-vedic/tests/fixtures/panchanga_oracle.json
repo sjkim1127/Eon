@@ -13,9 +13,58 @@
       "vara": "Friday",
       "tithi": 1,
       "nakshatra": 1,
-      "day_lord": "Venus"
+      "yoga": 1,
+      "karana": 2,
+      "day_lord": "Venus",
+      "is_day_birth": false
+    }
+  },
+  {
+    "case_id": "seoul_pre_sunrise_2026",
+    "description": "Seoul, March 20, 05:00 KST (March 19, 20:00 UTC) - Should be Thursday Vara",
+    "input": {
+      "year": 2026, "month": 3, "day": 19, "hour": 20,
+      "lat": 37.5665, "lon": 126.9780,
+      "sun_deg": 359.0, "moon_deg": 5.0
     },
-    "notes": "Approximate values for Seoul equinox. Vara should be Friday if sunrise is around 6:36 AM KST (21:36 UTC previous day)."
+    "expected": {
+      "sunrise_utc": "2026-03-18T21:36:00Z",
+      "vara": "Thursday",
+      "day_lord": "Jupiter",
+      "is_day_birth": false
+    }
+  },
+  {
+    "case_id": "new_york_solstice_2026",
+    "description": "New York, Summer Solstice 2026 (Western Longitude)",
+    "input": {
+      "year": 2026, "month": 6, "day": 21, "hour": 12,
+      "lat": 40.7128, "lon": -74.0060,
+      "sun_deg": 90.0, "moon_deg": 120.0
+    },
+    "expected": {
+      "sunrise_utc": "2026-06-21T09:24:00Z",
+      "sunset_utc": "2026-06-22T00:30:00Z",
+      "vara": "Sunday",
+      "day_lord": "Sun",
+      "is_day_birth": true
+    }
+  },
+  {
+    "case_id": "sydney_dec_solstice_2026",
+    "description": "Sydney, December Solstice 2026 (Southern Hemisphere)",
+    "input": {
+      "year": 2026, "month": 12, "day": 21, "hour": 12,
+      "lat": -33.8688, "lon": 151.2093,
+      "sun_deg": 270.0, "moon_deg": 30.0
+    },
+    "expected": {
+      "sunrise_utc": "2026-12-20T18:41:00Z",
+      "sunset_utc": "2026-12-21T09:04:00Z",
+      "vara": "Monday",
+      "day_lord": "Moon",
+      "is_day_birth": false
+    }
   },
   {
     "case_id": "london_summer_solstice_2026",
@@ -29,8 +78,8 @@
       "sunrise_utc": "2026-06-21T03:43:00Z",
       "sunset_utc": "2026-06-21T20:21:00Z",
       "vara": "Sunday",
-      "day_lord": "Sun"
-    },
-    "notes": "High latitude check. Sunrise is very early, sunset is very late."
+      "day_lord": "Sun",
+      "is_day_birth": true
+    }
   }
 ]
