@@ -1,0 +1,67 @@
+[
+  {
+    "case_id": "sun_exalted_aries_2024",
+    "description": "Sun in Aries (Exalted), check Uchcha Bala",
+    "input": {
+      "year": 2024, "month": 4, "day": 15, "hour": 12,
+      "lat": 37.5665, "lon": 126.9780
+    },
+    "test_planet": "Sun",
+    "expected": {
+      "uchcha_bala": 57.27,
+      "naisargika_bala": 60.0
+    },
+    "notes": "At 1.81 deg Aries sidereal."
+  },
+  {
+    "case_id": "full_moon_paksha_bala",
+    "description": "Moon near Purnima (Full Moon) should have high Paksha Bala",
+    "input": {
+      "year": 2024, "month": 4, "day": 24, "hour": 0,
+      "lat": 37.5665, "lon": 126.9780
+    },
+    "test_planet": "Moon",
+    "expected": {
+      "total_score": 300.0
+    },
+    "notes": "Full moon around April 24, 2024."
+  },
+  {
+    "case_id": "retrograde_mars_chesta",
+    "description": "Retrograde Mars should have maximum Chesta Bala (60)",
+    "input": {
+      "year": 2024, "month": 12, "day": 15, "hour": 12,
+      "lat": 37.5665, "lon": 126.9780
+    },
+    "test_planet": "Mars",
+    "expected": {
+      "chesta_bala": 60.0
+    },
+    "notes": "Mars retrogrades in late 2024."
+  },
+  {
+    "case_id": "mercury_dig_bala_1st_house",
+    "description": "Mercury in 1st house (Ascendant sign) check Dig Bala",
+    "input": {
+      "year": 2024, "month": 4, "day": 15, "hour": 0,
+      "lat": 37.5665, "lon": 126.9780
+    },
+    "test_planet": "Mercury",
+    "expected": {
+      "dig_bala": 60.0
+    }
+  },
+  {
+    "case_id": "saturn_directional_7th_house",
+    "description": "Saturn in 7th house should have maximum Dig Bala (60)",
+    "input": {
+      "year": 2024, "month": 4, "day": 15, "hour": 18,
+      "lat": 37.5665, "lon": 126.9780
+    },
+    "test_planet": "Saturn",
+    "expected": {
+      "dig_bala": 60.0
+    },
+    "notes": "Ascendant is Libra, Saturn in Aquarius (5th) - need careful house check."
+  }
+]
