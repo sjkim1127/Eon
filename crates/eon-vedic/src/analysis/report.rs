@@ -8,7 +8,6 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct VedicAnalysisReport {
     pub primary_karakas: KarakaSummary,
     #[serde(default)]
@@ -46,7 +45,6 @@ pub struct VedicAnalysisReport {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct TajikaReport {
     pub year_lord: Option<VedicPlanet>,
     pub muntha_rasi: u8,
@@ -57,7 +55,6 @@ pub struct TajikaReport {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct KarakaSummary {
     pub atmakaraka: VedicPlanet,
     pub amatyakaraka: VedicPlanet,
@@ -70,7 +67,6 @@ pub struct KarakaSummary {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct HouseRating {
     pub house: u8,
     pub rating: String, // e.g. "Excellent", "Strong", "Average", "Weak"
