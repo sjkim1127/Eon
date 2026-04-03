@@ -21,7 +21,6 @@ pub enum SadeSatiPhase {
 
 /// Transit Result for a single planet
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct TransitPosition {
     pub planet: VedicPlanet,
     pub current_rasi: u8,
@@ -35,7 +34,6 @@ pub struct TransitPosition {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct GocharaSummary {
     pub transits: Vec<TransitPosition>,
     pub sade_sati: SadeSatiPhase,

@@ -7,7 +7,13 @@ interface VedicOverviewSectionProps {
 }
 
 export function VedicOverviewSection({ report }: VedicOverviewSectionProps) {
-    const { primary_karakas, dasha_focus, overall_strength_score } = report;
+    // snake/camel fallback for cached responses from old backend
+    const r = report as any;
+    const primary_karakas = r.primary_karakas ?? r.primaryKarakas;
+    const dasha_focus = r.dasha_focus ?? r.dashaFocus ?? "";
+    const overall_strength_score = r.overall_strength_score ?? r.overallStrengthScore ?? 0;
+
+    if (!primary_karakas) return null;
 
     return (
         <div className="space-y-8">

@@ -89,12 +89,12 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
     };
 
     // Calculate Dasha periods in age-space
-    const dashaPeriods = vedicReport?.report?.dasha_timeline ? (() => {
-        const timeline = vedicReport.report.dasha_timeline;
+    const dashaPeriods = (vedicReport?.report as any)?.dasha_timeline ?? (vedicReport?.report as any)?.dashaTimeline ? (() => {
+        const timeline = (vedicReport?.report as any)?.dasha_timeline ?? (vedicReport?.report as any)?.dashaTimeline ?? [];
         if (timeline.length === 0) return [];
 
         const birthTime = new Date(timeline[0].start_time).getTime();
-        return timeline.map(p => {
+        return timeline.map((p: any) => {
             const startAge = (new Date(p.start_time).getTime() - birthTime) / (365.2425 * 86400000);
             const endAge = (new Date(p.end_time).getTime() - birthTime) / (365.2425 * 86400000);
             return {
@@ -103,7 +103,7 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
                 end: Math.min(100, endAge),
                 color: VEDIC_PLANET_COLORS[p.lord] || "#888",
             };
-        }).filter(p => p.start < 100 && p.end > 0);
+        }).filter((p: any) => p.start < 100 && p.end > 0);
     })() : [];
 
     return (
@@ -218,7 +218,7 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
                                                         </>
                                                     )}
                                                     {visibleLines.vedic_dasha && dashaPeriods.length > 0 && (() => {
-                                                        const currentDasha = dashaPeriods.find(p => label >= p.start && label < p.end);
+                                                        const currentDasha = dashaPeriods.find((p: any) => label >= p.start && label < p.end);
                                                         return currentDasha ? (
                                                             <p className="flex justify-between items-center mt-2 pt-2 border-t border-white/5">
                                                                 <span className="text-white/40">Vedic Dasha:</span>
@@ -257,7 +257,7 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
                             ))}
 
                             {/* 베딕 다샤(Mahadasha) 배경 밴드 */}
-                            {visibleLines.vedic_dasha && dashaPeriods.map((p, i) => (
+                            {visibleLines.vedic_dasha && dashaPeriods.map((p: any, i: number) => (
                                 <ReferenceArea
                                     key={`dasha-${i}`}
                                     x1={p.start}

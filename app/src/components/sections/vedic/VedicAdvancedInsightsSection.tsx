@@ -1,5 +1,5 @@
 import { Compass, Briefcase, Heart, Star, Zap } from "lucide-react";
-import type { VedicAnalysisReport, TajikaReport, Saham } from "../../../types/vedic";
+import type { VedicAnalysisReport, TajikaReport, Saham, VargaInterpretation } from "../../../types/vedic";
 
 interface VedicAdvancedInsightsSectionProps {
   report: VedicAnalysisReport;
@@ -7,22 +7,23 @@ interface VedicAdvancedInsightsSectionProps {
 }
 
 export function VedicAdvancedInsightsSection({ report, tajikaReport }: VedicAdvancedInsightsSectionProps) {
-  const {
-    arudha_lagna,
-    upapada_lagna,
-    special_lagnas_summary,
-    d9_marriage_analysis,
-    d10_career_analysis,
-    varga_interpretations,
-  } = report;
+  // snake/camel fallback for cached responses from old backend
+  const r = report as any;
+  const arudha_lagna = r.arudha_lagna ?? r.arudhaLagna ?? 0;
+  const upapada_lagna = r.upapada_lagna ?? r.upapadaLagna ?? 0;
+  const special_lagnas_summary = r.special_lagnas_summary ?? r.specialLagnasSummary ?? [];
+  const d9_marriage_analysis = r.d9_marriage_analysis ?? r.d9MarriageAnalysis ?? "";
+  const d10_career_analysis = r.d10_career_analysis ?? r.d10CareerAnalysis ?? "";
+  const varga_interpretations = r.varga_interpretations ?? r.vargaInterpretations ?? [];
 
-  const sahams = tajikaReport?.sahams ?? [];
-  const harsha_bala_summary = tajikaReport?.harsha_bala_summary ?? [];
-  const year_lord = tajikaReport?.year_lord;
-  const muntha_rasi = tajikaReport?.muntha_rasi;
+  const tr = tajikaReport as any;
+  const sahams = tr?.sahams ?? [];
+  const harsha_bala_summary = tr?.harsha_bala_summary ?? tr?.harshaBalaSummary ?? [];
+  const year_lord = tr?.year_lord ?? tr?.yearLord;
+  const muntha_rasi = tr?.muntha_rasi ?? tr?.munthaRasi;
 
   // Filter special planets
-  const specialPlanets = varga_interpretations?.filter(vi => vi.is_vargottama || vi.is_pushkar_navamsa) || [];
+  const specialPlanets = (varga_interpretations as VargaInterpretation[])?.filter((vi: VargaInterpretation) => vi.is_vargottama || vi.is_pushkar_navamsa) || [];
 
   return (
     <div className="space-y-8">
@@ -47,7 +48,7 @@ export function VedicAdvancedInsightsSection({ report, tajikaReport }: VedicAdva
               <p className="text-[10px] text-white/30 mt-1">배우자·결혼 생활의 기운</p>
             </div>
           )}
-          {special_lagnas_summary?.map(([name, rasi]) => (
+          {(special_lagnas_summary as [string, number][])?.map(([name, rasi]: [string, number]) => (
             <div key={name} className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
               <p className="text-[10px] text-white/40 font-bold uppercase mb-1">{name}</p>
               <p className="text-lg font-bold text-white">사인 {rasi}</p>
@@ -122,7 +123,7 @@ export function VedicAdvancedInsightsSection({ report, tajikaReport }: VedicAdva
           </h5>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {specialPlanets.length > 0 ? (
-              specialPlanets.map((vi) => (
+              specialPlanets.map((vi: VargaInterpretation) => (
                 <div key={vi.planet} className="p-5 rounded-2xl bg-brand-400/5 border border-brand-400/20 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-3">
                     <p className="text-sm font-bold text-white tracking-tight">{vi.planet}</p>
@@ -142,7 +143,7 @@ export function VedicAdvancedInsightsSection({ report, tajikaReport }: VedicAdva
                   </p>
 
                   <div className="space-y-1 mt-auto pt-3 border-t border-white/5">
-                    {vi.reasons.map((reason, idx) => (
+                    {vi.reasons.map((reason: string, idx: number) => (
                       <div key={idx} className="flex items-center gap-2 text-[9px] text-brand-400/60">
                         <Zap className="w-2 h-2" />
                         <span>{reason}</span>

@@ -33,9 +33,10 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   const planets = currentChart.planets;
   const ascendant = currentChart.ascendant;
   const panchanga = currentChart.panchanga;
-  const dashaTimeline = report.report?.dasha_timeline ?? [];
-  const yoginiTimeline = report.report?.yogini_timeline ?? [];
-  const charaDashaTimeline = report.report?.chara_dasha_timeline ?? [];
+  const rr = report.report as any;
+  const dashaTimeline = rr?.dasha_timeline ?? rr?.dashaTimeline ?? [];
+  const yoginiTimeline = rr?.yogini_timeline ?? rr?.yoginiTimeline ?? [];
+  const charaDashaTimeline = rr?.chara_dasha_timeline ?? rr?.charaDashaTimeline ?? [];
 
   return (
     <motion.div
@@ -81,7 +82,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       {/* ── Nakshatra & Panchanga ─────────────────────────────────────── */}
       <VedicPanchangaSection 
         panchanga={panchanga} 
-        nakshatraInfo={report.report?.nakshatra_info ?? "N/A"} 
+        nakshatraInfo={rr?.nakshatra_info ?? rr?.nakshatraInfo ?? "N/A"} 
       />
 
       {/* ── 고급 분석 지표 (Jaimini, D9/D10, Tajika) ─────────────────── */}
@@ -104,7 +105,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
 
       {/* ── 하우스(Bhava) 에너지 상세 ────────────────────────────────── */}
       <HouseStrengthGrid 
-        houseSummary={report.report?.house_summary || []} 
+        houseSummary={rr?.house_summary ?? rr?.houseSummary ?? []} 
         bhavaStrengths={currentChart?.bhava_strengths || []} 
       />
 
@@ -134,7 +135,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       {/* ── 카라카 + 아바스타 (Karakas + Avasthas) ────────── */}
       <AvasthaKarakaSection
         avasthas={currentChart.avasthas ?? []}
-        karakas={report.report?.all_karakas ?? currentChart.karakas ?? []}
+        karakas={(report.report as any)?.all_karakas ?? (report.report as any)?.allKarakas ?? currentChart.karakas ?? []}
         arudhaPadas={currentChart.arudha_padas ?? []}
       />
     </motion.div>

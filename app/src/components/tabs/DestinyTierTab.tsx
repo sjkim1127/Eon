@@ -65,9 +65,9 @@ export function DestinyTierTab({ sajuReport, report, transitReport, tierReport, 
   const stabilityPt = /^A/.test(stabilityGrade) ? 4 : (/^B/.test(stabilityGrade) ? 2 : 0);
 
   // ── 점수 분해: 베딕 (v3 기준 정규화 가시화) ──
-  const vr = report?.report;
+  const vr = report?.report as any;
   // v3 Planet Strength: overall / 6 * 35%
-  const planetStrengthNorm = ((vr?.overall_strength_score ?? 0) / 6) * 35;
+  const planetStrengthNorm = ((vr?.overall_strength_score ?? vr?.overallStrengthScore ?? 0) / 6) * 35;
   
   const highYogaCount = (vr?.yogas ?? []).filter((y: { quality: string | object }) => {
     const q = typeof y.quality === "string" ? y.quality : Object.keys(y.quality ?? {})[0];
@@ -75,15 +75,15 @@ export function DestinyTierTab({ sajuReport, report, transitReport, tierReport, 
   }).length;
   const yogaPt = Math.min(12, highYogaCount * 3); // v3 weight: 12
   
-  const strongHouses = (vr?.house_summary ?? []).filter((h: { rating: string }) =>
+  const strongHouses = (vr?.house_summary ?? vr?.houseSummary ?? []).filter((h: { rating: string }) =>
     h.rating === "Excellent" || h.rating === "Strong"
   ).length;
   // v3 House Strength weight: 10
   const housePt = Math.min(10, strongHouses * 1.5);
   
-  const satiPt = vr?.sade_sati === "None" ? 5 : 0; // v3 weight: 5
+  const satiPt = (vr?.sade_sati ?? vr?.sadeSati) === "None" ? 5 : 0; // v3 weight: 5
   const BENEFIC_PLANETS = ["Jupiter", "Venus", "Mercury", "Moon"];
-  const dashaPt = BENEFIC_PLANETS.some((p) => (vr?.dasha_focus ?? "").includes(p)) ? 4 : 0;
+  const dashaPt = BENEFIC_PLANETS.some((p) => (vr?.dasha_focus ?? vr?.dashaFocus ?? "").includes(p)) ? 4 : 0;
 
   return (
     <motion.div
