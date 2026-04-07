@@ -426,17 +426,26 @@ export function buildSajuMarkdown(s: SajuAnalysisResult): string {
 // ── 베딕 섹션 ────────────────────────────────────────
 
 export function buildVedicMarkdown(v: VedicAnalysisResult): string {
-    const r = v.report;
+    const rr = v.report as any;
     const c = v.chart;
     const lines: string[] = [];
+
+    // snake/camel fallback for cached responses
+    const primaryKarakas = rr?.primary_karakas ?? rr?.primaryKarakas;
+    const dashaFocus = rr?.dasha_focus ?? rr?.dashaFocus ?? "";
+    const overallStrengthScore = rr?.overall_strength_score ?? rr?.overallStrengthScore ?? 0;
+    const dashaTimeline = rr?.dasha_timeline ?? rr?.dashaTimeline ?? [];
+    const houseSummary = rr?.house_summary ?? rr?.houseSummary ?? [];
+    const yogas = rr?.yogas ?? [];
+    const sadeSati = rr?.sade_sati ?? rr?.sadeSati ?? "None";
 
     lines.push("# 베딕 점성학 분석 리포트\n");
 
     // 카라카
     lines.push("## 주요 카라카 (인생의 핵심 역할을 나타내는 지표)\n");
-    lines.push(`- **영혼 지표 (Atmakaraka)**: ${r.primary_karakas.atmakaraka}`);
-    lines.push(`- **직업 지표 (Amatyakaraka)**: ${r.primary_karakas.amatyakaraka}`);
-    lines.push(`- **파트너 지표 (Darakaraka)**: ${r.primary_karakas.darakaraka}`);
+    lines.push(`- **영혼 지표 (Atmakaraka)**: ${primaryKarakas?.atmakaraka ?? "N/A"}`);
+    lines.push(`- **직업 지표 (Amatyakaraka)**: ${primaryKarakas?.amatyakaraka ?? "N/A"}`);
+    lines.push(`- **파트너 지표 (Darakaraka)**: ${primaryKarakas?.darakaraka ?? "N/A"}`);
     lines.push("");
 
     // 8 카라카
@@ -457,9 +466,9 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
 
     // 현재 대운 & 전체 강도
     lines.push("## 분석 요약: 현재 대운 및 차트 강도\n");
-    lines.push(`- **현재 대운 (Dasha)**: ${r.dasha_focus} (인생의 현재 단계에서 가장 강력한 영향을 미치는 기운)`);
-    lines.push(`- **사데사티 (Sade Sati)**: ${r.sade_sati} (토성의 월지 트랜짓 영향권 여부)`);
-    lines.push(`- **전체 차트 강도**: ${Math.round(r.overall_strength_score)}/600 (중요 행성 및 하우스 강점 총합)`);
+    lines.push(`- **현재 대운 (Dasha)**: ${dashaFocus} (인생의 현재 단계에서 가장 강력한 영향을 미치는 기운)`);
+    lines.push(`- **사데사티 (Sade Sati)**: ${sadeSati} (토성의 월지 트랜짓 영향권 여부)`);
+    lines.push(`- **전체 차트 강도**: ${Math.round(overallStrengthScore)}/600 (중요 행성 및 하우스 강점 총합)`);
     lines.push("");
 
     // 판창가 (Panchanga)
@@ -500,12 +509,12 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     }
 
     // 다샤 타임라인 — 마하다샤 + 안타르다샤 2단계
-    if (Array.isArray(r.dasha_timeline) && r.dasha_timeline.length > 0) {
+    if (Array.isArray(dashaTimeline) && dashaTimeline.length > 0) {
         lines.push("## 다샤 타임라인 (Vimshottari Dasha — 마하다샤 & 안타르다샤)\n");
         lines.push("> 다샤는 달(Moon)의 낙샤트라 위치를 기준으로 산출하는 베딕 시간 주기입니다.\n");
         lines.push("| 구분 | 행성 (Planet) | 시작 | 종료 |");
         lines.push("|---|---|---|---|");
-        for (const maha of r.dasha_timeline) {
+        for (const maha of dashaTimeline) {
             lines.push(`| **Mahadasha** | **${maha.lord}** | ${fmtYearMonth(maha.start_time)} | ${fmtYearMonth(maha.end_time)} |`);
             for (const antar of maha.sub_dashas ?? []) {
                 lines.push(`| └ Antardasha | ${antar.lord} | ${fmtYearMonth(antar.start_time)} | ${fmtYearMonth(antar.end_time)} |`);
@@ -515,11 +524,11 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     }
 
     // 하우스 요약
-    if (r.house_summary?.length) {
+    if (houseSummary?.length) {
         lines.push("## 하우스별 에너지 (삶의 영역별 지원/강도)\n");
         lines.push("| 하우스 | 점수 | 등급 |");
         lines.push("|---|---|---|");
-        for (const h of r.house_summary) {
+        for (const h of houseSummary) {
             lines.push(`| ${h.house} | ${Math.round(h.total_score)} | ${h.rating} |`);
         }
         lines.push("");
@@ -620,11 +629,11 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
     }
 
     // 요가
-    if (r.yogas?.length) {
+    if (yogas?.length) {
         lines.push("## 베딕 요가 (주요 행성 조합)\n");
         lines.push("| 요가명 | 품질 | 관련 행성 | 설명 |");
         lines.push("|---|---|---|---|");
-        for (const yoga of r.yogas) {
+        for (const yoga of yogas) {
             let q = typeof yoga.quality === "string" ? yoga.quality : "Weak";
             if (typeof yoga.quality === 'object' && 'Weak' in yoga.quality) q = "약함";
             else if (q === "VeryHigh") q = "매우 강함";
