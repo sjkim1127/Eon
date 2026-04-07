@@ -29,6 +29,7 @@ use crate::analysis::supplementary_pillars::InterpretationLevel;
 
 /// 천간합의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum StemCombination {
     /// 甲己合 → 土
     JiaJi,
@@ -94,6 +95,7 @@ impl StemCombination {
 
 /// 천간충의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum StemClash {
     /// 甲庚沖
     JiaGeng,
@@ -143,6 +145,7 @@ impl StemClash {
 
 /// 삼합의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum TripleCombination {
     /// 寅午戌 → 火局
     YinWuXu,
@@ -208,6 +211,7 @@ impl TripleCombination {
 
 /// 반합의 종류 (삼합 중 2개)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum SemiCombination {
     /// 寅午 (火局 반합)
     YinWu,
@@ -290,6 +294,7 @@ impl SemiCombination {
 
 /// 방합의 종류 (계절의 결합)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum SeasonalCombination {
     /// 寅卯辰 → 木局 (봄)
     YinMaoChen,
@@ -355,6 +360,7 @@ impl SeasonalCombination {
 
 /// 육합의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum SixCombination {
     /// 子丑合 → 土
     ZiChou,
@@ -414,6 +420,7 @@ impl SixCombination {
 
 /// 충(沖)의 종류에 따른 분류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum ClashType {
     /// 왕지충(旺地沖) - 子午, 卯酉
     /// 순수 오행 충돌로 뿌리 손상이 가장 큼
@@ -449,6 +456,7 @@ impl ClashType {
 
 /// 지지충의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum BranchClash {
     /// 子午沖
     ZiWu,
@@ -514,6 +522,7 @@ impl BranchClash {
 
 /// 지지형의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum BranchPunishment {
     /// 삼형 (寅巳申) - 무은지형
     TriplePunishment,
@@ -566,6 +575,7 @@ impl BranchPunishment {
 
 /// 지지파의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum BranchDestruction {
     /// 子酉破
     ZiYou,
@@ -614,6 +624,7 @@ impl BranchDestruction {
 
 /// 지지해의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum BranchHarm {
     /// 子未害
     ZiWei,
@@ -662,6 +673,7 @@ impl BranchHarm {
 
 /// 암합 (暗合, 지장간끼리의 합)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Amhap {
     pub branches: (EarthlyBranch, EarthlyBranch),
     pub combination: StemCombination,
@@ -669,6 +681,7 @@ pub struct Amhap {
 
 /// 명암합 (明暗合, 천간과 지지 속 지장간의 합)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MyungAmHap {
     pub stem: HeavenlyStem,
     pub branch: EarthlyBranch,
@@ -677,6 +690,7 @@ pub struct MyungAmHap {
 
 /// 발견된 관계 정보 (레거시)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FoundRelation {
     pub description: String,
     pub positions: (String, String),
@@ -684,6 +698,7 @@ pub struct FoundRelation {
 
 /// 합충형해 상세 정보 (Explainable Relationship)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RelationshipDetail {
     pub relation_type: String,
     pub name: String,
@@ -697,6 +712,7 @@ pub struct RelationshipDetail {
 
 /// 합충형해 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RelationshipAnalysis {
     /// 발견된 모든 합충형해 상세 정보 (고도의 설명 가능성 포함)
     pub mapped_relationships: Vec<RelationshipDetail>,

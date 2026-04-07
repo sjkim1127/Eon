@@ -2,6 +2,7 @@ use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum TarabalaCategory {
     Janma = 1,    // Danger to self
     Sampat = 2,   // Wealth and Prosperity

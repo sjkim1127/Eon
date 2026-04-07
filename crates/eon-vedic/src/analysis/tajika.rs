@@ -3,6 +3,7 @@ use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum TajikaAspectType {
     Mitra(bool),  // Friend (true = Very Friendly, false = Friendly)
     Shatru(bool), // Enemy (true = Very Hostile, false = Hostile)

@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AnalysisInput {
     pub year: i32,
     pub month: u32,
@@ -16,6 +17,7 @@ pub struct AnalysisInput {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SajuAnalysisInput {
     #[serde(flatten)]
     pub base: AnalysisInput,
@@ -51,6 +53,7 @@ impl SajuAnalysisInput {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TransitAnalysisInput {
     #[serde(flatten)]
     pub base: SajuAnalysisInput,
@@ -83,6 +86,7 @@ impl TransitAnalysisInput {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VedicAnalysisInput {
     #[serde(flatten)]
     pub base: AnalysisInput,

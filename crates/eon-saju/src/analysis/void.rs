@@ -11,6 +11,7 @@ use crate::core::ten_gods::TenGod;
 
 /// 공망 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VoidAnalysis {
     /// 해당 사주의 공망 지지 (2개)
     pub void_branches: [EarthlyBranch; 2],
@@ -25,6 +26,7 @@ pub struct VoidAnalysis {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VoidDetail {
     pub branch: EarthlyBranch,
     pub position: String,

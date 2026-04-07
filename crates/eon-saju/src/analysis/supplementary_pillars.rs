@@ -6,6 +6,7 @@ use crate::core::branch::EarthlyBranch;
 
 /// 태원·명궁·신궁 등 보조 기둥 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct SupplementaryPillars {
     /// 태원 (胎元): 잉태 시점의 기운
     pub taewon: GanZi,
@@ -20,6 +21,7 @@ pub struct SupplementaryPillars {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct SupplementaryInterpretation {
     pub pillar_name: String,
     pub level: InterpretationLevel,
@@ -30,6 +32,7 @@ pub struct SupplementaryInterpretation {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub enum InterpretationLevel {
     Auspicious,   // 길조
     Caution,      // 주의
@@ -37,6 +40,7 @@ pub enum InterpretationLevel {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct SupplementaryPillarsMeta {
     /// 계산 공식 버전
     pub formula_version: String,

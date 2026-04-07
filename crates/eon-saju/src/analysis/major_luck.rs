@@ -29,6 +29,7 @@ use chrono::{Utc, TimeZone, NaiveDate, Datelike};
 
 /// 대운 진행 방향
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum LuckDirection {
     /// 순행 (월주에서 앞으로)
     Forward,
@@ -63,6 +64,7 @@ impl std::fmt::Display for LuckDirection {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MajorLuck {
     /// 대운 간지
     pub ganzi: GanZi,
@@ -122,6 +124,7 @@ impl std::fmt::Display for MajorLuck {
 
 /// 대운 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MajorLuckAnalysis {
     /// 대운 방향
     pub direction: LuckDirection,

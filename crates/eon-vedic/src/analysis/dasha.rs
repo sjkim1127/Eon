@@ -3,6 +3,7 @@ use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DashaPeriod {
     pub lord: VedicPlanet,
     pub start_time: DateTime<Utc>,
