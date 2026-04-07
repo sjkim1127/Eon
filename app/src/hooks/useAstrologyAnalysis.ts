@@ -65,9 +65,9 @@ export function useAstrologyAnalysis() {
 
     const results = await Promise.allSettled(tasks.map(t => t.fn()));
 
-    let sajuData: SajuAnalysisResult | null = null;
-    let vedicData: VedicAnalysisResult | null = null;
-    let transitData: TransitResult | null = null;
+    let sajuRaw: SajuAnalysisResult | null = null;
+    let vedicRaw: any | null = null;
+    let transitRaw: TransitResult | null = null;
 
     results.forEach((res, idx) => {
       const key = tasks[idx].key as "vedic" | "saju" | "transit";
@@ -78,20 +78,20 @@ export function useAstrologyAnalysis() {
         
         switch (key) {
           case "vedic": {
+            vedicRaw = val;
             const data = normalizeVedicResult(val);
-            vedicData = data;
             store.setAnalysisTaskState("vedic", { status: "success", data });
             break;
           }
           case "saju": {
+            sajuRaw = val as SajuAnalysisResult;
             const data = val as SajuAnalysisResult;
-            sajuData = data;
             store.setAnalysisTaskState("saju", { status: "success", data });
             break;
           }
           case "transit": {
+            transitRaw = val as TransitResult;
             const data = val as TransitResult;
-            transitData = data;
             store.setAnalysisTaskState("transit", { status: "success", data });
             break;
           }
@@ -99,23 +99,27 @@ export function useAstrologyAnalysis() {
         }
       } else {
         const errMsg = String(res.reason);
+        console.error(`[analysis:${key}]`, errMsg);
         store.setAnalysisTaskState(key, { status: "error", error: errMsg });
         failed.push(key);
       }
     });
 
     // 2. Dependent Task: Destiny Tier (Requires Saju & Vedic)
-    if (sajuData && vedicData) {
+    if (sajuRaw && vedicRaw) {
       store.setAnalysisTaskState("tier", { status: "loading" });
       try {
-        const tier = await backendClient.getDestinyTier(sajuData, vedicData, transitData);
+        const tier = await backendClient.getDestinyTier(sajuRaw, vedicRaw, transitRaw);
         store.setAnalysisTaskState("tier", { status: "success", data: tier });
         completed.push("tier");
       } catch (e) {
-        store.setAnalysisTaskState("tier", { status: "error", error: String(e) });
+        const errMsg = String(e);
+        console.error("[analysis:tier]", errMsg);
+        store.setAnalysisTaskState("tier", { status: "error", error: errMsg });
         failed.push("tier");
       }
     } else {
+      console.error("[analysis:tier]", "Required data (Saju/Vedic) missing");
       store.setAnalysisTaskState("tier", { status: "error", error: "Required data (Saju/Vedic) missing" });
       failed.push("tier");
     }
@@ -128,7 +132,10 @@ export function useAstrologyAnalysis() {
     if (!ok) {
       toast.error("분석에 실패했습니다. 입력 정보를 확인해주세요.");
     } else if (partial) {
-      toast.warning(`일부 분석(${failed.join(", ")})에 실패했습니다.`);
+      const failedReasons = failed
+        .map((k) => `${k}: ${store.analysisState[k as keyof typeof store.analysisState]?.error ?? "unknown"}`)
+        .join(" | ");
+      toast.warning(`일부 분석에 실패했습니다. ${failedReasons}`);
     } else {
       toast.success("분석이 완료되었습니다.");
     }
