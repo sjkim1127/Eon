@@ -11,8 +11,10 @@ export function VedicYogaHighlightSection({ yogas }: VedicYogaHighlightSectionPr
 
     return (
         <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
-            {yogas.map((yoga, idx) => {
+            {yogas.map((raw, idx) => {
+                const yoga = raw as any;
                 const isVeryHigh = yoga.quality === "VeryHigh";
+                const yogaType = yoga.yoga_type ?? yoga.yogaType ?? "Unknown";
                 return (
                     <div
                         key={idx}
@@ -25,7 +27,7 @@ export function VedicYogaHighlightSection({ yogas }: VedicYogaHighlightSectionPr
                             <Zap className={cn("w-4 h-4", isVeryHigh ? "text-celestial-gold" : "text-brand-400")} />
                             <span className="text-sm font-bold text-white">{yoga.name}</span>
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/60">
-                                {yoga.yoga_type}
+                                {yogaType}
                             </span>
                         </div>
                         <p className="text-xs text-white/60 line-clamp-2 leading-relaxed">

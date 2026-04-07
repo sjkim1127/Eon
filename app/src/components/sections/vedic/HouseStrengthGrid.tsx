@@ -19,7 +19,11 @@ export function HouseStrengthGrid({ houseSummary, bhavaStrengths }: HouseStrengt
             <h5 className="text-xl font-bold text-white mb-6">하우스(Bhava)별 에너지 역량 상세</h5>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {houseSummary.map((house) => {
-                    const bhava = bhavaStrengths.find((b) => b.house === house.house);
+                    const rawBhava = bhavaStrengths.find((b) => b.house === house.house);
+                    const bhava = rawBhava as any;
+                    const lordScore = bhava?.lord_score ?? bhava?.lordScore ?? 0;
+                    const totalScore = house.total_score ?? (house as any).totalScore ?? 0;
+                    
                     return (
                         <div
                             key={house.house}
@@ -56,7 +60,7 @@ export function HouseStrengthGrid({ houseSummary, bhavaStrengths }: HouseStrengt
                             <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
                                 <div className="flex justify-between text-[10px]">
                                     <span className="text-white/30">로드 파워 (Lord)</span>
-                                    <span className="text-white/70 font-mono italic">{bhava?.lord_score?.toFixed(1)}</span>
+                                    <span className="text-white/70 font-mono italic">{lordScore.toFixed(1)}</span>
                                 </div>
                                 <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
                                     <div
@@ -64,7 +68,7 @@ export function HouseStrengthGrid({ houseSummary, bhavaStrengths }: HouseStrengt
                                             house.rating === "Excellent" ? "bg-emerald-500" :
                                                 house.rating === "Strong" ? "bg-celestial-cyan" : "bg-white/20"
                                         )}
-                                        style={{ width: `${Math.min(100, (house.total_score / 600) * 100)}%` }}
+                                        style={{ width: `${Math.min(100, (totalScore / 600) * 100)}%` }}
                                     />
                                 </div>
                             </div>

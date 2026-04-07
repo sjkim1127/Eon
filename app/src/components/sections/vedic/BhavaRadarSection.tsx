@@ -33,13 +33,16 @@ export function BhavaRadarSection({ strengths }: BhavaRadarSectionProps) {
         );
     }
 
-    const chartData = strengths.map(s => ({
-        house: HOUSE_LABELS[s.house] ?? `H${s.house}`,
-        total: Math.round(s.total_score),
-        lord: Math.round(s.lord_score),
-        dig: Math.round(s.dig_score),
-        drishti: Math.round(s.drishti_score),
-    }));
+    const chartData = strengths.map(raw => {
+        const s = raw as any;
+        return {
+            house: HOUSE_LABELS[s.house] ?? `H${s.house}`,
+            total: Math.round(s.total_score ?? s.totalScore ?? 0),
+            lord: Math.round(s.lord_score ?? s.lordScore ?? 0),
+            dig: Math.round(s.dig_score ?? s.digScore ?? 0),
+            drishti: Math.round(s.drishti_score ?? s.drishtiScore ?? 0),
+        };
+    });
 
     const getRatingColor = (score: number) =>
         score > 400 ? "text-celestial-gold" : score > 300 ? "text-green-400" : score > 200 ? "text-white/70" : "text-red-400";
@@ -85,25 +88,33 @@ export function BhavaRadarSection({ strengths }: BhavaRadarSectionProps) {
 
                 {/* 하우스 강도 리스트 */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {strengths.map(s => (
-                        <div
-                            key={s.house}
-                            className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-all"
-                        >
-                            <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-xs text-white/40 font-bold">{HOUSE_LABELS[s.house] ?? `H${s.house}`}</span>
-                                <span className={`text-xs font-bold ${getRatingColor(s.total_score)}`}>
-                                    {getRatingLabel(s.total_score)}
-                                </span>
+                    {strengths.map(raw => {
+                        const s = raw as any;
+                        const totalScore = s.total_score ?? s.totalScore ?? 0;
+                        const lordScore = s.lord_score ?? s.lordScore ?? 0;
+                        const digScore = s.dig_score ?? s.digScore ?? 0;
+                        const drishtiScore = s.drishti_score ?? s.drishtiScore ?? 0;
+                        
+                        return (
+                            <div
+                                key={s.house}
+                                className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/[0.07] transition-all"
+                            >
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-xs text-white/40 font-bold">{HOUSE_LABELS[s.house] ?? `H${s.house}`}</span>
+                                    <span className={`text-xs font-bold ${getRatingColor(totalScore)}`}>
+                                        {getRatingLabel(totalScore)}
+                                    </span>
+                                </div>
+                                <p className="text-lg font-black text-white mb-1">{Math.round(totalScore)}</p>
+                                <div className="flex gap-2 text-[10px] text-white/40">
+                                    <span>lord:{Math.round(lordScore)}</span>
+                                    <span>dig:{Math.round(digScore)}</span>
+                                    <span>dṛṣṭi:{Math.round(drishtiScore)}</span>
+                                </div>
                             </div>
-                            <p className="text-lg font-black text-white mb-1">{Math.round(s.total_score)}</p>
-                            <div className="flex gap-2 text-[10px] text-white/40">
-                                <span>lord:{Math.round(s.lord_score)}</span>
-                                <span>dig:{Math.round(s.dig_score)}</span>
-                                <span>dṛṣṭi:{Math.round(s.drishti_score)}</span>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>

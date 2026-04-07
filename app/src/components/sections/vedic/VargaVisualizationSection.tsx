@@ -72,22 +72,28 @@ export function VargaVisualizationSection({ planets, ascendant, vargaNakshatraRe
                     {chartStyle === "south" ? (
                         <SouthIndianChart
                             lagnaRasi={lagnaRasi}
-                            planetEntries={(planets || []).map((p) => ({ 
-                                name: p.planet, 
-                                rasi: (p[vargaDef.key] as number) || 1, 
-                                retro: p.is_retrograde, 
-                                deg: p.sidereal_deg 
-                            }))}
+                            planetEntries={(planets || []).map((raw) => {
+                                const p = raw as any;
+                                return { 
+                                    name: p.planet, 
+                                    rasi: (p[vargaDef.key] as number) || 1, 
+                                    retro: p.is_retrograde ?? p.isRetrograde ?? false, 
+                                    deg: p.sidereal_deg ?? p.siderealDeg ?? 0 
+                                };
+                            })}
                         />
                     ) : (
                         <NorthIndianChart
                             lagnaRasi={lagnaRasi}
-                            planetEntries={(planets || []).map((p) => ({ 
-                                name: p.planet, 
-                                rasi: (p[vargaDef.key] as number) || 1, 
-                                retro: p.is_retrograde, 
-                                deg: p.sidereal_deg 
-                            }))}
+                            planetEntries={(planets || []).map((raw) => {
+                                const p = raw as any;
+                                return { 
+                                    name: p.planet, 
+                                    rasi: (p[vargaDef.key] as number) || 1, 
+                                    retro: p.is_retrograde ?? p.isRetrograde ?? false, 
+                                    deg: p.sidereal_deg ?? p.siderealDeg ?? 0 
+                                };
+                            })}
                         />
                     )}
                     <div className="flex-1 w-full overflow-x-auto">
