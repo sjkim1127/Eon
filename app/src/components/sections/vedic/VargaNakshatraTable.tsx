@@ -75,15 +75,14 @@ export function VargaNakshatraTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {(rows || []).map((raw, i) => {
-              const row = raw as any;
-              const isRetrograde = row.is_retrograde ?? row.isRetrograde ?? false;
-              const isCombust = row.is_combust ?? row.isCombust ?? false;
-              const positionStr = row.position_str ?? row.positionStr ?? "—";
-              const nakshatraName = row.nakshatra_name ?? row.nakshatraName ?? "—";
-              const padaRange = row.pada_range ?? row.padaRange ?? "—";
-              const nakshatraLord = row.nakshatra_lord ?? row.nakshatraLord ?? "—";
-              const padaLord = row.pada_lord ?? row.padaLord ?? "—";
+            {(rows || []).map((row, i) => {
+              const isRetrograde = row.isRetrograde ?? false;
+              const isCombust = row.isCombust ?? false;
+              const positionStr = row.positionStr ?? "—";
+              const nakshatraName = row.nakshatraName ?? "—";
+              const padaRange = row.padaRange ?? "—";
+              const nakshatraLord = row.nakshatraLord ?? "—";
+              const padaLord = row.padaLord ?? "—";
               
               return (
                 <tr key={i} className="hover:bg-white/3 transition-colors">

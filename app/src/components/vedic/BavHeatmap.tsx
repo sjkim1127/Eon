@@ -44,7 +44,7 @@ export function BavHeatmap({ bav, savPoints }: Props) {
                     </td>
                   );
                 })}
-                <td className="py-2 pl-3 text-center font-mono text-white/50 text-[11px]">{entry.sodya_pinda}</td>
+                <td className="py-2 pl-3 text-center font-mono text-white/50 text-[11px]">{entry.sodyaPinda}</td>
               </tr>
             );
           })}

@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { backendClient } from "../lib/backend";
 import { useAppStore } from "../store/useAppStore";
 import { getBirthValidationError } from "../utils/validation";
+import { normalizeVedicResult } from "../utils/normalize";
 import type { SajuAnalysisResult, VedicAnalysisResult, TransitResult } from "../types";
 import type { RunAnalysisResult } from "../types/analysis";
 
@@ -27,23 +28,23 @@ export function useAstrologyAnalysis() {
       day: birthData.day,
       hour: birthData.hour,
       minute: birthData.minute,
-      is_lunar: birthData.is_lunar ?? false,
-      is_leap_month: birthData.is_leap_month ?? false,
+      isLunar: birthData.isLunar ?? false,
+      isLeapMonth: birthData.isLeapMonth ?? false,
       lat: birthData.lat,
       lon: birthData.lon,
       timezone: birthData.timezone,
-      unknown_time: birthData.unknown_time ?? false,
+      unknownTime: birthData.unknownTime ?? false,
     };
 
     const sajuArgs = {
       ...commonArgs,
-      is_male: isMale,
-      use_night_rat_hour: birthData.use_night_rat_hour ?? false,
+      isMale: isMale,
+      useNightRatHour: birthData.useNightRatHour ?? false,
     };
 
     const transitArgs = {
       ...sajuArgs,
-      now_utc: nowIso,
+      nowUtc: nowIso,
     };
 
     const completed: Array<any> = [];
@@ -77,7 +78,7 @@ export function useAstrologyAnalysis() {
         
         switch (key) {
           case "vedic": {
-            const data = val as VedicAnalysisResult;
+            const data = normalizeVedicResult(val);
             vedicData = data;
             store.setAnalysisTaskState("vedic", { status: "success", data });
             break;

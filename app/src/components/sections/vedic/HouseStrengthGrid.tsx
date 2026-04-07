@@ -20,9 +20,8 @@ export function HouseStrengthGrid({ houseSummary, bhavaStrengths }: HouseStrengt
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {houseSummary.map((house) => {
                     const rawBhava = bhavaStrengths.find((b) => b.house === house.house);
-                    const bhava = rawBhava as any;
-                    const lordScore = bhava?.lord_score ?? bhava?.lordScore ?? 0;
-                    const totalScore = house.total_score ?? (house as any).totalScore ?? 0;
+                    const lordScore = rawBhava?.lordScore ?? 0;
+                    const totalScore = house.totalScore ?? 0;
                     
                     return (
                         <div

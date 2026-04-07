@@ -30,7 +30,7 @@ export function CompactBirthInfoBar({
     actionSlot,
 }: CompactBirthInfoBarProps) {
     const isExact = meta?.precision === "Exact";
-    const correctedTime = meta?.corrected_time;
+    const correctedTime = meta?.correctedTime;
 
     return (
         <div
@@ -43,7 +43,7 @@ export function CompactBirthInfoBar({
                     {birthData.year}.{pad(birthData.month)}.{pad(birthData.day)}
                 </span>
                 <span className="text-white/25">·</span>
-                {birthData.unknown_time ? (
+                {birthData.unknownTime ? (
                     <span className="text-amber-400/70 text-xs">시간미상</span>
                 ) : (
                     <span className="font-mono">{pad(birthData.hour)}:{pad(birthData.minute)}</span>

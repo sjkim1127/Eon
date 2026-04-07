@@ -13,7 +13,7 @@ export function SimulationTab({ sajuReport, vedicReport }: SimulationTabProps) {
   if (!sajuReport || !sajuReport.report) return null;
   
   const reportData = sajuReport.report;
-  const gt = reportData.golden_time;
+  const gt = reportData.goldenTime;
 
   return (
     <motion.div
@@ -27,15 +27,15 @@ export function SimulationTab({ sajuReport, vedicReport }: SimulationTabProps) {
       <LifeGraphSection
         timeline={reportData.timeline ?? []}
         goldenTime={gt}
-        simulationFrames={reportData.simulation_frames}
+        simulationFrames={reportData.simulationFrames}
         vedicReport={vedicReport}
       />
 
       {/* 생애 시뮬레이션 타임라인 */}
-      <SimulationTimelineSection frames={reportData.simulation_frames ?? []} />
+      <SimulationTimelineSection frames={reportData.simulationFrames ?? []} />
 
       {/* 주의가 필요한 시기 (대운·세운 전수 조사) */}
-      <VulnerabilitySection report={sajuReport.vulnerability_report ?? null} />
+      <VulnerabilitySection report={sajuReport.vulnerabilityReport ?? null} />
     </motion.div>
   );
 }

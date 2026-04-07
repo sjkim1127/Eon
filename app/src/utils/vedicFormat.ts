@@ -87,30 +87,33 @@ export function formatPadaRange(range: string): string {
 export function buildNakshatraMarkdownRows(
   rows: {
     planet: string;
-    position_str: string;
+    positionStr: string;
     sign?: number;
     house?: number;
-    nakshatra_name: string;
+    nakshatraName: string;
     pada: number;
-    pada_range: string;
-    nakshatra_lord: string;
-    pada_lord: string;
+    padaRange: string;
+    nakshatraLord: string;
+    padaLord: string;
     deity: string;
     purpose: string;
-    is_retrograde?: boolean;
-    is_combust?: boolean;
+    isRetrograde?: boolean;
+    isCombust?: boolean;
   }[],
   showHouse = false,
 ): string[] {
-  const cols = showHouse ? VARGA_COLUMNS : D1_COLUMNS;
-  const sep = cols.map(() => "---");
   const lines: string[] = [];
-
-  lines.push(`| ${cols.join(" | ")} |`);
-  lines.push(`| ${sep.join(" | ")} |`);
+  const head = showHouse 
+    ? "| 행성 | 위치(사이드리얼) | 사인 | 하우스 | 낙샤트라(파다) | 파다 범위 | 낙샤트라 로드 | 파다 로드 | 신(Deity) | 목적 |" 
+    : "| 행성 | 위치(사이드리얼) | 낙샤트라(파다) | 파다 범위 | 낙샤트라 로드 | 파다 로드 | 신(Deity) | 목적 |";
+  const sep = showHouse 
+    ? "|---|---|---|---|---|---|---|---|---|---|" 
+    : "|---|---|---|---|---|---|---|---|";
+  lines.push(head);
+  lines.push(sep);
 
   for (const row of rows) {
-    const flags = [row.is_retrograde ? "℞" : "", row.is_combust ? "☀" : ""]
+    const flags = [row.isRetrograde ? "℞" : "", row.isCombust ? "☀" : ""]
       .filter(Boolean)
       .join(" ");
     const planet = flags ? `${row.planet} ${flags}` : row.planet;
@@ -119,11 +122,11 @@ export function buildNakshatraMarkdownRows(
 
     if (showHouse) {
       lines.push(
-        `| ${planet} | ${row.position_str} | ${signName} | ${houseStr} | ${formatNakshatraWithPada(row.nakshatra_name, row.pada)} | ${formatPadaRange(row.pada_range)} | ${row.nakshatra_lord} | ${row.pada_lord} | ${row.deity} | ${row.purpose} |`,
+        `| ${planet} | ${row.positionStr} | ${signName} | ${houseStr} | ${formatNakshatraWithPada(row.nakshatraName, row.pada)} | ${formatPadaRange(row.padaRange)} | ${row.nakshatraLord} | ${row.padaLord} | ${row.deity} | ${row.purpose} |`,
       );
     } else {
       lines.push(
-        `| ${planet} | ${row.position_str} | ${formatNakshatraWithPada(row.nakshatra_name, row.pada)} | ${formatPadaRange(row.pada_range)} | ${row.nakshatra_lord} | ${row.pada_lord} | ${row.deity} | ${row.purpose} |`,
+        `| ${planet} | ${row.positionStr} | ${formatNakshatraWithPada(row.nakshatraName, row.pada)} | ${formatPadaRange(row.padaRange)} | ${row.nakshatraLord} | ${row.padaLord} | ${row.deity} | ${row.purpose} |`,
       );
     }
   }

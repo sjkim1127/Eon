@@ -6,9 +6,9 @@ export type YogaQuality = "VeryHigh" | "High" | "Medium" | { Weak: string };
 /** 요가 */
 export interface Yoga {
   name: string;
-  yoga_type: string;
+  yogaType: string;
   description: string;
-  planets_involved: string[];
+  planetsInvolved: string[];
   quality: YogaQuality;
 }
 
@@ -16,7 +16,7 @@ export interface Yoga {
 export interface HouseSummary {
   house: number;
   rating: string;
-  total_score: number;
+  totalScore: number;
   summary: string;
   description: string;
   reasons: string[];
@@ -26,9 +26,9 @@ export interface HouseSummary {
 export interface DashaPeriod {
   type: "planet";
   lord: string;
-  start_time: string; // ISO 8601 UTC
-  end_time: string;   // ISO 8601 UTC
-  sub_dashas: DashaPeriod[];
+  startTime: string; // ISO 8601 UTC
+  endTime: string;   // ISO 8601 UTC
+  subDashas: DashaPeriod[];
   name?: string;      // For Yogini Dasha names like "Mangala"
 }
 
@@ -36,8 +36,8 @@ export interface DashaPeriod {
 export interface SignDashaPeriod {
   type: "sign";
   rasi: number;
-  start_time: string;
-  end_time: string;
+  startTime: string;
+  endTime: string;
 }
 
 /** 사함 (Sensitive Points in Annual Chart) */
@@ -50,11 +50,11 @@ export interface Saham {
 /** 분할 차트 해석 결과 (Varga Interpretation) */
 export interface VargaInterpretation {
   planet: string;
-  is_vargottama: boolean;
-  is_pushkar_navamsa: boolean;
-  d9_rasi: number;
-  d10_rasi: number;
-  d60_rasi: number;
+  isVargottama: boolean;
+  isPushkarNavamsa: boolean;
+  d9Rasi: number;
+  d10Rasi: number;
+  d60Rasi: number;
   summary: string;
   description: string;
   reasons: string[];
@@ -62,16 +62,16 @@ export interface VargaInterpretation {
 
 /** 타지카 연간 분석 리포트 (TajikaReport Rust struct) */
 export interface TajikaReport {
-  year_lord: string | null;
-  muntha_rasi: number;
+  yearLord: string | null;
+  munthaRasi: number;
   sahams: Saham[];
-  harsha_bala_summary: [string, number][];
+  harshaBalaSummary: [string, number][];
   summary: string;
 }
 
 /** 베딕 분석 리포트 (VedicAnalysisReport Rust struct) */
 export interface VedicAnalysisReport {
-  primary_karakas: {
+  primaryKarakas: {
     atmakaraka: string;
     amatyakaraka: string;
     bhratrukaraka: string | null;
@@ -81,79 +81,79 @@ export interface VedicAnalysisReport {
     gnatikaraka: string | null;
     darakaraka: string;
   };
-  house_summary: HouseSummary[];
-  dasha_focus: string;
-  dasha_timeline: DashaPeriod[];
-  yogini_timeline: DashaPeriod[];
-  chara_dasha_timeline: SignDashaPeriod[];
-  all_karakas: KarakaAssignment[];
-  nakshatra_info: string;
-  overall_strength_score: number;
-  sade_sati: "None" | "Rising" | "Peak" | "Setting";
+  houseSummary: HouseSummary[];
+  dashaFocus: string;
+  dashaTimeline: DashaPeriod[];
+  yoginiTimeline: DashaPeriod[];
+  charaDashaTimeline: SignDashaPeriod[];
+  allKarakas: KarakaAssignment[];
+  nakshatraInfo: string;
+  overallStrengthScore: number;
+  sadeSati: "None" | "Rising" | "Peak" | "Setting";
   yogas: Yoga[];
 
   // Advanced Metrics
-  arudha_lagna: number;
-  upapada_lagna: number;
-  special_lagnas_summary: [string, number][];
+  arudhaLagna: number;
+  upapadaLagna: number;
+  specialLagnasSummary: [string, number][];
 
   // Varga Integration
-  varga_interpretations: VargaInterpretation[];
-  d9_marriage_analysis: string;
-  d10_career_analysis: string;
+  vargaInterpretations?: VargaInterpretation[];
+  d9MarriageAnalysis?: string;
+  d10CareerAnalysis?: string;
 }
 
 // ── 하우스 점수 (SAV / Bhava) ─────────────────────
 
-/** 사르바아슈타카바르가 (전체 하우스 점수) */
-export interface Sarvashtakavarga {
-  points: number[]; // 12개 하우스별 합산 빈두 포인트
-}
-
-/** 행성별 빈나슈타카바르가 (BAV) 점수 */
-export interface BavEntry {
-  planet: string;        // 행성 이름
-  points: number[];      // raw 빈두 포인트 [12]
-  trikona_points: number[];   // Trikona Shodhana 후
-  shodhana_points: number[];  // Ekadhipatya Shodhana 후
-  sodya_pinda: number;        // 최종 Pinda 점수
-}
-
-/** 하우스(바바) 강점 상세 */
+/** 하우스별 강도 지표 (BhavaStrength Rust struct) */
 export interface BhavaStrength {
-  house: number;        // 1~12
-  lord_score: number;   // 하우스 주인 행성의 힘
-  dig_score: number;    // 방위 힘 (Dig Bala)
-  drishti_score: number; // 행성 시선의 영향
-  total_score: number;
-  reasons: string[];
+  house: number;
+  totalScore: number;
+  relativeStrength: number;
+  rating: string;
+  lordScore: number;
+  occupantScore: number;
+  aspectScore: number;
 }
 
-// ── 행성 힘 (Vimshopaka / Karakas / Aspects) ──────
-
-/** 빔쇼파카 발라 (행성 종합 힘 20점 만점) */
+/** 슈타카바르가 점수 (VimshopakaScore Rust struct) */
 export interface VimshopakaScore {
-  shadvarga_score: number;       // 6분할 기준 점수 (0~20)
-  shodashavarga_score: number;   // 16분할 기준 점수 (0~20)
-  details: [string, number][];   // [분할차트명, 점수] 쌍
+  shadvargaScore: number;
+  shodashavargaScore: number;
 }
 
-/** 제미니 카라카 역할 */
+/** 아슈타카바르가 항목 (BAV/SAV Entry) */
+export interface BavEntry {
+  planet: string;
+  points: number[];           // 원시 점수
+  trikonaPoints: number[];    // 트리코나 쇼다나 후
+  shodhanaPoints: number[];   // 에카디파탸 쇼다나 후
+  sodyaPinda: number;         // 최종 핀다 점수
+}
+
+/** 사르바아슈타카바르가 (SAV) */
+export interface Sarvashtakavarga {
+  points: number[]; // 12개 하우스 합산 점수
+}
+
+// ── 자이미니 (Jaimini) ─────────────────────────
+
+/** 자이미니 카라카 역할 */
 export type JaiminiKarakaRole =
-  | "Atmakaraka"     // 영혼
-  | "Amatyakaraka"   // 직업/대신
-  | "Bhratrukaraka"  // 형제
+  | "Atmakaraka"    // 영혼
+  | "Amatyakaraka"   // 직업/조언자
+  | "Bhratrukaraka"  // 형제/동료
   | "Matrukaraka"    // 어머니
   | "Pitrikaraka"    // 아버지
-  | "Putrakaraka"    // 자식
-  | "Gnatikaraka"    // 경쟁자/친척
+  | "Putrakaraka"    // 자녀
+  | "Gnatikaraka"    // 경쟁자
   | "Darakaraka";    // 배우자
 
 /** 카라카 배정 결과 */
 export interface KarakaAssignment {
   planet: string;
   role: JaiminiKarakaRole;
-  degree_in_rasi: number;
+  degreeInRasi: number;
 }
 
 /** 아루다 파다 (Arudha Pada) */
@@ -172,8 +172,8 @@ export interface SpecialLagna {
 
 /** 행성 시선(Drishti/Aspect) 관계 */
 export interface AspectRelation {
-  aspecting_planet: string;
-  aspected_houses: number[]; // 1~12
+  aspectingPlanet: string;
+  aspectedHouses: number[]; // 1~12
 }
 
 // ── VedicChart 원시 데이터 ────────────────────
@@ -182,27 +182,27 @@ export interface AspectRelation {
 export interface VedicPanchanga {
   vara: string;
   tithi: number;
-  tithi_name: string;
+  tithiName: string;
   nakshatra: number;
   yoga: number;
-  karana_name: string;
-  day_lord: string;
-  hour_lord: string;
-  is_day_birth: boolean;
+  karanaName: string;
+  dayLord: string;
+  hourLord: string;
+  isDayBirth: boolean;
 }
 
 /** 행성 위치 (VedicPosition Rust struct) — 바르가 필드 포함 */
 export interface VedicPosition {
   planet: string;
-  tropical_deg: number;
-  sidereal_deg: number;
+  tropicalDeg: number;
+  siderealDeg: number;
   nakshatra: number;
   pada: number;
   rasi: number;
-  house_index: number;
+  houseIndex: number;
   speed: number;
-  is_retrograde: boolean;
-  is_combust: boolean;
+  isRetrograde: boolean;
+  isCombust: boolean;
   declination: number;
   // D-차트 라시 포지션 (D2~D144)
   [key: string]: number | string | boolean;
@@ -215,40 +215,40 @@ export interface VedicChartData {
   aspects: AspectRelation[];
   sav: Sarvashtakavarga;
   bav: BavEntry[];    // 행성별 BAV [Sun~Saturn]
-  house_cusps: number[];
+  houseCusps: number[];
   karakas: KarakaAssignment[];
-  arudha_padas: ArudhaPada[];
-  special_lagnas: SpecialLagna[];
-  bhava_strengths: BhavaStrength[];
-  vimshopaka_scores: [string, VimshopakaScore][];
+  arudhaPadas: ArudhaPada[];
+  specialLagnas: SpecialLagna[];
+  bhavaStrengths: BhavaStrength[];
+  vimshopakaScores: [string, VimshopakaScore][];
   avasthas: { planet: string; baladi: string; jagradadi: string; deeptaadi: string }[];
   panchanga: VedicPanchanga;
-  analysis_report: VedicAnalysisReport | null;
+  analysisReport: VedicAnalysisReport | null;
 }
 
 /** 단일 바르가 낙샤트라 리포트 행 */
 export interface VargaNakshatraReportRow {
   planet: string;
-  position_str: string;
+  positionStr: string;
   sign: number;
   house: number;
   nakshatra: number;
-  nakshatra_name: string;
+  nakshatraName: string;
   pada: number;
-  pada_range: string;
-  nakshatra_lord: string;
-  pada_lord: string;
+  padaRange: string;
+  nakshatraLord: string;
+  padaLord: string;
   deity: string;
   purpose: string;
-  is_retrograde: boolean;
-  is_combust: boolean;
+  isRetrograde: boolean;
+  isCombust: boolean;
 }
 
 /** 단일 바르가(D1/D9/D10/D108) 낙샤트라 리포트 */
 export interface VargaNakshatraReport {
-  varga_id: string;
-  varga_label: string;
-  lagna_rasi: number;
+  vargaId: string;
+  vargaLabel: string;
+  lagnaRasi: number;
   rows: VargaNakshatraReportRow[];
 }
 
@@ -261,11 +261,11 @@ export interface VargaNakshatraReports {
 export interface VedicAnalysisResult {
   meta: AnalysisMeta;
   report: VedicAnalysisReport;
-  tajika_report?: TajikaReport | null;
+  tajikaReport?: TajikaReport | null;
   chart: VedicChartData;
-  annual_chart: VedicChartData | null;
+  annualChart: VedicChartData | null;
   gochara: GocharaSummary;
-  varga_nakshatra_reports: VargaNakshatraReports;
+  vargaNakshatraReports: VargaNakshatraReports;
 }
 
 /** 낙샤트라 원시 데이터 */
@@ -273,7 +273,7 @@ export interface NakshatraEntry {
   name: string;
   lord: string;
   deity: string;
-  start_deg: number;
+  startDeg: number;
   purpose: string;
 }
 
@@ -303,10 +303,10 @@ export interface VargaDef {
 /** 행성 트랜싯 위치 (TransitPosition Rust struct) */
 export interface TransitPosition {
   planet: string;
-  current_rasi: number;
-  house_from_moon: number;
-  is_benefic_transit: boolean;
-  is_blocked: boolean;
+  currentRasi: number;
+  houseFromMoon: number;
+  isBeneficTransit: boolean;
+  isBlocked: boolean;
   murti: "Gold" | "Silver" | "Copper" | "Iron" | "Unknown";
   summary: string;
   description: string;
@@ -316,4 +316,5 @@ export interface TransitPosition {
 /** 고차라 요약 (GocharaSummary Rust struct) */
 export interface GocharaSummary {
   transits: TransitPosition[];
+  sadeSati: "None" | "Rising" | "Peak" | "Setting";
 }

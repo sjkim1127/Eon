@@ -3,6 +3,7 @@ use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AshtakavargaPoints {
     pub planet: VedicPlanet,
     pub points: [u8; 12],          // Raw points
@@ -12,6 +13,7 @@ pub struct AshtakavargaPoints {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Sarvashtakavarga {
     pub points: [u8; 12], // Total points in each house 1-12
 }

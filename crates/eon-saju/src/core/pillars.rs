@@ -11,6 +11,7 @@ use chrono::{DateTime, Utc, Datelike, NaiveDate, Duration, TimeZone, Timelike};
 
 /// 사주 계산 입력
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SajuInput {
     /// 년도 (양력)
     pub year: i32,
@@ -145,6 +146,7 @@ impl SajuInput {
 
 /// 사주 팔자(四柱八字)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FourPillars {
     /// 년주(年柱)
     pub year: GanZi,
@@ -371,7 +373,8 @@ impl std::fmt::Display for FourPillars {
     }
 }
 
-#[derive(Debug, Clone, thiserror::Error, Serialize, Deserialize)]
+#[derive(Debug, Clone, Error, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum SajuError {
     #[error("잘못된 날짜/시간: {0}")]
     InvalidDateTime(String),

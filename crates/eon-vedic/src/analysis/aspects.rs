@@ -3,6 +3,7 @@ use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AspectRelation {
     pub aspecting_planet: VedicPlanet,
     pub aspected_houses: Vec<u8>, // 1-12

@@ -69,6 +69,7 @@ impl std::fmt::Display for StrengthType {
 
 /// 득령(得令) 판정 - 월지와 일간의 관계
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DeukRyeong {
     /// 득령 여부
     pub acquired: bool,
@@ -138,6 +139,7 @@ impl DeukRyeong {
 
 /// 득지(得地) 판정 - 지지에 통근 여부
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DeukJi {
     /// 득지 여부
     pub acquired: bool,
@@ -270,6 +272,7 @@ impl DeukJi {
 
 /// 득시(得時) 판정 - 시지와 일간의 관계
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DeukSi {
     /// 득시 여부
     pub acquired: bool,
@@ -339,6 +342,7 @@ impl DeukSi {
 
 /// 득세(得勢) 판정 - 비겁/인성의 숫자
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DeukSe {
     /// 득세 여부
     pub acquired: bool,
@@ -451,6 +455,7 @@ impl DeukSe {
 
 /// 신강신약 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StrengthAnalysis {
     /// 일간
     pub day_master: HeavenlyStem,

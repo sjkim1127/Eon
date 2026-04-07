@@ -7,23 +7,20 @@ interface VedicAdvancedInsightsSectionProps {
 }
 
 export function VedicAdvancedInsightsSection({ report, tajikaReport }: VedicAdvancedInsightsSectionProps) {
-  // snake/camel fallback for cached responses from old backend
-  const r = report as any;
-  const arudha_lagna = r.arudha_lagna ?? r.arudhaLagna ?? 0;
-  const upapada_lagna = r.upapada_lagna ?? r.upapadaLagna ?? 0;
-  const special_lagnas_summary = r.special_lagnas_summary ?? r.specialLagnasSummary ?? [];
-  const d9_marriage_analysis = r.d9_marriage_analysis ?? r.d9MarriageAnalysis ?? "";
-  const d10_career_analysis = r.d10_career_analysis ?? r.d10CareerAnalysis ?? "";
-  const varga_interpretations = r.varga_interpretations ?? r.vargaInterpretations ?? [];
+  const arudhaLagna = report.arudhaLagna ?? 0;
+  const upapadaLagna = report.upapadaLagna ?? 0;
+  const specialLagnasSummary = report.specialLagnasSummary ?? [];
+  const d9MarriageAnalysis = report.d9MarriageAnalysis ?? "";
+  const d10CareerAnalysis = report.d10CareerAnalysis ?? "";
+  const vargaInterpretations = report.vargaInterpretations ?? [];
 
-  const tr = tajikaReport as any;
-  const sahams = tr?.sahams ?? [];
-  const harsha_bala_summary = tr?.harsha_bala_summary ?? tr?.harshaBalaSummary ?? [];
-  const year_lord = tr?.year_lord ?? tr?.yearLord;
-  const muntha_rasi = tr?.muntha_rasi ?? tr?.munthaRasi;
+  const sahams = tajikaReport?.sahams ?? [];
+  const harshaBalaSummary = tajikaReport?.harshaBalaSummary ?? [];
+  const yearLord = tajikaReport?.yearLord;
+  const munthaRasi = tajikaReport?.munthaRasi;
 
   // Filter special planets
-  const specialPlanets = (varga_interpretations as VargaInterpretation[])?.filter((vi: VargaInterpretation) => vi.is_vargottama || vi.is_pushkar_navamsa) || [];
+  const specialPlanets = (vargaInterpretations as VargaInterpretation[])?.filter((vi: VargaInterpretation) => vi.isVargottama || vi.isPushkarNavamsa) || [];
 
   return (
     <div className="space-y-8">
@@ -34,21 +31,21 @@ export function VedicAdvancedInsightsSection({ report, tajikaReport }: VedicAdva
           제미니 지표 및 특별 라그나 (Jaimini & Special Lagnas)
         </h5>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          {arudha_lagna > 0 && (
+          {arudhaLagna > 0 && (
             <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
               <p className="text-[10px] text-white/40 font-bold uppercase mb-1">Arudha Lagna (AL)</p>
-              <p className="text-lg font-bold text-celestial-gold">사인 {arudha_lagna}</p>
+              <p className="text-lg font-bold text-celestial-gold">사인 {arudhaLagna}</p>
               <p className="text-[10px] text-white/30 mt-1">사회적 이미지·외부적 자아</p>
             </div>
           )}
-          {upapada_lagna > 0 && (
+          {upapadaLagna > 0 && (
             <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
               <p className="text-[10px] text-white/40 font-bold uppercase mb-1">Upapada Lagna (UL)</p>
-              <p className="text-lg font-bold text-pink-400">사인 {upapada_lagna}</p>
+              <p className="text-lg font-bold text-pink-400">사인 {upapadaLagna}</p>
               <p className="text-[10px] text-white/30 mt-1">배우자·결혼 생활의 기운</p>
             </div>
           )}
-          {(special_lagnas_summary as [string, number][])?.map(([name, rasi]: [string, number]) => (
+          {(specialLagnasSummary as [string, number][])?.map(([name, rasi]: [string, number]) => (
             <div key={name} className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
               <p className="text-[10px] text-white/40 font-bold uppercase mb-1">{name}</p>
               <p className="text-lg font-bold text-white">사인 {rasi}</p>
@@ -65,7 +62,7 @@ export function VedicAdvancedInsightsSection({ report, tajikaReport }: VedicAdva
             나밤사(D9) — 결혼 및 내적 성숙
           </h5>
           <p className="text-sm text-white/80 leading-relaxed bg-black/20 p-4 rounded-xl border border-white/5">
-            {d9_marriage_analysis}
+            {d9MarriageAnalysis}
           </p>
           <p className="text-[11px] text-white/40 mt-4 leading-relaxed">
             D9 차트는 영혼의 열매이자 배우자와의 깊은 카르마적 연결, 중년 이후의 운을 나타냅니다.
@@ -78,7 +75,7 @@ export function VedicAdvancedInsightsSection({ report, tajikaReport }: VedicAdva
             다샴사(D10) — 사회적 성취 및 직업
           </h5>
           <p className="text-sm text-white/80 leading-relaxed bg-black/20 p-4 rounded-xl border border-white/5">
-            {d10_career_analysis}
+            {d10CareerAnalysis}
           </p>
           <p className="text-[11px] text-white/40 mt-4 leading-relaxed">
             D10 차트는 전문적인 명성, 직업적 권위, 그리고 사회에 기여하는 방식을 분석합니다.
@@ -97,77 +94,66 @@ export function VedicAdvancedInsightsSection({ report, tajikaReport }: VedicAdva
           <div className="space-y-3 mb-6">
             <div className="p-3 rounded-xl bg-celestial-cyan/10 border border-celestial-cyan/20">
               <p className="text-[10px] text-celestial-cyan font-black uppercase mb-1">연차 로드 (Year Lord)</p>
-              <p className="text-sm font-bold text-white">{year_lord || "N/A"}</p>
+              <p className="text-sm font-bold text-white">{yearLord || "N/A"}</p>
             </div>
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <p className="text-[10px] text-amber-400 font-black uppercase mb-1">문타 (Muntha)</p>
-              <p className="text-sm font-bold text-white">사인 {muntha_rasi}</p>
+            <div className="p-3 rounded-xl bg-celestial-purple/10 border border-celestial-purple/20">
+              <p className="text-[10px] text-celestial-purple font-black uppercase mb-1">문타 (Muntha Rasi)</p>
+              <p className="text-sm font-bold text-white">사인 {munthaRasi || "N/A"}</p>
             </div>
           </div>
-          <div className="space-y-3">
-            <p className="text-[10px] text-white/40 font-bold uppercase mb-2">주요 사함 (Sahams)</p>
-            {sahams?.map((s: Saham) => (
-              <div key={s.name} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                <span className="text-xs font-bold text-white/70">{s.name}</span>
-                <span className="text-xs font-mono text-celestial-gold">사인 {s.rasi}</span>
+          <div className="grid grid-cols-2 gap-2">
+            {(sahams as Saham[]).map((s) => (
+              <div key={s.name} className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5">
+                <p className="text-[9px] text-white/30 font-bold mb-0.5">{s.name}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono text-celestial-gold">사인 {s.rasi}</span>
+                  {s.name.includes("Fortune") && <Zap className="w-3 h-3 text-emerald-400" />}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Special Status Planets */}
-        <div className="glass p-6 rounded-[2rem] lg:col-span-2">
-          <h5 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Zap className="w-4 h-4 text-brand-400" />
-            특별 행성 지위 (Vargottama / Pushkar)
+        {/* Vargottama / Special Positions */}
+        <div className="glass p-8 rounded-[2rem] lg:col-span-2">
+          <h5 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-6 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-brand-400" />
+            바르고타마 및 특수 지위 (Special Planetary Status)
           </h5>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {specialPlanets.length > 0 ? (
-              specialPlanets.map((vi: VargaInterpretation) => (
-                <div key={vi.planet} className="p-5 rounded-2xl bg-brand-400/5 border border-brand-400/20 flex flex-col h-full">
-                  <div className="flex justify-between items-start mb-3">
-                    <p className="text-sm font-bold text-white tracking-tight">{vi.planet}</p>
-                    <div className="flex gap-1.5">
-                      {vi.is_vargottama && (
-                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30 font-black uppercase">Vargottama</span>
-                      )}
-                      {vi.is_pushkar_navamsa && (
-                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-celestial-gold/20 text-celestial-gold border border-celestial-gold/30 font-black uppercase">Pushkar</span>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <h6 className="text-[11px] font-bold text-white/80 mb-1">{vi.summary}</h6>
-                  <p className="text-[10px] text-white/40 leading-relaxed mb-4 flex-1">
-                    {vi.description}
-                  </p>
-
-                  <div className="space-y-1 mt-auto pt-3 border-t border-white/5">
-                    {vi.reasons.map((reason: string, idx: number) => (
-                      <div key={idx} className="flex items-center gap-2 text-[9px] text-brand-400/60">
-                        <Zap className="w-2 h-2" />
-                        <span>{reason}</span>
-                      </div>
-                    ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {specialPlanets.map((vi, i) => (
+              <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/10 group hover:border-celestial-gold/50 transition-all">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white font-black">{vi.planet}</span>
+                  <div className="flex gap-1.5">
+                    {vi.isVargottama && <span className="text-[9px] bg-celestial-gold/20 text-celestial-gold px-2 py-0.5 rounded font-bold">VARGOTTAMA</span>}
+                    {vi.isPushkarNavamsa && <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-bold">PUSHKAR</span>}
                   </div>
                 </div>
-              ))
-            ) : (
-              <p className="text-xs text-white/30 italic">특별한 지위에 있는 행성이 발견되지 않았습니다.</p>
+                <p className="text-xs text-white/50 leading-relaxed italic line-clamp-2">
+                  "{vi.summary}"
+                </p>
+              </div>
+            ))}
+            {specialPlanets.length === 0 && (
+              <div className="col-span-2 py-10 text-center border-2 border-dashed border-white/5 rounded-2xl">
+                <p className="text-sm text-white/20">이 차트에는 바르고타마 지위를 가진 행성이 없습니다.</p>
+              </div>
             )}
           </div>
-          
-          <div className="mt-6">
-            <h6 className="text-[10px] font-bold text-white/40 uppercase mb-3">Harsha Bala (기쁨의 강도)</h6>
-            <div className="flex flex-wrap gap-2">
-              {harsha_bala_summary?.filter(([_, score]: [string, number]) => score >= 5).map(([planet, score]: [string, number]) => (
-                <div key={planet} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 flex items-center gap-2">
-                  <span className="text-xs font-bold text-white/80">{planet}</span>
-                  <span className={`text-[10px] font-black ${score >= 15 ? 'text-green-400' : score >= 10 ? 'text-celestial-cyan' : 'text-white/40'}`}>{score}</span>
-                </div>
-              ))}
+
+          {harshaBalaSummary.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-white/5">
+               <h6 className="text-[10px] text-white/30 font-bold uppercase mb-3">Harsha Bala (진정한 기쁨)</h6>
+               <div className="flex flex-wrap gap-2">
+                  {(harshaBalaSummary as [string, number][]).map(([planet, score]: [string, number]) => (
+                    <div key={planet} className="px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400">
+                      <span className="font-bold">{planet}</span>: {score} pts
+                    </div>
+                  ))}
+               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

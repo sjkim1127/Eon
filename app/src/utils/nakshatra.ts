@@ -27,13 +27,13 @@ export function getNakshatraInfo(sidereal_deg: number): NakshatraInfo {
   const deg = ((sidereal_deg % 360) + 360) % 360;
   const idx = Math.floor(deg / (360 / 27));
   const nak = NAKSHATRA_DATA[idx];
-  const degInNak = deg - nak.start_deg;
+  const degInNak = deg - nak.startDeg;
   const pada = Math.floor(degInNak / (13.333 / 4)) + 1;
   const clampedPada = Math.min(4, Math.max(1, pada));
   const navamsaSign = ((idx * 4 + (clampedPada - 1)) % 12) + 1;
   const padaLord = SIGN_LORDS[navamsaSign];
   const purpose = nak.purpose; // BPHS nakshatra-level purpose
-  const padaStartDeg = nak.start_deg + (clampedPada - 1) * (13.333 / 4);
+  const padaStartDeg = nak.startDeg + (clampedPada - 1) * (13.333 / 4);
   const padaEndDeg = padaStartDeg + (13.333 / 4);
 
   const fmtDeg = (d: number) => {

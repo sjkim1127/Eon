@@ -9,9 +9,9 @@ interface Props {
 export function VoidAnalysis({ voidAnalysis }: Props) {
   if (!voidAnalysis) return null;
 
-  const branches = voidAnalysis.void_branches ?? [];
-  const xunGroup = voidAnalysis.xun_group ?? "";
-  const hasDetails = !!voidAnalysis.mapped_voids && voidAnalysis.mapped_voids.length > 0;
+  const branches = voidAnalysis.voidBranches ?? [];
+  const xunGroup = voidAnalysis.xunGroup ?? "";
+  const hasDetails = !!voidAnalysis.mappedVoids && voidAnalysis.mappedVoids.length > 0;
 
   return (
     <div className="glass p-8 rounded-[2rem] border-violet-500/20 bg-violet-500/5">
@@ -50,7 +50,7 @@ export function VoidAnalysis({ voidAnalysis }: Props) {
         <div className="lg:col-span-2">
           {hasDetails ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {voidAnalysis.mapped_voids.map((v: VoidDetail, i: number) => (
+              {voidAnalysis.mappedVoids.map((v: VoidDetail, i: number) => (
                 <div
                   key={i}
                   className="group relative p-5 rounded-2xl bg-violet-500/5 border border-violet-500/20 transition-all duration-300 hover:bg-violet-500/10 shadow-[0_0_20px_rgba(167,139,250,0.05)]"
@@ -59,7 +59,7 @@ export function VoidAnalysis({ voidAnalysis }: Props) {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h6 className="text-base font-bold text-violet-300">
-                          {v.position} {TENGOD_INFO[v.ten_god]?.hangul ?? v.ten_god}
+                          {v.position} {TENGOD_INFO[v.tenGod]?.hangul ?? v.tenGod}
                         </h6>
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/20 font-bold uppercase">
                           Void

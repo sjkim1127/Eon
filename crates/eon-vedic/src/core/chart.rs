@@ -5,6 +5,7 @@ use eon_astro::AstroEngine;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VedicPosition {
     pub planet: VedicPlanet,
     pub tropical_deg: f64,
@@ -78,6 +79,7 @@ impl VedicPosition {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VedicChart {
     pub ascendant: VedicPosition,
     pub planets: Vec<VedicPosition>,

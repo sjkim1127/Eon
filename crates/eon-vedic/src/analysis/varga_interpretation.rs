@@ -3,6 +3,7 @@ use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VargaInterpretation {
     pub planet: crate::planets::VedicPlanet,
     pub is_vargottama: bool,

@@ -9,7 +9,7 @@ interface Props {
 export function RelationshipsAnalysis({ relationships }: Props) {
   if (!relationships) return null;
 
-  const hasDetails = !!relationships?.mapped_relationships && relationships.mapped_relationships.length > 0;
+  const hasDetails = !!relationships?.mappedRelationships && relationships.mappedRelationships.length > 0;
   
   // 새 필드가 있으면 고해상도 카드 렌더링
   if (hasDetails) {
@@ -27,7 +27,7 @@ export function RelationshipsAnalysis({ relationships }: Props) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {relationships.mapped_relationships.map((rel: RelationshipDetail, i: number) => {
+          {relationships.mappedRelationships.map((rel: RelationshipDetail, i: number) => {
             const isAuspicious = rel.level === "Auspicious";
             return (
               <div
@@ -78,10 +78,10 @@ export function RelationshipsAnalysis({ relationships }: Props) {
                       </span>
                     ))}
                   </div>
-                  {rel.transformed_element && (
+                  {rel.transformedElement && (
                     <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 border border-white/10">
                       <Layers className="w-3 h-3 text-white/40" />
-                      <span className="text-[10px] text-white/60 font-bold">{rel.transformed_element}</span>
+                      <span className="text-[10px] text-white/60 font-bold">{rel.transformedElement}</span>
                     </div>
                   )}
                 </div>
@@ -107,18 +107,18 @@ export function RelationshipsAnalysis({ relationships }: Props) {
   };
 
   const groups: RelGroup[] = [
-    { label: "천간합", color: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30", items: (rel.stem_combinations ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
-    { label: "천간충", color: "text-red-400 bg-red-500/15 border-red-500/30", items: (rel.stem_clashes ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
-    { label: "삼합", color: "text-amber-400 bg-amber-500/15 border-amber-500/30", items: (rel.triple_combinations ?? []).map((r: any) => formatRel(r)) },
-    { label: "방합", color: "text-amber-400 bg-amber-500/15 border-amber-500/30", items: (rel.seasonal_combinations ?? []).map((r: any) => formatRel(r)) },
-    { label: "반합(진)", color: "text-yellow-400 bg-yellow-500/15 border-yellow-500/30", items: (rel.dominant_semi_combinations ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
-    { label: "육합", color: "text-green-400 bg-green-500/15 border-green-500/30", items: (rel.six_combinations ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
-    { label: "지지충", color: "text-rose-400 bg-rose-500/15 border-rose-500/30", items: (rel.branch_clashes ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
-    { label: "지지형", color: "text-orange-400 bg-orange-500/15 border-orange-500/30", items: (rel.branch_punishments ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
-    { label: "지지해", color: "text-pink-400 bg-pink-500/15 border-pink-500/30", items: (rel.branch_harms ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
-    { label: "지지파", color: "text-fuchsia-400 bg-fuchsia-500/15 border-fuchsia-500/30", items: (rel.branch_destructions ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
-    { label: "암합", color: "text-teal-400 bg-teal-500/15 border-teal-500/30", items: (rel.am_combinations ?? []).map((r: any) => `${formatRel(r[0]?.combination)} (${r[1]}-${r[2]})`) },
-    { label: "명암합", color: "text-cyan-400 bg-cyan-500/15 border-cyan-500/30", items: (rel.myung_am_combinations ?? []).map((r: any) => `${formatRel(r[0]?.combination)} (${r[1]}-${r[2]})`) },
+    { label: "천간합", color: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30", items: (rel.stemCombinations ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
+    { label: "천간충", color: "text-red-400 bg-red-500/15 border-red-500/30", items: (rel.stemClashes ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
+    { label: "삼합", color: "text-amber-400 bg-amber-500/15 border-amber-500/30", items: (rel.tripleCombinations ?? []).map((r: any) => formatRel(r)) },
+    { label: "방합", color: "text-amber-400 bg-amber-500/15 border-amber-500/30", items: (rel.seasonalCombinations ?? []).map((r: any) => formatRel(r)) },
+    { label: "반합(진)", color: "text-yellow-400 bg-yellow-500/15 border-yellow-500/30", items: (rel.dominantSemiCombinations ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
+    { label: "육합", color: "text-green-400 bg-green-500/15 border-green-500/30", items: (rel.sixCombinations ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
+    { label: "지지충", color: "text-rose-400 bg-rose-500/15 border-rose-500/30", items: (rel.branchClashes ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
+    { label: "지지형", color: "text-orange-400 bg-orange-500/15 border-orange-500/30", items: (rel.branchPunishments ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
+    { label: "지지해", color: "text-pink-400 bg-pink-500/15 border-pink-500/30", items: (rel.branchHarms ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
+    { label: "지지파", color: "text-fuchsia-400 bg-fuchsia-500/15 border-fuchsia-500/30", items: (rel.branchDestructions ?? []).map((r: any) => `${formatRel(r[0])} (${r[1]}-${r[2]})`) },
+    { label: "암합", color: "text-teal-400 bg-teal-500/15 border-teal-500/30", items: (rel.amCombinations ?? []).map((r: any) => `${formatRel(r[0]?.combination)} (${r[1]}-${r[2]})`) },
+    { label: "명암합", color: "text-cyan-400 bg-cyan-500/15 border-cyan-500/30", items: (rel.myungAmCombinations ?? []).map((r: any) => `${formatRel(r[0]?.combination)} (${r[1]}-${r[2]})`) },
   ].filter(g => g.items.length > 0);
 
   if (groups.length === 0) return null;

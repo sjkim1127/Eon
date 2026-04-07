@@ -7,9 +7,9 @@ interface Props {
 }
 
 export function SpiritsList({ sp }: Props) {
-  // mapped_markers가 있으면 이를 우선 사용, 없으면 markers 사용 (하위 호환)
-  const hasDetails = !!sp?.mapped_markers && sp.mapped_markers.length > 0;
-  const markersToRender = hasDetails ? sp.mapped_markers : (sp?.markers || []);
+  // mappedMarkers가 있으면 이를 우선 사용, 없으면 markers 사용 (하위 호환)
+  const hasDetails = !!sp?.mappedMarkers && sp.mappedMarkers.length > 0;
+  const markersToRender = hasDetails ? sp.mappedMarkers : (sp?.markers || []);
 
   if (markersToRender.length === 0) return null;
 

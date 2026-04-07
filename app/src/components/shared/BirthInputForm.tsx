@@ -40,8 +40,8 @@ export function BirthInputForm({
   submitLabel,
   hideUnknownTime = false,
 }: BirthInputFormProps) {
-  const unknownTime = birthData.unknown_time ?? false;
-  const useNightRatHour = birthData.use_night_rat_hour ?? false;
+  const unknownTime = birthData.unknownTime ?? false;
+  const useNightRatHour = birthData.useNightRatHour ?? false;
 
   // 해당 년/월의 최대 일수 계산
   const daysInMonth = new Date(birthData.year, birthData.month, 0).getDate();
@@ -56,17 +56,17 @@ export function BirthInputForm({
   const toggleUnknownTime = () => {
     setBirthData((prev) => ({
       ...prev,
-      unknown_time: !prev.unknown_time,
+      unknownTime: !prev.unknownTime,
       // 시간 모름으로 전환 시 정오(12:00)로 초기화
-      hour: !prev.unknown_time ? 12 : prev.hour,
-      minute: !prev.unknown_time ? 0 : prev.minute,
+      hour: !prev.unknownTime ? 12 : prev.hour,
+      minute: !prev.unknownTime ? 0 : prev.minute,
     }));
   };
 
   const toggleNightRatHour = () => {
     setBirthData((prev) => ({
       ...prev,
-      use_night_rat_hour: !(prev.use_night_rat_hour ?? false),
+      useNightRatHour: !(prev.useNightRatHour ?? false),
     }));
   };
 
@@ -93,8 +93,8 @@ export function BirthInputForm({
         <label className="block text-xs text-white/40 mb-1.5 font-medium">달력 구분</label>
         <select
           value={
-            birthData.is_lunar
-              ? birthData.is_leap_month
+            birthData.isLunar
+              ? birthData.isLeapMonth
                 ? "lunar_leap"
                 : "lunar"
               : "solar"
@@ -103,8 +103,8 @@ export function BirthInputForm({
             const val = e.target.value;
             setBirthData((prev) => ({
               ...prev,
-              is_lunar: val === "lunar" || val === "lunar_leap",
-              is_leap_month: val === "lunar_leap",
+              isLunar: val === "lunar" || val === "lunar_leap",
+              isLeapMonth: val === "lunar_leap",
             }));
           }}
           className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-8 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
@@ -313,17 +313,17 @@ export function BirthInputForm({
           <span>
             위도 {birthData.lat.toFixed(2)}° / 경도 {birthData.lon.toFixed(2)}°
           </span>
-          {birthData.is_lunar && (
+          {birthData.isLunar && (
             <span className="text-pink-400">
-              {birthData.is_leap_month ? "음력(윤달)" : "음력"}
+              {birthData.isLeapMonth ? "음력(윤달)" : "음력"}
             </span>
           )}
-          {sajuReport?.meta?.corrected_time && (
+          {sajuReport?.meta?.correctedTime && (
             <span className="text-celestial-cyan/60">
-              보정시: {sajuReport.meta.corrected_time}
+              보정시: {sajuReport.meta.correctedTime}
             </span>
           )}
-          {sajuReport?.meta?.is_dst && (
+          {sajuReport?.meta?.isDst && (
             <span className="text-amber-400/80">DST 적용됨</span>
           )}
         </div>

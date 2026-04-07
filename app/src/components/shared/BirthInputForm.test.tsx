@@ -11,8 +11,8 @@ const mockBirthData: BirthData = {
   minute: 0,
   lat: 37.5665,
   lon: 126.978,
-  is_lunar: false,
-  is_leap_month: false,
+  isLunar: false,
+  isLeapMonth: false,
   timezone: "Asia/Seoul",
 };
 

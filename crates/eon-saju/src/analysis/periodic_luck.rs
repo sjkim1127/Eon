@@ -167,6 +167,7 @@ impl std::fmt::Display for MonthlyLuck {
 
 /// 일운 (해당 일의 운세)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DailyLuck {
     pub year: i32,
     pub month: u32,

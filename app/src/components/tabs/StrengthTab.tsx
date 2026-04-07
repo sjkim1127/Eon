@@ -39,11 +39,11 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
   const [loadPage, setLoadPage] = useState(0);
   if (!sajuReport) return null;
   const entropy = sajuReport.entropy;
-  const topology = sajuReport.qi_topology;
+  const topology = sajuReport.qiTopology;
   const complexity = sajuReport.complexity;
   const lints: any[] = sajuReport.lints ?? [];
-  const loadDiag: any[] = sajuReport.load_diagnostics ?? [];
-  const crashCount: number = sajuReport.crash_count ?? 0;
+  const loadDiag: any[] = sajuReport.loadDiagnostics ?? [];
+  const crashCount: number = sajuReport.crashCount ?? 0;
 
   return (
     <motion.div
@@ -168,11 +168,11 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
             <p className="text-sm text-white/80 leading-relaxed font-medium">
               {entropy.description ?? "오행의 분포에 따른 삶의 복잡성을 나타냅니다."}
             </p>
-            {entropy.unpacker_element && (
+            {entropy.unpackerElement && (
               <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/10">
                 <span className="text-xs font-bold text-white/50">운명적 꼬임을 풀어주는 해결 열쇠 (오행):</span>
                 <span className="px-3 py-1 bg-celestial-gold/20 border border-celestial-gold/40 text-celestial-gold rounded-full text-xs font-bold">
-                  {typeof entropy.unpacker_element === "string" ? (ELEMENT_KOREAN[entropy.unpacker_element] ?? entropy.unpacker_element) : "알 수 없음"}
+                  {typeof entropy.unpackerElement === "string" ? (ELEMENT_KOREAN[entropy.unpackerElement] ?? entropy.unpackerElement) : "알 수 없음"}
                 </span>
               </div>
             )}
@@ -233,24 +233,24 @@ export function StrengthTab({ sajuReport, unknownTime = false }: StrengthTabProp
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
               <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">갈림길 지수</p>
-              <p className="text-4xl font-black text-celestial-cyan">{complexity.cyclomatic_complexity}</p>
+              <p className="text-4xl font-black text-celestial-cyan">{complexity.cyclomaticComplexity}</p>
               <p className="text-[10px] text-white/40 mt-1">중요 선택이 많을수록 값이 커집니다.</p>
             </div>
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
               <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">안정성 등급</p>
-              <p className="text-lg font-black text-white leading-tight">{complexity.stability_grade}</p>
+              <p className="text-lg font-black text-white leading-tight">{complexity.stabilityGrade}</p>
             </div>
             <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
               <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">변화의 불안정성</p>
               <p className="text-4xl font-black text-white">{complexity.entropy?.toFixed(2) ?? "—"}</p>
             </div>
           </div>
-          {complexity.decision_nodes && complexity.decision_nodes.length > 0 && (
+          {complexity.decisionNodes && complexity.decisionNodes.length > 0 && (
             <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/10">
               <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">주요 분기점 (나이)</p>
               <p className="text-sm text-white/80 font-mono">
-                {complexity.decision_nodes.slice(0, 20).join("세, ")}
-                {complexity.decision_nodes.length > 20 ? ` ... 외 ${complexity.decision_nodes.length - 20}개` : "세"}
+                {complexity.decisionNodes.slice(0, 20).join("세, ")}
+                {complexity.decisionNodes.length > 20 ? ` ... 외 ${complexity.decisionNodes.length - 20}개` : "세"}
               </p>
             </div>
           )}

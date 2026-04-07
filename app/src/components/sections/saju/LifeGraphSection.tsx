@@ -24,13 +24,13 @@ interface LifeGraphSectionProps {
 
 export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedicReport }: LifeGraphSectionProps) {
     const [visibleLines, setVisibleLines] = useState({
-        trend_ma: true,
+        trendMa: true,
         wealth: true,
         career: true,
         academic: true,
         health: true,
         volatility: true,
-        vedic_dasha: true,
+        vedicDasha: true,
     });
 
     const toggleLine = (dataKey: string) => {
@@ -44,19 +44,19 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
     const chartData = hasTimeline
         ? timeline.map((f) => ({
             age: f.age,
-            score: Number(f.total_score ?? 0),
-            trend_ma: f.trend_ma_5yr != null ? Number(f.trend_ma_5yr) : null,
-            wealth: Number(f.wealth_score ?? 0),
-            career: Number(f.career_score ?? 0),
-            academic: Number(f.academic_score ?? 0),
-            health: Number(f.health_score ?? 0),
-            volatility: Number(f.volatility_index ?? 0),
-            isTransition: f.is_transition_period,
+            score: Number(f.totalScore ?? 0),
+            trendMa: f.trendMa5yr != null ? Number(f.trendMa5yr) : null,
+            wealth: Number(f.wealthScore ?? 0),
+            career: Number(f.careerScore ?? 0),
+            academic: Number(f.academicScore ?? 0),
+            health: Number(f.healthScore ?? 0),
+            volatility: Number(f.volatilityIndex ?? 0),
+            isTransition: f.isTransitionPeriod,
         }))
         : (simulationFrames ?? []).map((f: any) => ({
             age: f.age,
             score: Number(f.score ?? 0),
-            trend_ma: Number(f.score ?? 0),
+            trendMa: Number(f.score ?? 0),
             wealth: 0, career: 0, academic: 0, health: 0, volatility: 0,
             isTransition: false,
         }));
@@ -68,7 +68,7 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
         score >= 70 ? "text-green-400" : score >= 40 ? "text-amber-400" : "text-red-400";
 
     const LEGEND_ITEMS = [
-        { key: "trend_ma", label: "종합(MA)", color: "bg-cyan-400" },
+        { key: "trendMa", label: "종합(MA)", color: "bg-cyan-400" },
         { key: "wealth", label: "재물운", color: "bg-amber-400" },
         { key: "career", label: "명예운", color: "bg-purple-400" },
         { key: "academic", label: "학업운", color: "bg-blue-400" },
@@ -89,14 +89,14 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
     };
 
     // Calculate Dasha periods in age-space
-    const dashaPeriods = (vedicReport?.report as any)?.dasha_timeline ?? (vedicReport?.report as any)?.dashaTimeline ? (() => {
-        const timeline = (vedicReport?.report as any)?.dasha_timeline ?? (vedicReport?.report as any)?.dashaTimeline ?? [];
+    const dashaPeriods = (vedicReport?.report as any)?.dashaTimeline ? (() => {
+        const timeline = (vedicReport?.report as any)?.dashaTimeline ?? [];
         if (timeline.length === 0) return [];
 
-        const birthTime = new Date(timeline[0].start_time).getTime();
+        const birthTime = new Date(timeline[0].startTime).getTime();
         return timeline.map((p: any) => {
-            const startAge = (new Date(p.start_time).getTime() - birthTime) / (365.2425 * 86400000);
-            const endAge = (new Date(p.end_time).getTime() - birthTime) / (365.2425 * 86400000);
+            const startAge = (new Date(p.startTime).getTime() - birthTime) / (365.2425 * 86400000);
+            const endAge = (new Date(p.endTime).getTime() - birthTime) / (365.2425 * 86400000);
             return {
                 lord: p.lord,
                 start: Math.max(0, startAge),
@@ -120,13 +120,13 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
                             <div>
                                 <p className="text-xs text-celestial-gold/70 font-bold uppercase tracking-wider mb-1">Golden Time 🏆</p>
                                 <p className="text-3xl font-black text-celestial-gold">
-                                    {goldenTime.start_age}~{goldenTime.end_age}세
+                                    {goldenTime.startAge}~{goldenTime.endAge}세
                                 </p>
                             </div>
                         </div>
                         <div className="sm:ml-auto text-right">
                             <p className="text-xs text-white/40 mb-1">평균 점수</p>
-                            <p className="text-2xl font-bold text-white">{goldenTime.average_score?.toFixed(1)}</p>
+                            <p className="text-2xl font-bold text-white">{goldenTime.averageScore?.toFixed(1)}</p>
                         </div>
                     </div>
                     {goldenTime.description && (
@@ -193,8 +193,8 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
                                                 <div className="space-y-2 text-xs">
                                                     <p className="flex justify-between items-center text-white/50">
                                                         <span>종합 (MA):</span>
-                                                        <span className={`font-bold ${data.trend_ma != null ? getStatusColor(data.trend_ma) : getStatusColor(data.score)}`}>
-                                                            {(data.trend_ma ?? data.score).toFixed(1)}점
+                                                        <span className={`font-bold ${data.trendMa != null ? getStatusColor(data.trendMa) : getStatusColor(data.score)}`}>
+                                                            {(data.trendMa ?? data.score).toFixed(1)}점
                                                         </span>
                                                     </p>
                                                     {hasTimeline && (
@@ -217,7 +217,7 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
                                                             </p>
                                                         </>
                                                     )}
-                                                    {visibleLines.vedic_dasha && dashaPeriods.length > 0 && (() => {
+                                                    {visibleLines.vedicDasha && dashaPeriods.length > 0 && (() => {
                                                         const currentDasha = dashaPeriods.find((p: any) => label >= p.start && label < p.end);
                                                         return currentDasha ? (
                                                             <p className="flex justify-between items-center mt-2 pt-2 border-t border-white/5">
@@ -237,8 +237,8 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
                             {/* Golden Time 하이라이트 밴드 */}
                             {goldenTime && (
                                 <ReferenceArea
-                                    x1={goldenTime.start_age}
-                                    x2={goldenTime.end_age}
+                                    x1={goldenTime.startAge}
+                                    x2={goldenTime.endAge}
                                     fill="url(#goldenTimeFill)"
                                     stroke="#f59e0b"
                                     strokeOpacity={0.3}
@@ -257,7 +257,7 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
                             ))}
 
                             {/* 베딕 다샤(Mahadasha) 배경 밴드 */}
-                            {visibleLines.vedic_dasha && dashaPeriods.map((p: any, i: number) => (
+                            {visibleLines.vedicDasha && dashaPeriods.map((p: any, i: number) => (
                                 <ReferenceArea
                                     key={`dasha-${i}`}
                                     x1={p.start}
@@ -269,10 +269,10 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
                             ))}
 
                             {/* 메인 Area: 5년 이동평균 */}
-                            {visibleLines.trend_ma && (
+                            {visibleLines.trendMa && (
                                 <Area
                                     type="monotone"
-                                    dataKey="trend_ma"
+                                    dataKey="trendMa"
                                     stroke="#06b6d4"
                                     strokeWidth={2.5}
                                     fill="url(#sajuScoreGradient)"
@@ -304,8 +304,8 @@ export function LifeGraphSection({ timeline, goldenTime, simulationFrames, vedic
                     {vedicReport && (
                         <button
                             type="button"
-                            onClick={() => toggleLine("vedic_dasha")}
-                            className={`flex items-center gap-1 transition-opacity ${visibleLines.vedic_dasha ? "opacity-100 hover:opacity-80 text-celestial-gold" : "opacity-30 hover:opacity-60"}`}
+                            onClick={() => toggleLine("vedicDasha")}
+                            className={`flex items-center gap-1 transition-opacity ${visibleLines.vedicDasha ? "opacity-100 hover:opacity-80 text-celestial-gold" : "opacity-30 hover:opacity-60"}`}
                         >
                             <Moon className="w-3 h-3" />
                             베딕 다샤 오버레이

@@ -125,18 +125,21 @@ impl VedicAnalysisInput {
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CurrentContext {
     pub now_utc: DateTime<Utc>,
     pub analysis_timezone: String,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub enum BirthTimePrecision {
     Exact,
     UnknownTimeNoonProxy,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AnalysisMeta {
     pub precision: BirthTimePrecision,
     pub input_time: String,
@@ -147,6 +150,7 @@ pub struct AnalysisMeta {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SajuAnalysisOutput {
     pub meta: AnalysisMeta,
     pub report: eon_saju::report::SajuReport,
@@ -162,6 +166,7 @@ pub struct SajuAnalysisOutput {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VedicAnalysisOutput {
     pub meta: AnalysisMeta,
     pub report: eon_vedic::analysis::report::VedicAnalysisReport,
@@ -175,6 +180,7 @@ pub struct VedicAnalysisOutput {
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LifeFrameDto {
     pub age: u32,
     pub ganzi: eon_saju::core::ganzi::GanZi,
@@ -186,6 +192,7 @@ pub struct LifeFrameDto {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TransitAnalysisOutput {
     pub meta: AnalysisMeta,
     pub yearly_luck: eon_saju::analysis::periodic_luck::YearlyLuck,
@@ -199,6 +206,7 @@ pub struct TransitAnalysisOutput {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AiAuditOutput {
     pub meta: AnalysisMeta,
     pub context_dump: String,
