@@ -71,7 +71,7 @@ export function DestinyTierTab({ sajuReport, report, transitReport, tierReport, 
   
   const highYogaCount = (vr?.yogas ?? []).filter((y: { quality: string | object }) => {
     const q = typeof y.quality === "string" ? y.quality : Object.keys(y.quality ?? {})[0];
-    return q === "VeryHigh" || q === "High";
+    return q === "veryHigh" || q === "high";
   }).length;
   const yogaPt = Math.min(12, highYogaCount * 3); // v3 weight: 12
   
@@ -81,7 +81,7 @@ export function DestinyTierTab({ sajuReport, report, transitReport, tierReport, 
   // v3 House Strength weight: 10
   const housePt = Math.min(10, strongHouses * 1.5);
   
-  const satiPt = (vr?.sadeSati === "None" || vr?.sadeSati === "None") ? 5 : 0; // v3 weight: 5
+  const satiPt = (vr?.sadeSati === "none" || vr?.sadeSati === "None") ? 5 : 0; // v3 weight: 5
   const BENEFIC_PLANETS = ["Jupiter", "Venus", "Mercury", "Moon"];
   const dashaPt = BENEFIC_PLANETS.some((p) => (vr?.dashaFocus ?? "").includes(p)) ? 4 : 0;
 

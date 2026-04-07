@@ -26,6 +26,7 @@ use crate::core::config::AnalysisConfig;
 
 /// 강약 유형
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum StrengthType {
     /// 신강(身强) - 강한 사주
     Strong,

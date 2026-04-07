@@ -557,7 +557,12 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("|---|---|---|---|");
         for (const yoga of rr.yogas) {
             let q = typeof yoga.quality === "string" ? yoga.quality : "Medium";
-            const qMap: Record<string, string> = { VeryHigh: "매우 강함", High: "강함", Medium: "보통", Low: "약함" };
+            const qMap: Record<string, string> = { 
+                VeryHigh: "매우 강함", veryHigh: "매우 강함",
+                High: "강함", high: "강함",
+                Medium: "보통", medium: "보통",
+                Low: "약함", low: "약함" 
+            };
             lines.push(`| ${yoga.name} | ${qMap[q] ?? q} | ${(yoga.planetsInvolved ?? []).join(", ")} | ${yoga.description} |`);
         }
         lines.push("");
