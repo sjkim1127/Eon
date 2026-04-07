@@ -139,7 +139,9 @@ export function SpiritsList({ sp }: Props) {
 function isAuspicious(marker: string): boolean {
   const auspicious = [
     "Tianyi", "Wenchang", "Taiji", "Yuede", "Tiande", 
-    "Zhenglu", "Jinyu", "Anlu", "Xuetang", "TianyiMedical", "Tianwen"
+    "Zhenglu", "Jinyu", "Anlu", "Xuetang", "TianyiMedical", "Tianwen",
+    "tianyi", "wenchang", "taiji", "yuede", "tiande", 
+    "zhenglu", "jinyu", "anlu", "xuetang", "tianyiMedical", "tianwen"
   ];
   return auspicious.includes(marker);
 }

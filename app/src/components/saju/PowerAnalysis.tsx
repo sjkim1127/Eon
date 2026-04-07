@@ -7,7 +7,7 @@ interface Props {
 
 export function PowerAnalysis({ power }: Props) {
   if (!power) return null;
-  const { options, element_scores, ten_god_scores } = power;
+  const { options, elementScores, tenGodScores } = power;
 
   const getStatusColor = (percent: number) => {
     if (percent < 10) return "text-white/40"; // 부족
@@ -33,11 +33,11 @@ export function PowerAnalysis({ power }: Props) {
       <div className="flex flex-col gap-1 mb-6 text-xs text-white/50 bg-white/5 p-4 rounded-xl border border-white/10">
         <p className="flex items-center gap-2">
           <span className="w-4 h-4 rounded-full bg-celestial-gold/20 flex items-center justify-center text-[10px] text-celestial-gold">✓</span>
-          합에 따른 오행 변화 적용 {options?.apply_transform ? "(적용됨)" : "(미적용)"}
+          합에 따른 오행 변화 적용 {options?.applyTransform ? "(적용됨)" : "(미적용)"}
         </p>
         <p className="flex items-center gap-2">
           <span className="w-4 h-4 rounded-full bg-celestial-gold/20 flex items-center justify-center text-[10px] text-celestial-gold">✓</span>
-          조후와 궁성 보정값 적용 {options?.apply_correction ? "(적용됨)" : "(미적용)"}
+          조후와 궁성 보정값 적용 {options?.applyCorrection ? "(적용됨)" : "(미적용)"}
         </p>
       </div>
 
@@ -46,7 +46,7 @@ export function PowerAnalysis({ power }: Props) {
         <div>
           <h6 className="text-sm font-bold text-brand-400 mb-4 uppercase tracking-wider">오행 분포</h6>
           <div className="space-y-3">
-            {element_scores?.map(([elKey, percent]: [string, number, number], idx: number) => {
+            {elementScores?.map(([elKey, percent]: [string, number, number], idx: number) => {
               const info = ELEMENT_INFO[elKey];
               if (!info) return null;
               return (
@@ -70,7 +70,7 @@ export function PowerAnalysis({ power }: Props) {
         <div>
           <h6 className="text-sm font-bold text-celestial-purple/80 mb-4 uppercase tracking-wider">십성 분포</h6>
           <div className="space-y-2">
-            {ten_god_scores?.map(([godKey, percent]: [string, number, number], idx: number) => {
+            {tenGodScores?.map(([godKey, percent]: [string, number, number], idx: number) => {
               const info = TENGOD_INFO[godKey];
               if (!info) return null;
               const isPresent = percent > 0;

@@ -19,19 +19,19 @@ export function SajuSummary({ s, y, st }: Props) {
           신강/신약 분석
         </p>
         <h4 className="text-3xl font-bold text-white mb-2">
-          {STRENGTH_INFO[s?.strength_type] || s?.strength_type || "—"}
+          {STRENGTH_INFO[s?.strengthType] || s?.strengthType || "—"}
         </h4>
         <div className="flex items-baseline gap-2 mb-4">
           <span className="text-5xl font-black text-gradient leading-none">
-            {s?.strength_score != null ? Math.round(s.strength_score) : "—"}
+            {s?.strengthScore != null ? Math.round(s.strengthScore) : "—"}
           </span>
           <span className="text-white/20 font-bold">점</span>
         </div>
         <div className="space-y-1 text-xs text-white/50">
-          <p>득령: {s?.deuk_ryeong?.acquired ? "✅" : "❌"}</p>
-          <p>득지: {s?.deuk_ji?.acquired ? "✅" : "❌"}</p>
-          <p>득시: {s?.deuk_si?.acquired ? "✅" : "❌"}</p>
-          <p>득세: {s?.deuk_se?.acquired ? "✅" : "❌"}</p>
+          <p>득령: {s?.deukRyeong?.acquired ? "✅" : "❌"}</p>
+          <p>득지: {s?.deukJi?.acquired ? "✅" : "❌"}</p>
+          <p>득시: {s?.deukSi?.acquired ? "✅" : "❌"}</p>
+          <p>득세: {s?.deukSe?.acquired ? "✅" : "❌"}</p>
         </div>
       </div>
 
@@ -51,7 +51,7 @@ export function SajuSummary({ s, y, st }: Props) {
               <div key={i} className="flex flex-col gap-1.5 p-3 rounded-2xl bg-white/5 border border-white/10">
                 <div className="flex items-center gap-2">
                   <span className="shrink-0 px-1.5 py-0.5 rounded bg-celestial-purple/30 text-celestial-purple/90 text-[10px] font-bold">
-                    {YONGSHIN_TYPE_INFO[rec.yongshin_type] || rec.yongshin_type}
+                    {YONGSHIN_TYPE_INFO[rec.yongshinType] || rec.yongshinType}
                   </span>
                   <span className="text-white font-bold text-xs">
                     {ELEMENT_INFO[rec.element]?.hangul || rec.element} ({ELEMENT_INFO[rec.element]?.hanja})
@@ -107,9 +107,9 @@ export function SajuSummary({ s, y, st }: Props) {
                     {reason}
                   </span>
                 ))}
-                {st.projection_path && (
+                {st.projectionPath && (
                   <span className="text-[9px] px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20 font-bold">
-                    {st.projection_path} 투출
+                    {st.projectionPath} 투출
                   </span>
                 )}
               </div>

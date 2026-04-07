@@ -15,6 +15,7 @@ use crate::core::ten_gods::TenGod;
 
 /// 분석 옵션
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AnalysisOptions {
     /// 합에 따른 오행 변화 적용 (Transformations)
     pub apply_transform: bool,
@@ -33,6 +34,7 @@ impl Default for AnalysisOptions {
 
 /// 분석 엔진 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct IntegratedAnalysis {
     pub options: AnalysisOptions,
     /// 오행 비율 (Element, Percentage, Score)

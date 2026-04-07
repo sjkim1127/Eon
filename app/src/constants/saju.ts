@@ -5,26 +5,39 @@ import type { HanjaHangul } from "../types";
 // ──────────────────────────────────────────────
 
 export const STEM_INFO: Record<string, HanjaHangul> = {
-  Jia: { hanja: "甲", hangul: "갑" }, Yi: { hanja: "乙", hangul: "을" },
-  Bing: { hanja: "丙", hangul: "병" }, Ding: { hanja: "丁", hangul: "정" },
-  Wu: { hanja: "戊", hangul: "무" }, Ji: { hanja: "己", hangul: "기" },
-  Geng: { hanja: "庚", hangul: "경" }, Xin: { hanja: "辛", hangul: "신" },
-  Ren: { hanja: "壬", hangul: "임" }, Gui: { hanja: "癸", hangul: "계" },
+  Jia: { hanja: "甲", hangul: "갑" }, jia: { hanja: "甲", hangul: "갑" },
+  Yi: { hanja: "乙", hangul: "을" }, yi: { hanja: "乙", hangul: "을" },
+  Bing: { hanja: "丙", hangul: "병" }, bing: { hanja: "丙", hangul: "병" },
+  Ding: { hanja: "丁", hangul: "정" }, ding: { hanja: "丁", hangul: "정" },
+  Wu: { hanja: "戊", hangul: "무" }, wu: { hanja: "戊", hangul: "무" },
+  Ji: { hanja: "己", hangul: "기" }, ji: { hanja: "己", hangul: "기" },
+  Geng: { hanja: "庚", hangul: "경" }, geng: { hanja: "庚", hangul: "경" },
+  Xin: { hanja: "辛", hangul: "신" }, xin: { hanja: "辛", hangul: "신" },
+  Ren: { hanja: "壬", hangul: "임" }, ren: { hanja: "壬", hangul: "임" },
+  Gui: { hanja: "癸", hangul: "계" }, gui: { hanja: "癸", hangul: "계" },
 };
 
 export const BRANCH_INFO: Record<string, HanjaHangul> = {
-  Zi: { hanja: "子", hangul: "자" }, Chou: { hanja: "丑", hangul: "축" },
-  Yin: { hanja: "寅", hangul: "인" }, Mao: { hanja: "卯", hangul: "묘" },
-  Chen: { hanja: "辰", hangul: "진" }, Si: { hanja: "巳", hangul: "사" },
-  Wu: { hanja: "午", hangul: "오" }, Wei: { hanja: "未", hangul: "미" },
-  Shen: { hanja: "申", hangul: "신" }, You: { hanja: "酉", hangul: "유" },
-  Xu: { hanja: "戌", hangul: "술" }, Hai: { hanja: "亥", hangul: "해" },
+  Zi: { hanja: "子", hangul: "자" }, zi: { hanja: "子", hangul: "자" },
+  Chou: { hanja: "丑", hangul: "축" }, chou: { hanja: "丑", hangul: "축" },
+  Yin: { hanja: "寅", hangul: "인" }, yin: { hanja: "寅", hangul: "인" },
+  Mao: { hanja: "卯", hangul: "묘" }, mao: { hanja: "卯", hangul: "묘" },
+  Chen: { hanja: "辰", hangul: "진" }, chen: { hanja: "辰", hangul: "진" },
+  Si: { hanja: "巳", hangul: "사" }, si: { hanja: "巳", hangul: "사" },
+  Wu: { hanja: "午", hangul: "오" }, wu: { hanja: "午", hangul: "오" },
+  Wei: { hanja: "未", hangul: "미" }, wei: { hanja: "未", hangul: "미" },
+  Shen: { hanja: "申", hangul: "신" }, shen: { hanja: "申", hangul: "신" },
+  You: { hanja: "酉", hangul: "유" }, you: { hanja: "酉", hangul: "유" },
+  Xu: { hanja: "戌", hangul: "술" }, xu: { hanja: "戌", hangul: "술" },
+  Hai: { hanja: "亥", hangul: "해" }, hai: { hanja: "亥", hangul: "해" },
 };
 
 export const ELEMENT_INFO: Record<string, HanjaHangul> = {
-  Wood: { hanja: "木", hangul: "목" }, Fire: { hanja: "火", hangul: "화" },
-  Earth: { hanja: "土", hangul: "토" }, Metal: { hanja: "金", hangul: "금" },
-  Water: { hanja: "水", hangul: "수" },
+  Wood: { hanja: "木", hangul: "목" }, wood: { hanja: "木", hangul: "목" },
+  Fire: { hanja: "火", hangul: "화" }, fire: { hanja: "火", hangul: "화" },
+  Earth: { hanja: "土", hangul: "토" }, earth: { hanja: "土", hangul: "토" },
+  Metal: { hanja: "金", hangul: "금" }, metal: { hanja: "金", hangul: "금" },
+  Water: { hanja: "水", hangul: "수" }, water: { hanja: "水", hangul: "수" },
 };
 
 export const STEM_TO_ELEMENT: Record<string, string> = {
@@ -44,28 +57,43 @@ export const BRANCH_TO_ELEMENT: Record<string, string> = {
 };
 
 export const STRENGTH_INFO: Record<string, string> = {
-  Strong: "신강 (身强)", Weak: "신약 (身弱)", Balanced: "중화 (中和)",
+  Strong: "신강 (身强)", strong: "신강 (身强)",
+  Weak: "신약 (身弱)", weak: "신약 (身弱)",
+  Balanced: "중화 (中和)", balanced: "중화 (中和)",
 };
 
 export const TENGOD_INFO: Record<string, HanjaHangul> = {
-  Bijian: { hangul: "비견", hanja: "比肩" }, Jiecai: { hangul: "겁재", hanja: "劫財" },
-  Shishen: { hangul: "식신", hanja: "食神" }, Shangguan: { hangul: "상관", hanja: "傷官" },
-  Piancai: { hangul: "편재", hanja: "偏財" }, Zhengcai: { hangul: "정재", hanja: "正財" },
-  Pianguan: { hangul: "편관", hanja: "偏官" }, Zhengguan: { hangul: "정관", hanja: "正官" },
-  Pianyin: { hangul: "편인", hanja: "偏印" }, Zhengyin: { hangul: "정인", hanja: "正印" },
+  Bijian: { hangul: "비견", hanja: "比肩" }, bijian: { hangul: "비견", hanja: "比肩" },
+  Jiecai: { hangul: "겁재", hanja: "劫財" }, jiecai: { hangul: "겁재", hanja: "劫財" },
+  Shishen: { hangul: "식신", hanja: "食神" }, shishen: { hangul: "식신", hanja: "食神" },
+  Shangguan: { hangul: "상관", hanja: "傷官" }, shangguan: { hangul: "상관", hanja: "傷官" },
+  Piancai: { hangul: "편재", hanja: "偏財" }, piancai: { hangul: "편재", hanja: "偏財" },
+  Zhengcai: { hangul: "정재", hanja: "正財" }, zhengcai: { hangul: "정재", hanja: "正財" },
+  Pianguan: { hangul: "편관", hanja: "偏官" }, pianguan: { hangul: "편관", hanja: "偏官" },
+  Zhengguan: { hangul: "정관", hanja: "正官" }, zhengguan: { hangul: "정관", hanja: "正官" },
+  Pianyin: { hangul: "편인", hanja: "偏印" }, pianyin: { hangul: "편인", hanja: "偏印" },
+  Zhengyin: { hangul: "정인", hanja: "正印" }, zhengyin: { hangul: "정인", hanja: "正印" },
 };
 
 export const STRUCTURE_INFO: Record<string, HanjaHangul> = {
-  ShiShen: { hangul: "식신격", hanja: "食神格" }, ShangGuan: { hangul: "상관격", hanja: "傷官格" },
-  PianCai: { hangul: "편재격", hanja: "偏財格" }, ZhengCai: { hangul: "정재격", hanja: "正財格" },
-  PianGuan: { hangul: "편관격", hanja: "偏官格" }, ZhengGuan: { hangul: "정관격", hanja: "正官格" },
-  PianYin: { hangul: "편인격", hanja: "偏印格" }, ZhengYin: { hangul: "정인격", hanja: "正印格" },
-  JianLu: { hangul: "건록격", hanja: "建祿格" }, YangIn: { hangul: "양인격", hanja: "陽刃格" },
-  Special: { hangul: "비겁격", hanja: "特殊格" },
-  JongAh: { hangul: "종아격", hanja: "從兒格" }, JongJae: { hangul: "종재격", hanja: "從財格" },
-  JongSal: { hangul: "종살격", hanja: "從殺格" }, JongGang: { hangul: "종강격", hanja: "從强格" },
-  JongWang: { hangul: "종왕격", hanja: "從旺格" }, Follower: { hangul: "종격", hanja: "從格" },
-  SpecialTransformation: { hangul: "전왕격", hanja: "專旺格" },
+  ShiShen: { hangul: "식신격", hanja: "食神格" }, shiShen: { hangul: "식신격", hanja: "食神格" },
+  ShangGuan: { hangul: "상관격", hanja: "傷官格" }, shangGuan: { hangul: "상관격", hanja: "傷官格" },
+  PianCai: { hangul: "편재격", hanja: "偏財格" }, pianCai: { hangul: "편재격", hanja: "偏財格" },
+  ZhengCai: { hangul: "정재격", hanja: "正財格" }, zhengCai: { hangul: "정재격", hanja: "正財格" },
+  PianGuan: { hangul: "편관격", hanja: "偏官格" }, pianGuan: { hangul: "편관격", hanja: "偏官格" },
+  ZhengGuan: { hangul: "정관격", hanja: "正官格" }, zhengGuan: { hangul: "정관격", hanja: "正관格" },
+  PianYin: { hangul: "편인격", hanja: "偏印格" }, pianYin: { hangul: "편인격", hanja: "偏印格" },
+  ZhengYin: { hangul: "정인격", hanja: "正印格" }, zhengYin: { hangul: "정인격", hanja: "正印格" },
+  JianLu: { hangul: "건록격", hanja: "建祿格" }, jianLu: { hangul: "건록격", hanja: "建祿格" },
+  YangIn: { hangul: "양인격", hanja: "陽刃格" }, yangIn: { hangul: "양인격", hanja: "陽刃格" },
+  Special: { hangul: "비겁격", hanja: "特殊格" }, special: { hangul: "비겁격", hanja: "特殊格" },
+  JongAh: { hangul: "종아격", hanja: "從兒格" }, jongAh: { hangul: "종아격", hanja: "從兒格" },
+  JongJae: { hangul: "종재격", hanja: "從財格" }, jongJae: { hangul: "종재격", hanja: "從財格" },
+  JongSal: { hangul: "종살격", hanja: "從殺格" }, jongSal: { hangul: "종살격", hanja: "從殺格" },
+  JongGang: { hangul: "종강격", hanja: "從强格" }, jongGang: { hangul: "종강격", hanja: "從强格" },
+  JongWang: { hangul: "종왕격", hanja: "從旺格" }, jongWang: { hangul: "종왕격", hanja: "從旺格" },
+  Follower: { hangul: "종격", hanja: "從格" }, follower: { hangul: "종격", hanja: "從格" },
+  SpecialTransformation: { hangul: "전왕격", hanja: "專旺格" }, specialTransformation: { hangul: "전왕격", hanja: "專旺格" },
 };
 
 export const SPIRIT_INFO: Record<string, HanjaHangul> = {
@@ -88,14 +116,17 @@ export const SPIRIT_INFO: Record<string, HanjaHangul> = {
 };
 
 export const PILLAR_POS_INFO: Record<string, string> = {
-  Year: "년주", Month: "월주", Day: "일주", Hour: "시주",
+  Year: "년주", year: "년주",
+  Month: "월주", month: "월주",
+  Day: "일주", day: "일주",
+  Hour: "시주", hour: "시주",
 };
 
 export const YONGSHIN_TYPE_INFO: Record<string, string> = {
-  Eokbu: "억부용신",
-  Johu: "조후용신",
-  Tonggwan: "통관용신",
-  Byeongyak: "병약용신",
+  Eokbu: "억부용신", eokbu: "억부용신",
+  Johu: "조후용신", johu: "조후용신",
+  Tonggwan: "통관용신", tonggwan: "통관용신",
+  Byeongyak: "병약용신", byeongyak: "병약용신",
 };
 
 export const REL_INFO: Record<string, string> = {
