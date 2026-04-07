@@ -74,14 +74,18 @@ export function AvasthaKarakaSection({ avasthas, karakas, arudhaPadas }: Avastha
                             제미니 카라카 (Jaimini Karakas)
                         </h5>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {karakas.map((k, i) => {
-                                const roleInfo = KARAKA_ROLES[k.role] ?? { label: k.role.slice(0, 3), meaning: k.role };
+                            {karakas.map((raw, i) => {
+                                const k = raw as any;
+                                const role = k.role ?? "";
+                                const degreeInRasi = k.degree_in_rasi ?? k.degreeInRasi ?? 0;
+                                const roleInfo = KARAKA_ROLES[role] ?? { label: role.slice(0, 3), meaning: role };
+                                
                                 return (
                                     <div key={i} className="p-3 rounded-xl bg-white/[0.03] border border-white/10 text-center">
                                         <p className="text-[10px] text-celestial-gold font-bold mb-1">{roleInfo.label}</p>
                                         <p className="text-white font-bold text-sm">{k.planet}</p>
                                         <p className="text-[10px] text-white/40 mt-1">{roleInfo.meaning}</p>
-                                        <p className="text-[10px] text-white/25 font-mono">{k.degree_in_rasi.toFixed(2)}°</p>
+                                        <p className="text-[10px] text-white/25 font-mono">{degreeInRasi.toFixed(2)}°</p>
                                     </div>
                                 );
                             })}

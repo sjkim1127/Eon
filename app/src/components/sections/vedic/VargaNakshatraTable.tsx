@@ -75,53 +75,64 @@ export function VargaNakshatraTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {(rows || []).map((row, i) => (
-              <tr key={i} className="hover:bg-white/3 transition-colors">
-                <td className="py-3 pr-4 font-bold text-white whitespace-nowrap">
-                  {row.planet}
-                  {row.is_retrograde && (
-                    <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">
-                      ℞
-                    </span>
-                  )}
-                  {row.is_combust && (
-                    <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40">
-                      ☀
-                    </span>
-                  )}
-                </td>
-                <td className="py-3 pr-4 text-white/70 font-mono text-xs whitespace-nowrap">
-                  {row.position_str}
-                </td>
-                {showHouse && (
-                  <>
-                    <td className="py-3 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">
-                      {SIGN_NAMES[row.sign] ?? "—"}
-                    </td>
-                    <td className="py-3 pr-4 text-white/70 whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-xs">
-                        H{row.house}
+            {(rows || []).map((raw, i) => {
+              const row = raw as any;
+              const isRetrograde = row.is_retrograde ?? row.isRetrograde ?? false;
+              const isCombust = row.is_combust ?? row.isCombust ?? false;
+              const positionStr = row.position_str ?? row.positionStr ?? "—";
+              const nakshatraName = row.nakshatra_name ?? row.nakshatraName ?? "—";
+              const padaRange = row.pada_range ?? row.padaRange ?? "—";
+              const nakshatraLord = row.nakshatra_lord ?? row.nakshatraLord ?? "—";
+              const padaLord = row.pada_lord ?? row.padaLord ?? "—";
+              
+              return (
+                <tr key={i} className="hover:bg-white/3 transition-colors">
+                  <td className="py-3 pr-4 font-bold text-white whitespace-nowrap">
+                    {row.planet}
+                    {isRetrograde && (
+                      <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                        ℞
                       </span>
-                    </td>
-                  </>
-                )}
-                <td className="py-3 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">
-                  {row.nakshatra_name}
-                  <span className="ml-1.5 text-[10px] text-white/40">(Pada {row.pada})</span>
-                </td>
-                <td className="py-3 pr-4 text-white/40 text-xs whitespace-nowrap">
-                  {row.pada_range}
-                </td>
-                <td className="py-3 pr-4 text-white/70 whitespace-nowrap">{row.nakshatra_lord}</td>
-                <td className="py-3 pr-4 text-white/70 whitespace-nowrap">{row.pada_lord}</td>
-                <td className="py-3 pr-4 text-white/60 whitespace-nowrap">{row.deity}</td>
-                <td className="py-3 pr-4 whitespace-nowrap">
-                  <span className={`text-xs font-bold ${purposeColor(row.purpose)}`}>
-                    {row.purpose}
-                  </span>
-                </td>
-              </tr>
-            ))}
+                    )}
+                    {isCombust && (
+                      <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/40">
+                        ☀
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-3 pr-4 text-white/70 font-mono text-xs whitespace-nowrap">
+                    {positionStr}
+                  </td>
+                  {showHouse && (
+                    <>
+                      <td className="py-3 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">
+                        {SIGN_NAMES[row.sign] ?? "—"}
+                      </td>
+                      <td className="py-3 pr-4 text-white/70 whitespace-nowrap">
+                        <span className="px-2 py-0.5 rounded bg-white/10 font-mono text-xs">
+                          H{row.house}
+                        </span>
+                      </td>
+                    </>
+                  )}
+                  <td className="py-3 pr-4 text-celestial-cyan font-semibold whitespace-nowrap">
+                    {nakshatraName}
+                    <span className="ml-1.5 text-[10px] text-white/40">(Pada {row.pada})</span>
+                  </td>
+                  <td className="py-3 pr-4 text-white/40 text-xs whitespace-nowrap">
+                    {padaRange}
+                  </td>
+                  <td className="py-3 pr-4 text-white/70 whitespace-nowrap">{nakshatraLord}</td>
+                  <td className="py-3 pr-4 text-white/70 whitespace-nowrap">{padaLord}</td>
+                  <td className="py-3 pr-4 text-white/60 whitespace-nowrap">{row.deity}</td>
+                  <td className="py-3 pr-4 whitespace-nowrap">
+                    <span className={`text-xs font-bold ${purposeColor(row.purpose)}`}>
+                      {row.purpose}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

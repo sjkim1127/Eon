@@ -39,25 +39,31 @@ export function AspectsSection({ aspects }: AspectsSectionProps) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {aspects.map((a, i) => (
-                            <tr key={i} className="hover:bg-white/[0.03] transition-colors">
-                                <td className="py-3 pr-4 font-bold text-white whitespace-nowrap">
-                                    {a.aspecting_planet}
-                                </td>
-                                <td className="py-3 pr-4">
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {a.aspected_houses.map(h => (
-                                            <span
-                                                key={h}
-                                                className="text-xs px-2 py-0.5 rounded-lg bg-celestial-cyan/10 text-celestial-cyan border border-celestial-cyan/20 font-semibold"
-                                            >
-                                                H{h} {SIGN_NAMES[h] ? `(${SIGN_NAMES[h]})` : ""}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                        {aspects.map((raw, i) => {
+                            const a = raw as any;
+                            const aspectingPlanet = a.aspecting_planet ?? a.aspectingPlanet ?? "—";
+                            const aspectedHouses = Array.isArray(a.aspected_houses) ? a.aspected_houses : (Array.isArray(a.aspectedHouses) ? a.aspectedHouses : []);
+                            
+                            return (
+                                <tr key={i} className="hover:bg-white/[0.03] transition-colors">
+                                    <td className="py-3 pr-4 font-bold text-white whitespace-nowrap">
+                                        {aspectingPlanet}
+                                    </td>
+                                    <td className="py-3 pr-4">
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {aspectedHouses.map((h: number) => (
+                                                <span
+                                                    key={h}
+                                                    className="text-xs px-2 py-0.5 rounded-lg bg-celestial-cyan/10 text-celestial-cyan border border-celestial-cyan/20 font-semibold"
+                                                >
+                                                    H{h} {SIGN_NAMES[h] ? `(${SIGN_NAMES[h]})` : ""}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
