@@ -15,11 +15,25 @@ interface GocharaSectionProps {
     summary: GocharaSummary | null;
 }
 
-/** 응답에서 gochara가 와도 transits가 배열이 아닐 수 있음 (WASM 직렬화 등) — 정규화 */
+/** 응답에서 snake/camel 혼용 정규화 + transits 배열 보장 */
 function normalizeSummary(summary: GocharaSummary | null): GocharaSummary | null {
     if (!summary || typeof summary !== "object") return null;
-    const transits = Array.isArray(summary.transits) ? summary.transits : [];
-    return { ...summary, transits };
+
+    const rawTransits = Array.isArray((summary as any).transits) ? (summary as any).transits : [];
+
+    const transits = rawTransits.map((t: any) => ({
+        planet: t.planet ?? "—",
+        current_rasi: t.current_rasi ?? t.currentRasi ?? 0,
+        house_from_moon: t.house_from_moon ?? t.houseFromMoon ?? 0,
+        is_benefic_transit: t.is_benefic_transit ?? t.isBeneficTransit ?? false,
+        is_blocked: t.is_blocked ?? t.isBlocked ?? false,
+        murti: t.murti ?? "Unknown",
+        summary: t.summary ?? "",
+        description: t.description ?? "",
+        reasons: Array.isArray(t.reasons) ? t.reasons : [],
+    }));
+
+    return { ...summary, transits } as GocharaSummary;
 }
 
 export function GocharaSection({ summary }: GocharaSectionProps) {
@@ -49,7 +63,6 @@ export function GocharaSection({ summary }: GocharaSectionProps) {
 
             <div className="overflow-x-auto mb-10">
                 <table className="w-full text-sm">
-                    {/* ... (keep table as is, but we can make it more compact) */}
                     <thead>
                         <tr className="border-b border-white/10">
                             <th className="text-left text-xs text-white/40 font-bold uppercase tracking-wider pb-3 pr-4">행성</th>
@@ -63,12 +76,14 @@ export function GocharaSection({ summary }: GocharaSectionProps) {
                     <tbody className="divide-y divide-white/5">
                         {normalized.transits.map((t, i) => {
                             const murti = MURTI_LABELS[t.murti] ?? MURTI_LABELS.Unknown;
-                            const signName = SIGN_NAMES[t.current_rasi] ?? `#${t.current_rasi}`;
+                            const signNum = Number(t.current_rasi ?? 0);
+                            const houseNum = Number(t.house_from_moon ?? 0);
+                            const signName = signNum >= 1 && signNum <= 12 ? SIGN_NAMES[signNum] : "—";
                             return (
                                 <tr key={i} className="hover:bg-white/[0.03] transition-colors">
-                                    <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">{t.planet}</td>
+                                    <td className="py-2.5 pr-4 font-bold text-white whitespace-nowrap">{t.planet ?? "—"}</td>
                                     <td className="py-2.5 pr-4 text-white/70">{signName}</td>
-                                    <td className="py-2.5 pr-4 text-white/50 font-mono">H{t.house_from_moon}</td>
+                                    <td className="py-2.5 pr-4 text-white/50 font-mono">{houseNum ? `H${houseNum}` : "—"}</td>
                                     <td className="py-2.5 pr-4">
                                         {t.is_benefic_transit ? (
                                             <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20 font-semibold">길 吉</span>

@@ -682,11 +682,16 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("> Moon(달) 기준 하우스 트랜짓이며, 베다(Vedha)로 인해 영향력이 차단될 수 있습니다.\n");
         lines.push("| 행성 | 현재 라시 | 월지기준 하우스 | 길흉 | 베다(차단) | 무르띠(Murti) |");
         lines.push("|---|---|---|---|---|---|");
-        for (const t of v.gochara.transits) {
-            const rasi = SIGN_NAMES[t.current_rasi] ?? t.current_rasi;
-            const benefic = t.is_benefic_transit ? "길(吉) ✅" : "흉(凶) ⚠️";
-            const blocked = t.is_blocked ? "연결 차단(Vedha)" : "—";
-            lines.push(`| ${t.planet} | ${rasi} | H${t.house_from_moon} | ${benefic} | ${blocked} | ${t.murti} |`);
+        for (const raw of v.gochara.transits) {
+            const t = raw as any;
+            const rasiNum = t.current_rasi ?? t.currentRasi ?? 0;
+            const houseNum = t.house_from_moon ?? t.houseFromMoon ?? 0;
+            const isBenefic = t.is_benefic_transit ?? t.isBeneficTransit ?? false;
+            const isBlocked = t.is_blocked ?? t.isBlocked ?? false;
+            const rasi = SIGN_NAMES[rasiNum] ?? rasiNum;
+            const benefic = isBenefic ? "길(吉) ✅" : "흉(凶) ⚠️";
+            const blocked = isBlocked ? "연결 차단(Vedha)" : "—";
+            lines.push(`| ${t.planet ?? "—"} | ${rasi} | H${houseNum} | ${benefic} | ${blocked} | ${t.murti ?? "Unknown"} |`);
         }
         lines.push("");
     }
