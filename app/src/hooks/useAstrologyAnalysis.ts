@@ -3,7 +3,7 @@ import { backendClient } from "../lib/backend";
 import { useAppStore } from "../store/useAppStore";
 import { getBirthValidationError } from "../utils/validation";
 import { normalizeVedicResult } from "../utils/normalize";
-import type { SajuAnalysisResult, VedicAnalysisResult, TransitResult } from "../types";
+import type { SajuAnalysisResult, TransitResult } from "../types";
 import type { RunAnalysisResult } from "../types/analysis";
 
 export function useAstrologyAnalysis() {
