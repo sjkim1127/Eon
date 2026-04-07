@@ -5,9 +5,9 @@ import type { AnalysisBundleState, AnalysisTaskState } from '../types/analysis';
 export const DEFAULT_BIRTH: BirthData = {
   year: 1990, month: 1, day: 1, hour: 12, minute: 0,
   lat: 37.5665, lon: 126.978,
-  is_lunar: false, is_leap_month: false,
+  isLunar: false, isLeapMonth: false,
   timezone: "Asia/Seoul",
-  unknown_time: false,
+  unknownTime: false,
 };
 
 

@@ -17,10 +17,12 @@ export function AuxiliaryPillars({ data, auxShinsals = [], unknownTime = false }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between px-2">
-        <h3 className="text-white/30 text-[10px] font-bold uppercase tracking-widest">
-          {data.meta.formula_name} {data.meta.formula_version}
-        </h3>
+      <div className="flex items-center gap-2 mb-6 text-[10px] text-white/30 font-bold uppercase tracking-widest">
+        <Sparkles className="w-3.5 h-3.5 text-celestial-gold" />
+        <span>보조 기둥 (Supplementary)</span>
+        <span className="ml-auto opacity-50">
+          {data.meta.formulaName} {data.meta.formulaVersion}
+        </span>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -78,7 +80,7 @@ export function AuxiliaryPillars({ data, auxShinsals = [], unknownTime = false }
 
               {/* Dynamic Interpretation (SSOT from Engine) */}
               {(() => {
-                const interp = data.interpretations?.find(i => i.pillar_name === p.key);
+                const interp = data.interpretations?.find(i => i.pillarName === p.key);
                 if (!interp) return null;
 
                 const isAuspicious = interp.level === "Auspicious";

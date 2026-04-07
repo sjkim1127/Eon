@@ -1,4 +1,4 @@
-import { Globe, ShieldAlert, Sparkles, AlertCircle } from "lucide-react";
+import { Globe, Sparkles } from "lucide-react";
 import { SIGN_NAMES } from "../../../constants";
 import type { GocharaSummary } from "../../../types/vedic";
 import { cn } from "../../../utils";
@@ -15,30 +15,8 @@ interface GocharaSectionProps {
     summary: GocharaSummary | null;
 }
 
-/** 응답에서 snake/camel 혼용 정규화 + transits 배열 보장 */
-function normalizeSummary(summary: GocharaSummary | null): GocharaSummary | null {
-    if (!summary || typeof summary !== "object") return null;
-
-    const rawTransits = Array.isArray((summary as any).transits) ? (summary as any).transits : [];
-
-    const transits = rawTransits.map((t: any) => ({
-        planet: t.planet ?? "—",
-        current_rasi: t.current_rasi ?? t.currentRasi ?? 0,
-        house_from_moon: t.house_from_moon ?? t.houseFromMoon ?? 0,
-        is_benefic_transit: t.is_benefic_transit ?? t.isBeneficTransit ?? false,
-        is_blocked: t.is_blocked ?? t.isBlocked ?? false,
-        murti: t.murti ?? "Unknown",
-        summary: t.summary ?? "",
-        description: t.description ?? "",
-        reasons: Array.isArray(t.reasons) ? t.reasons : [],
-    }));
-
-    return { ...summary, transits } as GocharaSummary;
-}
-
 export function GocharaSection({ summary }: GocharaSectionProps) {
-    const normalized = normalizeSummary(summary);
-    if (!normalized || normalized.transits.length === 0) {
+    if (!summary || !summary.transits || summary.transits.length === 0) {
         return (
             <div className="glass p-8 rounded-[2rem]">
                 <h5 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
@@ -47,7 +25,7 @@ export function GocharaSection({ summary }: GocharaSectionProps) {
                 </h5>
                 <p className="text-white/50 text-sm">
                     {summary != null && typeof summary === "object"
-                        ? "현재 트랜짓 데이터가 비어 있습니다. 출생 달 위치 기준으로 현재 행성 위치를 계산합니다. (웹에서는 WASM 빌드 후 표시될 수 있습니다.)"
+                        ? "현재 트랜짓 데이터가 비어 있습니다. 출생 달 위치 기준으로 현재 행성 위치를 계산합니다."
                         : "데이터를 불러올 수 없습니다. 베딕 분석을 실행한 뒤 다시 확인해 주세요."}
                 </p>
             </div>
@@ -74,10 +52,10 @@ export function GocharaSection({ summary }: GocharaSectionProps) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {normalized.transits.map((t, i) => {
+                        {summary.transits.map((t, i) => {
                             const murti = MURTI_LABELS[t.murti] ?? MURTI_LABELS.Unknown;
-                            const signNum = Number(t.current_rasi ?? 0);
-                            const houseNum = Number(t.house_from_moon ?? 0);
+                            const signNum = Number(t.currentRasi ?? 0);
+                            const houseNum = Number(t.houseFromMoon ?? 0);
                             const signName = signNum >= 1 && signNum <= 12 ? SIGN_NAMES[signNum] : "—";
                             return (
                                 <tr key={i} className="hover:bg-white/[0.03] transition-colors">
@@ -85,21 +63,24 @@ export function GocharaSection({ summary }: GocharaSectionProps) {
                                     <td className="py-2.5 pr-4 text-white/70">{signName}</td>
                                     <td className="py-2.5 pr-4 text-white/50 font-mono">{houseNum ? `H${houseNum}` : "—"}</td>
                                     <td className="py-2.5 pr-4">
-                                        {t.is_benefic_transit ? (
+                                        {t.isBeneficTransit ? (
                                             <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20 font-semibold">길 吉</span>
                                         ) : (
                                             <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20 font-semibold">흉 凶</span>
                                         )}
                                     </td>
                                     <td className="py-2.5 pr-4">
-                                        {t.is_blocked ? (
+                                        {t.isBlocked ? (
                                             <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 font-semibold">차단됨</span>
                                         ) : (
                                             <span className="text-xs text-white/20">—</span>
                                         )}
                                     </td>
                                     <td className="py-2.5">
-                                        <span className={`text-xs font-semibold ${murti.color}`}>{murti.emoji} {murti.label}</span>
+                                        <div className={cn("flex flex-col items-start gap-1 font-bold", murti.color)}>
+                                            <span className="text-[10px] leading-tight text-white/40">{murti.emoji} MURTI</span>
+                                            <span className="text-sm font-bold tracking-widest">{murti.label}</span>
+                                        </div>
                                     </td>
                                 </tr>
                             );
@@ -109,34 +90,21 @@ export function GocharaSection({ summary }: GocharaSectionProps) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {normalized.transits.filter(t => t.summary).map((t, i) => (
-                    <div key={i} className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 glass-hover">
+                {summary.transits.slice(0, 7).filter(t => t.summary).map((t, i) => (
+                    <div key={i} className="p-6 bg-white/[0.03] rounded-2xl border border-white/10 hover:border-white/20 transition-all">
                         <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <div className={cn("p-2 rounded-lg", t.is_benefic_transit ? "bg-green-500/10" : "bg-red-500/10")}>
-                                    {t.is_benefic_transit ? <Sparkles className="w-4 h-4 text-green-400" /> : <ShieldAlert className="w-4 h-4 text-red-400" />}
-                                </div>
-                                <div>
-                                    <h6 className="text-white font-bold">{t.planet} 트랜짓</h6>
-                                    <p className="text-[10px] text-white/40 uppercase font-bold">{t.summary}</p>
-                                </div>
-                            </div>
-                            {t.is_blocked && (
-                                <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-amber-500/10 border border-amber-500/20">
-                                    <AlertCircle className="w-3 h-3 text-amber-400" />
-                                    <span className="text-[10px] font-bold text-amber-400 leading-none">VEDHA</span>
-                                </div>
-                            )}
+                            <span className="font-bold text-white">{t.planet} 요약</span>
+                            <span className={cn("text-xs font-bold px-2 py-1 rounded-lg", t.isBeneficTransit ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400")}>
+                                {t.isBeneficTransit ? "긍정적 주기" : "주의 필요 주기"}
+                            </span>
                         </div>
-                        <p className="text-sm text-white/70 leading-relaxed mb-4">
-                            {t.description}
-                        </p>
+                        <p className="text-sm text-white/70 leading-relaxed mb-4">{t.summary}</p>
                         {t.reasons && t.reasons.length > 0 && (
-                            <div className="space-y-2">
-                                {t.reasons.map((reason, j) => (
-                                    <div key={j} className="flex items-start gap-2 text-[11px] text-white/40">
-                                        <div className="w-1 h-1 rounded-full bg-white/20 mt-1.5 flex-shrink-0" />
-                                        <span>{reason}</span>
+                            <div className="space-y-1.5 border-t border-white/5 pt-4">
+                                {t.reasons.map((r, rIdx) => (
+                                    <div key={rIdx} className="flex items-center gap-2 text-xs text-white/40">
+                                        <Sparkles className="w-3 h-3 text-celestial-cyan/50" />
+                                        <span>{r}</span>
                                     </div>
                                 ))}
                             </div>

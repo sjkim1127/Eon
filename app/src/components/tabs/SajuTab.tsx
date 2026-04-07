@@ -17,15 +17,15 @@ interface SajuTabProps {
 
 function RelationshipBadges({ relationships }: { relationships: any }) {
   const summary = [];
-  if ((relationships.stem_clashes?.length || 0) + (relationships.branch_clashes?.length || 0) > 0) 
+  if ((relationships.stemClashes?.length || 0) + (relationships.branchClashes?.length || 0) > 0) 
     summary.push({ label: "충(沖)", color: "text-rose-400 bg-rose-500/10 border-rose-500/20" });
-  if ((relationships.branch_punishments?.length || 0) > 0) 
+  if ((relationships.branchPunishments?.length || 0) > 0) 
     summary.push({ label: "형(刑)", color: "text-orange-400 bg-orange-500/10 border-orange-500/20" });
-  if ((relationships.stem_combinations?.length || 0) + (relationships.six_combinations?.length || 0) + (relationships.triple_combinations?.length || 0) + (relationships.seasonal_combinations?.length || 0) > 0) 
+  if ((relationships.stemCombinations?.length || 0) + (relationships.sixCombinations?.length || 0) + (relationships.tripleCombinations?.length || 0) + (relationships.seasonalCombinations?.length || 0) > 0) 
     summary.push({ label: "합(合)", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" });
-  if ((relationships.branch_harms?.length || 0) > 0) 
+  if ((relationships.branchHarms?.length || 0) > 0) 
     summary.push({ label: "해(害)", color: "text-pink-400 bg-pink-500/10 border-pink-500/20" });
-  if ((relationships.branch_destructions?.length || 0) > 0) 
+  if ((relationships.branchDestructions?.length || 0) > 0) 
     summary.push({ label: "파(破)", color: "text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20" });
 
   if (summary.length === 0) return null;
@@ -46,12 +46,12 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
   if (!sajuReport || !sajuReport.report) return null;
   const reportData = sajuReport.report;
   const p = reportData.pillars;
-  const t = reportData.ten_gods;
+  const t = reportData.tenGods;
   const s = reportData.strength;
   const y = reportData.yongshin;
   const st = reportData.structure;
-  const sp = reportData.spirit_markers;
-  const ml = reportData.major_luck;
+  const sp = reportData.spiritMarkers;
+  const ml = reportData.majorLuck;
 
   return (
     <motion.div
@@ -86,10 +86,10 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
       </div>
 
       {/* 보조 기둥 (태원/명궁/신궁) */}
-      {reportData.supplementary_pillars && (
+      {reportData.supplementaryPillars && (
         <AuxiliaryPillars 
-          data={reportData.supplementary_pillars} 
-          auxShinsals={sp?.aux_shinsals}
+          data={reportData.supplementaryPillars} 
+          auxShinsals={sp?.auxShinsals}
           unknownTime={unknownTime} 
         />
       )}
@@ -107,7 +107,7 @@ export function SajuTab({ sajuReport, unknownTime = false }: SajuTabProps) {
       {sajuReport.relationships && <RelationshipsAnalysis relationships={sajuReport.relationships} />}
 
       {/* 공망 (空亡) 분석 */}
-      <VoidAnalysis voidAnalysis={sajuReport.void_analysis ?? sajuReport.report?.voids} />
+      <VoidAnalysis voidAnalysis={sajuReport.voidAnalysis ?? sajuReport.report?.voids} />
 
       {/* 대운 */}
       <MajorLuckTimeline ml={ml} />

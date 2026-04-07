@@ -19,8 +19,6 @@ interface TransitTabProps {
   transitError?: string | null;
 }
 
-
-
 export function TransitTab({ transitReport, transitError }: TransitTabProps) {
   if (!transitReport) {
     return (
@@ -53,14 +51,15 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
       </motion.div>
     );
   }
-  const yr = transitReport.yearly_luck;
-  const mo = transitReport.monthly_luck;
-  const dl = transitReport.daily_luck;
-  const hl = transitReport.hourly_luck;
-  const monthlyAll: any[] = transitReport.monthly_lucks ?? [];
-  const frame = transitReport.current_frame;
-  const nearby: any[] = transitReport.nearby_diagnostics ?? [];
-  const age: number = transitReport.current_age ?? 0;
+
+  const yr = transitReport.yearlyLuck;
+  const mo = transitReport.monthlyLuck;
+  const dl = transitReport.dailyLuck;
+  const hl = transitReport.hourlyLuck;
+  const monthlyAll: any[] = transitReport.monthlyLucks ?? [];
+  const frame = transitReport.currentFrame;
+  const nearby: any[] = transitReport.nearbyDiagnostics ?? [];
+  const age: number = transitReport.currentAge ?? 0;
 
   const scoreColor = (s: number) =>
     s >= 70 ? "text-green-400" : s >= 40 ? "text-yellow-400" : "text-red-400";
@@ -137,18 +136,18 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
           <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-3">세운 (年運) — {yr?.year}년</p>
           <h4 className="text-4xl font-black text-celestial-gold mb-3">{ganziHangul(yr?.ganzi) || "—"}</h4>
           <div className="space-y-1 text-sm text-white/60 mb-4">
-            <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[yr?.stem_god]?.hangul ?? yr?.stem_god ?? "—"}</span></p>
-            <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[yr?.branch_god]?.hangul ?? yr?.branch_god ?? "—"}</span></p>
-            {yr?.twelve_stage && (
-              <p>12운성: <span className="text-celestial-cyan font-semibold">{yr.twelve_stage}</span></p>
+            <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[yr?.stemGod]?.hangul ?? yr?.stemGod ?? "—"}</span></p>
+            <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[yr?.branchGod]?.hangul ?? yr?.branchGod ?? "—"}</span></p>
+            {yr?.twelveStage && (
+              <p>12운성: <span className="text-celestial-cyan font-semibold">{yr.twelveStage}</span></p>
             )}
-            {yr?.special_events?.length > 0 && (
-              <p className="text-red-400 font-semibold">⚠️ {yr.special_events.join(" / ")}</p>
+            {yr?.specialEvents?.length > 0 && (
+              <p className="text-red-400 font-semibold">⚠️ {yr.specialEvents.join(" / ")}</p>
             )}
           </div>
-          {yr?.influence?.relations_with_natal?.length > 0 && (
+          {yr?.influence?.relationsWithNatal?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-3">
-              {yr.influence.relations_with_natal.map((rel: string, i: number) => (
+              {yr.influence.relationsWithNatal.map((rel: string, i: number) => (
                 <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-celestial-gold/15 text-celestial-gold border border-celestial-gold/30 font-medium">{rel}</span>
               ))}
             </div>
@@ -158,18 +157,18 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
           <p className="text-celestial-purple/80 text-sm font-bold uppercase tracking-wider mb-3">월운 (月運) — {mo?.month}월</p>
           <h4 className="text-4xl font-black text-white mb-3">{ganziHangul(mo?.ganzi) || "—"}</h4>
           <div className="space-y-1 text-sm text-white/60 mb-4">
-            <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[mo?.stem_god]?.hangul ?? mo?.stem_god ?? "—"}</span></p>
-            <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[mo?.branch_god]?.hangul ?? mo?.branch_god ?? "—"}</span></p>
-            {mo?.twelve_stage && (
-              <p>12운성: <span className="text-celestial-cyan font-semibold">{mo.twelve_stage}</span></p>
+            <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[mo?.stemGod]?.hangul ?? mo?.stemGod ?? "—"}</span></p>
+            <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[mo?.branchGod]?.hangul ?? mo?.branchGod ?? "—"}</span></p>
+            {mo?.twelveStage && (
+              <p>12운성: <span className="text-celestial-cyan font-semibold">{mo.twelveStage}</span></p>
             )}
-            {mo?.special_events?.length > 0 && (
-              <p className="text-red-400 font-semibold">⚠️ {mo.special_events.join(" / ")}</p>
+            {mo?.specialEvents?.length > 0 && (
+              <p className="text-red-400 font-semibold">⚠️ {mo.specialEvents.join(" / ")}</p>
             )}
           </div>
-          {mo?.influence?.relations_with_natal?.length > 0 && (
+          {mo?.influence?.relationsWithNatal?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-3">
-              {mo.influence.relations_with_natal.map((rel: string, i: number) => (
+              {mo.influence.relationsWithNatal.map((rel: string, i: number) => (
                 <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-celestial-purple/15 text-celestial-purple border border-celestial-purple/30 font-medium">{rel}</span>
               ))}
             </div>
@@ -182,18 +181,18 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
             <p className="text-celestial-cyan/80 text-sm font-bold uppercase tracking-wider mb-3">일운 (日運) — {dl.month}월 {dl.day}일</p>
             <h4 className="text-4xl font-black text-white mb-3">{ganziHangul(dl.ganzi) || "—"}</h4>
             <div className="space-y-1 text-sm text-white/60 mb-4">
-              <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[dl.stem_god]?.hangul ?? dl.stem_god ?? "—"}</span></p>
-              <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[dl.branch_god]?.hangul ?? dl.branch_god ?? "—"}</span></p>
-              {dl.twelve_stage && (
-                <p>12운성: <span className="text-celestial-cyan font-semibold">{dl.twelve_stage}</span></p>
+              <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[dl.stemGod]?.hangul ?? dl.stemGod ?? "—"}</span></p>
+              <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[dl.branchGod]?.hangul ?? dl.branchGod ?? "—"}</span></p>
+              {dl.twelveStage && (
+                <p>12운성: <span className="text-celestial-cyan font-semibold">{dl.twelveStage}</span></p>
               )}
-              {dl.special_events?.length > 0 && (
-                <p className="text-red-400 font-semibold">⚠️ {dl.special_events.join(" / ")}</p>
+              {dl.specialEvents?.length > 0 && (
+                <p className="text-red-400 font-semibold">⚠️ {dl.specialEvents.join(" / ")}</p>
               )}
             </div>
-            {dl.influence?.relations_with_natal?.length > 0 && (
+            {dl.influence?.relationsWithNatal?.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
-                {dl.influence.relations_with_natal.map((rel: string, i: number) => (
+                {dl.influence.relationsWithNatal.map((rel: string, i: number) => (
                   <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-celestial-cyan/15 text-celestial-cyan border border-celestial-cyan/30 font-medium">{rel}</span>
                 ))}
               </div>
@@ -207,18 +206,18 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
             <p className="text-brand-400 text-sm font-bold uppercase tracking-wider mb-3">시운 (時運) — {hl.hour}시</p>
             <h4 className="text-4xl font-black text-white mb-3">{ganziHangul(hl.ganzi) || "—"}</h4>
             <div className="space-y-1 text-sm text-white/60 mb-4">
-              <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[hl.stem_god]?.hangul ?? hl.stem_god ?? "—"}</span></p>
-              <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[hl.branch_god]?.hangul ?? hl.branch_god ?? "—"}</span></p>
-              {hl.twelve_stage && (
-                <p>12운성: <span className="text-celestial-cyan font-semibold">{hl.twelve_stage}</span></p>
+              <p>천간 십성: <span className="text-white font-semibold">{TENGOD_INFO[hl.stemGod]?.hangul ?? hl.stemGod ?? "—"}</span></p>
+              <p>지지 십성: <span className="text-white font-semibold">{TENGOD_INFO[hl.branchGod]?.hangul ?? hl.branchGod ?? "—"}</span></p>
+              {hl.twelveStage && (
+                <p>12운성: <span className="text-celestial-cyan font-semibold">{hl.twelveStage}</span></p>
               )}
-              {hl.special_events?.length > 0 && (
-                <p className="text-red-400 font-semibold">⚠️ {hl.special_events.join(" / ")}</p>
+              {hl.specialEvents?.length > 0 && (
+                <p className="text-red-400 font-semibold">⚠️ {hl.specialEvents.join(" / ")}</p>
               )}
             </div>
-            {hl.influence?.relations_with_natal?.length > 0 && (
+            {hl.influence?.relationsWithNatal?.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
-                {hl.influence.relations_with_natal.map((rel: string, i: number) => (
+                {hl.influence.relationsWithNatal.map((rel: string, i: number) => (
                   <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-brand-400/15 text-brand-400 border border-brand-400/30 font-medium">{rel}</span>
                 ))}
               </div>
@@ -248,12 +247,12 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
                   <p className={`text-xs font-bold mb-1 ${isCurrent ? "text-celestial-purple" : "text-white/30"}`}>{m.month}월</p>
                   <p className="text-lg font-bold text-white mb-1">{ganziHangul(m.ganzi) || "—"}</p>
                   <div className="text-[10px] text-white/50 space-y-0.5">
-                    <p>{TENGOD_INFO[m.stem_god]?.hangul ?? m.stem_god} / {TENGOD_INFO[m.branch_god]?.hangul ?? m.branch_god}</p>
-                    {m.twelve_stage && <p className="text-celestial-cyan/70">{m.twelve_stage}</p>}
+                    <p>{TENGOD_INFO[m.stemGod]?.hangul ?? m.stemGod} / {TENGOD_INFO[m.branchGod]?.hangul ?? m.branchGod}</p>
+                    {m.twelveStage && <p className="text-celestial-cyan/70">{m.twelveStage}</p>}
                   </div>
-                  {m.influence?.relations_with_natal?.length > 0 && (
+                  {m.influence?.relationsWithNatal?.length > 0 && (
                     <div className="flex flex-wrap justify-center gap-1 mt-2">
-                      {m.influence.relations_with_natal.slice(0, 2).map((rel: string, j: number) => (
+                      {m.influence.relationsWithNatal.slice(0, 2).map((rel: string, j: number) => (
                         <span key={j} className="text-[9px] px-1.5 py-0.5 rounded-full bg-celestial-purple/10 text-celestial-purple/80 border border-celestial-purple/20">{rel}</span>
                       ))}
                     </div>
@@ -293,20 +292,19 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
             </div>
           </div>
 
-
           {/* 오행 에너지 분포 */}
-          {frame.register_state && (
+          {frame.registerState && (
             <div className="mt-4">
               <p className="text-xs text-white/40 font-bold uppercase tracking-wider mb-3">오행 에너지 분포</p>
               <div className="h-56 bg-white/5 rounded-xl border border-white/10 p-3">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={[
-                      { label: "木", value: frame.register_state.r0_wood ?? 0, gradient: "url(#gradWood)", shadow: "#16a34a" },
-                      { label: "火", value: frame.register_state.r1_fire ?? 0, gradient: "url(#gradFire)", shadow: "#dc2626" },
-                      { label: "土", value: frame.register_state.r2_earth ?? 0, gradient: "url(#gradEarth)", shadow: "#ca8a04" },
-                      { label: "金", value: frame.register_state.r3_metal ?? 0, gradient: "url(#gradMetal)", shadow: "#9ca3af" },
-                      { label: "水", value: frame.register_state.r4_water ?? 0, gradient: "url(#gradWater)", shadow: "#2563eb" },
+                      { label: "木", value: frame.registerState.r0Wood ?? 0, gradient: "url(#gradWood)", shadow: "#16a34a" },
+                      { label: "火", value: frame.registerState.r1Fire ?? 0, gradient: "url(#gradFire)", shadow: "#dc2626" },
+                      { label: "土", value: frame.registerState.r2Earth ?? 0, gradient: "url(#gradEarth)", shadow: "#ca8a04" },
+                      { label: "金", value: frame.registerState.r3Metal ?? 0, gradient: "url(#gradMetal)", shadow: "#9ca3af" },
+                      { label: "水", value: frame.registerState.r4Water ?? 0, gradient: "url(#gradWater)", shadow: "#2563eb" },
                     ]}
                     margin={{ top: 20, right: 10, left: -20, bottom: 0 }}
                   >
@@ -340,18 +338,15 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
                       contentStyle={{ ...CHART_TOOLTIP_STYLE, borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.8)" }}
                       cursor={{ fill: "rgba(255,255,255,0.03)" }}
                     />
-                    {/* Add ReferenceLine to make the zero line pop out and show negative values properly */}
                     <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" strokeWidth={1} />
-                    {/* Conditional rounding based on value to prevent flat tops and rounded bottoms for negative numbers */}
                     <Bar dataKey="value" shape={(props: any) => {
                       const { x, y, width, height, payload } = props;
                       const isNegative = payload.value < 0;
                       const rad = 8;
                       const yPos = isNegative ? y : y; 
                       const h = isNegative ? Math.abs(height) : height;
-                      // Path with rounded top (or rounded bottom if negative)
                       const path = isNegative
-                        ? `M${x},${yPos} h${width} v${h - rad} a${rad},${rad} 0 0 1 -${rad},${rad} h-${width - 2 * rad} a${rad},${rad} 0 0 1 -${rad},-${rad} Z`
+                        ? `M${x},${yPos} h${width} v${h - rad} a${rad},${rad} 0 0 1 -${rad},rad} h-${width - 2 * rad} a${rad},${rad} 0 0 1 -${rad},-${rad} Z`
                         : `M${x},${yPos + rad} a${rad},${rad} 0 0 1 ${rad},-${rad} h${width - 2 * rad} a${rad},${rad} 0 0 1 ${rad},${rad} v${h - rad} h-${width} Z`;
                       return (
                         <g>
@@ -390,10 +385,8 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
 
               return (
                 <div key={i} className="relative group transition-all">
-                  {/* Timeline Node */}
                   <div className={`absolute -left-[30px] top-6 w-[10px] h-[10px] rounded-full ${nodeColor} ring-4 ring-black/50 transition-transform group-hover:scale-125 z-10`} />
 
-                  {/* Content Card */}
                   <div className={`p-5 rounded-2xl border backdrop-blur-sm transition-all duration-300 ${bgColor} ${borderColor} ${isCurrent ? 'scale-[1.02] shadow-lg shadow-celestial-purple/5' : ''}`}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                       <div className="flex items-center gap-3">

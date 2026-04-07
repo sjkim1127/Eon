@@ -27,16 +27,16 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   if (!report || !report.chart || !report.chart.planets) return null;
   
   const natalChart = report.chart;
-  const annualChart = report.annual_chart;
+  const annualChart = report.annualChart;
   const currentChart = (activeTab === "annual" && annualChart) ? annualChart : natalChart;
 
   const planets = currentChart.planets;
   const ascendant = currentChart.ascendant;
   const panchanga = currentChart.panchanga;
-  const rr = report.report as any;
-  const dashaTimeline = rr?.dasha_timeline ?? rr?.dashaTimeline ?? [];
-  const yoginiTimeline = rr?.yogini_timeline ?? rr?.yoginiTimeline ?? [];
-  const charaDashaTimeline = rr?.chara_dasha_timeline ?? rr?.charaDashaTimeline ?? [];
+  const rr = report.report;
+  const dashaTimeline = rr?.dashaTimeline ?? [];
+  const yoginiTimeline = rr?.yoginiTimeline ?? [];
+  const charaDashaTimeline = rr?.charaDashaTimeline ?? [];
 
   return (
     <motion.div
@@ -82,14 +82,14 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       {/* ── Nakshatra & Panchanga ─────────────────────────────────────── */}
       <VedicPanchangaSection 
         panchanga={panchanga} 
-        nakshatraInfo={rr?.nakshatra_info ?? rr?.nakshatraInfo ?? "N/A"} 
+        nakshatraInfo={rr?.nakshatraInfo ?? "N/A"} 
       />
 
       {/* ── 고급 분석 지표 (Jaimini, D9/D10, Tajika) ─────────────────── */}
       {report.report && (
         <VedicAdvancedInsightsSection 
           report={report.report} 
-          tajikaReport={report.tajika_report}
+          tajikaReport={report.tajikaReport}
         />
       )}
 
@@ -100,44 +100,47 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       <VargaVisualizationSection 
         planets={planets} 
         ascendant={ascendant} 
-        vargaNakshatraReportsMap={report.varga_nakshatra_reports?.reports} 
+        vargaNakshatraReportsMap={report.vargaNakshatraReports?.reports}
       />
 
-      {/* ── 하우스(Bhava) 에너지 상세 ────────────────────────────────── */}
+      {/* ── 하우스별 세부 지표 (Bhavas, Ashtakavarga) ──────────── */}
       <HouseStrengthGrid 
-        houseSummary={rr?.house_summary ?? rr?.houseSummary ?? []} 
-        bhavaStrengths={currentChart?.bhava_strengths || []} 
+        houseSummary={rr?.houseSummary ?? []}
+        bhavaStrengths={currentChart?.bhavaStrengths || []} 
       />
 
-      {/* ── BAV Heatmap, SAV, Vimshopaka ───────────────────────────── */}
+      {/* ── 하우스 점령 및 주인 (Occupation) ──────────── */}
       <VedicMetricsGrid 
         bav={currentChart?.bav || []} 
         savPoints={currentChart?.sav?.points || []} 
-        vimshopaka={currentChart?.vimshopaka_scores || []} 
+        vimshopaka={currentChart?.vimshopakaScores || []}
       />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* ── 고차라 트랜싯 / 아스펙트 ─────────────────────────── */}
+        <GocharaSection summary={report.gochara} />
+        <AspectsSection aspects={currentChart?.aspects ?? []} />
+      </div>
 
-      {/* ── 다샤 타임라인 (Vimshottari, Yogini, Chara) ───────────── */}
-      <DashaTimelineSection 
-        periods={dashaTimeline} 
-        yoginiPeriods={yoginiTimeline}
-        charaPeriods={charaDashaTimeline}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* ── 행성별 상태 (Avasthas) ─────────── */}
+        <AvasthaKarakaSection
+            avasthas={currentChart.avasthas ?? []}
+            karakas={rr?.allKarakas ?? currentChart.karakas ?? []}
+            arudhaPadas={currentChart.arudhaPadas ?? []}
+        />
 
-      {/* ── 12하우스 강도 레이더 (Bhava Strength) ───────────── */}
-      <BhavaRadarSection strengths={currentChart.bhava_strengths ?? []} />
+        {/* ── 다샤 다이어그램 (Dasha Timeline) ───────── */}
+        <DashaTimelineSection 
+          periods={dashaTimeline}
+          yoginiPeriods={yoginiTimeline}
+          charaPeriods={charaDashaTimeline}
+        />
+      </div>
 
-      {/* ── 행성 시선 (Aspects / Drishti) ─────────────────── */}
-      <AspectsSection aspects={currentChart.aspects ?? []} />
+      {/* ── 하우스 분석 상세 (Bhava Analysis / Radar) ───────────────── */}
+      {currentChart?.bhavaStrengths && <BhavaRadarSection strengths={currentChart.bhavaStrengths} />}
 
-      {/* ── 고차라 트랜싯 (Gochara) ─────────────────── */}
-      <GocharaSection summary={report.gochara ?? null} />
-
-      {/* ── 카라카 + 아바스타 (Karakas + Avasthas) ────────── */}
-      <AvasthaKarakaSection
-        avasthas={currentChart.avasthas ?? []}
-        karakas={(report.report as any)?.all_karakas ?? (report.report as any)?.allKarakas ?? currentChart.karakas ?? []}
-        arudhaPadas={currentChart.arudha_padas ?? []}
-      />
     </motion.div>
   );
 }

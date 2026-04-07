@@ -43,7 +43,7 @@ function App() {
     loading,
   } = useAstrologyAnalysis();
 
-  const isDST = sajuData?.meta?.is_dst ?? false;
+  const isDST = sajuData?.meta?.isDst ?? false;
 
   const [formOpen, setFormOpen] = useState(true);
 
@@ -59,10 +59,10 @@ function App() {
 
   // 시간미상 가드
   useEffect(() => {
-    if (birthData.unknown_time && currentTab === "vedic_charts") {
+    if (birthData.unknownTime && currentTab === "vedic_charts") {
       setActiveTab("saju");
     }
-  }, [birthData.unknown_time, currentTab]);
+  }, [birthData.unknownTime, currentTab]);
 
   return (
     <>
@@ -95,8 +95,14 @@ function App() {
           vedicData={vedicData}
           transitData={transitData}
           tierData={tierData}
-          unknownTime={!!birthData.unknown_time}
+          unknownTime={!!birthData.unknownTime}
         />
+        {sajuData?.meta?.correctedTime && (
+          <div className="flex items-center gap-2 px-3 py-1 bg-violet-500/20 text-violet-300 rounded-full text-xs font-medium border border-violet-500/30">
+            <span className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-pulse" />
+            보정됨 ({sajuData.meta.correctedTime})
+          </div>
+        )}
       </AppLayout>
 
       <Analytics />

@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Clock } from "lucide-react";
 import { ShootingStars, Sidebar, CompactBirthInfoBar, ExportActionButtons, BirthDrawer } from "../shared";
 import { TabId } from "../../types";
 
@@ -81,13 +81,14 @@ export function AppLayout({
             </button>
           )}
 
-          {sajuData?.meta?.corrected_time && (
-            <span className="text-celestial-cyan/60">
-              보정시: {sajuData.meta.corrected_time}
-            </span>
-          )}
-          {sajuData?.meta?.is_dst && (
-            <span className="text-amber-400/80 ml-2">DST 적용됨</span>
+          {sajuData?.meta?.correctedTime && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[11px] text-white/50">
+              <Clock className="w-3.5 h-3.5" />
+              보정시: {sajuData.meta.correctedTime}
+              {sajuData?.meta?.isDst && (
+                <span className="text-celestial-gold/60 font-medium ml-1"> (DST)</span>
+              )}
+            </div>
           )}
 
           {errorMessage && (

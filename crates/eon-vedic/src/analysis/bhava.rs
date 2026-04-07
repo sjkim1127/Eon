@@ -4,6 +4,7 @@ use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BhavaStrength {
     pub house: u8, // 1~12
     pub lord_score: f64,

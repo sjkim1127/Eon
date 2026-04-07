@@ -16,6 +16,7 @@ pub enum JaiminiKarakaRole {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct KarakaAssignment {
     pub planet: VedicPlanet,
     pub role: JaiminiKarakaRole,
@@ -23,6 +24,7 @@ pub struct KarakaAssignment {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ArudhaPada {
     pub house: u8, // 1~12
     pub rasi: u8,  // 1~12
@@ -30,6 +32,7 @@ pub struct ArudhaPada {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SpecialLagna {
     pub name: String,
     pub longitude: f64,

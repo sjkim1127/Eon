@@ -5,6 +5,7 @@ use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VimshopakaScore {
     pub shadvarga_score: f64,           // Out of 20
     pub shodashavarga_score: f64,       // Out of 20 (Simple average for now)

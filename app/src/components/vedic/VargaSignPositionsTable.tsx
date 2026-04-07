@@ -29,8 +29,18 @@ export function VargaSignPositionsTable({ planets, ascendant }: Props) {
         </thead>
         <tbody className="divide-y divide-white/5">
           {[
-            ...(planets || []).map((p: any) => ({ name: p.planet, data: p, retro: p.is_retrograde, combust: p.is_combust })),
-            ...(ascendant ? [{ name: "ASC", data: ascendant, retro: false, combust: false }] : []),
+            ...(planets || []).map((p: any) => ({ 
+                name: p.planet, 
+                data: p, 
+                retro: p.isRetrograde, 
+                combust: p.isCombust 
+            })),
+            ...(ascendant ? [{ 
+                name: "ASC", 
+                data: ascendant, 
+                retro: false, 
+                combust: false 
+            }] : []),
           ].map((row, i) => (
             <tr key={i} className="hover:bg-white/3 transition-colors">
               <td className="py-2 pr-3 font-bold text-white whitespace-nowrap">

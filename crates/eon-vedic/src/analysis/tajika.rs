@@ -10,6 +10,7 @@ pub enum TajikaAspectType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Saham {
     pub name: String,
     pub longitude: f64,

@@ -33,6 +33,7 @@ pub enum DeeptaadiAvastha {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PlanetAvastha {
     pub planet: VedicPlanet,
     pub baladi: BaladiAvastha,

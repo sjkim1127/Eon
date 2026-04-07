@@ -11,10 +11,9 @@ export function VedicYogaHighlightSection({ yogas }: VedicYogaHighlightSectionPr
 
     return (
         <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
-            {yogas.map((raw, idx) => {
-                const yoga = raw as any;
+            {yogas.map((yoga, idx) => {
                 const isVeryHigh = yoga.quality === "VeryHigh";
-                const yogaType = yoga.yoga_type ?? yoga.yogaType ?? "Unknown";
+                const yogaType = yoga.yogaType ?? "Unknown";
                 return (
                     <div
                         key={idx}

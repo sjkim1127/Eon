@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// Single row of a varga nakshatra report (one planet in one varga)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VargaNakshatraReportRow {
     pub planet: String,
     pub position_str: String,
@@ -28,6 +29,7 @@ pub struct VargaNakshatraReportRow {
 
 /// Full report for one varga (e.g. D1, D9, D10, D108)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VargaNakshatraReport {
     pub varga_id: String,
     pub varga_label: String,
@@ -37,6 +39,7 @@ pub struct VargaNakshatraReport {
 
 /// Map of varga_id -> report (all D1~D144 vargas)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VargaNakshatraReports {
     pub reports: std::collections::HashMap<String, VargaNakshatraReport>,
 }

@@ -13,11 +13,11 @@ export interface AnalysisTaskState<T> {
 
 export interface AnalysisMeta {
   precision: "Exact" | "UnknownTimeNoonProxy";
-  input_time: string;
-  corrected_time: string;
-  is_dst: boolean;
-  dst_offset_hours: number | null;
-  analysis_timezone: string;
+  inputTime: string;
+  correctedTime: string;
+  isDst: boolean;
+  dstOffsetHours: number | null;
+  analysisTimezone: string;
 }
 
 export interface TierGrade {

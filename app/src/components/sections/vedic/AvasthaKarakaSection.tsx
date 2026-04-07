@@ -1,5 +1,5 @@
 import { Sparkles, Users, Target } from "lucide-react";
-import type { ArudhaPada } from "../../../types/vedic";
+import type { ArudhaPada, KarakaAssignment } from "../../../types/vedic";
 
 // ── Avasthas Types ──
 interface PlanetAvastha {
@@ -7,13 +7,6 @@ interface PlanetAvastha {
     baladi: string;  // "Bala" | "Kumara" | "Yuva" | "Vriddha" | "Mrita"
     jagradadi: string; // "Jagrat" | "Swapna" | "Sushupti"
     deeptaadi: string;
-}
-
-// ── Karaka Types ──
-interface KarakaAssignment {
-    planet: string;
-    role: string;
-    degree_in_rasi: number;
 }
 
 const BALADI_INFO: Record<string, { label: string; color: string; emoji: string }> = {
@@ -74,11 +67,10 @@ export function AvasthaKarakaSection({ avasthas, karakas, arudhaPadas }: Avastha
                             제미니 카라카 (Jaimini Karakas)
                         </h5>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {karakas.map((raw, i) => {
-                                const k = raw as any;
+                            {karakas.map((k, i) => {
                                 const role = k.role ?? "";
-                                const degreeInRasi = k.degree_in_rasi ?? k.degreeInRasi ?? 0;
-                                const roleInfo = KARAKA_ROLES[role] ?? { label: role.slice(0, 3), meaning: role };
+                                const degreeInRasi = k.degreeInRasi ?? 0;
+                                const roleInfo = KARAKA_ROLES[role] ?? { label: (role as string).slice(0, 3), meaning: role };
                                 
                                 return (
                                     <div key={i} className="p-3 rounded-xl bg-white/[0.03] border border-white/10 text-center">

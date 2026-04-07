@@ -21,6 +21,7 @@ use crate::engine::vm::LifeFrame;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SajuReport {
     pub pillars: FourPillars,
     pub strength: StrengthAnalysis,

@@ -23,7 +23,7 @@ export function VedicPanchangaSection({ panchanga, nakshatraInfo }: VedicPanchan
                 <div className="p-6 bg-celestial-gold/5 rounded-2xl border border-celestial-gold/10">
                     <p className="text-[10px] text-celestial-gold/60 font-bold uppercase mb-2">Lunar Phase & Day</p>
                     <p className="text-lg text-celestial-gold font-bold">
-                        {panchanga.tithi_name} ({panchanga.is_day_birth ? "주간" : "야간"} 출생 · {panchanga.vara}요일)
+                        {panchanga.tithiName} ({panchanga.isDayBirth ? "주간" : "야간"} 출생 · {panchanga.vara}요일)
                     </p>
                 </div>
             </div>

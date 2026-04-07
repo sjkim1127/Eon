@@ -46,7 +46,7 @@ export function ExportActionButtons({
     const [vedicCopied, setVedicCopied] = useState(false);
 
     const handleCopyAll = async () => {
-        const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null, transitReport ?? null, tierResult);
+        const md = buildFullAnalysisMarkdown(sajuReport ?? null, report ?? null, transitReport ?? null, tierResult ?? null);
         const ok = await copyToClipboard(md);
         if (ok) {
             setMdCopied(true);
