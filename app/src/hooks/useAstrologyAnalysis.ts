@@ -2,7 +2,7 @@ import { toast } from "sonner";
 import { backendClient } from "../lib/backend";
 import { useAppStore } from "../store/useAppStore";
 import { getBirthValidationError } from "../utils/validation";
-import { normalizeVedicResult } from "../utils/normalize";
+import { normalizeVedicResult, normalizeSajuResult, normalizeTransitResult } from "../utils/normalize";
 import type { SajuAnalysisResult, TransitResult } from "../types";
 import type { RunAnalysisResult } from "../types/analysis";
 
@@ -85,13 +85,13 @@ export function useAstrologyAnalysis() {
           }
           case "saju": {
             sajuRaw = val as SajuAnalysisResult;
-            const data = val as SajuAnalysisResult;
+            const data = normalizeSajuResult(val);
             store.setAnalysisTaskState("saju", { status: "success", data });
             break;
           }
           case "transit": {
             transitRaw = val as TransitResult;
-            const data = val as TransitResult;
+            const data = normalizeTransitResult(val);
             store.setAnalysisTaskState("transit", { status: "success", data });
             break;
           }

@@ -1,4 +1,21 @@
 import type { VedicAnalysisResult, VedicAnalysisReport, GocharaSummary } from "../types/vedic";
+import type { SajuAnalysisResult, TransitResult } from "../types/saju";
+
+function toCamelCase(str: string): string {
+  return str.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
+}
+
+export function deepToCamelCase(obj: any): any {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(deepToCamelCase);
+
+  const result: any = {};
+  for (const key of Object.keys(obj)) {
+    const camelKey = toCamelCase(key);
+    result[camelKey] = deepToCamelCase(obj[key]);
+  }
+  return result;
+}
 
 /**
  * Normalizes a Vedic analysis report by ensuring all fields are present
@@ -123,5 +140,93 @@ export function normalizeVedicResult(raw: any): VedicAnalysisResult {
     annualChart: raw.annualChart ?? raw.annual_chart,
     gochara: normalizeGocharaSummary(raw.gochara),
     vargaNakshatraReports: raw.vargaNakshatraReports ?? raw.varga_nakshatra_reports,
+  };
+}
+
+export function normalizeTransitResult(raw: any): TransitResult {
+  if (!raw) return {} as TransitResult;
+  const cc = deepToCamelCase(raw);
+  return {
+    meta: cc.meta || {},
+    yearlyLuck: cc.yearlyLuck || {},
+    monthlyLuck: cc.monthlyLuck || {},
+    monthlyLucks: cc.monthlyLucks || [],
+    dailyLuck: cc.dailyLuck || {},
+    hourlyLuck: cc.hourlyLuck || {},
+    currentAge: cc.currentAge ?? 0,
+    currentFrame: cc.currentFrame ?? null,
+    nearbyDiagnostics: cc.nearbyDiagnostics || [],
+  };
+}
+
+export function normalizeSajuResult(raw: any): SajuAnalysisResult {
+  if (!raw) return {} as SajuAnalysisResult;
+  const cc = deepToCamelCase(raw);
+  
+  if (!cc.report) cc.report = {};
+  
+  return {
+    meta: cc.meta || {},
+    report: {
+      ...cc.report,
+      timeline: cc.report.timeline || [],
+      simulationFrames: cc.report.simulationFrames || [],
+      majorLuck: cc.report.majorLuck ? {
+        ...cc.report.majorLuck,
+        cycles: cc.report.majorLuck.cycles || []
+      } : null,
+      strength: {
+        ...(cc.report.strength || {}),
+        deukRyeong: cc.report.strength?.deukRyeong || { acquired: false },
+        deukJi: cc.report.strength?.deukJi || { acquired: false },
+        deukSi: cc.report.strength?.deukSi || { acquired: false },
+        deukSe: cc.report.strength?.deukSe || { acquired: false, bijieCount: 0, yinxingCount: 0, shishangCount: 0, caishengCount: 0, guanxingCount: 0, supportRatio: 0 },
+      },
+      spiritMarkers: {
+        ...(cc.report.spiritMarkers || {}),
+        mappedMarkers: cc.report.spiritMarkers?.mappedMarkers || [],
+        markers: cc.report.spiritMarkers?.markers || [],
+        auspicious: cc.report.spiritMarkers?.auspicious || [],
+        inauspicious: cc.report.spiritMarkers?.inauspicious || [],
+        auxShinsals: cc.report.spiritMarkers?.auxShinsals || [],
+      },
+      power: {
+        ...(cc.report.power || {}),
+        elementScores: cc.report.power?.elementScores || [],
+        tenGodScores: cc.report.power?.tenGodScores || [],
+      }
+    },
+    lints: cc.lints || [],
+    entropy: cc.entropy || null,
+    qiTopology: cc.qiTopology || null,
+    loadDiagnostics: cc.loadDiagnostics || [],
+    crashCount: cc.crashCount || 0,
+    vulnerabilityReport: cc.vulnerabilityReport ? {
+      ...cc.vulnerabilityReport,
+      criticalVectors: cc.vulnerabilityReport.criticalVectors || []
+    } : null,
+    complexity: cc.complexity || null,
+    relationships: cc.relationships ? {
+      ...cc.relationships,
+      mappedRelationships: cc.relationships.mappedRelationships || [],
+      stemCombinations: cc.relationships.stemCombinations || [],
+      stemClashes: cc.relationships.stemClashes || [],
+      tripleCombinations: cc.relationships.tripleCombinations || [],
+      seasonalCombinations: cc.relationships.seasonalCombinations || [],
+      dominantSemiCombinations: cc.relationships.dominantSemiCombinations || [],
+      weakSemiCombinations: cc.relationships.weakSemiCombinations || [],
+      sixCombinations: cc.relationships.sixCombinations || [],
+      branchClashes: cc.relationships.branchClashes || [],
+      branchPunishments: cc.relationships.branchPunishments || [],
+      branchHarms: cc.relationships.branchHarms || [],
+      branchDestructions: cc.relationships.branchDestructions || [],
+    } : undefined,
+    voidAnalysis: cc.voidAnalysis ? {
+      ...cc.voidAnalysis,
+      voidBranches: cc.voidAnalysis.voidBranches || [],
+      voidPositions: cc.voidAnalysis.voidPositions || [],
+      voidTenGods: cc.voidAnalysis.voidTenGods || [],
+      mappedVoids: cc.voidAnalysis.mappedVoids || [],
+    } : undefined,
   };
 }
