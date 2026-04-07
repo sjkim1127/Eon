@@ -27,16 +27,16 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
   if (!report || !report.chart || !report.chart.planets) return null;
   
   const natalChart = report.chart;
-  const annualChart = report.annualChart;
+  const annualChart = report.annualChart ?? (report as any).annual_chart;
   const currentChart = (activeTab === "annual" && annualChart) ? annualChart : natalChart;
 
   const planets = currentChart.planets;
   const ascendant = currentChart.ascendant;
   const panchanga = currentChart.panchanga;
   const rr = report.report;
-  const dashaTimeline = rr?.dashaTimeline ?? [];
-  const yoginiTimeline = rr?.yoginiTimeline ?? [];
-  const charaDashaTimeline = rr?.charaDashaTimeline ?? [];
+  const dashaTimeline = rr?.dashaTimeline ?? (rr as any)?.dasha_timeline ?? [];
+  const yoginiTimeline = rr?.yoginiTimeline ?? (rr as any)?.yogini_timeline ?? [];
+  const charaDashaTimeline = rr?.charaDashaTimeline ?? (rr as any)?.chara_dasha_timeline ?? [];
 
   return (
     <motion.div
@@ -89,7 +89,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       {report.report && (
         <VedicAdvancedInsightsSection 
           report={report.report} 
-          tajikaReport={report.tajikaReport}
+          tajikaReport={report.tajikaReport ?? (report as any).tajika_report}
         />
       )}
 
@@ -100,20 +100,20 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       <VargaVisualizationSection 
         planets={planets} 
         ascendant={ascendant} 
-        vargaNakshatraReportsMap={report.vargaNakshatraReports?.reports}
+        vargaNakshatraReportsMap={report.vargaNakshatraReports?.reports ?? (report as any).varga_nakshatra_reports?.reports}
       />
 
       {/* ── 하우스별 세부 지표 (Bhavas, Ashtakavarga) ──────────── */}
       <HouseStrengthGrid 
-        houseSummary={rr?.houseSummary ?? []}
-        bhavaStrengths={currentChart?.bhavaStrengths || []} 
+        houseSummary={rr?.houseSummary ?? (rr as any)?.house_summary ?? []}
+        bhavaStrengths={currentChart?.bhavaStrengths ?? (currentChart as any)?.bhava_strengths ?? []} 
       />
 
       {/* ── 하우스 점령 및 주인 (Occupation) ──────────── */}
       <VedicMetricsGrid 
         bav={currentChart?.bav || []} 
-        savPoints={currentChart?.sav?.points || []} 
-        vimshopaka={currentChart?.vimshopakaScores || []}
+        savPoints={currentChart?.sav?.points ?? (currentChart as any)?.sav?.points ?? []} 
+        vimshopaka={currentChart?.vimshopakaScores ?? (currentChart as any)?.vimshopaka_scores ?? []}
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -126,8 +126,8 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
         {/* ── 행성별 상태 (Avasthas) ─────────── */}
         <AvasthaKarakaSection
             avasthas={currentChart.avasthas ?? []}
-            karakas={rr?.allKarakas ?? currentChart.karakas ?? []}
-            arudhaPadas={currentChart.arudhaPadas ?? []}
+            karakas={rr?.allKarakas ?? (rr as any)?.all_karakas ?? currentChart.karakas ?? []}
+            arudhaPadas={currentChart.arudhaPadas ?? (currentChart as any)?.arudha_padas ?? []}
         />
 
         {/* ── 다샤 다이어그램 (Dasha Timeline) ───────── */}
@@ -139,7 +139,7 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
       </div>
 
       {/* ── 하우스 분석 상세 (Bhava Analysis / Radar) ───────────────── */}
-      {currentChart?.bhavaStrengths && <BhavaRadarSection strengths={currentChart.bhavaStrengths} />}
+      {currentChart && (currentChart.bhavaStrengths || (currentChart as any).bhava_strengths) && <BhavaRadarSection strengths={currentChart.bhavaStrengths ?? (currentChart as any).bhava_strengths} />}
 
     </motion.div>
   );

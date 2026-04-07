@@ -7,9 +7,9 @@ interface VedicOverviewSectionProps {
 }
 
 export function VedicOverviewSection({ report }: VedicOverviewSectionProps) {
-    const primaryKarakas = report.primaryKarakas;
-    const dashaFocus = report.dashaFocus ?? "";
-    const overallStrengthScore = report.overallStrengthScore ?? 0;
+    const primaryKarakas = report.primaryKarakas ?? (report as any).primary_karakas;
+    const dashaFocus = report.dashaFocus ?? (report as any).dasha_focus ?? "";
+    const overallStrengthScore = report.overallStrengthScore ?? (report as any).overall_strength_score ?? 0;
 
     if (!primaryKarakas) return null;
 
