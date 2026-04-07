@@ -5,6 +5,7 @@ use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub enum YogaType {
     RajaYoga,            // Generic Raja Yoga
     GajaKesari,          // Jupiter + Moon
@@ -34,6 +35,7 @@ pub enum YogaType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct YogaResult {
     pub name: String,
     pub yoga_type: YogaType,
@@ -43,6 +45,7 @@ pub struct YogaResult {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub enum YogaQuality {
     VeryHigh,
     High,

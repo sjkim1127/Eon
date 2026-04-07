@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// 운명 취약점 리포트
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VulnerabilityReport {
     /// 발견된 총 크래시 수
     pub total_crashes: usize,
@@ -18,6 +19,7 @@ pub struct VulnerabilityReport {
 
 /// 발견된 개별 취약점 (Crash)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Vulnerability {
     /// 크래시 시점의 에너지 점수
     pub crash_score: f32,
@@ -33,6 +35,7 @@ pub struct Vulnerability {
 
 /// 취약점 재현을 위한 입력 벡터 (초정밀 타임라인 지원)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LuckVector {
     pub major: GanZi,           // 대운 (Process Context)
     pub yearly: GanZi,          // 세운 (Yearly Instruction)

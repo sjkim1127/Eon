@@ -22,6 +22,7 @@ use serde::{Deserialize, Serialize};
 
 /// Saju Interrupt (하드웨어 예외/인터럽트)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum SajuInterrupt {
     /// 0x01: 고우선순위 시스템 충돌 (백호살 등)
     CriticalException,
@@ -35,6 +36,7 @@ pub enum SajuInterrupt {
 
 /// 오행 레지스터 (R0~R4)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct QiRegisters {
     /// R0: 목 (Wood)
     pub r0_wood: f32,
@@ -99,6 +101,7 @@ impl QiRegisters {
 
 /// 인생의 한 지점(1년 단위)의 시뮬레이션 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LifeFrame {
     /// 나이
     pub age: u32,

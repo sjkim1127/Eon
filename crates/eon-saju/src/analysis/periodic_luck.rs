@@ -6,7 +6,6 @@
 use serde::{Deserialize, Serialize};
 use eon_core::Gender;
 use crate::core::stem::HeavenlyStem;
-use crate::core::branch::EarthlyBranch;
 use crate::core::ganzi::GanZi;
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;

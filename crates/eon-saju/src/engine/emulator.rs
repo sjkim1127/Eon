@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 
 /// 1년 단위의 시계열 인생 점수 데이터
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct YearlyScore {
     pub year: i32,
     pub age: u32,
@@ -34,6 +35,7 @@ pub struct YearlyScore {
 
 /// 100년 인생 시뮬레이션 결과 리포트
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LifePathReport {
     /// 연도별 시계열 점수 데이터
     pub timeline: Vec<YearlyScore>,

@@ -14,6 +14,7 @@ use crate::core::config::AnalysisConfig;
 
 /// 용신의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum YongshinType {
     /// 억부용신 (일간의 강약을 조절)
     Eokbu,
@@ -38,6 +39,7 @@ impl YongshinType {
 
 /// 낱개 용신 추천 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RecommendedYongshin {
     pub yongshin_type: YongshinType,
     pub element: Element,
@@ -48,6 +50,7 @@ pub struct RecommendedYongshin {
 
 /// 용신 분석 종합 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct YongshinAnalysis {
     /// 추천된 용신 목록
     pub recommendations: Vec<RecommendedYongshin>,

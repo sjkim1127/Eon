@@ -4,6 +4,7 @@ use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum JaiminiKarakaRole {
     Atmakaraka,    // AK - Soul
     Amatyakaraka,  // AmK - Career/Minister
@@ -40,6 +41,7 @@ pub struct SpecialLagna {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SignDashaPeriod {
     pub rasi: u8,
     pub start_time: DateTime<Utc>,

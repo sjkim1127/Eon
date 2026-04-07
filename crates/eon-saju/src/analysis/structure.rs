@@ -12,6 +12,7 @@ use crate::analysis::Analyzable;
 
 /// 격국의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum StructureType {
     /// 식신격 (食神格)
     ShiShen,
@@ -119,6 +120,7 @@ impl StructureType {
 
 /// 격국 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StructureAnalysis {
     /// 결정된 격국
     pub structure: StructureType,

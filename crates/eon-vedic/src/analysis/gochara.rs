@@ -3,6 +3,7 @@ use crate::planets::VedicPlanet;
 use crate::chart::VedicChart; // We might need Ayanamsa from chart or engine
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub enum MurtiType {
     Gold,   // Suvarna
     Silver, // Rajata
@@ -12,6 +13,7 @@ pub enum MurtiType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub enum SadeSatiPhase {
     None,
     Rising,  // Saturn in 12th from Moon

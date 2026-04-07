@@ -20,6 +20,7 @@ use crate::analysis::supplementary_pillars::InterpretationLevel;
 
 /// 신살 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum SpiritMarker {
     // === 길신 (吉神) ===
     /// 천을귀인(天乙貴人) - 귀인의 도움
@@ -220,6 +221,7 @@ impl std::fmt::Display for SpiritMarker {
 
 /// 신살 발견 위치
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum PillarPosition {
     Year,
     Month,
@@ -240,6 +242,7 @@ impl PillarPosition {
 
 /// 발견된 신살 정보
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FoundMarker {
     pub marker: SpiritMarker,
     pub position: PillarPosition,
@@ -255,6 +258,7 @@ impl std::fmt::Display for FoundMarker {
 
 /// 신살 상세 정보 (Explainable Spirit Marker)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SpiritMarkerDetail {
     pub marker: SpiritMarker,
     pub position: PillarPosition,
@@ -267,6 +271,7 @@ pub struct SpiritMarkerDetail {
 
 /// 신살 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SpiritMarkerAnalysis {
     /// 발견된 모든 신살 상세 정보 (고도의 설명 가능성 포함)
     pub mapped_markers: Vec<SpiritMarkerDetail>,

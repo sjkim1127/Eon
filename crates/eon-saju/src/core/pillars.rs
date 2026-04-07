@@ -3,6 +3,7 @@
 //! 생년월일시로부터 년주, 월주, 일주, 시주를 계산합니다.
 
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 use crate::core::stem::HeavenlyStem;
 use crate::core::branch::EarthlyBranch;
 use crate::core::ganzi::GanZi;
