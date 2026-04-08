@@ -9,6 +9,7 @@ import {
   Tooltip,
   CartesianGrid,
   ReferenceLine,
+  Rectangle,
 } from "recharts";
 import { CHART_TOOLTIP_STYLE } from "../../lib/chartTheme";
 import { TENGOD_INFO } from "../../constants";
@@ -340,19 +341,16 @@ export function TransitTab({ transitReport, transitError }: TransitTabProps) {
                     />
                     <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" strokeWidth={1} />
                     <Bar dataKey="value" shape={(props: any) => {
-                      const { x, y, width, height, payload } = props;
+                      const { payload } = props;
                       const isNegative = payload.value < 0;
-                      const rad = 8;
-                      const yPos = isNegative ? y : y; 
-                      const h = isNegative ? Math.abs(height) : height;
-                      const path = isNegative
-                        ? `M${x},${yPos} h${width} v${h - rad} a${rad},${rad} 0 0 1 -${rad},rad} h-${width - 2 * rad} a${rad},${rad} 0 0 1 -${rad},-${rad} Z`
-                        : `M${x},${yPos + rad} a${rad},${rad} 0 0 1 ${rad},-${rad} h${width - 2 * rad} a${rad},${rad} 0 0 1 ${rad},${rad} v${h - rad} h-${width} Z`;
                       return (
-                        <g>
-                          <path d={path} fill={payload.gradient} />
-                          <path d={path} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" opacity={0.5} />
-                        </g>
+                        <Rectangle 
+                          {...props} 
+                          fill={payload.gradient} 
+                          radius={isNegative ? [0, 0, 8, 8] : [8, 8, 0, 0]}
+                          stroke="rgba(255,255,255,0.2)"
+                          strokeWidth={1}
+                        />
                       );
                     }} />
                   </BarChart>
