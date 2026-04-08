@@ -54,8 +54,8 @@ export function GocharaSection({ summary }: GocharaSectionProps) {
                     <tbody className="divide-y divide-white/5">
                         {summary.transits.map((t, i) => {
                             const murti = MURTI_LABELS[t.murti] ?? MURTI_LABELS.Unknown;
-                            const signNum = Number(t.currentRasi ?? (t as any).current_rasi ?? 0);
-                            const houseNum = Number(t.houseFromMoon ?? (t as any).house_from_moon ?? 0);
+                            const signNum = Number(t.currentRasi ?? 0);
+                            const houseNum = Number(t.houseFromMoon ?? 0);
                             const signName = signNum >= 1 && signNum <= 12 ? SIGN_NAMES[signNum] : "—";
                             return (
                                 <tr key={i} className="hover:bg-white/[0.03] transition-colors">
@@ -63,14 +63,14 @@ export function GocharaSection({ summary }: GocharaSectionProps) {
                                     <td className="py-2.5 pr-4 text-white/70">{signName}</td>
                                     <td className="py-2.5 pr-4 text-white/50 font-mono">{houseNum ? `H${houseNum}` : "—"}</td>
                                     <td className="py-2.5 pr-4">
-                                        {(t.isBeneficTransit ?? (t as any).is_benefic_transit) ? (
+                                        {t.isBeneficTransit ? (
                                             <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20 font-semibold">길 吉</span>
                                         ) : (
                                             <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20 font-semibold">흉 凶</span>
                                         )}
                                     </td>
                                     <td className="py-2.5 pr-4">
-                                        {(t.isBlocked ?? (t as any).is_blocked) ? (
+                                        {t.isBlocked ? (
                                             <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 font-semibold">차단됨</span>
                                         ) : (
                                             <span className="text-xs text-white/20">—</span>
@@ -94,8 +94,8 @@ export function GocharaSection({ summary }: GocharaSectionProps) {
                     <div key={i} className="p-6 bg-white/[0.03] rounded-2xl border border-white/10 hover:border-white/20 transition-all">
                         <div className="flex items-center justify-between mb-4">
                             <span className="font-bold text-white">{t.planet} 요약</span>
-                            <span className={cn("text-xs font-bold px-2 py-1 rounded-lg", (t.isBeneficTransit ?? (t as any).is_benefic_transit) ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400")}>
-                                {(t.isBeneficTransit ?? (t as any).is_benefic_transit) ? "긍정적 주기" : "주의 필요 주기"}
+                            <span className={cn("text-xs font-bold px-2 py-1 rounded-lg", t.isBeneficTransit ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400")}>
+                                {t.isBeneficTransit ? "긍정적 주기" : "주의 필요 주기"}
                             </span>
                         </div>
                         <p className="text-sm text-white/70 leading-relaxed mb-4">{t.summary}</p>
