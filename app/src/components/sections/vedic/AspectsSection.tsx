@@ -39,10 +39,9 @@ export function AspectsSection({ aspects }: AspectsSectionProps) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {aspects.map((raw, i) => {
-                            const a = raw as any;
-                            const aspectingPlanet = a.aspecting_planet ?? a.aspectingPlanet ?? "—";
-                            const aspectedHouses = Array.isArray(a.aspected_houses) ? a.aspected_houses : (Array.isArray(a.aspectedHouses) ? a.aspectedHouses : []);
+                        {aspects.map((a, i) => {
+                            const aspectingPlanet = a.aspectingPlanet ?? "—";
+                            const aspectedHouses = Array.isArray(a.aspectedHouses) ? a.aspectedHouses : [];
                             
                             return (
                                 <tr key={i} className="hover:bg-white/[0.03] transition-colors">
