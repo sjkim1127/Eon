@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Compass, Users } from "lucide-react";
+import { Compass, Users, Star } from "lucide-react";
 import { cn } from "../../utils";
 import type { VedicAnalysisResult } from "../../types";
 
@@ -75,6 +75,21 @@ export function VedicChartsTab({ report }: VedicChartsTabProps) {
           </button>
         </div>
       </div>
+
+      {activeTab === "annual" && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="p-6 rounded-[2rem] bg-celestial-gold/5 border border-celestial-gold/20 text-center"
+        >
+          <h3 className="text-xl font-bold text-celestial-gold flex items-center justify-center gap-2">
+            <Star className="w-5 h-5" /> ✨ 연간 차트 (Solar Return) 모드
+          </h3>
+          <p className="text-sm text-celestial-gold/70 mt-3 font-semibold">
+            하단에 표기되는 <strong>분할 차트, 하우스 점수, 세부 행성 포지션</strong>이 출생 기준이 아닌 '올해 태양 위치'를 기준으로 재계산되어 표시 중입니다.
+          </p>
+        </motion.div>
+      )}
 
       {/* ── Overview 통합 (Karakas, Dasha Focus, Strength) ─────────────── */}
       {report.report && <VedicOverviewSection report={report.report} />}
