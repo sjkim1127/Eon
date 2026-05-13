@@ -1,38 +1,20 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
-    VedicAnalysisResult,
-    SajuAnalysisResult,
-    TransitResult,
-} from "../types";
-import type { TierResult } from "../types/analysis";
-
-export interface CurrentContextDto {
-    now_utc: string; // ISO 8601
-    analysis_timezone: string;
-}
-
-export interface AnalysisArgs {
-    year: number; month: number; day: number; hour: number; minute: number;
-    isLunar: boolean; isLeapMonth: boolean;
-    lat: number; lon: number; timezone: string;
-    unknownTime?: boolean;
-}
-
-export interface SajuArgs extends AnalysisArgs {
-    isMale: boolean;
-    useNightRatHour?: boolean;
-}
-
-export interface TransitArgs extends SajuArgs {
-    nowUtc: string;
-}
-
+    SajuAnalysisRequest,
+    VedicAnalysisRequest,
+    TransitAnalysisRequest,
+    DestinyTierRequest,
+    SajuAnalysisOutput,
+    VedicAnalysisOutput,
+    TransitAnalysisOutput,
+    TierResult,
+} from "../generated/eon-api";
 
 export interface BackendClient {
-    getVedicAnalysis(args: AnalysisArgs): Promise<VedicAnalysisResult>;
-    getSajuAnalysis(args: SajuArgs): Promise<SajuAnalysisResult>;
-    getTransitAnalysis(args: TransitArgs): Promise<TransitResult>;
-    getDestinyTier(saju: SajuAnalysisResult, vedic: VedicAnalysisResult, transit: TransitResult | null): Promise<TierResult>;
+    getVedicAnalysis(request: VedicAnalysisRequest): Promise<VedicAnalysisOutput>;
+    getSajuAnalysis(request: SajuAnalysisRequest): Promise<SajuAnalysisOutput>;
+    getTransitAnalysis(request: TransitAnalysisRequest): Promise<TransitAnalysisOutput>;
+    getDestinyTier(saju: SajuAnalysisOutput, vedic: VedicAnalysisOutput, transit: TransitAnalysisOutput | null): Promise<TierResult>;
 }
 
 // WASM Module Loading Cache
@@ -57,102 +39,44 @@ const getWasmModule = async (): Promise<typeof import("eon-wasm")> => {
 };
 
 export class WasmBackendClient implements BackendClient {
-    async getVedicAnalysis(args: AnalysisArgs): Promise<VedicAnalysisResult> {
+    async getVedicAnalysis(request: VedicAnalysisRequest): Promise<VedicAnalysisOutput> {
         const wasm = await getWasmModule();
-        return wasm.get_vedic_analysis(
-            args.year, args.month, args.day, args.hour, args.minute,
-            args.isLunar, args.isLeapMonth, args.lat, args.lon, args.timezone,
-            args.unknownTime ?? false,
-            new Date().toISOString()
-        ) as Promise<VedicAnalysisResult>;
+        return wasm.get_vedic_analysis(request) as Promise<VedicAnalysisOutput>;
     }
 
-    async getSajuAnalysis(args: SajuArgs): Promise<SajuAnalysisResult> {
+    async getSajuAnalysis(request: SajuAnalysisRequest): Promise<SajuAnalysisOutput> {
         const wasm = await getWasmModule();
-        return wasm.get_saju_analysis(
-            args.year, args.month, args.day, args.hour, args.minute,
-            args.isLunar, args.isLeapMonth, args.isMale,
-            args.useNightRatHour ?? false,
-            args.lon, args.lat, args.timezone,
-            args.unknownTime ?? false
-        ) as Promise<SajuAnalysisResult>;
+        return wasm.get_saju_analysis(request) as Promise<SajuAnalysisOutput>;
     }
 
-    async getTransitAnalysis(args: TransitArgs): Promise<TransitResult> {
+    async getTransitAnalysis(request: TransitAnalysisRequest): Promise<TransitAnalysisOutput> {
         const wasm = await getWasmModule();
-        return wasm.get_transit_analysis(
-            args.year, args.month, args.day, args.hour, args.minute,
-            args.isLunar, args.isLeapMonth, args.isMale,
-            args.useNightRatHour ?? false,
-            args.lon, args.lat, args.timezone,
-            args.unknownTime ?? false,
-            args.nowUtc ?? new Date().toISOString()
-        ) as Promise<TransitResult>;
+        return wasm.get_transit_analysis(request) as Promise<TransitAnalysisOutput>;
     }
 
-    async getDestinyTier(saju: SajuAnalysisResult, vedic: VedicAnalysisResult, transit: TransitResult | null): Promise<TierResult> {
+    async getDestinyTier(saju: SajuAnalysisOutput, vedic: VedicAnalysisOutput, transit: TransitAnalysisOutput | null): Promise<TierResult> {
         const wasm = await getWasmModule();
-        return (wasm as any).get_destiny_tier_analysis(saju, vedic, transit) as Promise<TierResult>;
+        const request: DestinyTierRequest = { saju, vedic, transit };
+        return (wasm as any).get_destiny_tier_analysis(request) as Promise<TierResult>;
     }
 }
 
 export class TauriBackendClient implements BackendClient {
-    async getVedicAnalysis(args: AnalysisArgs): Promise<VedicAnalysisResult> {
-        return invoke("get_vedic_analysis", {
-            year: args.year,
-            month: args.month,
-            day: args.day,
-            hour: args.hour,
-            minute: args.minute,
-            is_lunar: args.isLunar,
-            is_leap_month: args.isLeapMonth,
-            lat: args.lat,
-            lon: args.lon,
-            timezone: args.timezone,
-            unknown_time: args.unknownTime,
-            now_utc: new Date().toISOString()
-        });
+    async getVedicAnalysis(request: VedicAnalysisRequest): Promise<VedicAnalysisOutput> {
+        return invoke("get_vedic_analysis", { request });
     }
 
-    async getSajuAnalysis(args: SajuArgs): Promise<SajuAnalysisResult> {
-        return invoke("get_saju_analysis", {
-            year: args.year,
-            month: args.month,
-            day: args.day,
-            hour: args.hour,
-            minute: args.minute,
-            is_lunar: args.isLunar,
-            is_leap_month: args.isLeapMonth,
-            is_male: args.isMale,
-            use_night_rat_hour: args.useNightRatHour,
-            lon: args.lon,
-            lat: args.lat,
-            timezone: args.timezone,
-            unknown_time: args.unknownTime
-        });
+    async getSajuAnalysis(request: SajuAnalysisRequest): Promise<SajuAnalysisOutput> {
+        return invoke("get_saju_analysis", { request });
     }
 
-    async getTransitAnalysis(args: TransitArgs): Promise<TransitResult> {
-        return invoke("get_transit_analysis", {
-            year: args.year,
-            month: args.month,
-            day: args.day,
-            hour: args.hour,
-            minute: args.minute,
-            is_lunar: args.isLunar,
-            is_leap_month: args.isLeapMonth,
-            is_male: args.isMale,
-            use_night_rat_hour: args.useNightRatHour,
-            lon: args.lon,
-            lat: args.lat,
-            timezone: args.timezone,
-            unknown_time: args.unknownTime,
-            now_utc: args.nowUtc ?? new Date().toISOString()
-        });
+    async getTransitAnalysis(request: TransitAnalysisRequest): Promise<TransitAnalysisOutput> {
+        return invoke("get_transit_analysis", { request });
     }
 
-    async getDestinyTier(saju: SajuAnalysisResult, vedic: VedicAnalysisResult, transit: TransitResult | null): Promise<TierResult> {
-        return invoke("get_destiny_tier_analysis", { sajuVal: saju, vedicVal: vedic, transitVal: transit });
+    async getDestinyTier(saju: SajuAnalysisOutput, vedic: VedicAnalysisOutput, transit: TransitAnalysisOutput | null): Promise<TierResult> {
+        const request: DestinyTierRequest = { saju, vedic, transit };
+        return invoke("get_destiny_tier_analysis", { request });
     }
 }
 

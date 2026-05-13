@@ -5,6 +5,7 @@ import { getBirthValidationError } from "../utils/validation";
 import { normalizeVedicResult, normalizeSajuResult, normalizeTransitResult } from "../utils/normalize";
 import type { SajuAnalysisResult, TransitResult } from "../types";
 import type { RunAnalysisResult } from "../types/analysis";
+import { buildVedicRequest, buildSajuRequest, buildTransitRequest } from "../lib/request-builders";
 
 export function useAstrologyAnalysis() {
   const store = useAppStore();
@@ -22,30 +23,9 @@ export function useAstrologyAnalysis() {
     const now = new Date();
     const nowIso = now.toISOString();
 
-    const commonArgs = {
-      year: birthData.year,
-      month: birthData.month,
-      day: birthData.day,
-      hour: birthData.hour,
-      minute: birthData.minute,
-      isLunar: birthData.isLunar ?? false,
-      isLeapMonth: birthData.isLeapMonth ?? false,
-      lat: birthData.lat,
-      lon: birthData.lon,
-      timezone: birthData.timezone,
-      unknownTime: birthData.unknownTime ?? false,
-    };
-
-    const sajuArgs = {
-      ...commonArgs,
-      isMale: isMale,
-      useNightRatHour: birthData.useNightRatHour ?? false,
-    };
-
-    const transitArgs = {
-      ...sajuArgs,
-      nowUtc: nowIso,
-    };
+    const vedicRequest = buildVedicRequest(birthData, nowIso);
+    const sajuRequest = buildSajuRequest(birthData, isMale);
+    const transitRequest = buildTransitRequest(birthData, isMale, nowIso);
 
     const completed: Array<any> = [];
     const failed: Array<any> = [];
@@ -57,10 +37,10 @@ export function useAstrologyAnalysis() {
     store.setAnalysisTaskState("transit", { status: "loading" });
 
     const tasks = [
-      { key: "vedic", fn: () => backendClient.getVedicAnalysis(commonArgs) },
-      { key: "saju", fn: () => backendClient.getSajuAnalysis(sajuArgs) },
+      { key: "vedic", fn: () => backendClient.getVedicAnalysis(vedicRequest) },
+      { key: "saju", fn: () => backendClient.getSajuAnalysis(sajuRequest) },
 
-      { key: "transit", fn: () => backendClient.getTransitAnalysis(transitArgs) },
+      { key: "transit", fn: () => backendClient.getTransitAnalysis(transitRequest) },
     ];
 
     const results = await Promise.allSettled(tasks.map(t => t.fn()));

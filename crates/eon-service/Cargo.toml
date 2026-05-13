@@ -16,3 +16,4 @@ eon-vedic = { path = "../eon-vedic" }
 eon-ai = { path = "../eon-ai" }
 eon-astro = { path = "../eon-astro" }
 eon-data = { path = "../eon-data" }
+ts-rs = { version = "10", features = ["chrono-impl"] }
