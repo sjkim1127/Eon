@@ -1,5 +1,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
+use crate::error::ServiceError;
+use std::str::FromStr;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -219,31 +222,35 @@ pub struct AiAuditOutput {
 }
 
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct TierGrade {
     pub grade: String,
     pub label: String,
     pub desc: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct DomainTier {
     pub house: u8,
     pub domain: String,
     pub tier: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ScoreResult {
     pub score: f32,
     pub highlights: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct DestinyComponent {
     pub key: String,
     pub label: String,
@@ -252,8 +259,9 @@ pub struct DestinyComponent {
     pub reasons: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct TierResult {
     pub natal_score: f32,
     pub current_score: f32,
@@ -276,4 +284,160 @@ pub struct TierResult {
     pub destiny_tier_score: f32,
     pub detailed_components: Vec<DestinyComponent>,
     pub tier_model_version: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct AnalysisRequest {
+    pub year: i32,
+    pub month: u32,
+    pub day: u32,
+    pub hour: u32,
+    pub minute: u32,
+    pub is_lunar: bool,
+    pub is_leap_month: bool,
+    pub lat: f64,
+    pub lon: f64,
+    pub timezone: String,
+    pub unknown_time: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SajuAnalysisRequest {
+    #[serde(flatten)]
+    #[ts(flatten)]
+    pub base: AnalysisRequest,
+    pub is_male: bool,
+    pub use_night_rat_hour: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct VedicAnalysisRequest {
+    #[serde(flatten)]
+    #[ts(flatten)]
+    pub base: AnalysisRequest,
+    pub now_utc: Option<String>,
+    pub target_year: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct TransitAnalysisRequest {
+    #[serde(flatten)]
+    #[ts(flatten)]
+    pub base: SajuAnalysisRequest,
+    pub now_utc: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DestinyTierRequest {
+    #[ts(type = "any")]
+    pub saju: SajuAnalysisOutput,
+    #[ts(type = "any")]
+    pub vedic: VedicAnalysisOutput,
+    #[ts(type = "any")]
+    pub transit: Option<TransitAnalysisOutput>,
+}
+
+impl TryFrom<SajuAnalysisRequest> for SajuAnalysisInput {
+    type Error = ServiceError;
+
+    fn try_from(req: SajuAnalysisRequest) -> Result<Self, Self::Error> {
+        let precision = if req.base.unknown_time.unwrap_or(false) {
+            BirthTimePrecision::UnknownTimeNoonProxy
+        } else {
+            BirthTimePrecision::Exact
+        };
+
+        Ok(Self {
+            base: AnalysisInput {
+                year: req.base.year,
+                month: req.base.month,
+                day: req.base.day,
+                hour: req.base.hour,
+                minute: req.base.minute,
+                is_lunar: req.base.is_lunar,
+                is_leap_month: req.base.is_leap_month,
+                lat: req.base.lat,
+                lon: req.base.lon,
+                timezone: req.base.timezone,
+            },
+            is_male: req.is_male,
+            use_night_rat_hour: req.use_night_rat_hour.unwrap_or(false),
+            precision,
+        })
+    }
+}
+
+impl TryFrom<TransitAnalysisRequest> for TransitAnalysisInput {
+    type Error = ServiceError;
+
+    fn try_from(req: TransitAnalysisRequest) -> Result<Self, Self::Error> {
+        let base = SajuAnalysisInput::try_from(req.base)?;
+        let now_utc = if let Some(dt_str) = req.now_utc {
+            DateTime::from_str(&dt_str)
+                .map_err(|e| ServiceError::InvalidInput(format!("Invalid now_utc: {e}")))?
+        } else {
+            Utc::now()
+        };
+
+        let analysis_timezone = base.base.timezone.clone();
+        Ok(Self {
+            base,
+            current: CurrentContext {
+                now_utc,
+                analysis_timezone,
+            },
+        })
+    }
+}
+
+impl TryFrom<VedicAnalysisRequest> for VedicAnalysisInput {
+    type Error = ServiceError;
+
+    fn try_from(req: VedicAnalysisRequest) -> Result<Self, Self::Error> {
+        let precision = if req.base.unknown_time.unwrap_or(false) {
+            BirthTimePrecision::UnknownTimeNoonProxy
+        } else {
+            BirthTimePrecision::Exact
+        };
+
+        let now_utc = if let Some(dt_str) = req.now_utc {
+            DateTime::from_str(&dt_str)
+                .map_err(|e| ServiceError::InvalidInput(format!("Invalid now_utc: {e}")))?
+        } else {
+            Utc::now()
+        };
+
+        let analysis_timezone = req.base.timezone.clone();
+
+        Ok(Self {
+            base: AnalysisInput {
+                year: req.base.year,
+                month: req.base.month,
+                day: req.base.day,
+                hour: req.base.hour,
+                minute: req.base.minute,
+                is_lunar: req.base.is_lunar,
+                is_leap_month: req.base.is_leap_month,
+                lat: req.base.lat,
+                lon: req.base.lon,
+                timezone: req.base.timezone,
+            },
+            precision,
+            current: CurrentContext {
+                now_utc,
+                analysis_timezone,
+            },
+            target_year: req.target_year,
+        })
+    }
 }

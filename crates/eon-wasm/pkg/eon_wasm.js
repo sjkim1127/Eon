@@ -384,13 +384,11 @@ export function calc_ut(jd_ut, planet, flags) {
 }
 
 /**
- * @param {any} saju_val
- * @param {any} vedic_val
- * @param {any} transit_val
+ * @param {any} request
  * @returns {any}
  */
-export function get_destiny_tier_analysis(saju_val, vedic_val, transit_val) {
-    const ret = wasm.get_destiny_tier_analysis(saju_val, vedic_val, transit_val);
+export function get_destiny_tier_analysis(request) {
+    const ret = wasm.get_destiny_tier_analysis(request);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -398,25 +396,11 @@ export function get_destiny_tier_analysis(saju_val, vedic_val, transit_val) {
 }
 
 /**
- * @param {number} year
- * @param {number} month
- * @param {number} day
- * @param {number} hour
- * @param {number} minute
- * @param {boolean} is_lunar
- * @param {boolean} is_leap_month
- * @param {boolean} is_male
- * @param {boolean} use_night_rat_hour
- * @param {number} lon
- * @param {number} lat
- * @param {string} timezone
- * @param {boolean | null} [unknown_time]
+ * @param {any} request
  * @returns {any}
  */
-export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone, unknown_time) {
-    const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_saju_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0, isLikeNone(unknown_time) ? 0xFFFFFF : unknown_time ? 1 : 0);
+export function get_saju_analysis(request) {
+    const ret = wasm.get_saju_analysis(request);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -424,28 +408,11 @@ export function get_saju_analysis(year, month, day, hour, minute, is_lunar, is_l
 }
 
 /**
- * @param {number} year
- * @param {number} month
- * @param {number} day
- * @param {number} hour
- * @param {number} minute
- * @param {boolean} is_lunar
- * @param {boolean} is_leap_month
- * @param {boolean} is_male
- * @param {boolean} use_night_rat_hour
- * @param {number} lon
- * @param {number} lat
- * @param {string} timezone
- * @param {boolean | null} [unknown_time]
- * @param {string | null} [now_utc_str]
+ * @param {any} request
  * @returns {any}
  */
-export function get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, timezone, unknown_time, now_utc_str) {
-    const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN;
-    var ptr1 = isLikeNone(now_utc_str) ? 0 : passStringToWasm0(now_utc_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len1 = WASM_VECTOR_LEN;
-    const ret = wasm.get_transit_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, is_male, use_night_rat_hour, lon, lat, ptr0, len0, isLikeNone(unknown_time) ? 0xFFFFFF : unknown_time ? 1 : 0, ptr1, len1);
+export function get_transit_analysis(request) {
+    const ret = wasm.get_transit_analysis(request);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -453,26 +420,11 @@ export function get_transit_analysis(year, month, day, hour, minute, is_lunar, i
 }
 
 /**
- * @param {number} year
- * @param {number} month
- * @param {number} day
- * @param {number} hour
- * @param {number} minute
- * @param {boolean} is_lunar
- * @param {boolean} is_leap_month
- * @param {number} lat
- * @param {number} lon
- * @param {string} timezone
- * @param {boolean | null} [unknown_time]
- * @param {string | null} [now_utc_str]
+ * @param {any} request
  * @returns {any}
  */
-export function get_vedic_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, lat, lon, timezone, unknown_time, now_utc_str) {
-    const ptr0 = passStringToWasm0(timezone, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN;
-    var ptr1 = isLikeNone(now_utc_str) ? 0 : passStringToWasm0(now_utc_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len1 = WASM_VECTOR_LEN;
-    const ret = wasm.get_vedic_analysis(year, month, day, hour, minute, is_lunar, is_leap_month, lat, lon, ptr0, len0, isLikeNone(unknown_time) ? 0xFFFFFF : unknown_time ? 1 : 0, ptr1, len1);
+export function get_vedic_analysis(request) {
+    const ret = wasm.get_vedic_analysis(request);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -662,6 +614,16 @@ function __wbg_get_imports() {
         const ret = result;
         return ret;
     };
+    imports.wbg.__wbg_instanceof_Map_084be8da74364158 = function(arg0) {
+        let result;
+        try {
+            result = arg0 instanceof Map;
+        } catch (_) {
+            result = false;
+        }
+        const ret = result;
+        return ret;
+    };
     imports.wbg.__wbg_instanceof_Uint8Array_da54ccc9d3e09434 = function(arg0) {
         let result;
         try {
@@ -749,6 +711,11 @@ function __wbg_get_imports() {
     imports.wbg.__wbindgen_cast_4625c577ab2ec9ee = function(arg0) {
         // Cast intrinsic for `U64 -> Externref`.
         const ret = BigInt.asUintN(64, arg0);
+        return ret;
+    };
+    imports.wbg.__wbindgen_cast_9ae0607507abb057 = function(arg0) {
+        // Cast intrinsic for `I64 -> Externref`.
+        const ret = arg0;
         return ret;
     };
     imports.wbg.__wbindgen_cast_d6cd19b81560fd6e = function(arg0) {

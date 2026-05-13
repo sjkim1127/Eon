@@ -1,38 +1,18 @@
 pub mod tier;
 
-use eon_service::dto::{SajuAnalysisInput, TransitAnalysisInput, VedicAnalysisInput};
+use eon_service::dto::{SajuAnalysisInput, TransitAnalysisInput, VedicAnalysisInput, SajuAnalysisRequest, VedicAnalysisRequest, TransitAnalysisRequest};
 use eon_service::facade;
+use eon_service::error::ServiceError;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub fn get_vedic_analysis(
-    year: i32,
-    month: u32,
-    day: u32,
-    hour: u32,
-    minute: u32,
-    is_lunar: bool,
-    is_leap_month: bool,
-    lat: f64,
-    lon: f64,
-    timezone: String,
-    unknown_time: Option<bool>,
-    now_utc_str: Option<String>,
-) -> Result<JsValue, JsValue> {
-    let now_utc = if let Some(s) = now_utc_str {
-        chrono::DateTime::parse_from_rfc3339(&s)
-            .map(|dt| dt.with_timezone(&chrono::Utc))
-            .unwrap_or_else(|_| chrono::Utc::now())
-    } else {
-        chrono::Utc::now()
-    };
+pub fn get_vedic_analysis(request: JsValue) -> Result<JsValue, JsValue> {
+    let req: VedicAnalysisRequest = serde_wasm_bindgen::from_value(request)
+        .map_err(|e| JsError::new(&format!("Invalid VedicAnalysisRequest: {e}")))?;
 
-    let input = VedicAnalysisInput::new(
-        year, month, day, hour, minute,
-        is_lunar, is_leap_month,
-        lat, lon, timezone,
-        unknown_time, Some(now_utc),
-    );
+    let input: VedicAnalysisInput = req
+        .try_into()
+        .map_err(|e: ServiceError| JsError::new(&e.to_string()))?;
 
     let result = facade::analyze_vedic(input).map_err(|e| JsError::new(&e.to_string()))?;
 
@@ -44,26 +24,13 @@ pub fn get_vedic_analysis(
 }
 
 #[wasm_bindgen]
-pub fn get_saju_analysis(
-    year: i32,
-    month: u32,
-    day: u32,
-    hour: u32,
-    minute: u32,
-    is_lunar: bool,
-    is_leap_month: bool,
-    is_male: bool,
-    use_night_rat_hour: bool,
-    lon: f64,
-    lat: f64,
-    timezone: String,
-    unknown_time: Option<bool>,
-) -> Result<JsValue, JsValue> {
-    let input = SajuAnalysisInput::new(
-        year, month, day, hour, minute,
-        is_lunar, is_leap_month, is_male, use_night_rat_hour,
-        lon, lat, timezone, unknown_time,
-    );
+pub fn get_saju_analysis(request: JsValue) -> Result<JsValue, JsValue> {
+    let req: SajuAnalysisRequest = serde_wasm_bindgen::from_value(request)
+        .map_err(|e| JsError::new(&format!("Invalid SajuAnalysisRequest: {e}")))?;
+
+    let input: SajuAnalysisInput = req
+        .try_into()
+        .map_err(|e: ServiceError| JsError::new(&e.to_string()))?;
 
     let result = facade::analyze_saju(input).map_err(|e| JsError::new(&e.to_string()))?;
 
@@ -75,35 +42,13 @@ pub fn get_saju_analysis(
 }
 
 #[wasm_bindgen]
-pub fn get_transit_analysis(
-    year: i32,
-    month: u32,
-    day: u32,
-    hour: u32,
-    minute: u32,
-    is_lunar: bool,
-    is_leap_month: bool,
-    is_male: bool,
-    use_night_rat_hour: bool,
-    lon: f64,
-    lat: f64,
-    timezone: String,
-    unknown_time: Option<bool>,
-    now_utc_str: Option<String>,
-) -> Result<JsValue, JsValue> {
-    let now_utc = if let Some(s) = now_utc_str {
-        chrono::DateTime::parse_from_rfc3339(&s)
-            .map(|dt| dt.with_timezone(&chrono::Utc))
-            .unwrap_or_else(|_| chrono::Utc::now())
-    } else {
-        chrono::Utc::now()
-    };
+pub fn get_transit_analysis(request: JsValue) -> Result<JsValue, JsValue> {
+    let req: TransitAnalysisRequest = serde_wasm_bindgen::from_value(request)
+        .map_err(|e| JsError::new(&format!("Invalid TransitAnalysisRequest: {e}")))?;
 
-    let input = TransitAnalysisInput::new(
-        year, month, day, hour, minute,
-        is_lunar, is_leap_month, is_male, use_night_rat_hour,
-        lon, lat, timezone, unknown_time, Some(now_utc),
-    );
+    let input: TransitAnalysisInput = req
+        .try_into()
+        .map_err(|e: ServiceError| JsError::new(&e.to_string()))?;
 
     let result = facade::analyze_transit(input).map_err(|e| JsError::new(&e.to_string()))?;
 
