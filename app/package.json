@@ -4,6 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "generate:types": "cd ../crates/eon-service && TS_RS_EXPORT_DIR=../../app/src/generated/eon-api cargo run --bin export_ts",
+    "build:wasm": "cd ../crates/eon-wasm && wasm-pack build --target web --out-dir pkg && cp -r pkg/* ../../app/src/lib/wasm/",
+    "predev": "npm run generate:types && npm run build:wasm",
+    "prebuild": "npm run generate:types && npm run build:wasm",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",

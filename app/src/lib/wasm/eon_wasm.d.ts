@@ -72,10 +72,10 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
+  readonly get_destiny_tier_analysis: (a: any) => [number, number, number];
   readonly get_saju_analysis: (a: any) => [number, number, number];
   readonly get_transit_analysis: (a: any) => [number, number, number];
   readonly get_vedic_analysis: (a: any) => [number, number, number];
-  readonly get_destiny_tier_analysis: (a: any) => [number, number, number];
   readonly __wbg_get_position_distance: (a: number) => number;
   readonly __wbg_get_position_distance_speed: (a: number) => number;
   readonly __wbg_get_position_latitude: (a: number) => number;
@@ -95,20 +95,20 @@ export interface InitOutput {
   readonly __wbg_set_swissepherror_message: (a: number, b: number, c: number) => void;
   readonly __wbg_swissepherror_free: (a: number, b: number) => void;
   readonly calc_ut: (a: number, b: number, c: number) => [number, number, number];
-  readonly set_ephe_path: (a: number, b: number) => void;
-  readonly version: () => [number, number];
   readonly free: (a: number) => void;
   readonly malloc: (a: number) => number;
+  readonly set_ephe_path: (a: number, b: number) => void;
+  readonly version: () => [number, number];
   readonly wasm_swe_calc: (a: number, b: number, c: number, d: number, e: number) => number;
   readonly wasm_swe_calc_ut: (a: number, b: number, c: number, d: number, e: number) => number;
-  readonly wasm_swe_close: () => void;
   readonly wasm_swe_houses: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
   readonly wasm_swe_julday: (a: number, b: number, c: number, d: number, e: number) => number;
   readonly wasm_swe_revjul: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
   readonly wasm_swe_set_ephe_path: (a: number) => void;
+  readonly wasm_swe_version: (a: number) => number;
   readonly wasm_swe_set_topo: (a: number, b: number, c: number) => void;
   readonly wasm_swe_sidtime: (a: number) => number;
-  readonly wasm_swe_version: (a: number) => number;
+  readonly wasm_swe_close: () => void;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
   readonly __wbindgen_exn_store: (a: number) => void;

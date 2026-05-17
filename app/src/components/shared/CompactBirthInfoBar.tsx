@@ -29,7 +29,7 @@ export function CompactBirthInfoBar({
     onEdit,
     actionSlot,
 }: CompactBirthInfoBarProps) {
-    const isExact = meta?.precision === "Exact";
+    const isExact = meta?.precision === "exact";
     const correctedTime = meta?.correctedTime;
 
     return (
