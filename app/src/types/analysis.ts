@@ -12,7 +12,7 @@ export interface AnalysisTaskState<T> {
 
 
 export interface AnalysisMeta {
-  precision: "Exact" | "UnknownTimeNoonProxy";
+  precision: "exact" | "unknownTimeNoonProxy";
   inputTime: string;
   correctedTime: string;
   isDst: boolean;

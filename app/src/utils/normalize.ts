@@ -1,29 +1,12 @@
 import type { VedicAnalysisResult, VedicAnalysisReport, GocharaSummary } from "../types/vedic";
 import type { SajuAnalysisResult, TransitResult } from "../types/saju";
 
-function toCamelCase(str: string): string {
-  return str.replace(/_([a-z0-9])/g, (g) => g[1].toUpperCase());
-}
-
-export function deepToCamelCase(obj: any): any {
-  if (obj === null || typeof obj !== "object") return obj;
-  if (Array.isArray(obj)) return obj.map(deepToCamelCase);
-
-  const result: any = {};
-  for (const key of Object.keys(obj)) {
-    const camelKey = toCamelCase(key);
-    result[camelKey] = deepToCamelCase(obj[key]);
-  }
-  return result;
-}
-
 /**
- * Normalizes a Vedic analysis report by ensuring all fields are present
- * and handling both snake_case and camelCase fallbacks for robustness.
+ * Normalizes a Vedic analysis report by ensuring all fields are present.
  */
 export function normalizeVedicReport(raw: any): VedicAnalysisReport {
   if (!raw) return {} as VedicAnalysisReport;
-  const cc = deepToCamelCase(raw);
+  const cc = raw;
 
   return {
     ...cc,
@@ -58,7 +41,7 @@ export function normalizeVedicReport(raw: any): VedicAnalysisReport {
 
 export function normalizeGocharaSummary(raw: any): GocharaSummary {
   if (!raw) return { transits: [], sadeSati: "None" };
-  const cc = deepToCamelCase(raw);
+  const cc = raw;
   return {
     transits: cc.transits ?? [],
     sadeSati: cc.sadeSati ?? "None",
@@ -67,7 +50,7 @@ export function normalizeGocharaSummary(raw: any): GocharaSummary {
 
 export function normalizeVedicResult(raw: any): VedicAnalysisResult {
   if (!raw) return {} as VedicAnalysisResult;
-  const cc = deepToCamelCase(raw);
+  const cc = raw;
   
   return {
     ...cc,
@@ -83,7 +66,7 @@ export function normalizeVedicResult(raw: any): VedicAnalysisResult {
 
 export function normalizeTransitResult(raw: any): TransitResult {
   if (!raw) return {} as TransitResult;
-  const cc = deepToCamelCase(raw);
+  const cc = raw;
   return {
     meta: cc.meta || {},
     yearlyLuck: cc.yearlyLuck || {},
@@ -99,7 +82,7 @@ export function normalizeTransitResult(raw: any): TransitResult {
 
 export function normalizeSajuResult(raw: any): SajuAnalysisResult {
   if (!raw) return {} as SajuAnalysisResult;
-  const cc = deepToCamelCase(raw);
+  const cc = raw;
   
   if (!cc.report) cc.report = {};
   

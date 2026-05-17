@@ -1,10 +1,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
+export const get_destiny_tier_analysis: (a: any) => [number, number, number];
 export const get_saju_analysis: (a: any) => [number, number, number];
 export const get_transit_analysis: (a: any) => [number, number, number];
 export const get_vedic_analysis: (a: any) => [number, number, number];
-export const get_destiny_tier_analysis: (a: any) => [number, number, number];
 export const __wbg_get_position_distance: (a: number) => number;
 export const __wbg_get_position_distance_speed: (a: number) => number;
 export const __wbg_get_position_latitude: (a: number) => number;
@@ -24,20 +24,20 @@ export const __wbg_set_swissepherror_code: (a: number, b: number) => void;
 export const __wbg_set_swissepherror_message: (a: number, b: number, c: number) => void;
 export const __wbg_swissepherror_free: (a: number, b: number) => void;
 export const calc_ut: (a: number, b: number, c: number) => [number, number, number];
-export const set_ephe_path: (a: number, b: number) => void;
-export const version: () => [number, number];
 export const free: (a: number) => void;
 export const malloc: (a: number) => number;
+export const set_ephe_path: (a: number, b: number) => void;
+export const version: () => [number, number];
 export const wasm_swe_calc: (a: number, b: number, c: number, d: number, e: number) => number;
 export const wasm_swe_calc_ut: (a: number, b: number, c: number, d: number, e: number) => number;
-export const wasm_swe_close: () => void;
 export const wasm_swe_houses: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
 export const wasm_swe_julday: (a: number, b: number, c: number, d: number, e: number) => number;
 export const wasm_swe_revjul: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
 export const wasm_swe_set_ephe_path: (a: number) => void;
+export const wasm_swe_version: (a: number) => number;
 export const wasm_swe_set_topo: (a: number, b: number, c: number) => void;
 export const wasm_swe_sidtime: (a: number) => number;
-export const wasm_swe_version: (a: number) => number;
+export const wasm_swe_close: () => void;
 export const __wbindgen_malloc: (a: number, b: number) => number;
 export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
 export const __wbindgen_exn_store: (a: number) => void;

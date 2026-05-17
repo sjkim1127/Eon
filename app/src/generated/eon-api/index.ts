@@ -8,6 +8,7 @@ export type { TierGrade } from "./TierGrade";
 export type { DomainTier } from "./DomainTier";
 export type { ScoreResult } from "./ScoreResult";
 export type { DestinyComponent } from "./DestinyComponent";
+export type { ServiceError } from "./ServiceError";
 
 export type { SajuAnalysisResult as SajuAnalysisOutput } from "../../types/saju";
 export type { VedicAnalysisResult as VedicAnalysisOutput } from "../../types/vedic";
