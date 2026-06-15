@@ -150,7 +150,7 @@ impl VimshottariDasha {
             let (p_lord, years) = Self::CYCLE[idx];
             let full_sub_portion = years / Self::TOTAL_YEARS;
             let remaining_sub_portion = full_sub_portion - sub_elapsed;
-            let full_mahadasha_duration = total_duration / initial_portion.unwrap();
+            let full_mahadasha_duration = total_duration / initial_portion.unwrap_or(1.0);
             let sub_duration = full_mahadasha_duration * remaining_sub_portion;
             let sub_end = current_start + Duration::seconds(sub_duration as i64);
 

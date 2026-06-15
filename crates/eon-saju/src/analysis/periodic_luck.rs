@@ -142,7 +142,8 @@ impl MonthlyLuck {
     }
 
     fn month_ganzi(year: i32, month: u32) -> GanZi {
-        crate::core::ganzi_utils::calculate_month_ganzi(year, month as i32)
+        let saju_month = if month == 1 { 12 } else { month - 1 };
+        crate::core::ganzi_utils::calculate_month_ganzi(year, saju_month as i32)
     }
 }
 
@@ -400,6 +401,7 @@ impl FourPillars {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::branch::EarthlyBranch;
     use crate::core::pillars::SajuInput;
 
     #[test]

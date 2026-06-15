@@ -19,14 +19,14 @@ fn verify_true_vs_mean_nodes() {
     let mut config_true = VedicConfig::default();
     config_true.node_calc = NodeCalculation::TrueNode;
     let calc_true = VedicChartCalculator::with_config(config_true);
-    let chart_true = calc_true.calculate(dt, lat, lon);
+    let chart_true = calc_true.calculate(dt, lat, lon).unwrap();
     let rahu_true = chart_true.planets.iter().find(|p| p.planet == VedicPlanet::Rahu).unwrap();
 
     // 2. Calculate with Mean Node
     let mut config_mean = VedicConfig::default();
     config_mean.node_calc = NodeCalculation::MeanNode;
     let calc_mean = VedicChartCalculator::with_config(config_mean);
-    let chart_mean = calc_mean.calculate(dt, lat, lon);
+    let chart_mean = calc_mean.calculate(dt, lat, lon).unwrap();
     let rahu_mean = chart_mean.planets.iter().find(|p| p.planet == VedicPlanet::Rahu).unwrap();
 
     println!("Rahu True: tropical={}, sidereal={}, dec={}", rahu_true.tropical_deg, rahu_true.sidereal_deg, rahu_true.declination);

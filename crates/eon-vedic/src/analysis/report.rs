@@ -304,7 +304,7 @@ impl VedicAnalysisReport {
             .iter()
             .filter(|h| h.total_score > 300.0)
             .collect();
-        strong_houses.sort_by(|a, b| b.total_score.partial_cmp(&a.total_score).unwrap());
+        strong_houses.sort_by(|a, b| b.total_score.partial_cmp(&a.total_score).unwrap_or(std::cmp::Ordering::Equal));
 
         if strong_houses.is_empty() {
             s.push_str("- No exceptionally strong houses detected.\n");

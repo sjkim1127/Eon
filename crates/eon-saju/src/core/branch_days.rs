@@ -7,6 +7,7 @@ use crate::core::branch::EarthlyBranch;
 use crate::core::stem::HeavenlyStem;
 use crate::core::pillars::FourPillars;
 use crate::core::calendar::{SolarTerm, get_solar_term_time};
+use crate::core::pillars::SajuError;
 
 /// 지장간 사령(司令) 정보
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,14 +26,14 @@ pub struct SaryeongAnalysis {
 
 impl SaryeongAnalysis {
     /// 사주 팔자로부터 사령 분석
-    pub fn from_pillars(pillars: &FourPillars) -> Self {
+    pub fn from_pillars(pillars: &FourPillars) -> Result<Self, SajuError> {
         let branch = pillars.month.branch;
         
         // 해당 월의 시작 절기 찾기
         let term = SolarTerm::from_month_branch_index(branch.index());
         
         // 해당 절기의 정확한 시작 시각 계산
-        let term_time = get_solar_term_time(pillars.birth_time, term);
+        let term_time = get_solar_term_time(pillars.birth_time, term)?;
         
         // 경과 일수 계산 (실제 시간차 기준)
         let diff = pillars.birth_time - term_time;
@@ -43,13 +44,13 @@ impl SaryeongAnalysis {
 
         let (stem, duration, part) = get_saryeong_data(branch, days_passed);
 
-        Self {
+        Ok(Self {
             month_branch: branch,
             days_passed,
             commanding_stem: stem,
             duration,
             part,
-        }
+        })
     }
 }
 
@@ -134,7 +135,7 @@ impl std::fmt::Display for SaryeongAnalysis {
 
 impl FourPillars {
     /// 월령분금(사령) 분석
-    pub fn saryeong(&self) -> SaryeongAnalysis {
+    pub fn saryeong(&self) -> Result<SaryeongAnalysis, SajuError> {
         SaryeongAnalysis::from_pillars(self)
     }
 }

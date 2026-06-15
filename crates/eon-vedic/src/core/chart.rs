@@ -1,4 +1,5 @@
 use crate::core::config::{NodeCalculation, VedicConfig};
+use crate::core::error::VedicError;
 use crate::planets::VedicPlanet;
 use chrono::{DateTime, Utc, TimeZone, Datelike, Timelike};
 use eon_astro::AstroEngine;
@@ -133,7 +134,7 @@ impl VedicChartCalculator {
         }
     }
 
-    pub fn calculate(&self, time: DateTime<Utc>, latitude: f64, longitude: f64) -> VedicChart {
+    pub fn calculate(&self, time: DateTime<Utc>, latitude: f64, longitude: f64) -> Result<VedicChart, VedicError> {
         let ayanamsa = crate::calc::ayanamsa::get_ayanamsa(&self.engine, time, self.config.ayanamsa);
 
         let hsys = match self.config.house_system {
@@ -143,8 +144,7 @@ impl VedicChartCalculator {
 
         let (cusps, ascmc) = self
             .engine
-            .get_houses(time, latitude, longitude, hsys)
-            .unwrap_or((vec![], [0.0; 10]));
+            .get_houses(time, latitude, longitude, hsys)?;
 
         let sidereal_cusps: Vec<f64> = cusps
             .iter()
@@ -268,12 +268,10 @@ impl VedicChartCalculator {
 
         let (sun_trop, _) = self
             .engine
-            .get_planet_full(time, VedicPlanet::Sun.se_id(), 256 | 2)
-            .unwrap_or((0.0, 0.0));
+            .get_planet_full(time, VedicPlanet::Sun.se_id(), 256 | 2)?;
         let (_, _sun_dec) = self
             .engine
-            .get_planet_equatorial(time, VedicPlanet::Sun.se_id())
-            .unwrap_or((0.0, 0.0));
+            .get_planet_equatorial(time, VedicPlanet::Sun.se_id())?;
         let sun_sidereal = (sun_trop - ayanamsa + 360.0) % 360.0;
 
         let asc_position = create_position(
@@ -309,12 +307,10 @@ impl VedicChartCalculator {
             let flag = 256 | 2;
             let (trop, speed) = self
                 .engine
-                .get_planet_full(time, se_id, flag)
-                .unwrap_or((0.0, 0.0));
+                .get_planet_full(time, se_id, flag)?;
             let (_, dec) = self
                 .engine
-                .get_planet_equatorial(time, se_id)
-                .unwrap_or((0.0, 0.0));
+                .get_planet_equatorial(time, se_id)?;
             let sidereal = (trop - ayanamsa + 360.0) % 360.0;
             planets.push(create_position(
                 *p,
@@ -413,7 +409,7 @@ impl VedicChartCalculator {
             &chart, time, chart.ascendant.rasi
         ));
 
-        chart
+        Ok(chart)
     }
 
     /// Calculate Solar Return (Varshaphala) chart for a specific year
@@ -423,9 +419,9 @@ impl VedicChartCalculator {
         latitude: f64,
         longitude: f64,
         target_year: i32,
-    ) -> VedicChart {
+    ) -> Result<VedicChart, VedicError> {
         // 1. Get birth Sun sidereal longitude
-        let birth_chart = self.calculate(birth_time, latitude, longitude);
+        let birth_chart = self.calculate(birth_time, latitude, longitude)?;
         let birth_sun_sidereal = birth_chart
             .planets
             .iter()
@@ -451,7 +447,8 @@ impl VedicChartCalculator {
                 birth_time.minute(),
                 0,
             )
-            .unwrap();
+            .single()
+            .ok_or_else(|| VedicError::CalculationError("Invalid approx time".to_string()))?;
 
         let mut current_guess = approx_time;
         for _ in 0..3 {
@@ -466,14 +463,14 @@ impl VedicChartCalculator {
         }
 
         // 3. Calculate full chart for the exact return time
-        let mut annual_chart = self.calculate(current_guess, latitude, longitude);
+        let mut annual_chart = self.calculate(current_guess, latitude, longitude)?;
         
         // Overwrite report with correct birth lagna context and correct return time
         annual_chart.analysis_report = Some(crate::analysis::report::VedicAnalysisReport::generate(
             &annual_chart, current_guess, birth_chart.ascendant.rasi
         ));
         
-        annual_chart
+        Ok(annual_chart)
     }
 }
 

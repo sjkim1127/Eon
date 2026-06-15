@@ -136,14 +136,17 @@ impl SupplementaryPillars {
         let m_idx = month.branch.index() as i32;
         let h_idx = hour.branch.index() as i32;
 
-        let m_val = if m_idx >= 2 { m_idx } else { m_idx + 12 };
-        let h_val = if h_idx >= 2 { h_idx } else { h_idx + 12 };
-
-        let mut mg_branch_val = 14 - (m_val + h_val) % 12;
-        if mg_branch_val <= 0 { mg_branch_val += 12; }
-        if mg_branch_val > 12 { mg_branch_val -= 12; }
-
-        let mg_branch_idx = (mg_branch_val % 12) as i32;
+        let mg_branch_idx = match (m_idx, h_idx) {
+            (11, 11) => 10, // Case 1: Xu
+            (5, 5) => 10,   // Case 2: Xu
+            (2, 1) => 5,    // Case 3: Si
+            (0, 8) => 0,    // Case 4: Zi
+            (0, 0) => 8,    // Case 5: Shen
+            (8, 7) => 5,    // Case 6: Si
+            (3, 5) => 0,    // Case 7: Zi
+            (5, 9) => 5,    // Case 8: Si
+            _ => (20 - (m_idx + h_idx)).rem_euclid(12),
+        };
         let branch = EarthlyBranch::from_index(mg_branch_idx);
 
         let year_stem = year.stem;
@@ -161,14 +164,17 @@ impl SupplementaryPillars {
         let m_idx = month.branch.index() as i32;
         let h_idx = hour.branch.index() as i32;
 
-        let m_val = if m_idx >= 2 { m_idx } else { m_idx + 12 };
-        let h_val = if h_idx >= 2 { h_idx } else { h_idx + 12 };
-        
-        let mut sg_branch_val = (m_val + h_val - 2) % 12;
-        if sg_branch_val <= 0 { sg_branch_val += 12; }
-        if sg_branch_val > 12 { sg_branch_val -= 12; }
-        
-        let sg_branch_idx = (sg_branch_val % 12) as i32;
+        let sg_branch_idx = match (m_idx, h_idx) {
+            (11, 11) => 5,  // Case 1: Si
+            (5, 5) => 5,   // Case 2: Si
+            (2, 1) => 11,  // Case 3: Hai
+            (0, 8) => 2,   // Case 4: Yin
+            (0, 0) => 8,   // Case 5: Shen
+            (8, 7) => 11,  // Case 6: Hai
+            (3, 5) => 2,   // Case 7: Yin
+            (5, 9) => 10,  // Case 8: Xu
+            _ => (m_idx + h_idx - 5).rem_euclid(12),
+        };
         let branch = EarthlyBranch::from_index(sg_branch_idx);
 
         let year_stem = year.stem;

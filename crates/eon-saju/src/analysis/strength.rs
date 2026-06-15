@@ -208,7 +208,7 @@ impl DeukJi {
             // 지장간(Hidden Stems) 전체를 확인하여 통근 여부 및 세기 분석
             let hidden_stems = branch.hidden_stems();
             let mut branch_root_score = 0.0;
-            let saryeong = if *name == "월지" { Some(pillars.saryeong()) } else { None };
+            let saryeong = if *name == "월지" { pillars.saryeong().ok() } else { None };
 
             for (idx, stem) in hidden_stems.iter().enumerate() {
                 if stem.element() == day_element {

@@ -52,7 +52,7 @@ fn verify_location_oracle_snapshots() {
 
         // 2. Calculate Chart
         let calc = VedicChartCalculator::default();
-        let chart = calc.calculate(actual_utc, case.input.lat, case.input.lon);
+        let chart = calc.calculate(actual_utc, case.input.lat, case.input.lon).unwrap();
 
         // 3. Verify Ascendant (0.1 deg tolerance)
         common::assert_approx_eq(chart.ascendant.sidereal_deg, case.expected.asc_sidereal, 0.1, &format!("Case {} Ascendant", case.case_id));

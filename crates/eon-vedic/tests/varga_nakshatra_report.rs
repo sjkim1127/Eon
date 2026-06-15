@@ -16,7 +16,7 @@ fn test_varga_nakshatra_report_d1_ansan() {
         ..Default::default()
     };
     let calculator = VedicChartCalculator::with_config(config);
-    let chart = calculator.calculate(time, 37.3167, 126.8167);
+    let chart = calculator.calculate(time, 37.3167, 126.8167).unwrap();
 
     let reports = build_varga_nakshatra_reports(&chart);
 

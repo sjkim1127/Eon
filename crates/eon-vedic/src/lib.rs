@@ -23,6 +23,7 @@ pub use calc::ayanamsa;
 pub use calc::panchanga;
 pub use calc::varga;
 pub use core::chart;
+pub use core::error::VedicError;
 pub use core::config;
 pub use core::constants;
 pub use core::names;

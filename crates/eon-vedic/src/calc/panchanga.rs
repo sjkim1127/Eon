@@ -148,7 +148,7 @@ impl PanchangaEngine {
         ];
 
         // Find index of day lord in the sequence
-        let start_idx = hora_seq.iter().position(|&p| p == day_lord).unwrap();
+        let start_idx = hora_seq.iter().position(|&p| p == day_lord).unwrap_or(0);
 
         let is_day = time >= sunrise && time < sunset;
 

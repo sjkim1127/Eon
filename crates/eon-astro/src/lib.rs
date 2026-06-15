@@ -5,6 +5,20 @@
 use chrono::{DateTime, Datelike, Timelike, Utc};
 use std::sync::Mutex;
 
+/// Astronomical calculation errors
+#[derive(Debug, thiserror::Error, serde::Serialize, Clone, PartialEq, Eq)]
+#[serde(tag = "type", content = "message")]
+pub enum AstroError {
+    #[error("Mutex lock poisoned")]
+    LockPoisoned,
+
+    #[error("Swiss Ephemeris FFI error: {0}")]
+    FfiError(String),
+
+    #[error("Failed to calculate houses")]
+    HouseCalculationError,
+}
+
 static ASTRO_LOCK: Mutex<()> = Mutex::new(());
 
 pub struct AstroEngine;
@@ -20,7 +34,7 @@ impl AstroEngine {
     }
 
     /// 특정 시점의 태양 황경(Tropical Longitude)을 계산합니다.
-    pub fn get_sun_longitude(&self, datetime: DateTime<Utc>) -> Result<f64, String> {
+    pub fn get_sun_longitude(&self, datetime: DateTime<Utc>) -> Result<f64, AstroError> {
         let julian_day = self.to_julian_day(datetime);
 
         // SE_SUN = 0, SEFLG_SPEED = 256 (보통)
@@ -28,7 +42,7 @@ impl AstroEngine {
         let mut results = [0.0; 6];
         let mut error = [0; 256];
 
-        let _lock = ASTRO_LOCK.lock().unwrap();
+        let _lock = ASTRO_LOCK.lock().map_err(|_| AstroError::LockPoisoned)?;
         unsafe {
             // Body::Sun = 0
             // Flag::SPEED = 256
@@ -44,7 +58,7 @@ impl AstroEngine {
                 let err_msg = std::ffi::CStr::from_ptr(error.as_ptr() as *const i8)
                     .to_string_lossy()
                     .into_owned();
-                Err(format!("Astro Error: {}", err_msg))
+                Err(AstroError::FfiError(err_msg))
             } else {
                 Ok(results[0]) // Longitude
             }
@@ -69,7 +83,7 @@ impl AstroEngine {
         &self,
         start_time: DateTime<Utc>,
         target_long: f64,
-    ) -> Result<DateTime<Utc>, String> {
+    ) -> Result<DateTime<Utc>, AstroError> {
         use chrono::Duration;
 
         let mut current_time = start_time;
@@ -106,7 +120,7 @@ impl AstroEngine {
         &self,
         birth_time: DateTime<Utc>,
         term_idx: u8, // 0: 입춘, 1: 우수 ... 23: 대한
-    ) -> Result<DateTime<Utc>, String> {
+    ) -> Result<DateTime<Utc>, AstroError> {
         let target_long = (315.0 + (term_idx as f64) * 15.0) % 360.0;
         let current_long = self.get_sun_longitude(birth_time)?;
 
@@ -131,12 +145,12 @@ impl AstroEngine {
         datetime: DateTime<Utc>,
         planet_id: i32,
         flag: i32,
-    ) -> Result<(f64, f64), String> {
+    ) -> Result<(f64, f64), AstroError> {
         let julian_day = self.to_julian_day(datetime);
         let mut results = [0.0; 6];
         let mut error = [0; 256];
 
-        let _lock = ASTRO_LOCK.lock().unwrap();
+        let _lock = ASTRO_LOCK.lock().map_err(|_| AstroError::LockPoisoned)?;
         unsafe {
             let ret = swiss_eph::swe_calc_ut(
                 julian_day,
@@ -150,7 +164,7 @@ impl AstroEngine {
                 let err_msg = std::ffi::CStr::from_ptr(error.as_ptr() as *const i8)
                     .to_string_lossy()
                     .into_owned();
-                Err(format!("Astro Error: {}", err_msg))
+                Err(AstroError::FfiError(err_msg))
             } else {
                 Ok((results[0], results[3])) // Longitude, Speed
             }
@@ -163,7 +177,7 @@ impl AstroEngine {
         datetime: DateTime<Utc>,
         planet_id: i32,
         flag: i32,
-    ) -> Result<f64, String> {
+    ) -> Result<f64, AstroError> {
         self.get_planet_full(datetime, planet_id, flag)
             .map(|(long, _)| long)
     }
@@ -173,13 +187,13 @@ impl AstroEngine {
         &self,
         datetime: DateTime<Utc>,
         planet_id: i32,
-    ) -> Result<(f64, f64), String> {
+    ) -> Result<(f64, f64), AstroError> {
         let julian_day = self.to_julian_day(datetime);
         let mut results = [0.0; 6];
         let mut error = [0; 256];
         let flag = 2048 | 2; // SEFLG_EQUATORIAL | SEFLG_SWIEPH
 
-        let _lock = ASTRO_LOCK.lock().unwrap();
+        let _lock = ASTRO_LOCK.lock().map_err(|_| AstroError::LockPoisoned)?;
         unsafe {
             let ret = swiss_eph::swe_calc_ut(
                 julian_day,
@@ -193,7 +207,7 @@ impl AstroEngine {
                 let err_msg = std::ffi::CStr::from_ptr(error.as_ptr() as *const i8)
                     .to_string_lossy()
                     .into_owned();
-                Err(format!("Astro Error: {}", err_msg))
+                Err(AstroError::FfiError(err_msg))
             } else {
                 Ok((results[0], results[1])) // RA, Declination
             }
@@ -215,7 +229,7 @@ impl AstroEngine {
     }
 
     /// 특정 시점 이전 혹은 포함된 가장 가까운 합삭(New Moon) 시각을 찾습니다.
-    pub fn find_new_moon_before(&self, datetime: DateTime<Utc>) -> Result<DateTime<Utc>, String> {
+    pub fn find_new_moon_before(&self, datetime: DateTime<Utc>) -> Result<DateTime<Utc>, AstroError> {
         self.find_relative_conjunction_backward(datetime, 0.0)
     }
 
@@ -224,7 +238,7 @@ impl AstroEngine {
     pub fn find_winter_solstice_before(
         &self,
         datetime: DateTime<Utc>,
-    ) -> Result<DateTime<Utc>, String> {
+    ) -> Result<DateTime<Utc>, AstroError> {
         self.find_longitude_time_backward(datetime, 270.0)
     }
 
@@ -233,7 +247,7 @@ impl AstroEngine {
         &self,
         start_time: DateTime<Utc>,
         target_diff: f64,
-    ) -> Result<DateTime<Utc>, String> {
+    ) -> Result<DateTime<Utc>, AstroError> {
         use chrono::Duration;
 
         let mut t = start_time;
@@ -283,7 +297,7 @@ impl AstroEngine {
         &self,
         start_time: DateTime<Utc>,
         target_long: f64,
-    ) -> Result<DateTime<Utc>, String> {
+    ) -> Result<DateTime<Utc>, AstroError> {
         use chrono::Duration;
         let mut t = start_time;
 
@@ -328,12 +342,12 @@ impl AstroEngine {
         latitude: f64,
         longitude: f64,
         house_system: i32, // 'P' as char as i32, etc.
-    ) -> Result<(Vec<f64>, [f64; 10]), String> {
+    ) -> Result<(Vec<f64>, [f64; 10]), AstroError> {
         let julian_day = self.to_julian_day(datetime);
         let mut cusps = [0.0; 13]; // 1-based usually
         let mut ascmc = [0.0; 10]; // ASC, MC, ARMC, Vertex...
 
-        let _lock = ASTRO_LOCK.lock().unwrap();
+        let _lock = ASTRO_LOCK.lock().map_err(|_| AstroError::LockPoisoned)?;
         unsafe {
             // 'P' as i32 for Placidus, 'W' for Whole Sign if supported,
             // but SE typically takes char byte.
@@ -348,7 +362,7 @@ impl AstroEngine {
             );
 
             if ret < 0 {
-                Err("Failed to calculate houses".to_string())
+                Err(AstroError::HouseCalculationError)
             } else {
                 // Convert cusps to Vec (1..13) ignoring index 0
                 let cusps_vec = cusps[1..13].to_vec();

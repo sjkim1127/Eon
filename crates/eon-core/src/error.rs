@@ -23,3 +23,20 @@ pub enum EonError {
     #[error("Calculation error: {0}")]
     CalculationError(String),
 }
+
+/// Core module errors
+#[derive(Debug, thiserror::Error, serde::Serialize, Clone, PartialEq, Eq)]
+#[serde(tag = "type", content = "message")]
+pub enum CoreError {
+    /// 잘못된 날짜/시간
+    #[error("Invalid date or time parameters")]
+    InvalidDateTime,
+
+    /// 로컬 시간이 대상 타임존에 존재하지 않음
+    #[error("Local date/time is non-existent in the target timezone")]
+    NonExistentLocalTime,
+
+    /// 잘못된 타임존 형식
+    #[error("Invalid timezone format: {0}")]
+    InvalidTimezone(String),
+}

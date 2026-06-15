@@ -15,7 +15,7 @@ fn main() {
     println!("====================================================\n");
 
     // 3. AI 에이전트용 프롬프트 생성 (Tool Manifest 포함)
-    let agent_prompt = DestinyAIAuditor::build_agent_prompt(&pillars);
+    let agent_prompt = DestinyAIAuditor::build_agent_prompt(&pillars).unwrap();
 
     println!("AI 에이전트에게 전달될 프롬프트 (Tool Manifest 포함):\n");
     println!("{}\n", agent_prompt);
@@ -26,11 +26,11 @@ fn main() {
 
     // 4. 실제 도구 호출 시뮬레이션 (LLM이 'analyze_entropy'를 호출했다고 가정)
     println!("[AI CALL]: analyze_entropy()");
-    let result = eon_ai::EonToolbox::call(&pillars, "analyze_entropy", serde_json::json!({}));
+    let result = eon_ai::EonToolbox::call(&pillars, "analyze_entropy", serde_json::json!({})).unwrap();
     println!("[SYSTEM RESULT]: {}\n", serde_json::to_string_pretty(&result).unwrap());
 
     println!("[AI CALL]: fuzz_luck_vulnerabilities(major_ganzi_index: 10)");
-    let result = eon_ai::EonToolbox::call(&pillars, "fuzz_luck_vulnerabilities", serde_json::json!({"major_ganzi_index": 10}));
+    let result = eon_ai::EonToolbox::call(&pillars, "fuzz_luck_vulnerabilities", serde_json::json!({"major_ganzi_index": 10})).unwrap();
     println!("[SYSTEM RESULT]: (총 {}개의 크래시 발견)\n", result["total_crashes"]);
 
     println!("----------------------------------------------------");

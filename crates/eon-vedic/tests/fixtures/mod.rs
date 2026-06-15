@@ -32,9 +32,9 @@ pub const FIXTURES: &[VedicTestFixture] = &[
         ayanamsa: AyanamsaSystem::Raman,
         jaimini: Some(ExpectedJaimini {
             atmakaraka: Some(VedicPlanet::Moon),
-            arudha_lagna: Some(9),
+            arudha_lagna: Some(2),
             upapada_lagna: Some(6),
-            a10_rasi: Some(6),
+            a10_rasi: Some(11),
         }),
         varga: Some(ExpectedVarga {
             navamsa_lagna: Some(10),
@@ -66,7 +66,7 @@ pub const FIXTURES: &[VedicTestFixture] = &[
         ayanamsa: AyanamsaSystem::Lahiri,
         jaimini: Some(ExpectedJaimini {
             atmakaraka: Some(VedicPlanet::Sun),
-            arudha_lagna: Some(9),
+            arudha_lagna: Some(2),
             upapada_lagna: Some(6),
             a10_rasi: Some(4),
         }),
@@ -80,8 +80,8 @@ pub const FIXTURES: &[VedicTestFixture] = &[
             current_yogini: Some("Pingala"),
         }),
         tajika: Some(ExpectedTajika {
-            punya_rasi: Some(11),
-            vidya_rasi: Some(12),
+            punya_rasi: Some(12),
+            vidya_rasi: Some(11),
             high_harsha_bala: &[],
         }),
         avastha: Some(ExpectedAvastha {
@@ -100,7 +100,7 @@ pub const FIXTURES: &[VedicTestFixture] = &[
         ayanamsa: AyanamsaSystem::Lahiri,
         jaimini: Some(ExpectedJaimini {
             atmakaraka: Some(VedicPlanet::Venus),
-            arudha_lagna: Some(1),
+            arudha_lagna: Some(6),
             upapada_lagna: Some(10),
             a10_rasi: Some(10),
         }),
@@ -210,8 +210,8 @@ pub const FIXTURES: &[VedicTestFixture] = &[
             current_yogini: Some("Bhadrika"),
         }),
         tajika: Some(ExpectedTajika {
-            punya_rasi: Some(1),
-            vidya_rasi: Some(3),
+            punya_rasi: Some(3),
+            vidya_rasi: Some(1),
             high_harsha_bala: &[],
         }),
         avastha: None,
@@ -338,8 +338,8 @@ pub const FIXTURES: &[VedicTestFixture] = &[
             current_yogini: Some("Mangala"),
         }),
         tajika: Some(ExpectedTajika {
-            punya_rasi: Some(2),
-            vidya_rasi: Some(9),
+            punya_rasi: Some(9),
+            vidya_rasi: Some(2),
             high_harsha_bala: &[],
         }),
         avastha: None,

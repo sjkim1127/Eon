@@ -34,6 +34,7 @@ pub fn analyze(input: SajuAnalysisInput) -> Result<AiAuditOutput, ServiceError> 
         .map_err(|e| ServiceError::AiAudit(format!("에뮬레이션 실패: {}", e)))?;
 
     let context_dump = DestinyAIAuditor::build_agent_prompt(&pillars)
+        .map_err(|e| ServiceError::AiAudit(format!("프롬프트 생성 실패: {}", e)))?
         + "\n\n=== CORE DUMP ===\n"
         + &DestinyAIAuditor::generate_context(&pillars, &life_report);
 

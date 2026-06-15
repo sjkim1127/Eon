@@ -177,7 +177,7 @@ impl FourPillars {
         let (solar_year, solar_month, solar_day) = if input.is_lunar {
             use eon_data::LunarCalendar;
             let solar_date = LunarCalendar::to_solar(input.year, input.month, input.day, input.is_leap_month)
-                .ok_or_else(|| SajuError::CalculationError("음력 변환에 실패했습니다.".to_string()))?;
+                .map_err(|e| SajuError::CalculationError(format!("음력 변환에 실패했습니다: {}", e)))?;
             (solar_date.year(), solar_date.month(), solar_date.day())
         } else {
             (input.year, input.month, input.day)
@@ -271,7 +271,7 @@ impl FourPillars {
     pub(crate) fn calculate_month_pillar(dt: DateTime<Utc>) -> Result<GanZi, SajuError> {
         use crate::core::calendar::get_month_branch_index_from_dt;
         
-        let branch_idx = get_month_branch_index_from_dt(dt);
+        let branch_idx = get_month_branch_index_from_dt(dt)?;
         let branch = EarthlyBranch::from_index(branch_idx as i32);
 
         let year_pillar = Self::calculate_year_pillar(dt)?;
@@ -374,7 +374,7 @@ impl std::fmt::Display for FourPillars {
     }
 }
 
-#[derive(Debug, Clone, Error, Serialize, Deserialize)]
+#[derive(Debug, Clone, Error, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SajuError {
     #[error("잘못된 날짜/시간: {0}")]
@@ -383,6 +383,12 @@ pub enum SajuError {
     LunarNotSupported,
     #[error("계산 오류: {0}")]
     CalculationError(String),
+    #[error("달력 오류: {0}")]
+    Calendar(#[from] crate::core::calendar::CalendarError),
+    #[error("천문 오류: {0}")]
+    Astro(#[from] eon_astro::AstroError),
+    #[error("데이터 오류: {0}")]
+    Data(#[from] eon_data::DataError),
 }
 
 #[cfg(test)]
