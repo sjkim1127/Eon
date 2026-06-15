@@ -32,8 +32,8 @@ pub struct ManseryukCache {
 
 impl ManseryukCache {
     /// 바이너리 데이터로부터 캐시 로드
-    pub fn from_binary(bytes: &[u8]) -> Result<Self, String> {
-        bincode::deserialize(bytes).map_err(|e| e.to_string())
+    pub fn from_binary(bytes: &[u8]) -> Result<Self, crate::error::DataError> {
+        bincode::deserialize(bytes).map_err(|e| crate::error::DataError::Deserialization(e.to_string()))
     }
 
     /// 특정 연도/절기의 시각 조회

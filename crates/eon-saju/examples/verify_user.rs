@@ -71,7 +71,9 @@ fn main() {
     println!();
 
     // 월령분금(사령) 분석
-    println!("{}", pillars.saryeong());
+    if let Ok(sar) = pillars.saryeong() {
+        println!("{}", sar);
+    }
     println!();
 
     // 12운성 분석

@@ -147,7 +147,7 @@ impl Vimshottari {
         year_type: VedicYearType,
     ) -> Vec<DashaPeriod> {
         let sequence = Self::get_dasha_sequence();
-        let start_idx = sequence.iter().position(|(p, _)| *p == lord).unwrap();
+        let start_idx = sequence.iter().position(|(p, _)| *p == lord).unwrap_or(0);
 
         let mut periods = Vec::new();
         let mut current_start = theoretical_start;

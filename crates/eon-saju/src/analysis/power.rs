@@ -150,8 +150,8 @@ impl IntegratedAnalysis {
             final_tg.push((god, (score / total_weight) * 100.0, score));
         }
 
-        let dominant_element = final_el.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap()).unwrap().0;
-        let dominant_ten_god = final_tg.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap()).unwrap().0;
+        let dominant_element = final_el.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)).unwrap_or(&final_el[0]).0;
+        let dominant_ten_god = final_tg.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)).unwrap_or(&final_tg[0]).0;
 
         Self {
             options,

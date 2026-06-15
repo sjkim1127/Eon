@@ -13,3 +13,4 @@ serde_json = { workspace = true }
 toml = "0.8"
 async-trait = "0.1"
 log = "0.4"
+thiserror.workspace = true

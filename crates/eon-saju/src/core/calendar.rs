@@ -130,8 +130,9 @@ pub struct SolarTermTime {
 }
 
 /// 특정 시점을 기준으로 해당 절기의 정확한 시작 시각 계산 (eon-astro 활용)
-pub fn get_solar_term_time(dt: DateTime<Utc>, term: SolarTerm) -> DateTime<Utc> {
+pub fn get_solar_term_time(dt: DateTime<Utc>, term: SolarTerm) -> Result<DateTime<Utc>, CalendarError> {
     use eon_astro::AstroEngine;
+    use chrono::{Datelike, Timelike};
     let engine = AstroEngine::new();
 
     // AstroEngine의 term_idx: 0=입춘(315도), 1=우수, 2=경칩...
@@ -139,7 +140,7 @@ pub fn get_solar_term_time(dt: DateTime<Utc>, term: SolarTerm) -> DateTime<Utc> 
     // 월의 시작 절기는 짝수 인덱스
     engine
         .find_solar_term_time(dt, term.index() * 2)
-        .unwrap_or(dt)
+        .map_err(CalendarError::Astro)
 }
 
 /// 양력 날짜/시각 + Timezone offset으로부터 해당 월의 절기 지지 인덱스 계산
@@ -181,32 +182,40 @@ pub fn get_month_branch_index(
         })?
         .with_timezone(&Utc);
 
-    Ok(get_month_branch_index_from_dt(dt_utc))
+    get_month_branch_index_from_dt(dt_utc)
 }
 
 /// DateTime<Utc>로부터 해당 월의 절기 지지 인덱스 계산
 ///
 /// 이 함수는 이미 UTC로 변환된 시간을 받으므로 timezone 문제가 없습니다.
-pub fn get_month_branch_index_from_dt(dt: DateTime<Utc>) -> u8 {
+pub fn get_month_branch_index_from_dt(dt: DateTime<Utc>) -> Result<u8, CalendarError> {
     use eon_astro::AstroEngine;
 
     let engine = AstroEngine::new();
 
     // 태양 황경으로부터 현재 어떤 절기권에 있는지 계산
-    // AstroEngine::get_solar_term_index는 24절기(0~23)를 반환
-    let term_24_idx = engine.get_solar_term_index(dt);
+    let sun_long = engine.get_sun_longitude(dt)?;
+
+    // 입춘(315도)을 0으로 맞춤
+    let adjusted = (sun_long - 315.0 + 360.0) % 360.0;
+
+    // 15도마다 절기가 바뀜 (24절기)
+    let index = (adjusted / 15.0).floor() as u8;
+    let term_24_idx = index % 24;
 
     // 12절기(월 구분용) 인덱스로 변환 (0: 입춘, 1: 경칩, 2: 청명...)
     let term_12_idx = term_24_idx / 2;
 
     // 해당 절기가 시작하는 월의 지지 인덱스 (寅=2부터)
-    SolarTerm::from_index(term_12_idx as i32).month_branch_index()
+    Ok(SolarTerm::from_index(term_12_idx as i32).month_branch_index())
 }
 
 /// 달력 관련 에러
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, thiserror::Error, serde::Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub enum CalendarError {
     /// 유효하지 않은 날짜/시간
+    #[error("Invalid datetime: {year}-{month:02}-{day:02} {hour:02}:{minute:02}")]
     InvalidDateTime {
         year: i32,
         month: u32,
@@ -215,33 +224,12 @@ pub enum CalendarError {
         minute: u32,
     },
     /// 유효하지 않은 시간대
+    #[error("Invalid timezone offset: {0} minutes")]
     InvalidTimezone(i32),
+    /// 천문 계산 오류
+    #[error("Astronomical calculation error: {0}")]
+    Astro(#[from] eon_astro::AstroError),
 }
-
-impl std::fmt::Display for CalendarError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::InvalidDateTime {
-                year,
-                month,
-                day,
-                hour,
-                minute,
-            } => {
-                write!(
-                    f,
-                    "Invalid datetime: {}-{:02}-{:02} {:02}:{:02}",
-                    year, month, day, hour, minute
-                )
-            }
-            Self::InvalidTimezone(offset) => {
-                write!(f, "Invalid timezone offset: {} minutes", offset)
-            }
-        }
-    }
-}
-
-impl std::error::Error for CalendarError {}
 
 #[cfg(test)]
 mod tests {

@@ -270,8 +270,14 @@ impl JaiminiEngine {
     /// 2. If equal, the node/planet that is stronger wins (Exaltation > Own Sign > Others).
     /// 3. If still equal, the one with more degrees in the sign wins (Jaimini logic).
     fn evaluate_co_ruler_strength(chart: &VedicChart, rasi: u8, p1: VedicPlanet, p2: VedicPlanet) -> u8 {
-        let pos1 = chart.planets.iter().find(|p| p.planet == p1).unwrap();
-        let pos2 = chart.planets.iter().find(|p| p.planet == p2).unwrap();
+        let pos1 = match chart.planets.iter().find(|p| p.planet == p1) {
+            Some(p) => p,
+            None => return 1,
+        };
+        let pos2 = match chart.planets.iter().find(|p| p.planet == p2) {
+            Some(p) => p,
+            None => return 2,
+        };
 
         // Count conjunctions in the rasi where the lord is placed (excluding the lord itself)
         let count_conj = |p_rasi: u8, planet: VedicPlanet| {

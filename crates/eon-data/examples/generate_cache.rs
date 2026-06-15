@@ -47,7 +47,7 @@ fn main() {
                 let kst_offset = chrono::Duration::hours(9);
                 let nm_date_kst = (next_nm_t + kst_offset).date_naive();
                 
-                if let Some((ly, lm, _, il)) = eon_data::manseryuk::LunarCalendar::from_solar_internal(nm_date_kst) {
+                if let Ok((ly, lm, _, il)) = eon_data::manseryuk::LunarCalendar::from_solar_internal(nm_date_kst) {
                     if nm_date_kst.year() == year {
                         lunar_records.push(LunarMonthRecord {
                             new_moon_date: nm_date_kst,

@@ -32,7 +32,7 @@ pub fn prepare_birth_context(
         // 음력인 경우 eon_data를 이용해 양력으로 변환한 뒤 BirthInfo에 등록합니다.
         use eon_data::LunarCalendar;
         let solar_date = LunarCalendar::to_solar(input.year, input.month, input.day, input.is_leap_month)
-            .ok_or_else(|| ServiceError::BirthInfo("음력 날짜를 양력으로 변환할 수 없습니다.".to_string()))?;
+            .map_err(|e| ServiceError::BirthInfo(format!("음력 날짜를 양력으로 변환할 수 없습니다: {}", e)))?;
         
         BirthInfo::lunar(
             solar_date.year(),

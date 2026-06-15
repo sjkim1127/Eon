@@ -11,7 +11,7 @@ fn main() {
     let lon = 126.8167; 
 
     let calculator = VedicChartCalculator::new();
-    let chart = calculator.calculate(birth_time, lat, lon);
+    let chart = calculator.calculate(birth_time, lat, lon).unwrap();
 
     let moon = chart.planets.iter().find(|p| p.planet == eon_vedic::planets::VedicPlanet::Moon).unwrap();
     println!("Moon Sidereal: {:.4}°", moon.sidereal_deg);

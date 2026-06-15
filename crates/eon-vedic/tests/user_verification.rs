@@ -34,7 +34,7 @@ fn test_verify_user_d1_chart() {
         ..Default::default()
     };
     let calculator = VedicChartCalculator::with_config(config);
-    let chart = calculator.calculate(time, 37.3167, 126.8167);
+    let chart = calculator.calculate(time, 37.3167, 126.8167).unwrap();
 
     println!("\n=== Calculated Vedic Chart (Mean Node) for User ===");
     println!("D1(Rasi)  D2(Hora)  D3(Drekk) D4(Chatur) D7(Sapt)  D9(Navam) D10(Das)  D12(Dwada)");

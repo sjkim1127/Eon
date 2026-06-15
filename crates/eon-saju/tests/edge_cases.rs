@@ -363,10 +363,11 @@ fn test_case_6_advanced_analysis_refinements() {
         .expect("억부용신이 있어야 함");
         
     assert!(
-        eokbu.reason.contains("용재파인") || 
-        eokbu.reason.contains("관살제겁") || 
-        eokbu.reason.contains("설기"),
-        "억부 이유에 전문 용어가 포함되어야 함: {}", eokbu.reason
+        eokbu.summary.contains("용재파인") || 
+        eokbu.summary.contains("관살제겁") || 
+        eokbu.summary.contains("설기") ||
+        eokbu.reasons.iter().any(|r| r.contains("용재파인") || r.contains("관살제겁") || r.contains("설기")),
+        "억부 이유에 전문 용어가 포함되어야 함: summary={:?}, reasons={:?}", eokbu.summary, eokbu.reasons
     );
 }
 
@@ -388,8 +389,14 @@ fn test_case_7_structure_yongshin_integration() {
             .find(|r| r.yongshin_type == eon_saju::analysis::yongshin::YongshinType::Eokbu)
             .expect("종격이어도 억부(격국) 용신 분류로 추천되어야 함");
             
-        assert!(eokbu.reason.contains("종"), "이유에 '종'이라는 단어가 포함되어야 함: {}", eokbu.reason);
-        assert!(eokbu.reason.contains(&structure.structure.hangul()), "이유에 격국 이름이 포함되어야 함: {}", eokbu.reason);
+        assert!(
+            eokbu.summary.contains("종") || eokbu.reasons.iter().any(|r| r.contains("종")), 
+            "이유에 '종'이라는 단어가 포함되어야 함: summary={:?}, reasons={:?}", eokbu.summary, eokbu.reasons
+        );
+        assert!(
+            eokbu.summary.contains(&structure.structure.hangul()) || eokbu.reasons.iter().any(|r| r.contains(&structure.structure.hangul())), 
+            "이유에 격국 이름이 포함되어야 함: summary={:?}, reasons={:?}", eokbu.summary, eokbu.reasons
+        );
     }
 }
 

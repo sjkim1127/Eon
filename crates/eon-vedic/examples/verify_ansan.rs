@@ -10,7 +10,7 @@ fn main() {
     let lon = 126.8167; // 126°49'E
 
     let calculator = VedicChartCalculator::new();
-    let chart = calculator.calculate(birth_time, lat, lon);
+    let chart = calculator.calculate(birth_time, lat, lon).unwrap();
 
     println!("Birth Time: {}", birth_time);
     println!("Ascendant (Lagna): {:.2}° (Rasi: {})", chart.ascendant.sidereal_deg, chart.ascendant.rasi);

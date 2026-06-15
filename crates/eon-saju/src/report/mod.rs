@@ -299,7 +299,7 @@ impl SajuReport {
             md.push_str("\n### 8.2 Key Life Events (ESIL Trace Summary)\n");
             // 큰 변화가 있거나 상위 5개 프레임 추출
             let mut key_frames: Vec<_> = self.simulation_frames.iter().collect();
-            key_frames.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+            key_frames.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
 
             for frame in key_frames.iter().take(5) {
                 if !frame.tags.is_empty() {

@@ -6,7 +6,7 @@ fn print_chart(date_str: &str, time: chrono::DateTime<Utc>) {
     let lat = 37.3167; // Ansan
     let lon = 126.8167; 
     let calculator = VedicChartCalculator::new();
-    let chart = calculator.calculate(time, lat, lon);
+    let chart = calculator.calculate(time, lat, lon).unwrap();
 
     println!("\n--- {} ---", date_str);
     println!("ASC:  {:.2}° | Rasi: {} | Nak: {}", chart.ascendant.sidereal_deg, chart.ascendant.rasi, chart.ascendant.nakshatra);

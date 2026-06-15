@@ -49,15 +49,15 @@ impl EonToolbox {
     }
 
     /// 도구 호출 실행 (Dispatch)
-    pub fn call(pillars: &FourPillars, tool_name: &str, params: Value) -> Value {
+    pub fn call(pillars: &FourPillars, tool_name: &str, params: Value) -> Result<Value, crate::error::AiError> {
         match tool_name {
             "analyze_entropy" => {
                 let res = DestinyEntropy::analyze(pillars);
-                serde_json::to_value(res).unwrap()
+                serde_json::to_value(res).map_err(|e| e.into())
             }
             "scan_topology" => {
                 let res = QiTopology::analyze(pillars);
-                serde_json::to_value(res).unwrap()
+                serde_json::to_value(res).map_err(|e| e.into())
             }
             "fuzz_luck_vulnerabilities" => {
                 let idx = params["major_ganzi_index"].as_i64().unwrap_or(0) as i32;
@@ -65,7 +65,7 @@ impl EonToolbox {
                 let vm = eon_saju::SajuVM::new(pillars.clone());
                 let fuzzer = DestinyFuzzer::new(vm);
                 let res = fuzzer.audit(major);
-                serde_json::to_value(res).unwrap()
+                serde_json::to_value(res).map_err(|e| e.into())
             }
             "backtrace_root_cause" => {
                 let age = params["target_age"].as_u64().unwrap_or(0) as u32;
@@ -76,12 +76,12 @@ impl EonToolbox {
                 match emulator.emulate() {
                     Ok(report) => {
                         let res = DestinyDebugger::backtrace(&report, age, tag);
-                        serde_json::to_value(res).unwrap()
+                        serde_json::to_value(res).map_err(|e| e.into())
                     }
-                    Err(e) => serde_json::json!({"error": format!("에뮬레이션 실패: {}", e)}),
+                    Err(e) => Ok(serde_json::json!({"error": format!("에뮬레이션 실패: {}", e)})),
                 }
             }
-            _ => serde_json::json!({"error": "Unknown tool"}),
+            _ => Ok(serde_json::json!({"error": "Unknown tool"})),
         }
     }
 }

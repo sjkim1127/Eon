@@ -19,7 +19,7 @@ fn main() {
 
     // 2. Calculate Chart
     let calculator = VedicChartCalculator::new();
-    let chart = calculator.calculate(birth_time, lat, lon);
+    let chart = calculator.calculate(birth_time, lat, lon).unwrap();
 
     println!("\n[1] Planetary Positions, Nature & Strength");
     let lagna_rasi = chart.ascendant.rasi;
@@ -39,7 +39,7 @@ fn main() {
 
         let strength = StrengthEngine::calculate(pos, &chart);
 
-        let avasthas = eon_vedic::analysis::avasthas::AvasthaEngine::calculate(pos);
+        let avasthas = eon_vedic::analysis::avasthas::AvasthaEngine::calculate(pos, &chart);
 
         println!("{:<12} | H: {:>2} | Sid: {:>6.2}° | Nature: {:<12} | Str: {:>5.1} (D:{:>4.1},K:{:>2.0},A:{:>4.1},P:{:>4.1}) I/K:{:0>2.0}/{:0>2.0} ({}){}{}", 
             format!("{:?}", pos.planet), 

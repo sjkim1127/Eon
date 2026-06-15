@@ -8,7 +8,7 @@ fn test_vedic_chart_calculation() {
     let time = Utc.with_ymd_and_hms(2000, 1, 1, 12, 0, 0).unwrap();
     
     let calculator = VedicChartCalculator::new();
-    let chart = calculator.calculate(time, 0.0, 0.0);
+    let chart = calculator.calculate(time, 0.0, 0.0).unwrap();
     
     println!("Vedic Chart for {}", time);
     for pos in &chart.planets {

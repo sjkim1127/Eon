@@ -185,15 +185,22 @@ impl BirthInfo {
     /// 썸머타임(DST)이 적용된 UTC 시간 반환
     ///
     /// IANA 타임존 데이터베이스를 사용하여 역사적 DST를 자동 처리합니다.
-    pub fn to_utc(&self) -> Option<DateTime<Utc>> {
-        let naive = self.local_datetime()?;
+    pub fn to_utc(&self) -> Result<DateTime<Utc>, crate::error::CoreError> {
+        let naive = self.local_datetime()
+            .ok_or(crate::error::CoreError::InvalidDateTime)?;
 
-        let tz = self.parsed_timezone().unwrap_or(chrono_tz::Asia::Seoul);
+        let tz = if let Some(ref tz_str) = self.timezone {
+            tz_str.parse::<chrono_tz::Tz>()
+                .map_err(|_| crate::error::CoreError::InvalidTimezone(tz_str.clone()))?
+        } else {
+            chrono_tz::Asia::Seoul
+        };
+
         // Handle ambiguous times (DST fall-back) by picking the earlier (DST) variant
         match tz.from_local_datetime(&naive) {
-            chrono::LocalResult::Single(dt) => Some(dt.with_timezone(&Utc)),
-            chrono::LocalResult::Ambiguous(dt1, _dt2) => Some(dt1.with_timezone(&Utc)),
-            chrono::LocalResult::None => None,
+            chrono::LocalResult::Single(dt) => Ok(dt.with_timezone(&Utc)),
+            chrono::LocalResult::Ambiguous(dt1, _dt2) => Ok(dt1.with_timezone(&Utc)),
+            chrono::LocalResult::None => Err(crate::error::CoreError::NonExistentLocalTime),
         }
     }
 

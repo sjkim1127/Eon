@@ -5,7 +5,9 @@ use eon_saju::{
     LifePathReport
 };
 
+pub mod error;
 pub mod tools;
+pub use error::AiError;
 pub use tools::EonToolbox;
 
 /// AI 기반 운명 보안 감사 리포트 구조
@@ -61,9 +63,9 @@ impl DestinyAIAuditor {
     }
 
     /// LLM에게 전달할 최종 프롬프트 생성 (Tool-Calling / Agentic Style)
-    pub fn build_agent_prompt(pillars: &eon_saju::FourPillars) -> String {
+    pub fn build_agent_prompt(pillars: &eon_saju::FourPillars) -> Result<String, AiError> {
         let manifest = EonToolbox::get_manifest();
-        let manifest_json = serde_json::to_string_pretty(&manifest).unwrap();
+        let manifest_json = serde_json::to_string_pretty(&manifest)?;
 
         let mut prompt = String::new();
         prompt.push_str("당신은 'Eon Destiny Security Agency'의 수석 에이전트 분석관입니다.\n");
@@ -80,6 +82,6 @@ impl DestinyAIAuditor {
         
         prompt.push_str("분석을 시작하기 위해 첫 번째 도구 호출을 수행하거나 계획을 세우십시오.");
 
-        prompt
+        Ok(prompt)
     }
 }
