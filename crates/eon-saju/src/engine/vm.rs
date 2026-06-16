@@ -689,7 +689,15 @@ impl SajuVM {
 
         self.apply_dynamic_transformation(registers, esil_trace);
 
-        score.clamp(0.0, 100.0)
+        let mut final_score = score;
+        if final_score > 100.0 {
+            final_score = 100.0;
+        } else if final_score < 15.0 {
+            // Asymptotic decay below 15.0 to prevent hard 0.0 clamp
+            final_score = 15.0 * ((final_score - 15.0) / 15.0).exp();
+        }
+
+        final_score
     }
 
     /// 동적 오행 변환 (에너지 보존 법칙)
