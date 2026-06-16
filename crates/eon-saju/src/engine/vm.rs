@@ -687,7 +687,47 @@ impl SajuVM {
             tags.push(TraceTag::DeukSe);
         }
 
+        self.apply_dynamic_transformation(registers, esil_trace);
+
         score.clamp(0.0, 100.0)
+    }
+
+    /// 동적 오행 변환 (에너지 보존 법칙)
+    fn apply_dynamic_transformation(&self, registers: &mut QiRegisters, esil_trace: &mut String) {
+        // 생(生) 상생 사이클 시뮬레이션
+        // Wood -> Fire -> Earth -> Metal -> Water -> Wood
+        // 소모되는 에너지는 줄이고 생성되는 에너지는 증가 (보존)
+        
+        let transfer_rate = 0.1; // 10% 에너지 전이
+        
+        let wood_transfer = registers.r0_wood * transfer_rate;
+        let fire_transfer = registers.r1_fire * transfer_rate;
+        let earth_transfer = registers.r2_earth * transfer_rate;
+        let metal_transfer = registers.r3_metal * transfer_rate;
+        let water_transfer = registers.r4_water * transfer_rate;
+
+        // Wood -> Fire
+        registers.r0_wood -= wood_transfer;
+        registers.r1_fire += wood_transfer;
+        
+        // Fire -> Earth
+        registers.r1_fire -= fire_transfer;
+        registers.r2_earth += fire_transfer;
+        
+        // Earth -> Metal
+        registers.r2_earth -= earth_transfer;
+        registers.r3_metal += earth_transfer;
+        
+        // Metal -> Water
+        registers.r3_metal -= metal_transfer;
+        registers.r4_water += metal_transfer;
+        
+        // Water -> Wood
+        registers.r4_water -= water_transfer;
+        registers.r0_wood += water_transfer;
+
+        registers.normalize();
+        esil_trace.push_str("qi_conservation:applied; ");
     }
 
     /// 인터럽트 벡터 테이블(IVT) 및 핸들링 로직
@@ -707,14 +747,26 @@ impl SajuVM {
         if let Some(y) = yearly_ganzi {
             // 1. 고우선순위 인터럽트: 백호살 (Baihu)
             // 지지 충돌 시 백호대살이 겹치면 '심각한 하드웨어 예외' 발생
+            let el = y.stem.element();
+            let thermal_index = crate::analysis::yongshin::calculate_thermal_index(&self.natal, &self.config);
+            let p = self.get_element_priority(el, self.yongshin.primary, self.yongshin.assistant, thermal_index);
+
             if crate::analysis::spirit_markers::SpiritMarkerAnalysis::is_baihu(y) {
-                let irq = SajuInterrupt::CriticalException;
+                let mut irq = SajuInterrupt::CriticalException;
+                if p > 0.5 {
+                    irq = SajuInterrupt::ServiceInterrupt; // 용신 제화(완화)
+                    esil_trace.push_str("irq_mitigate:yongshin_protect; ");
+                }
                 self.trigger_irq(irq, "백호대살", tags, esil_trace, registers, score);
             }
 
             // 2. 리소스 오버플로우: 괴강살 (Kuigang)
             if crate::analysis::spirit_markers::SpiritMarkerAnalysis::is_kuigang(y) {
-                let irq = SajuInterrupt::ResourceOverflow;
+                let mut irq = SajuInterrupt::ResourceOverflow;
+                if p > 0.5 {
+                    irq = SajuInterrupt::ServiceInterrupt; // 용신 제화(완화)
+                    esil_trace.push_str("irq_mitigate:yongshin_protect; ");
+                }
                 self.trigger_irq(irq, "괴강특수운", tags, esil_trace, registers, score);
             }
         }
