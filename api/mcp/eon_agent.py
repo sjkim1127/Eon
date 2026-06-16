@@ -15,6 +15,15 @@ from google.antigravity import Agent, LocalAgentConfig, types
 # MCP 서버 스크립트 경로
 MCP_SERVER_PATH = Path(__file__).parent / "eon_mcp_server.py"
 
+# 세션 유지 디렉토리 설정
+IS_VERCEL = "VERCEL" in os.environ or "NOW_BUILD" in os.environ
+if IS_VERCEL:
+    SAVE_DIR = "/tmp/eon_conversations"
+else:
+    SAVE_DIR = str(Path(__file__).parents[2] / ".gemini" / "conversations")
+
+os.makedirs(SAVE_DIR, exist_ok=True)
+
 SYSTEM_INSTRUCTIONS = """당신은 'Eon Destiny Security Agency'의 수석 에이전트 분석관입니다.
 당신의 임무는 분석 대상 사주 시스템을 CS(Computer Science) 방식으로 심층 감사하는 것입니다.
 
@@ -62,7 +71,7 @@ async def run_audit(
     is_male: bool,
     api_key: str,
     birth_name: str = "분석 대상",
-) -> str:
+) -> tuple[str, str]:
     """
     AGY 에이전트를 실행하여 사주 감사 리포트를 생성합니다.
 
@@ -76,7 +85,7 @@ async def run_audit(
         birth_name: 분석 대상자 이름 (선택)
 
     Returns:
-        str: 마크다운 형식의 감사 리포트
+        tuple[str, str]: (마크다운 형식의 감사 리포트, 대화 ID)
     """
     mcp_servers = [
         types.McpStdioServer(
@@ -89,6 +98,7 @@ async def run_audit(
         api_key=api_key,
         system_instructions=SYSTEM_INSTRUCTIONS,
         mcp_servers=mcp_servers,
+        save_dir=SAVE_DIR,
     )
 
     gender_str = "남성" if is_male else "여성"
@@ -111,8 +121,68 @@ async def run_audit(
     async with Agent(config) as agent:
         response = await agent.chat(prompt)
         report = await response.text()
+        conv_id = agent.conversation_id
 
-    return report
+    return report, conv_id or ""
+
+
+async def run_chat(
+    conversation_id: str,
+    message: str,
+    api_key: str,
+    year: int | None = None,
+    month: int | None = None,
+    day: int | None = None,
+    hour: int | None = None,
+    is_male: bool | None = None,
+    birth_name: str = "분석 대상",
+) -> tuple[str, str]:
+    """
+    기존 대화를 불러와서 사용자의 질문에 답변합니다.
+    세션이 만료된 경우 새 대화를 시작하고 초기 감사를 수행한 뒤 답변합니다.
+    """
+    mcp_servers = [
+        types.McpStdioServer(
+            command="python3",
+            args=[str(MCP_SERVER_PATH)],
+        )
+    ]
+
+    # 세션 파일 존재 확인
+    session_file = Path(SAVE_DIR) / f"traj-{conversation_id}"
+    
+    if not session_file.exists() and year is not None and month is not None and day is not None and hour is not None and is_male is not None:
+        # 세션 유실 시 복구 및 재생
+        config = LocalAgentConfig(
+            api_key=api_key,
+            save_dir=SAVE_DIR,
+            system_instructions=SYSTEM_INSTRUCTIONS,
+            mcp_servers=mcp_servers,
+        )
+        gender_str = "남성" if is_male else "여성"
+        init_prompt = f"""
+분석 대상: {birth_name} ({gender_str})
+생년월일시: {year}년 {month}월 {day}일 {hour}시 (양력)
+
+위 사주에 대해 전체 도구를 순서대로 호출하여 심층 감사 리포트를 작성해 주세요.
+"""
+        async with Agent(config) as agent:
+            await agent.chat(init_prompt)
+            response = await agent.chat(message)
+            reply = await response.text()
+            return reply, agent.conversation_id or ""
+    else:
+        config = LocalAgentConfig(
+            api_key=api_key,
+            conversation_id=conversation_id,
+            save_dir=SAVE_DIR,
+            system_instructions=SYSTEM_INSTRUCTIONS,
+            mcp_servers=mcp_servers,
+        )
+        async with Agent(config) as agent:
+            response = await agent.chat(message)
+            reply = await response.text()
+            return reply, conversation_id
 
 
 if __name__ == "__main__":
@@ -124,7 +194,7 @@ if __name__ == "__main__":
         print("GEMINI_API_KEY 환경 변수를 설정해주세요.", file=sys.stderr)
         sys.exit(1)
 
-    result = asyncio.run(
+    result, conv_id = asyncio.run(
         run_audit(
             year=1990,
             month=5,
@@ -135,4 +205,5 @@ if __name__ == "__main__":
             birth_name="테스트",
         )
     )
-    print(result)
+    print("Report:", result)
+    print("Conversation ID:", conv_id)

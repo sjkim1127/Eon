@@ -1,8 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, Sparkles, Key, Play, ChevronDown, ChevronUp, AlertCircle, CheckCircle2, Loader2, Shield } from "lucide-react";
+import { Bot, Sparkles, Key, Play, ChevronDown, ChevronUp, AlertCircle, CheckCircle2, Loader2, Shield, Send, MessageSquare, RotateCcw } from "lucide-react";
 import type { SajuAnalysisResult } from "../../../types/saju";
-import type { AiAuditState } from "../../../types/ai";
+import type { AiAuditState, ChatMessage } from "../../../types/ai";
 
 interface AiAuditSectionProps {
     sajuReport: SajuAnalysisResult;
@@ -149,12 +149,12 @@ function LoadingState() {
     const [stepIdx, setStepIdx] = useState(0);
 
     // 3초마다 단계 전환
-    useState(() => {
+    useEffect(() => {
         const interval = setInterval(() => {
             setStepIdx(i => (i + 1) % steps.length);
         }, 3000);
         return () => clearInterval(interval);
-    });
+    }, [steps.length]);
 
     return (
         <div className="flex flex-col items-center justify-center py-12 gap-6">
@@ -205,54 +205,270 @@ function LoadingState() {
     );
 }
 
-// ── 리포트 표시 패널 ──────────────────────────────────────────────────────────
-function ReportPanel({
+// ── 타이핑 표시기 ─────────────────────────────────────────────────────────────
+function TypingIndicator() {
+    return (
+        <div className="flex items-start gap-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Bot className="w-4 h-4 text-purple-400" />
+            </div>
+            <div className="bg-black/20 border border-white/5 rounded-2xl px-4 py-3 flex gap-1.5 items-center">
+                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+        </div>
+    );
+}
+
+// ── 통합 대화형 패널 ──────────────────────────────────────────────────────────
+function ChatPanel({
     report,
+    initialConversationId,
+    birthYear,
+    birthMonth,
+    birthDay,
+    birthHour,
+    isMale,
+    apiKey,
     onRerun,
 }: {
     report: string;
+    initialConversationId: string;
+    birthYear: number;
+    birthMonth: number;
+    birthDay: number;
+    birthHour: number;
+    isMale: boolean;
+    apiKey: string;
     onRerun: () => void;
 }) {
     const [collapsed, setCollapsed] = useState(false);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [chatInput, setChatInput] = useState("");
+    const [isChatLoading, setIsChatLoading] = useState(false);
+    const [conversationId, setConversationId] = useState(initialConversationId);
+    const [error, setError] = useState<string | null>(null);
+
+    const chatEndRef = useRef<HTMLDivElement>(null);
+
+    // 스크롤 동기화
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages, isChatLoading]);
+
+    const handleSend = useCallback(async (textToSend?: string) => {
+        const query = (textToSend ?? chatInput).trim();
+        if (!query || isChatLoading) return;
+
+        if (!textToSend) {
+            setChatInput("");
+        }
+        setError(null);
+
+        // 메시지 추가
+        const userMsg: ChatMessage = { role: "user", content: query, timestamp: new Date() };
+        setMessages(prev => [...prev, userMsg]);
+        setIsChatLoading(true);
+
+        try {
+            const response = await fetch("/api/ai_audit", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Gemini-Api-Key": apiKey.trim(),
+                },
+                body: JSON.stringify({
+                    action: "chat",
+                    conversationId: conversationId,
+                    message: query,
+                    // 세션 만료 시 백엔드 복구를 위한 사주 정보
+                    year: birthYear,
+                    month: birthMonth,
+                    day: birthDay,
+                    hour: birthHour,
+                    isMale,
+                    birthName: "분석 대상",
+                }),
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({ error: "서버 오류" }));
+                throw new Error(errData.error ?? `HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.status === "error") {
+                throw new Error(data.error ?? "알 수 없는 오류");
+            }
+
+            // 답장 수신
+            const assistantMsg: ChatMessage = {
+                role: "assistant",
+                content: data.reply,
+                timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, assistantMsg]);
+            if (data.conversationId) {
+                setConversationId(data.conversationId);
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : String(err));
+        } finally {
+            setIsChatLoading(false);
+        }
+    }, [chatInput, isChatLoading, conversationId, apiKey, birthYear, birthMonth, birthDay, birthHour, isMale]);
+
+    const SUGGESTIONS = [
+        "올해 전체적인 직장/사업운이 어떤가요?",
+        "제 사주에서 건강이나 사고를 조심해야 할 시점은?",
+        "제 성향과 강점을 오행 관점에서 쉽게 설명해주세요.",
+        "오행 위상 분석 결과의 병목과 해결책을 구체적으로 알려주세요.",
+    ];
 
     return (
-        <div className="space-y-3">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-emerald-400">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>AI 감사 완료</span>
+        <div className="space-y-6">
+            {/* 리포트 접기/펼치기 패널 */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-emerald-400">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>AI 감사 리포트 생성 완료</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={onRerun}
+                            className="text-xs text-white/40 hover:text-white/70 transition-colors flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-white/5 border border-white/5"
+                        >
+                            <RotateCcw className="w-3 h-3" />
+                            다시 감사하기
+                        </button>
+                        <button
+                            onClick={() => setCollapsed(v => !v)}
+                            className="text-xs text-white/40 hover:text-white/70 transition-colors flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-white/5 border border-white/5"
+                        >
+                            {collapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+                            {collapsed ? "감사 리포트 열기" : "리포트 접기"}
+                        </button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
+
+                <AnimatePresence>
+                    {!collapsed && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="bg-black/20 rounded-2xl p-5 border border-white/5 prose prose-invert max-w-none shadow-inner">
+                                {renderMarkdown(report)}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* 대화창 영역 */}
+            <div className="border-t border-white/5 pt-6 space-y-4">
+                <h4 className="text-sm font-semibold text-purple-300 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    감사관에게 추가 질문하기
+                </h4>
+
+                {/* 대화 내역 */}
+                <div className="bg-black/10 rounded-2xl p-4 border border-white/5 h-[350px] overflow-y-auto space-y-4 flex flex-col shadow-inner">
+                    {messages.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-white/40">
+                            <Bot className="w-10 h-10 text-white/20 mb-3" />
+                            <p className="text-xs font-medium">리포트에 대해 더 궁금한 점이 있으신가요?</p>
+                            <p className="text-[10px] text-white/25 mt-1">
+                                사주 위상, 대운별 안전 패치, 특정 직업/건강운 등 감사관에게 직접 물어보세요.
+                            </p>
+                        </div>
+                    ) : (
+                        messages.map((msg, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {msg.role === "user" ? (
+                                    <div className="flex justify-end mb-1">
+                                        <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl rounded-tr-none px-4 py-2.5 text-sm text-white font-medium max-w-[80%] shadow-md shadow-purple-950/20">
+                                            {msg.content}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-3 mb-1 items-start">
+                                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <Bot className="w-4 h-4 text-purple-400" />
+                                        </div>
+                                        <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-none p-4 text-sm text-white/80 leading-relaxed max-w-[80%] prose prose-invert shadow-sm">
+                                            {renderMarkdown(msg.content)}
+                                        </div>
+                                    </div>
+                                )}
+                            </motion.div>
+                        ))
+                    )}
+
+                    {isChatLoading && <TypingIndicator />}
+                    <div ref={chatEndRef} />
+                </div>
+
+                {/* 에러 피드백 */}
+                {error && (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/5 border border-red-500/15 text-xs text-red-400">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        <span>전송 실패: {error}</span>
+                    </div>
+                )}
+
+                {/* 추천 질문 */}
+                {messages.length === 0 && !isChatLoading && (
+                    <div className="space-y-1.5">
+                        <p className="text-[11px] text-white/35 font-medium pl-1">추천 질문</p>
+                        <div className="flex flex-wrap gap-2">
+                            {SUGGESTIONS.map((s, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => handleSend(s)}
+                                    className="text-xs bg-white/5 hover:bg-purple-500/10 border border-white/5 hover:border-purple-500/20 text-white/60 hover:text-purple-300 px-3 py-1.5 rounded-xl transition-all duration-200 text-left active:scale-95"
+                                >
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 입력창 */}
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        value={chatInput}
+                        onChange={e => setChatInput(e.target.value)}
+                        onKeyDown={e => {
+                            if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                                void handleSend();
+                            }
+                        }}
+                        placeholder="사주 엔트로피를 낮추는 개운법은 무엇인가요?..."
+                        disabled={isChatLoading}
+                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white/80 placeholder-white/25 focus:outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all disabled:opacity-50"
+                    />
                     <button
-                        onClick={onRerun}
-                        className="text-xs text-white/40 hover:text-white/70 transition-colors px-2 py-1 rounded-lg hover:bg-white/5"
+                        onClick={() => void handleSend()}
+                        disabled={!chatInput.trim() || isChatLoading}
+                        className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md active:scale-95"
+                        aria-label="전송"
                     >
-                        다시 실행
-                    </button>
-                    <button
-                        onClick={() => setCollapsed(v => !v)}
-                        className="text-xs text-white/40 hover:text-white/70 transition-colors flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white/5"
-                    >
-                        {collapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
-                        {collapsed ? "펼치기" : "접기"}
+                        <Send className="w-4 h-4" />
                     </button>
                 </div>
             </div>
-
-            <AnimatePresence>
-                {!collapsed && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                    >
-                        <div className="bg-black/20 rounded-2xl p-5 border border-white/5 prose prose-invert max-w-none">
-                            {renderMarkdown(report)}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 }
@@ -341,12 +557,12 @@ export function AiAuditSection({
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="glass p-6 rounded-[2rem] border border-purple-500/10"
+            className="glass p-6 rounded-[2rem] border border-purple-500/10 shadow-lg"
         >
             {/* 헤더 */}
             <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shadow-inner">
                         <Bot className="w-5 h-5 text-purple-400" />
                     </div>
                     <div>
@@ -357,7 +573,7 @@ export function AiAuditSection({
                             </span>
                         </h3>
                         <p className="text-xs text-white/40 mt-0.5">
-                            Gemini Flash + MCP Tool Calling 기반 자율 분석
+                            Gemini Flash + MCP Tool Calling 기반 대화형 자율 분석관
                         </p>
                     </div>
                 </div>
@@ -370,7 +586,7 @@ export function AiAuditSection({
             {/* 기능 뱃지 */}
             {auditState.status === "idle" && (
                 <div className="flex flex-wrap gap-2 mb-5">
-                    {["엔트로피 분석", "위상 스캔", "취약점 퍼징", "근본 원인 역추적"].map(label => (
+                    {["대화형 피드백", "위상 스캔", "취약점 퍼징", "근본 원인 역추적"].map(label => (
                         <span
                             key={label}
                             className="flex items-center gap-1 text-[10px] bg-white/5 border border-white/8 text-white/40 px-2.5 py-1 rounded-full"
@@ -403,7 +619,17 @@ export function AiAuditSection({
 
                 {auditState.status === "success" && auditState.result && (
                     <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <ReportPanel report={auditState.result.report} onRerun={handleRerun} />
+                        <ChatPanel
+                            report={auditState.result.report}
+                            initialConversationId={auditState.result.conversationId ?? ""}
+                            birthYear={birthYear}
+                            birthMonth={birthMonth}
+                            birthDay={birthDay}
+                            birthHour={birthHour}
+                            isMale={isMale}
+                            apiKey={apiKey}
+                            onRerun={handleRerun}
+                        />
                     </motion.div>
                 )}
 

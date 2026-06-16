@@ -13,6 +13,7 @@ export interface AiAuditResult {
     report: string;    // 마크다운 형식의 감사 리포트
     status: "success" | "error";
     error?: string;
+    conversationId?: string;
 }
 
 export type AiAuditStatus = "idle" | "loading" | "success" | "error";
@@ -21,4 +22,10 @@ export interface AiAuditState {
     status: AiAuditStatus;
     result: AiAuditResult | null;
     error: string | null;
+}
+
+export interface ChatMessage {
+    role: "user" | "assistant";
+    content: string;
+    timestamp: Date;
 }

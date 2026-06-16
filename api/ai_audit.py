@@ -17,7 +17,7 @@ from http.server import BaseHTTPRequestHandler
 # Vercel Python 런타임 경로 설정
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "mcp"))
 
-from eon_agent import run_audit
+from eon_agent import run_audit, run_chat
 
 
 class handler(BaseHTTPRequestHandler):
@@ -41,51 +41,103 @@ class handler(BaseHTTPRequestHandler):
             self._error(401, "X-Gemini-Api-Key 헤더가 필요합니다.")
             return
 
-        # 필수 파라미터 검증
-        required = ["year", "month", "day", "hour"]
-        for field in required:
-            if field not in data:
-                self._error(400, f"필수 파라미터 누락: {field}")
+        action = data.get("action", "audit")
+
+        if action == "chat":
+            # 대화 모드
+            conversation_id = data.get("conversationId")
+            message = data.get("message")
+            if not conversation_id or not message:
+                self._error(400, "대화 모드에서는 conversationId와 message가 필수입니다.")
                 return
 
-        try:
-            year = int(data["year"])
-            month = int(data["month"])
-            day = int(data["day"])
-            hour = int(data["hour"])
-            is_male = bool(data.get("isMale", True))
+            # 폴백용 사주 파라미터 (있다면 파싱)
+            year = int(data["year"]) if "year" in data else None
+            month = int(data["month"]) if "month" in data else None
+            day = int(data["day"]) if "day" in data else None
+            hour = int(data["hour"]) if "hour" in data else None
+            is_male = bool(data["isMale"]) if "isMale" in data else None
             birth_name = str(data.get("birthName", "분석 대상"))
-        except (ValueError, TypeError) as e:
-            self._error(400, f"파라미터 타입 오류: {e}")
-            return
 
-        # 범위 검증
-        if not (1 <= month <= 12 and 1 <= day <= 31 and 0 <= hour <= 23):
-            self._error(400, "날짜/시간 범위가 올바르지 않습니다.")
-            return
-
-        try:
-            report = asyncio.run(
-                run_audit(
-                    year=year,
-                    month=month,
-                    day=day,
-                    hour=hour,
-                    is_male=is_male,
-                    api_key=api_key,
-                    birth_name=birth_name,
+            try:
+                reply, conv_id = asyncio.run(
+                    run_chat(
+                        conversation_id=conversation_id,
+                        message=message,
+                        api_key=api_key,
+                        year=year,
+                        month=month,
+                        day=day,
+                        hour=hour,
+                        is_male=is_male,
+                        birth_name=birth_name,
+                    )
                 )
+            except Exception as e:
+                self._error(500, f"에이전트 대화 실행 오류: {e}")
+                return
+
+            self.send_response(200)
+            self._set_cors_headers()
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            response_body = json.dumps(
+                {"reply": reply, "conversationId": conv_id, "status": "success"},
+                ensure_ascii=False,
             )
-        except Exception as e:
-            self._error(500, f"에이전트 실행 오류: {e}")
+            self.wfile.write(response_body.encode("utf-8"))
             return
 
-        self.send_response(200)
-        self._set_cors_headers()
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.end_headers()
-        response_body = json.dumps({"report": report, "status": "success"}, ensure_ascii=False)
-        self.wfile.write(response_body.encode("utf-8"))
+        else:
+            # 기본 모드: 최초 심층 감사 리포트 생성
+            # 필수 파라미터 검증
+            required = ["year", "month", "day", "hour"]
+            for field in required:
+                if field not in data:
+                    self._error(400, f"필수 파라미터 누락: {field}")
+                    return
+
+            try:
+                year = int(data["year"])
+                month = int(data["month"])
+                day = int(data["day"])
+                hour = int(data["hour"])
+                is_male = bool(data.get("isMale", True))
+                birth_name = str(data.get("birthName", "분석 대상"))
+            except (ValueError, TypeError) as e:
+                self._error(400, f"파라미터 타입 오류: {e}")
+                return
+
+            # 범위 검증
+            if not (1 <= month <= 12 and 1 <= day <= 31 and 0 <= hour <= 23):
+                self._error(400, "날짜/시간 범위가 올바르지 않습니다.")
+                return
+
+            try:
+                report, conv_id = asyncio.run(
+                    run_audit(
+                        year=year,
+                        month=month,
+                        day=day,
+                        hour=hour,
+                        is_male=is_male,
+                        api_key=api_key,
+                        birth_name=birth_name,
+                    )
+                )
+            except Exception as e:
+                self._error(500, f"에이전트 실행 오류: {e}")
+                return
+
+            self.send_response(200)
+            self._set_cors_headers()
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            response_body = json.dumps(
+                {"report": report, "conversationId": conv_id, "status": "success"},
+                ensure_ascii=False,
+            )
+            self.wfile.write(response_body.encode("utf-8"))
 
     def _set_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
