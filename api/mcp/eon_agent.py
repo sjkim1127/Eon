@@ -89,6 +89,7 @@ async def run_audit(
     """
     mcp_servers = [
         types.McpStdioServer(
+            name="eon-mcp-server",
             command="python3",
             args=[str(MCP_SERVER_PATH)],
         )
@@ -143,6 +144,7 @@ async def run_chat(
     """
     mcp_servers = [
         types.McpStdioServer(
+            name="eon-mcp-server",
             command="python3",
             args=[str(MCP_SERVER_PATH)],
         )
