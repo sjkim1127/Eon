@@ -4,7 +4,6 @@
   "installCommand": "cd app && npm install",
   "functions": {
     "api/ai_audit.py": {
-      "runtime": "python3.12",
       "maxDuration": 60
     }
   },
