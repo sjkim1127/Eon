@@ -8,6 +8,7 @@ const loadStrengthTab = () => import("../components/tabs/StrengthTab");
 const loadTransitTab = () => import("../components/tabs/TransitTab");
 const loadSimulationTab = () => import("../components/tabs/SimulationTab");
 const loadDestinyTierTab = () => import("../components/tabs/DestinyTierTab");
+const loadAiAuditTab = () => import("../components/tabs/AiAuditTab");
 
 
 const TAB_LOADERS: Record<TabId, () => Promise<unknown>> = {
@@ -17,26 +18,28 @@ const TAB_LOADERS: Record<TabId, () => Promise<unknown>> = {
     transit: loadTransitTab,
     simulation: loadSimulationTab,
     destiny_tier: loadDestinyTierTab,
+    ai_audit: loadAiAuditTab,
 };
 
 const ALL_TABS: TabId[] = [
     "saju", "vedic_charts", "strength",
-    "transit", "simulation", "destiny_tier",
+    "transit", "simulation", "destiny_tier", "ai_audit",
 ];
 
 // 마르코프 체인 폴백 (데이터 부족 시 도메인 지식 기반 우선순위)
 const FALLBACK_NEXT_TABS: Record<TabId, TabId[]> = {
-    saju: ["strength", "simulation", "transit"],
+    saju: ["strength", "simulation", "transit", "ai_audit"],
     vedic_charts: ["strength", "saju"],
-    strength: ["transit", "saju"],
+    strength: ["transit", "saju", "ai_audit"],
     transit: ["simulation", "saju"],
     simulation: ["transit"],
     destiny_tier: ["saju", "strength"],
+    ai_audit: ["saju", "strength"],
 };
 
 // 리포트 존재 여부에 따른 탭 우선순위 가중치
 const REPORT_READY_BONUS: Partial<Record<TabId, number>> = {
-    saju: 4, strength: 4, vedic_charts: 2, transit: 2, destiny_tier: 5,
+    saju: 4, strength: 4, vedic_charts: 2, transit: 2, destiny_tier: 5, ai_audit: 3,
 };
 const TRANSIT_READY_BONUS: Partial<Record<TabId, number>> = {
     transit: 5, strength: 2,

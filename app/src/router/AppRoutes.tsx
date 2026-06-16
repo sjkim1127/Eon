@@ -11,6 +11,7 @@ const StrengthTab = lazy(() => import("../components/tabs/StrengthTab").then((m)
 const TransitTab = lazy(() => import("../components/tabs/TransitTab").then((m) => ({ default: m.TransitTab })));
 const SimulationTab = lazy(() => import("../components/tabs/SimulationTab").then((m) => ({ default: m.SimulationTab })));
 const DestinyTierTab = lazy(() => import("../components/tabs/DestinyTierTab").then((m) => ({ default: m.DestinyTierTab })));
+const AiAuditTab = lazy(() => import("../components/tabs/AiAuditTab").then((m) => ({ default: m.AiAuditTab })));
 
 interface AppRoutesProps {
   hasAnyReport: boolean;
@@ -54,11 +55,6 @@ export function AppRoutes({
                 <SajuTab
                   sajuReport={sajuData!}
                   unknownTime={unknownTime}
-                  birthYear={birthData?.year}
-                  birthMonth={birthData?.month}
-                  birthDay={birthData?.day}
-                  birthHour={birthData?.hour}
-                  isMale={birthData?.isMale}
                 />
               ) : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
             } />
@@ -84,6 +80,18 @@ export function AppRoutes({
                   unknownTime={unknownTime}
                 />
               ) : <UnavailableTabFallback reason="종합 등급 산출을 위해 사주와 베딕 분석이 모두 성공해야 합니다." />
+            } />
+            <Route path="/ai_audit" element={
+              availability.ai_audit ? (
+                <AiAuditTab
+                  sajuReport={sajuData}
+                  birthYear={birthData?.year}
+                  birthMonth={birthData?.month}
+                  birthDay={birthData?.day}
+                  birthHour={birthData?.hour}
+                  isMale={birthData?.isMale}
+                />
+              ) : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
             } />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -8,6 +8,7 @@ export interface TabAvailability {
   transit: boolean;
   destiny_tier: boolean;
   simulation: boolean;
+  ai_audit: boolean;
 }
 
 export interface AvailabilitySource {
@@ -30,5 +31,6 @@ export function getTabAvailability(source: AvailabilitySource): TabAvailability 
     transit: !!transitData,
     destiny_tier: !!tierData,
     simulation: !!sajuData,
+    ai_audit: !!sajuData,
   };
 }

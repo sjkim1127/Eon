@@ -9,16 +9,10 @@ import { RelationshipsAnalysis } from "../saju/RelationshipsAnalysis";
 import { VoidAnalysis } from "../saju/VoidAnalysis";
 import { MajorLuckTimeline } from "../saju/MajorLuckTimeline";
 import { AuxiliaryPillars } from "../saju/AuxiliaryPillars";
-import { AiAuditSection } from "../sections/ai/AiAuditSection";
 
 interface SajuTabProps {
   sajuReport: import("../../types").SajuAnalysisResult | null;
   unknownTime?: boolean;
-  birthYear?: number;
-  birthMonth?: number;
-  birthDay?: number;
-  birthHour?: number;
-  isMale?: boolean;
 }
 
 function RelationshipBadges({ relationships }: { relationships: any }) {
@@ -50,11 +44,6 @@ function RelationshipBadges({ relationships }: { relationships: any }) {
 export function SajuTab({
   sajuReport,
   unknownTime = false,
-  birthYear,
-  birthMonth,
-  birthDay,
-  birthHour,
-  isMale = true,
 }: SajuTabProps) {
 
   if (!sajuReport || !sajuReport.report) return null;
@@ -125,18 +114,6 @@ export function SajuTab({
 
       {/* 대운 */}
       <MajorLuckTimeline ml={ml} />
-
-      {/* AI 운명 감사 리포트 */}
-      {birthYear && birthMonth && birthDay !== undefined && birthHour !== undefined && (
-        <AiAuditSection
-          sajuReport={sajuReport}
-          birthYear={birthYear}
-          birthMonth={birthMonth}
-          birthDay={birthDay}
-          birthHour={birthHour}
-          isMale={isMale}
-        />
-      )}
 
     </motion.div>
   );

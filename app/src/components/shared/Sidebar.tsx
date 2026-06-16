@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, Activity, Star, Zap, Sun, Trophy, Menu, X, Github, LineChart } from "lucide-react";
+import { Sparkles, Activity, Star, Zap, Sun, Trophy, Menu, X, Github, LineChart, Brain } from "lucide-react";
 import { cn } from "../../utils";
 import type { TabId } from "../../types";
 
@@ -17,6 +17,7 @@ const TABS = [
   { id: "transit" as TabId, label: "현재 운세", icon: Sun },
   { id: "simulation" as TabId, label: "생애 시뮬레이션", icon: LineChart },
   { id: "destiny_tier" as TabId, label: "운명의 티어", icon: Trophy },
+  { id: "ai_audit" as TabId, label: "AI 감사", icon: Brain },
 ];
 
 export function Sidebar({ activeTab, setActiveTab, onTabHover, unknownTime }: SidebarProps) {
@@ -97,7 +98,12 @@ export function Sidebar({ activeTab, setActiveTab, onTabHover, unknownTime }: Si
       </nav>
 
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-black/60 backdrop-blur-xl px-2 py-2">
-        <div className={cn("grid gap-1", filteredTabs.length === 5 ? "grid-cols-5" : "grid-cols-6")}>
+        <div className={cn(
+          "grid gap-1", 
+          filteredTabs.length === 5 ? "grid-cols-5" : 
+          filteredTabs.length === 6 ? "grid-cols-6" : 
+          "grid-cols-7"
+        )}>
           {filteredTabs.map((tab) => (
             <button
               key={`mobile-${tab.id}`}
