@@ -96,6 +96,13 @@ function App() {
           transitData={transitData}
           tierData={tierData}
           unknownTime={!!birthData.unknownTime}
+          birthData={{
+            year: birthData.year,
+            month: birthData.month,
+            day: birthData.day,
+            hour: birthData.hour,
+            isMale,
+          }}
         />
         {sajuData?.meta?.correctedTime && (
           <div className="flex items-center gap-2 px-3 py-1 bg-violet-500/20 text-violet-300 rounded-full text-xs font-medium border border-violet-500/30">

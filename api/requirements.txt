@@ -1,0 +1,4 @@
+google-antigravity
+mcp
+fastmcp
+pydantic
