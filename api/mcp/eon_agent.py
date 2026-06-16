@@ -1,28 +1,21 @@
 """
-Eon AGY Agent — Google Antigravity SDK 기반 운명 감사 에이전트
+Eon GenAI Agent — google-genai SDK 기반 운명 감사 에이전트
 
-FastMCP 서버를 Stdio Transport로 연결하고 Gemini Flash로
-자율적인 Tool Calling을 통해 한국어 심층 감사 리포트를 생성합니다.
+Gemini API의 네이티브 Function Calling 지원을 활용하여
+사주 분석 함수를 직접 도구로 바인딩하고 대화형 감사 리포트를 작성합니다.
 """
 from __future__ import annotations
 
 import asyncio
 import os
-from pathlib import Path
+import sys
 
-from google.antigravity import Agent, LocalAgentConfig, types
+# eon_mcp_server에서 도구 직접 임포트
+sys.path.insert(0, os.path.dirname(__file__))
+from eon_mcp_server import analyze_entropy, scan_topology, fuzz_luck_vulnerabilities, backtrace_root_cause
 
-# MCP 서버 스크립트 경로
-MCP_SERVER_PATH = Path(__file__).parent / "eon_mcp_server.py"
-
-# 세션 유지 디렉토리 설정
-IS_VERCEL = "VERCEL" in os.environ or "NOW_BUILD" in os.environ
-if IS_VERCEL:
-    SAVE_DIR = "/tmp/eon_conversations"
-else:
-    SAVE_DIR = str(Path(__file__).parents[2] / ".gemini" / "conversations")
-
-os.makedirs(SAVE_DIR, exist_ok=True)
+from google import genai
+from google.genai import types
 
 SYSTEM_INSTRUCTIONS = """당신은 'Eon Destiny Security Agency'의 수석 에이전트 분석관입니다.
 당신의 임무는 분석 대상 사주 시스템을 CS(Computer Science) 방식으로 심층 감사하는 것입니다.
@@ -71,9 +64,9 @@ async def run_audit(
     is_male: bool,
     api_key: str,
     birth_name: str = "분석 대상",
-) -> tuple[str, str]:
+) -> tuple[str, list[dict]]:
     """
-    AGY 에이전트를 실행하여 사주 감사 리포트를 생성합니다.
+    Gemini 에이전트를 실행하여 사주 감사 리포트와 대화 기록을 생성합니다.
 
     Args:
         year: 출생 연도 (양력)
@@ -85,21 +78,19 @@ async def run_audit(
         birth_name: 분석 대상자 이름 (선택)
 
     Returns:
-        tuple[str, str]: (마크다운 형식의 감사 리포트, 대화 ID)
+        tuple[str, list[dict]]: (마크다운 형식의 감사 리포트, 직렬화된 대화 기록)
     """
-    mcp_servers = [
-        types.McpStdioServer(
-            name="eon-mcp-server",
-            command="python3",
-            args=[str(MCP_SERVER_PATH)],
-        )
-    ]
+    client = genai.Client(api_key=api_key)
 
-    config = LocalAgentConfig(
-        api_key=api_key,
-        system_instructions=SYSTEM_INSTRUCTIONS,
-        mcp_servers=mcp_servers,
-        save_dir=SAVE_DIR,
+    # 파이썬 함수를 직접 도구로 주입
+    tools = [analyze_entropy, scan_topology, fuzz_luck_vulnerabilities, backtrace_root_cause]
+
+    chat = client.chats.create(
+        model="gemini-2.0-flash",
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_INSTRUCTIONS,
+            tools=tools,
+        )
     )
 
     gender_str = "남성" if is_male else "여성"
@@ -119,84 +110,59 @@ async def run_audit(
 모든 데이터 수집 후 마크다운 형식의 완전한 감사 리포트를 작성해 주세요.
 """
 
-    async with Agent(config) as agent:
-        response = await agent.chat(prompt)
-        report = await response.text()
-        conv_id = agent.conversation_id
-
-    return report, conv_id or ""
+    loop = asyncio.get_running_loop()
+    response = await loop.run_in_executor(
+        None,
+        lambda: chat.send_message(prompt)
+    )
+    
+    report = response.text
+    history = [h.model_dump() for h in chat.get_history()]
+    return report, history
 
 
 async def run_chat(
-    conversation_id: str,
+    history_data: list[dict],
     message: str,
     api_key: str,
-    year: int | None = None,
-    month: int | None = None,
-    day: int | None = None,
-    hour: int | None = None,
-    is_male: bool | None = None,
-    birth_name: str = "분석 대상",
-) -> tuple[str, str]:
+) -> tuple[str, list[dict]]:
     """
-    기존 대화를 불러와서 사용자의 질문에 답변합니다.
-    세션이 만료된 경우 새 대화를 시작하고 초기 감사를 수행한 뒤 답변합니다.
+    기존 대화 기록을 기반으로 사용자의 추가 질문에 답변합니다.
     """
-    mcp_servers = [
-        types.McpStdioServer(
-            name="eon-mcp-server",
-            command="python3",
-            args=[str(MCP_SERVER_PATH)],
-        )
-    ]
+    client = genai.Client(api_key=api_key)
+    tools = [analyze_entropy, scan_topology, fuzz_luck_vulnerabilities, backtrace_root_cause]
 
-    # 세션 파일 존재 확인
-    session_file = Path(SAVE_DIR) / f"traj-{conversation_id}"
-    
-    if not session_file.exists() and year is not None and month is not None and day is not None and hour is not None and is_male is not None:
-        # 세션 유실 시 복구 및 재생
-        config = LocalAgentConfig(
-            api_key=api_key,
-            save_dir=SAVE_DIR,
-            system_instructions=SYSTEM_INSTRUCTIONS,
-            mcp_servers=mcp_servers,
-        )
-        gender_str = "남성" if is_male else "여성"
-        init_prompt = f"""
-분석 대상: {birth_name} ({gender_str})
-생년월일시: {year}년 {month}월 {day}일 {hour}시 (양력)
+    # Content 객체 복원
+    history_objects = [types.Content(**item) for item in history_data]
 
-위 사주에 대해 전체 도구를 순서대로 호출하여 심층 감사 리포트를 작성해 주세요.
-"""
-        async with Agent(config) as agent:
-            await agent.chat(init_prompt)
-            response = await agent.chat(message)
-            reply = await response.text()
-            return reply, agent.conversation_id or ""
-    else:
-        config = LocalAgentConfig(
-            api_key=api_key,
-            conversation_id=conversation_id,
-            save_dir=SAVE_DIR,
-            system_instructions=SYSTEM_INSTRUCTIONS,
-            mcp_servers=mcp_servers,
-        )
-        async with Agent(config) as agent:
-            response = await agent.chat(message)
-            reply = await response.text()
-            return reply, conversation_id
+    chat = client.chats.create(
+        model="gemini-2.0-flash",
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_INSTRUCTIONS,
+            tools=tools,
+        ),
+        history=history_objects,
+    )
+
+    loop = asyncio.get_running_loop()
+    response = await loop.run_in_executor(
+        None,
+        lambda: chat.send_message(message)
+    )
+
+    reply = response.text
+    updated_history = [h.model_dump() for h in chat.get_history()]
+    return reply, updated_history
 
 
 if __name__ == "__main__":
     # 로컬 테스트용 실행
-    import sys
-
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
         print("GEMINI_API_KEY 환경 변수를 설정해주세요.", file=sys.stderr)
         sys.exit(1)
 
-    result, conv_id = asyncio.run(
+    result, history = asyncio.run(
         run_audit(
             year=1990,
             month=5,
@@ -208,4 +174,4 @@ if __name__ == "__main__":
         )
     )
     print("Report:", result)
-    print("Conversation ID:", conv_id)
+    print("History length:", len(history))

@@ -224,22 +224,12 @@ function TypingIndicator() {
 // ── 통합 대화형 패널 ──────────────────────────────────────────────────────────
 function ChatPanel({
     report,
-    initialConversationId,
-    birthYear,
-    birthMonth,
-    birthDay,
-    birthHour,
-    isMale,
+    initialHistory,
     apiKey,
     onRerun,
 }: {
     report: string;
-    initialConversationId: string;
-    birthYear: number;
-    birthMonth: number;
-    birthDay: number;
-    birthHour: number;
-    isMale: boolean;
+    initialHistory: any[];
     apiKey: string;
     onRerun: () => void;
 }) {
@@ -247,7 +237,7 @@ function ChatPanel({
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [chatInput, setChatInput] = useState("");
     const [isChatLoading, setIsChatLoading] = useState(false);
-    const [conversationId, setConversationId] = useState(initialConversationId);
+    const [history, setHistory] = useState<any[]>(initialHistory);
     const [error, setError] = useState<string | null>(null);
 
     const chatEndRef = useRef<HTMLDivElement>(null);
@@ -280,15 +270,8 @@ function ChatPanel({
                 },
                 body: JSON.stringify({
                     action: "chat",
-                    conversationId: conversationId,
+                    history: history,
                     message: query,
-                    // 세션 만료 시 백엔드 복구를 위한 사주 정보
-                    year: birthYear,
-                    month: birthMonth,
-                    day: birthDay,
-                    hour: birthHour,
-                    isMale,
-                    birthName: "분석 대상",
                 }),
             });
 
@@ -309,15 +292,15 @@ function ChatPanel({
                 timestamp: new Date(),
             };
             setMessages(prev => [...prev, assistantMsg]);
-            if (data.conversationId) {
-                setConversationId(data.conversationId);
+            if (data.history) {
+                setHistory(data.history);
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
         } finally {
             setIsChatLoading(false);
         }
-    }, [chatInput, isChatLoading, conversationId, apiKey, birthYear, birthMonth, birthDay, birthHour, isMale]);
+    }, [chatInput, isChatLoading, history, apiKey]);
 
     const SUGGESTIONS = [
         "올해 전체적인 직장/사업운이 어떤가요?",
@@ -621,12 +604,7 @@ export function AiAuditSection({
                     <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                         <ChatPanel
                             report={auditState.result.report}
-                            initialConversationId={auditState.result.conversationId ?? ""}
-                            birthYear={birthYear}
-                            birthMonth={birthMonth}
-                            birthDay={birthDay}
-                            birthHour={birthHour}
-                            isMale={isMale}
+                            initialHistory={auditState.result.history ?? []}
                             apiKey={apiKey}
                             onRerun={handleRerun}
                         />
