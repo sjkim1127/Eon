@@ -20,10 +20,17 @@ interface AppRoutesProps {
   transitData: any;
   tierData: any;
   unknownTime: boolean;
+  birthData?: {
+    year: number;
+    month: number;
+    day: number;
+    hour: number;
+    isMale: boolean;
+  };
 }
 
 export function AppRoutes({
-  hasAnyReport, loading, sajuData, vedicData, transitData, tierData, unknownTime
+  hasAnyReport, loading, sajuData, vedicData, transitData, tierData, unknownTime, birthData
 }: AppRoutesProps) {
   const location = useLocation();
 
@@ -43,7 +50,17 @@ export function AppRoutes({
         <Suspense fallback={<TabSkeleton />}>
           <Routes location={location} key={location.pathname}>
             <Route path="/" element={
-              availability.saju ? <SajuTab sajuReport={sajuData!} unknownTime={unknownTime} /> : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
+              availability.saju ? (
+                <SajuTab
+                  sajuReport={sajuData!}
+                  unknownTime={unknownTime}
+                  birthYear={birthData?.year}
+                  birthMonth={birthData?.month}
+                  birthDay={birthData?.day}
+                  birthHour={birthData?.hour}
+                  isMale={birthData?.isMale}
+                />
+              ) : <UnavailableTabFallback reason="사주 분석 결과가 필요합니다." />
             } />
             <Route path="/vedic_charts" element={
               availability.vedic_charts ? <VedicChartsTab report={vedicData!} /> : <UnavailableTabFallback reason="시간 미상인 경우 베딕 차트를 생성할 수 없습니다." />
