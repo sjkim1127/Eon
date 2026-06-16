@@ -556,7 +556,7 @@ export function buildVedicMarkdown(v: VedicAnalysisResult): string {
         lines.push("| 요가명 | 품질 | 관련 행성 | 설명 |");
         lines.push("|---|---|---|---|");
         for (const yoga of rr.yogas) {
-            let q = typeof yoga.quality === "string" ? yoga.quality : "Medium";
+            const q = typeof yoga.quality === "string" ? yoga.quality : "Medium";
             const qMap: Record<string, string> = { 
                 VeryHigh: "매우 강함", veryHigh: "매우 강함",
                 High: "강함", high: "강함",

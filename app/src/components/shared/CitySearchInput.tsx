@@ -58,7 +58,7 @@ export function CitySearchInput({ selectedLabel, onSelect, onError }: CitySearch
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [onError]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
