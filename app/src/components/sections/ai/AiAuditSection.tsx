@@ -291,7 +291,7 @@ export function AiAuditSection({
         setAuditState({ status: "loading", result: null, error: null });
 
         try {
-            const response = await fetch("/api/ai-audit", {
+            const response = await fetch("/api/ai_audit", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

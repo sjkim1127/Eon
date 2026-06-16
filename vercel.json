@@ -8,6 +8,7 @@
     }
   },
   "rewrites": [
+    { "source": "/api/ai-audit", "destination": "/api/ai_audit" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
