@@ -5,8 +5,6 @@
  *   - 백엔드 SSOT 중심 아키텍처로 전환하여 프런트엔드 계산 로직 대폭 축소
  *   - 등급표 및 정규화 함수만 유지하여 일관성 보장
  */
-import type { SajuAnalysisResult, TransitResult } from "../types";
-import type { VedicAnalysisResult } from "../types";
 import type { TierResult, TierGrade } from "../types/analysis";
 export type { TierResult, TierGrade };
 
@@ -55,11 +53,7 @@ export function spreadNormalize(score: number): number {
  * 프런트엔드에서 최소한의 정보로 티어 구조를 생성합니다.
  * 실제 정밀 분석은 백엔드 응답(tierReport)을 사용하는 것이 원칙입니다.
  */
-export function computeTierResult(
-  _sajuReport: SajuAnalysisResult | null,
-  _report: VedicAnalysisResult | null,
-  _transitReport?: TransitResult | null,
-): TierResult | null {
+export function computeTierResult(): TierResult | null {
   // 기본적으로 fallback 결과는 생성하지 않고 null을 반환하여 
   // UI에서 "백엔드 결과 대기" 상태를 유도합니다.
   // 로컬 테스트나 특수 상황에서만 최소 구조를 반환할 수 있습니다.

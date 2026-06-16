@@ -59,7 +59,7 @@ export function AuxiliaryPillars({ data, auxShinsals = [], unknownTime = false }
               <div className="flex flex-wrap gap-2 mt-4">
                 {auxShinsals
                   .filter(([pillarName]) => pillarName === p.key)
-                  .map(([_, criteria, shinsalName], sIdx) => {
+                  .map(([, criteria, shinsalName], sIdx) => {
                     const isAuspicious = ["천을귀인", "건록", "장성살", "반안살", "지살"].includes(shinsalName);
                     return (
                       <div

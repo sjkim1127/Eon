@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -19,10 +19,10 @@ function App() {
   const pathParts = location.pathname.split('/').filter(Boolean);
   const currentTab: TabId = (pathParts.length > 0 ? pathParts[0] : "saju") as TabId;
 
-  const setActiveTab = (tab: TabId) => {
+  const setActiveTab = useCallback((tab: TabId) => {
     useAppStore.getState().setActiveTab(tab);
     navigate(`/${tab === 'saju' ? '' : tab}`);
-  };
+  }, [navigate]);
 
   const errorMessage = useAppStore(state => state.errorMessage);
   const analysisState = useAppStore(state => state.analysisState);
@@ -62,7 +62,7 @@ function App() {
     if (birthData.unknownTime && currentTab === "vedic_charts") {
       setActiveTab("saju");
     }
-  }, [birthData.unknownTime, currentTab]);
+  }, [birthData.unknownTime, currentTab, setActiveTab]);
 
   return (
     <>
