@@ -105,6 +105,8 @@ pub enum YogaCondition {
     VasumathiYogaCheck,
     /// Special Check: Sakata Yoga (Moon in 6, 8, 12 from Jupiter)
     SakataYogaCheck,
+    /// Special Check: Dhana Yoga (Wealth combinations)
+    DhanaYogaCheck,
     /// Composite AND
     And(Vec<YogaCondition>),
 }
@@ -154,6 +156,43 @@ impl YogaEngine {
                             "Shadbala 강도 부족 ({:.0}/180 미만) — Yoga 발현 약함",
                             avg_shadbala
                         ));
+                    }
+                }
+                
+                if rule.yoga_type == YogaType::PanchaMahapurusha {
+                    let avg_shadbala = planets
+                        .iter()
+                        .filter_map(|&pl| {
+                            chart
+                                .planets
+                                .iter()
+                                .find(|p| p.planet == pl)
+                                .map(|pos| StrengthEngine::calculate(pos, chart).total_score)
+                        })
+                        .sum::<f64>()
+                        / planets.len().max(1) as f64;
+
+                    if avg_shadbala < 100.0 {
+                        quality = YogaQuality::Weak(format!(
+                            "Shadbala 강도 부족 ({:.0}/100 미만) — Mahapurusha 발현 불가",
+                            avg_shadbala
+                        ));
+                    }
+                }
+
+                if rule.yoga_type == YogaType::NeechaBhanga {
+                    let mut has_kendra_exaltation = false;
+                    for pl in &planets {
+                        if let Some(pos) = chart.planets.iter().find(|p| p.planet == *pl) {
+                            if [1, 4, 7, 10].contains(&pos.house_index) {
+                                has_kendra_exaltation = true;
+                            }
+                        }
+                    }
+                    if !has_kendra_exaltation {
+                        quality = YogaQuality::Weak("고양성/지배성이 켄드라에 위치하지 않아 약한 니차방가".to_string());
+                    } else {
+                        quality = YogaQuality::VeryHigh; // 확실한 역전
                     }
                 }
 
