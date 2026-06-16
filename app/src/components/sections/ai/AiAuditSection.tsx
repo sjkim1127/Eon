@@ -583,7 +583,7 @@ export function AiAuditSection({
 
             {/* 컨텐츠 영역 */}
             <AnimatePresence mode="wait">
-                {auditState.status === "idle" && (
+                {auditState.status === "idle" ? (
                     <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <ApiKeyPanel
                             apiKey={apiKey}
@@ -592,15 +592,11 @@ export function AiAuditSection({
                             isLoading={false}
                         />
                     </motion.div>
-                )}
-
-                {auditState.status === "loading" && (
+                ) : auditState.status === "loading" ? (
                     <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <LoadingState />
                     </motion.div>
-                )}
-
-                {auditState.status === "success" && auditState.result && (
+                ) : auditState.status === "success" && auditState.result ? (
                     <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                         <ChatPanel
                             report={auditState.result.report}
@@ -609,9 +605,7 @@ export function AiAuditSection({
                             onRerun={handleRerun}
                         />
                     </motion.div>
-                )}
-
-                {auditState.status === "error" && (
+                ) : auditState.status === "error" ? (
                     <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/5 border border-red-500/20 mb-4">
                             <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
@@ -627,7 +621,7 @@ export function AiAuditSection({
                             isLoading={false}
                         />
                     </motion.div>
-                )}
+                ) : null}
             </AnimatePresence>
         </motion.div>
     );
