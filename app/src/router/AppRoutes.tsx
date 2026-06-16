@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { TabSkeleton, UnavailableTabFallback, EmptyStateFallback } from "../components/layout/Fallbacks";
 import { getTabAvailability } from "../utils/analysis";
@@ -46,10 +46,25 @@ export function AppRoutes({
   return (
     <AnimatePresence mode="wait">
       {!hasAnyReport && !loading ? (
-        <EmptyStateFallback />
+        <motion.div
+          key="empty-state"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="h-full w-full"
+        >
+          <EmptyStateFallback />
+        </motion.div>
       ) : (
-        <Suspense fallback={<TabSkeleton />}>
-          <Routes location={location} key={location.pathname}>
+        <motion.div
+          key="routes-content"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="h-full w-full"
+        >
+          <Suspense fallback={<TabSkeleton />}>
+            <Routes location={location} key={location.pathname}>
             <Route path="/" element={
               availability.saju ? (
                 <SajuTab
@@ -96,6 +111,7 @@ export function AppRoutes({
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
+        </motion.div>
       )}
     </AnimatePresence>
   );
