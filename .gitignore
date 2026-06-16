@@ -18,3 +18,7 @@ Thumbs.db
 # External source / test
 /vendor
 /cross_test
+
+# AI local storage and state
+.gemini/
+.agent/
