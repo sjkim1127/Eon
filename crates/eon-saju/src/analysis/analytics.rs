@@ -6,6 +6,7 @@ use crate::engine::emulator::YearlyScore;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GoldenTime {
     pub start_age: u32,
     pub end_age: u32,

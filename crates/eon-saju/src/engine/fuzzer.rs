@@ -54,7 +54,7 @@ impl DestinyFuzzer {
     pub fn new(vm: SajuVM) -> Self {
         Self {
             vm,
-            crash_threshold: 30.0,
+            crash_threshold: 20.0,
         }
     }
 
