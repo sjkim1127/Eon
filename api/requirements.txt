@@ -1,4 +1,4 @@
-google-antigravity
+google-genai
 mcp
 fastmcp
 pydantic

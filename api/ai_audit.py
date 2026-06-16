@@ -45,32 +45,18 @@ class handler(BaseHTTPRequestHandler):
 
         if action == "chat":
             # 대화 모드
-            conversation_id = data.get("conversationId")
+            history = data.get("history")
             message = data.get("message")
-            if not conversation_id or not message:
-                self._error(400, "대화 모드에서는 conversationId와 message가 필수입니다.")
+            if history is None or not message:
+                self._error(400, "대화 모드에서는 history와 message가 필수입니다.")
                 return
 
-            # 폴백용 사주 파라미터 (있다면 파싱)
-            year = int(data["year"]) if "year" in data else None
-            month = int(data["month"]) if "month" in data else None
-            day = int(data["day"]) if "day" in data else None
-            hour = int(data["hour"]) if "hour" in data else None
-            is_male = bool(data["isMale"]) if "isMale" in data else None
-            birth_name = str(data.get("birthName", "분석 대상"))
-
             try:
-                reply, conv_id = asyncio.run(
+                reply, updated_history = asyncio.run(
                     run_chat(
-                        conversation_id=conversation_id,
+                        history_data=history,
                         message=message,
                         api_key=api_key,
-                        year=year,
-                        month=month,
-                        day=day,
-                        hour=hour,
-                        is_male=is_male,
-                        birth_name=birth_name,
                     )
                 )
             except Exception as e:
@@ -82,7 +68,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
             response_body = json.dumps(
-                {"reply": reply, "conversationId": conv_id, "status": "success"},
+                {"reply": reply, "history": updated_history, "status": "success"},
                 ensure_ascii=False,
             )
             self.wfile.write(response_body.encode("utf-8"))
@@ -114,7 +100,7 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             try:
-                report, conv_id = asyncio.run(
+                report, history = asyncio.run(
                     run_audit(
                         year=year,
                         month=month,
@@ -134,7 +120,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
             response_body = json.dumps(
-                {"report": report, "conversationId": conv_id, "status": "success"},
+                {"report": report, "history": history, "status": "success"},
                 ensure_ascii=False,
             )
             self.wfile.write(response_body.encode("utf-8"))

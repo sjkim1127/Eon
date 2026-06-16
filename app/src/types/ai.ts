@@ -13,7 +13,7 @@ export interface AiAuditResult {
     report: string;    // 마크다운 형식의 감사 리포트
     status: "success" | "error";
     error?: string;
-    conversationId?: string;
+    history?: any[];   // 직렬화된 대화 히스토리
 }
 
 export type AiAuditStatus = "idle" | "loading" | "success" | "error";
