@@ -31,10 +31,9 @@ pub struct SajuAnalysisInput {
 
 impl SajuAnalysisInput {
     pub fn new(
-        year: i32, month: u32, day: u32, hour: u32, minute: u32,
-        is_lunar: bool, is_leap_month: bool,
-        is_male: bool, use_night_rat_hour: bool,
-        lon: f64, lat: f64, timezone: String,
+        base: AnalysisInput,
+        is_male: bool,
+        use_night_rat_hour: bool,
         unknown_time: Option<bool>,
     ) -> Self {
         let precision = if unknown_time.unwrap_or(false) {
@@ -44,10 +43,7 @@ impl SajuAnalysisInput {
         };
 
         Self {
-            base: AnalysisInput {
-                year, month, day, hour, minute,
-                is_lunar, is_leap_month, lat, lon, timezone,
-            },
+            base,
             is_male,
             use_night_rat_hour,
             precision,
@@ -65,24 +61,16 @@ pub struct TransitAnalysisInput {
 
 impl TransitAnalysisInput {
     pub fn new(
-        year: i32, month: u32, day: u32, hour: u32, minute: u32,
-        is_lunar: bool, is_leap_month: bool,
-        is_male: bool, use_night_rat_hour: bool,
-        lon: f64, lat: f64, timezone: String,
-        unknown_time: Option<bool>,
+        base: SajuAnalysisInput,
         now_utc: Option<DateTime<Utc>>,
     ) -> Self {
-        let base = SajuAnalysisInput::new(
-            year, month, day, hour, minute,
-            is_lunar, is_leap_month, is_male, use_night_rat_hour,
-            lon, lat, timezone.clone(), unknown_time,
-        );
+        let analysis_timezone = base.base.timezone.clone();
 
         Self {
             base,
             current: CurrentContext {
                 now_utc: now_utc.unwrap_or_else(Utc::now),
-                analysis_timezone: timezone,
+                analysis_timezone,
             },
         }
     }
@@ -100,9 +88,7 @@ pub struct VedicAnalysisInput {
 
 impl VedicAnalysisInput {
     pub fn new(
-        year: i32, month: u32, day: u32, hour: u32, minute: u32,
-        is_lunar: bool, is_leap_month: bool,
-        lat: f64, lon: f64, timezone: String,
+        base: AnalysisInput,
         unknown_time: Option<bool>,
         now_utc: Option<DateTime<Utc>>,
     ) -> Self {
@@ -113,16 +99,14 @@ impl VedicAnalysisInput {
         };
 
         let now = now_utc.unwrap_or_else(Utc::now);
+        let analysis_timezone = base.timezone.clone();
 
         Self {
-            base: AnalysisInput {
-                year, month, day, hour, minute,
-                is_lunar, is_leap_month, lat, lon, timezone: timezone.clone(),
-            },
+            base,
             precision,
             current: CurrentContext {
                 now_utc: now,
-                analysis_timezone: timezone,
+                analysis_timezone,
             },
             target_year: None,
         }

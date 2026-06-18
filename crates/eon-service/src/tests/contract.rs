@@ -28,18 +28,14 @@ fn test_tier_v3_contract_snapshot() {
     let now = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
     
     let vedic_input = VedicAnalysisInput::new(
-        birth.year, birth.month, birth.day, birth.hour, birth.minute,
-        birth.is_lunar, birth.is_leap_month,
-        birth.lat, birth.lon, birth.timezone.clone(),
-        Some(false), Some(now)
+        birth.clone(),
+        Some(false),
+        Some(now)
     );
 
     let transit_input = TransitAnalysisInput::new(
-        birth.year, birth.month, birth.day, birth.hour, birth.minute,
-        birth.is_lunar, birth.is_leap_month,
-        saju_input.is_male, saju_input.use_night_rat_hour,
-        birth.lon, birth.lat, birth.timezone.clone(),
-        Some(false), Some(now)
+        saju_input.clone(),
+        Some(now)
     );
 
     // 2. Execute analysis
@@ -84,10 +80,9 @@ fn test_vedic_contract_snapshot() {
 
     let now = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
     let vedic_input = VedicAnalysisInput::new(
-        birth.year, birth.month, birth.day, birth.hour, birth.minute,
-        birth.is_lunar, birth.is_leap_month,
-        birth.lat, birth.lon, birth.timezone.clone(),
-        Some(false), Some(now)
+        birth.clone(),
+        Some(false),
+        Some(now)
     );
 
     let res = facade::analyze_vedic(vedic_input).expect("Vedic failed");

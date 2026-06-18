@@ -1,12 +1,13 @@
 """
-Eon GenAI Agent — google-genai SDK 기반 운명 감사 에이전트
+Eon GenAI Agent — Groq SDK 기반 운명 감사 에이전트
 
-Gemini API의 네이티브 Function Calling 지원을 활용하여
+Groq API를 활용하여 Llama 3 등을 백엔드로 사용하며,
 사주 분석 함수를 직접 도구로 바인딩하고 대화형 감사 리포트를 작성합니다.
 """
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import sys
 
@@ -14,8 +15,7 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 from eon_mcp_server import analyze_entropy, scan_topology, fuzz_luck_vulnerabilities, backtrace_root_cause
 
-from google import genai
-from google.genai import types
+from groq import AsyncGroq
 
 SYSTEM_INSTRUCTIONS = """당신은 'Eon Destiny Security Agency'의 수석 에이전트 분석관입니다.
 당신의 임무는 분석 대상 사주 시스템을 CS(Computer Science) 방식으로 심층 감사하는 것입니다.
@@ -55,6 +55,162 @@ SYSTEM_INSTRUCTIONS = """당신은 'Eon Destiny Security Agency'의 수석 에�
 
 항상 한국어로 답변하세요."""
 
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "analyze_entropy",
+            "description": "사주의 에너지 난독화 등급 및 엔트로피 점수를 분석합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "year": {"type": "integer", "description": "출생 연도 (양력)"},
+                    "month": {"type": "integer", "description": "출생 월"},
+                    "day": {"type": "integer", "description": "출생 일"},
+                    "hour": {"type": "integer", "description": "출생 시 (0~23)"}
+                },
+                "required": ["year", "month", "day", "hour"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "scan_topology",
+            "description": "오행 네트워크의 트래픽 흐름, 대역폭 및 병목 구간을 분석합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "year": {"type": "integer", "description": "출생 연도 (양력)"},
+                    "month": {"type": "integer", "description": "출생 월"},
+                    "day": {"type": "integer", "description": "출생 일"},
+                    "hour": {"type": "integer", "description": "출생 시 (0~23)"}
+                },
+                "required": ["year", "month", "day", "hour"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "fuzz_luck_vulnerabilities",
+            "description": "특정 대운 컨텍스트에서 발생할 수 있는 취약점(크래시)를 탐색합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "year": {"type": "integer"},
+                    "month": {"type": "integer"},
+                    "day": {"type": "integer"},
+                    "hour": {"type": "integer"},
+                    "is_male": {"type": "boolean"},
+                    "major_ganzi_index": {"type": "integer", "description": "대운 간지 인덱스 (0~59)"}
+                },
+                "required": ["year", "month", "day", "hour"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "backtrace_root_cause",
+            "description": "특정 나이의 특정 상태에 대한 근본 원인을 역추적합니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "year": {"type": "integer"},
+                    "month": {"type": "integer"},
+                    "day": {"type": "integer"},
+                    "hour": {"type": "integer"},
+                    "target_age": {"type": "integer"},
+                    "target_tag": {"type": "string", "description": "추적할 태그 (예: '기신', '충', '형')"}
+                },
+                "required": ["year", "month", "day", "hour", "target_age"]
+            }
+        }
+    }
+]
+
+AVAILABLE_FUNCTIONS = {
+    "analyze_entropy": analyze_entropy,
+    "scan_topology": scan_topology,
+    "fuzz_luck_vulnerabilities": fuzz_luck_vulnerabilities,
+    "backtrace_root_cause": backtrace_root_cause,
+}
+
+async def execute_tools(messages, client, model="llama-3.3-70b-versatile"):
+    """
+    도구 호출 루프를 실행하여 최종 응답을 얻습니다.
+    """
+    max_loops = 10
+    loops = 0
+    while loops < max_loops:
+        response = await client.chat.completions.create(
+            model=model,
+            messages=messages,
+            tools=TOOLS,
+            tool_choice="auto",
+        )
+        
+        response_message = response.choices[0].message
+        
+        # Groq SDK에서 message 객체를 dict로 변환 (tool_calls가 없을 수 있음)
+        msg_dict = {
+            "role": response_message.role,
+        }
+        if response_message.content:
+            msg_dict["content"] = response_message.content
+            
+        if response_message.tool_calls:
+            msg_dict["tool_calls"] = [
+                {
+                    "id": tc.id,
+                    "type": tc.type,
+                    "function": {
+                        "name": tc.function.name,
+                        "arguments": tc.function.arguments,
+                    }
+                } for tc in response_message.tool_calls
+            ]
+            
+        messages.append(msg_dict)
+        
+        if not response_message.tool_calls:
+            # 도구 호출이 끝나면 리포트 완료
+            return response_message.content or "", messages
+
+        # 도구 실행
+        for tool_call in response_message.tool_calls:
+            function_name = tool_call.function.name
+            function_to_call = AVAILABLE_FUNCTIONS.get(function_name)
+            if function_to_call:
+                try:
+                    function_args = json.loads(tool_call.function.arguments)
+                    function_response = function_to_call(**function_args)
+                    messages.append({
+                        "tool_call_id": tool_call.id,
+                        "role": "tool",
+                        "name": function_name,
+                        "content": json.dumps(function_response, ensure_ascii=False),
+                    })
+                except Exception as e:
+                    messages.append({
+                        "tool_call_id": tool_call.id,
+                        "role": "tool",
+                        "name": function_name,
+                        "content": json.dumps({"error": str(e)}, ensure_ascii=False),
+                    })
+            else:
+                messages.append({
+                    "tool_call_id": tool_call.id,
+                    "role": "tool",
+                    "name": function_name,
+                    "content": json.dumps({"error": f"Unknown function {function_name}"}),
+                })
+        
+        loops += 1
+
+    return "도구 호출이 너무 많아 종료되었습니다.", messages
+
 
 async def run_audit(
     year: int,
@@ -66,32 +222,9 @@ async def run_audit(
     birth_name: str = "분석 대상",
 ) -> tuple[str, list[dict]]:
     """
-    Gemini 에이전트를 실행하여 사주 감사 리포트와 대화 기록을 생성합니다.
-
-    Args:
-        year: 출생 연도 (양력)
-        month: 출생 월
-        day: 출생 일
-        hour: 출생 시 (0~23)
-        is_male: 남성 여부
-        api_key: Gemini API 키
-        birth_name: 분석 대상자 이름 (선택)
-
-    Returns:
-        tuple[str, list[dict]]: (마크다운 형식의 감사 리포트, 직렬화된 대화 기록)
+    Groq 에이전트를 실행하여 사주 감사 리포트와 대화 기록을 생성합니다.
     """
-    client = genai.Client(api_key=api_key)
-
-    # 파이썬 함수를 직접 도구로 주입
-    tools = [analyze_entropy, scan_topology, fuzz_luck_vulnerabilities, backtrace_root_cause]
-
-    chat = client.chats.create(
-        model="gemini-2.0-flash",
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_INSTRUCTIONS,
-            tools=tools,
-        )
-    )
+    client = AsyncGroq(api_key=api_key)
 
     gender_str = "남성" if is_male else "여성"
     prompt = f"""
@@ -110,15 +243,13 @@ async def run_audit(
 모든 데이터 수집 후 마크다운 형식의 완전한 감사 리포트를 작성해 주세요.
 """
 
-    loop = asyncio.get_running_loop()
-    response = await loop.run_in_executor(
-        None,
-        lambda: chat.send_message(prompt)
-    )
-    
-    report = response.text
-    history = [h.model_dump() for h in chat.get_history()]
-    return report, history
+    messages = [
+        {"role": "system", "content": SYSTEM_INSTRUCTIONS},
+        {"role": "user", "content": prompt}
+    ]
+
+    report, final_history = await execute_tools(messages, client)
+    return report, final_history
 
 
 async def run_chat(
@@ -129,37 +260,25 @@ async def run_chat(
     """
     기존 대화 기록을 기반으로 사용자의 추가 질문에 답변합니다.
     """
-    client = genai.Client(api_key=api_key)
-    tools = [analyze_entropy, scan_topology, fuzz_luck_vulnerabilities, backtrace_root_cause]
+    client = AsyncGroq(api_key=api_key)
 
-    # Content 객체 복원
-    history_objects = [types.Content(**item) for item in history_data]
+    messages = []
+    # system instruction이 없으면 추가
+    if not any(m.get("role") == "system" for m in history_data):
+        messages.append({"role": "system", "content": SYSTEM_INSTRUCTIONS})
+        
+    messages.extend(history_data)
+    messages.append({"role": "user", "content": message})
 
-    chat = client.chats.create(
-        model="gemini-2.0-flash",
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_INSTRUCTIONS,
-            tools=tools,
-        ),
-        history=history_objects,
-    )
-
-    loop = asyncio.get_running_loop()
-    response = await loop.run_in_executor(
-        None,
-        lambda: chat.send_message(message)
-    )
-
-    reply = response.text
-    updated_history = [h.model_dump() for h in chat.get_history()]
-    return reply, updated_history
+    reply, final_history = await execute_tools(messages, client)
+    return reply, final_history
 
 
 if __name__ == "__main__":
     # 로컬 테스트용 실행
-    api_key = os.environ.get("GEMINI_API_KEY", "")
+    api_key = os.environ.get("GROQ_API_KEY", "")
     if not api_key:
-        print("GEMINI_API_KEY 환경 변수를 설정해주세요.", file=sys.stderr)
+        print("GROQ_API_KEY 환경 변수를 설정해주세요.", file=sys.stderr)
         sys.exit(1)
 
     result, history = asyncio.run(

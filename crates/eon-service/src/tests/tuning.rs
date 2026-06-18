@@ -40,21 +40,17 @@ mod tests {
             };
 
             let vedic_input = VedicAnalysisInput::new(
-                birth.year, birth.month, birth.day, birth.hour, birth.minute,
-                birth.is_lunar, birth.is_leap_month,
-                birth.lat, birth.lon, birth.timezone.clone(),
-                Some(false), Some(now)
+                birth.clone(),
+                Some(false),
+                Some(now)
             );
 
             let saju_res = facade::analyze_saju(saju_input.clone()).expect("Saju failed");
             let vedic_res = facade::analyze_vedic(vedic_input).expect("Vedic failed");
 
             let transit_res = facade::analyze_transit(TransitAnalysisInput::new(
-                birth.year, birth.month, birth.day, birth.hour, birth.minute,
-                birth.is_lunar, birth.is_leap_month,
-                saju_input.is_male, saju_input.use_night_rat_hour,
-                birth.lon, birth.lat, birth.timezone.clone(),
-                Some(false), Some(now)
+                saju_input.clone(),
+                Some(now)
             )).ok();
 
             let tier_res = facade::analyze_destiny_tier(saju_res, vedic_res, transit_res).unwrap();
