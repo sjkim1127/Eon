@@ -1,4 +1,4 @@
-google-genai
+groq
 mcp
 fastmcp
 pydantic

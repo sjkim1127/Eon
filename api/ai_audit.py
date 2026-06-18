@@ -1,7 +1,7 @@
 """
 Vercel 서버리스 함수 — POST /api/ai-audit
 
-사주 정보와 Gemini API 키를 받아 AGY 에이전트를 실행하고
+사주 정보와 Groq API 키를 받아 AGY 에이전트를 실행하고
 AI 감사 리포트를 반환합니다.
 
 API 키는 클라이언트에서 요청 헤더로 전달받아 서버에 저장하지 않습니다.
@@ -35,10 +35,10 @@ class handler(BaseHTTPRequestHandler):
             self._error(400, f"잘못된 요청 형식: {e}")
             return
 
-        # Gemini API 키: 요청 헤더에서 수신 (서버에 저장하지 않음)
-        api_key = self.headers.get("X-Gemini-Api-Key", "").strip()
+        # Groq API 키: 요청 헤더에서 수신 (서버에 저장하지 않음)
+        api_key = self.headers.get("X-Groq-Api-Key", "").strip()
         if not api_key:
-            self._error(401, "X-Gemini-Api-Key 헤더가 필요합니다.")
+            self._error(401, "X-Groq-Api-Key 헤더가 필요합니다.")
             return
 
         action = data.get("action", "audit")
@@ -128,7 +128,7 @@ class handler(BaseHTTPRequestHandler):
     def _set_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Gemini-Api-Key")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Groq-Api-Key")
 
     def _error(self, code: int, message: str):
         self.send_response(code)

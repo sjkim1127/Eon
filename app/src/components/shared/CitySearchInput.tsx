@@ -95,7 +95,7 @@ export function CitySearchInput({ selectedLabel, onSelect, onError }: CitySearch
     // Fallback: show Korean cities dropdown
     if (useFallback) {
         return (
-            <div className="relative">
+            <div key="fallback" className="relative">
                 <label className="block text-xs text-white/40 mb-1.5 font-medium flex items-center gap-1">
                     <MapPin className="w-3 h-3" /> 출생지
                 </label>
@@ -105,7 +105,7 @@ export function CitySearchInput({ selectedLabel, onSelect, onError }: CitySearch
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3 pr-8 py-2.5 text-white text-sm focus:border-celestial-purple/50 focus:outline-none appearance-none cursor-pointer"
                 >
                     {KOREAN_CITIES.map((city) => (
-                        <option key={city.name} value={city.name} className="bg-gray-900">
+                        <option key={city.name} value={city.name} className="bg-gray-900" translate="no">
                             {city.name}
                         </option>
                     ))}
@@ -122,7 +122,7 @@ export function CitySearchInput({ selectedLabel, onSelect, onError }: CitySearch
     }
 
     return (
-        <div className="relative" ref={containerRef}>
+        <div key="search" className="relative" ref={containerRef}>
             <label className="block text-xs text-white/40 mb-1.5 font-medium flex items-center gap-1">
                 <MapPin className="w-3 h-3" /> 출생지
             </label>
@@ -130,6 +130,7 @@ export function CitySearchInput({ selectedLabel, onSelect, onError }: CitySearch
             {/* Current value display / search toggle */}
             {!isOpen && !query ? (
                 <button
+                    key="display-btn"
                     type="button"
                     onClick={() => {
                         setIsOpen(true);
@@ -138,10 +139,10 @@ export function CitySearchInput({ selectedLabel, onSelect, onError }: CitySearch
                     className="w-full text-left bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm hover:border-celestial-purple/30 focus:border-celestial-purple/50 focus:outline-none transition-colors flex items-center gap-2"
                 >
                     <Search className="w-3.5 h-3.5 text-white/30 shrink-0" />
-                    <span className="truncate">{selectedLabel || "도시 검색..."}</span>
+                    <span className="truncate" translate="no">{selectedLabel || "도시 검색..."}</span>
                 </button>
             ) : (
-                <div className="relative">
+                <div key="input-wrapper" className="relative">
                     <input
                         ref={inputRef}
                         type="text"
@@ -169,10 +170,10 @@ export function CitySearchInput({ selectedLabel, onSelect, onError }: CitySearch
                                 onClick={() => handleSelect(city)}
                                 className="w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-white/10 hover:text-white transition-colors first:rounded-t-xl last:rounded-b-xl border-b border-white/5 last:border-b-0"
                             >
-                                <span className="font-semibold text-white">{city.name}</span>
-                                {city.admin1 && <span className="text-white/40">, {city.admin1}</span>}
-                                <span className="text-white/40">, {city.country}</span>
-                                <span className="text-white/25 text-xs ml-2">
+                                <span className="font-semibold text-white" translate="no">{city.name}</span>
+                                {city.admin1 && <span className="text-white/40" translate="no">, {city.admin1}</span>}
+                                <span className="text-white/40" translate="no">, {city.country}</span>
+                                <span className="text-white/25 text-xs ml-2" translate="no">
                                     ({city.lat.toFixed(2)}, {city.lon.toFixed(2)})
                                 </span>
                             </button>
