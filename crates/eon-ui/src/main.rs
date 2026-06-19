@@ -7,6 +7,7 @@ mod router;
 mod store;
 mod types;
 mod utils;
+mod worker;
 
 use router::Route;
 
