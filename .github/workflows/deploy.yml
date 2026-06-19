@@ -53,6 +53,10 @@ jobs:
           WASI_SDK_PATH: /opt/wasi-sdk
         run: cargo build --target wasm32-unknown-unknown --release
 
+      - name: Build Tailwind CSS
+        working-directory: ./crates/eon-ui
+        run: npx tailwindcss -i ./input.css -o ./public/tailwind.css --minify
+
       - name: Build Dioxus Web App
         working-directory: ./crates/eon-ui
         env:
