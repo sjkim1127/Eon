@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
+use crate::i18n::{t, TK};
 use eon_service::dto::{VedicAnalysisInput, AnalysisInput, VedicCompatibilityInput, VedicCompatibilityOutput};
 use eon_service::facade;
 use eon_vedic::planets::VedicPlanet;
@@ -139,12 +140,208 @@ fn rasi_name_short(rasi: u8) -> &'static str {
     }
 }
 
+// --- Tooltip & Interaction structures ---
+#[derive(Clone, Debug, PartialEq)]
+pub enum VedicTooltipTarget {
+    Planet {
+        name: String,
+        symbol: String,
+        rasi_num: u8,
+        house_num: u8,
+        longitude_str: String,
+        nakshatra_name: String,
+        nakshatra_lord: String,
+        is_retrograde: bool,
+        is_combust: bool,
+        varga_label: String,
+        deity: Option<String>,
+        purpose: Option<String>,
+    },
+    House {
+        house_num: u8,
+        rasi_num: u8,
+        rasi_name: String,
+        rasi_lord: String,
+        score: Option<f64>,
+        varga_label: String,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct VedicTooltipData {
+    pub target: VedicTooltipTarget,
+    pub x: f64,
+    pub y: f64,
+}
+
+fn planet_from_lbl(lbl: &str) -> Option<VedicPlanet> {
+    match lbl {
+        "Su" => Some(VedicPlanet::Sun),
+        "Mo" => Some(VedicPlanet::Moon),
+        "Ma" => Some(VedicPlanet::Mars),
+        "Me" => Some(VedicPlanet::Mercury),
+        "Ju" => Some(VedicPlanet::Jupiter),
+        "Ve" => Some(VedicPlanet::Venus),
+        "Sa" => Some(VedicPlanet::Saturn),
+        "Ra" => Some(VedicPlanet::Rahu),
+        "Ke" => Some(VedicPlanet::Ketu),
+        "Asc" => Some(VedicPlanet::Ascendant),
+        _ => None,
+    }
+}
+
+fn nakshatra_lord_kr(nakshatra_idx: u8) -> &'static str {
+    if nakshatra_idx == 0 || nakshatra_idx > 27 { return "—" }
+    match (nakshatra_idx - 1) % 9 {
+        0 => "케투 (Ketu)",
+        1 => "금성 (Venus)",
+        2 => "태양 (Sun)",
+        3 => "달 (Moon)",
+        4 => "화성 (Mars)",
+        5 => "라후 (Rahu)",
+        6 => "목성 (Jupiter)",
+        7 => "토성 (Saturn)",
+        8 => "수성 (Mercury)",
+        _ => "—"
+    }
+}
+
+fn rasi_lord_kr(rasi_idx: u8) -> &'static str {
+    match rasi_idx {
+        1 => "화성 (Mars)",
+        2 => "금성 (Venus)",
+        3 => "수성 (Mercury)",
+        4 => "달 (Moon)",
+        5 => "태양 (Sun)",
+        6 => "수성 (Mercury)",
+        7 => "금성 (Venus)",
+        8 => "화성 (Mars)",
+        9 => "목성 (Jupiter)",
+        10 => "토성 (Saturn)",
+        11 => "토성 (Saturn)",
+        12 => "목성 (Jupiter)",
+        _ => "—"
+    }
+}
+
+fn get_d1_planet_tooltip(
+    lbl: &str,
+    d1_planets: &[eon_vedic::core::chart::VedicPosition],
+    d1_ascendant: &eon_vedic::core::chart::VedicPosition,
+    varga_label: &str,
+) -> Option<VedicTooltipTarget> {
+    let p_opt = planet_from_lbl(lbl);
+    if let Some(planet) = p_opt {
+        let pos = if planet == VedicPlanet::Ascendant {
+            d1_ascendant
+        } else {
+            d1_planets.iter().find(|p| p.planet == planet)?
+        };
+        
+        let nak_name = nakshatra_name(pos.nakshatra);
+        let nak_lord = nakshatra_lord_kr(pos.nakshatra);
+        
+        let planet_name = planet_name_kr(pos.planet).to_string();
+        let deg_within_sign = pos.sidereal_deg % 30.0;
+        let deg_floor = deg_within_sign.floor() as i32;
+        let min_val = ((deg_within_sign - deg_floor as f64) * 60.0).round() as i32;
+        let longitude_str = format!("{}° {:02}'", deg_floor, min_val);
+
+        Some(VedicTooltipTarget::Planet {
+            name: planet_name,
+            symbol: lbl.to_string(),
+            rasi_num: pos.rasi,
+            house_num: pos.house_index,
+            longitude_str,
+            nakshatra_name: format!("{} ({}단계)", nak_name, pos.pada),
+            nakshatra_lord: nak_lord.to_string(),
+            is_retrograde: pos.is_retrograde,
+            is_combust: pos.is_combust,
+            varga_label: varga_label.to_string(),
+            deity: None,
+            purpose: None,
+        })
+    } else {
+        None
+    }
+}
+
+fn get_varga_planet_tooltip(
+    lbl: &str,
+    rows: &[eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReportRow],
+    varga_label: &str,
+) -> Option<VedicTooltipTarget> {
+    let row = rows.iter().find(|r| {
+        let r_lbl = match r.planet.as_str() {
+            "Sun" | "Surya" => "Su",
+            "Moon" | "Chandra" => "Mo",
+            "Mars" | "Mangala" => "Ma",
+            "Mercury" | "Budha" => "Me",
+            "Jupiter" | "Guru" => "Ju",
+            "Venus" | "Shukra" => "Ve",
+            "Saturn" | "Shani" => "Sa",
+            "Rahu" => "Ra",
+            "Ketu" => "Ke",
+            "Lagna" | "Ascendant" => "Asc",
+            _ => "",
+        };
+        r_lbl == lbl
+    })?;
+
+    let p_name_kr = planet_name_kr_str(&row.planet).to_string();
+
+    Some(VedicTooltipTarget::Planet {
+        name: p_name_kr,
+        symbol: lbl.to_string(),
+        rasi_num: row.sign,
+        house_num: row.house,
+        longitude_str: row.position_str.clone(),
+        nakshatra_name: format!("{} ({}단계)", row.nakshatra_name, row.pada),
+        nakshatra_lord: planet_name_kr_str(&row.nakshatra_lord).to_string(),
+        is_retrograde: row.is_retrograde,
+        is_combust: row.is_combust,
+        varga_label: varga_label.to_string(),
+        deity: Some(row.deity.clone()),
+        purpose: Some(row.purpose.clone()),
+    })
+}
+
+fn get_house_tooltip(
+    house_num: u8,
+    lagna_rasi: u8,
+    varga_label: &str,
+    bhava_strengths: Option<&[eon_vedic::analysis::bhava::BhavaStrength]>,
+) -> Option<VedicTooltipTarget> {
+    let rasi_num = (lagna_rasi + house_num - 2) % 12 + 1;
+    let rasi_name_str = rasi_name(rasi_num).to_string();
+    let rasi_lord = rasi_lord_kr(rasi_num).to_string();
+    
+    let score = bhava_strengths.and_then(|strengths| {
+        strengths.iter().find(|s| s.house == house_num).map(|s| s.total_score)
+    });
+
+    Some(VedicTooltipTarget::House {
+        house_num,
+        rasi_num,
+        rasi_name: rasi_name_str,
+        rasi_lord,
+        score,
+        varga_label: varga_label.to_string(),
+    })
+}
+
 fn render_vedic_chart(
     rasi_planets: &[Vec<(&'static str, &'static str)>],
     house_planets: &[Vec<(&'static str, &'static str)>],
     lagna_rasi: u8,
     style: &str,
     chart_title: &str,
+    active_tooltip: Signal<Option<VedicTooltipData>>,
+    selected_detail: Signal<Option<VedicTooltipData>>,
+    varga_rows: Option<&[eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReportRow]>,
+    d1_planets: Option<&[eon_vedic::core::chart::VedicPosition]>,
+    d1_ascendant: Option<&eon_vedic::core::chart::VedicPosition>,
+    bhava_strengths: Option<&[eon_vedic::analysis::bhava::BhavaStrength]>,
 ) -> Element {
     if style == "north" {
         let house_bounds = [
@@ -223,6 +420,19 @@ fn render_vedic_chart(
                     let sign_num = (lagna_rasi + h_idx as u8 - 2) % 12 + 1;
                     let (_, s_x, s_y) = sign_coords[h_idx];
                     let h_planets = &house_planets[h_idx];
+                    
+                    let house_target = get_house_tooltip(h_idx as u8, lagna_rasi, chart_title, bhava_strengths);
+                    
+                    let mut active_tooltip_text = active_tooltip.clone();
+                    let mut active_tooltip_fo = active_tooltip.clone();
+                    let mut selected_detail_text = selected_detail.clone();
+                    let mut selected_detail_fo = selected_detail.clone();
+                    
+                    let house_target_hover_text = house_target.clone();
+                    let house_target_hover_fo = house_target.clone();
+                    let house_target_click_text = house_target.clone();
+                    let house_target_click_fo = house_target.clone();
+                    
                     rsx! {
                         text {
                             x: "{s_x}",
@@ -231,6 +441,28 @@ fn render_vedic_chart(
                             font_size: "10px",
                             font_weight: "bold",
                             fill: "#475569",
+                            class: "cursor-pointer hover:fill-blue-400 transition-colors",
+                            onmouseenter: move |e| {
+                                if let Some(target) = &house_target_hover_text {
+                                    let coords = e.client_coordinates();
+                                    *active_tooltip_text.write() = Some(VedicTooltipData {
+                                        target: target.clone(),
+                                        x: coords.x,
+                                        y: coords.y,
+                                    });
+                                }
+                            },
+                            onmouseleave: move |_| *active_tooltip_text.write() = None,
+                            onclick: move |e| {
+                                if let Some(target) = &house_target_click_text {
+                                    let coords = e.client_coordinates();
+                                    *selected_detail_text.write() = Some(VedicTooltipData {
+                                        target: target.clone(),
+                                        x: coords.x,
+                                        y: coords.y,
+                                    });
+                                }
+                            },
                             "{sign_num}"
                         }
                         foreignObject {
@@ -238,9 +470,71 @@ fn render_vedic_chart(
                             y: "{box_y}",
                             width: "{box_w}",
                             height: "{box_h}",
+                            class: "cursor-pointer rounded hover:bg-slate-800/10 transition-colors",
+                            onmouseenter: move |e| {
+                                if let Some(target) = &house_target_hover_fo {
+                                    let coords = e.client_coordinates();
+                                    *active_tooltip_fo.write() = Some(VedicTooltipData {
+                                        target: target.clone(),
+                                        x: coords.x,
+                                        y: coords.y,
+                                    });
+                                }
+                            },
+                            onmouseleave: move |_| *active_tooltip_fo.write() = None,
+                            onclick: move |e| {
+                                if let Some(target) = &house_target_click_fo {
+                                    let coords = e.client_coordinates();
+                                    *selected_detail_fo.write() = Some(VedicTooltipData {
+                                        target: target.clone(),
+                                        x: coords.x,
+                                        y: coords.y,
+                                    });
+                                }
+                            },
                             div { class: "flex flex-wrap justify-center items-center gap-1 p-0.5 h-full",
-                                {h_planets.iter().map(|&(lbl, color_cls)| rsx! {
-                                    span { class: "{color_cls} text-[9px] bg-slate-950/80 border border-slate-900/60 px-1 py-0.5 rounded", "{lbl}" }
+                                {h_planets.iter().map(|&(lbl, color_cls)| {
+                                    let planet_target = if let Some(rows) = varga_rows {
+                                        get_varga_planet_tooltip(lbl, rows, chart_title)
+                                    } else if let (Some(planets), Some(asc)) = (d1_planets, d1_ascendant) {
+                                        get_d1_planet_tooltip(lbl, planets, asc, chart_title)
+                                    } else {
+                                        None
+                                    };
+                                    
+                                    let mut active_tooltip_clone_p = active_tooltip.clone();
+                                    let mut selected_detail_clone_p = selected_detail.clone();
+                                    let planet_target_hover = planet_target.clone();
+                                    let planet_target_click = planet_target.clone();
+                                    
+                                    rsx! {
+                                        span { 
+                                            class: "{color_cls} text-[9px] bg-slate-950/80 border border-slate-900/60 px-1 py-0.5 rounded cursor-pointer hover:bg-slate-800 hover:border-slate-700 transition-all", 
+                                            onmouseenter: move |e| {
+                                                if let Some(target) = &planet_target_hover {
+                                                    let coords = e.client_coordinates();
+                                                    *active_tooltip_clone_p.write() = Some(VedicTooltipData {
+                                                        target: target.clone(),
+                                                        x: coords.x,
+                                                        y: coords.y,
+                                                    });
+                                                }
+                                            },
+                                            onmouseleave: move |_| *active_tooltip_clone_p.write() = None,
+                                            onclick: move |e| {
+                                                e.stop_propagation();
+                                                if let Some(target) = &planet_target_click {
+                                                    let coords = e.client_coordinates();
+                                                    *selected_detail_clone_p.write() = Some(VedicTooltipData {
+                                                        target: target.clone(),
+                                                        x: coords.x,
+                                                        y: coords.y,
+                                                    });
+                                                }
+                                            },
+                                            "{lbl}" 
+                                        }
+                                    }
                                 })}
                             }
                         }
@@ -308,6 +602,16 @@ fn render_vedic_chart(
                     let bg_color = if is_lagna { "#131e35" } else { "#0b0f19" };
                     let border_color = if is_lagna { "#38bdf8" } else { "#1e293b" };
                     let r_planets = &rasi_planets[r_id as usize];
+                    
+                    let house_num = (r_id as i16 - lagna_rasi as i16 + 12) % 12 + 1;
+                    
+                    let house_target = get_house_tooltip(house_num as u8, lagna_rasi, chart_title, bhava_strengths);
+                    
+                    let mut active_tooltip_clone = active_tooltip.clone();
+                    let mut selected_detail_clone = selected_detail.clone();
+                    let house_target_hover = house_target.clone();
+                    let house_target_click = house_target.clone();
+                    
                     rsx! {
                         rect {
                             x: "{cell_x}",
@@ -316,18 +620,81 @@ fn render_vedic_chart(
                             height: "100",
                             fill: "{bg_color}",
                             stroke: "{border_color}",
-                            stroke_width: "1.5"
+                            stroke_width: "1.5",
+                            class: "cursor-pointer hover:fill-slate-800/20 transition-colors",
+                            onmouseenter: move |e| {
+                                if let Some(target) = &house_target_hover {
+                                    let coords = e.client_coordinates();
+                                    *active_tooltip_clone.write() = Some(VedicTooltipData {
+                                        target: target.clone(),
+                                        x: coords.x,
+                                        y: coords.y,
+                                    });
+                                }
+                            },
+                            onmouseleave: move |_| *active_tooltip_clone.write() = None,
+                            onclick: move |e| {
+                                if let Some(target) = &house_target_click {
+                                    let coords = e.client_coordinates();
+                                    *selected_detail_clone.write() = Some(VedicTooltipData {
+                                        target: target.clone(),
+                                        x: coords.x,
+                                        y: coords.y,
+                                    });
+                                }
+                            }
                         }
                         foreignObject {
                             x: "{cell_x}",
                             y: "{cell_y}",
                             width: "100",
                             height: "100",
+                            pointer_events: "none",
                             div { class: "p-1.5 flex flex-col justify-between h-full select-none",
                                 span { class: "text-[9px] text-slate-500 font-bold", "{rasi_name_short(r_id)}" }
-                                div { class: "grid grid-cols-2 gap-x-1 gap-y-0.5 text-[9px]",
-                                    {r_planets.iter().map(|&(lbl, color_cls)| rsx! {
-                                        span { class: "{color_cls} text-center bg-slate-950/40 border border-slate-900/30 rounded py-0.5", "{lbl}" }
+                                div { class: "grid grid-cols-2 gap-x-1 gap-y-0.5 text-[9px] pointer-events-auto",
+                                    {r_planets.iter().map(|&(lbl, color_cls)| {
+                                        let planet_target = if let Some(rows) = varga_rows {
+                                            get_varga_planet_tooltip(lbl, rows, chart_title)
+                                        } else if let (Some(planets), Some(asc)) = (d1_planets, d1_ascendant) {
+                                            get_d1_planet_tooltip(lbl, planets, asc, chart_title)
+                                        } else {
+                                            None
+                                        };
+                                        
+                                        let mut active_tooltip_clone_p = active_tooltip.clone();
+                                        let mut selected_detail_clone_p = selected_detail.clone();
+                                        let planet_target_hover = planet_target.clone();
+                                        let planet_target_click = planet_target.clone();
+                                        
+                                        rsx! {
+                                            span { 
+                                                class: "{color_cls} text-center bg-slate-950/40 border border-slate-900/30 rounded py-0.5 cursor-pointer hover:bg-slate-800 transition-all", 
+                                                onmouseenter: move |e| {
+                                                    if let Some(target) = &planet_target_hover {
+                                                        let coords = e.client_coordinates();
+                                                        *active_tooltip_clone_p.write() = Some(VedicTooltipData {
+                                                            target: target.clone(),
+                                                            x: coords.x,
+                                                            y: coords.y,
+                                                        });
+                                                    }
+                                                },
+                                                onmouseleave: move |_| *active_tooltip_clone_p.write() = None,
+                                                onclick: move |e| {
+                                                    e.stop_propagation();
+                                                    if let Some(target) = &planet_target_click {
+                                                        let coords = e.client_coordinates();
+                                                        *selected_detail_clone_p.write() = Some(VedicTooltipData {
+                                                            target: target.clone(),
+                                                            x: coords.x,
+                                                            y: coords.y,
+                                                        });
+                                                    }
+                                                },
+                                                "{lbl}" 
+                                            }
+                                        }
                                     })}
                                 }
                             }
@@ -339,15 +706,249 @@ fn render_vedic_chart(
     }
 }
 
+fn render_detail_card(
+    detail_opt: Signal<Option<VedicTooltipData>>,
+) -> Element {
+    let detail_val = detail_opt.read().clone();
+    if let Some(detail) = detail_val {
+        let mut detail_opt_clear = detail_opt.clone();
+        match detail.target {
+            VedicTooltipTarget::Planet {
+                name,
+                symbol,
+                rasi_num,
+                house_num,
+                longitude_str,
+                nakshatra_name,
+                nakshatra_lord,
+                is_retrograde,
+                is_combust,
+                varga_label,
+                deity,
+                purpose,
+            } => {
+                let sign_name = rasi_name(rasi_num);
+                rsx! {
+                    div { class: "bg-slate-950/60 border border-slate-800 rounded-xl p-4 mt-3 space-y-3.5 shadow-lg animate-in slide-in-from-bottom-2 duration-200 relative overflow-hidden",
+                        div { class: "absolute -right-4 -bottom-4 text-slate-800/10 text-7xl font-bold select-none", "{symbol}" }
+                        
+                        div { class: "flex justify-between items-center border-b border-slate-900 pb-2",
+                            div { class: "flex items-center gap-2",
+                                span { class: "px-2 py-0.5 rounded text-[10px] bg-blue-950/50 text-blue-400 border border-blue-900/30 font-semibold", "{varga_label}" }
+                                h4 { class: "font-bold text-slate-200 text-sm", "{name} 상세 정보" }
+                            }
+                            button {
+                                class: "text-slate-500 hover:text-slate-300 text-xs transition-colors p-1",
+                                onclick: move |_| *detail_opt_clear.write() = None,
+                                "닫기 ✕"
+                            }
+                        }
+                        
+                        div { class: "grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs",
+                            div { class: "space-y-0.5",
+                                span { class: "text-slate-500 text-[10px] block", "위치" }
+                                span { class: "text-slate-300 font-medium", "{sign_name} / {house_num}하우스" }
+                            }
+                            div { class: "space-y-0.5",
+                                span { class: "text-slate-500 text-[10px] block", "정밀 황경 (Longitude)" }
+                                span { class: "text-slate-300 font-mono font-medium", "{longitude_str}" }
+                            }
+                            div { class: "space-y-0.5",
+                                span { class: "text-slate-500 text-[10px] block", "나크샤트라 (Nakshatra)" }
+                                span { class: "text-slate-300 font-medium", "{nakshatra_name}" }
+                            }
+                            div { class: "space-y-0.5",
+                                span { class: "text-slate-500 text-[10px] block", "나크샤트라 지배성" }
+                                span { class: "text-indigo-400 font-medium", "{nakshatra_lord}" }
+                            }
+                            if let Some(d) = deity {
+                                div { class: "space-y-0.5",
+                                    span { class: "text-slate-500 text-[10px] block", "수호신 (Deity)" }
+                                    span { class: "text-amber-400 font-semibold", "{d}" }
+                                }
+                            }
+                            if is_retrograde || is_combust {
+                                div { class: "space-y-0.5",
+                                    span { class: "text-slate-500 text-[10px] block", "특수 상태" }
+                                    div { class: "flex gap-1",
+                                        if is_retrograde {
+                                            span { class: "px-1.5 py-0.5 rounded text-[9px] bg-purple-950 text-purple-400 border border-purple-900/40 font-bold", "역행" }
+                                        }
+                                        if is_combust {
+                                            span { class: "px-1.5 py-0.5 rounded text-[9px] bg-orange-950 text-orange-400 border border-orange-900/40 font-bold", "태비(연소)" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if let Some(p) = &purpose {
+                            if !p.is_empty() {
+                                div { class: "border-t border-slate-900 pt-2.5 text-xs text-slate-400 leading-normal max-w-full whitespace-normal",
+                                    span { class: "text-slate-500 text-[10px] block mb-1", "우주적 의미 & 길흉 해석" }
+                                    "{p}"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            VedicTooltipTarget::House {
+                house_num,
+                rasi_num: _,
+                rasi_name,
+                rasi_lord,
+                score,
+                varga_label,
+            } => {
+                rsx! {
+                    div { class: "bg-slate-950/60 border border-slate-800 rounded-xl p-4 mt-3 space-y-3 shadow-lg animate-in slide-in-from-bottom-2 duration-200 relative overflow-hidden",
+                        div { class: "absolute -right-4 -bottom-4 text-slate-800/10 text-7xl font-bold select-none", "H{house_num}" }
+                        
+                        div { class: "flex justify-between items-center border-b border-slate-900 pb-2",
+                            div { class: "flex items-center gap-2",
+                                span { class: "px-2 py-0.5 rounded text-[10px] bg-blue-950/50 text-blue-400 border border-blue-900/30 font-semibold", "{varga_label}" }
+                                h4 { class: "font-bold text-slate-200 text-sm", "{house_num}하우스 상세 정보" }
+                            }
+                            button {
+                                class: "text-slate-500 hover:text-slate-300 text-xs transition-colors p-1",
+                                onclick: move |_| *detail_opt_clear.write() = None,
+                                "닫기 ✕"
+                            }
+                        }
+                        
+                        div { class: "grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs",
+                            div { class: "space-y-0.5",
+                                span { class: "text-slate-500 text-[10px] block", "지정 성좌 (Rasi Sign)" }
+                                span { class: "text-slate-300 font-medium", "{rasi_name}" }
+                            }
+                            div { class: "space-y-0.5",
+                                span { class: "text-slate-500 text-[10px] block", "성좌 지배성 (Lord)" }
+                                span { class: "text-indigo-400 font-medium", "{rasi_lord}" }
+                            }
+                            if let Some(s) = score {
+                                div { class: "space-y-0.5",
+                                    span { class: "text-slate-500 text-[10px] block", "하우스 평점 (House Rating)" }
+                                    span { class: "text-emerald-400 font-bold font-mono", "{s:.2} pts" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        rsx! { div {} }
+    }
+}
+
+fn render_floating_tooltip(
+    tooltip_opt: Signal<Option<VedicTooltipData>>,
+) -> Element {
+    let tooltip_val = tooltip_opt.read().clone();
+    if let Some(tooltip) = tooltip_val {
+        let x_px = tooltip.x + 15.0;
+        let y_px = tooltip.y + 15.0;
+        
+        match tooltip.target {
+            VedicTooltipTarget::Planet {
+                name,
+                symbol,
+                rasi_num,
+                house_num,
+                longitude_str,
+                nakshatra_name,
+                nakshatra_lord,
+                is_retrograde,
+                is_combust,
+                varga_label,
+                deity,
+                ..
+            } => {
+                let sign_name = rasi_name(rasi_num);
+                rsx! {
+                    div { 
+                        class: "fixed z-50 bg-slate-950/95 border border-slate-800/80 backdrop-blur-md rounded-lg p-3 shadow-2xl pointer-events-none text-xs text-slate-200 w-[220px] transition-all duration-75 space-y-1.5",
+                        style: "left: {x_px}px; top: {y_px}px;",
+                        div { class: "flex items-center justify-between border-b border-slate-900 pb-1.5",
+                            span { class: "font-bold text-slate-100", "{name} ({symbol})" }
+                            span { class: "text-[9px] text-blue-400 bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-900/30", "{varga_label}" }
+                        }
+                        div { class: "grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]",
+                            span { class: "text-slate-500", "위치:" }
+                            span { class: "text-slate-300 font-medium text-right", "{sign_name} ({house_num}H)" }
+                            span { class: "text-slate-500", "황경:" }
+                            span { class: "text-slate-300 font-mono font-medium text-right", "{longitude_str}" }
+                            span { class: "text-slate-500", "성수(Star):" }
+                            span { class: "text-slate-300 font-medium text-right", "{nakshatra_name}" }
+                            span { class: "text-slate-500", "성수주(Lord):" }
+                            span { class: "text-indigo-400 font-medium text-right", "{nakshatra_lord}" }
+                            if let Some(d) = deity {
+                                if !d.is_empty() {
+                                    span { class: "text-slate-500", "수호신:" }
+                                    span { class: "text-amber-400 font-semibold text-right", "{d}" }
+                                }
+                            }
+                        }
+                        if is_retrograde || is_combust {
+                            div { class: "flex gap-1 pt-1 border-t border-slate-900",
+                                if is_retrograde {
+                                    span { class: "px-1 py-0.5 rounded text-[8px] bg-purple-950 text-purple-400 border border-purple-900/40 font-bold", "역행" }
+                                }
+                                if is_combust {
+                                    span { class: "px-1 py-0.5 rounded text-[8px] bg-orange-950 text-orange-400 border border-orange-900/40 font-bold", "태비" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            VedicTooltipTarget::House {
+                house_num,
+                rasi_num: _,
+                rasi_name,
+                rasi_lord,
+                score,
+                varga_label,
+            } => {
+                rsx! {
+                    div {
+                        class: "fixed z-50 bg-slate-950/95 border border-slate-800/80 backdrop-blur-md rounded-lg p-3 shadow-2xl pointer-events-none text-xs text-slate-200 w-[180px] transition-all duration-75 space-y-1.5",
+                        style: "left: {x_px}px; top: {y_px}px;",
+                        div { class: "flex items-center justify-between border-b border-slate-900 pb-1.5",
+                            span { class: "font-bold text-slate-100", "{house_num}하우스" }
+                            span { class: "text-[9px] text-blue-400 bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-900/30", "{varga_label}" }
+                        }
+                        div { class: "grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]",
+                            span { class: "text-slate-500", "조디악 사인:" }
+                            span { class: "text-slate-300 font-medium text-right", "{rasi_name}" }
+                            span { class: "text-slate-500", "지배성(Lord):" }
+                            span { class: "text-indigo-400 font-medium text-right", "{rasi_lord}" }
+                            if let Some(s) = score {
+                                span { class: "text-slate-500", "하우스 평점:" }
+                                span { class: "text-emerald-400 font-bold font-mono text-right", "{s:.2} pts" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        rsx! { div {} }
+    }
+}
+
 #[component]
 pub fn VedicTab() -> Element {
     let mut state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
     
     // Sub-tab selection state: 0 = Basic D1, 1 = KP System, 2 = Dashas, 3 = Compatibility
     let mut active_subtab = use_signal(|| 0);
     let mut active_reduction_view = use_signal(|| 0);
     let mut chart_style = use_signal(|| "south".to_string());
     let mut varga_chart_style = use_signal(|| "south".to_string());
+    let active_tooltip = use_signal(|| Option::<VedicTooltipData>::None);
+    let selected_detail = use_signal(|| Option::<VedicTooltipData>::None);
 
     // Compatibility form states
     let mut partner_year = use_signal(|| 1992);
@@ -431,12 +1032,12 @@ pub fn VedicTab() -> Element {
 
             div { class: "flex justify-between items-center",
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-blue-200 to-indigo-400 bg-clip-text text-transparent",
-                    "베딕 점성학 (Vedic Astrology)"
+                    "{t(locale, TK::SectionVedicChart)}"
                 }
                 button {
                     class: "px-5 py-2.5 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 rounded-xl font-semibold text-white shadow-lg shadow-blue-900/30 transition-all duration-200 active:scale-95",
                     onclick: run_analysis,
-                    "🔭 차트 생성"
+                    "{t(locale, TK::BtnCalculate)} 🔭"
                 }
             }
 
@@ -444,17 +1045,17 @@ pub fn VedicTab() -> Element {
                 TaskStatus::Idle => rsx! {
                     div { class: "flex flex-col items-center justify-center py-20 gap-3 text-slate-500",
                         span { class: "text-5xl", "🪐" }
-                        p { class: "text-lg font-medium", "출생 정보를 입력하고 차트를 생성하세요." }
+                        p { class: "text-lg font-medium", "{t(locale, TK::StatusIdleHint)}" }
                     }
                 },
                 TaskStatus::Loading => rsx! {
                     div { class: "flex flex-col items-center justify-center py-20 gap-3",
                         div { class: "w-12 h-12 rounded-full border-4 border-blue-500/30 border-t-blue-400 animate-spin" }
-                        p { class: "text-blue-400 font-medium animate-pulse", "천문 계산 중... (Swiss Ephemeris)" }
+                        p { class: "text-blue-400 font-medium animate-pulse", "{t(locale, TK::StatusLoadingVedic)}" }
                     }
                 },
                 TaskStatus::Error(e) => rsx! {
-                    div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400", "오류: {e}" }
+                    div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400", "{t(locale, TK::StatusError)}: {e}" }
                 },
                 TaskStatus::Success => {
                     if let Some(data) = &state.vedic.read().data {
@@ -676,8 +1277,23 @@ pub fn VedicTab() -> Element {
                                                             }
                                                         }
                                                     }
-                                                    div { class: "py-2 flex justify-center",
-                                                        {render_vedic_chart(&rasi_planets, &house_planets, data.chart.ascendant.rasi, &cur_style, "Rasi D1")}
+                                                                                    div { class: "py-2 flex flex-col items-center justify-center w-full",
+                                                        {render_vedic_chart(
+                                                            &rasi_planets,
+                                                            &house_planets,
+                                                            data.chart.ascendant.rasi,
+                                                            &cur_style,
+                                                            "Rasi D1",
+                                                            active_tooltip,
+                                                            selected_detail,
+                                                            None,
+                                                            Some(&data.chart.planets),
+                                                            Some(&data.chart.ascendant),
+                                                            Some(&data.chart.bhava_strengths),
+                                                        )}
+                                                        div { class: "w-full max-w-[400px] mx-auto",
+                                                            {render_detail_card(selected_detail)}
+                                                        }
                                                     }
                                                 }
                                             }
@@ -1948,8 +2564,23 @@ pub fn VedicTab() -> Element {
                                                                     }
                                                                 }
                                                             }
-                                                            div { class: "py-2 flex justify-center",
-                                                                {render_vedic_chart(&v_rasi_planets, &v_house_planets, v_report.lagna_rasi, &cur_v_style, &v_report.varga_label)}
+                                                                                            div { class: "py-2 flex flex-col items-center justify-center w-full",
+                                                                {render_vedic_chart(
+                                                                    &v_rasi_planets,
+                                                                    &v_house_planets,
+                                                                    v_report.lagna_rasi,
+                                                                    &cur_v_style,
+                                                                    &v_report.varga_label,
+                                                                    active_tooltip,
+                                                                    selected_detail,
+                                                                    Some(&v_report.rows),
+                                                                    None,
+                                                                    None,
+                                                                    None,
+                                                                )}
+                                                                div { class: "w-full max-w-[400px] mx-auto",
+                                                                    {render_detail_card(selected_detail)}
+                                                                }
                                                             }
                                                         }
 
@@ -2235,6 +2866,7 @@ pub fn VedicTab() -> Element {
                                 },
                                 _ => rsx! { div {} }
                             }
+                            {render_floating_tooltip(active_tooltip)}
                         }
                     } else {
                         rsx! { div {} }

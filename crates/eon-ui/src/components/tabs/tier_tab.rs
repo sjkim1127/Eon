@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
+use crate::i18n::{t, TK};
 use eon_service::dto::{AnalysisInput, SajuAnalysisInput, VedicAnalysisInput};
 use eon_service::facade;
 
@@ -8,6 +9,7 @@ use crate::components::shared::birth_form::BirthForm;
 #[component]
 pub fn TierTab() -> Element {
     let mut state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
 
     let run_analysis = move |_| {
         spawn(async move {
@@ -69,12 +71,12 @@ pub fn TierTab() -> Element {
 
             div { class: "flex justify-between items-center",
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-yellow-200 to-amber-500 bg-clip-text text-transparent",
-                    "데스티니 티어 (Destiny Tier)"
+                    "{t(locale, TK::TierTitle)}"
                 }
                 button {
                     class: "px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-semibold text-white shadow-lg shadow-orange-900/30 transition-all duration-200 active:scale-95",
                     onclick: run_analysis,
-                    "👑 티어 산출"
+                    "👑 {t(locale, TK::BtnCalculate)}"
                 }
             }
             
@@ -82,18 +84,17 @@ pub fn TierTab() -> Element {
                 TaskStatus::Idle => rsx! {
                     div { class: "flex flex-col items-center justify-center py-20 gap-3 text-slate-500",
                         span { class: "text-5xl", "⚖️" }
-                        p { class: "text-lg font-medium", "출생 정보를 바탕으로 운명의 잠재력 티어를 평가합니다." }
-                        p { class: "text-sm text-slate-600", "사주 점수, 베딕 점수, 운세 점수를 종합하여 SSS~F 등급을 산출합니다." }
+                        p { class: "text-lg font-medium", "{t(locale, TK::StatusIdleHint)}" }
                     }
                 },
                 TaskStatus::Loading => rsx! {
                     div { class: "flex flex-col items-center justify-center py-20 gap-3",
                         div { class: "w-12 h-12 rounded-full border-4 border-amber-500/30 border-t-amber-400 animate-spin" }
-                        p { class: "text-amber-400 font-medium animate-pulse", "운명 티어 심사 중..." }
+                        p { class: "text-amber-400 font-medium animate-pulse", "{t(locale, TK::StatusLoadingTier)}" }
                     }
                 },
                 TaskStatus::Error(e) => rsx! {
-                    div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400", "오류 발생: {e}" }
+                    div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400", "{t(locale, TK::StatusError)}: {e}" }
                 },
                 TaskStatus::Success => {
                     if let Some(data) = &state.tier.read().data {
