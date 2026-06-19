@@ -1,6 +1,8 @@
+#![allow(dead_code)]
+
 use gloo_worker::{HandlerId, Worker, WorkerScope};
 use serde::{Deserialize, Serialize};
-use eon_service::dto::{AnalysisInput, SajuAnalysisInput, VedicAnalysisInput, SajuAnalysisOutput, VedicAnalysisOutput};
+use eon_service::dto::{SajuAnalysisInput, VedicAnalysisInput, SajuAnalysisOutput, VedicAnalysisOutput};
 use eon_service::facade;
 
 #[derive(Serialize, Deserialize)]
