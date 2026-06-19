@@ -79,7 +79,7 @@ pub fn BirthForm() -> Element {
         search_results.set(Vec::new());
         spawn(async move {
             let url = format!(
-                "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=5&accept-language=ko",
+                "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=15&accept-language=ko",
                 urlencoding::encode(&query)
             );
             let client = reqwest::Client::builder()
@@ -121,7 +121,7 @@ pub fn BirthForm() -> Element {
             search_results.set(Vec::new());
             spawn(async move {
                 let url = format!(
-                    "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=5&accept-language=ko",
+                    "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=15&accept-language=ko",
                     urlencoding::encode(&query)
                 );
                 let client = reqwest::Client::new();
