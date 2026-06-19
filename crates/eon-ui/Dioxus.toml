@@ -2,6 +2,7 @@
 name = "eon-ui"
 default_platform = "web"
 out_dir = "target/dx/eon-ui/release/web/public"
+asset_dir = "public"
 
 [web.app]
 title = "Eon: Destiny Engine"
