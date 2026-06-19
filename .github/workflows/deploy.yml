@@ -60,11 +60,13 @@ jobs:
         run: dx build --release --trace
 
       - name: Inject Assets (Post-Build)
+        working-directory: ./crates/eon-ui
         run: |
-          cp ./crates/eon-ui/public/vercel.json ./target/dx/eon-ui/release/web/public/
+          cp ./public/vercel.json ../../target/dx/eon-ui/release/web/public/
           curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64
           chmod +x tailwindcss-linux-x64
-          ./tailwindcss-linux-x64 -i ./crates/eon-ui/input.css -o ./target/dx/eon-ui/release/web/public/tailwind.css --minify
+          ./tailwindcss-linux-x64 -i ./input.css -o ../../target/dx/eon-ui/release/web/public/tailwind.css --minify
+          rm tailwindcss-linux-x64
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v20
