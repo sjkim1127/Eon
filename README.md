@@ -4,32 +4,32 @@
 
 `Eon`은 사주 명리학과 베딕 점성학을 **시스템 공학(System Engineering)** 및 **리버스 엔지니어링(Reverse Engineering)** 의 관점으로 재해석한 차세대 운명 분석 플랫폼입니다. 인생의 데이터를 소스 코드로 간주하고, 이를 실행·디버깅·최적화하는 강력한 툴체인을 제공합니다.
 
-**라이브 데모:** [Vercel 배포](https://eon-sage.vercel.app) | **데스크탑:** Tauri v2 (`npm run tauri dev`)
+**라이브 데모:** [Vercel 배포](https://eon-sage.vercel.app)
 
 ---
 
-## 🏗️ 아키텍처
+## 🏗️ 아키텍처 (100% Rust 기반)
+
+기존 React/Tauri 체제를 모두 걷어내고, 프론트엔드부터 백엔드 엔진까지 **100% Rust 언어(Dioxus Web)** 로 통합 구축되었습니다. 브라우저에서 WASM으로 컴파일되어 구동되며, Vercel을 통해 정적 사이트로 배포됩니다.
 
 ```text
 Eon/
-├── app/                        # 프론트엔드 (React + Vite + TailwindCSS)
-│   ├── src/
-│   │   ├── App.tsx             # 단일 SPA — 6개 탭 (saju / vedic_charts / strength / transit / simulation / destiny_tier)
-│   │   └── utils/backend.ts    # Tauri IPC ↔ WASM 자동 분기 브릿지 (eon-service 기반)
-│   └── src-tauri/src/lib.rs    # Tauri 커맨드 (get_vedic_analysis, get_saju_analysis, get_transit_analysis, get_destiny_tier_analysis)
-│
 ├── crates/
-│   ├── eon-core/               # 공통 타입 (HeavenlyStem, EarthlyBranch, BirthInfo, Location, DST 보정)
-│   ├── eon-data/               # 만세력(萬歲曆) 바이너리 캐시
-│   ├── eon-astro/              # Swiss Ephemeris C API 바인딩 — 초정밀 행성 위치 연산
-│   ├── eon-saju/               # 사주 핵심 엔진 (아래 ⚙️ 섹션 참조)
-│   ├── eon-vedic/              # 베딕 점성학 엔진 (아래 🌌 섹션 참조)
-│   ├── eon-service/            # 통합 Façade 및 DTO (프론트 통신 규격)
-│   └── eon-wasm/               # WASM 번들 — Vercel 배포용 (get_saju_analysis, get_transit_analysis, get_vedic_analysis, get_destiny_tier_analysis)
+│   ├── eon-ui/                 # Dioxus 기반 프론트엔드 (UI & 상태 관리)
+│   │   ├── src/components/     # UI 컴포넌트 (SajuTab, VedicTab, AiTab 등)
+│   │   ├── src/store/          # Dioxus Signal 및 IndexedDB 로컬 저장소 연동
+│   │   ├── src/worker/         # Web Worker (gloo-worker) 백그라운드 연산 분리
+│   │   └── public/             # CSS 자산 및 vercel.json
+│   ├── eon-core/               # 공통 타입 (HeavenlyStem, EarthlyBranch, BirthInfo)
+│   ├── eon-data/               # 만세력(萬歲曆) 바이너리 데이터
+│   ├── eon-astro/              # Swiss Ephemeris C API 바인딩
+│   ├── eon-saju/               # 사주 핵심 엔진 (VM, Fuzzer, Topology 등)
+│   ├── eon-vedic/              # 베딕 점성학 엔진 (Shadbala, Dasha 등)
+│   ├── eon-ai/                 # Groq API 기반 LLM 연동 모듈
+│   └── eon-service/            # 도메인 파사드(Façade) 및 DTO
+├── .github/workflows/          # Vercel CI/CD 배포 파이프라인 (GitHub Actions)
+└── DOCS/                       # 시스템 명세 및 분석 문서
 ```
-
-**Tauri 환경** (데스크탑): `invoke()` → Rust 네이티브 백엔드  
-**Web 환경** (Vercel): `import("eon-wasm")` → WASM 번들 자동 폴백 (동일 API)
 
 ---
 
@@ -48,20 +48,6 @@ Eon/
 | **Qi Topology** | 네트워크 분석 | 오행 에너지 흐름을 트래픽으로 모델링. Throughput / Bottleneck 구간 감지 |
 | **KarmaLoadBalancer** | 부하 분산기 | 운의 급격한 변화(Traffic Spike) 시 시스템 과부하 진단 및 제어 전략 제안 |
 | **Destiny Linter** | 코드 린터 | 사주 구조적 결함을 ERROR/WARN/INFO 레벨로 진단. `SajuLint { code, message, advice }` |
-| **Golden Time Finder** | 슬라이딩 윈도우 | 100년 시뮬레이션 프레임에서 최고 점수 구간(황금기) 자동 추출 |
-| **Cyclomatic Complexity** | 소프트웨어 복잡도 | 사주의 Cyclomatic M 및 Stability Grade 계산 |
-| **CompatibilityAuditor** | IPC/프로세스 | 두 사주의 synergy/conflict 분석 (추후 서비스 분리 예정) |
-
-### 분석 모듈
-
-- **FourPillars**: 사주팔자(四柱八字) 계산 — Swiss Ephemeris 기반 대운(大運) 정밀 산출
-- **StrengthAnalysis**: 신강/신약 4득(得令·得地·得時·得勢) 분석
-- **YongshinAnalysis**: 용신(用神) 및 보조 용신 추천
-- **StructureAnalysis**: 격국(格局) 탐지
-- **SpiritMarkers**: 12신살(神煞) 분석
-- **VoidAnalysis**: 공망(空亡) 분석
-- **TwelveStages**: 12운성(運星) 계산
-- **YearlyLuck / MonthlyLuck**: 세운(歲運) / 월운(月運) — 원국과의 합충형해 관계 포함
 
 ---
 
@@ -69,127 +55,70 @@ Eon/
 
 BPHS(Brihat Parashara Hora Shastra) 표준에 맞춰 구현한 초정밀 베딕 점성학 엔진.
 
-### 차트 계산
-
-- **Rasi 기본 차트 (D1) ~ D144** 16가지 분할 차트(Varga) — 행성 배치, 역행(Retrograde), 연소(Combust) 상태 포함
-- **Jaimini Chara Karakas**: Atmakaraka(영혼) / Amatyakaraka(직업) / Darakaraka(파트너) 산출
-
-### 강도 분석
-
-- **Shadbala**: 행성 전쟁(Yuddha Bala) + 특수 시각 선형 보간으로 Graha Bala 정밀 계산
-- **Bhava Bala**: 하우스 주인(Lord) + 방위(Dig) + Drishti 가중치 결합
-- **Ashtakavarga**: BPHS 표준 bindu 감쇄 동기화 — `Sarvashtakavarga` 12하우스 포인트
-- **Vimshopaka**: 행성별 16 Varga 점수 합산
+### 차트 계산 및 강도 분석
+- **Rasi 기본 차트 (D1) ~ D144** 16가지 분할 차트(Varga) 산출
+- **Shadbala**: 행성 전쟁(Yuddha Bala)을 포함한 6가지 범주 점수 정밀 계산
+- **Bhava Bala & Ashtakavarga**: 하우스 파워 분석 및 Bindu 히트맵
 
 ### 예측 / 관계 분석
-
-- **Vimshottari Dasha**: 다샤 타임라인 (현재 대운 포커스 포함)
-- **Yoga Engine**: Raj Yoga, Dhana Yoga, Parivartana Yoga 등 자동 탐지
-- **Panchanga**: Tithi / Nakshatra / Yoga / Karana (판창가 5요소)
-- **Ashta Kuta 궁합**: 8항목 36점 체계 (엔진 내장, UI 분리)
-- **Sade Sati**: 토성 7.5년 주기 경고
+- **Vimshottari Dasha**: 마하다샤(Mahadasha) 타임라인
+- **Yoga Engine**: Raj Yoga, Dhana Yoga 등 자동 탐지
+- **Panchanga**: 판창가 5요소 및 Sade Sati 분석
 
 ---
 
-## 🖥️ 프론트엔드 화면 구성
+## 🖥️ 프론트엔드 기능
 
-> 웹(Vercel) + 데스크탑(Tauri) 동일 UI. 이중 경로 자동 분기.
+Dioxus Web으로 구현된 UI는 성능 최적화와 사용자 편의성을 위해 **Web Worker**와 **IndexedDB**를 적극적으로 활용합니다.
 
-| 탭 | 표시 데이터 |
+| 탭 | 표시 데이터 및 주요 기능 |
 |----|------------|
-| **사주 분석** | 사주팔자 8글자 · 신강/신약 4득 분석 · 용신/격국 · 12신살 그룹화 · 대운 주화입마 |
-| **베딕 차트** | 통합 대시보드 (Atmakaraka 등) · D1~D144 분할 차트 2×3 그리드 |
-| **역량 및 기운** | Qi Topology 오행 네트워크 · Entropy/DIE 등급 · 취약점 및 Linter 진단 |
-| **현재 운세** | 세출 간지 · 고차라(Gochara) 차트 · 오행 에너지 밸런스 그라데이션 차트 |
-| **생애 시뮬레이션** | 인생 흐름 그래프 (0~100세 점수형) · 생애 프레임 주의 시기 전수조사 |
-| **운명의 티어** | 메타 메트릭 기반 종합 점수 및 등급 뱃지 (S+ ~ D) |
+| **Saju Tab (사주 분석)** | 원국 8글자, 격국/용신, 신강약 분석 패널 |
+| **Vedic Tab (베딕 차트)** | 통합 대시보드, D1~D144 차트 분할 |
+| **Tier Tab (운명의 티어)** | S+ ~ D 등급의 종합 인생 뱃지 시각화 |
+| **Strength Tab (오행 세력)** | 사주 및 베딕의 오행 세력을 막대그래프로 비교 |
+| **Transit Tab (대운 흐름)** | 대운 / 세운 / 마하다샤를 타임라인 테이블로 조회 |
+| **Simulation Tab (생애)** | 0~100세 인생 흐름 및 길흉 그래프 렌더링 |
+| **AI Tab (챗봇)** | GPT/Claude 벤치마킹 프리미엄 대화형 UI 지원 |
+
+> 💡 **특장점**: 사주/베딕 분석과 같은 무거운 연산은 `gloo-worker`를 통해 백그라운드 스레드로 위임되며, 여러 지인들의 생년월일 프로필은 브라우저 내 `IndexedDB`에 무제한으로 저장하여 손쉽게 재로드할 수 있습니다.
 
 ---
 
 ## 🚀 시작하기
 
 ### 필수 조건
-
 - [Rust](https://www.rust-lang.org/) (stable)
-- [Node.js](https://nodejs.org/) 18+
-- [wasm-pack](https://rustwasm.github.io/wasm-pack/) (웹 빌드 시)
-
-### 웹 개발 서버 (WASM)
+- **`dioxus-cli`** (`dx` 명령어 설치 필요)
 
 ```bash
-# 1. WASM 패키지 빌드
-cd crates/eon-wasm
-wasm-pack build --target web --out-dir pkg
-
-# 2. 프론트엔드 실행
-cd ../../app
-npm install
-npm run dev
+# Dioxus CLI 설치
+cargo install dioxus-cli --locked
+# 혹은 더 빠른 설치 (cargo-binstall)
+cargo binstall dioxus-cli -y
 ```
 
-### 데스크탑 앱 (Tauri)
+### 웹 로컬 개발 서버 실행
 
 ```bash
-cd app
-npm install
-npm run tauri dev
+cd crates/eon-ui
+dx serve
 ```
+*브라우저가 열리고 핫 리로드(Hot Reload)가 활성화된 개발 서버가 실행됩니다.*
 
-### Cargo 예제 실행
+### 배포용 WebAssembly 빌드
 
 ```bash
-# 사주 종합 분석 예제
-cargo run --package eon-saju --example verify_user
-
-# 베딕 점성학 검증
-cargo run --package eon-vedic --example verify_vedic
-
-# 데스티니 티어 예제
-cargo run --package eon-service --example tier_calculation
+cd crates/eon-ui
+dx build --release
 ```
+빌드된 정적 리소스(HTML, JS, WASM)는 `target/dx/eon-ui/release/web/public` 폴더에 생성됩니다. GitHub Actions 파이프라인(`.github/workflows/deploy.yml`)이 이 폴더를 Vercel로 자동 배포합니다.
 
 ---
 
-## 🗺️ 구현 현황 및 로드맵
+## 🧩 모듈 의존성 트래픽
 
-### ✅ 완료
-
-- [x] Saju-VM 100년 생애 시뮬레이션 + ESIL 트레이스
-- [x] Destiny TTD Backtrace / Life Diff
-- [x] DIE (Shannon Entropy + Packer 탐지)
-- [x] Destiny Fuzzer (대운×세운 전수 조사)
-- [x] Qi Topology + KarmaLoadBalancer
-- [x] Destiny Linter (ERROR/WARN/INFO)
-- [x] Golden Time Finder
-- [x] 대운 정밀 계산 (Swiss Ephemeris)
-- [x] 세운/월운 + 원국 합충 관계
-- [x] DST / 진태양시 자동 보정 (BirthInfo)
-- [x] Vedic Chart D1~D144 전 계층
-- [x] Shadbala / Bhava Bala / Ashtakavarga / Vimshopaka
-- [x] Vimshottari Dasha / Yoga Engine / Panchanga
-- [x] AI 및 궁합 분석 (엔진 분리 및 경량화 완료)
-- [x] Vercel WASM 배포 연동 및 브릿지 구성
-- [x] Tauri 데스크탑 빌드 및 네이티브 호출
-
-### 🔧 진행 중 / 버그 수정 예정
-
-- [ ] `strength` 탭 `entropy.score` 필드명 버그 수정 (`shannon_entropy` → `score`)
-- [ ] `strength` 탭 Topology 병목 배지 버그 수정 (`node.is_bottleneck` → 최상위 `qi_topology.bottleneck` 비교)
-- [ ] `overview` 탭 Amatyakaraka / Darakaraka 카드 추가
-- [ ] `saju` 탭 생애 시뮬레이션 타임라인 차트 (`simulation_frames` 시각화)
-- [ ] `transit` 탭 세운/월운 합충 뱃지 + 12운성 표시
-- [ ] `strength` 탭 ComplexityAnalysis / DieAnalysis 카드 추가 (API 응답 확장 필요)
-- [ ] `vedic_charts` 탭 역행/연소 배지 + Panchanga 섹션
-
-- [ ] **Yoga 섹션** — `VedicAnalysisReport`에 `yogas` 필드 강화 UI 연동
-- [ ] **Ashtakavarga 그리드** — `chart.sav` 12하우스 히트맵
-- [ ] **eon-service 브릿지 공통화** — WASM & Tauri 요청 DTO의 SSOT 일원화
-
----
-
-## 🧩 크레이트 의존성 그래프
-
-```
+```text
 eon-core ◄─────── eon-data
     ▲                  │
     │            (만세력 캐시)
@@ -198,15 +127,13 @@ eon-astro ◄────────────┘
 eon-saju ──────────────────► eon-ai
 eon-vedic                         │
     │                             │
-    └──────► eon-wasm ◄───────────┘
+    └──────► eon-service ◄────────┘
                  │
-             (WASM pkg)
+              eon-ui (Dioxus Web)
                  │
-    app/src-tauri ◄──── eon-saju
-         │              eon-vedic
-         │              eon-ai
-         ▼
-     App.tsx (React)
+           (WASM / HTML)
+                 ▼
+         Vercel Static Hosting
 ```
 
 ---
