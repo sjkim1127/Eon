@@ -10,6 +10,8 @@ struct NominatimResult {
     display_name: String,
 }
 
+const MAX_SEARCH_RESULTS: usize = 15;
+
 #[component]
 pub fn BirthForm() -> Element {
     let mut state = use_context::<AnalysisState>();
@@ -79,8 +81,9 @@ pub fn BirthForm() -> Element {
         search_results.set(Vec::new());
         spawn(async move {
             let url = format!(
-                "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=15&accept-language=ko",
-                urlencoding::encode(&query)
+                "https://nominatim.openstreetmap.org/search?q={}&format=json&limit={}&accept-language=ko",
+                urlencoding::encode(&query),
+                MAX_SEARCH_RESULTS
             );
             let client = reqwest::Client::builder()
                 .build()
