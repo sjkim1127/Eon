@@ -8,3 +8,8 @@ title = "Eon: Destiny Engine"
 
 [web.resource]
 style = ["tailwind.css"]
+script = []
+
+[web.resource.dev]
+style = ["tailwind.css"]
+script = []
