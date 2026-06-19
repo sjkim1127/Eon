@@ -96,6 +96,7 @@ pub struct VedicChart {
     pub avasthas: Vec<crate::analysis::avasthas::PlanetAvastha>,
     pub panchanga: crate::panchanga::Panchanga,
     pub analysis_report: Option<crate::analysis::report::VedicAnalysisReport>,
+    pub ayanamsa: f64,
 }
 
 pub struct VedicChartCalculator {
@@ -110,6 +111,10 @@ impl Default for VedicChartCalculator {
 }
 
 impl VedicChartCalculator {
+    pub fn engine(&self) -> &AstroEngine {
+        &self.engine
+    }
+
     fn calculate_nakshatra_and_pada(sidereal: f64) -> (u8, u8) {
         let nak_pos = sidereal / (360.0 / 27.0);
         let nakshatra = (nak_pos.floor() as u8) + 1;
@@ -366,6 +371,7 @@ impl VedicChartCalculator {
             avasthas: Vec::new(),
             panchanga,
             analysis_report: None,
+            ayanamsa,
         };
 
         chart.aspects = crate::analysis::aspects::AspectEngine::calculate_aspects(&chart);

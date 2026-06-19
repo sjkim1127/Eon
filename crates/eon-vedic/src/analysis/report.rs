@@ -43,6 +43,8 @@ pub struct VedicAnalysisReport {
     pub varga_interpretations: Vec<VargaInterpretation>,
     pub d9_marriage_analysis: String,
     pub d10_career_analysis: String,
+    #[serde(default)]
+    pub kalachakra_timeline: Vec<crate::prediction::kalachakra::KalaChakraPeriod>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -197,6 +199,13 @@ impl VedicAnalysisReport {
         // Chara Dasha (Jaimini)
         let chara_dasha_timeline = crate::analysis::jaimini::JaiminiEngine::calculate_chara_dasha(chart);
 
+        // Kala Chakra Dasha
+        let kalachakra_timeline = if let Some(m) = moon_pos {
+            crate::prediction::kalachakra::KalaChakraDasha::calculate(m.sidereal_deg, birth_time)
+        } else {
+            Vec::new()
+        };
+
         Self {
             primary_karakas: KarakaSummary {
                 atmakaraka: ak,
@@ -229,6 +238,7 @@ impl VedicAnalysisReport {
             varga_interpretations,
             d9_marriage_analysis,
             d10_career_analysis,
+            kalachakra_timeline,
         }
     }
 }

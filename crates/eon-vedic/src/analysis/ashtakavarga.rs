@@ -431,8 +431,13 @@ mod tests {
                     VedicPlanet::Rahu,
                 ],
                 is_night_birth: false,
+                yogi_point: 0.0,
+                yogi_planet: VedicPlanet::Sun,
+                avayogi_planet: VedicPlanet::Saturn,
+                dagdha_rashis: vec![],
             },
             analysis_report: None,
+            ayanamsa: 23.0,
         }
     }
 

@@ -9,6 +9,10 @@ pub fn analyze_vedic(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, S
     crate::services::vedic::analyze(input)
 }
 
+pub fn analyze_vedic_compatibility(input: VedicCompatibilityInput) -> Result<VedicCompatibilityOutput, ServiceError> {
+    crate::services::vedic::analyze_compatibility(input)
+}
+
 pub fn analyze_transit(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, ServiceError> {
     crate::services::transit::analyze(input)
 }

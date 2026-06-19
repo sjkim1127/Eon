@@ -419,6 +419,7 @@ mod tests {
                 ..Default::default()
             },
             analysis_report: None,
+            ayanamsa: 23.0,
         }
     }
 

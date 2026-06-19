@@ -15,3 +15,7 @@ pub mod vimshopaka;
 pub mod varga_interpretation;
 pub mod varga_nakshatra_report;
 pub mod yogas;
+pub mod kp;
+pub mod matching;
+
+

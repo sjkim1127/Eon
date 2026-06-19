@@ -98,6 +98,7 @@ fn test_libra_lagna_saturn_yogakaraka() {
         avasthas: vec![],
         panchanga: dummy_panchanga,
         analysis_report: None,
+        ayanamsa: 23.0,
     };
 
     let results = YogaEngine::check_yogas(&chart);
