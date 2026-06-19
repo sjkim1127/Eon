@@ -1,0 +1,10 @@
+[application]
+name = "eon-ui"
+default_platform = "web"
+out_dir = "target/dx/eon-ui/release/web/public"
+
+[web.app]
+title = "Eon: Destiny Engine"
+
+[web.resource]
+style = ["tailwind.css"]
