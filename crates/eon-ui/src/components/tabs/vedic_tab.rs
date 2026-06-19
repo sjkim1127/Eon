@@ -482,6 +482,86 @@ pub fn VedicTab() -> Element {
                                                 }
                                             }
                                         }
+
+                                        // ── 하우스별 활성도 & 성향 강도 분석 (House Ratings) ───────
+                                        div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl",
+                                            div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5 flex justify-between items-center flex-wrap gap-2",
+                                                h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-widest", "하우스별 성향 및 에너지 강도 (House Ratings)" }
+                                                span { class: "text-xs text-slate-500", "총 12개 하우스의 정량적 강도 및 특수 분석 결과" }
+                                            }
+                                            div { class: "overflow-x-auto",
+                                                table { class: "w-full text-sm",
+                                                    thead {
+                                                        tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase border-b border-slate-800",
+                                                            th { class: "px-4 py-3 text-left font-medium w-24", "하우스" }
+                                                            th { class: "px-4 py-3 text-left font-medium w-48", "담당 생애 영역" }
+                                                            th { class: "px-4 py-3 text-left font-medium w-32", "에너지 등급" }
+                                                            th { class: "px-4 py-3 text-left font-medium w-24", "강도 점수" }
+                                                            th { class: "px-4 py-3 text-left font-medium", "에너지 판별 근거" }
+                                                        }
+                                                    }
+                                                    tbody { class: "divide-y divide-slate-800",
+                                                        {data.report.house_summary.iter().map(|h| {
+                                                            let rating_cls = match h.rating.as_str() {
+                                                                "Excellent" => "text-emerald-400 bg-emerald-950/20 border-emerald-900/30",
+                                                                "Strong" => "text-indigo-400 bg-indigo-950/20 border-indigo-900/30",
+                                                                "Average" => "text-slate-350 bg-slate-800/40 border-slate-700/30",
+                                                                "Weak" => "text-rose-400 bg-rose-950/20 border-rose-900/30",
+                                                                _ => "text-slate-400 bg-slate-800/20 border-slate-800",
+                                                            };
+                                                            let rating_kr = match h.rating.as_str() {
+                                                                "Excellent" => "최상 (Excellent)",
+                                                                "Strong" => "강함 (Strong)",
+                                                                "Average" => "보통 (Average)",
+                                                                "Weak" => "약함 (Weak)",
+                                                                _ => &h.rating,
+                                                            };
+                                                            let house_purpose_kr = match h.house {
+                                                                1 => "자아, 기질 및 전반적 생명력",
+                                                                2 => "재물운, 지지 기반 및 언어능력",
+                                                                3 => "형제/자매, 사적 용기 및 모험심",
+                                                                4 => "어머니, 모국, 가정의 평화 및 부동산",
+                                                                5 => "지성/학업, 창의적 소질 및 자녀운",
+                                                                6 => "질병/부상, 부채 극복력 및 경쟁력",
+                                                                7 => "배우자, 결혼 생활 및 대인 파트너십",
+                                                                8 => "수명, 급격한 변화 및 오컬트/영성",
+                                                                9 => "종교, 철학, 종조상 및 고등학문",
+                                                                10 => "직업적 천직, 사회적 성공 및 권위",
+                                                                11 => "투자의 결실, 소망 성취 및 동료 네트워크",
+                                                                12 => "지출/손실, 은둔, 격리 및 해탈/영성",
+                                                                _ => "기타 인생 영역",
+                                                            };
+                                                            rsx! {
+                                                                tr { class: "hover:bg-slate-800/20 transition-colors",
+                                                                    td { class: "px-4 py-3 font-bold text-indigo-300 font-mono", "House {h.house}" }
+                                                                    td { class: "px-4 py-3 text-xs",
+                                                                        div { class: "flex flex-col gap-0.5",
+                                                                            span { class: "font-semibold text-slate-200", "{house_purpose_kr}" }
+                                                                            span { class: "text-[10px] text-slate-500 font-mono", "{h.summary}" }
+                                                                        }
+                                                                    }
+                                                                    td { class: "px-4 py-3 text-xs",
+                                                                        span { class: "px-2 py-0.5 rounded border text-[10px] font-bold {rating_cls}", "{rating_kr}" }
+                                                                    }
+                                                                    td { class: "px-4 py-3 text-xs text-slate-400 font-mono", "{h.total_score:.1}" }
+                                                                    td { class: "px-4 py-3 text-xs",
+                                                                        if h.reasons.is_empty() {
+                                                                            span { class: "text-slate-500 italic", "특이 요인 없음" }
+                                                                        } else {
+                                                                            div { class: "flex flex-wrap gap-1.5",
+                                                                                {h.reasons.iter().map(|reason| rsx! {
+                                                                                    span { class: "px-1.5 py-0.5 bg-slate-900 border border-slate-800 rounded text-[10px] text-slate-450", "{reason}" }
+                                                                                })}
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        })}
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 },
                                 1 => rsx! {
