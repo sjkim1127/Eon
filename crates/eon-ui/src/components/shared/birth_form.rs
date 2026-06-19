@@ -62,7 +62,7 @@ pub fn BirthForm() -> Element {
         geo_status.set("🔍 검색 중...".to_string());
         spawn(async move {
             let url = format!(
-                "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=1&accept-language=ko",
+                "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=5&accept-language=ko",
                 urlencoding::encode(&query)
             );
             let client = reqwest::Client::builder()
@@ -76,7 +76,10 @@ pub fn BirthForm() -> Element {
             {
                 Ok(resp) => {
                     if let Ok(results) = resp.json::<Vec<NominatimResult>>().await {
-                        if let Some(first) = results.into_iter().next() {
+                        let target = results.iter().find(|r| r.display_name.contains("대한민국") || r.display_name.contains("South Korea"))
+                            .or_else(|| results.first());
+                            
+                        if let Some(first) = target {
                             let lat: f64 = first.lat.parse().unwrap_or(37.5665);
                             let lon: f64 = first.lon.parse().unwrap_or(126.9780);
                             state.form.write().lat = lat;
@@ -112,7 +115,7 @@ pub fn BirthForm() -> Element {
             geo_status.set("🔍 검색 중...".to_string());
             spawn(async move {
                 let url = format!(
-                    "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=1&accept-language=ko",
+                    "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=5&accept-language=ko",
                     urlencoding::encode(&query)
                 );
                 let client = reqwest::Client::new();
@@ -124,7 +127,10 @@ pub fn BirthForm() -> Element {
                 {
                     Ok(resp) => {
                         if let Ok(results) = resp.json::<Vec<NominatimResult>>().await {
-                            if let Some(first) = results.into_iter().next() {
+                            let target = results.iter().find(|r| r.display_name.contains("대한민국") || r.display_name.contains("South Korea"))
+                                .or_else(|| results.first());
+                                
+                            if let Some(first) = target {
                                 let lat: f64 = first.lat.parse().unwrap_or(37.5665);
                                 let lon: f64 = first.lon.parse().unwrap_or(126.9780);
                                 state.form.write().lat = lat;
