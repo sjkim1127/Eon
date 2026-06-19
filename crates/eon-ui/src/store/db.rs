@@ -81,6 +81,7 @@ pub async fn load_all_profiles() -> Result<Vec<UserProfile>, String> {
     Ok(profiles)
 }
 
+#[allow(dead_code)]
 pub async fn delete_profile(id: &str) -> Result<(), String> {
     let db = init_db().await?;
     let tx = db.transaction_on_one_with_mode(STORE_NAME, IdbTransactionMode::Readwrite)

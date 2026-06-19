@@ -1,42 +1,244 @@
 use dioxus::prelude::*;
+use crate::store::{AnalysisState, TaskStatus};
+use eon_service::dto::{SajuAnalysisInput, VedicAnalysisInput, AnalysisInput};
+use eon_service::facade;
+use eon_vedic::analysis::strength::StrengthEngine;
+use eon_vedic::planets::VedicPlanet;
+use eon_saju::analysis::strength::StrengthType;
 use crate::components::shared::birth_form::BirthForm;
+
+// 세력 분석은 사주+베딕 두 결과를 모두 필요로 합니다.
+// 전역 상태에서 이미 계산된 saju, vedic 데이터를 활용하거나
+// 없으면 이 탭에서 직접 호출합니다.
+
+const PLANETS: &[VedicPlanet] = &[
+    VedicPlanet::Sun, VedicPlanet::Moon, VedicPlanet::Mars,
+    VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus,
+    VedicPlanet::Saturn, VedicPlanet::Rahu, VedicPlanet::Ketu,
+];
+
+fn planet_kr(p: VedicPlanet) -> &'static str {
+    match p {
+        VedicPlanet::Sun => "태양 ☀️",
+        VedicPlanet::Moon => "달 🌙",
+        VedicPlanet::Mars => "화성 ♂",
+        VedicPlanet::Mercury => "수성 ☿",
+        VedicPlanet::Jupiter => "목성 ♃",
+        VedicPlanet::Venus => "금성 ♀",
+        VedicPlanet::Saturn => "토성 ♄",
+        VedicPlanet::Rahu => "라후 ☊",
+        VedicPlanet::Ketu => "케투 ☋",
+        VedicPlanet::Ascendant => "라그나",
+    }
+}
+
+fn planet_bar_color(p: VedicPlanet) -> &'static str {
+    match p {
+        VedicPlanet::Sun => "bg-orange-500",
+        VedicPlanet::Moon => "bg-slate-300",
+        VedicPlanet::Mars => "bg-red-600",
+        VedicPlanet::Mercury => "bg-emerald-400",
+        VedicPlanet::Jupiter => "bg-yellow-400",
+        VedicPlanet::Venus => "bg-pink-400",
+        VedicPlanet::Saturn => "bg-indigo-600",
+        VedicPlanet::Rahu => "bg-purple-500",
+        VedicPlanet::Ketu => "bg-amber-700",
+        VedicPlanet::Ascendant => "bg-white",
+    }
+}
 
 #[component]
 pub fn StrengthTab() -> Element {
+    let mut state = use_context::<AnalysisState>();
+
+    let run_analysis = move |_| {
+        spawn(async move {
+            state.saju.write().status = TaskStatus::Loading;
+            state.vedic.write().status = TaskStatus::Loading;
+
+            let form = state.form.read().clone();
+            let base = AnalysisInput {
+                year: form.year, month: form.month, day: form.day,
+                hour: form.hour, minute: form.minute,
+                is_lunar: form.is_lunar, is_leap_month: form.is_leap_month,
+                lat: form.lat, lon: form.lon,
+                timezone: "Asia/Seoul".to_string(),
+            };
+
+            // 병렬 계산 (사주 먼저, 베딕 이후)
+            match facade::analyze_saju(SajuAnalysisInput::new(base.clone(), form.is_male, false, Some(false))) {
+                Ok(res) => {
+                    state.saju.write().data = Some(res);
+                    state.saju.write().status = TaskStatus::Success;
+                }
+                Err(e) => {
+                    state.saju.write().status = TaskStatus::Error(e.to_string());
+                }
+            }
+
+            match facade::analyze_vedic(VedicAnalysisInput::new(base, Some(false), None)) {
+                Ok(res) => {
+                    state.vedic.write().data = Some(res);
+                    state.vedic.write().status = TaskStatus::Success;
+                }
+                Err(e) => {
+                    state.vedic.write().status = TaskStatus::Error(e.to_string());
+                }
+            }
+        });
+    };
+
+    let is_loading = matches!(state.saju.read().status, TaskStatus::Loading)
+        || matches!(state.vedic.read().status, TaskStatus::Loading);
+    let has_saju = matches!(state.saju.read().status, TaskStatus::Success);
+    let has_vedic = matches!(state.vedic.read().status, TaskStatus::Success);
+
     rsx! {
         div { class: "space-y-6 animate-in fade-in duration-700",
             BirthForm {}
-            
+
             div { class: "flex justify-between items-center",
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-emerald-200 to-green-400 bg-clip-text text-transparent",
                     "세력 분석 (Strength Analysis)"
                 }
+                button {
+                    class: "px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-green-700 hover:from-emerald-600 hover:to-green-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-200 active:scale-95 disabled:opacity-50",
+                    onclick: run_analysis,
+                    disabled: is_loading,
+                    if is_loading { "⏳ 계산 중..." } else { "💪 세력 분석 실행" }
+                }
             }
 
-            div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl",
-                div { class: "grid grid-cols-1 md:grid-cols-2 gap-8",
-                    // 사주 오행 세력
-                    div { class: "space-y-4",
-                        h3 { class: "text-lg font-semibold text-slate-300 border-b border-slate-800 pb-2", "사주 오행 (Five Elements)" }
-                        
-                        ElementBar { name: "목 (Wood)", color: "bg-green-500", percentage: 30 }
-                        ElementBar { name: "화 (Fire)", color: "bg-red-500", percentage: 20 }
-                        ElementBar { name: "토 (Earth)", color: "bg-yellow-600", percentage: 10 }
-                        ElementBar { name: "금 (Metal)", color: "bg-slate-300", percentage: 25 }
-                        ElementBar { name: "수 (Water)", color: "bg-blue-500", percentage: 15 }
-                    }
+            if !has_saju && !has_vedic {
+                div { class: "flex flex-col items-center justify-center py-20 gap-3 text-slate-500",
+                    span { class: "text-5xl", "⚖️" }
+                    p { class: "text-lg font-medium", "세력 분석을 실행하면 사주 + 베딕 통합 분석이 수행됩니다." }
+                }
+            }
 
-                    // 베딕 행성 세력 (Shadbala)
-                    div { class: "space-y-4",
-                        h3 { class: "text-lg font-semibold text-slate-300 border-b border-slate-800 pb-2", "베딕 샤드발라 (Shadbala)" }
-                        
-                        ElementBar { name: "태양 (Sun)", color: "bg-orange-500", percentage: 80 }
-                        ElementBar { name: "달 (Moon)", color: "bg-slate-100", percentage: 40 }
-                        ElementBar { name: "화성 (Mars)", color: "bg-red-600", percentage: 65 }
-                        ElementBar { name: "수성 (Mercury)", color: "bg-emerald-400", percentage: 55 }
-                        ElementBar { name: "목성 (Jupiter)", color: "bg-yellow-400", percentage: 90 }
-                        ElementBar { name: "금성 (Venus)", color: "bg-pink-400", percentage: 70 }
-                        ElementBar { name: "토성 (Saturn)", color: "bg-indigo-600", percentage: 35 }
+            if is_loading {
+                div { class: "flex flex-col items-center justify-center py-16 gap-3",
+                    div { class: "w-12 h-12 rounded-full border-4 border-emerald-500/30 border-t-emerald-400 animate-spin" }
+                    p { class: "text-emerald-400 font-medium animate-pulse", "사주 + 베딕 동시 계산 중..." }
+                }
+            }
+
+            if has_saju {
+                if let Some(saju) = &state.saju.read().data {
+                    div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5",
+                        // 헤더
+                        div { class: "flex items-center justify-between mb-4",
+                            h3 { class: "text-lg font-semibold text-emerald-300", "사주 오행 세력 분포" }
+                            {
+                                let st = saju.report.strength.strength_type;
+                                let (badge_color, icon) = match st {
+                                    StrengthType::Strong => ("bg-red-500/20 text-red-300 border-red-500/50", "🔥"),
+                                    StrengthType::Weak => ("bg-blue-500/20 text-blue-300 border-blue-500/50", "💧"),
+                                    StrengthType::Balanced => ("bg-emerald-500/20 text-emerald-300 border-emerald-500/50", "⚖️"),
+                                };
+                                rsx! {
+                                    span { class: "flex items-center gap-1 px-3 py-1 rounded-full border text-sm font-bold {badge_color}",
+                                        "{icon} {st.hangul()} ({st.hanja()})"
+                                    }
+                                }
+                            }
+                        }
+
+                        div { class: "space-y-3",
+                            {
+                                let se = &saju.report.strength.deuk_se;
+                                let dm_el = saju.report.strength.day_master.element();
+                                let total = (se.bijie_count + se.yinxing_count + se.shishang_count + se.caisheng_count + se.guanxing_count).max(1) as f32;
+
+                                let bars = vec![
+                                    ("비겁(比劫)", dm_el.hangul(), dm_el.hanja(), se.bijie_count, "bg-violet-500"),
+                                    ("인성(印星)", dm_el.generated_by().hangul(), dm_el.generated_by().hanja(), se.yinxing_count, "bg-blue-500"),
+                                    ("식상(食傷)", dm_el.generates().hangul(), dm_el.generates().hanja(), se.shishang_count, "bg-emerald-500"),
+                                    ("재성(財星)", dm_el.controls().hangul(), dm_el.controls().hanja(), se.caisheng_count, "bg-amber-500"),
+                                    ("관성(官星)", dm_el.controlled_by().hangul(), dm_el.controlled_by().hanja(), se.guanxing_count, "bg-red-500"),
+                                ];
+
+                                rsx! {
+                                    {bars.iter().map(|(ten_god, el_name, el_hanja, count, color)| {
+                                        let pct = (*count as f32 / total * 100.0) as u32;
+                                        rsx! {
+                                            div { class: "flex items-center gap-3",
+                                                div { class: "w-28 text-right shrink-0",
+                                                    span { class: "text-sm font-medium text-slate-300", "{ten_god}" }
+                                                    span { class: "text-xs text-slate-500 ml-1", "{el_name}({el_hanja})" }
+                                                }
+                                                div { class: "flex-1 h-4 bg-slate-800 rounded-full overflow-hidden",
+                                                    div {
+                                                        class: "h-full {color} rounded-full transition-all duration-1000",
+                                                        style: "width: {pct}%"
+                                                    }
+                                                }
+                                                div { class: "w-16 text-xs font-mono text-slate-400 text-right shrink-0",
+                                                    "{count}개 ({pct}%)"
+                                                }
+                                            }
+                                        }
+                                    })}
+                                }
+                            }
+                        }
+
+                        // 득령/득지/득시/득세 상세
+                        div { class: "mt-4 pt-4 border-t border-slate-800 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm",
+                            DeukDetail { label: "득령 (得令)", acquired: saju.report.strength.deuk_ryeong.acquired, desc: saju.report.strength.deuk_ryeong.relation().to_string() }
+                            DeukDetail { label: "득지 (得地)", acquired: saju.report.strength.deuk_ji.acquired, desc: format!("통근 {}개 | 강한 운성 {}개", saju.report.strength.deuk_ji.root_count, saju.report.strength.deuk_ji.strong_stage_count) }
+                            DeukDetail { label: "득시 (得時)", acquired: saju.report.strength.deuk_si.acquired, desc: saju.report.strength.deuk_si.relation().to_string() }
+                            DeukDetail { label: "득세 (得勢)", acquired: saju.report.strength.deuk_se.acquired, desc: format!("지지 세력 {:.1}%", saju.report.strength.deuk_se.support_ratio) }
+                        }
+                    }
+                }
+            }
+
+            // 베딕 샤드발라
+            if has_vedic {
+                if let Some(vedic) = &state.vedic.read().data {
+                    div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5",
+                        h3 { class: "text-lg font-semibold text-blue-300 mb-4", "베딕 샤드발라 (Shadbala 行星 强度)" }
+                        div { class: "space-y-3",
+                            {
+                                // 최대 점수를 찾아서 바 비율 계산
+                                let strengths: Vec<_> = vedic.chart.planets.iter()
+                                    .filter(|p| PLANETS.contains(&p.planet))
+                                    .map(|p| (p.planet, StrengthEngine::calculate(p, &vedic.chart)))
+                                    .collect();
+                                let max_score = strengths.iter().map(|(_, s)| s.total_score).fold(0.0_f64, f64::max).max(1.0);
+
+                                rsx! {
+                                    {strengths.iter().map(|(planet, s)| {
+                                        let pct = (s.total_score / max_score * 100.0) as u32;
+                                        let bar_color = planet_bar_color(*planet);
+                                        let status_color = match s.status.as_str() {
+                                            "Exalted" => "text-yellow-400",
+                                            "Strong" => "text-emerald-400",
+                                            "Debilitated" | "Weak" => "text-red-400",
+                                            _ => "text-slate-400",
+                                        };
+                                        rsx! {
+                                            div { class: "flex items-center gap-3",
+                                                div { class: "w-24 text-sm font-medium text-right text-slate-300 shrink-0",
+                                                    "{planet_kr(*planet)}"
+                                                }
+                                                div { class: "flex-1 h-4 bg-slate-800 rounded-full overflow-hidden",
+                                                    div {
+                                                        class: "h-full {bar_color} rounded-full transition-all duration-1000",
+                                                        style: "width: {pct}%"
+                                                    }
+                                                }
+                                                div { class: "w-24 text-xs text-right shrink-0",
+                                                    span { class: "font-mono text-slate-400", "{s.total_score:.0}" }
+                                                    span { class: "ml-2 {status_color} font-medium", "{s.status}" }
+                                                }
+                                            }
+                                        }
+                                    })}
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -45,17 +247,19 @@ pub fn StrengthTab() -> Element {
 }
 
 #[component]
-fn ElementBar(name: String, color: String, percentage: u8) -> Element {
+fn DeukDetail(label: &'static str, acquired: bool, desc: String) -> Element {
+    let (bg, icon_color) = if acquired {
+        ("bg-emerald-900/20 border-emerald-700/40", "text-emerald-400")
+    } else {
+        ("bg-slate-800/40 border-slate-700/40", "text-slate-500")
+    };
     rsx! {
-        div { class: "flex items-center gap-4",
-            div { class: "w-24 text-sm font-medium text-slate-400 text-right shrink-0", "{name}" }
-            div { class: "flex-1 h-3 bg-slate-800 rounded-full overflow-hidden",
-                div { 
-                    class: "h-full {color} rounded-full transition-all duration-1000",
-                    style: "width: {percentage}%"
-                }
+        div { class: "p-3 rounded-xl border {bg}",
+            div { class: "flex items-center gap-1.5 mb-1",
+                span { class: "text-xs font-mono {icon_color}", if acquired { "○" } else { "✗" } }
+                span { class: "text-xs font-semibold text-slate-300", "{label}" }
             }
-            div { class: "w-10 text-sm font-mono text-slate-500 text-right", "{percentage}%" }
+            p { class: "text-xs text-slate-500 leading-snug", "{desc}" }
         }
     }
 }

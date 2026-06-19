@@ -2,7 +2,6 @@ use crate::dto::{
     DestinyComponent, DomainTier, SajuAnalysisOutput, ScoreResult, TierGrade, TierResult,
     TransitAnalysisOutput, VedicAnalysisOutput,
 };
-use eon_saju::engine::linter::LintSeverity;
 use eon_vedic::analysis::avasthas::BaladiAvastha;
 use eon_vedic::analysis::gochara::SadeSatiPhase;
 use eon_vedic::analysis::yogas::YogaQuality;
@@ -334,7 +333,7 @@ fn compute_saju_score(saju: &SajuAnalysisOutput) -> ScoreResult {
 
 fn compute_vedic_score(vedic: &VedicAnalysisOutput) -> ScoreResult {
     let mut score = 0.0;
-    let mut highlights = Vec::new();
+    let highlights = Vec::new();
 
     let r = &vedic.report;
     score += clamp_score(r.overall_strength_score as f32 / 6.0) * 0.35;

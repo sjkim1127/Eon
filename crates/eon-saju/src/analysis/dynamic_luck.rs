@@ -198,8 +198,49 @@ impl DynamicLuckAnalysis {
         analysis.triple_combinations = TripleCombination::check(&all_b);
         analysis.seasonal_combinations = SeasonalCombination::check(&all_b);
 
-        // TODO: 운운(運運) 결합에 대한 구체적인 mapped_relationships 생성 로직 추가
-        analysis.mapped_relationships = Vec::new();
+        let is_luck = |p: &str| p == "대운" || p == "세운" || p == "월운" || p == "일운" || p == "시운";
+
+        let mut mapped = Vec::new();
+        let make_detail = |rel_type: &str, name: &str, p1: &str, p2: &str| crate::analysis::relationships::RelationshipDetail {
+            relation_type: rel_type.to_string(),
+            name: name.to_string(),
+            positions: vec![p1.to_string(), p2.to_string()],
+            level: crate::analysis::supplementary_pillars::InterpretationLevel::Neutral,
+            summary: format!("{}과 {}의 {}", p1, p2, name),
+            description: "".to_string(),
+            reasons: vec![],
+            transformed_element: None,
+        };
+
+        for (_, p1, p2) in &analysis.stem_combinations {
+            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("합", "천간합", p1, p2)); }
+        }
+        for (_, p1, p2) in &analysis.stem_clashes {
+            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("충", "천간충", p1, p2)); }
+        }
+        for (_, p1, p2) in &analysis.dominant_semi_combinations {
+            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("합", "반합(주도)", p1, p2)); }
+        }
+        for (_, p1, p2) in &analysis.weak_semi_combinations {
+            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("합", "반합(보조)", p1, p2)); }
+        }
+        for (_, p1, p2) in &analysis.six_combinations {
+            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("합", "육합", p1, p2)); }
+        }
+        for (_, p1, p2) in &analysis.branch_clashes {
+            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("충", "지지충", p1, p2)); }
+        }
+        for (_, p1, p2) in &analysis.branch_punishments {
+            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("형", "형", p1, p2)); }
+        }
+        for (_, p1, p2) in &analysis.branch_harms {
+            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("해", "해", p1, p2)); }
+        }
+        for (_, p1, p2) in &analysis.branch_destructions {
+            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("파", "파", p1, p2)); }
+        }
+
+        analysis.mapped_relationships = mapped;
 
         analysis
     }
