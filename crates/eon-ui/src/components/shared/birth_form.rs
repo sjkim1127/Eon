@@ -3,7 +3,7 @@ use crate::store::AnalysisState;
 use crate::store::db::{self, UserProfile};
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 struct NominatimResult {
     lat: String,
     lon: String,
@@ -19,6 +19,7 @@ pub fn BirthForm() -> Element {
     let mut new_profile_name = use_signal(|| String::new());
     let mut city_input = use_signal(|| "서울".to_string());
     let mut geo_status = use_signal(|| String::new()); // "검색 중...", "서울, KR", "오류" 등
+    let mut search_results = use_signal(Vec::<NominatimResult>::new);
 
     // Load profiles on mount
     use_effect(move || {
@@ -53,6 +54,21 @@ pub fn BirthForm() -> Element {
         }
     };
 
+    let mut select_city = move |result: NominatimResult| {
+        let lat: f64 = result.lat.parse().unwrap_or(37.5665);
+        let lon: f64 = result.lon.parse().unwrap_or(126.9780);
+        state.form.write().lat = lat;
+        state.form.write().lon = lon;
+        let short_name = result.display_name
+            .split(',')
+            .take(2)
+            .collect::<Vec<_>>()
+            .join(",");
+        geo_status.set(format!("✅ {}", short_name.trim()));
+        search_results.set(Vec::new());
+        city_input.set(String::new());
+    };
+
     // 도시 검색 (Nominatim)
     let on_city_geocode = move |_| {
         let query = city_input.read().clone();
@@ -60,6 +76,7 @@ pub fn BirthForm() -> Element {
             return;
         }
         geo_status.set("🔍 검색 중...".to_string());
+        search_results.set(Vec::new());
         spawn(async move {
             let url = format!(
                 "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=5&accept-language=ko",
@@ -76,23 +93,11 @@ pub fn BirthForm() -> Element {
             {
                 Ok(resp) => {
                     if let Ok(results) = resp.json::<Vec<NominatimResult>>().await {
-                        let target = results.iter().find(|r| r.display_name.contains("대한민국") || r.display_name.contains("South Korea"))
-                            .or_else(|| results.first());
-                            
-                        if let Some(first) = target {
-                            let lat: f64 = first.lat.parse().unwrap_or(37.5665);
-                            let lon: f64 = first.lon.parse().unwrap_or(126.9780);
-                            state.form.write().lat = lat;
-                            state.form.write().lon = lon;
-                            // 표시 이름 축약
-                            let short_name = first.display_name
-                                .split(',')
-                                .take(2)
-                                .collect::<Vec<_>>()
-                                .join(",");
-                            geo_status.set(format!("✅ {}", short_name.trim()));
-                        } else {
+                        if results.is_empty() {
                             geo_status.set("❌ 결과 없음".to_string());
+                        } else {
+                            geo_status.set(format!("✅ 검색 완료 ({}건)", results.len()));
+                            search_results.set(results);
                         }
                     } else {
                         geo_status.set("❌ 파싱 오류".to_string());
@@ -113,6 +118,7 @@ pub fn BirthForm() -> Element {
                 return;
             }
             geo_status.set("🔍 검색 중...".to_string());
+            search_results.set(Vec::new());
             spawn(async move {
                 let url = format!(
                     "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=5&accept-language=ko",
@@ -127,22 +133,11 @@ pub fn BirthForm() -> Element {
                 {
                     Ok(resp) => {
                         if let Ok(results) = resp.json::<Vec<NominatimResult>>().await {
-                            let target = results.iter().find(|r| r.display_name.contains("대한민국") || r.display_name.contains("South Korea"))
-                                .or_else(|| results.first());
-                                
-                            if let Some(first) = target {
-                                let lat: f64 = first.lat.parse().unwrap_or(37.5665);
-                                let lon: f64 = first.lon.parse().unwrap_or(126.9780);
-                                state.form.write().lat = lat;
-                                state.form.write().lon = lon;
-                                let short_name = first.display_name
-                                    .split(',')
-                                    .take(2)
-                                    .collect::<Vec<_>>()
-                                    .join(",");
-                                geo_status.set(format!("✅ {}", short_name.trim()));
-                            } else {
+                            if results.is_empty() {
                                 geo_status.set("❌ 결과 없음".to_string());
+                            } else {
+                                geo_status.set(format!("✅ 검색 완료 ({}건)", results.len()));
+                                search_results.set(results);
                             }
                         } else {
                             geo_status.set("❌ 파싱 오류".to_string());
@@ -256,7 +251,7 @@ pub fn BirthForm() -> Element {
                     }
                 }
                 // 출생지 (텍스트 검색)
-                div { class: "flex flex-col gap-1 min-w-0",
+                div { class: "flex flex-col gap-1 min-w-0 relative",
                     label { class: "text-xs text-slate-400 font-medium",
                         "출생지 (엔터 또는 🔍 로 검색)"
                     }
@@ -272,6 +267,21 @@ pub fn BirthForm() -> Element {
                             class: "bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm px-2 py-2 rounded-lg transition-colors",
                             onclick: on_city_geocode,
                             "🔍"
+                        }
+                    }
+                    if !search_results.read().is_empty() {
+                        div { class: "absolute top-full left-0 mt-1 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50 overflow-hidden",
+                            {search_results.read().iter().map(|result| {
+                                let r = result.clone();
+                                let display = r.display_name.clone();
+                                rsx! {
+                                    div {
+                                        class: "px-3 py-2 text-xs text-slate-300 hover:bg-violet-600 hover:text-white cursor-pointer transition-colors truncate",
+                                        onclick: move |_| select_city(r.clone()),
+                                        "{display}"
+                                    }
+                                }
+                            })}
                         }
                     }
                     // 지오코딩 결과 / 좌표 표시
