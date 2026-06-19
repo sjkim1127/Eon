@@ -240,8 +240,31 @@ pub fn SajuTab() -> Element {
                                                     }
                                                 }
                                                 if !yn.recommendations.is_empty() {
-                                                    p { class: "text-xs text-slate-500 mt-1 leading-relaxed",
-                                                        "{yn.recommendations[0].summary}"
+                                                    div { class: "mt-3 pt-3 border-t border-slate-800 space-y-2.5",
+                                                        p { class: "text-[10px] font-bold text-slate-500 uppercase tracking-wider", "요소별 세부 용신 분석" }
+                                                        div { class: "space-y-2",
+                                                            {yn.recommendations.iter().map(|rec| {
+                                                                let (el_color, el_icon) = element_style(rec.element.hangul());
+                                                                let type_name = rec.yongshin_type.hangul();
+                                                                rsx! {
+                                                                    div { class: "p-2.5 rounded-lg bg-slate-900/50 border border-slate-800/80 space-y-1 text-xs",
+                                                                        div { class: "flex justify-between items-center",
+                                                                            span { class: "text-[10px] font-bold text-slate-400", "{type_name}" }
+                                                                            span { class: "font-bold text-xs {el_color}", "{el_icon} {rec.element.hangul()}({rec.element.hanja()})" }
+                                                                        }
+                                                                        p { class: "text-xs text-slate-350 font-semibold", "{rec.summary}" }
+                                                                        p { class: "text-[11px] text-slate-550 leading-relaxed", "{rec.description}" }
+                                                                        if !rec.reasons.is_empty() {
+                                                                            div { class: "flex flex-wrap gap-1 mt-1",
+                                                                                {rec.reasons.iter().map(|r| rsx! {
+                                                                                    span { class: "text-[9px] px-1 bg-slate-950/60 border border-slate-850 rounded text-slate-500", "{r}" }
+                                                                                })}
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            })}
+                                                        }
                                                     }
                                                 }
                                             }
@@ -479,6 +502,54 @@ pub fn SajuTab() -> Element {
                                                     }
                                                 }
                                             })}
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ── 5.1.2 격국 분석 (Structure / Pattern) ─────────────
+                            {
+                                let struct_dt = &data.report.structure;
+                                let struct_lbl = format!("{}({})", struct_dt.structure.hangul(), struct_dt.structure.hanja());
+                                let proj_stem_lbl = struct_dt.projected_stem.map(|s| format!("{}({})", s.hanja(), s.hangul()));
+                                rsx! {
+                                    div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
+                                        div { class: "flex items-center justify-between border-b border-slate-800/60 pb-3 flex-wrap gap-2",
+                                            div { class: "space-y-0.5",
+                                                h3 { class: "text-sm font-semibold text-slate-200 uppercase tracking-widest", "격국 분석 (Structure & Pattern)" }
+                                                p { class: "text-xs text-slate-500", "월지 지장간의 투출 상태를 근거로 타고난 사회적 그릇과 직업적 성향의 격식을 판별합니다." }
+                                            }
+                                            span { class: "text-xs font-bold text-amber-400 bg-amber-950/20 px-3 py-1 rounded border border-amber-900/30",
+                                                "격국 결정: {struct_lbl}"
+                                            }
+                                        }
+                                        div { class: "p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3.5 shadow-inner",
+                                            if let Some(stem_lbl) = proj_stem_lbl {
+                                                div { class: "flex items-center gap-4 text-xs font-mono text-slate-400 flex-wrap",
+                                                    div { "투출 천간 (Projected Stem): "
+                                                        span { class: "text-indigo-400 font-bold text-sm ml-1", "{stem_lbl}" }
+                                                    }
+                                                    if let Some(path) = &struct_dt.projection_path {
+                                                        div { "투출 위치 (Projection Path): "
+                                                            span { class: "text-indigo-400 font-bold text-sm ml-1", "{path}" }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            div { class: "space-y-1.5",
+                                                p { class: "text-sm text-slate-200 font-bold", "{struct_dt.summary}" }
+                                                p { class: "text-xs text-slate-400 leading-relaxed", "{struct_dt.description}" }
+                                            }
+                                            if !struct_dt.reasons.is_empty() {
+                                                div { class: "border-t border-slate-800/80 pt-3 space-y-2",
+                                                    p { class: "text-[10px] font-bold text-slate-500 uppercase tracking-wider", "격국 성립 근거" }
+                                                    div { class: "flex flex-wrap gap-2",
+                                                        {struct_dt.reasons.iter().map(|reason| rsx! {
+                                                            span { class: "px-2 py-0.5 bg-slate-900 border border-slate-800/80 text-[10px] text-slate-400 rounded-md", "{reason}" }
+                                                        })}
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }

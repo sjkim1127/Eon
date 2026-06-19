@@ -4,6 +4,7 @@ use eon_service::dto::{VedicAnalysisInput, AnalysisInput, VedicCompatibilityInpu
 use eon_service::facade;
 use eon_vedic::planets::VedicPlanet;
 use crate::components::shared::birth_form::BirthForm;
+use chrono_tz;
 
 const RASI_NAMES_KR: &[&str] = &[
     "", "양자리(Aries)", "황소자리(Taurus)", "쌍둥이자리(Gemini)",
@@ -126,6 +127,7 @@ pub fn VedicTab() -> Element {
     
     // Sub-tab selection state: 0 = Basic D1, 1 = KP System, 2 = Dashas, 3 = Compatibility
     let mut active_subtab = use_signal(|| 0);
+    let mut active_reduction_view = use_signal(|| 0);
 
     // Compatibility form states
     let mut partner_year = use_signal(|| 1992);
@@ -313,6 +315,15 @@ pub fn VedicTab() -> Element {
                                     onclick: move |_| *active_subtab.write() = 7,
                                     "📝 분할차트 상세 해석 (D9/D10)"
                                 }
+                                button {
+                                    class: if *active_subtab.read() == 8 {
+                                        "px-4 py-2.5 font-medium text-sm transition-colors border-b-2 border-blue-500 text-blue-400"
+                                    } else {
+                                        "px-4 py-2.5 font-medium text-sm transition-colors border-b-2 border-transparent text-slate-400 hover:text-slate-200"
+                                    },
+                                    onclick: move |_| *active_subtab.write() = 8,
+                                    "📊 아쉬타카바르가"
+                                }
                             }
 
                             // ── 서브 탭 콘텐츠 ─────────────────────────────────
@@ -320,6 +331,26 @@ pub fn VedicTab() -> Element {
                                 0 => rsx! {
                                     // D1 Rasi & Basic Info
                                     div { class: "space-y-6",
+                                        // ── 베딕 운명 프로필 요약 (Vedic Destiny Profile Summary) ─────────
+                                        div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3.5 shadow-xl",
+                                            div { class: "flex justify-between items-center border-b border-slate-800/60 pb-2.5 flex-wrap gap-2",
+                                                h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "베딕 운명 지표 요약 (Vedic Destiny Overview)" }
+                                                span { class: "text-xs font-bold text-indigo-400 bg-indigo-950/20 px-3 py-1 rounded border border-indigo-900/30",
+                                                    "종합 활성도 점수 (Overall Strength): {data.report.overall_strength_score:.1}점"
+                                                }
+                                            }
+                                            div { class: "grid grid-cols-1 md:grid-cols-2 gap-4",
+                                                div { class: "p-3 rounded-xl bg-slate-800/20 border border-slate-800/60 space-y-1",
+                                                    p { class: "text-[10px] text-slate-500 font-bold uppercase tracking-wider", "출생 성좌(Nakshatra) 운명 특징" }
+                                                    p { class: "text-xs text-slate-350 leading-relaxed font-semibold", "{data.report.nakshatra_info}" }
+                                                }
+                                                div { class: "p-3 rounded-xl bg-slate-800/20 border border-slate-800/60 space-y-1",
+                                                    p { class: "text-[10px] text-slate-500 font-bold uppercase tracking-wider", "현재 대운/소운 주기 포커스" }
+                                                    p { class: "text-xs text-slate-350 leading-relaxed font-semibold", "{data.report.dasha_focus}" }
+                                                }
+                                            }
+                                        }
+
                                         div { class: "grid grid-cols-1 md:grid-cols-3 gap-4",
                                             // 1) Lagna Badge
                                             div { class: "flex items-center gap-4 p-5 bg-slate-900 border border-slate-800 rounded-2xl",
@@ -328,6 +359,7 @@ pub fn VedicTab() -> Element {
                                                     p { class: "text-xs text-slate-500 font-semibold tracking-wider", "라그나 (Lagna)" }
                                                     p { class: "text-xl font-bold text-indigo-300 mt-1", "{rasi_name(data.chart.ascendant.rasi)}" }
                                                     p { class: "text-xs text-slate-400 mt-0.5", "pada {data.chart.ascendant.pada} | {data.chart.ascendant.sidereal_deg:.2}°" }
+                                                    p { class: "text-[10px] text-slate-500 font-mono mt-0.5", "Ayanamsa: {data.chart.ayanamsa:.4}°" }
                                                 }
                                             }
                                             // 2) Yogi Point
@@ -347,6 +379,130 @@ pub fn VedicTab() -> Element {
                                                     p { class: "text-xl font-bold text-rose-400 mt-1", "{planet_name_kr(data.chart.panchanga.avayogi_planet)}" }
                                                     p { class: "text-xs text-slate-400 mt-0.5", "Dagdha: {data.chart.panchanga.dagdha_rashis.iter().map(|&r| rasi_name(r)).collect::<Vec<_>>().join(\", \")}" }
                                                 }
+                                            }
+                                        }
+
+                                        // ── 5대 판창가 (Panchanga Limbs & Solar Info) ─────────────────
+                                        div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
+                                            div { class: "flex items-center gap-2 border-b border-slate-800/60 pb-2.5",
+                                                span { class: "text-xl", "📅" }
+                                                h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "5대 판창가 (Panchanga Limbs & Solar Info)" }
+                                                span { class: "text-xs text-slate-500", "출생 시간 기준 우주적 다섯 요소 및 천문 정보" }
+                                            }
+                                            div { class: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5",
+                                                div { class: "p-3 rounded-xl bg-slate-800/20 border border-slate-800/60 flex flex-col gap-1",
+                                                    span { class: "text-[10px] text-slate-500 font-semibold tracking-wider", "요일 (Vara)" }
+                                                    span { class: "text-sm font-bold text-slate-200", "{data.chart.panchanga.vara}" }
+                                                    span { class: "text-[9px] text-slate-400", "지배성: {planet_name_kr(data.chart.panchanga.day_lord)}" }
+                                                }
+                                                div { class: "p-3 rounded-xl bg-slate-800/20 border border-slate-800/60 flex flex-col gap-1",
+                                                    span { class: "text-[10px] text-slate-500 font-semibold tracking-wider", "티티 (Tithi)" }
+                                                    span { class: "text-sm font-bold text-slate-200", "{data.chart.panchanga.tithi_name}" }
+                                                    span { class: "text-[9px] text-slate-400 font-mono", "Tithi #{data.chart.panchanga.tithi}" }
+                                                }
+                                                div { class: "p-3 rounded-xl bg-slate-800/20 border border-slate-800/60 flex flex-col gap-1",
+                                                    span { class: "text-[10px] text-slate-500 font-semibold tracking-wider", "나크샤트라 (Nakshatra)" }
+                                                    span { class: "text-sm font-bold text-slate-200", "{nakshatra_name(data.chart.panchanga.nakshatra)}" }
+                                                    span { class: "text-[9px] text-slate-405 font-mono", "Nakshatra #{data.chart.panchanga.nakshatra}" }
+                                                }
+                                                div { class: "p-3 rounded-xl bg-slate-800/20 border border-slate-800/60 flex flex-col gap-1",
+                                                    span { class: "text-[10px] text-slate-500 font-semibold tracking-wider", "요가 (Nitya Yoga)" }
+                                                    span { class: "text-sm font-bold text-slate-200", "Yoga {data.chart.panchanga.yoga}" }
+                                                    span { class: "text-[9px] text-slate-500", "27대 요가 요소" }
+                                                }
+                                                div { class: "p-3 rounded-xl bg-slate-800/20 border border-slate-800/60 flex flex-col gap-1",
+                                                    span { class: "text-[10px] text-slate-500 font-semibold tracking-wider", "카라나 (Karana)" }
+                                                    span { class: "text-sm font-bold text-slate-200", "{data.chart.panchanga.karana_name}" }
+                                                    span { class: "text-[9px] text-slate-405 font-mono", "Karana #{data.chart.panchanga.karana}" }
+                                                }
+                                            }
+                                            {
+                                                let form = state.form.read();
+                                                let local_timezone = "Asia/Seoul";
+                                                let tz_res: Result<chrono_tz::Tz, _> = local_timezone.parse();
+                                                let formatted_sunrise = if let Ok(tz) = tz_res {
+                                                    data.chart.panchanga.sunrise.with_timezone(&tz).format("%H:%M:%S").to_string()
+                                                } else {
+                                                    data.chart.panchanga.sunrise.format("%H:%M:%S").to_string()
+                                                };
+                                                let formatted_sunset = if let Ok(tz) = tz_res {
+                                                    data.chart.panchanga.sunset.with_timezone(&tz).format("%H:%M:%S").to_string()
+                                                } else {
+                                                    data.chart.panchanga.sunset.format("%H:%M:%S").to_string()
+                                                };
+                                                let birth_time_lbl = format!("{:02}:{:02}", form.hour, form.minute);
+                                                let birth_day_or_night = if data.chart.panchanga.is_day_birth { "낮 출생 ☀️" } else { "밤 출생 🌙" };
+                                                rsx! {
+                                                    div { class: "p-3.5 rounded-xl bg-slate-900/40 border border-slate-800/80 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-400 font-mono justify-between items-center",
+                                                        div { "출생 시각: "
+                                                            span { class: "text-slate-200 font-bold", "{form.year}년 {form.month}월 {form.day}일 {birth_time_lbl}" }
+                                                        }
+                                                        div { "출생지: "
+                                                            span { class: "text-slate-200 font-bold", "위도 {form.lat:.4}° / 경도 {form.lon:.4}°" }
+                                                        }
+                                                        div { "출생 시간대: "
+                                                            span { class: "text-indigo-400 font-bold", "{birth_day_or_night}" }
+                                                        }
+                                                        div { "일출: "
+                                                            span { class: "text-orange-400 font-bold", "{formatted_sunrise}" }
+                                                        }
+                                                        div { "일몰: "
+                                                            span { class: "text-indigo-400 font-bold", "{formatted_sunset}" }
+                                                        }
+                                                        div { "시간 지배성 (Hora Lord): "
+                                                            span { class: "text-yellow-400 font-bold", "{planet_name_kr(data.chart.panchanga.hour_lord)}" }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // ── 12개 아루다 파다 (Arudha Padas - 영역별 평판/거울 이미지) ───────────
+                                        div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
+                                            div { class: "flex items-center gap-2 border-b border-slate-800/60 pb-2.5",
+                                                span { class: "text-xl", "🪞" }
+                                                h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "12대 아루다 파다 (Arudha Padas — 사회적 평판 및 거울)" }
+                                                span { class: "text-xs text-slate-500", "현실 세계에 투영되는 나의 평판과 인생 영역별 실체" }
+                                            }
+                                            div { class: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
+                                                {data.chart.arudha_padas.iter().map(|ap| {
+                                                    let purpose = match ap.house {
+                                                        1 => "AL (사회적 지위, 평판, 인상)",
+                                                        2 => "A2 (재물 상태, 재산, 언어력)",
+                                                        3 => "A3 (형제 자매, 모험력, 주관)",
+                                                        4 => "A4 (가정, 어머니, 평화, 자산)",
+                                                        5 => "A5 (자녀, 학업, 투자, 지혜)",
+                                                        6 => "A6 (부채, 건강, 경쟁, 하수인)",
+                                                        7 => "A7 (배우자 성향, 대인 파트너십)",
+                                                        8 => "A8 (급격한 기복, 수명, 영적 지식)",
+                                                        9 => "A9 (상생, 부친, 종교, 고등 교육)",
+                                                        10 => "A10 (사회적 활동성, 직업적 명성)",
+                                                        11 => "A11 (재물 획득, 소원 성취, 동료)",
+                                                        12 => "UL (결혼 지속성, 해탈, 사생활)",
+                                                        _ => "기타 인생 영역",
+                                                    };
+                                                    let border_cls = if ap.house == 1 {
+                                                        "border-amber-950/60 bg-amber-950/10 hover:border-amber-900/60"
+                                                    } else if ap.house == 12 {
+                                                        "border-pink-950/60 bg-pink-950/10 hover:border-pink-900/60"
+                                                    } else {
+                                                        "border-slate-800 bg-slate-800/20 hover:border-slate-750"
+                                                    };
+                                                    let label_cls = if ap.house == 1 {
+                                                        "text-amber-300"
+                                                    } else if ap.house == 12 {
+                                                        "text-pink-300"
+                                                    } else {
+                                                        "text-indigo-300"
+                                                    };
+                                                    rsx! {
+                                                        div { class: "p-3 rounded-xl border flex flex-col justify-between gap-1 transition-all duration-300 {border_cls}",
+                                                            p { class: "text-[10px] text-slate-500 font-semibold tracking-wider", "{purpose}" }
+                                                            p { class: "text-sm font-extrabold {label_cls} mt-0.5", "{ap.name}" }
+                                                            p { class: "text-[10px] text-slate-400 mt-1 font-semibold", "성좌: {rasi_name(ap.rasi)}" }
+                                                        }
+                                                    }
+                                                })}
                                             }
                                         }
 
@@ -410,6 +566,8 @@ pub fn VedicTab() -> Element {
                                                             th { class: "px-4 py-3 text-left font-medium", "황경" }
                                                             th { class: "px-4 py-3 text-left font-medium", "나크샤트라" }
                                                             th { class: "px-4 py-3 text-left font-medium", "하우스" }
+                                                            th { class: "px-4 py-3 text-left font-medium", "애스펙트 (Drishti)" }
+                                                            th { class: "px-4 py-3 text-left font-medium", "빔쇼파카 강도" }
                                                             th { class: "px-4 py-3 text-left font-medium", "라지타디 Avastha" }
                                                             th { class: "px-4 py-3 text-center font-medium", "태비/역행" }
                                                         }
@@ -418,6 +576,18 @@ pub fn VedicTab() -> Element {
                                                         {data.chart.planets.iter().map(|p| {
                                                             let color = planet_color(p.planet);
                                                             let av = data.chart.avasthas.iter().find(|a| a.planet == p.planet);
+                                                            let aspect_rel = data.chart.aspects.iter().find(|a| a.aspecting_planet == p.planet);
+                                                            let aspect_str = if let Some(a) = aspect_rel {
+                                                                a.aspected_houses.iter().map(|h| format!("H{}", h)).collect::<Vec<_>>().join(", ")
+                                                            } else {
+                                                                "없음".to_string()
+                                                            };
+                                                            let v_score_opt = data.chart.vimshopaka_scores.iter().find(|(pl, _)| *pl == p.planet);
+                                                            let v_score_str = if let Some((_, vs)) = v_score_opt {
+                                                                format!("{:.1} / 20", vs.shadvarga_score)
+                                                            } else {
+                                                                "—".to_string()
+                                                            };
                                                             rsx! {
                                                                 tr { class: "hover:bg-slate-800/20 transition-colors",
                                                                     td { class: "px-4 py-3 font-bold {color}", "{planet_name_kr(p.planet)}" }
@@ -425,6 +595,8 @@ pub fn VedicTab() -> Element {
                                                                     td { class: "px-4 py-3 font-mono text-slate-400 text-xs", "{p.sidereal_deg:.2}°" }
                                                                     td { class: "px-4 py-3 text-slate-400 text-xs", "{nakshatra_name(p.nakshatra)} P{p.pada}" }
                                                                     td { class: "px-4 py-3 text-slate-400 text-xs font-mono", "H{p.house_index}" }
+                                                                    td { class: "px-4 py-3 text-slate-450 font-mono text-xs", "{aspect_str}" }
+                                                                    td { class: "px-4 py-3 text-indigo-400 font-mono text-xs font-bold", "{v_score_str}" }
                                                                     td { class: "px-4 py-3",
                                                                         if let Some(a) = av {
                                                                             span { class: "px-2 py-0.5 rounded-full text-xs font-semibold {lajjitadi_color(&a.lajjitadi)}",
@@ -531,6 +703,12 @@ pub fn VedicTab() -> Element {
                                                                 12 => "지출/손실, 은둔, 격리 및 해탈/영성",
                                                                 _ => "기타 인생 영역",
                                                             };
+                                                            let bhava_opt = data.chart.bhava_strengths.iter().find(|bs| bs.house == h.house);
+                                                            let bhava_str = if let Some(bs) = bhava_opt {
+                                                                format!("L:{:.0} D:{:.0} A:{:.0}", bs.lord_score, bs.dig_score, bs.drishti_score)
+                                                            } else {
+                                                                "".to_string()
+                                                            };
                                                             rsx! {
                                                                 tr { class: "hover:bg-slate-800/20 transition-colors",
                                                                     td { class: "px-4 py-3 font-bold text-indigo-300 font-mono", "House {h.house}" }
@@ -543,7 +721,14 @@ pub fn VedicTab() -> Element {
                                                                     td { class: "px-4 py-3 text-xs",
                                                                         span { class: "px-2 py-0.5 rounded border text-[10px] font-bold {rating_cls}", "{rating_kr}" }
                                                                     }
-                                                                    td { class: "px-4 py-3 text-xs text-slate-400 font-mono", "{h.total_score:.1}" }
+                                                                    td { class: "px-4 py-3 text-xs",
+                                                                        div { class: "flex flex-col gap-0.5",
+                                                                            span { class: "font-mono font-bold text-slate-300", "{h.total_score:.1}" }
+                                                                            if !bhava_str.is_empty() {
+                                                                                span { class: "text-[9px] text-slate-500 font-mono whitespace-nowrap", "{bhava_str}" }
+                                                                            }
+                                                                        }
+                                                                    }
                                                                     td { class: "px-4 py-3 text-xs",
                                                                         if h.reasons.is_empty() {
                                                                             span { class: "text-slate-500 italic", "특이 요인 없음" }
@@ -559,6 +744,29 @@ pub fn VedicTab() -> Element {
                                                             }
                                                         })}
                                                     }
+                                                }
+                                            }
+                                        }
+
+                                        // ── 분석 메타 정보 (Analysis Metadata Card) ───────────────────────
+                                        div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-3 shadow-xl",
+                                            h3 { class: "text-xs font-bold text-slate-500 uppercase tracking-widest", "분석 정보 (Analysis Info)" }
+                                            div { class: "space-y-2 text-xs font-mono text-slate-400",
+                                                div { class: "flex justify-between border-b border-slate-850 pb-1.5",
+                                                    span { "입력 시각" }
+                                                    span { class: "text-slate-200 font-bold", "{data.meta.input_time}" }
+                                                }
+                                                div { class: "flex justify-between border-b border-slate-850 pb-1.5",
+                                                    span { "교정 시각 (정밀도)" }
+                                                    span { class: "text-slate-200 font-bold", "{data.meta.corrected_time}" }
+                                                }
+                                                div { class: "flex justify-between border-b border-slate-850 pb-1.5",
+                                                    span { "분석 기준 타임존" }
+                                                    span { class: "text-slate-200 font-bold", "{data.meta.analysis_timezone}" }
+                                                }
+                                                div { class: "flex justify-between",
+                                                    span { "서머타임 (DST)" }
+                                                    span { class: "text-slate-200 font-bold", if data.meta.is_dst { "적용됨" } else { "해당없음" } }
                                                 }
                                             }
                                         }
@@ -663,6 +871,15 @@ pub fn VedicTab() -> Element {
                                                 },
                                                 onclick: move |_| *active_dasha_type.write() = 2,
                                                 "칼라 차크라 (Kala Chakra)"
+                                            }
+                                            button {
+                                                class: if *active_dasha_type.read() == 3 {
+                                                    "px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors bg-blue-600 text-white"
+                                                } else {
+                                                    "px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors text-slate-400 hover:text-slate-200"
+                                                },
+                                                onclick: move |_| *active_dasha_type.write() = 3,
+                                                "요기니 다샤 (Yogini)"
                                             }
                                         }
 
@@ -780,6 +997,54 @@ pub fn VedicTab() -> Element {
                                                                             td { class: "px-4 py-3",
                                                                                 if is_current {
                                                                                     span { class: "px-2 py-0.5 rounded-full text-xs bg-amber-600/40 text-amber-200 border border-amber-500/40 font-semibold", "⬤ 진행 중" }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                })}
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            3 => rsx! {
+                                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
+                                                    div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
+                                                        h3 { class: "font-semibold text-slate-200", "요기니 마하다샤 (Yogini Mahadasha)" }
+                                                    }
+                                                    div { class: "overflow-x-auto",
+                                                        table { class: "w-full text-sm",
+                                                            thead {
+                                                                tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
+                                                                    th { class: "px-4 py-3 text-left font-medium", "Yogini (지배성)" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "시작" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "종료" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "기간" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "상태" }
+                                                                }
+                                                            }
+                                                            tbody { class: "divide-y divide-slate-800",
+                                                                {data.report.yogini_timeline.iter().map(|d| {
+                                                                    let color = planet_color(d.lord);
+                                                                    let start_str = d.start_time.format("%Y-%m").to_string();
+                                                                    let end_str = d.end_time.format("%Y-%m").to_string();
+                                                                    let duration_years = (d.end_time - d.start_time).num_days() / 365;
+                                                                    let now = chrono::Utc::now();
+                                                                    let is_current = d.start_time <= now && now < d.end_time;
+                                                                    let yogini_label = if let Some(n) = &d.name {
+                                                                        format!("{} ({})", n, planet_name_kr(d.lord))
+                                                                    } else {
+                                                                        planet_name_kr(d.lord).to_string()
+                                                                    };
+                                                                    rsx! {
+                                                                        tr { class: "hover:bg-slate-800/20 transition-colors",
+                                                                            td { class: "px-4 py-3 font-bold {color}", "{yogini_label}" }
+                                                                            td { class: "px-4 py-3 font-mono text-slate-300 text-xs", "{start_str}" }
+                                                                            td { class: "px-4 py-3 font-mono text-slate-400 text-xs", "{end_str}" }
+                                                                            td { class: "px-4 py-3 text-slate-400 text-xs", "{duration_years}년" }
+                                                                            td { class: "px-4 py-3",
+                                                                                if is_current {
+                                                                                    span { class: "px-2 py-0.5 rounded-full text-xs bg-blue-600/40 text-blue-200 border border-blue-500/40 font-semibold", "⬤ 현재 대운" }
                                                                                 }
                                                                             }
                                                                         }
@@ -1198,6 +1463,53 @@ pub fn VedicTab() -> Element {
                                                         }
                                                     }
                                                 }
+
+                                                if data.annual_chart.is_some() {
+                                                    div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl mt-6",
+                                                        div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5 flex justify-between items-center",
+                                                            h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-widest", "타지카 연간 분점 차트 — 행성 상세 (Tajika Annual Chart)" }
+                                                            span { class: "text-xs font-bold text-amber-400 bg-amber-950/20 px-3 py-1 rounded border border-amber-900/30",
+                                                                "연간 라그나: {rasi_name(data.annual_chart.as_ref().unwrap().ascendant.rasi)} ({data.annual_chart.as_ref().unwrap().ascendant.sidereal_deg:.2}°)"
+                                                            }
+                                                        }
+                                                        div { class: "overflow-x-auto",
+                                                            table { class: "w-full text-sm",
+                                                                thead {
+                                                                    tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
+                                                                        th { class: "px-4 py-3 text-left font-medium", "행성" }
+                                                                        th { class: "px-4 py-3 text-left font-medium", "라시 (Sign)" }
+                                                                        th { class: "px-4 py-3 text-left font-medium", "황경" }
+                                                                        th { class: "px-4 py-3 text-left font-medium", "나크샤트라" }
+                                                                        th { class: "px-4 py-3 text-left font-medium", "하우스" }
+                                                                        th { class: "px-4 py-3 text-center font-medium", "태비/역행" }
+                                                                    }
+                                                                }
+                                                                tbody { class: "divide-y divide-slate-800",
+                                                                    {data.annual_chart.as_ref().unwrap().planets.iter().map(|p| {
+                                                                        let color = planet_color(p.planet);
+                                                                        rsx! {
+                                                                            tr { class: "hover:bg-slate-800/20 transition-colors",
+                                                                                td { class: "px-4 py-3 font-bold {color}", "{planet_name_kr(p.planet)}" }
+                                                                                td { class: "px-4 py-3 text-slate-300", "{rasi_name(p.rasi)}" }
+                                                                                td { class: "px-4 py-3 font-mono text-slate-400 text-xs", "{p.sidereal_deg:.2}°" }
+                                                                                td { class: "px-4 py-3 text-slate-400 text-xs", "{nakshatra_name(p.nakshatra)} P{p.pada}" }
+                                                                                td { class: "px-4 py-3 text-slate-400 text-xs font-mono", "H{p.house_index}" }
+                                                                                td { class: "px-4 py-3 text-center",
+                                                                                    if p.is_retrograde {
+                                                                                        span { class: "px-1.5 py-0.5 rounded text-xs bg-purple-900/50 text-purple-300 border border-purple-700/50 mr-1", "R" }
+                                                                                    }
+                                                                                    if p.is_combust {
+                                                                                        span { class: "px-1.5 py-0.5 rounded text-xs bg-orange-900/50 text-orange-300 border border-orange-700/50", "C" }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    })}
+                                                                 }
+                                                            }
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     } else {
@@ -1402,6 +1714,134 @@ pub fn VedicTab() -> Element {
                                                         }
                                                     }
                                                 })}
+                                            }
+                                        }
+                                    }
+                                },
+                                8 => rsx! {
+                                    // Ashtakavarga Tab
+                                    div { class: "space-y-6 animate-in fade-in duration-500",
+                                        // 1) Sarvashtakavarga (SAV - 종합 강도) Card/Table
+                                        div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
+                                            div { class: "flex items-center gap-2 border-b border-slate-800/60 pb-2.5",
+                                                span { class: "text-xl", "📊" }
+                                                h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "사르바쉬타카바르가 (SAV — 종합 에너지 총합)" }
+                                                span { class: "text-xs text-slate-500", "12개 하우스의 전반적인 에너지 총량 (평균 28점)" }
+                                            }
+                                            div { class: "grid grid-cols-3 sm:grid-cols-6 md:grid-cols-12 gap-3",
+                                                {data.chart.sav.points.iter().enumerate().map(|(idx, &pts)| {
+                                                    let house = idx + 1;
+                                                    let text_color = if pts >= 30 {
+                                                        "text-emerald-400"
+                                                    } else if pts < 25 {
+                                                        "text-rose-400"
+                                                    } else {
+                                                        "text-indigo-300"
+                                                    };
+                                                    let bg_color = if pts >= 30 {
+                                                        "bg-emerald-950/10 border-emerald-900/30 hover:border-emerald-800/50"
+                                                    } else if pts < 25 {
+                                                        "bg-rose-950/10 border-rose-900/30 hover:border-rose-800/50"
+                                                    } else {
+                                                        "bg-slate-800/20 border-slate-850 hover:border-slate-750"
+                                                    };
+                                                    rsx! {
+                                                        div { class: "p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all duration-300 {bg_color}",
+                                                            span { class: "text-[10px] text-slate-500 font-bold", "H{house}" }
+                                                            span { class: "text-lg font-extrabold {text_color} font-mono", "{pts}" }
+                                                            span { class: "text-[8px] text-slate-550",
+                                                                if pts >= 30 { "풍요" } else if pts < 25 { "부족" } else { "보통" }
+                                                            }
+                                                        }
+                                                    }
+                                                })}
+                                            }
+                                        }
+
+                                        // 2) Bhinna Ashtakavarga (BAV - 행성별 세부 강도) Table with Reduction Switcher
+                                        div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl space-y-4",
+                                            div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5 flex flex-wrap justify-between items-center gap-4",
+                                                div { class: "space-y-0.5",
+                                                    h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "빈나 아쉬타카바르가 (BAV - 행성별 세부 강도)" }
+                                                    p { class: "text-[10px] text-slate-500", "7대 행성의 각 하우스별 길흉 점수와 감쇄 분석 및 최종 소디아 핀다" }
+                                                }
+                                                // Reduction View Selector Buttons
+                                                div { class: "flex bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-xs font-semibold text-slate-400",
+                                                    button {
+                                                        class: if *active_reduction_view.read() == 0 {
+                                                            "px-3 py-1.5 rounded-md bg-indigo-600 text-white transition-colors font-bold"
+                                                        } else {
+                                                            "px-3 py-1.5 rounded-md hover:text-slate-200 transition-colors"
+                                                        },
+                                                        onclick: move |_| *active_reduction_view.write() = 0,
+                                                        "순수 BAV (Raw)"
+                                                    }
+                                                    button {
+                                                        class: if *active_reduction_view.read() == 1 {
+                                                            "px-3 py-1.5 rounded-md bg-indigo-600 text-white transition-colors font-bold"
+                                                        } else {
+                                                            "px-3 py-1.5 rounded-md hover:text-slate-200 transition-colors"
+                                                        },
+                                                        onclick: move |_| *active_reduction_view.write() = 1,
+                                                        "삼각 감쇄 (Trikona)"
+                                                    }
+                                                    button {
+                                                        class: if *active_reduction_view.read() == 2 {
+                                                            "px-3 py-1.5 rounded-md bg-indigo-600 text-white transition-colors font-bold"
+                                                        } else {
+                                                            "px-3 py-1.5 rounded-md hover:text-slate-200 transition-colors"
+                                                        },
+                                                        onclick: move |_| *active_reduction_view.write() = 2,
+                                                        "일주 감쇄 (Ekadhipatya)"
+                                                    }
+                                                }
+                                            }
+
+                                            div { class: "overflow-x-auto p-1",
+                                                table { class: "w-full text-sm font-mono",
+                                                    thead {
+                                                        tr { class: "bg-slate-800/20 text-xs text-slate-400 uppercase border-b border-slate-800",
+                                                            th { class: "px-4 py-3 text-left font-medium w-28", "행성 (Planet)" }
+                                                            { (1..=12).map(|h| rsx! {
+                                                                th { class: "px-2 py-3 text-center font-medium w-12", "H{h}" }
+                                                            }) }
+                                                            th { class: "px-4 py-3 text-center font-medium w-32", "소디아 핀다 (Pinda)" }
+                                                        }
+                                                    }
+                                                    tbody { class: "divide-y divide-slate-800/60",
+                                                        {data.chart.bav.iter().map(|b| {
+                                                            let p_name = planet_name_kr(b.planet);
+                                                            let p_color = planet_color(b.planet);
+                                                            let pts_arr = match *active_reduction_view.read() {
+                                                                1 => &b.trikona_points,
+                                                                2 => &b.shodhana_points,
+                                                                _ => &b.points,
+                                                            };
+                                                            rsx! {
+                                                                tr { class: "hover:bg-slate-800/10 transition-colors",
+                                                                    td { class: "px-4 py-3 font-bold text-left",
+                                                                        span { class: "{p_color}", "{p_name}" }
+                                                                    }
+                                                                    { pts_arr.iter().map(|&pt| {
+                                                                        let text_color = if pt > 4 {
+                                                                            "text-emerald-400 font-bold"
+                                                                        } else if pt == 0 {
+                                                                            "text-slate-650"
+                                                                        } else {
+                                                                            "text-slate-350"
+                                                                        };
+                                                                        rsx! {
+                                                                            td { class: "px-2 py-3 text-center {text_color}", "{pt}" }
+                                                                        }
+                                                                    }) }
+                                                                    td { class: "px-4 py-3 text-center font-extrabold text-amber-400",
+                                                                        "{b.sodya_pinda}"
+                                                                    }
+                                                                }
+                                                            }
+                                                        })}
+                                                    }
+                                                }
                                             }
                                         }
                                     }

@@ -875,6 +875,7 @@ name = "eon-ui"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "chrono-tz",
  "dioxus",
  "eon-core",
  "eon-saju",
