@@ -108,6 +108,26 @@ pub fn SimulationTab() -> Element {
                                 }
                             }
 
+                            // ── 인생 골든 타임 (Golden Time) ───────────────────
+                            if let Some(gt) = &saju.report.golden_time {
+                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 bg-gradient-to-r from-amber-950/20 to-slate-900 shadow-xl border-amber-900/30 flex items-center justify-between flex-wrap gap-4",
+                                    div { class: "flex items-center gap-4",
+                                        div { class: "text-4xl", "👑" }
+                                        div { class: "space-y-1",
+                                            h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "인생의 골든 타임 (Golden Time)" }
+                                            p { class: "text-lg font-bold bg-gradient-to-r from-amber-200 to-yellow-400 bg-clip-text text-transparent", 
+                                                "만 {gt.start_age}세 ~ {gt.end_age}세 (10년간)" 
+                                            }
+                                            p { class: "text-xs text-slate-400 leading-relaxed", "{gt.description}" }
+                                        }
+                                    }
+                                    div { class: "text-right bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-2.5",
+                                        p { class: "text-[10px] text-slate-500 font-semibold tracking-wider uppercase", "10년 평균 카르마 점수" }
+                                        p { class: "text-2xl font-mono font-extrabold text-amber-400 mt-0.5", "{gt.average_score:.1}" }
+                                    }
+                                }
+                            }
+
                             // ── VM 시뮬레이션 프레임 ──────────────────────────
                             if !saju.report.simulation_frames.is_empty() {
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
