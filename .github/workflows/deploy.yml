@@ -38,10 +38,18 @@ jobs:
       - name: Install Dioxus CLI
         run: cargo binstall dioxus-cli@0.6.1 -y
 
+      - name: Install WASI SDK
+        run: |
+          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz
+          sudo tar xf wasi-sdk-24.0-x86_64-linux.tar.gz -C /opt
+          sudo ln -s /opt/wasi-sdk-24.0 /opt/wasi-sdk
+
       - name: Build Rust Wasm Explicitly (For Debugging Cargo Error)
         working-directory: ./crates/eon-ui
         env:
           CARGO_BUILD_JOBS: 1
+          CC_wasm32_unknown_unknown: clang
+          AR_wasm32_unknown_unknown: llvm-ar
         run: cargo build --target wasm32-unknown-unknown --release
 
       - name: Build Dioxus Web App
