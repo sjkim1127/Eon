@@ -7,7 +7,7 @@ members = [
     "crates/eon-astro",
     "crates/eon-ai", "crates/eon-vedic",
     "crates/eon-service",
-    "app/src-tauri", "crates/eon-wasm",
+    "crates/eon-ui",
 ]
 
 [workspace.package]
@@ -33,3 +33,13 @@ opt-level = 'z'     # Optimize for size
 lto = true          # Enable Link Time Optimization
 codegen-units = 1   # Reduce parallel code generation units for better optimization
 panic = 'abort'     # Abort on panic instead of unwinding (reduces size)
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"

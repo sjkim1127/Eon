@@ -1,0 +1,22 @@
+[package]
+name = "eon-ui"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description.workspace = true
+
+[dependencies]
+dioxus = { version = "0.6.0", features = ["web", "router"] }
+eon-service = { path = "../eon-service" }
+eon-core = { path = "../eon-core" }
+eon-vedic = { path = "../eon-vedic" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+reqwest = { version = "0.12", features = ["json"] }
+wasm-logger = "0.2"
+log = "0.4"
+getrandom = { version = "0.2", features = ["js"] }
+gloo-timers = { version = "0.3", features = ["futures"] }
