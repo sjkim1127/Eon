@@ -40,7 +40,9 @@ jobs:
 
       - name: Build Dioxus Web App
         working-directory: ./crates/eon-ui
-        run: dx build --release
+        env:
+          CARGO_BUILD_JOBS: 2
+        run: dx build --release --trace
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v20
