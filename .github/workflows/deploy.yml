@@ -53,18 +53,18 @@ jobs:
           WASI_SDK_PATH: /opt/wasi-sdk
         run: cargo build --target wasm32-unknown-unknown --release
 
-      - name: Build Tailwind CSS
-        working-directory: ./crates/eon-ui
-        run: |
-          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64
-          chmod +x tailwindcss-linux-x64
-          ./tailwindcss-linux-x64 -i ./input.css -o ./public/tailwind.css --minify
-
       - name: Build Dioxus Web App
         working-directory: ./crates/eon-ui
         env:
           CARGO_BUILD_JOBS: 1
         run: dx build --release --trace
+
+      - name: Inject Assets (Post-Build)
+        run: |
+          cp ./crates/eon-ui/public/vercel.json ./target/dx/eon-ui/release/web/public/
+          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64
+          chmod +x tailwindcss-linux-x64
+          ./tailwindcss-linux-x64 -i ./crates/eon-ui/input.css -o ./target/dx/eon-ui/release/web/public/tailwind.css --minify
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v20
