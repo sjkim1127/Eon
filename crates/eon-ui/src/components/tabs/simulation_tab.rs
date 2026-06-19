@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
+use crate::i18n::{t, TK};
 use eon_service::dto::{SajuAnalysisInput, AnalysisInput};
 use eon_service::facade;
 use eon_saju::engine::emulator::YearlyScore;
@@ -8,6 +9,7 @@ use crate::components::shared::birth_form::BirthForm;
 #[component]
 pub fn SimulationTab() -> Element {
     let mut state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
 
     let run_analysis = move |_| {
         spawn(async move {
@@ -42,12 +44,12 @@ pub fn SimulationTab() -> Element {
 
             div { class: "flex justify-between items-center",
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-purple-200 to-pink-400 bg-clip-text text-transparent",
-                    "생애 시뮬레이터 (Life Path Simulator)"
+                    "{t(locale, TK::SectionSimulation)}"
                 }
                 button {
                     class: "px-5 py-2.5 bg-gradient-to-r from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600 rounded-xl font-semibold text-white shadow-lg shadow-purple-900/30 transition-all duration-200 active:scale-95",
                     onclick: run_analysis,
-                    "🧬 시뮬레이션 실행"
+                    "{t(locale, TK::BtnCalculate)} 🧬"
                 }
             }
 
@@ -55,18 +57,17 @@ pub fn SimulationTab() -> Element {
                 TaskStatus::Idle => rsx! {
                     div { class: "flex flex-col items-center justify-center py-20 gap-3 text-slate-500",
                         span { class: "text-5xl", "🔮" }
-                        p { class: "text-lg font-medium", "0~100세 생애 흐름을 사주 VM 엔진으로 시뮬레이션합니다." }
-                        p { class: "text-sm text-slate-600", "연도별 카르마 점수, 부하 진단, 취약점 분석 포함." }
+                        p { class: "text-lg font-medium", "{t(locale, TK::StatusIdleHint)}" }
                     }
                 },
                 TaskStatus::Loading => rsx! {
                     div { class: "flex flex-col items-center justify-center py-16 gap-3",
                         div { class: "w-12 h-12 rounded-full border-4 border-purple-500/30 border-t-purple-400 animate-spin" }
-                        p { class: "text-purple-400 font-medium animate-pulse", "생애 시뮬레이션 중... (LifePathEmulator)" }
+                        p { class: "text-purple-400 font-medium animate-pulse", "{t(locale, TK::StatusLoading)}" }
                     }
                 },
                 TaskStatus::Error(e) => rsx! {
-                    div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400", "오류: {e}" }
+                    div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400", "{t(locale, TK::StatusError)}: {e}" }
                 },
                 TaskStatus::Success => {
                     if let Some(saju) = &state.saju.read().data {

@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
+use crate::i18n::{t, TK};
 use eon_service::dto::{SajuAnalysisInput, VedicAnalysisInput, AnalysisInput};
 use eon_service::facade;
 use eon_vedic::analysis::strength::StrengthEngine;
@@ -50,6 +51,7 @@ fn planet_bar_color(p: VedicPlanet) -> &'static str {
 #[component]
 pub fn StrengthTab() -> Element {
     let mut state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
 
     let run_analysis = move |_| {
         spawn(async move {
@@ -99,27 +101,27 @@ pub fn StrengthTab() -> Element {
 
             div { class: "flex justify-between items-center",
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-emerald-200 to-green-400 bg-clip-text text-transparent",
-                    "세력 분석 (Strength Analysis)"
+                    "{t(locale, TK::SectionStrength)}"
                 }
                 button {
                     class: "px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-green-700 hover:from-emerald-600 hover:to-green-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-200 active:scale-95 disabled:opacity-50",
                     onclick: run_analysis,
                     disabled: is_loading,
-                    if is_loading { "⏳ 계산 중..." } else { "💪 세력 분석 실행" }
+                    if is_loading { "{t(locale, TK::StatusLoading)}" } else { "{t(locale, TK::BtnAnalyze)} 💪" }
                 }
             }
 
             if !has_saju && !has_vedic {
                 div { class: "flex flex-col items-center justify-center py-20 gap-3 text-slate-500",
                     span { class: "text-5xl", "⚖️" }
-                    p { class: "text-lg font-medium", "세력 분석을 실행하면 사주 + 베딕 통합 분석이 수행됩니다." }
+                    p { class: "text-lg font-medium", "{t(locale, TK::StatusIdleHint)}" }
                 }
             }
 
             if is_loading {
                 div { class: "flex flex-col items-center justify-center py-16 gap-3",
                     div { class: "w-12 h-12 rounded-full border-4 border-emerald-500/30 border-t-emerald-400 animate-spin" }
-                    p { class: "text-emerald-400 font-medium animate-pulse", "사주 + 베딕 동시 계산 중..." }
+                    p { class: "text-emerald-400 font-medium animate-pulse", "{t(locale, TK::StatusLoadingStrength)}" }
                 }
             }
 

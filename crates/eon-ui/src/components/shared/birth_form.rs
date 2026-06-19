@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use crate::store::AnalysisState;
 use crate::store::db::{self, UserProfile};
+use crate::i18n::{t, TK};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
@@ -15,12 +16,13 @@ const MAX_SEARCH_RESULTS: usize = 15;
 #[component]
 pub fn BirthForm() -> Element {
     let mut state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
 
     // Local state
     let mut profiles = use_signal(Vec::<UserProfile>::new);
     let mut new_profile_name = use_signal(|| String::new());
-    let mut city_input = use_signal(|| "서울".to_string());
-    let mut geo_status = use_signal(|| String::new()); // "검색 중...", "서울, KR", "오류" 등
+    let mut city_input = use_signal(|| String::new());
+    let mut geo_status = use_signal(|| String::new());
     let mut search_results = use_signal(Vec::<NominatimResult>::new);
 
     // Load profiles on mount
@@ -49,7 +51,6 @@ pub fn BirthForm() -> Element {
         let selected_id = evt.value();
         if let Some(profile) = profiles.read().iter().find(|p| p.id == selected_id) {
             *state.form.write() = profile.form_state.clone();
-            // 도시 입력 필드도 위도/경도로 복원
             let lat = profile.form_state.lat;
             let lon = profile.form_state.lon;
             geo_status.set(format!("📍 {:.4}°N, {:.4}°E", lat, lon));
@@ -71,13 +72,16 @@ pub fn BirthForm() -> Element {
         city_input.set(String::new());
     };
 
+    let geo_searching_str = t(locale, TK::GeoSearching);
+    let geo_no_result_str = t(locale, TK::GeoNoResult);
+    let geo_parse_err_str = t(locale, TK::GeoParseError);
+    let geo_net_err_str = t(locale, TK::GeoNetworkError);
+
     // 도시 검색 (Nominatim)
     let on_city_geocode = move |_| {
         let query = city_input.read().clone();
-        if query.trim().is_empty() {
-            return;
-        }
-        geo_status.set("🔍 검색 중...".to_string());
+        if query.trim().is_empty() { return; }
+        geo_status.set(geo_searching_str.to_string());
         search_results.set(Vec::new());
         spawn(async move {
             let url = format!(
@@ -85,42 +89,32 @@ pub fn BirthForm() -> Element {
                 urlencoding::encode(&query),
                 MAX_SEARCH_RESULTS
             );
-            let client = reqwest::Client::builder()
-                .build()
+            let client = reqwest::Client::builder().build()
                 .unwrap_or_else(|_| reqwest::Client::new());
-            match client
-                .get(&url)
-                .header("User-Agent", "EonAstroApp/1.0")
-                .send()
-                .await
-            {
+            match client.get(&url).header("User-Agent", "EonAstroApp/1.0").send().await {
                 Ok(resp) => {
                     if let Ok(results) = resp.json::<Vec<NominatimResult>>().await {
                         if results.is_empty() {
-                            geo_status.set("❌ 결과 없음".to_string());
+                            geo_status.set(geo_no_result_str.to_string());
                         } else {
-                            geo_status.set(format!("✅ 검색 완료 ({}건)", results.len()));
+                            geo_status.set(format!("✅ ({} results)", results.len()));
                             search_results.set(results);
                         }
                     } else {
-                        geo_status.set("❌ 파싱 오류".to_string());
+                        geo_status.set(geo_parse_err_str.to_string());
                     }
                 }
-                Err(_) => {
-                    geo_status.set("❌ 네트워크 오류".to_string());
-                }
+                Err(_) => { geo_status.set(geo_net_err_str.to_string()); }
             }
         });
     };
 
-    // Enter 키 검색
+    // Enter key search
     let on_city_keydown = move |evt: Event<KeyboardData>| {
         if evt.key() == Key::Enter {
             let query = city_input.read().clone();
-            if query.trim().is_empty() {
-                return;
-            }
-            geo_status.set("🔍 검색 중...".to_string());
+            if query.trim().is_empty() { return; }
+            geo_status.set(geo_searching_str.to_string());
             search_results.set(Vec::new());
             spawn(async move {
                 let url = format!(
@@ -128,27 +122,20 @@ pub fn BirthForm() -> Element {
                     urlencoding::encode(&query)
                 );
                 let client = reqwest::Client::new();
-                match client
-                    .get(&url)
-                    .header("User-Agent", "EonAstroApp/1.0")
-                    .send()
-                    .await
-                {
+                match client.get(&url).header("User-Agent", "EonAstroApp/1.0").send().await {
                     Ok(resp) => {
                         if let Ok(results) = resp.json::<Vec<NominatimResult>>().await {
                             if results.is_empty() {
-                                geo_status.set("❌ 결과 없음".to_string());
+                                geo_status.set(geo_no_result_str.to_string());
                             } else {
-                                geo_status.set(format!("✅ 검색 완료 ({}건)", results.len()));
+                                geo_status.set(format!("✅ ({} results)", results.len()));
                                 search_results.set(results);
                             }
                         } else {
-                            geo_status.set("❌ 파싱 오류".to_string());
+                            geo_status.set(geo_parse_err_str.to_string());
                         }
                     }
-                    Err(_) => {
-                        geo_status.set("❌ 네트워크 오류".to_string());
-                    }
+                    Err(_) => { geo_status.set(geo_net_err_str.to_string()); }
                 }
             });
         }
@@ -163,11 +150,11 @@ pub fn BirthForm() -> Element {
             // Profile Row
             div { class: "flex items-center gap-3 pb-3 border-b border-slate-800",
                 div { class: "flex flex-col gap-1 flex-1 min-w-0",
-                    label { class: "text-xs text-slate-400 font-medium", "저장된 프로필" }
+                    label { class: "text-xs text-slate-400 font-medium", "{t(locale, TK::FormSavedProfiles)}" }
                     select {
                         class: "bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 w-full",
                         onchange: on_select_profile,
-                        option { value: "", "--- 불러오기 ---" }
+                        option { value: "", "{t(locale, TK::FormLoadProfile)}" }
                         {profiles.read().iter().map(|p| rsx! {
                             option { value: "{p.id}", "{p.name}" }
                         })}
@@ -175,10 +162,10 @@ pub fn BirthForm() -> Element {
                 }
                 div { class: "flex items-end gap-2 flex-1 min-w-0",
                     div { class: "flex flex-col gap-1 flex-1 min-w-0",
-                        label { class: "text-xs text-slate-400 font-medium", "현재 설정 저장" }
+                        label { class: "text-xs text-slate-400 font-medium", "{t(locale, TK::FormSaveProfile)}" }
                         input {
                             class: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500",
-                            placeholder: "프로필 이름 (예: 홍길동)",
+                            placeholder: "{t(locale, TK::FormProfileNamePlaceholder)}",
                             value: "{new_profile_name}",
                             oninput: move |evt| new_profile_name.set(evt.value()),
                         }
@@ -186,16 +173,16 @@ pub fn BirthForm() -> Element {
                     button {
                         class: "shrink-0 bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors",
                         onclick: on_save_profile,
-                        "저장"
+                        "{t(locale, TK::FormSaveBtn)}"
                     }
                 }
             }
 
             // Input Row
             div { class: "flex flex-wrap gap-3 items-end",
-                // 연도
+                // Year
                 div { class: "flex flex-col gap-1",
-                    label { class: "text-xs text-slate-400 font-medium", "연 (Year)" }
+                    label { class: "text-xs text-slate-400 font-medium", "{t(locale, TK::FormYear)}" }
                     input {
                         class: "w-20 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition-colors",
                         r#type: "number", min: "1900", max: "2100",
@@ -205,9 +192,9 @@ pub fn BirthForm() -> Element {
                         },
                     }
                 }
-                // 월
+                // Month
                 div { class: "flex flex-col gap-1",
-                    label { class: "text-xs text-slate-400 font-medium", "월" }
+                    label { class: "text-xs text-slate-400 font-medium", "{t(locale, TK::FormMonth)}" }
                     input {
                         class: "w-14 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition-colors",
                         r#type: "number", min: "1", max: "12",
@@ -217,9 +204,9 @@ pub fn BirthForm() -> Element {
                         },
                     }
                 }
-                // 일
+                // Day
                 div { class: "flex flex-col gap-1",
-                    label { class: "text-xs text-slate-400 font-medium", "일" }
+                    label { class: "text-xs text-slate-400 font-medium", "{t(locale, TK::FormDay)}" }
                     input {
                         class: "w-14 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition-colors",
                         r#type: "number", min: "1", max: "31",
@@ -229,9 +216,9 @@ pub fn BirthForm() -> Element {
                         },
                     }
                 }
-                // 시
+                // Hour
                 div { class: "flex flex-col gap-1",
-                    label { class: "text-xs text-slate-400 font-medium", "시" }
+                    label { class: "text-xs text-slate-400 font-medium", "{t(locale, TK::FormHour)}" }
                     input {
                         class: "w-14 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition-colors",
                         r#type: "number", min: "0", max: "23",
@@ -241,9 +228,9 @@ pub fn BirthForm() -> Element {
                         },
                     }
                 }
-                // 분
+                // Minute
                 div { class: "flex flex-col gap-1",
-                    label { class: "text-xs text-slate-400 font-medium", "분" }
+                    label { class: "text-xs text-slate-400 font-medium", "{t(locale, TK::FormMinute)}" }
                     input {
                         class: "w-14 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition-colors",
                         r#type: "number", min: "0", max: "59",
@@ -253,15 +240,15 @@ pub fn BirthForm() -> Element {
                         },
                     }
                 }
-                // 출생지 (텍스트 검색)
+                // Birthplace (text search)
                 div { class: "flex flex-col gap-1 min-w-0 relative",
                     label { class: "text-xs text-slate-400 font-medium",
-                        "출생지 (엔터 또는 🔍 로 검색)"
+                        "{t(locale, TK::FormBirthplace)}"
                     }
                     div { class: "flex gap-1",
                         input {
                             class: "w-36 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition-colors",
-                            placeholder: "도시명 (예: 서울)",
+                            placeholder: "{t(locale, TK::FormCityPlaceholder)}",
                             value: "{city_input}",
                             oninput: move |evt| city_input.set(evt.value()),
                             onkeydown: on_city_keydown,
@@ -287,7 +274,7 @@ pub fn BirthForm() -> Element {
                             })}
                         }
                     }
-                    // 지오코딩 결과 / 좌표 표시
+                    // Geocoding result / coordinate display
                     div { class: "text-xs text-slate-500 mt-0.5",
                         if geo_status.read().is_empty() {
                             "📍 {lat_display:.4}°N, {lon_display:.4}°E"
@@ -296,7 +283,7 @@ pub fn BirthForm() -> Element {
                         }
                     }
                 }
-                // 음력
+                // Lunar calendar checkbox
                 div { class: "flex items-center gap-2 mb-1",
                     input {
                         r#type: "checkbox", id: "is_lunar",
@@ -304,9 +291,11 @@ pub fn BirthForm() -> Element {
                         checked: "{state.form.read().is_lunar}",
                         onchange: move |evt| state.form.write().is_lunar = evt.value() == "true"
                     }
-                    label { r#for: "is_lunar", class: "text-sm text-slate-300 select-none cursor-pointer whitespace-nowrap", "음력" }
+                    label { r#for: "is_lunar", class: "text-sm text-slate-300 select-none cursor-pointer whitespace-nowrap",
+                        "{t(locale, TK::FormLunar)}"
+                    }
                 }
-                // 남성
+                // Male checkbox
                 div { class: "flex items-center gap-2 mb-1",
                     input {
                         r#type: "checkbox", id: "is_male",
@@ -314,7 +303,9 @@ pub fn BirthForm() -> Element {
                         checked: "{state.form.read().is_male}",
                         onchange: move |evt| state.form.write().is_male = evt.value() == "true"
                     }
-                    label { r#for: "is_male", class: "text-sm text-slate-300 select-none cursor-pointer whitespace-nowrap", "남성" }
+                    label { r#for: "is_male", class: "text-sm text-slate-300 select-none cursor-pointer whitespace-nowrap",
+                        "{t(locale, TK::FormMale)}"
+                    }
                 }
             }
         }

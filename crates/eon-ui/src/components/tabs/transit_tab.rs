@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
+use crate::i18n::{t, TK};
 use eon_service::dto::{SajuAnalysisInput, TransitAnalysisInput, AnalysisInput};
 use eon_service::facade;
 use crate::components::shared::birth_form::BirthForm;
@@ -7,6 +8,7 @@ use crate::components::shared::birth_form::BirthForm;
 #[component]
 pub fn TransitTab() -> Element {
     let mut state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
 
     let run_analysis = move |_| {
         spawn(async move {
@@ -58,12 +60,12 @@ pub fn TransitTab() -> Element {
 
             div { class: "flex justify-between items-center",
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-sky-200 to-blue-400 bg-clip-text text-transparent",
-                    "운세 흐름 (Transit & Dasha)"
+                    "{t(locale, TK::SectionTransit)}"
                 }
                 button {
                     class: "px-5 py-2.5 bg-gradient-to-r from-sky-700 to-blue-700 hover:from-sky-600 hover:to-blue-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-200 active:scale-95",
                     onclick: run_analysis,
-                    "⏳ 운세 분석 실행"
+                    "{t(locale, TK::BtnAnalyze)} ⏳"
                 }
             }
 
@@ -71,17 +73,17 @@ pub fn TransitTab() -> Element {
                 TaskStatus::Idle => rsx! {
                     div { class: "flex flex-col items-center justify-center py-20 gap-3 text-slate-500",
                         span { class: "text-5xl", "🌊" }
-                        p { class: "text-lg font-medium", "운세 분석을 실행하면 현재 흐름을 볼 수 있습니다." }
+                        p { class: "text-lg font-medium", "{t(locale, TK::StatusIdleHint)}" }
                     }
                 },
                 TaskStatus::Loading => rsx! {
                     div { class: "flex flex-col items-center justify-center py-16 gap-3",
                         div { class: "w-12 h-12 rounded-full border-4 border-sky-500/30 border-t-sky-400 animate-spin" }
-                        p { class: "text-sky-400 font-medium animate-pulse", "운세 계산 중..." }
+                        p { class: "text-sky-400 font-medium animate-pulse", "{t(locale, TK::StatusLoadingTransit)}" }
                     }
                 },
                 TaskStatus::Error(e) => rsx! {
-                    div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400", "오류: {e}" }
+                    div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400", "{t(locale, TK::StatusError)}: {e}" }
                 },
                 TaskStatus::Success => {
                     if let Some(transit) = &state.transit.read().data {

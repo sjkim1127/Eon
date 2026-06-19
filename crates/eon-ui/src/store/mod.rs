@@ -1,6 +1,7 @@
 pub mod db;
 use dioxus::prelude::*;
 use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult};
+use crate::i18n::Locale;
 
 #[derive(Clone, PartialEq, Default)]
 pub enum TaskStatus {
@@ -68,6 +69,7 @@ pub struct AnalysisState {
     pub vedic: Signal<AnalysisTaskState<VedicAnalysisOutput>>,
     pub transit: Signal<AnalysisTaskState<TransitAnalysisOutput>>,
     pub tier: Signal<AnalysisTaskState<TierResult>>,
+    pub locale: Signal<Locale>,
 }
 
 impl AnalysisState {
@@ -78,6 +80,7 @@ impl AnalysisState {
             vedic: Signal::new(AnalysisTaskState::default()),
             transit: Signal::new(AnalysisTaskState::default()),
             tier: Signal::new(AnalysisTaskState::default()),
+            locale: Signal::new(Locale::Ko),
         }
     }
 }

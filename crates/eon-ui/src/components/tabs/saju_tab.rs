@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
+use crate::i18n::{t, TK};
 use eon_service::dto::{SajuAnalysisInput, AnalysisInput};
 use eon_service::facade;
 use eon_saju::analysis::strength::StrengthType;
@@ -9,6 +10,7 @@ use crate::components::shared::birth_form::BirthForm;
 #[component]
 pub fn SajuTab() -> Element {
     let mut state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
 
     let run_analysis = move |_| {
         spawn(async move {
@@ -43,12 +45,12 @@ pub fn SajuTab() -> Element {
 
             div { class: "flex justify-between items-center",
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-amber-200 to-orange-400 bg-clip-text text-transparent",
-                    "사주 명식 (四柱 命式)"
+                    "{t(locale, TK::SectionSajuChart)}"
                 }
                 button {
                     class: "px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-semibold text-white shadow-lg shadow-amber-900/30 transition-all duration-200 active:scale-95",
                     onclick: run_analysis,
-                    "🔮 분석 실행"
+                    "{t(locale, TK::SajuAnalyzeBtn)}"
                 }
             }
 
@@ -56,17 +58,17 @@ pub fn SajuTab() -> Element {
                 TaskStatus::Idle => rsx! {
                     div { class: "flex flex-col items-center justify-center py-20 gap-3 text-slate-500",
                         span { class: "text-5xl", "🌌" }
-                        p { class: "text-lg font-medium", "출생 정보를 입력하고 분석을 실행하세요." }
+                        p { class: "text-lg font-medium", "{t(locale, TK::StatusIdleHint)}" }
                     }
                 },
                 TaskStatus::Loading => rsx! {
                     div { class: "flex flex-col items-center justify-center py-20 gap-3",
                         div { class: "w-12 h-12 rounded-full border-4 border-amber-500/30 border-t-amber-400 animate-spin" }
-                        p { class: "text-amber-400 font-medium animate-pulse", "사주 계산 중..." }
+                        p { class: "text-amber-400 font-medium animate-pulse", "{t(locale, TK::StatusLoadingSaju)}" }
                     }
                 },
                 TaskStatus::Error(e) => rsx! {
-                    div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400", "오류: {e}" }
+                    div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400", "{t(locale, TK::StatusError)}: {e}" }
                 },
                 TaskStatus::Success => {
                     if let Some(data) = &state.saju.read().data {
@@ -94,7 +96,7 @@ pub fn SajuTab() -> Element {
                             // ── 1. 사주 원국 (천간/지지/십성/12운성/신살) ─────────
                             div { class: "grid grid-cols-4 gap-3.5",
                                 PillarCard {
-                                    title: "시주 (Hour)",
+                                    title: t(locale, TK::SajuHourPillar),
                                     stem_god: data.report.ten_gods.hour_stem.hangul().to_string(),
                                     stem_hanja: data.report.pillars.hour.stem.hanja().to_string(),
                                     stem_hangul: data.report.pillars.hour.stem.hangul().to_string(),
@@ -107,8 +109,8 @@ pub fn SajuTab() -> Element {
                                     shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Hour)
                                 }
                                 PillarCard {
-                                    title: "일주 (Day)",
-                                    stem_god: "일간 (본인)".to_string(),
+                                    title: t(locale, TK::SajuDayPillar),
+                                    stem_god: t(locale, TK::SajuDayMaster).to_string(),
                                     stem_hanja: data.report.pillars.day.stem.hanja().to_string(),
                                     stem_hangul: data.report.pillars.day.stem.hangul().to_string(),
                                     stem_element: data.report.pillars.day.stem.element().hangul().to_string(),
@@ -120,7 +122,7 @@ pub fn SajuTab() -> Element {
                                     shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Day)
                                 }
                                 PillarCard {
-                                    title: "월주 (Month)",
+                                    title: t(locale, TK::SajuMonthPillar),
                                     stem_god: data.report.ten_gods.month_stem.hangul().to_string(),
                                     stem_hanja: data.report.pillars.month.stem.hanja().to_string(),
                                     stem_hangul: data.report.pillars.month.stem.hangul().to_string(),
@@ -133,7 +135,7 @@ pub fn SajuTab() -> Element {
                                     shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Month)
                                 }
                                 PillarCard {
-                                    title: "연주 (Year)",
+                                    title: t(locale, TK::SajuYearPillar),
                                     stem_god: data.report.ten_gods.year_stem.hangul().to_string(),
                                     stem_hanja: data.report.pillars.year.stem.hanja().to_string(),
                                     stem_hangul: data.report.pillars.year.stem.hangul().to_string(),
