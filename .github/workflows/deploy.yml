@@ -38,10 +38,16 @@ jobs:
       - name: Install Dioxus CLI
         run: cargo binstall dioxus-cli@0.6.1 -y
 
+      - name: Build Rust Wasm Explicitly (For Debugging Cargo Error)
+        working-directory: ./crates/eon-ui
+        env:
+          CARGO_BUILD_JOBS: 1
+        run: cargo build --target wasm32-unknown-unknown --release
+
       - name: Build Dioxus Web App
         working-directory: ./crates/eon-ui
         env:
-          CARGO_BUILD_JOBS: 2
+          CARGO_BUILD_JOBS: 1
         run: dx build --release --trace
 
       - name: Deploy to Vercel
