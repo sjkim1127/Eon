@@ -1,3 +1,4 @@
+pub mod db;
 use dioxus::prelude::*;
 use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult};
 
@@ -27,7 +28,9 @@ impl<T: Clone + 'static> Default for AnalysisTaskState<T> {
     }
 }
 
-#[derive(Clone, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct FormState {
     pub year: i32,
     pub month: u32,
