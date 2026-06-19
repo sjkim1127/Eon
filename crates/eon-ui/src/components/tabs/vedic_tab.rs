@@ -121,6 +121,224 @@ fn lajjitadi_color(av: &eon_vedic::analysis::avasthas::LajjitadiAvastha) -> &'st
     }
 }
 
+fn rasi_name_short(rasi: u8) -> &'static str {
+    match rasi {
+        1 => "AR (양)",
+        2 => "TA (황소)",
+        3 => "GE (쌍둥)",
+        4 => "CN (게)",
+        5 => "LE (사자)",
+        6 => "VI (처녀)",
+        7 => "LI (천칭)",
+        8 => "SC (전갈)",
+        9 => "SG (사수)",
+        10 => "CP (염소)",
+        11 => "AQ (물병)",
+        12 => "PI (물고기)",
+        _ => "—",
+    }
+}
+
+fn render_vedic_chart(
+    rasi_planets: &[Vec<(&'static str, &'static str)>],
+    house_planets: &[Vec<(&'static str, &'static str)>],
+    lagna_rasi: u8,
+    style: &str,
+    chart_title: &str,
+) -> Element {
+    if style == "north" {
+        let house_bounds = [
+            (0, 0, 0, 0, 0), // dummy 0-index
+            (1, 130, 75, 140, 70), // House 1
+            (2, 60, 20, 100, 45),  // House 2
+            (3, 10, 70, 50, 90),   // House 3
+            (4, 75, 130, 85, 140),  // House 4
+            (5, 10, 240, 50, 90),  // House 5
+            (6, 60, 325, 100, 45), // House 6
+            (7, 130, 245, 140, 70),// House 7
+            (8, 240, 325, 100, 45),// House 8
+            (9, 340, 240, 50, 90), // House 9
+            (10, 240, 130, 85, 140),// House 10
+            (11, 340, 70, 50, 90), // House 11
+            (12, 240, 20, 100, 45), // House 12
+        ];
+
+        let sign_coords = [
+            (0, 0, 0), // dummy
+            (1, 200, 32),
+            (2, 120, 20),
+            (3, 20, 115),
+            (4, 115, 205),
+            (5, 20, 295),
+            (6, 120, 388),
+            (7, 200, 372),
+            (8, 280, 388),
+            (9, 380, 295),
+            (10, 285, 205),
+            (11, 380, 115),
+            (12, 280, 20),
+        ];
+
+        rsx! {
+            svg {
+                view_box: "0 0 400 400",
+                class: "w-full h-auto max-w-[400px] aspect-square select-none font-mono mx-auto",
+                rect {
+                    width: "400",
+                    height: "400",
+                    fill: "#0b0f19",
+                    rx: "12",
+                    stroke: "#1e293b",
+                    stroke_width: "2"
+                }
+                line { x1: "0", y1: "0", x2: "400", y2: "400", stroke: "#1e293b", stroke_width: "1.5" }
+                line { x1: "0", y1: "400", x2: "400", y2: "0", stroke: "#1e293b", stroke_width: "1.5" }
+                polygon {
+                    points: "200,0 400,200 200,400 0,200",
+                    fill: "none",
+                    stroke: "#1e293b",
+                    stroke_width: "1.5"
+                }
+                rect {
+                    x: "155",
+                    y: "182",
+                    width: "90",
+                    height: "36",
+                    fill: "#0f172a",
+                    stroke: "#1e293b",
+                    stroke_width: "1",
+                    rx: "4"
+                }
+                text {
+                    x: "200",
+                    y: "204",
+                    text_anchor: "middle",
+                    font_size: "10px",
+                    font_weight: "bold",
+                    fill: "#cbd5e1",
+                    "{chart_title}"
+                }
+                
+                {house_bounds.iter().map(|&(h_idx, box_x, box_y, box_w, box_h)| {
+                    let sign_num = (lagna_rasi + h_idx as u8 - 2) % 12 + 1;
+                    let (_, s_x, s_y) = sign_coords[h_idx];
+                    let h_planets = &house_planets[h_idx];
+                    rsx! {
+                        text {
+                            x: "{s_x}",
+                            y: "{s_y}",
+                            text_anchor: "middle",
+                            font_size: "10px",
+                            font_weight: "bold",
+                            fill: "#475569",
+                            "{sign_num}"
+                        }
+                        foreignObject {
+                            x: "{box_x}",
+                            y: "{box_y}",
+                            width: "{box_w}",
+                            height: "{box_h}",
+                            div { class: "flex flex-wrap justify-center items-center gap-1 p-0.5 h-full",
+                                {h_planets.iter().map(|&(lbl, color_cls)| rsx! {
+                                    span { class: "{color_cls} text-[9px] bg-slate-950/80 border border-slate-900/60 px-1 py-0.5 rounded", "{lbl}" }
+                                })}
+                            }
+                        }
+                    }
+                })}
+            }
+        }
+    } else {
+        let cell_coords = [
+            (12, 0, 0),    // Pisces
+            (1, 100, 0),   // Aries
+            (2, 200, 0),   // Taurus
+            (3, 300, 0),   // Gemini
+            (4, 300, 100),  // Cancer
+            (5, 300, 200),  // Leo
+            (6, 300, 300),  // Virgo
+            (7, 200, 300),  // Libra
+            (8, 100, 300),  // Scorpio
+            (9, 0, 300),   // Sagittarius
+            (10, 0, 200),  // Capricorn
+            (11, 0, 100),  // Aquarius
+        ];
+
+        rsx! {
+            svg {
+                view_box: "0 0 400 400",
+                class: "w-full h-auto max-w-[400px] aspect-square select-none font-mono mx-auto",
+                rect {
+                    width: "400",
+                    height: "400",
+                    fill: "#0b0f19",
+                    rx: "12",
+                    stroke: "#1e293b",
+                    stroke_width: "2"
+                }
+                rect {
+                    x: "100",
+                    y: "100",
+                    width: "200",
+                    height: "200",
+                    fill: "#0f172a",
+                    stroke: "#1e293b",
+                    stroke_width: "1.5"
+                }
+                text {
+                    x: "200",
+                    y: "185",
+                    text_anchor: "middle",
+                    font_size: "14px",
+                    font_weight: "bold",
+                    fill: "#f8fafc",
+                    "{chart_title}"
+                }
+                text {
+                    x: "200",
+                    y: "215",
+                    text_anchor: "middle",
+                    font_size: "10px",
+                    fill: "#475569",
+                    "South Indian Style"
+                }
+
+                {cell_coords.iter().map(|&(r_id, cell_x, cell_y)| {
+                    let is_lagna = lagna_rasi == r_id;
+                    let bg_color = if is_lagna { "#131e35" } else { "#0b0f19" };
+                    let border_color = if is_lagna { "#38bdf8" } else { "#1e293b" };
+                    let r_planets = &rasi_planets[r_id as usize];
+                    rsx! {
+                        rect {
+                            x: "{cell_x}",
+                            y: "{cell_y}",
+                            width: "100",
+                            height: "100",
+                            fill: "{bg_color}",
+                            stroke: "{border_color}",
+                            stroke_width: "1.5"
+                        }
+                        foreignObject {
+                            x: "{cell_x}",
+                            y: "{cell_y}",
+                            width: "100",
+                            height: "100",
+                            div { class: "p-1.5 flex flex-col justify-between h-full select-none",
+                                span { class: "text-[9px] text-slate-500 font-bold", "{rasi_name_short(r_id)}" }
+                                div { class: "grid grid-cols-2 gap-x-1 gap-y-0.5 text-[9px]",
+                                    {r_planets.iter().map(|&(lbl, color_cls)| rsx! {
+                                        span { class: "{color_cls} text-center bg-slate-950/40 border border-slate-900/30 rounded py-0.5", "{lbl}" }
+                                    })}
+                                }
+                            }
+                        }
+                    }
+                })}
+            }
+        }
+    }
+}
+
 #[component]
 pub fn VedicTab() -> Element {
     let mut state = use_context::<AnalysisState>();
@@ -128,6 +346,8 @@ pub fn VedicTab() -> Element {
     // Sub-tab selection state: 0 = Basic D1, 1 = KP System, 2 = Dashas, 3 = Compatibility
     let mut active_subtab = use_signal(|| 0);
     let mut active_reduction_view = use_signal(|| 0);
+    let mut chart_style = use_signal(|| "south".to_string());
+    let mut varga_chart_style = use_signal(|| "south".to_string());
 
     // Compatibility form states
     let mut partner_year = use_signal(|| 1992);
@@ -378,6 +598,87 @@ pub fn VedicTab() -> Element {
                                                     p { class: "text-xs text-slate-500 font-semibold tracking-wider", "아바요기 포인트 (흉성)" }
                                                     p { class: "text-xl font-bold text-rose-400 mt-1", "{planet_name_kr(data.chart.panchanga.avayogi_planet)}" }
                                                     p { class: "text-xs text-slate-400 mt-0.5", "Dagdha: {data.chart.panchanga.dagdha_rashis.iter().map(|&r| rasi_name(r)).collect::<Vec<_>>().join(\", \")}" }
+                                                }
+                                            }
+                                        }
+
+                                        // ── 베딕 천도 배치도 (Vedic Birth Chart SVG) ──────────────────────
+                                        {
+                                            let mut rasi_planets: Vec<Vec<(&'static str, &'static str)>> = vec![vec![]; 13];
+                                            let mut house_planets: Vec<Vec<(&'static str, &'static str)>> = vec![vec![]; 13];
+
+                                            house_planets[1].push(("Asc", "text-sky-400 font-bold"));
+                                            if data.chart.ascendant.rasi >= 1 && data.chart.ascendant.rasi <= 12 {
+                                                rasi_planets[data.chart.ascendant.rasi as usize].push(("Asc", "text-sky-400 font-bold"));
+                                            }
+
+                                            for p in &data.chart.planets {
+                                                let p_lbl = match p.planet {
+                                                    VedicPlanet::Sun => "Su",
+                                                    VedicPlanet::Moon => "Mo",
+                                                    VedicPlanet::Mars => "Ma",
+                                                    VedicPlanet::Mercury => "Me",
+                                                    VedicPlanet::Jupiter => "Ju",
+                                                    VedicPlanet::Venus => "Ve",
+                                                    VedicPlanet::Saturn => "Sa",
+                                                    VedicPlanet::Rahu => "Ra",
+                                                    VedicPlanet::Ketu => "Ke",
+                                                    VedicPlanet::Ascendant => "Asc",
+                                                };
+                                                let p_color = match p.planet {
+                                                    VedicPlanet::Sun => "text-orange-400 font-bold",
+                                                    VedicPlanet::Moon => "text-slate-355 font-bold",
+                                                    VedicPlanet::Mars => "text-red-400 font-bold",
+                                                    VedicPlanet::Mercury => "text-emerald-400 font-bold",
+                                                    VedicPlanet::Jupiter => "text-yellow-400 font-bold",
+                                                    VedicPlanet::Venus => "text-pink-400 font-bold",
+                                                    VedicPlanet::Saturn => "text-indigo-400 font-bold",
+                                                    VedicPlanet::Rahu => "text-purple-400 font-bold",
+                                                    VedicPlanet::Ketu => "text-amber-600 font-bold",
+                                                    VedicPlanet::Ascendant => "text-sky-400 font-bold",
+                                                };
+                                                if p_lbl != "Asc" {
+                                                    if p.rasi >= 1 && p.rasi <= 12 {
+                                                        rasi_planets[p.rasi as usize].push((p_lbl, p_color));
+                                                    }
+                                                    if p.house_index >= 1 && p.house_index <= 12 {
+                                                        house_planets[p.house_index as usize].push((p_lbl, p_color));
+                                                    }
+                                                }
+                                            }
+
+                                            let cur_style = chart_style.read().clone();
+                                            rsx! {
+                                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl animate-in fade-in duration-500",
+                                                    div { class: "flex justify-between items-center border-b border-slate-800/60 pb-3 flex-wrap gap-2",
+                                                        div { class: "space-y-0.5",
+                                                            h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "베딕 천도 배치도 (Vedic Birth Chart)" }
+                                                            p { class: "text-xs text-slate-500", "라시 차트(D1)의 각 행성 및 라그나 배치도 시각화" }
+                                                        }
+                                                        div { class: "flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-850",
+                                                            button {
+                                                                class: if cur_style == "south" {
+                                                                    "px-3 py-1.5 text-xs font-bold text-blue-400 bg-slate-850 rounded-lg transition-colors border border-slate-700/50"
+                                                                } else {
+                                                                    "px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+                                                                },
+                                                                onclick: move |_| *chart_style.write() = "south".to_string(),
+                                                                "남인도식 (South)"
+                                                            }
+                                                            button {
+                                                                class: if cur_style == "north" {
+                                                                    "px-3 py-1.5 text-xs font-bold text-blue-400 bg-slate-855 rounded-lg transition-colors border border-slate-700/50"
+                                                                } else {
+                                                                    "px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+                                                                },
+                                                                onclick: move |_| *chart_style.write() = "north".to_string(),
+                                                                "북인도식 (North)"
+                                                            }
+                                                        }
+                                                    }
+                                                    div { class: "py-2 flex justify-center",
+                                                        {render_vedic_chart(&rasi_planets, &house_planets, data.chart.ascendant.rasi, &cur_style, "Rasi D1")}
+                                                    }
                                                 }
                                             }
                                         }
@@ -1567,66 +1868,152 @@ pub fn VedicTab() -> Element {
                                             let v_id = selected_varga.read().clone();
                                             if let Some(v_report) = data.varga_nakshatra_reports.reports.get(&v_id) {
                                                 let lagna_name = rasi_name(v_report.lagna_rasi);
+
+                                                // Calculate Varga planets
+                                                let mut v_rasi_planets: Vec<Vec<(&'static str, &'static str)>> = vec![vec![]; 13];
+                                                let mut v_house_planets: Vec<Vec<(&'static str, &'static str)>> = vec![vec![]; 13];
+
+                                                v_house_planets[1].push(("Asc", "text-sky-400 font-bold"));
+                                                if v_report.lagna_rasi >= 1 && v_report.lagna_rasi <= 12 {
+                                                    v_rasi_planets[v_report.lagna_rasi as usize].push(("Asc", "text-sky-400 font-bold"));
+                                                }
+
+                                                for row in &v_report.rows {
+                                                    let p_name = row.planet.as_str();
+                                                    let p_lbl = match p_name {
+                                                        "Sun" | "Surya" => "Su",
+                                                        "Moon" | "Chandra" => "Mo",
+                                                        "Mars" | "Mangala" => "Ma",
+                                                        "Mercury" | "Budha" => "Me",
+                                                        "Jupiter" | "Guru" => "Ju",
+                                                        "Venus" | "Shukra" => "Ve",
+                                                        "Saturn" | "Shani" => "Sa",
+                                                        "Rahu" => "Ra",
+                                                        "Ketu" => "Ke",
+                                                        "Lagna" | "Ascendant" => "Asc",
+                                                        _ => "",
+                                                    };
+                                                    if p_lbl.is_empty() || p_lbl == "Asc" {
+                                                        continue;
+                                                    }
+                                                    let p_color = match p_name {
+                                                        "Sun" | "Surya" => "text-orange-400 font-bold",
+                                                        "Moon" | "Chandra" => "text-slate-355 font-bold",
+                                                        "Mars" | "Mangala" => "text-red-400 font-bold",
+                                                        "Mercury" | "Budha" => "text-emerald-400 font-bold",
+                                                        "Jupiter" | "Guru" => "text-yellow-400 font-bold",
+                                                        "Venus" | "Shukra" => "text-pink-400 font-bold",
+                                                        "Saturn" | "Shani" => "text-indigo-400 font-bold",
+                                                        "Rahu" => "text-purple-400 font-bold",
+                                                        "Ketu" => "text-amber-600 font-bold",
+                                                        _ => "text-slate-405",
+                                                    };
+                                                    if row.sign >= 1 && row.sign <= 12 {
+                                                        v_rasi_planets[row.sign as usize].push((p_lbl, p_color));
+                                                    }
+                                                    if row.house >= 1 && row.house <= 12 {
+                                                        v_house_planets[row.house as usize].push((p_lbl, p_color));
+                                                    }
+                                                }
+
+                                                let cur_v_style = varga_chart_style.read().clone();
+
                                                 rsx! {
-                                                    div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl",
-                                                        div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5 flex justify-between items-center flex-wrap gap-2",
-                                                            h3 { class: "font-semibold text-slate-200", "{v_report.varga_label} 상세 표" }
-                                                            span { class: "text-xs font-bold text-indigo-400 bg-indigo-950/20 px-3 py-1 rounded border border-indigo-900/30",
-                                                                "라그나 성좌: {lagna_name}"
-                                                            }
-                                                        }
-                                                        div { class: "overflow-x-auto",
-                                                            table { class: "w-full text-sm",
-                                                                thead {
-                                                                    tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase border-b border-slate-800",
-                                                                        th { class: "px-4 py-3 text-left font-medium", "행성" }
-                                                                        th { class: "px-4 py-3 text-left font-medium", "도수 / 성좌" }
-                                                                        th { class: "px-4 py-3 text-left font-medium", "하우스" }
-                                                                        th { class: "px-4 py-3 text-left font-medium", "나크샤트라 (Pada)" }
-                                                                        th { class: "px-4 py-3 text-left font-medium", "지배성" }
-                                                                        th { class: "px-4 py-3 text-left font-medium", "수호신 (Deity)" }
-                                                                        th { class: "px-4 py-3 text-left font-medium", "우주적 의미 (Purpose)" }
-                                                                        th { class: "px-4 py-3 text-center font-medium", "태비/역행" }
+                                                    div { class: "space-y-6 animate-in fade-in duration-500",
+                                                        // 1) Visual Chart Card
+                                                        div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
+                                                            div { class: "flex justify-between items-center border-b border-slate-800/60 pb-3 flex-wrap gap-2",
+                                                                div { class: "space-y-0.5",
+                                                                    h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "{v_report.varga_label} 배치도 (Visual Chart)" }
+                                                                    p { class: "text-xs text-slate-500", "선택된 분할차트의 각 행성 및 라그나 배치도 시각화" }
+                                                                }
+                                                                div { class: "flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-855",
+                                                                    button {
+                                                                        class: if cur_v_style == "south" {
+                                                                            "px-3 py-1.5 text-xs font-bold text-blue-400 bg-slate-850 rounded-lg transition-colors border border-slate-700/50"
+                                                                        } else {
+                                                                            "px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+                                                                        },
+                                                                        onclick: move |_| *varga_chart_style.write() = "south".to_string(),
+                                                                        "남인도식 (South)"
+                                                                    }
+                                                                    button {
+                                                                        class: if cur_v_style == "north" {
+                                                                            "px-3 py-1.5 text-xs font-bold text-blue-400 bg-slate-855 rounded-lg transition-colors border border-slate-700/50"
+                                                                        } else {
+                                                                            "px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+                                                                        },
+                                                                        onclick: move |_| *varga_chart_style.write() = "north".to_string(),
+                                                                        "북인도식 (North)"
                                                                     }
                                                                 }
-                                                                tbody { class: "divide-y divide-slate-800",
-                                                                    {v_report.rows.iter().map(|row| {
-                                                                        let planet_lbl = planet_name_kr_str(&row.planet);
-                                                                        let planet_color_cls = planet_color_str(&row.planet);
-                                                                        let sign_lbl = rasi_name(row.sign);
-                                                                        let nak_lord = planet_name_kr_str(&row.nakshatra_lord);
-                                                                        let pad_lord = planet_name_kr_str(&row.pada_lord);
-                                                                        let deities = row.deity.clone();
-                                                                        let purposes = row.purpose.clone();
-                                                                        let pos_lbl = row.position_str.clone();
-                                                                        let nak_name = row.nakshatra_name.clone();
-                                                                        let pada_val = row.pada;
-                                                                        let house_val = row.house;
-                                                                        rsx! {
-                                                                            tr { class: "hover:bg-slate-800/20 transition-colors",
-                                                                                td { class: "px-4 py-3 font-bold {planet_color_cls}", "{planet_lbl}" }
-                                                                                td { class: "px-4 py-3 text-slate-300 font-mono text-xs", "{pos_lbl} ({sign_lbl})" }
-                                                                                td { class: "px-4 py-3 text-slate-400 text-xs font-mono", "H{house_val}" }
-                                                                                td { class: "px-4 py-3 text-slate-400 text-xs", "{nak_name} ({pada_val}단계)" }
-                                                                                td { class: "px-4 py-3 text-xs",
-                                                                                    div { class: "flex flex-col gap-0.5",
-                                                                                        span { class: "text-[10px] text-slate-500", "Star: {nak_lord}" }
-                                                                                        span { class: "text-[10px] text-slate-500", "Pada: {pad_lord}" }
+                                                            }
+                                                            div { class: "py-2 flex justify-center",
+                                                                {render_vedic_chart(&v_rasi_planets, &v_house_planets, v_report.lagna_rasi, &cur_v_style, &v_report.varga_label)}
+                                                            }
+                                                        }
+
+                                                        // 2) Details Table Card
+                                                        div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl",
+                                                            div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5 flex justify-between items-center flex-wrap gap-2",
+                                                                h3 { class: "font-semibold text-slate-200", "{v_report.varga_label} 상세 표" }
+                                                                span { class: "text-xs font-bold text-indigo-400 bg-indigo-950/20 px-3 py-1 rounded border border-indigo-900/30",
+                                                                    "라그나 성좌: {lagna_name}"
+                                                                }
+                                                            }
+                                                            div { class: "overflow-x-auto",
+                                                                table { class: "w-full text-sm",
+                                                                    thead {
+                                                                        tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase border-b border-slate-800",
+                                                                            th { class: "px-4 py-3 text-left font-medium", "행성" }
+                                                                            th { class: "px-4 py-3 text-left font-medium", "도수 / 성좌" }
+                                                                            th { class: "px-4 py-3 text-left font-medium", "하우스" }
+                                                                            th { class: "px-4 py-3 text-left font-medium", "나크샤트라 (Pada)" }
+                                                                            th { class: "px-4 py-3 text-left font-medium", "지배성" }
+                                                                            th { class: "px-4 py-3 text-left font-medium", "수호신 (Deity)" }
+                                                                            th { class: "px-4 py-3 text-left font-medium", "우주적 의미 (Purpose)" }
+                                                                            th { class: "px-4 py-3 text-center font-medium", "태비/역행" }
+                                                                        }
+                                                                    }
+                                                                    tbody { class: "divide-y divide-slate-800",
+                                                                        {v_report.rows.iter().map(|row| {
+                                                                            let planet_lbl = planet_name_kr_str(&row.planet);
+                                                                            let planet_color_cls = planet_color_str(&row.planet);
+                                                                            let sign_lbl = rasi_name(row.sign);
+                                                                            let nak_lord = planet_name_kr_str(&row.nakshatra_lord);
+                                                                            let pad_lord = planet_name_kr_str(&row.pada_lord);
+                                                                            let deities = row.deity.clone();
+                                                                            let purposes = row.purpose.clone();
+                                                                            let pos_lbl = row.position_str.clone();
+                                                                            let nak_name = row.nakshatra_name.clone();
+                                                                            let pada_val = row.pada;
+                                                                            let house_val = row.house;
+                                                                            rsx! {
+                                                                                tr { class: "hover:bg-slate-800/20 transition-colors",
+                                                                                    td { class: "px-4 py-3 font-bold {planet_color_cls}", "{planet_lbl}" }
+                                                                                    td { class: "px-4 py-3 text-slate-300 font-mono text-xs", "{pos_lbl} ({sign_lbl})" }
+                                                                                    td { class: "px-4 py-3 text-slate-400 text-xs font-mono", "H{house_val}" }
+                                                                                    td { class: "px-4 py-3 text-slate-400 text-xs", "{nak_name} ({pada_val}단계)" }
+                                                                                    td { class: "px-4 py-3 text-xs",
+                                                                                        div { class: "flex flex-col gap-0.5",
+                                                                                            span { class: "text-[10px] text-slate-500", "Star: {nak_lord}" }
+                                                                                            span { class: "text-[10px] text-slate-500", "Pada: {pad_lord}" }
+                                                                                        }
                                                                                     }
-                                                                                }
-                                                                                td { class: "px-4 py-3 text-xs font-semibold text-amber-400", "{deities}" }
-                                                                                td { class: "px-4 py-3 text-xs text-slate-400 leading-normal max-w-xs whitespace-normal", "{purposes}" }
-                                                                                td { class: "px-4 py-3 text-center",
-                                                                                    if row.is_retrograde {
-                                                                                        span { class: "px-1.5 py-0.5 rounded text-[10px] bg-purple-900/50 text-purple-300 border border-purple-700/50 mr-1 font-bold", "역행" }
-                                                                                    }
-                                                                                    if row.is_combust {
-                                                                                        span { class: "px-1.5 py-0.5 rounded text-[10px] bg-orange-900/50 text-orange-300 border border-orange-700/50 font-bold", "태비" }
+                                                                                    td { class: "px-4 py-3 text-xs text-amber-400 font-semibold", "{deities}" }
+                                                                                    td { class: "px-4 py-3 text-xs text-slate-400 leading-normal max-w-xs whitespace-normal", "{purposes}" }
+                                                                                    td { class: "px-4 py-3 text-center",
+                                                                                        if row.is_retrograde {
+                                                                                            span { class: "px-1.5 py-0.5 rounded text-[10px] bg-purple-900/50 text-purple-300 border border-purple-700/50 mr-1 font-bold", "역행" }
+                                                                                        }
+                                                                                        if row.is_combust {
+                                                                                            span { class: "px-1.5 py-0.5 rounded text-[10px] bg-orange-900/50 text-orange-300 border border-orange-700/50 font-bold", "태비" }
+                                                                                        }
                                                                                     }
                                                                                 }
                                                                             }
-                                                                        }
-                                                                    })}
+                                                                        })}
+                                                                    }
                                                                 }
                                                             }
                                                         }
