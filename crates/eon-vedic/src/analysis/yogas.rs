@@ -1166,7 +1166,12 @@ mod tests {
                 current_time: chrono::DateTime::from_timestamp(43200, 0)
                     .unwrap()
                     .with_timezone(&chrono::Utc),
+                yogi_point: 0.0,
+                yogi_planet: VedicPlanet::Sun,
+                avayogi_planet: VedicPlanet::Saturn,
+                dagdha_rashis: vec![],
             },
+            ayanamsa: 23.0,
         }
     }
 

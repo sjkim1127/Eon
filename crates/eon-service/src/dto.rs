@@ -167,7 +167,23 @@ pub struct VedicAnalysisOutput {
     pub gochara: eon_vedic::analysis::gochara::GocharaSummary,
     pub varga_nakshatra_reports:
         eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReports,
+    pub kp_analysis: Option<eon_vedic::analysis::kp::KpAnalysis>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VedicCompatibilityInput {
+    pub male: AnalysisInput,
+    pub female: AnalysisInput,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VedicCompatibilityOutput {
+    pub meta: AnalysisMeta,
+    pub report: eon_vedic::analysis::matching::CompatibilityReport,
+}
+
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -23,7 +23,50 @@ pub struct Panchanga {
     pub hour_lord: VedicPlanet,
     pub daily_parts: [VedicPlanet; 8], // Tribhaga lords (Day: 3, Night: 3, Total usually handled as 8 yamas or parts)
     pub is_night_birth: bool,
+    
+    // Yogi, Avayogi, Dagdha Rashi
+    pub yogi_point: f64,
+    pub yogi_planet: VedicPlanet,
+    pub avayogi_planet: VedicPlanet,
+    pub dagdha_rashis: Vec<u8>,
 }
+
+fn get_nakshatra_lord(nakshatra: u8) -> VedicPlanet {
+    let lords = [
+        VedicPlanet::Ketu,
+        VedicPlanet::Venus,
+        VedicPlanet::Sun,
+        VedicPlanet::Moon,
+        VedicPlanet::Mars,
+        VedicPlanet::Rahu,
+        VedicPlanet::Jupiter,
+        VedicPlanet::Saturn,
+        VedicPlanet::Mercury,
+    ];
+    lords[((nakshatra - 1) % 9) as usize]
+}
+
+fn get_dagdha_rashis(tithi: u8) -> Vec<u8> {
+    let t = if tithi > 15 { tithi - 15 } else { tithi };
+    match t {
+        1 => vec![1, 7],   // Aries, Libra
+        2 => vec![2, 5],   // Taurus, Leo
+        3 => vec![3, 6],   // Gemini, Virgo
+        4 => vec![2, 11],  // Taurus, Aquarius
+        5 => vec![3, 9],   // Gemini, Sagittarius
+        6 => vec![1, 8],   // Aries, Scorpio
+        7 => vec![3, 12],  // Gemini, Pisces
+        8 => vec![3, 6],   // Gemini, Virgo
+        9 => vec![5, 8],   // Leo, Scorpio
+        10 => vec![5, 9],  // Leo, Sagittarius
+        11 => vec![9, 12], // Sagittarius, Pisces
+        12 => vec![7, 10], // Libra, Capricorn
+        13 => vec![2, 3],  // Taurus, Gemini
+        14 => vec![2, 3, 6, 9], // Taurus, Gemini, Virgo, Sagittarius
+        _ => vec![],
+    }
+}
+
 
 pub struct PanchangaEngine;
 
@@ -103,6 +146,17 @@ impl PanchangaEngine {
         let karana_idx = (tithi_deg / 6.0).floor() as u16 + 1;
         let karana_name = Self::get_karana_name(karana_idx);
 
+        // Yogi, Avayogi & Dagdha Rashi
+        let yogi_point = (sun + moon + 93.3333333) % 360.0;
+        let yogi_nak = (yogi_point / (360.0 / 27.0)).floor() as u8 + 1;
+        let yogi_planet = get_nakshatra_lord(yogi_nak);
+
+        let avayogi_point = (yogi_point + 186.6666667) % 360.0;
+        let avayogi_nak = (avayogi_point / (360.0 / 27.0)).floor() as u8 + 1;
+        let avayogi_planet = get_nakshatra_lord(avayogi_nak);
+
+        let dagdha_rashis = get_dagdha_rashis(tithi);
+
         Panchanga {
             vara,
             tithi,
@@ -120,6 +174,10 @@ impl PanchangaEngine {
             day_lord,
             hour_lord,
             daily_parts,
+            yogi_point,
+            yogi_planet,
+            avayogi_planet,
+            dagdha_rashis,
         }
     }
 

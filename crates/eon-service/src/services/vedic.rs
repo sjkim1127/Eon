@@ -61,6 +61,15 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
     let varga_nakshatra_reports =
         eon_vedic::analysis::varga_nakshatra_report::build_varga_nakshatra_reports(&chart);
 
+    let kp_analysis = Some(eon_vedic::analysis::kp::KpAnalysis::calculate(
+        dt,
+        input.base.lat,
+        input.base.lon,
+        chart.ayanamsa,
+        &chart.planets,
+        calculator.engine(),
+    ).map_err(|e| ServiceError::Vedic(e))?);
+
     Ok(VedicAnalysisOutput {
         meta: AnalysisMeta {
             precision: input.precision,
@@ -76,5 +85,39 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
         annual_chart: Some(annual_chart),
         gochara,
         varga_nakshatra_reports,
+        kp_analysis,
     })
 }
+
+pub fn analyze_compatibility(
+    input: crate::dto::VedicCompatibilityInput,
+) -> Result<crate::dto::VedicCompatibilityOutput, ServiceError> {
+    let male_ctx = prepare_birth_context(&input.male, None, false)?;
+    let male_dt = male_ctx.birth_info.to_utc()
+        .map_err(|e| ServiceError::BirthInfo(e.to_string()))?;
+
+    let female_ctx = prepare_birth_context(&input.female, None, false)?;
+    let female_dt = female_ctx.birth_info.to_utc()
+        .map_err(|e| ServiceError::BirthInfo(e.to_string()))?;
+
+    let calculator = VedicChartCalculator::new();
+    let male_chart = calculator.calculate(male_dt, input.male.lat, input.male.lon)
+        .map_err(|e| ServiceError::Vedic(e.to_string()))?;
+    let female_chart = calculator.calculate(female_dt, input.female.lat, input.female.lon)
+        .map_err(|e| ServiceError::Vedic(e.to_string()))?;
+
+    let report = eon_vedic::analysis::matching::MatchingEngine::calculate_compatibility(&male_chart, &female_chart);
+
+    Ok(crate::dto::VedicCompatibilityOutput {
+        meta: AnalysisMeta {
+            precision: crate::dto::BirthTimePrecision::Exact,
+            input_time: male_ctx.input_time_string,
+            corrected_time: male_ctx.corrected_time_string,
+            is_dst: male_ctx.is_dst,
+            dst_offset_hours: male_ctx.dst_offset_hours,
+            analysis_timezone: input.male.timezone,
+        },
+        report,
+    })
+}
+

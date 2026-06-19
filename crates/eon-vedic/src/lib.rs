@@ -29,3 +29,9 @@ pub use core::constants;
 pub use core::names;
 pub use core::planets;
 pub use prediction::dasha;
+pub use prediction::kalachakra;
+pub use analysis::kp;
+pub use analysis::matching;
+
+
+
