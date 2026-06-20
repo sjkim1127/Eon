@@ -29,9 +29,21 @@ pub enum YogaType {
     Vimala,    // 12th lord in 12th house (spiritual liberation)
     KalaSarpa, // All planets hemmed between Rahu-Ketu axis (obstacles, delays)
     Adhi,      // Benefics in 6, 7, 8 from Moon/Lagna
-    Vasumathi, // Benefics inUpachaya (3, 6, 10, 11) houses
+    Vasumathi, // Benefics in Upachaya (3, 6, 10, 11) houses
     Sakata,    // Moon in 6, 8, 12 from Jupiter
-               // Add more types as needed
+    // ── Nabhasa Yogas (BPHS) ────────────────────────────────
+    // Sankhya (분산 개수 기반) — 9행성이 점유한 라시 수로 판별
+    NabhasaGola,    // 9행성 → 1 rasi: 극단적 집중, 매우 희귀
+    NabhasaYuga,    // 9행성 → 2 rasi: 극단적 이원성, 도전적 삶
+    NabhasaShoola,  // 9행성 → 3 rasi: 삼위일체 균형, 고난과 강인함
+    NabhasaKedara,  // 9행성 → 4 rasi: 근면, 농업적 성향, 인내
+    NabhasaPasha,   // 9행성 → 5 rasi: 결속력, 집중, 집착
+    NabhasaDaama,   // 9행성 → 6 rasi: 관대함, 통솔력
+    NabhasaVeena,   // 9행성 → 7 rasi: 음악/예술/조화의 재능
+    // Akriti (사인 성질 기반) — 모든 행성이 같은 성질의 사인에만 위치
+    NabhasaAshrita,      // Chara 사인만 (Aries/Cancer/Libra/Cap): 유동성, 적응력
+    NabhasaSthira,       // Sthira 사인만 (Taurus/Leo/Scorpio/Aqu): 안정, 고집
+    NabhasaDvisvabhava,  // Dvisvabhava 사인만 (Gem/Vir/Sag/Pis): 유연, 이중성
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -109,6 +121,8 @@ pub enum YogaCondition {
     DhanaYogaCheck,
     /// Composite AND
     And(Vec<YogaCondition>),
+    /// Special Check: Nabhasa Yoga (Planet distribution patterns, BPHS)
+    NabhasaCheck,
 }
 
 pub struct YogaRule {
@@ -212,6 +226,9 @@ impl YogaEngine {
 
         // Include Parivartana Yogas with proper classification (Maha, Khala, Dainya)
         results.extend(Self::find_parivartana_exchanges(chart));
+
+        // Include Nabhasa Yogas (BPHS planet distribution patterns)
+        results.extend(Self::evaluate_nabhasa_yogas(chart));
 
         results
     }
@@ -1060,8 +1077,153 @@ impl YogaEngine {
                 }
             }
 
-            _ => None, // Implement others if needed
+            YogaCondition::NabhasaCheck => None, // Handled separately via evaluate_nabhasa_yogas
+            _ => None,
         }
+    }
+
+    // ── Nabhasa Yoga Engine (BPHS) ─────────────────────────────────────────────
+    //
+    // Nabhasa Yogas are based on the DISTRIBUTION of the 9 planets (Sun~Ketu)
+    // across the 12 rasis. Ascendant is excluded from counting.
+    // Two families:
+    //   Sankhya: determined by the COUNT of unique rasis occupied.
+    //   Akriti:  determined by the QUALITY (Chara/Sthira/Dvisvabhava) of all occupied rasis.
+    //
+    // BPHS precedence rule:
+    //   If an Akriti yoga is present AND all rasis share the same quality,
+    //   the Akriti yoga is reported alongside the Sankhya yoga.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// Returns the unique rasi numbers occupied by the 9 planets (Ascendant excluded).
+    fn occupied_rasis(chart: &VedicChart) -> std::collections::HashSet<u8> {
+        use std::collections::HashSet;
+        chart
+            .planets
+            .iter()
+            .filter(|p| {
+                // Exclude Ascendant pseudo-planet (planet == Ketu is the mock ascendant sentinel
+                // in tests, but real charts use VedicPlanet::Ascendant).
+                p.planet != VedicPlanet::Ascendant
+            })
+            .map(|p| p.rasi)
+            .collect::<HashSet<u8>>()
+    }
+
+    /// Returns true when ALL 9 non-Ascendant planets fall within rasis of the given quality.
+    /// quality: 0 = Chara (0-indexed rasi % 3 == 0),
+    ///          1 = Sthira (rasi % 3 == 1),
+    ///          2 = Dvisvabhava (rasi % 3 == 2).
+    /// Rasi numbering: 1-Aries, 2-Taurus … 12-Pisces.
+    /// Chara  (Cardinal): Aries(1), Cancer(4), Libra(7), Capricorn(10)  → (rasi-1) % 3 == 0
+    /// Sthira (Fixed):    Taurus(2), Leo(5), Scorpio(8), Aquarius(11)   → (rasi-1) % 3 == 1
+    /// Dvísva (Mutable):  Gemini(3), Virgo(6), Sagittarius(9), Pisces(12)→ (rasi-1) % 3 == 2
+    fn all_planets_in_sign_quality(chart: &VedicChart, quality: u8) -> bool {
+        chart.planets.iter()
+            .filter(|p| p.planet != VedicPlanet::Ascendant)
+            .all(|p| (p.rasi - 1) % 3 == quality)
+    }
+
+    /// Evaluate all Nabhasa Yogas and return the matching results.
+    fn evaluate_nabhasa_yogas(chart: &VedicChart) -> Vec<YogaResult> {
+        let mut results = Vec::new();
+
+        // ── Sankhya Yoga ──────────────────────────────────────────────────────
+        let rasi_count = Self::occupied_rasis(chart).len();
+
+        // Collect all 9-planet list for planets_involved
+        let all_planets: Vec<VedicPlanet> = chart
+            .planets
+            .iter()
+            .filter(|p| p.planet != VedicPlanet::Ascendant)
+            .map(|p| p.planet)
+            .collect();
+
+        let (sankhya_type, sankhya_name, sankhya_desc, sankhya_quality) = match rasi_count {
+            1 => (
+                Some(YogaType::NabhasaGola),
+                "Gola Yoga",
+                "All 9 planets in a single sign. Extreme single-directedness; highly rare. Life shaped by one dominant energy.",
+                YogaQuality::High,
+            ),
+            2 => (
+                Some(YogaType::NabhasaYuga),
+                "Yuga Yoga",
+                "All planets concentrated in 2 signs. Intense duality; life of extreme contrasts and sharp transitions.",
+                YogaQuality::Medium,
+            ),
+            3 => (
+                Some(YogaType::NabhasaShoola),
+                "Shoola Yoga",
+                "Planets span 3 signs. Trident pattern — challenges forge resilience; cycles of hardship and renewal.",
+                YogaQuality::Medium,
+            ),
+            4 => (
+                Some(YogaType::NabhasaKedara),
+                "Kedara Yoga",
+                "Planets in 4 signs. Diligent, agricultural temperament; patience, steadfastness, material grounding.",
+                YogaQuality::High,
+            ),
+            5 => (
+                Some(YogaType::NabhasaPasha),
+                "Pasha Yoga",
+                "Planets in 5 signs. Strong bonds and attachments; focus, loyalty, and sometimes obsession.",
+                YogaQuality::Medium,
+            ),
+            6 => (
+                Some(YogaType::NabhasaDaama),
+                "Daama Yoga",
+                "Planets in 6 signs. Generous leadership; broad influence, charity, and social responsibility.",
+                YogaQuality::High,
+            ),
+            7 => (
+                Some(YogaType::NabhasaVeena),
+                "Veena Yoga",
+                "Planets in 7 signs. Artistic, musical, and harmonious nature; balanced distribution of energy across life domains.",
+                YogaQuality::VeryHigh,
+            ),
+            _ => (None, "", "", YogaQuality::Medium),
+        };
+
+        if let Some(yoga_type) = sankhya_type {
+            results.push(YogaResult {
+                name: sankhya_name.to_string(),
+                yoga_type,
+                description: sankhya_desc.to_string(),
+                planets_involved: all_planets.clone(),
+                quality: sankhya_quality,
+            });
+        }
+
+        // ── Akriti Yoga ───────────────────────────────────────────────────────
+        // Only evaluated when ALL planets fall within rasis of the same quality.
+        if Self::all_planets_in_sign_quality(chart, 0) {
+            results.push(YogaResult {
+                name: "Ashrita Yoga".to_string(),
+                yoga_type: YogaType::NabhasaAshrita,
+                description: "All planets in Chara (Cardinal) signs. Restless, adaptable nature; perpetual movement and change.".to_string(),
+                planets_involved: all_planets.clone(),
+                quality: YogaQuality::High,
+            });
+        } else if Self::all_planets_in_sign_quality(chart, 1) {
+            results.push(YogaResult {
+                name: "Sthira Yoga".to_string(),
+                yoga_type: YogaType::NabhasaSthira,
+                description: "All planets in Sthira (Fixed) signs. Stable, determined, and persistent; builds enduring structures.".to_string(),
+                planets_involved: all_planets.clone(),
+                quality: YogaQuality::High,
+            });
+        } else if Self::all_planets_in_sign_quality(chart, 2) {
+            results.push(YogaResult {
+                name: "Dvisvabhava Yoga".to_string(),
+                yoga_type: YogaType::NabhasaDvisvabhava,
+                description: "All planets in Dvisvabhava (Mutable) signs. Dual nature, versatility, and intellectual flexibility.".to_string(),
+                planets_involved: all_planets,
+                quality: YogaQuality::High,
+            });
+        }
+
+        results
     }
 
     fn get_lord_of_house(lagna_rasi: u8, house: u8) -> VedicPlanet {
@@ -1254,5 +1416,106 @@ mod tests {
 
         let vr_yoga = vr_yoga.unwrap();
         assert!(vr_yoga.planets_involved.contains(&VedicPlanet::Mars));
+    }
+
+    // ── Nabhasa Yoga Tests ────────────────────────────────────────────────────
+
+    #[test]
+    fn test_nabhasa_veena_yoga_seven_rasi() {
+        // 9 planets spread across 7 distinct rasis → Veena Yoga
+        let planets = vec![
+            mock_pos(VedicPlanet::Sun,     1,  1),
+            mock_pos(VedicPlanet::Moon,    2,  2),
+            mock_pos(VedicPlanet::Mars,    3,  3),
+            mock_pos(VedicPlanet::Mercury, 4,  4),
+            mock_pos(VedicPlanet::Jupiter, 5,  5),
+            mock_pos(VedicPlanet::Venus,   6,  6),
+            mock_pos(VedicPlanet::Saturn,  7,  7),
+            mock_pos(VedicPlanet::Rahu,    7,  7), // same rasi as Saturn
+            mock_pos(VedicPlanet::Ketu,    1,  1), // same rasi as Sun
+        ];
+        // Occupied rasis: {1,2,3,4,5,6,7} = 7 → Veena
+        let chart = mock_chart(planets);
+        let yogas = YogaEngine::check_yogas(&chart);
+        assert!(
+            yogas.iter().any(|y| y.yoga_type == YogaType::NabhasaVeena),
+            "Veena Yoga should be detected when 9 planets are in 7 rasis"
+        );
+    }
+
+    #[test]
+    fn test_nabhasa_gola_yoga_one_rasi() {
+        // All 9 planets in rasi 5 (Leo) → Gola Yoga
+        let planets = vec![
+            mock_pos(VedicPlanet::Sun,     5, 5),
+            mock_pos(VedicPlanet::Moon,    5, 5),
+            mock_pos(VedicPlanet::Mars,    5, 5),
+            mock_pos(VedicPlanet::Mercury, 5, 5),
+            mock_pos(VedicPlanet::Jupiter, 5, 5),
+            mock_pos(VedicPlanet::Venus,   5, 5),
+            mock_pos(VedicPlanet::Saturn,  5, 5),
+            mock_pos(VedicPlanet::Rahu,    5, 5),
+            mock_pos(VedicPlanet::Ketu,    5, 5),
+        ];
+        let chart = mock_chart(planets);
+        let yogas = YogaEngine::check_yogas(&chart);
+        assert!(
+            yogas.iter().any(|y| y.yoga_type == YogaType::NabhasaGola),
+            "Gola Yoga should be detected when all planets are in a single rasi"
+        );
+    }
+
+    #[test]
+    fn test_nabhasa_ashrita_yoga_all_chara() {
+        // All planets in Chara (Cardinal) signs: Aries(1), Cancer(4), Libra(7), Capricorn(10)
+        // (rasi - 1) % 3 == 0 for all
+        let planets = vec![
+            mock_pos(VedicPlanet::Sun,     1,  1),  // Aries
+            mock_pos(VedicPlanet::Moon,    4,  4),  // Cancer
+            mock_pos(VedicPlanet::Mars,    7,  7),  // Libra
+            mock_pos(VedicPlanet::Mercury, 10, 10), // Capricorn
+            mock_pos(VedicPlanet::Jupiter, 1,  1),
+            mock_pos(VedicPlanet::Venus,   4,  4),
+            mock_pos(VedicPlanet::Saturn,  7,  7),
+            mock_pos(VedicPlanet::Rahu,    10, 10),
+            mock_pos(VedicPlanet::Ketu,    1,  1),
+        ];
+        let chart = mock_chart(planets);
+        let yogas = YogaEngine::check_yogas(&chart);
+        assert!(
+            yogas.iter().any(|y| y.yoga_type == YogaType::NabhasaAshrita),
+            "Ashrita Yoga should be detected when all planets are in Chara signs"
+        );
+    }
+
+    #[test]
+    fn test_nabhasa_none_if_mixed_signs() {
+        // Planets in both Chara and Sthira signs → no Akriti Yoga
+        let planets = vec![
+            mock_pos(VedicPlanet::Sun,     1, 1), // Aries (Chara)
+            mock_pos(VedicPlanet::Moon,    2, 2), // Taurus (Sthira)
+            mock_pos(VedicPlanet::Mars,    3, 3), // Gemini (Dvisvabhava)
+            mock_pos(VedicPlanet::Mercury, 4, 4),
+            mock_pos(VedicPlanet::Jupiter, 5, 5),
+            mock_pos(VedicPlanet::Venus,   6, 6),
+            mock_pos(VedicPlanet::Saturn,  7, 7),
+            mock_pos(VedicPlanet::Rahu,    8, 8),
+            mock_pos(VedicPlanet::Ketu,    9, 9),
+        ];
+        let chart = mock_chart(planets);
+        let yogas = YogaEngine::check_yogas(&chart);
+        let has_akriti = yogas.iter().any(|y| matches!(
+            y.yoga_type,
+            YogaType::NabhasaAshrita | YogaType::NabhasaSthira | YogaType::NabhasaDvisvabhava
+        ));
+        assert!(!has_akriti, "No Akriti Yoga when planets span mixed sign qualities");
+        // But Sankhya (9 rasis) should produce no Sankhya yoga (only 1-7 generate one)
+        let has_sankhya = yogas.iter().any(|y| matches!(
+            y.yoga_type,
+            YogaType::NabhasaGola | YogaType::NabhasaYuga | YogaType::NabhasaShoola |
+            YogaType::NabhasaKedara | YogaType::NabhasaPasha | YogaType::NabhasaDaama |
+            YogaType::NabhasaVeena
+        ));
+        assert!(!has_sankhya, "No Sankhya Yoga when planets are spread across all 9 rasis");
     }
 }

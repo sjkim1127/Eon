@@ -238,5 +238,14 @@ pub fn translate(key: TK) -> &'static str {
         TK::TierStrengthsInherent => "先天优势",
         TK::TierWeaknessesCaution => "注意事项与补充",
         TK::TierWeightsTitle => "详细评估项权重",
+
+        // 韦陀瑜伽分类
+        TK::VedicYogaCategoryRaja => "👑 拉贾瑜伽（王者瑜伽）",
+        TK::VedicYogaCategoryNabhasa => "🌌 纳巴萨瑜伽（宇宙模式）",
+        TK::VedicYogaCategoryDhana => "💰 达纳瑜伽（财富瑜伽）",
+        TK::VedicYogaCategoryChandra => "🌙 月亮瑜伽",
+        TK::VedicYogaCategoryParivartana => "🔄 交换瑜伽",
+        TK::VedicYogaCategoryArishta => "⚔️ 苦难瑜伽",
+        TK::VedicYogaCategoryNeecha => "☯️ 尼查邦嘉（削弱消解）",
     }
 }

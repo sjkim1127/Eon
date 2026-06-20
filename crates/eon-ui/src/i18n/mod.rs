@@ -314,6 +314,15 @@ pub enum TK {
     TierStrengthsInherent,
     TierWeaknessesCaution,
     TierWeightsTitle,
+
+    // ── Vedic Yoga Categories ────────────────────────────────────────────
+    VedicYogaCategoryRaja,
+    VedicYogaCategoryNabhasa,
+    VedicYogaCategoryDhana,
+    VedicYogaCategoryChandra,
+    VedicYogaCategoryParivartana,
+    VedicYogaCategoryArishta,
+    VedicYogaCategoryNeecha,
 }
 
 /// Main translation dispatch function.

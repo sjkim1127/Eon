@@ -238,5 +238,14 @@ pub fn translate(key: TK) -> &'static str {
         TK::TierStrengthsInherent => "Врожденные силы",
         TK::TierWeaknessesCaution => "Предостережения",
         TK::TierWeightsTitle => "Веса детальной оценки",
+
+        // Категории Ведических Йог
+        TK::VedicYogaCategoryRaja => "👑 Раджа Йога (Царские Йоги)",
+        TK::VedicYogaCategoryNabhasa => "🌌 Набхаса Йога (Космические Паттерны)",
+        TK::VedicYogaCategoryDhana => "💰 Дхана Йога (Йоги Богатства)",
+        TK::VedicYogaCategoryChandra => "🌙 Чандра Йога (Лунные Йоги)",
+        TK::VedicYogaCategoryParivartana => "🔄 Паривартана Йога (Йоги Обмена)",
+        TK::VedicYogaCategoryArishta => "⚔️ Аришта Йога (Йоги Испытаний)",
+        TK::VedicYogaCategoryNeecha => "☯️ Нича Бханга (Отмена Ослабления)",
     }
 }
