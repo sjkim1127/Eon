@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use crate::store::AnalysisState;
+use crate::i18n::{t, TK};
 use reqwest::Client;
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
@@ -30,12 +31,13 @@ struct AuditResponse {
 #[component]
 pub fn AiTab() -> Element {
     let state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
     
     let mut messages = use_signal(|| vec![
         Message {
             id: 0,
             role: Role::Assistant,
-            content: "안녕하세요! Eon AI입니다. 상단에 Groq API Key를 입력하고 '심층 감사 시작'을 누르면 전체 사주 시스템에 대한 보안 감사 리포트가 생성됩니다.\n이후 자유롭게 질문하실 수 있습니다.".to_string(),
+            content: t(locale, TK::AiWelcome).to_string(),
         }
     ]);
     
@@ -141,7 +143,7 @@ pub fn AiTab() -> Element {
             messages.write().push(Message {
                 id,
                 role: Role::System,
-                content: "Groq API Key를 먼저 입력해주세요.".to_string(),
+                content: t(locale, TK::AiApiKeyHint).to_string(),
             });
             return;
         }
@@ -151,7 +153,7 @@ pub fn AiTab() -> Element {
             messages.write().push(Message {
                 id,
                 role: Role::System,
-                content: "먼저 '심층 감사 시작' 버튼을 눌러 초기 컨텍스트를 생성해주세요.".to_string(),
+                content: t(locale, TK::AiChatPlaceholderWait).to_string(),
             });
             return;
         }
@@ -251,7 +253,7 @@ pub fn AiTab() -> Element {
                             class: "px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50",
                             onclick: run_audit,
                             disabled: *is_loading.read(),
-                            "심층 감사 시작"
+                            "{t(locale, TK::AiStartAudit)}"
                         }
                     }
                 }
@@ -284,7 +286,7 @@ pub fn AiTab() -> Element {
                     
                     textarea {
                         class: "w-full min-h-[56px] max-h-48 bg-slate-800/80 border border-slate-700 text-slate-200 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 resize-none placeholder-slate-500 shadow-inner disabled:opacity-50",
-                        placeholder: if *is_audited.read() { "질문을 입력하세요..." } else { "상단의 '심층 감사 시작'을 먼저 실행해주세요." },
+                        placeholder: if *is_audited.read() { t(locale, TK::AiChatPlaceholderReady) } else { t(locale, TK::AiChatPlaceholderWait) },
                         rows: "1",
                         value: "{input_text}",
                         disabled: !*is_audited.read() || *is_loading.read(),
@@ -307,7 +309,7 @@ pub fn AiTab() -> Element {
                     }
                 }
                 div { class: "text-center mt-2",
-                    span { class: "text-[10px] text-slate-500", "AI는 실수를 할 수 있습니다. 중요한 결정은 전문가와 상의하세요. (Groq API 연동)" }
+                    span { class: "text-[10px] text-slate-500", "{t(locale, TK::AiDisclaimer)}" }
                 }
             }
         }

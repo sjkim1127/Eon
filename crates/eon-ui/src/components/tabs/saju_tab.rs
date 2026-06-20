@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK};
+use crate::i18n::{t, TK, Locale, format_strength_summary, format_age, format_age_shift, format_age_from};
 use eon_service::dto::{SajuAnalysisInput, AnalysisInput};
 use eon_service::facade;
 use eon_saju::analysis::strength::StrengthType;
@@ -54,7 +54,8 @@ pub fn SajuTab() -> Element {
                 }
             }
 
-            match &state.saju.read().status {
+            {
+                match &state.saju.read().status {
                 TaskStatus::Idle => rsx! {
                     div { class: "flex flex-col items-center justify-center py-20 gap-3 text-slate-500",
                         span { class: "text-5xl", "🌌" }
@@ -88,9 +89,21 @@ pub fn SajuTab() -> Element {
                         let complexity_info = data.complexity.as_ref().map(|comp| {
                             let comp_label = format!("M = {} ({})", comp.cyclomatic_complexity, comp.stability_grade);
                             let entropy_str = format!("{:.2}", comp.entropy);
-                            let decision_ages = comp.decision_nodes.iter().map(|&a| format!("{}세", a)).collect::<Vec<_>>().join(", ");
+                            let decision_ages = comp.decision_nodes.iter().map(|&a| format_age(locale, a as i32)).collect::<Vec<_>>().join(", ");
                             (comp_label, entropy_str, decision_ages)
                         });
+
+                        let major_luck_info = data.report.major_luck.as_ref().map(|ml| {
+                            let dir_str = match locale {
+                                Locale::Ko => if ml.direction == eon_saju::LuckDirection::Forward { "순행" } else { "역행" },
+                                Locale::En => if ml.direction == eon_saju::LuckDirection::Forward { "Direct" } else { "Reverse" },
+                                Locale::Zh => if ml.direction == eon_saju::LuckDirection::Forward { "顺行" } else { "逆行" },
+                                Locale::Ru => if ml.direction == eon_saju::LuckDirection::Forward { "Прямо" } else { "Обратно" },
+                            };
+                            (ml, dir_str)
+                        });
+
+                        let crashes_lbl = t(locale, TK::SajuFuzzerCrashes).replace("{}", &data.crash_count.to_string());
 
                         rsx! {
                             // ── 1. 사주 원국 (천간/지지/십성/12운성/신살) ─────────
@@ -195,6 +208,11 @@ pub fn SajuTab() -> Element {
                                                 StrengthType::Balanced =>
                                                     ("bg-emerald-500/20 text-emerald-300 border-emerald-500/50", "⚖️"),
                                             };
+                                            let strength_desc = format_strength_summary(
+                                                locale,
+                                                data.report.strength.acquired_count as usize,
+                                                data.report.strength.strength_score as f64,
+                                            );
                                             rsx! {
                                                 span { class: "text-3xl", "{icon}" }
                                                 div {
@@ -202,7 +220,7 @@ pub fn SajuTab() -> Element {
                                                         "{st.hangul()} ({st.hanja()})"
                                                     }
                                                     p { class: "text-xs text-slate-500 mt-1",
-                                                        "조건 {data.report.strength.acquired_count}/4 충족 | 점수 {data.report.strength.strength_score:.1}"
+                                                        "{strength_desc}"
                                                     }
                                                 }
                                             }
@@ -210,16 +228,16 @@ pub fn SajuTab() -> Element {
                                     }
                                     // 득령/득지/득시/득세
                                     div { class: "grid grid-cols-2 gap-1.5 text-xs",
-                                        DeukBadge { label: "득령", acquired: data.report.strength.deuk_ryeong.acquired }
-                                        DeukBadge { label: "득지", acquired: data.report.strength.deuk_ji.acquired }
-                                        DeukBadge { label: "득시", acquired: data.report.strength.deuk_si.acquired }
-                                        DeukBadge { label: "득세", acquired: data.report.strength.deuk_se.acquired }
+                                        DeukBadge { label: t(locale, TK::SajuDeukRyeong), acquired: data.report.strength.deuk_ryeong.acquired }
+                                        DeukBadge { label: t(locale, TK::SajuDeukJi), acquired: data.report.strength.deuk_ji.acquired }
+                                        DeukBadge { label: t(locale, TK::SajuDeukSi), acquired: data.report.strength.deuk_si.acquired }
+                                        DeukBadge { label: t(locale, TK::SajuDeukSe), acquired: data.report.strength.deuk_se.acquired }
                                     }
                                 }
 
                                 // 용신
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-3",
-                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "용신 (用神)" }
+                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "{t(locale, TK::SajuYongShen)}" }
                                     {
                                         let yn = &data.report.yongshin;
                                         let primary_el = yn.primary;
@@ -231,19 +249,19 @@ pub fn SajuTab() -> Element {
                                                 div { class: "flex items-center gap-2",
                                                     span { class: "text-lg", "{p_icon}" }
                                                     div { class: "flex-1",
-                                                        p { class: "text-xs text-slate-400", "제1용신" }
+                                                        p { class: "text-xs text-slate-400", "{t(locale, TK::SajuPrimaryYongShen)}" }
                                                         p { class: "font-bold {p_color}", "{primary_el.hangul()} ({primary_el.hanja()})" }
                                                     }
                                                 }
                                                 div { class: "flex items-center gap-2",
                                                     div { class: "flex-1",
-                                                        p { class: "text-xs text-slate-400", "희신" }
+                                                        p { class: "text-xs text-slate-400", "{t(locale, TK::SajuHeeShen)}" }
                                                         p { class: "font-semibold {a_color}", "{assist_el.hangul()} ({assist_el.hanja()})" }
                                                     }
                                                 }
                                                 if !yn.recommendations.is_empty() {
                                                     div { class: "mt-3 pt-3 border-t border-slate-800 space-y-2.5",
-                                                        p { class: "text-[10px] font-bold text-slate-500 uppercase tracking-wider", "요소별 세부 용신 분석" }
+                                                        p { class: "text-[10px] font-bold text-slate-500 uppercase tracking-wider", "{t(locale, TK::SajuYongShenDetail)}" }
                                                         div { class: "space-y-2",
                                                             {yn.recommendations.iter().map(|rec| {
                                                                 let (el_color, el_icon) = element_style(rec.element.hangul());
@@ -254,12 +272,12 @@ pub fn SajuTab() -> Element {
                                                                             span { class: "text-[10px] font-bold text-slate-400", "{type_name}" }
                                                                             span { class: "font-bold text-xs {el_color}", "{el_icon} {rec.element.hangul()}({rec.element.hanja()})" }
                                                                         }
-                                                                        p { class: "text-xs text-slate-350 font-semibold", "{rec.summary}" }
-                                                                        p { class: "text-[11px] text-slate-550 leading-relaxed", "{rec.description}" }
+                                                                        p { class: "text-xs text-slate-355 font-semibold", "{rec.summary}" }
+                                                                        p { class: "text-[11px] text-slate-555 leading-relaxed", "{rec.description}" }
                                                                         if !rec.reasons.is_empty() {
                                                                             div { class: "flex flex-wrap gap-1 mt-1",
                                                                                 {rec.reasons.iter().map(|r| rsx! {
-                                                                                    span { class: "text-[9px] px-1 bg-slate-950/60 border border-slate-850 rounded text-slate-500", "{r}" }
+                                                                                    span { class: "text-[9px] px-1 bg-slate-955/60 border border-slate-855 rounded text-slate-500", "{r}" }
                                                                                 })}
                                                                             }
                                                                         }
@@ -276,12 +294,12 @@ pub fn SajuTab() -> Element {
 
                                 // 분석 메타
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-3",
-                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "분석 정보" }
+                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "{t(locale, TK::SajuAnalysisMetaTitle)}" }
                                     div { class: "space-y-2 text-sm",
-                                        MetaRow { label: "입력 시각", value: data.meta.input_time.clone() }
-                                        MetaRow { label: "교정 시각", value: data.meta.corrected_time.clone() }
-                                        MetaRow { label: "타임존", value: data.meta.analysis_timezone.clone() }
-                                        MetaRow { label: "DST", value: if data.meta.is_dst { "적용됨".to_string() } else { "해당없음".to_string() } }
+                                        MetaRow { label: t(locale, TK::SajuInfoInputTime), value: data.meta.input_time.clone() }
+                                        MetaRow { label: t(locale, TK::SajuInfoCorrectedTime), value: data.meta.corrected_time.clone() }
+                                        MetaRow { label: t(locale, TK::SajuInfoTimezone), value: data.meta.analysis_timezone.clone() }
+                                        MetaRow { label: t(locale, TK::SajuInfoDst), value: if data.meta.is_dst { t(locale, TK::SajuInfoDstApplied).to_string() } else { t(locale, TK::SajuInfoDstNone).to_string() } }
                                     }
                                 }
                             }
@@ -375,17 +393,17 @@ pub fn SajuTab() -> Element {
                             }
 
                             // ── 4. 대운 타임라인 ──────────────────────────────
-                            if let Some(ml) = &data.report.major_luck {
+                            if let Some((ml, dir_str)) = &major_luck_info {
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
                                     div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3 flex items-center justify-between",
-                                        h3 { class: "font-semibold text-slate-200", "대운 (大運) — {ml.direction}" }
-                                        span { class: "text-xs text-slate-400", "만 {ml.start_age}세 교운" }
+                                        h3 { class: "font-semibold text-slate-200", "{t(locale, TK::SajuLuckMajor)} — {dir_str}" }
+                                        span { class: "text-xs text-slate-400", "{format_age_shift(locale, ml.start_age as i32)}" }
                                     }
                                     div { class: "p-4 overflow-x-auto",
                                         div { class: "flex gap-2 min-w-max",
                                             {ml.cycles.iter().map(|cycle| rsx! {
                                                 div { class: "flex flex-col items-center gap-1 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-amber-700/60 transition-colors min-w-[80px]",
-                                                    span { class: "text-xs text-slate-400 font-mono", "만 {cycle.start_age}세~" }
+                                                    span { class: "text-xs text-slate-400 font-mono", "{format_age_from(locale, cycle.start_age as i32)}" }
                                                     span { class: "text-2xl font-serif text-amber-300 font-bold", "{cycle.ganzi.hanja()}" }
                                                     span { class: "text-sm text-slate-300", "{cycle.ganzi.hangul()}" }
                                                     div { class: "flex gap-1 flex-wrap justify-center",
@@ -401,14 +419,14 @@ pub fn SajuTab() -> Element {
 
                             // ── 5. 보조 기둥 (태원·명궁·신궁) ─────────────────────
                             div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4",
-                                h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "보조 기둥 및 신살 (Supplementary Pillars)" }
+                                h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "{t(locale, TK::SajuPillarsSupplementary)}" }
                                 div { class: "grid grid-cols-1 md:grid-cols-3 gap-4",
                                     {
                                         let sp = &data.report.supplementary_pillars;
                                         let aux_pillars = vec![
-                                            ("태원 (胎元)", &sp.taewon, "taewon"),
-                                            ("명궁 (命宮)", &sp.myeonggung, "myeonggung"),
-                                            ("신궁 (身宮)", &sp.shingung, "shingung"),
+                                            (t(locale, TK::SajuPillarTaiYuan), &sp.taewon, "taewon"),
+                                            (t(locale, TK::SajuPillarMingGong), &sp.myeonggung, "myeonggung"),
+                                            (t(locale, TK::SajuPillarShenGong), &sp.shingung, "shingung"),
                                         ];
                                         aux_pillars.into_iter().map(|(label, gz, code)| {
                                             let s_el = gz.stem.element().hangul();
@@ -445,15 +463,15 @@ pub fn SajuTab() -> Element {
 
                             // ── 5.1 공망 분석 (Void / Emptiness) ──────────────────
                             div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4",
-                                h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "공망 분석 (Void / Emptiness)" }
+                                h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "{t(locale, TK::SajuVoidTitle)}" }
                                 div { class: "p-4 rounded-xl bg-slate-800/40 border border-slate-800 flex flex-col gap-3 shadow-inner",
                                     div { class: "flex flex-wrap gap-x-6 gap-y-2 text-sm",
                                         p { class: "text-slate-400 font-bold",
-                                            "순중 공망 (Xun Group): "
+                                            "{t(locale, TK::SajuVoidXun)}: "
                                             span { class: "text-amber-400", {data.report.voids.xun_group.clone()} }
                                         }
                                         p { class: "text-slate-400 font-bold",
-                                            "공망 지지 (Void Branches): "
+                                            "{t(locale, TK::SajuVoidBranches)}: "
                                             span { class: "text-red-400 font-serif",
                                                 {format!("{}({}), {}({})",
                                                     data.report.voids.void_branches[0].hanja(),
@@ -465,7 +483,7 @@ pub fn SajuTab() -> Element {
                                         }
                                         if !data.report.voids.void_ten_gods.is_empty() {
                                             p { class: "text-slate-400 font-bold",
-                                                "공망 십성 (Void Ten Gods): "
+                                                "{t(locale, TK::SajuVoidTenGods)}: "
                                                 span { class: "text-indigo-400",
                                                     {data.report.voids.void_ten_gods.iter().map(|tg| tg.hangul()).collect::<Vec<_>>().join(", ")}
                                                 }
@@ -482,7 +500,14 @@ pub fn SajuTab() -> Element {
                                                 };
                                                 let label_branch = format!("{}({})", void_dt.branch.hanja(), void_dt.branch.hangul());
                                                 let label_tg = void_dt.ten_god.hangul().to_string();
-                                                let label_pos = format!("{} 공망", void_dt.position);
+                                                let pos_str = match void_dt.position.to_string().as_str() {
+                                                    "연주" | "Year" => t(locale, TK::SajuYearPillar),
+                                                    "월주" | "Month" => t(locale, TK::SajuMonthPillar),
+                                                    "일주" | "Day" => t(locale, TK::SajuDayPillar),
+                                                    "시주" | "Hour" => t(locale, TK::SajuHourPillar),
+                                                    _ => &void_dt.position.to_string(),
+                                                };
+                                                let label_pos = format!("{} {}", pos_str, t(locale, TK::SajuVoidSuffix));
                                                 rsx! {
                                                     div { class: "p-3 rounded-lg bg-slate-900/40 border border-slate-800/60 space-y-1 text-xs hover:border-slate-750 transition-colors",
                                                         div { class: "flex justify-between items-center gap-2 flex-wrap",
@@ -491,9 +516,9 @@ pub fn SajuTab() -> Element {
                                                                 span { class: "text-amber-400/90 font-semibold", "{label_tg}" }
                                                                 span { class: "px-2 py-0.5 rounded border text-[9px] font-bold {lvl_cls}",
                                                                     {match void_dt.level {
-                                                                        eon_saju::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "길조(吉)",
-                                                                        eon_saju::analysis::supplementary_pillars::InterpretationLevel::Caution => "영향(凶)",
-                                                                        eon_saju::analysis::supplementary_pillars::InterpretationLevel::Neutral => "보통",
+                                                                        eon_saju::analysis::supplementary_pillars::InterpretationLevel::Auspicious => t(locale, TK::SajuLevelAuspicious),
+                                                                        eon_saju::analysis::supplementary_pillars::InterpretationLevel::Caution => t(locale, TK::SajuLevelCaution),
+                                                                        eon_saju::analysis::supplementary_pillars::InterpretationLevel::Neutral => t(locale, TK::LabelNeutral),
                                                                     }}
                                                                 }
                                                             }
@@ -791,57 +816,78 @@ pub fn SajuTab() -> Element {
                                 // 1) Destiny Fuzzer (운명 취약점 퍼징)
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
                                     div { class: "flex justify-between items-center",
-                                        h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "운명 취약점 퍼징 리포트 (Destiny Fuzzer)" }
+                                        h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "{t(locale, TK::SajuFuzzerTitle)}" }
                                         span { class: "text-xs font-bold text-rose-400 bg-rose-950/20 px-2.5 py-0.5 rounded border border-rose-900/30",
-                                            "크래시: {data.crash_count}회 검출"
+                                            "{crashes_lbl}"
                                         }
                                     }
                                     p { class: "text-xs text-slate-400 leading-relaxed",
-                                        "사주 가상머신(VM)에서 현재 월지 환경 하에 60갑자 세운을 대입·퍼징하여, 시스템 에너지가 극도로 저하되는 임계점(Crash)을 찾아낸 진단입니다."
+                                        "{t(locale, TK::SajuFuzzerDesc)}"
                                     }
                                     if let Some(fuzz) = &data.vulnerability_report {
                                         div { class: "space-y-3.5 max-h-[300px] overflow-y-auto pr-1",
                                             {fuzz.critical_vectors.iter().map(|vuln| {
                                                 let score_val = vuln.crash_score;
-                                                let energy_lbl = format!("에너지 레벨: {:.1}", score_val);
+                                                let energy_lbl = t(locale, TK::SajuFuzzerEnergyLevel).replace("{:.1}", &format!("{:.1}", score_val));
                                                 let vuln_type = vuln.vulnerability_type.clone();
                                                 let major_gz = format!("{}{}", vuln.vector.major.hanja(), vuln.vector.major.hangul());
                                                 let yearly_gz = format!("{}{}", vuln.vector.yearly.hanja(), vuln.vector.yearly.hangul());
-                                                let vector_desc = format!("대운: {} | 세운: {}", major_gz, yearly_gz);
+                                                let vector_desc = t(locale, TK::SajuFuzzerVector).replacen("{}", &major_gz, 1).replacen("{}", &yearly_gz, 1);
                                                 let tags_list = vuln.tags.join(", ");
+                                                let tags_desc = t(locale, TK::SajuFuzzerTags).replace("{}", &tags_list);
                                                 rsx! {
-                                                    div { class: "p-3.5 rounded-xl bg-slate-950/40 border border-slate-850 hover:border-red-900/40 transition-colors flex flex-col gap-1.5 shadow-inner",
+                                                    div { class: "p-3.5 rounded-xl bg-slate-950/40 border border-slate-855 hover:border-red-900/40 transition-colors flex flex-col gap-1.5 shadow-inner",
                                                         div { class: "flex justify-between items-center flex-wrap gap-2",
                                                             span { class: "text-xs font-mono font-extrabold text-rose-400", "⚠️ {vuln_type}" }
                                                             span { class: "text-xs font-bold text-rose-500", "{energy_lbl}" }
                                                         }
                                                         p { class: "text-xs text-slate-300 font-serif", "{vector_desc}" }
                                                         if !tags_list.is_empty() {
-                                                            p { class: "text-[10px] text-slate-500 font-mono", "결정적 요소: {tags_list}" }
+                                                            p { class: "text-[10px] text-slate-500 font-mono", "{tags_desc}" }
                                                         }
                                                     }
                                                 }
                                             })}
                                         }
                                     } else {
-                                        p { class: "text-slate-500 text-xs py-4", "크래시 데이터 분석 결과 없음" }
+                                        p { class: "text-slate-500 text-xs py-4", "{t(locale, TK::SajuFuzzerNoCrash)}" }
                                     }
                                 }
 
                                 // 2) Karma Load Balancer (인생 부하 분산 진단)
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
-                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "인생 부하 분산 진단 (Karma Load Balancer)" }
+                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "{t(locale, TK::SajuLoadTitle)}" }
                                     p { class: "text-xs text-slate-400 leading-relaxed",
-                                        "일생의 흐름 중 급등 또는 급락하여 시스템 오버헤드가 과다 발생하는 시점을 감지하고 이에 맞는 행동 전략을 제시합니다."
+                                        "{t(locale, TK::SajuLoadDesc)}"
                                     }
                                     if !data.load_diagnostics.is_empty() {
                                         div { class: "space-y-3.5 max-h-[300px] overflow-y-auto pr-1",
                                             {data.load_diagnostics.iter().map(|diag| {
                                                 let (badge_cls, status_lbl) = match diag.status {
-                                                    eon_saju::engine::load_balancer::TrafficStatus::Idle => ("text-emerald-400 bg-emerald-950/20 border-emerald-900/30", "평온 (Idle)"),
-                                                    eon_saju::engine::load_balancer::TrafficStatus::Normal => ("text-blue-400 bg-blue-950/20 border-blue-900/30", "보통 (Normal)"),
-                                                    eon_saju::engine::load_balancer::TrafficStatus::Overloaded => ("text-amber-400 bg-amber-950/20 border-amber-900/30", "오버로드 (Overload)"),
-                                                    eon_saju::engine::load_balancer::TrafficStatus::SystemDown => ("text-rose-400 bg-rose-950/20 border-rose-900/30", "다운 (System Down)"),
+                                                    eon_saju::engine::load_balancer::TrafficStatus::Idle => ("text-emerald-400 bg-emerald-950/20 border-emerald-900/30", match locale {
+                                                        Locale::Ko => "평온 (Idle)",
+                                                        Locale::En => "Idle",
+                                                        Locale::Zh => "平稳 (Idle)",
+                                                        Locale::Ru => "Покой (Idle)",
+                                                    }),
+                                                    eon_saju::engine::load_balancer::TrafficStatus::Normal => ("text-blue-400 bg-blue-950/20 border-blue-900/30", match locale {
+                                                        Locale::Ko => "보통 (Normal)",
+                                                        Locale::En => "Normal",
+                                                        Locale::Zh => "正常 (Normal)",
+                                                        Locale::Ru => "Нормально (Normal)",
+                                                    }),
+                                                    eon_saju::engine::load_balancer::TrafficStatus::Overloaded => ("text-amber-400 bg-amber-950/20 border-amber-900/30", match locale {
+                                                        Locale::Ko => "오버로드 (Overload)",
+                                                        Locale::En => "Overload",
+                                                        Locale::Zh => "过载 (Overload)",
+                                                        Locale::Ru => "Перегрузка (Overload)",
+                                                    }),
+                                                    eon_saju::engine::load_balancer::TrafficStatus::SystemDown => ("text-rose-400 bg-rose-950/20 border-rose-900/30", match locale {
+                                                        Locale::Ko => "다운 (System Down)",
+                                                        Locale::En => "System Down",
+                                                        Locale::Zh => "系统故障 (System Down)",
+                                                        Locale::Ru => "Системный сбой (System Down)",
+                                                    }),
                                                 };
                                                 let age_val = diag.age;
                                                 let reason_desc = diag.reason.clone();
@@ -849,7 +895,7 @@ pub fn SajuTab() -> Element {
                                                 rsx! {
                                                     div { class: "p-3.5 rounded-xl bg-slate-950/40 border border-slate-850 hover:border-slate-750 transition-colors flex flex-col gap-1.5 shadow-inner",
                                                         div { class: "flex justify-between items-center flex-wrap gap-2",
-                                                            span { class: "text-xs font-bold text-slate-300 font-mono", "만 {age_val}세" }
+                                                            span { class: "text-xs font-bold text-slate-300 font-mono", "{format_age(locale, age_val as i32)}" }
                                                             span { class: "text-[10px] font-bold px-2 py-0.5 rounded border {badge_cls}", "{status_lbl}" }
                                                         }
                                                         p { class: "text-xs font-semibold text-amber-400", "{reason_desc}" }
@@ -859,7 +905,7 @@ pub fn SajuTab() -> Element {
                                             })}
                                         }
                                     } else {
-                                        p { class: "text-slate-500 text-xs py-4", "안정적인 흐름으로 감지된 시스템 이벤트가 없습니다." }
+                                        p { class: "text-slate-500 text-xs py-4", "{t(locale, TK::SajuLoadNoEvent)}" }
                                     }
                                 }
                             }
@@ -867,7 +913,7 @@ pub fn SajuTab() -> Element {
                             // ── 6. 신살 상세 해설 (Spirit Markers Detail) ─────────
                             if !data.report.spirit_markers.mapped_markers.is_empty() {
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4",
-                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "신살 상세 해설 (Spirit Markers Detail)" }
+                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "{t(locale, TK::SajuSpiritDetailTitle)}" }
                                     div { class: "space-y-3",
                                         {data.report.spirit_markers.mapped_markers.iter().map(|m| {
                                             let lvl_cls = match m.level {
@@ -876,12 +922,12 @@ pub fn SajuTab() -> Element {
                                                 InterpretationLevel::Neutral => "text-slate-400 bg-slate-850 border-slate-800",
                                             };
                                             let pos_name = match m.position {
-                                                eon_saju::analysis::spirit_markers::PillarPosition::Year => "년주 (Year)",
-                                                eon_saju::analysis::spirit_markers::PillarPosition::Month => "월주 (Month)",
-                                                eon_saju::analysis::spirit_markers::PillarPosition::Day => "일주 (Day)",
-                                                eon_saju::analysis::spirit_markers::PillarPosition::Hour => "시주 (Hour)",
+                                                eon_saju::analysis::spirit_markers::PillarPosition::Year => t(locale, TK::SajuYearPillar),
+                                                eon_saju::analysis::spirit_markers::PillarPosition::Month => t(locale, TK::SajuMonthPillar),
+                                                eon_saju::analysis::spirit_markers::PillarPosition::Day => t(locale, TK::SajuDayPillar),
+                                                eon_saju::analysis::spirit_markers::PillarPosition::Hour => t(locale, TK::SajuHourPillar),
                                             };
-                                            let part = if m.is_stem { "천간" } else { "지지" };
+                                            let part = if m.is_stem { t(locale, TK::SajuPillarStem) } else { t(locale, TK::SajuPillarBranch) };
                                             let marker_label = format!("{} ({})", m.marker.hangul(), m.marker.hanja());
                                             let pos_part = format!("{} {}", pos_name, part);
                                             rsx! {
@@ -891,9 +937,9 @@ pub fn SajuTab() -> Element {
                                                             span { class: "text-base font-bold text-slate-200", "{marker_label}" }
                                                             span { class: "text-xs px-2.5 py-0.5 rounded border font-bold {lvl_cls}",
                                                                 {match m.level {
-                                                                    InterpretationLevel::Auspicious => "길조(吉)",
-                                                                    InterpretationLevel::Caution => "주의(凶)",
-                                                                    InterpretationLevel::Neutral => "보통",
+                                                                    InterpretationLevel::Auspicious => t(locale, TK::SajuLevelAuspicious),
+                                                                    InterpretationLevel::Caution => t(locale, TK::SajuLevelCaution),
+                                                                    InterpretationLevel::Neutral => t(locale, TK::LabelNeutral),
                                                                 }}
                                                             }
                                                         }
@@ -905,7 +951,7 @@ pub fn SajuTab() -> Element {
                                                     p { class: "text-xs text-slate-400 leading-relaxed", "{m.description}" }
                                                     if !m.reasons.is_empty() {
                                                         div { class: "flex items-center gap-1.5 flex-wrap pt-1",
-                                                            span { class: "text-[10px] text-slate-500 font-bold", "성립 요건:" }
+                                                            span { class: "text-[10px] text-slate-500 font-bold", "{t(locale, TK::SajuSpiritRequirement)}" }
                                                             {m.reasons.iter().map(|r| rsx! {
                                                                 span { class: "text-[10px] px-2 py-0.5 bg-slate-800/80 border border-slate-700/40 text-slate-400 rounded-md font-mono", "{r}" }
                                                             })}
@@ -921,6 +967,7 @@ pub fn SajuTab() -> Element {
                     } else {
                         rsx! { div {} }
                     }
+                }
                 }
             }
         }

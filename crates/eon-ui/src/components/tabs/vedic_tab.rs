@@ -1,18 +1,14 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK};
+use crate::i18n::{
+    t, TK, Locale, translate_planet, translate_planet_str, rasi_name, rasi_name_short,
+    translate_avastha, nakshatra_lord_localized, rasi_lord_localized
+};
 use eon_service::dto::{VedicAnalysisInput, AnalysisInput, VedicCompatibilityInput, VedicCompatibilityOutput};
 use eon_service::facade;
 use eon_vedic::planets::VedicPlanet;
 use crate::components::shared::birth_form::BirthForm;
 use chrono_tz;
-
-const RASI_NAMES_KR: &[&str] = &[
-    "", "양자리(Aries)", "황소자리(Taurus)", "쌍둥이자리(Gemini)",
-    "게자리(Cancer)", "사자자리(Leo)", "처녀자리(Virgo)",
-    "천칭자리(Libra)", "전갈자리(Scorpio)", "사수자리(Sagittarius)",
-    "염소자리(Capricorn)", "물병자리(Aquarius)", "물고기자리(Pisces)",
-];
 
 const NAKSHATRA_NAMES: &[&str] = &[
     "", "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira",
@@ -23,20 +19,6 @@ const NAKSHATRA_NAMES: &[&str] = &[
     "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati",
 ];
 
-fn planet_name_kr(planet: VedicPlanet) -> &'static str {
-    match planet {
-        VedicPlanet::Sun => "태양 ☀️",
-        VedicPlanet::Moon => "달 🌙",
-        VedicPlanet::Mars => "화성 ♂",
-        VedicPlanet::Mercury => "수성 ☿",
-        VedicPlanet::Jupiter => "목성 ♃",
-        VedicPlanet::Venus => "금성 ♀",
-        VedicPlanet::Saturn => "토성 ♄",
-        VedicPlanet::Rahu => "라후 ☊",
-        VedicPlanet::Ketu => "케투 ☋",
-        VedicPlanet::Ascendant => "라그나 ⬆️",
-    }
-}
 
 fn planet_color(planet: VedicPlanet) -> &'static str {
     match planet {
@@ -53,21 +35,6 @@ fn planet_color(planet: VedicPlanet) -> &'static str {
     }
 }
 
-fn planet_name_kr_str(p_name: &str) -> &str {
-    match p_name {
-        "Sun" | "Surya" => "태양 ☀️",
-        "Moon" | "Chandra" => "달 🌙",
-        "Mars" | "Mangala" => "화성 ♂",
-        "Mercury" | "Budha" => "수성 ☿",
-        "Jupiter" | "Guru" => "목성 ♃",
-        "Venus" | "Shukra" => "금성 ♀",
-        "Saturn" | "Shani" => "토성 ♄",
-        "Rahu" => "라후 ☊",
-        "Ketu" => "케투 ☋",
-        "Ascendant" | "Lagna" => "라그나 ⬆️",
-        _ => p_name,
-    }
-}
 
 fn planet_color_str(p_name: &str) -> &'static str {
     match p_name {
@@ -86,28 +53,12 @@ fn planet_color_str(p_name: &str) -> &'static str {
 }
 
 
-fn rasi_name(rasi: u8) -> &'static str {
-    if rasi == 0 || rasi > 12 { return "—" }
-    RASI_NAMES_KR[rasi as usize]
-}
 
 fn nakshatra_name(n: u8) -> &'static str {
     if n == 0 || n > 27 { return "—" }
     NAKSHATRA_NAMES[n as usize]
 }
 
-fn lajjitadi_name_kr(av: &eon_vedic::analysis::avasthas::LajjitadiAvastha) -> &'static str {
-    use eon_vedic::analysis::avasthas::LajjitadiAvastha;
-    match av {
-        LajjitadiAvastha::Lajjita => "수치 (Lajjita)",
-        LajjitadiAvastha::Garvita => "자긍 (Garvita)",
-        LajjitadiAvastha::Kshudhita => "갈망 (Kshudhita)",
-        LajjitadiAvastha::Trishita => "갈증 (Trishita)",
-        LajjitadiAvastha::Mudita => "환희 (Mudita)",
-        LajjitadiAvastha::Kshobhita => "동요 (Kshobhita)",
-        LajjitadiAvastha::Neutral => "평온 (Neutral)",
-    }
-}
 
 fn lajjitadi_color(av: &eon_vedic::analysis::avasthas::LajjitadiAvastha) -> &'static str {
     use eon_vedic::analysis::avasthas::LajjitadiAvastha;
@@ -122,23 +73,6 @@ fn lajjitadi_color(av: &eon_vedic::analysis::avasthas::LajjitadiAvastha) -> &'st
     }
 }
 
-fn rasi_name_short(rasi: u8) -> &'static str {
-    match rasi {
-        1 => "AR (양)",
-        2 => "TA (황소)",
-        3 => "GE (쌍둥)",
-        4 => "CN (게)",
-        5 => "LE (사자)",
-        6 => "VI (처녀)",
-        7 => "LI (천칭)",
-        8 => "SC (전갈)",
-        9 => "SG (사수)",
-        10 => "CP (염소)",
-        11 => "AQ (물병)",
-        12 => "PI (물고기)",
-        _ => "—",
-    }
-}
 
 // --- Tooltip & Interaction structures ---
 #[derive(Clone, Debug, PartialEq)]
@@ -190,41 +124,9 @@ fn planet_from_lbl(lbl: &str) -> Option<VedicPlanet> {
     }
 }
 
-fn nakshatra_lord_kr(nakshatra_idx: u8) -> &'static str {
-    if nakshatra_idx == 0 || nakshatra_idx > 27 { return "—" }
-    match (nakshatra_idx - 1) % 9 {
-        0 => "케투 (Ketu)",
-        1 => "금성 (Venus)",
-        2 => "태양 (Sun)",
-        3 => "달 (Moon)",
-        4 => "화성 (Mars)",
-        5 => "라후 (Rahu)",
-        6 => "목성 (Jupiter)",
-        7 => "토성 (Saturn)",
-        8 => "수성 (Mercury)",
-        _ => "—"
-    }
-}
-
-fn rasi_lord_kr(rasi_idx: u8) -> &'static str {
-    match rasi_idx {
-        1 => "화성 (Mars)",
-        2 => "금성 (Venus)",
-        3 => "수성 (Mercury)",
-        4 => "달 (Moon)",
-        5 => "태양 (Sun)",
-        6 => "수성 (Mercury)",
-        7 => "금성 (Venus)",
-        8 => "화성 (Mars)",
-        9 => "목성 (Jupiter)",
-        10 => "토성 (Saturn)",
-        11 => "토성 (Saturn)",
-        12 => "목성 (Jupiter)",
-        _ => "—"
-    }
-}
 
 fn get_d1_planet_tooltip(
+    locale: Locale,
     lbl: &str,
     d1_planets: &[eon_vedic::core::chart::VedicPosition],
     d1_ascendant: &eon_vedic::core::chart::VedicPosition,
@@ -239,9 +141,9 @@ fn get_d1_planet_tooltip(
         };
         
         let nak_name = nakshatra_name(pos.nakshatra);
-        let nak_lord = nakshatra_lord_kr(pos.nakshatra);
+        let nak_lord = nakshatra_lord_localized(locale, pos.nakshatra);
         
-        let planet_name = planet_name_kr(pos.planet).to_string();
+        let planet_name = translate_planet(locale, pos.planet).to_string();
         let deg_within_sign = pos.sidereal_deg % 30.0;
         let deg_floor = deg_within_sign.floor() as i32;
         let min_val = ((deg_within_sign - deg_floor as f64) * 60.0).round() as i32;
@@ -253,7 +155,12 @@ fn get_d1_planet_tooltip(
             rasi_num: pos.rasi,
             house_num: pos.house_index,
             longitude_str,
-            nakshatra_name: format!("{} ({}단계)", nak_name, pos.pada),
+            nakshatra_name: match locale {
+                Locale::Ko => format!("{} ({}단계)", nak_name, pos.pada),
+                Locale::En => format!("{} (Pada {})", nak_name, pos.pada),
+                Locale::Zh => format!("{} ({}步)", nak_name, pos.pada),
+                Locale::Ru => format!("{} (Пада {})", nak_name, pos.pada),
+            },
             nakshatra_lord: nak_lord.to_string(),
             is_retrograde: pos.is_retrograde,
             is_combust: pos.is_combust,
@@ -267,6 +174,7 @@ fn get_d1_planet_tooltip(
 }
 
 fn get_varga_planet_tooltip(
+    locale: Locale,
     lbl: &str,
     rows: &[eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReportRow],
     varga_label: &str,
@@ -288,7 +196,7 @@ fn get_varga_planet_tooltip(
         r_lbl == lbl
     })?;
 
-    let p_name_kr = planet_name_kr_str(&row.planet).to_string();
+    let p_name_kr = translate_planet_str(locale, &row.planet).to_string();
 
     Some(VedicTooltipTarget::Planet {
         name: p_name_kr,
@@ -296,8 +204,13 @@ fn get_varga_planet_tooltip(
         rasi_num: row.sign,
         house_num: row.house,
         longitude_str: row.position_str.clone(),
-        nakshatra_name: format!("{} ({}단계)", row.nakshatra_name, row.pada),
-        nakshatra_lord: planet_name_kr_str(&row.nakshatra_lord).to_string(),
+        nakshatra_name: match locale {
+            Locale::Ko => format!("{} ({}단계)", row.nakshatra_name, row.pada),
+            Locale::En => format!("{} (Pada {})", row.nakshatra_name, row.pada),
+            Locale::Zh => format!("{} ({}步)", row.nakshatra_name, row.pada),
+            Locale::Ru => format!("{} (Пада {})", row.nakshatra_name, row.pada),
+        },
+        nakshatra_lord: translate_planet_str(locale, &row.nakshatra_lord).to_string(),
         is_retrograde: row.is_retrograde,
         is_combust: row.is_combust,
         varga_label: varga_label.to_string(),
@@ -307,14 +220,15 @@ fn get_varga_planet_tooltip(
 }
 
 fn get_house_tooltip(
+    locale: Locale,
     house_num: u8,
     lagna_rasi: u8,
     varga_label: &str,
     bhava_strengths: Option<&[eon_vedic::analysis::bhava::BhavaStrength]>,
 ) -> Option<VedicTooltipTarget> {
     let rasi_num = (lagna_rasi + house_num - 2) % 12 + 1;
-    let rasi_name_str = rasi_name(rasi_num).to_string();
-    let rasi_lord = rasi_lord_kr(rasi_num).to_string();
+    let rasi_name_str = rasi_name(locale, rasi_num).to_string();
+    let rasi_lord = rasi_lord_localized(locale, rasi_num).to_string();
     
     let score = bhava_strengths.and_then(|strengths| {
         strengths.iter().find(|s| s.house == house_num).map(|s| s.total_score)
@@ -331,6 +245,7 @@ fn get_house_tooltip(
 }
 
 fn render_vedic_chart(
+    locale: Locale,
     rasi_planets: &[Vec<(&'static str, &'static str)>],
     house_planets: &[Vec<(&'static str, &'static str)>],
     lagna_rasi: u8,
@@ -421,7 +336,7 @@ fn render_vedic_chart(
                     let (_, s_x, s_y) = sign_coords[h_idx];
                     let h_planets = &house_planets[h_idx];
                     
-                    let house_target = get_house_tooltip(h_idx as u8, lagna_rasi, chart_title, bhava_strengths);
+                    let house_target = get_house_tooltip(locale, h_idx as u8, lagna_rasi, chart_title, bhava_strengths);
                     
                     let mut active_tooltip_text = active_tooltip.clone();
                     let mut active_tooltip_fo = active_tooltip.clone();
@@ -495,9 +410,9 @@ fn render_vedic_chart(
                             div { class: "flex flex-wrap justify-center items-center gap-1 p-0.5 h-full",
                                 {h_planets.iter().map(|&(lbl, color_cls)| {
                                     let planet_target = if let Some(rows) = varga_rows {
-                                        get_varga_planet_tooltip(lbl, rows, chart_title)
+                                        get_varga_planet_tooltip(locale, lbl, rows, chart_title)
                                     } else if let (Some(planets), Some(asc)) = (d1_planets, d1_ascendant) {
-                                        get_d1_planet_tooltip(lbl, planets, asc, chart_title)
+                                        get_d1_planet_tooltip(locale, lbl, planets, asc, chart_title)
                                     } else {
                                         None
                                     };
@@ -605,7 +520,7 @@ fn render_vedic_chart(
                     
                     let house_num = (r_id as i16 - lagna_rasi as i16 + 12) % 12 + 1;
                     
-                    let house_target = get_house_tooltip(house_num as u8, lagna_rasi, chart_title, bhava_strengths);
+                    let house_target = get_house_tooltip(locale, house_num as u8, lagna_rasi, chart_title, bhava_strengths);
                     
                     let mut active_tooltip_clone = active_tooltip.clone();
                     let mut selected_detail_clone = selected_detail.clone();
@@ -651,13 +566,13 @@ fn render_vedic_chart(
                             height: "100",
                             pointer_events: "none",
                             div { class: "p-1.5 flex flex-col justify-between h-full select-none",
-                                span { class: "text-[9px] text-slate-500 font-bold", "{rasi_name_short(r_id)}" }
+                                span { class: "text-[9px] text-slate-500 font-bold", "{rasi_name_short(locale, r_id)}" }
                                 div { class: "grid grid-cols-2 gap-x-1 gap-y-0.5 text-[9px] pointer-events-auto",
                                     {r_planets.iter().map(|&(lbl, color_cls)| {
                                         let planet_target = if let Some(rows) = varga_rows {
-                                            get_varga_planet_tooltip(lbl, rows, chart_title)
+                                            get_varga_planet_tooltip(locale, lbl, rows, chart_title)
                                         } else if let (Some(planets), Some(asc)) = (d1_planets, d1_ascendant) {
-                                            get_d1_planet_tooltip(lbl, planets, asc, chart_title)
+                                            get_d1_planet_tooltip(locale, lbl, planets, asc, chart_title)
                                         } else {
                                             None
                                         };
@@ -709,6 +624,8 @@ fn render_vedic_chart(
 fn render_detail_card(
     detail_opt: Signal<Option<VedicTooltipData>>,
 ) -> Element {
+    let state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
     let detail_val = detail_opt.read().clone();
     if let Some(detail) = detail_val {
         let mut detail_opt_clear = detail_opt.clone();
@@ -727,7 +644,7 @@ fn render_detail_card(
                 deity,
                 purpose,
             } => {
-                let sign_name = rasi_name(rasi_num);
+                let sign_name = rasi_name(locale, rasi_num);
                 rsx! {
                     div { class: "bg-slate-950/60 border border-slate-800 rounded-xl p-4 mt-3 space-y-3.5 shadow-lg animate-in slide-in-from-bottom-2 duration-200 relative overflow-hidden",
                         div { class: "absolute -right-4 -bottom-4 text-slate-800/10 text-7xl font-bold select-none", "{symbol}" }
@@ -844,6 +761,8 @@ fn render_detail_card(
 fn render_floating_tooltip(
     tooltip_opt: Signal<Option<VedicTooltipData>>,
 ) -> Element {
+    let state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
     let tooltip_val = tooltip_opt.read().clone();
     if let Some(tooltip) = tooltip_val {
         let x_px = tooltip.x + 15.0;
@@ -864,7 +783,7 @@ fn render_floating_tooltip(
                 deity,
                 ..
             } => {
-                let sign_name = rasi_name(rasi_num);
+                let sign_name = rasi_name(locale, rasi_num);
                 rsx! {
                     div { 
                         class: "fixed z-50 bg-slate-950/95 border border-slate-800/80 backdrop-blur-md rounded-lg p-3 shadow-2xl pointer-events-none text-xs text-slate-200 w-[220px] transition-all duration-75 space-y-1.5",
@@ -941,6 +860,16 @@ fn render_floating_tooltip(
 pub fn VedicTab() -> Element {
     let mut state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
+    
+    let planet_name_kr = move |planet: VedicPlanet| {
+        translate_planet(locale, planet)
+    };
+    let rasi_name = move |rasi: u8| {
+        rasi_name(locale, rasi)
+    };
+    let lajjitadi_name_kr = move |av: &eon_vedic::analysis::avasthas::LajjitadiAvastha| {
+        translate_avastha(locale, av)
+    };
     
     // Sub-tab selection state: 0 = Basic D1, 1 = KP System, 2 = Dashas, 3 = Compatibility
     let mut active_subtab = use_signal(|| 0);
@@ -1279,6 +1208,7 @@ pub fn VedicTab() -> Element {
                                                     }
                                                                                     div { class: "py-2 flex flex-col items-center justify-center w-full",
                                                         {render_vedic_chart(
+                                                            locale,
                                                             &rasi_planets,
                                                             &house_planets,
                                                             data.chart.ascendant.rasi,
@@ -2564,8 +2494,9 @@ pub fn VedicTab() -> Element {
                                                                     }
                                                                 }
                                                             }
-                                                                                            div { class: "py-2 flex flex-col items-center justify-center w-full",
+                                                            div { class: "py-2 flex flex-col items-center justify-center w-full",
                                                                 {render_vedic_chart(
+                                                                    locale,
                                                                     &v_rasi_planets,
                                                                     &v_house_planets,
                                                                     v_report.lagna_rasi,
@@ -2608,11 +2539,11 @@ pub fn VedicTab() -> Element {
                                                                     }
                                                                     tbody { class: "divide-y divide-slate-800",
                                                                         {v_report.rows.iter().map(|row| {
-                                                                            let planet_lbl = planet_name_kr_str(&row.planet);
+                                                                            let planet_lbl = translate_planet_str(locale, &row.planet);
                                                                             let planet_color_cls = planet_color_str(&row.planet);
                                                                             let sign_lbl = rasi_name(row.sign);
-                                                                            let nak_lord = planet_name_kr_str(&row.nakshatra_lord);
-                                                                            let pad_lord = planet_name_kr_str(&row.pada_lord);
+                                                                            let nak_lord = translate_planet_str(locale, &row.nakshatra_lord);
+                                                                            let pad_lord = translate_planet_str(locale, &row.pada_lord);
                                                                             let deities = row.deity.clone();
                                                                             let purposes = row.purpose.clone();
                                                                             let pos_lbl = row.position_str.clone();
@@ -2879,11 +2810,13 @@ pub fn VedicTab() -> Element {
 
 #[component]
 fn KarakaCard(label: String, planet: VedicPlanet) -> Element {
+    let state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
     let color = planet_color(planet);
     rsx! {
         div { class: "p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 flex flex-col gap-1",
             p { class: "text-xs text-slate-500", "{label}" }
-            p { class: "font-bold text-sm {color}", "{planet_name_kr(planet)}" }
+            p { class: "font-bold text-sm {color}", "{translate_planet(locale, planet)}" }
         }
     }
 }

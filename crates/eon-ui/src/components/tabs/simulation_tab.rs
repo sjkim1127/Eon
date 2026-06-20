@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK};
+use crate::i18n::{t, TK, Locale, format_age, format_age_range};
 use eon_service::dto::{SajuAnalysisInput, AnalysisInput};
 use eon_service::facade;
 use eon_saju::engine::emulator::YearlyScore;
@@ -71,37 +71,58 @@ pub fn SimulationTab() -> Element {
                 },
                 TaskStatus::Success => {
                     if let Some(saju) = &state.saju.read().data {
+                        let c = saju.complexity.as_ref();
+                        let bottleneck_lbl = saju.qi_topology.bottleneck.map(|e| {
+                            match locale {
+                                Locale::Ko => format!("병목: {}({})", e.hangul(), e.hanja()),
+                                Locale::En => format!("Bottleneck: {}", e.hangul()),
+                                Locale::Zh => format!("瓶颈: {}", e.hangul()),
+                                Locale::Ru => format!("Узкое место: {}", e.hangul()),
+                            }
+                        }).unwrap_or_else(|| t(locale, TK::LabelNone).to_string());
+
+                        let cc_sub = if let Some(comp) = c {
+                            match locale {
+                                Locale::Ko => format!("안정도: {}", comp.stability_grade),
+                                Locale::En => format!("Stability: {}", comp.stability_grade),
+                                Locale::Zh => format!("稳定性: {}", comp.stability_grade),
+                                Locale::Ru => format!("Стабильность: {}", comp.stability_grade),
+                            }
+                        } else {
+                            "".to_string()
+                        };
+
+                        let cc_card = if let Some(comp) = c {
+                            rsx! {
+                                StatCard { icon: "🔬", label: t(locale, TK::SimComplexity), value: format!("{}", comp.cyclomatic_complexity), sub: cc_sub, color: "from-blue-900/30 to-slate-900 border-blue-700/40" }
+                            }
+                        } else {
+                            rsx! { div {} }
+                        };
+
                         rsx! {
                             // ── 요약 스탯 카드 ─────────────────────────────────
                             div { class: "grid grid-cols-2 md:grid-cols-4 gap-4",
-                                StatCard { icon: "⚠️", label: "취약점 (Fuzzer)", value: format!("{}", saju.crash_count), sub: "VM 충돌 횟수".to_string(), color: "from-red-900/30 to-slate-900 border-red-700/40" }
-                                StatCard { icon: "🌀", label: "운명 엔트로피", value: format!("{:.2}", saju.entropy.score), sub: saju.entropy.description.clone(), color: "from-purple-900/30 to-slate-900 border-purple-700/40" }
-                                StatCard { icon: "⚡", label: "기(氣) 흐름 효율", value: format!("{:.0}%", saju.qi_topology.throughput * 100.0),
-                                    sub: saju.qi_topology.bottleneck.map(|e| format!("병목: {}({})", e.hangul(), e.hanja())).unwrap_or_else(|| "없음".to_string()),
+                                StatCard { icon: "⚠️", label: t(locale, TK::SimVulnerability), value: format!("{}", saju.crash_count), sub: t(locale, TK::SimVmCrashes).to_string(), color: "from-red-900/30 to-slate-900 border-red-700/40" }
+                                StatCard { icon: "🌀", label: t(locale, TK::SimEntropy), value: format!("{:.2}", saju.entropy.score), sub: saju.entropy.description.clone(), color: "from-purple-900/30 to-slate-900 border-purple-700/40" }
+                                StatCard { icon: "⚡", label: t(locale, TK::SimQiEfficiency), value: format!("{:.0}%", saju.qi_topology.throughput * 100.0),
+                                    sub: bottleneck_lbl,
                                     color: "from-amber-900/30 to-slate-900 border-amber-700/40"
                                 }
-                                {
-                                    if let Some(c) = &saju.complexity {
-                                        rsx! {
-                                            StatCard { icon: "🔬", label: "순환 복잡도", value: format!("{}", c.cyclomatic_complexity), sub: format!("안정도: {}", c.stability_grade), color: "from-blue-900/30 to-slate-900 border-blue-700/40" }
-                                        }
-                                    } else {
-                                        rsx! { div {} }
-                                    }
-                                }
+                                {cc_card}
                             }
 
                             // ── 인생 점수 SVG 라인차트 ────────────────────────
                             if !saju.report.timeline.is_empty() {
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5",
                                     div { class: "flex items-center justify-between mb-4",
-                                        h3 { class: "font-semibold text-slate-200", "0~100세 운명 에너지 흐름" }
+                                        h3 { class: "font-semibold text-slate-200", "{t(locale, TK::SimEnergyFlowTitle)}" }
                                         div { class: "flex items-center gap-4 text-xs text-slate-500",
                                             span { class: "flex items-center gap-1.5",
-                                                span { class: "w-4 h-0.5 bg-purple-400 inline-block rounded" } "종합 점수"
+                                                span { class: "w-4 h-0.5 bg-purple-400 inline-block rounded" } "{t(locale, TK::SimScoreOverall)}"
                                             }
                                             span { class: "flex items-center gap-1.5",
-                                                span { class: "w-4 h-0.5 bg-amber-500 inline-block rounded" } "평균"
+                                                span { class: "w-4 h-0.5 bg-amber-500 inline-block rounded" } "{t(locale, TK::SimScoreAverage)}"
                                             }
                                         }
                                     }
@@ -115,15 +136,15 @@ pub fn SimulationTab() -> Element {
                                     div { class: "flex items-center gap-4",
                                         div { class: "text-4xl", "👑" }
                                         div { class: "space-y-1",
-                                            h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "인생의 골든 타임 (Golden Time)" }
+                                            h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "{t(locale, TK::SimGoldenTimeTitle)}" }
                                             p { class: "text-lg font-bold bg-gradient-to-r from-amber-200 to-yellow-400 bg-clip-text text-transparent", 
-                                                "만 {gt.start_age}세 ~ {gt.end_age}세 (10년간)" 
+                                                "{format_age_range(locale, gt.start_age as i32, gt.end_age as i32)}" 
                                             }
                                             p { class: "text-xs text-slate-400 leading-relaxed", "{gt.description}" }
                                         }
                                     }
                                     div { class: "text-right bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-2.5",
-                                        p { class: "text-[10px] text-slate-500 font-semibold tracking-wider uppercase", "10년 평균 카르마 점수" }
+                                        p { class: "text-[10px] text-slate-500 font-semibold tracking-wider uppercase", "{t(locale, TK::SimGoldenTimeAvg)}" }
                                         p { class: "text-2xl font-mono font-extrabold text-amber-400 mt-0.5", "{gt.average_score:.1}" }
                                     }
                                 }
@@ -133,17 +154,17 @@ pub fn SimulationTab() -> Element {
                             if !saju.report.simulation_frames.is_empty() {
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
                                     div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
-                                        h3 { class: "font-semibold text-slate-200", "VM 생애 프레임 (대운별 에너지 상태)" }
+                                        h3 { class: "font-semibold text-slate-200", "{t(locale, TK::SimLifeFramesTitle)}" }
                                     }
                                     div { class: "overflow-x-auto",
                                         table { class: "w-full text-xs",
                                             thead {
                                                 tr { class: "bg-slate-800/30 text-slate-400",
-                                                    th { class: "px-4 py-3 text-left font-medium", "나이" }
-                                                    th { class: "px-4 py-3 text-left font-medium", "대운 간지" }
-                                                    th { class: "px-4 py-3 text-left font-medium", "세운" }
-                                                    th { class: "px-4 py-3 text-left font-medium", "점수" }
-                                                    th { class: "px-4 py-3 text-left font-medium", "흐름" }
+                                                    th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::SimColAge)}" }
+                                                    th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::SimColMajorLuck)}" }
+                                                    th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::SimColAnnualLuck)}" }
+                                                    th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::SimColScore)}" }
+                                                    th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::SimColTrend)}" }
                                                 }
                                             }
                                             tbody { class: "divide-y divide-slate-800",
@@ -157,7 +178,7 @@ pub fn SimulationTab() -> Element {
                                                     };
                                                     rsx! {
                                                         tr { class: "hover:bg-slate-800/20 transition-colors",
-                                                            td { class: "px-4 py-2 font-mono text-slate-300", "만 {frame.age}세" }
+                                                            td { class: "px-4 py-2 font-mono text-slate-300", "{format_age(locale, frame.age as i32)}" }
                                                             td { class: "px-4 py-2 font-serif text-amber-300 font-bold", "{frame.major_ganzi.hanja()} ({frame.major_ganzi.hangul()})" }
                                                             td { class: "px-4 py-2 font-serif text-slate-400", "{frame.ganzi.hanja()}" }
                                                             td { class: "px-4 py-2 font-mono {score_color}", "{frame.score:.1}" }
@@ -176,14 +197,17 @@ pub fn SimulationTab() -> Element {
                             // ── 카르마 부하 진단 ──────────────────────────────
                             if !saju.load_diagnostics.is_empty() {
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5",
-                                    h3 { class: "font-semibold text-slate-200 mb-3", "⚡ 카르마 부하 진단 (KarmaLoadBalancer)" }
+                                    h3 { class: "font-semibold text-slate-200 mb-3", "{t(locale, TK::SimKarmaDiagnostics)}" }
                                     div { class: "space-y-2",
-                                        {saju.load_diagnostics.iter().map(|d| rsx! {
-                                            div { class: "flex items-start gap-2 p-3 rounded-lg bg-slate-800/50 text-sm",
-                                                span { class: "text-amber-400 mt-0.5 shrink-0", "▸" }
-                                                div {
-                                                    p { class: "text-slate-300", "만 {d.age}세: {d.reason}" }
-                                                    p { class: "text-xs text-slate-500 mt-0.5", "전략: {d.strategy}" }
+                                        {saju.load_diagnostics.iter().map(|d| {
+                                            let strategy_lbl = format!("{}: ", t(locale, TK::SimStrategy));
+                                            rsx! {
+                                                div { class: "flex items-start gap-2 p-3 rounded-lg bg-slate-800/50 text-sm",
+                                                    span { class: "text-amber-400 mt-0.5 shrink-0", "▸" }
+                                                    div {
+                                                        p { class: "text-slate-300", "{format_age(locale, d.age as i32)}: {d.reason}" }
+                                                        p { class: "text-xs text-slate-500 mt-0.5", "{strategy_lbl}{d.strategy}" }
+                                                    }
                                                 }
                                             }
                                         })}
@@ -301,20 +325,26 @@ fn LifelineChart(timeline: &[YearlyScore]) -> Element {
                 }
             })}
 
-            {(0..=10u32).map(|i| {
-                let idx = ((i as usize) * (timeline.len() - 1)) / 10;
-                let idx = idx.min(timeline.len() - 1);
-                let x = pad_left + (idx as f64 / (n - 1.0).max(1.0)) * chart_w;
-                let year_lbl = timeline[idx].age.to_string();
+            {
+                let locale = *use_context::<AnalysisState>().locale.read();
                 rsx! {
-                    text {
-                        x: "{x:.1}", y: "{height - 6.0}",
-                        text_anchor: "middle", font_size: "9",
-                        fill: "#64748b",
-                        "{year_lbl}세"
-                    }
+                    {(0..=10u32).map(|i| {
+                        let idx = ((i as usize) * (timeline.len() - 1)) / 10;
+                        let idx = idx.min(timeline.len() - 1);
+                        let x = pad_left + (idx as f64 / (n - 1.0).max(1.0)) * chart_w;
+                        let year_lbl = timeline[idx].age;
+                        let age_str = format_age(locale, year_lbl as i32);
+                        rsx! {
+                            text {
+                                x: "{x:.1}", y: "{height - 6.0}",
+                                text_anchor: "middle", font_size: "9",
+                                fill: "#64748b",
+                                "{age_str}"
+                            }
+                        }
+                    })}
                 }
-            })}
+            }
 
             text { x: "{pad_left - 5.0}", y: "{pad_top + 4.0}", text_anchor: "end", font_size: "9", fill: "#64748b", "{max_lbl}" }
             text { x: "{pad_left - 5.0}", y: "{pad_top + chart_h}", text_anchor: "end", font_size: "9", fill: "#64748b", "{min_lbl}" }
