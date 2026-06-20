@@ -238,5 +238,14 @@ pub fn translate(key: TK) -> &'static str {
         TK::TierStrengthsInherent => "Inherent Strengths",
         TK::TierWeaknessesCaution => "Areas of Caution",
         TK::TierWeightsTitle => "Detailed Evaluation Weights",
+
+        // Vedic Yoga Categories
+        TK::VedicYogaCategoryRaja => "👑 Raja Yoga (Royal Yogas)",
+        TK::VedicYogaCategoryNabhasa => "🌌 Nabhasa Yoga (Cosmic Patterns)",
+        TK::VedicYogaCategoryDhana => "💰 Dhana Yoga (Wealth Yogas)",
+        TK::VedicYogaCategoryChandra => "🌙 Chandra Yoga (Moon Yogas)",
+        TK::VedicYogaCategoryParivartana => "🔄 Parivartana Yoga (Exchange Yogas)",
+        TK::VedicYogaCategoryArishta => "⚔️ Arishta Yoga (Affliction Yogas)",
+        TK::VedicYogaCategoryNeecha => "☯️ Neecha Bhanga (Cancellation Yogas)",
     }
 }

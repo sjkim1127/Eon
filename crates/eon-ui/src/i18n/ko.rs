@@ -238,5 +238,14 @@ pub fn translate(key: TK) -> &'static str {
         TK::TierStrengthsInherent => "타고난 강점",
         TK::TierWeaknessesCaution => "주의 및 보완점",
         TK::TierWeightsTitle => "상세 평가 항목 가중치",
+
+        // Vedic Yoga 카테고리
+        TK::VedicYogaCategoryRaja => "👑 라자 요가 (왕족 요가)",
+        TK::VedicYogaCategoryNabhasa => "🌌 나바사 요가 (코스믹 패턴)",
+        TK::VedicYogaCategoryDhana => "💰 다나 요가 (재물 요가)",
+        TK::VedicYogaCategoryChandra => "🌙 찬드라 요가 (달 요가)",
+        TK::VedicYogaCategoryParivartana => "🔄 파리바르타나 요가 (교환 요가)",
+        TK::VedicYogaCategoryArishta => "⚔️ 아리시타 요가 (역경 요가)",
+        TK::VedicYogaCategoryNeecha => "☯️ 니차방가 요가 (약화 소멸)",
     }
 }

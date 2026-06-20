@@ -1467,19 +1467,106 @@ pub fn VedicTab() -> Element {
                                             }
                                         }
 
-                                        // Yogas & Karakas Grid
-                                        div { class: "grid grid-cols-1 md:grid-cols-2 gap-4",
-                                            div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3",
-                                                h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "감지된 요가 (Vedic Yogas)" }
-                                                div { class: "space-y-2",
-                                                    {data.report.yogas.iter().take(5).map(|y| rsx! {
-                                                        div { class: "p-3 rounded-xl bg-slate-800/50 border border-slate-700/50",
-                                                            p { class: "font-semibold text-sm text-indigo-300", "{y.name}" }
-                                                            p { class: "text-xs text-slate-400 mt-1", "{y.description}" }
+                                        // ── Yoga 카테고리 아코디언 + 카드 그리드 ──────────────────
+                                        {
+                                            let yogas = data.report.yogas.clone();
+                                            let yoga_count = yogas.len();
+                                            rsx! {
+                                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl mb-4",
+                                                    // 헤더
+                                                    div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5 flex items-center justify-between",
+                                                        div { class: "flex items-center gap-2",
+                                                            span { class: "text-lg", "🔮" }
+                                                            h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-widest", "Vedic Yoga 분석" }
                                                         }
-                                                    })}
+                                                        span { class: "text-xs text-indigo-400 font-semibold bg-indigo-950/40 border border-indigo-800/40 rounded-full px-2.5 py-0.5",
+                                                            "{yoga_count}개 감지됨"
+                                                        }
+                                                    }
+                                                    div { class: "p-4 space-y-3",
+                                                        // 카테고리별 아코디언
+                                                        {
+                                                            // 카테고리 정의: (label_key, filter_fn, icon, color)
+                                                            let categories: &[(&str, &str, &[&str])] = &[
+                                                                ("👑 라자 요가 (Raja Yoga)", "from-violet-600 to-purple-700", &["RajaYoga","GajaKesari","Budhaditya","DharmaKarmaAdhipati","PanchaMahapurusha"]),
+                                                                ("🌌 나바사 요가 (Nabhasa Yoga)", "from-sky-600 to-cyan-700", &["NabhasaGola","NabhasaYuga","NabhasaShoola","NabhasaKedara","NabhasaPasha","NabhasaDaama","NabhasaVeena","NabhasaAshrita","NabhasaSthira","NabhasaDvisvabhava"]),
+                                                                ("💰 다나 요가 (Dhana Yoga)", "from-amber-600 to-yellow-700", &["DhanaYoga","Adhi","Vasumathi"]),
+                                                                ("🌙 찬드라 요가 (Chandra Yoga)", "from-slate-500 to-slate-600", &["Sunapha","Anapha","Sakata"]),
+                                                                ("🔄 파리바르타나 (Parivartana)", "from-emerald-600 to-teal-700", &["Parivartana","ParivartanaMaha","ParivartanaKhala","ParivartanaDainya"]),
+                                                                ("☯️ 니차방가 (Neecha Bhanga)", "from-rose-600 to-pink-700", &["NeechaBhanga"]),
+                                                                ("⚔️ 아리시타 요가 (Arishta)", "from-red-700 to-orange-700", &["Kemadruma","VipareetaRajaYoga","Harsha","Sarala","Vimala","KalaSarpa"]),
+                                                            ];
+
+                                                            categories.iter().map(|(label, gradient, yoga_keys)| {
+                                                                // 해당 카테고리에 속한 요가 필터링
+                                                                let cat_yogas: Vec<_> = yogas.iter().filter(|y| {
+                                                                    let type_str = format!("{:?}", y.yoga_type);
+                                                                    yoga_keys.iter().any(|k| type_str == *k)
+                                                                }).collect();
+
+                                                                let count = cat_yogas.len();
+                                                                if count == 0 {
+                                                                    return rsx! { div {} };
+                                                                }
+
+                                                                let gradient_cls = *gradient;
+                                                                let label_str = *label;
+
+                                                                rsx! {
+                                                                    div { class: "rounded-xl overflow-hidden border border-slate-700/50",
+                                                                        // 카테고리 헤더
+                                                                        div { class: "flex items-center justify-between px-4 py-2.5 bg-slate-800/60",
+                                                                            div { class: "flex items-center gap-2",
+                                                                                div { class: "w-2 h-2 rounded-full bg-gradient-to-r {gradient_cls}" }
+                                                                                span { class: "text-sm font-semibold text-slate-200", "{label_str}" }
+                                                                            }
+                                                                            span { class: "text-xs text-slate-500 bg-slate-900/60 rounded-full px-2 py-0.5", "{count}개" }
+                                                                        }
+                                                                        // 카드 그리드
+                                                                        div { class: "p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 bg-slate-950/30",
+                                                                            {cat_yogas.iter().map(|y| {
+                                                                                let (quality_badge, quality_border, quality_glow) = {
+                                                                                    let type_str = format!("{:?}", y.quality);
+                                                                                    if type_str.starts_with("VeryHigh") {
+                                                                                        ("✦ 최고등급", "border-violet-500/50 bg-violet-950/30", "text-violet-300")
+                                                                                    } else if type_str.starts_with("High") {
+                                                                                        ("◈ 고등급", "border-indigo-500/40 bg-indigo-950/20", "text-indigo-300")
+                                                                                    } else if type_str.starts_with("Medium") {
+                                                                                        ("◇ 중등급", "border-slate-600/40 bg-slate-800/30", "text-slate-400")
+                                                                                    } else {
+                                                                                        ("△ 약함", "border-amber-700/40 bg-amber-950/20", "text-amber-500")
+                                                                                    }
+                                                                                };
+                                                                                let name = y.name.clone();
+                                                                                let desc = if y.description.len() > 80 {
+                                                                                    format!("{}…", &y.description[..80])
+                                                                                } else {
+                                                                                    y.description.clone()
+                                                                                };
+                                                                                rsx! {
+                                                                                    div { class: "rounded-lg border {quality_border} p-3 space-y-1.5 transition-all hover:brightness-125",
+                                                                                        div { class: "flex items-start justify-between gap-1",
+                                                                                            p { class: "font-semibold text-sm text-slate-100 leading-tight", "{name}" }
+                                                                                            span { class: "shrink-0 text-[10px] font-bold {quality_glow} bg-slate-900/60 rounded px-1.5 py-0.5",
+                                                                                                "{quality_badge}"
+                                                                                            }
+                                                                                        }
+                                                                                        p { class: "text-[11px] text-slate-400 leading-relaxed", "{desc}" }
+                                                                                    }
+                                                                                }
+                                                                            })}
+                                                                        }
+                                                                    }
+                                                                }
+                                                            })
+                                                        }
+                                                    }
                                                 }
                                             }
+                                        }
+
+                                        // Karakas Grid
+                                        div { class: "grid grid-cols-1 gap-4",
                                             div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3",
                                                 h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "자이미니 8대 카라카 (Jaimini Karakas)" }
                                                 div { class: "grid grid-cols-2 gap-3",
