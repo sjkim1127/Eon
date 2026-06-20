@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK};
+use crate::i18n::{t, TK, Locale, translate_planet};
 use eon_service::dto::{SajuAnalysisInput, VedicAnalysisInput, AnalysisInput};
 use eon_service::facade;
 use eon_vedic::analysis::strength::StrengthEngine;
@@ -17,21 +17,6 @@ const PLANETS: &[VedicPlanet] = &[
     VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus,
     VedicPlanet::Saturn, VedicPlanet::Rahu, VedicPlanet::Ketu,
 ];
-
-fn planet_kr(p: VedicPlanet) -> &'static str {
-    match p {
-        VedicPlanet::Sun => "태양 ☀️",
-        VedicPlanet::Moon => "달 🌙",
-        VedicPlanet::Mars => "화성 ♂",
-        VedicPlanet::Mercury => "수성 ☿",
-        VedicPlanet::Jupiter => "목성 ♃",
-        VedicPlanet::Venus => "금성 ♀",
-        VedicPlanet::Saturn => "토성 ♄",
-        VedicPlanet::Rahu => "라후 ☊",
-        VedicPlanet::Ketu => "케투 ☋",
-        VedicPlanet::Ascendant => "라그나",
-    }
-}
 
 fn planet_bar_color(p: VedicPlanet) -> &'static str {
     match p {
@@ -130,7 +115,7 @@ pub fn StrengthTab() -> Element {
                     div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5",
                         // 헤더
                         div { class: "flex items-center justify-between mb-4",
-                            h3 { class: "text-lg font-semibold text-emerald-300", "사주 오행 세력 분포" }
+                            h3 { class: "text-lg font-semibold text-emerald-300", "{t(locale, TK::SajuPowerWeighted)}" }
                             {
                                 let st = saju.report.strength.strength_type;
                                 let (badge_color, icon) = match st {
@@ -138,9 +123,27 @@ pub fn StrengthTab() -> Element {
                                     StrengthType::Weak => ("bg-blue-500/20 text-blue-300 border-blue-500/50", "💧"),
                                     StrengthType::Balanced => ("bg-emerald-500/20 text-emerald-300 border-emerald-500/50", "⚖️"),
                                 };
+                                let st_lbl = match locale {
+                                    Locale::Ko => format!("{} ({})", st.hangul(), st.hanja()),
+                                    Locale::En => match st {
+                                        StrengthType::Strong => "Strong".to_string(),
+                                        StrengthType::Weak => "Weak".to_string(),
+                                        StrengthType::Balanced => "Balanced".to_string(),
+                                    },
+                                    Locale::Zh => match st {
+                                        StrengthType::Strong => "身强".to_string(),
+                                        StrengthType::Weak => "身弱".to_string(),
+                                        StrengthType::Balanced => "中和".to_string(),
+                                    },
+                                    Locale::Ru => match st {
+                                        StrengthType::Strong => "Сильный".to_string(),
+                                        StrengthType::Weak => "Слабый".to_string(),
+                                        StrengthType::Balanced => "Сбалансирован".to_string(),
+                                    },
+                                };
                                 rsx! {
                                     span { class: "flex items-center gap-1 px-3 py-1 rounded-full border text-sm font-bold {badge_color}",
-                                        "{icon} {st.hangul()} ({st.hanja()})"
+                                        "{icon} {st_lbl}"
                                     }
                                 }
                             }
@@ -149,8 +152,8 @@ pub fn StrengthTab() -> Element {
                         div { class: "space-y-3",
                             {
                                 let se = &saju.report.strength.deuk_se;
-                                let dm_el = saju.report.strength.day_master.element();
                                 let total = (se.bijie_count + se.yinxing_count + se.shishang_count + se.caisheng_count + se.guanxing_count).max(1) as f32;
+                                let dm_el = saju.report.strength.day_master.element();
 
                                 let bars = vec![
                                     ("비겁(比劫)", dm_el.hangul(), dm_el.hanja(), se.bijie_count, "bg-violet-500"),
@@ -163,10 +166,42 @@ pub fn StrengthTab() -> Element {
                                 rsx! {
                                     {bars.iter().map(|(ten_god, el_name, el_hanja, count, color)| {
                                         let pct = (*count as f32 / total * 100.0) as u32;
+                                        let ten_god_lbl = match locale {
+                                            Locale::Ko => *ten_god,
+                                            Locale::En => match *ten_god {
+                                                "비겁(比劫)" => "Companion",
+                                                "인성(印星)" => "Resource",
+                                                "식상(食傷)" => "Output",
+                                                "재성(財星)" => "Wealth",
+                                                "관성(官星)" => "Influence",
+                                                _ => *ten_god,
+                                            },
+                                            Locale::Zh => match *ten_god {
+                                                "비겁(比劫)" => "比劫",
+                                                "인성(印星)" => "印星",
+                                                "식상(食傷)" => "食伤",
+                                                "재성(財星)" => "财星",
+                                                "관성(官星)" => "官星",
+                                                _ => *ten_god,
+                                            },
+                                            Locale::Ru => match *ten_god {
+                                                "비겁(比劫)" => "Братство",
+                                                "인성(印星)" => "Ресурсы",
+                                                "식상(食傷)" => "Самовыражение",
+                                                "재성(財星)" => "Богатство",
+                                                "관성(官星)" => "Власть",
+                                                _ => *ten_god,
+                                            },
+                                        };
+                                        let count_str = match locale {
+                                            Locale::Ko => format!("{}개", count),
+                                            Locale::Zh => format!("{}个", count),
+                                            _ => format!("{}", count),
+                                        };
                                         rsx! {
                                             div { class: "flex items-center gap-3",
                                                 div { class: "w-28 text-right shrink-0",
-                                                    span { class: "text-sm font-medium text-slate-300", "{ten_god}" }
+                                                    span { class: "text-sm font-medium text-slate-300", "{ten_god_lbl}" }
                                                     span { class: "text-xs text-slate-500 ml-1", "{el_name}({el_hanja})" }
                                                 }
                                                 div { class: "flex-1 h-4 bg-slate-800 rounded-full overflow-hidden",
@@ -176,7 +211,7 @@ pub fn StrengthTab() -> Element {
                                                     }
                                                 }
                                                 div { class: "w-16 text-xs font-mono text-slate-400 text-right shrink-0",
-                                                    "{count}개 ({pct}%)"
+                                                    "{count_str} ({pct}%)"
                                                 }
                                             }
                                         }
@@ -187,10 +222,26 @@ pub fn StrengthTab() -> Element {
 
                         // 득령/득지/득시/득세 상세
                         div { class: "mt-4 pt-4 border-t border-slate-800 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm",
-                            DeukDetail { label: "득령 (得令)", acquired: saju.report.strength.deuk_ryeong.acquired, desc: saju.report.strength.deuk_ryeong.relation().to_string() }
-                            DeukDetail { label: "득지 (得地)", acquired: saju.report.strength.deuk_ji.acquired, desc: format!("통근 {}개 | 강한 운성 {}개", saju.report.strength.deuk_ji.root_count, saju.report.strength.deuk_ji.strong_stage_count) }
-                            DeukDetail { label: "득시 (得時)", acquired: saju.report.strength.deuk_si.acquired, desc: saju.report.strength.deuk_si.relation().to_string() }
-                            DeukDetail { label: "득세 (得勢)", acquired: saju.report.strength.deuk_se.acquired, desc: format!("지지 세력 {:.1}%", saju.report.strength.deuk_se.support_ratio) }
+                            {
+                                let deuk_ji_desc = match locale {
+                                    Locale::Ko => format!("통근 {}개 | 강한 운성 {}개", saju.report.strength.deuk_ji.root_count, saju.report.strength.deuk_ji.strong_stage_count),
+                                    Locale::En => format!("Roots: {} | Strong: {}", saju.report.strength.deuk_ji.root_count, saju.report.strength.deuk_ji.strong_stage_count),
+                                    Locale::Zh => format!("通根 {}个 | 强星 {}个", saju.report.strength.deuk_ji.root_count, saju.report.strength.deuk_ji.strong_stage_count),
+                                    Locale::Ru => format!("Корни: {} | Сильные: {}", saju.report.strength.deuk_ji.root_count, saju.report.strength.deuk_ji.strong_stage_count),
+                                };
+                                let deuk_se_desc = match locale {
+                                    Locale::Ko => format!("지지 세력 {:.1}%", saju.report.strength.deuk_se.support_ratio),
+                                    Locale::En => format!("Branch Support: {:.1}%", saju.report.strength.deuk_se.support_ratio),
+                                    Locale::Zh => format!("地支势力 {:.1}%", saju.report.strength.deuk_se.support_ratio),
+                                    Locale::Ru => format!("Поддержка ветвей: {:.1}%", saju.report.strength.deuk_se.support_ratio),
+                                };
+                                rsx! {
+                                    DeukDetail { label: t(locale, TK::SajuDeukRyeong), acquired: saju.report.strength.deuk_ryeong.acquired, desc: saju.report.strength.deuk_ryeong.relation().to_string() }
+                                    DeukDetail { label: t(locale, TK::SajuDeukJi), acquired: saju.report.strength.deuk_ji.acquired, desc: deuk_ji_desc }
+                                    DeukDetail { label: t(locale, TK::SajuDeukSi), acquired: saju.report.strength.deuk_si.acquired, desc: saju.report.strength.deuk_si.relation().to_string() }
+                                    DeukDetail { label: t(locale, TK::SajuDeukSe), acquired: saju.report.strength.deuk_se.acquired, desc: deuk_se_desc }
+                                }
+                            }
                         }
                     }
                 }
@@ -200,7 +251,7 @@ pub fn StrengthTab() -> Element {
             if has_vedic {
                 if let Some(vedic) = &state.vedic.read().data {
                     div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5",
-                        h3 { class: "text-lg font-semibold text-blue-300 mb-4", "베딕 샤드발라 (Shadbala 行星 强度)" }
+                        h3 { class: "text-lg font-semibold text-blue-300 mb-4", "{t(locale, TK::SectionStrength)}" }
                         div { class: "space-y-3",
                             {
                                 // 최대 점수를 찾아서 바 비율 계산
@@ -209,7 +260,7 @@ pub fn StrengthTab() -> Element {
                                     .map(|p| (p.planet, StrengthEngine::calculate(p, &vedic.chart)))
                                     .collect();
                                 let max_score = strengths.iter().map(|(_, s)| s.total_score).fold(0.0_f64, f64::max).max(1.0);
-
+ 
                                 rsx! {
                                     {strengths.iter().map(|(planet, s)| {
                                         let pct = (s.total_score / max_score * 100.0) as u32;
@@ -220,10 +271,34 @@ pub fn StrengthTab() -> Element {
                                             "Debilitated" | "Weak" => "text-red-400",
                                             _ => "text-slate-400",
                                         };
+                                        let status_lbl = match locale {
+                                            Locale::Ko => match s.status.as_str() {
+                                                "Exalted" => "고양 (Exalted)",
+                                                "Strong" => "강함",
+                                                "Weak" => "약함",
+                                                "Debilitated" => "쇠퇴 (Debilitated)",
+                                                _ => s.status.as_str(),
+                                            },
+                                            Locale::En => s.status.as_str(),
+                                            Locale::Zh => match s.status.as_str() {
+                                                "Exalted" => "庙旺",
+                                                "Strong" => "强旺",
+                                                "Weak" => "虚弱",
+                                                "Debilitated" => "落陷",
+                                                _ => s.status.as_str(),
+                                            },
+                                            Locale::Ru => match s.status.as_str() {
+                                                "Exalted" => "Экзальтация",
+                                                "Strong" => "Сильный",
+                                                "Weak" => "Слабый",
+                                                "Debilitated" => "Падение",
+                                                _ => s.status.as_str(),
+                                            },
+                                        };
                                         rsx! {
                                             div { class: "flex items-center gap-3",
                                                 div { class: "w-24 text-sm font-medium text-right text-slate-300 shrink-0",
-                                                    "{planet_kr(*planet)}"
+                                                    "{translate_planet(locale, *planet)}"
                                                 }
                                                 div { class: "flex-1 h-4 bg-slate-800 rounded-full overflow-hidden",
                                                     div {
@@ -233,7 +308,7 @@ pub fn StrengthTab() -> Element {
                                                 }
                                                 div { class: "w-24 text-xs text-right shrink-0",
                                                     span { class: "font-mono text-slate-400", "{s.total_score:.0}" }
-                                                    span { class: "ml-2 {status_color} font-medium", "{s.status}" }
+                                                    span { class: "ml-2 {status_color} font-medium", "{status_lbl}" }
                                                 }
                                             }
                                         }

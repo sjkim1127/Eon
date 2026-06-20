@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK};
+use crate::i18n::{t, TK, format_weight_score};
 use eon_service::dto::{AnalysisInput, SajuAnalysisInput, VedicAnalysisInput};
 use eon_service::facade;
 
@@ -104,7 +104,7 @@ pub fn TierTab() -> Element {
                                 div { class: "absolute -top-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" }
                                 div { class: "absolute -bottom-20 -left-20 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" }
                                 
-                                h3 { class: "text-sm font-bold text-amber-400/80 tracking-widest uppercase mb-2", "종합 잠재력 티어" }
+                                h3 { class: "text-sm font-bold text-amber-400/80 tracking-widest uppercase mb-2", "{t(locale, TK::TierPotentialTitle)}" }
                                 div { class: "text-8xl font-black bg-gradient-to-br from-yellow-200 via-amber-400 to-orange-500 text-transparent bg-clip-text drop-shadow-[0_0_40px_rgba(251,191,36,0.3)] mb-4 leading-tight",
                                     "{data.destiny_tier.grade}"
                                 }
@@ -113,7 +113,7 @@ pub fn TierTab() -> Element {
                                 
                                 div { class: "w-full max-w-md mt-8",
                                     div { class: "flex justify-between text-xs text-slate-400 font-bold mb-2",
-                                        span { "운명력 수치" }
+                                        span { "{t(locale, TK::TierDestinyPowerScore)}" }
                                         span { class: "text-amber-400", "{data.destiny_score:.1} / 100" }
                                     }
                                     div { class: "h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50",
@@ -141,7 +141,7 @@ pub fn TierTab() -> Element {
                                 // 사주 기반
                                 div { class: "p-5 rounded-2xl bg-slate-900 border border-slate-800",
                                     div { class: "flex justify-between items-center mb-4",
-                                        h4 { class: "font-bold text-emerald-400", "동양 명리학 (사주) 점수" }
+                                        h4 { class: "font-bold text-emerald-400", "{t(locale, TK::TierEasternSajuScore)}" }
                                         span { class: "text-2xl font-black text-slate-200", "{data.saju_result.score:.1}" }
                                     }
                                     ul { class: "space-y-2",
@@ -156,7 +156,7 @@ pub fn TierTab() -> Element {
                                 // 베딕 기반
                                 div { class: "p-5 rounded-2xl bg-slate-900 border border-slate-800",
                                     div { class: "flex justify-between items-center mb-4",
-                                        h4 { class: "font-bold text-blue-400", "인도 점성학 (베딕) 점수" }
+                                        h4 { class: "font-bold text-blue-400", "{t(locale, TK::TierVedicScore)}" }
                                         span { class: "text-2xl font-black text-slate-200", "{data.vedic_result.score:.1}" }
                                     }
                                     ul { class: "space-y-2",
@@ -173,7 +173,7 @@ pub fn TierTab() -> Element {
                             // ── 4. 강점 & 약점 요약 ───────────────────────────
                             div { class: "grid grid-cols-1 md:grid-cols-2 gap-4",
                                 div { class: "p-5 rounded-2xl bg-emerald-900/10 border border-emerald-900/30",
-                                    h4 { class: "font-bold text-emerald-400 mb-3 flex items-center gap-2", span { class: "text-lg", "🌟" } "타고난 강점" }
+                                    h4 { class: "font-bold text-emerald-400 mb-3 flex items-center gap-2", span { class: "text-lg", "🌟" } "{t(locale, TK::TierStrengthsInherent)}" }
                                     ul { class: "space-y-2",
                                         {data.strengths.iter().map(|s| rsx! {
                                             li { class: "text-sm text-emerald-200/80 leading-relaxed", "• {s}" }
@@ -181,7 +181,7 @@ pub fn TierTab() -> Element {
                                     }
                                 }
                                 div { class: "p-5 rounded-2xl bg-red-900/10 border border-red-900/30",
-                                    h4 { class: "font-bold text-red-400 mb-3 flex items-center gap-2", span { class: "text-lg", "⚠️" } "주의 및 보완점" }
+                                    h4 { class: "font-bold text-red-400 mb-3 flex items-center gap-2", span { class: "text-lg", "⚠️" } "{t(locale, TK::TierWeaknessesCaution)}" }
                                     ul { class: "space-y-2",
                                         {data.weaknesses.iter().map(|w| rsx! {
                                             li { class: "text-sm text-red-200/80 leading-relaxed", "• {w}" }
@@ -193,15 +193,16 @@ pub fn TierTab() -> Element {
                             // ── 5. 컴포넌트 세부 가중치 ─────────────────────────
                             if !data.detailed_components.is_empty() {
                                 div { class: "p-5 rounded-2xl bg-slate-900 border border-slate-800",
-                                    h4 { class: "font-bold text-slate-300 mb-4", "상세 평가 항목 가중치" }
+                                    h4 { class: "font-bold text-slate-300 mb-4", "{t(locale, TK::TierWeightsTitle)}" }
                                     div { class: "space-y-4",
                                         {data.detailed_components.iter().map(|c| {
                                             let pct = c.score as u32;
+                                            let weight_lbl = format_weight_score(locale, (c.weight * 100.0) as f64, pct as f64);
                                             rsx! {
                                                 div {
                                                     div { class: "flex justify-between items-end mb-1",
                                                         span { class: "text-sm font-medium text-slate-300", "{c.label}" }
-                                                        span { class: "text-xs font-mono text-slate-500", "가중치 {c.weight * 100.0:.0}% | {pct}점" }
+                                                        span { class: "text-xs font-mono text-slate-500", "{weight_lbl}" }
                                                     }
                                                     div { class: "h-2 w-full bg-slate-800 rounded-full overflow-hidden",
                                                         div { class: "h-full bg-slate-500 rounded-full", style: "width: {pct}%" }

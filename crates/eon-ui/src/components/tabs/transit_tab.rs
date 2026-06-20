@@ -1,8 +1,9 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK};
+use crate::i18n::{t, TK, Locale};
 use eon_service::dto::{SajuAnalysisInput, TransitAnalysisInput, AnalysisInput};
 use eon_service::facade;
+use eon_saju::LuckDirection;
 use crate::components::shared::birth_form::BirthForm;
 
 #[component]
@@ -89,49 +90,84 @@ pub fn TransitTab() -> Element {
                     if let Some(transit) = &state.transit.read().data {
                         rsx! {
                             // ── 현재 운세 요약 카드 ─────────────────────────────
-                            div { class: "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4",
-                                // 현재 나이
-                                LuckCard {
-                                    title: "현재 나이",
-                                    value: format!("만 {}세", transit.current_age),
-                                    sub: "".to_string(),
-                                    color: "from-slate-800 to-slate-900 border-slate-700",
-                                    icon: "👤",
-                                }
-                                // 세운 (연운)
-                                LuckCard {
-                                    title: format!("세운 {}년", transit.yearly_luck.year),
-                                    value: format!("{} ({})", transit.yearly_luck.ganzi.hanja(), transit.yearly_luck.ganzi.hangul()),
-                                    sub: format!("{}/{}", transit.yearly_luck.stem_god.hangul(), transit.yearly_luck.branch_god.hangul()),
-                                    color: "from-amber-900/40 to-slate-900 border-amber-700/40",
-                                    icon: "🌟",
-                                }
-                                // 월운
-                                LuckCard {
-                                    title: format!("월운 {}월", transit.monthly_luck.month),
-                                    value: format!("{} ({})", transit.monthly_luck.ganzi.hanja(), transit.monthly_luck.ganzi.hangul()),
-                                    sub: format!("{}/{}", transit.monthly_luck.stem_god.hangul(), transit.monthly_luck.branch_god.hangul()),
-                                    color: "from-blue-900/40 to-slate-900 border-blue-700/40",
-                                    icon: "📅",
-                                }
-                                // 일운
-                                LuckCard {
-                                    title: "일운 (오늘)".to_string(),
-                                    value: format!("{} ({})", transit.daily_luck.ganzi.hanja(), transit.daily_luck.ganzi.hangul()),
-                                    sub: format!("{}/{}", transit.daily_luck.stem_god.hangul(), transit.daily_luck.branch_god.hangul()),
-                                    color: "from-emerald-900/40 to-slate-900 border-emerald-700/40",
-                                    icon: "📆",
-                                }
-                            }
+                            {
+                                let age_lbl = t(locale, TK::LabelAge);
+                                let age_val = match locale {
+                                    Locale::Ko => format!("만 {}세", transit.current_age),
+                                    Locale::En => format!("Age {}", transit.current_age),
+                                    Locale::Zh => format!("{}岁", transit.current_age),
+                                    Locale::Ru => format!("{} лет", transit.current_age),
+                                };
+                                let yearly_luck_title = match locale {
+                                    Locale::Ko => format!("세운 {}년", transit.yearly_luck.year),
+                                    Locale::En => format!("Annual Luck {}", transit.yearly_luck.year),
+                                    Locale::Zh => format!("流年 {}年", transit.yearly_luck.year),
+                                    Locale::Ru => format!("Год {}", transit.yearly_luck.year),
+                                };
+                                let monthly_luck_title = match locale {
+                                    Locale::Ko => format!("월운 {}월", transit.monthly_luck.month),
+                                    Locale::En => format!("Monthly Luck {}", transit.monthly_luck.month),
+                                    Locale::Zh => format!("流月 {}月", transit.monthly_luck.month),
+                                    Locale::Ru => format!("Месяц {}", transit.monthly_luck.month),
+                                };
+                                let daily_luck_title = match locale {
+                                    Locale::Ko => "일운 (오늘)".to_string(),
+                                    Locale::En => "Daily Luck (Today)".to_string(),
+                                    Locale::Zh => "流日 (今日)".to_string(),
+                                    Locale::Ru => "День (Сегодня)".to_string(),
+                                };
+                                let transit_notes_title = match locale {
+                                    Locale::Ko => "⚠️ 세운 특이사항",
+                                    Locale::En => "⚠️ Annual Luck Highlights",
+                                    Locale::Zh => "⚠️ 流年特别注意事项",
+                                    Locale::Ru => "⚠️ Особые события года",
+                                };
+                                rsx! {
+                                    div { class: "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4",
+                                        // 현재 나이
+                                        LuckCard {
+                                            title: "{age_lbl}",
+                                            value: "{age_val}",
+                                            sub: "".to_string(),
+                                            color: "from-slate-800 to-slate-900 border-slate-700",
+                                            icon: "👤",
+                                        }
+                                        // 세운 (연운)
+                                        LuckCard {
+                                            title: "{yearly_luck_title}",
+                                            value: format!("{} ({})", transit.yearly_luck.ganzi.hanja(), transit.yearly_luck.ganzi.hangul()),
+                                            sub: format!("{}/{}", transit.yearly_luck.stem_god.hangul(), transit.yearly_luck.branch_god.hangul()),
+                                            color: "from-amber-900/40 to-slate-900 border-amber-700/40",
+                                            icon: "🌟",
+                                        }
+                                        // 월운
+                                        LuckCard {
+                                            title: "{monthly_luck_title}",
+                                            value: format!("{} ({})", transit.monthly_luck.ganzi.hanja(), transit.monthly_luck.ganzi.hangul()),
+                                            sub: format!("{}/{}", transit.monthly_luck.stem_god.hangul(), transit.monthly_luck.branch_god.hangul()),
+                                            color: "from-blue-900/40 to-slate-900 border-blue-700/40",
+                                            icon: "📅",
+                                        }
+                                        // 일운
+                                        LuckCard {
+                                            title: "{daily_luck_title}",
+                                            value: format!("{} ({})", transit.daily_luck.ganzi.hanja(), transit.daily_luck.ganzi.hangul()),
+                                            sub: format!("{}/{}", transit.daily_luck.stem_god.hangul(), transit.daily_luck.branch_god.hangul()),
+                                            color: "from-emerald-900/40 to-slate-900 border-emerald-700/40",
+                                            icon: "📆",
+                                        }
+                                    }
 
-                            // ── 세운 특이사항 ─────────────────────────────────
-                            if !transit.yearly_luck.special_events.is_empty() {
-                                div { class: "p-4 rounded-xl bg-amber-900/20 border border-amber-700/40",
-                                    p { class: "text-sm font-semibold text-amber-300 mb-2", "⚠️ 세운 특이사항" }
-                                    div { class: "flex flex-wrap gap-2",
-                                        {transit.yearly_luck.special_events.iter().map(|e| rsx! {
-                                            span { class: "px-2 py-1 rounded-lg bg-amber-900/40 text-amber-200 text-xs border border-amber-700/50", "{e}" }
-                                        })}
+                                    // ── 세운 특이사항 ─────────────────────────────────
+                                    if !transit.yearly_luck.special_events.is_empty() {
+                                        div { class: "p-4 rounded-xl bg-amber-900/20 border border-amber-700/40",
+                                            p { class: "text-sm font-semibold text-amber-300 mb-2", "{transit_notes_title}" }
+                                            div { class: "flex flex-wrap gap-2",
+                                                {transit.yearly_luck.special_events.iter().map(|e| rsx! {
+                                                    span { class: "px-2 py-1 rounded-lg bg-amber-900/40 text-amber-200 text-xs border border-amber-700/50", "{e}" }
+                                                })}
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -139,44 +175,85 @@ pub fn TransitTab() -> Element {
                             // ── 대운 타임라인 (사주에서) ───────────────────────
                             if let Some(saju) = &state.saju.read().data {
                                 if let Some(ml) = &saju.report.major_luck {
-                                    div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
-                                        div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3 flex items-center justify-between",
-                                            h3 { class: "font-semibold text-slate-200", "대운 (大運) 타임라인" }
-                                            span { class: "text-xs text-slate-400", "만 {ml.start_age}세 교운 | {ml.direction}" }
-                                        }
-                                        div { class: "overflow-x-auto",
-                                            table { class: "w-full text-sm",
-                                                thead {
-                                                    tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
-                                                        th { class: "px-4 py-3 text-left font-medium", "나이" }
-                                                        th { class: "px-4 py-3 text-left font-medium", "간지" }
-                                                        th { class: "px-4 py-3 text-left font-medium", "천간 십성" }
-                                                        th { class: "px-4 py-3 text-left font-medium", "지지 십성" }
-                                                        th { class: "px-4 py-3 text-left font-medium", "상태" }
-                                                    }
+                                    {
+                                        let major_luck_title = match locale {
+                                            Locale::Ko => "대운 (大運) 타임라인",
+                                            Locale::En => "Major Luck Timeline",
+                                            Locale::Zh => "大运时间线",
+                                            Locale::Ru => "Хронология периодов Да Вун",
+                                        };
+                                        let major_luck_sub = match locale {
+                                            Locale::Ko => format!("만 {}세 교운 | {}", ml.start_age, ml.direction),
+                                            Locale::En => format!("Shift age {} | {}", ml.start_age, if ml.direction == LuckDirection::Forward { "Direct" } else { "Reverse" }),
+                                            Locale::Zh => format!("{}岁交运 | {}", ml.start_age, if ml.direction == LuckDirection::Forward { "顺行" } else { "逆行" }),
+                                            Locale::Ru => format!("Смена в {} лет | {}", ml.start_age, if ml.direction == LuckDirection::Forward { "Прямо" } else { "Обратно" }),
+                                        };
+                                        let th_age = match locale {
+                                            Locale::Ko => "나이", Locale::En => "Age", Locale::Zh => "年龄", Locale::Ru => "Возраст",
+                                        };
+                                        let th_pillar = match locale {
+                                            Locale::Ko => "간지", Locale::En => "Pillar", Locale::Zh => "干支", Locale::Ru => "Столп",
+                                        };
+                                        let th_stem_god = match locale {
+                                            Locale::Ko => "천간 십성", Locale::En => "Stem Ten God", Locale::Zh => "天干十神", Locale::Ru => "Божество НС",
+                                        };
+                                        let th_branch_god = match locale {
+                                            Locale::Ko => "지지 십성", Locale::En => "Branch Ten God", Locale::Zh => "地支十神", Locale::Ru => "Божество ЗВ",
+                                        };
+                                        let th_status = match locale {
+                                            Locale::Ko => "상태", Locale::En => "Status", Locale::Zh => "状态", Locale::Ru => "Статус",
+                                        };
+                                        let current_lbl = match locale {
+                                            Locale::Ko => "⬤ 현재", Locale::En => "⬤ Current", Locale::Zh => "⬤ 当前", Locale::Ru => "⬤ Текущий",
+                                        };
+
+                                        rsx! {
+                                            div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
+                                                div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3 flex items-center justify-between",
+                                                    h3 { class: "font-semibold text-slate-200", "{major_luck_title}" }
+                                                    span { class: "text-xs text-slate-400", "{major_luck_sub}" }
                                                 }
-                                                tbody { class: "divide-y divide-slate-800",
-                                                    {ml.cycles.iter().map(|cycle| {
-                                                        let is_current = cycle.start_age <= transit.current_age && transit.current_age <= cycle.end_age;
-                                                        let row_class = if is_current {
-                                                            "bg-amber-900/20 hover:bg-amber-900/30"
-                                                        } else {
-                                                            "hover:bg-slate-800/20"
-                                                        };
-                                                        rsx! {
-                                                            tr { class: "{row_class} transition-colors",
-                                                                td { class: "px-4 py-3 font-mono text-slate-300 text-xs", "만 {cycle.start_age}~{cycle.end_age}세" }
-                                                                td { class: "px-4 py-3 font-bold text-amber-300 font-serif", "{cycle.ganzi.hanja()} ({cycle.ganzi.hangul()})" }
-                                                                td { class: "px-4 py-3 text-slate-300", "{cycle.stem_god.hangul()}" }
-                                                                td { class: "px-4 py-3 text-slate-300", "{cycle.branch_god.hangul()}" }
-                                                                td { class: "px-4 py-3",
-                                                                    if is_current {
-                                                                        span { class: "px-2 py-0.5 rounded-full text-xs bg-amber-600/40 text-amber-200 border border-amber-500/40 font-semibold animate-pulse", "⬤ 현재" }
-                                                                    }
-                                                                }
+                                                div { class: "overflow-x-auto",
+                                                    table { class: "w-full text-sm",
+                                                        thead {
+                                                            tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
+                                                                th { class: "px-4 py-3 text-left font-medium", "{th_age}" }
+                                                                th { class: "px-4 py-3 text-left font-medium", "{th_pillar}" }
+                                                                th { class: "px-4 py-3 text-left font-medium", "{th_stem_god}" }
+                                                                th { class: "px-4 py-3 text-left font-medium", "{th_branch_god}" }
+                                                                th { class: "px-4 py-3 text-left font-medium", "{th_status}" }
                                                             }
                                                         }
-                                                    })}
+                                                        tbody { class: "divide-y divide-slate-800",
+                                                            {ml.cycles.iter().map(|cycle| {
+                                                                let is_current = cycle.start_age <= transit.current_age && transit.current_age <= cycle.end_age;
+                                                                let row_class = if is_current {
+                                                                    "bg-amber-900/20 hover:bg-amber-900/30"
+                                                                } else {
+                                                                    "hover:bg-slate-800/20"
+                                                                };
+                                                                let age_range_str = match locale {
+                                                                    Locale::Ko => format!("만 {}~{}세", cycle.start_age, cycle.end_age),
+                                                                    Locale::En => format!("Age {}~{}", cycle.start_age, cycle.end_age),
+                                                                    Locale::Zh => format!("{}~{}岁", cycle.start_age, cycle.end_age),
+                                                                    Locale::Ru => format!("{}~{} лет", cycle.start_age, cycle.end_age),
+                                                                };
+                                                                rsx! {
+                                                                    tr { class: "{row_class} transition-colors",
+                                                                        td { class: "px-4 py-3 font-mono text-slate-300 text-xs", "{age_range_str}" }
+                                                                        td { class: "px-4 py-3 font-bold text-amber-300 font-serif", "{cycle.ganzi.hanja()} ({cycle.ganzi.hangul()})" }
+                                                                        td { class: "px-4 py-3 text-slate-300", "{cycle.stem_god.hangul()}" }
+                                                                        td { class: "px-4 py-3 text-slate-300", "{cycle.branch_god.hangul()}" }
+                                                                        td { class: "px-4 py-3",
+                                                                            if is_current {
+                                                                                span { class: "px-2 py-0.5 rounded-full text-xs bg-amber-600/40 text-amber-200 border border-amber-500/40 font-semibold animate-pulse", "{current_lbl}" }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            })}
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
