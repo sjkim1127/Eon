@@ -406,6 +406,85 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     }
     s.push_str("\n");
 
+    // Supplementary Pillars
+    let (supp_title, taewon_lbl, myeonggung_lbl, shingung_lbl, supp_pillar_col, supp_level_col, supp_desc_col, supp_reason_col) = match locale {
+        Locale::Ko => ("보조 기둥 분석 (Supplementary Pillars)", "태원 (胎元)", "명궁 (命宮)", "신궁 (身宮)", "기둥", "구분", "해석", "판단 근거"),
+        Locale::En => ("Supplementary Pillars Analysis", "Taewon (Conception)", "Myeonggung (Ascendant)", "Shingung (Body)", "Pillar", "Level", "Interpretation", "Reasons"),
+        Locale::Zh => ("辅助柱位分析", "胎元", "命宫", "身宫", "柱位", "等级", "解析", "依据"),
+        Locale::Ru => ("Вспомогательные Столпы", "Тэвон (Зачатие)", "Мёнгун (Асцендент)", "Шингун (Тело)", "Столп", "Уровень", "Толкование", "Причины"),
+    };
+
+    s.push_str(&format!("### {}\n\n", supp_title));
+    s.push_str(&format!("- **{}**: {}({})\n", taewon_lbl, rep.supplementary_pillars.taewon.stem.hangul(), rep.supplementary_pillars.taewon.branch.hangul()));
+    s.push_str(&format!("- **{}**: {}({})\n", myeonggung_lbl, rep.supplementary_pillars.myeonggung.stem.hangul(), rep.supplementary_pillars.myeonggung.branch.hangul()));
+    s.push_str(&format!("- **{}**: {}({})\n\n", shingung_lbl, rep.supplementary_pillars.shingung.stem.hangul(), rep.supplementary_pillars.shingung.branch.hangul()));
+
+    if !rep.supplementary_pillars.interpretations.is_empty() {
+        s.push_str(&format!("| {} | {} | {} | {} |\n", supp_pillar_col, supp_level_col, supp_desc_col, supp_reason_col));
+        s.push_str("| --- | --- | --- | --- |\n");
+        for interp in &rep.supplementary_pillars.interpretations {
+            let lvl_str = match interp.level {
+                eon_saju::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "🟢 Auspicious",
+                eon_saju::analysis::supplementary_pillars::InterpretationLevel::Caution => "🔴 Caution",
+                eon_saju::analysis::supplementary_pillars::InterpretationLevel::Neutral => "⚪ Neutral",
+            };
+            let reasons_str = interp.reasons.join(", ");
+            s.push_str(&format!("| {} | {} | **{}** - {} | {} |\n", interp.pillar_name, lvl_str, interp.summary, interp.description, reasons_str));
+        }
+        s.push_str("\n");
+    }
+
+    // Golden Time
+    let (golden_title, golden_range_lbl, golden_score_lbl) = match locale {
+        Locale::Ko => ("인생 골든 타임 분석 (Golden Time)", "전성기 구간", "평균 점수"),
+        Locale::En => ("Life Golden Time Analysis", "Golden Age Range", "Average Score"),
+        Locale::Zh => ("人生黄金时期分析", "黄金年龄段", "平均分数"),
+        Locale::Ru => ("Золотой период жизни (Golden Time)", "Золотой возраст", "Средний балл"),
+    };
+    if let Some(gt) = &rep.golden_time {
+        s.push_str(&format!("### {}\n\n", golden_title));
+        s.push_str(&format!("- **{}**: {}세 ~ {}세\n", golden_range_lbl, gt.start_age, gt.end_age));
+        s.push_str(&format!("- **{}**: {:.2} / 100\n", golden_score_lbl, gt.average_score));
+        s.push_str(&format!("- **{}**\n\n", gt.description));
+    }
+
+    // VM Summary
+    let vm_title = match locale {
+        Locale::Ko => "인생 가상머신(VM) 분석 요약",
+        Locale::En => "Life VM Analysis Summary",
+        Locale::Zh => "人生虚拟机 (VM) 分析摘要",
+        Locale::Ru => "Сводка анализа виртуальной машины (VM) жизни",
+    };
+    if let Some(ref vm_sum) = rep.vm_summary {
+        s.push_str(&format!("### {}\n\n", vm_title));
+        s.push_str(&format!("{}\n\n", vm_sum));
+    }
+
+    // 100-Year Life Path Simulation Table
+    let (sim_title, sim_age, sim_year, sim_seun, sim_daeun, sim_score, sim_wealth, sim_career, sim_academic, sim_health, sim_vol, sim_trans, sim_tags) = match locale {
+        Locale::Ko => ("100년 인생 시뮬레이션 상세 경로 (100-Year Life Path Simulation)", "나이", "연도", "세운", "대운", "종합 점수", "재물운", "직업운", "학업운", "건강운", "변동성", "교운기", "주요 특징"),
+        Locale::En => ("100-Year Life Path Simulation Detail", "Age", "Year", "Seun", "Daeun", "Score", "Wealth", "Career", "Academic", "Health", "Volatility", "Transition?", "Tags"),
+        Locale::Zh => ("100年人生模拟详细路径", "年龄", "年份", "岁运", "大运", "综合得分", "财运", "事业运", "学业运", "健康运", "波动性", "交运期?", "主要特征"),
+        Locale::Ru => ("Подробный путь 100-летней симуляции жизни", "Возраст", "Год", "Сеун", "Дэун", "Балл", "Богатство", "Карьера", "Учеба", "Здоровье", "Волатильность", "Смена управителя?", "Метки"),
+    };
+
+    s.push_str(&format!("### {}\n\n", sim_title));
+    s.push_str(&format!("| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n", 
+        sim_age, sim_year, sim_seun, sim_daeun, sim_score, sim_wealth, sim_career, sim_academic, sim_health, sim_vol, sim_trans, sim_tags));
+    s.push_str("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
+
+    for score in &rep.timeline {
+        let frame_opt = rep.simulation_frames.iter().find(|f| f.age == score.age);
+        let seun_str = frame_opt.map(|f| format!("{}{}", f.ganzi.stem.hangul(), f.ganzi.branch.hangul())).unwrap_or_else(|| "—".to_string());
+        let daeun_str = frame_opt.map(|f| format!("{}{}", f.major_ganzi.stem.hangul(), f.major_ganzi.branch.hangul())).unwrap_or_else(|| "—".to_string());
+        let tags_str = frame_opt.map(|f| f.tags_as_strings().join(", ")).unwrap_or_else(|| "—".to_string());
+        let transition_str = if score.is_transition_period { "Yes" } else { "No" };
+        
+        s.push_str(&format!("| {} | {} | {} | {} | {:.1} | {:.1} | {:.1} | {:.1} | {:.1} | {:.1} | {} | {} |\n",
+            score.age, score.year, seun_str, daeun_str, score.total_score, score.wealth_score, score.career_score, score.academic_score, score.health_score, score.volatility_index, transition_str, tags_str));
+    }
+    s.push_str("\n");
+
     s
 }
 
@@ -644,6 +723,306 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
         s.push_str(&format!("- **{} ({} ~ {})**: {:.1} {}\n", p_name, start_fmt, end_fmt, duration_years, dasha_years_lbl));
     }
     s.push_str("\n");
+
+    // House Strengths & Ratings
+    let (house_rating_title, house_col, score_col, rating_col, meaning_col, desc_col, reasons_col) = match locale {
+        Locale::Ko => ("하우스별 강도 및 해석 (House Ratings)", "하우스", "총 점수", "평가 등급", "의미", "세부 설명", "판단 요인"),
+        Locale::En => ("House Strengths & Ratings", "House", "Total Score", "Rating", "Key Meaning", "Description", "Factors"),
+        Locale::Zh => ("各宫位力量与评估", "宫位", "总分", "评分", "核心意义", "详细说明", "判定因素"),
+        Locale::Ru => ("Сила и рейтинг домов", "Дом", "Общий балл", "Рейтинг", "Ключевое значение", "Описание", "Факторы"),
+    };
+
+    s.push_str(&format!("### {}\n\n", house_rating_title));
+    s.push_str(&format!("| {} | {} | {} | {} | {} | {} |\n", house_col, score_col, rating_col, meaning_col, desc_col, reasons_col));
+    s.push_str("| --- | --- | --- | --- | --- | --- |\n");
+    for h in &data.report.house_summary {
+        let reasons_str = h.reasons.join(", ");
+        s.push_str(&format!("| House {} | {:.1} | **{}** | {} | {} | {} |\n", 
+            h.house, h.total_score, h.rating, h.summary, h.description, reasons_str));
+    }
+    s.push_str("\n");
+
+    // Gochara planetary transits
+    let (gochara_title, g_planet, g_rasi, g_house, g_status, g_blocked, g_murti, g_desc) = match locale {
+        Locale::Ko => ("고차라 실시간 행성 통과 분석 (Gochara Transits)", "행성", "현재 사인", "달 기준 하우스", "길흉 여부", "Vedha 장애", "Murt Nirnaya (형태)", "상세 해설"),
+        Locale::En => ("Gochara Planetary Transits Analysis", "Planet", "Current Sign", "House from Moon", "Status", "Vedha Obstruction", "Murti Type", "Description"),
+        Locale::Zh => ("过境星体分析 (Gochara)", "星体", "当前星座", "月亮起算宫", "吉凶", "星曜阻碍 (Vedha)", "穆尔蒂类型", "详细解析"),
+        Locale::Ru => ("Транзиты планет (Gochara)", "Планета", "Текущий знак", "Дом от Луны", "Статус", "Препятствие Ведха", "Тип Мурти", "Описание"),
+    };
+
+    s.push_str(&format!("### {}\n\n", gochara_title));
+    s.push_str(&format!("| {} | {} | {} | {} | {} | {} | {} |\n", g_planet, g_rasi, g_house, g_status, g_blocked, g_murti, g_desc));
+    s.push_str("| --- | --- | --- | --- | --- | --- | --- |\n");
+    for t_pos in &data.gochara.transits {
+        let p_name = translate_planet(locale, t_pos.planet);
+        let r_name = rasi_name(locale, t_pos.current_rasi);
+        let status_str = if t_pos.is_benefic_transit { "🟢 Benefic (吉)" } else { "🔴 Malefic (凶)" };
+        let blocked_str = if t_pos.is_blocked { "Yes (Blocked)" } else { "No" };
+        let murti_str = match t_pos.murti {
+            eon_vedic::analysis::gochara::MurtiType::Gold => "Suvarna (Gold 🥇)",
+            eon_vedic::analysis::gochara::MurtiType::Silver => "Rajata (Silver 🥈)",
+            eon_vedic::analysis::gochara::MurtiType::Copper => "Tamra (Copper 🥉)",
+            eon_vedic::analysis::gochara::MurtiType::Iron => "Loha (Iron ⛓️)",
+            eon_vedic::analysis::gochara::MurtiType::Unknown => "Unknown",
+        };
+        s.push_str(&format!("| {} | {} | House {} | {} | {} | {} | **{}** - {} |\n", 
+            p_name, r_name, t_pos.house_from_moon, status_str, blocked_str, murti_str, t_pos.summary, t_pos.description));
+    }
+    s.push_str("\n");
+
+    // Varga Nakshatra Reports (23 charts)
+    let (varga_sec_title, v_planet, v_pos, v_house, v_nak, v_lord, v_deity, v_purpose) = match locale {
+        Locale::Ko => ("분할차트(Varga) 상세 분석 (Varga Charts)", "행성", "도수 / 상태", "사인 / 하우스", "나크샤트라 (파다)", "나크/파다 지배성", "수호신 (Deity)", "인생 지향점 (Purpose)"),
+        Locale::En => ("Varga Charts Detailed Analysis", "Planet", "Position / State", "Sign / House", "Nakshatra (Pada)", "Nak / Pada Lord", "Deity", "Life Purpose"),
+        Locale::Zh => ("分盘详细分析 (Vargas)", "星体", "度数 / 状态", "星座 / 宫位", "星宿 (步)", "星宿/步主星", "主神 (Deity)", "人生目标 (Purpose)"),
+        Locale::Ru => ("Подробный анализ дробных карт (Varga)", "Планета", "Положение / Состояние", "Знак / Дом", "Накшатра (Пада)", "Управитель Нак/Пада", "Божество", "Жизненная цель"),
+    };
+
+    s.push_str(&format!("### {}\n\n", varga_sec_title));
+    let varga_keys = vec![
+        "rasi", "hora", "drekkana", "chaturthamsha", "panchamsa", "shashtamsa", "saptamsa", "ashtamsa", "navamsa",
+        "dasamsa", "rudramsa", "dwadasamsa", "shodashamsa", "vimsamsa", "chaturvimshamsa", "saptavimsamsa", "trimsamsa",
+        "khavedamsa", "akshavedamsa", "shashtyamsa", "navanavamsa", "ashtottaramsa", "dwadasdwadasamsa",
+    ];
+
+    for key in &varga_keys {
+        if let Some(rep) = data.varga_nakshatra_reports.reports.get(*key) {
+            let lagna_sign = rasi_name(locale, rep.lagna_rasi);
+            s.push_str(&format!("#### {} (Lagna: {})\n\n", rep.varga_label, lagna_sign));
+            s.push_str(&format!("| {} | {} | {} | {} | {} | {} | {} |\n", 
+                v_planet, v_pos, v_house, v_nak, v_lord, v_deity, v_purpose));
+            s.push_str("| --- | --- | --- | --- | --- | --- | --- |\n");
+            for row in &rep.rows {
+                let p_trans = translate_planet_str(locale, &row.planet);
+                let sign_n = rasi_name(locale, row.sign);
+                
+                let mut state_suffix = String::new();
+                if row.is_retrograde {
+                    state_suffix.push_str(" [R]");
+                }
+                if row.is_combust {
+                    state_suffix.push_str(" [C]");
+                }
+                
+                s.push_str(&format!("| **{}** | {}{} | {} (House {}) | {} (Pada {}) | {} / {} | {} | {} |\n",
+                    p_trans, row.position_str, state_suffix, sign_n, row.house, row.nakshatra_name, row.pada, row.nakshatra_lord, row.pada_lord, row.deity, row.purpose));
+            }
+            s.push_str("\n");
+        }
+    }
+
+    // Varga Integrated Planet Interpretations
+    let (varga_interp_title, vi_planet, vi_vargo, vi_pushkar, vi_d9, vi_d10, vi_d60, vi_summary) = match locale {
+        Locale::Ko => ("분할차트 통합 행성 해석 (Varga Interpretations)", "행성", "Vargottama", "Pushkar Navamsa", "D9 사인", "D10 사인", "D60 사인", "해석 요약"),
+        Locale::En => ("Varga Integrated Planet Interpretations", "Planet", "Vargottama", "Pushkar Navamsa", "D9 Sign", "D10 Sign", "D60 Sign", "Interpretation Summary"),
+        Locale::Zh => ("分盘综合星体解析", "星体", "九分得雄 (Vargottama)", "普什卡星区 (Pushkar)", "D9 星座", "D10 星座", "D60 星座", "解析摘要"),
+        Locale::Ru => ("Интегрированное толкование планет по дробным картам", "Планета", "Варготтама", "Пушкар Навамша", "D9 знак", "D10 знак", "D60 знак", "Резюме толкования"),
+    };
+
+    s.push_str(&format!("### {}\n\n", varga_interp_title));
+    s.push_str(&format!("| {} | {} | {} | {} | {} | {} | {} |\n", 
+        vi_planet, vi_vargo, vi_pushkar, vi_d9, vi_d10, vi_d60, vi_summary));
+    s.push_str("| --- | --- | --- | --- | --- | --- | --- |\n");
+    for vi in &data.report.varga_interpretations {
+        let p_name = translate_planet(locale, vi.planet);
+        let vargo_str = if vi.is_vargottama { "Yes (🟢)" } else { "No" };
+        let pushkar_str = if vi.is_pushkar_navamsa { "Yes (🌟)" } else { "No" };
+        let d9_sign = rasi_name(locale, vi.d9_rasi);
+        let d10_sign = rasi_name(locale, vi.d10_rasi);
+        let d60_sign = rasi_name(locale, vi.d60_rasi);
+        
+        s.push_str(&format!("| {} | {} | {} | {} | {} | {} | **{}** - {} |\n", 
+            p_name, vargo_str, pushkar_str, d9_sign, d10_sign, d60_sign, vi.summary, vi.description));
+    }
+    s.push_str("\n");
+
+    // Marriage & Career text analysis
+    let (marriage_title, career_title) = match locale {
+        Locale::Ko => ("D9 삼수/배우자 분석 (Navamsa Marriage Analysis)", "D10 직업/성공 분석 (Dasamsa Career Analysis)"),
+        Locale::En => ("D9 Navamsa Marriage & Relationship Analysis", "D10 Dasamsa Career & Visibility Analysis"),
+        Locale::Zh => ("D9 九分盘婚姻与配偶分析", "D10 十分盘事业与社会成就分析"),
+        Locale::Ru => ("D9 Навамша: Анализ брака и партнерства", "D10 Дашамша: Анализ карьеры и успеха"),
+    };
+
+    s.push_str(&format!("### {}\n\n", marriage_title));
+    s.push_str(&format!("{}\n\n", data.report.d9_marriage_analysis));
+
+    s.push_str(&format!("### {}\n\n", career_title));
+    s.push_str(&format!("{}\n\n", data.report.d10_career_analysis));
+
+    // Tajika Annual Report
+    let (tajika_title, t_lord_lbl, t_muntha_lbl, t_saham_lbl, t_saham_name, t_saham_pos, t_saham_rasi, t_harsha_lbl, t_harsha_score) = match locale {
+        Locale::Ko => ("타지카 연간 점성학 분석 (Tajika Varshaphala)", "올해의 주성 (Year Lord)", "문타 사인 (Muntha Rasi)", "사함 (Saham) 지표", "지표명", "도수", "사인", "하르샤 발라 (Harsha Bala 강도)", "강도 점수 (0~4)"),
+        Locale::En => ("Tajika Annual Astrological Analysis (Varshaphala)", "Year Lord", "Muntha Sign (Progressed)", "Saham Points", "Point Name", "Longitude", "Sign", "Harsha Bala Strengths", "Strength Score (0~4)"),
+        Locale::Zh => ("塔吉卡年运分析 (Varshaphala)", "年度主宰星 (Year Lord)", "Muntha 星座", "萨罕 (Saham) 指标", "指标名称", "经度", "星座", "哈尔沙力量 (Harsha Bala)", "力量得分 (0~4)"),
+        Locale::Ru => ("Годовой анализ Таджика (Varshaphala)", "Управитель Года", "Мунтха Знак", "Точки Сахам", "Название точки", "Долгота", "Знак", "Сила Харша Бала", "Балл силы (0~4)"),
+    };
+
+    if let Some(tajika) = &data.tajika_report {
+        s.push_str(&format!("### {}\n\n", tajika_title));
+        let yl_str = tajika.year_lord.map(|p| translate_planet(locale, p)).unwrap_or("—");
+        let muntha_str = rasi_name(locale, tajika.muntha_rasi);
+        s.push_str(&format!("- **{}**: {}\n", t_lord_lbl, yl_str));
+        s.push_str(&format!("- **{}**: {}\n\n", t_muntha_lbl, muntha_str));
+        
+        s.push_str(&format!("#### {}\n\n", t_saham_lbl));
+        s.push_str(&format!("| {} | {} | {} |\n", t_saham_name, t_saham_pos, t_saham_rasi));
+        s.push_str("| --- | --- | --- |\n");
+        for saham in &tajika.sahams {
+            let deg_within_sign = saham.longitude % 30.0;
+            let deg_floor = deg_within_sign.floor() as i32;
+            let min_val = ((deg_within_sign - deg_floor as f64) * 60.0).round() as i32;
+            let pos_str = format!("{:02}° {:02}'", deg_floor, min_val);
+            let s_rasi = rasi_name(locale, saham.rasi);
+            s.push_str(&format!("| {} | {} | {} |\n", saham.name, pos_str, s_rasi));
+        }
+        s.push_str("\n");
+        
+        s.push_str(&format!("#### {}\n\n", t_harsha_lbl));
+        s.push_str(&format!("| {} | {} |\n", t_saham_name, t_harsha_score));
+        s.push_str("| --- | --- |\n");
+        for &(p, score) in &tajika.harsha_bala_summary {
+            let p_name = translate_planet(locale, p);
+            s.push_str(&format!("| {} | {} / 4 |\n", p_name, score));
+        }
+        s.push_str("\n");
+        
+        if !tajika.summary.is_empty() {
+            s.push_str(&format!("**{}**:\n{}\n\n", t_lord_lbl, tajika.summary));
+        }
+    }
+
+    // Annual Chart Planetary Positions
+    let (ann_chart_title, ann_planet, ann_deg, ann_rasi, ann_house, ann_nak, ann_pada, ann_lord, ann_retro, ann_combust) = match locale {
+        Locale::Ko => ("연간 분할차트 행성 배치 (Annual Chart Positions)", "행성", "도수", "사인 (Sign)", "하우스", "나크샤트라", "파다(Pada)", "지배성", "역행", "태비"),
+        Locale::En => ("Annual Chart Planetary Positions", "Planet", "Degree", "Sign", "House", "Nakshatra", "Pada", "Sign Lord", "Retro", "Combust"),
+        Locale::Zh => ("年运星体位置", "星体", "度数", "星座", "宫位", "星宿", "步 (Pada)", "定位星", "逆行", "焦伤"),
+        Locale::Ru => ("Положения планет годовой карты", "Планета", "Градус", "Знак", "Дом", "Накшатра", "Пада", "Управитель", "Ретро", "Сожж"),
+    };
+
+    if let Some(ann) = &data.annual_chart {
+        s.push_str(&format!("### {}\n\n", ann_chart_title));
+        s.push_str(&format!("| {} | {} | {} | {} | {} | {} | {} | {} | {} |\n", 
+            ann_planet, ann_deg, ann_rasi, ann_house, ann_nak, ann_pada, ann_retro, ann_combust, ann_lord));
+        s.push_str("| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
+        
+        let format_ann_pos = |pos: &eon_vedic::core::chart::VedicPosition, is_asc: bool| -> String {
+            let p_name = if is_asc {
+                translate_planet(locale, VedicPlanet::Ascendant)
+            } else {
+                translate_planet(locale, pos.planet)
+            };
+            
+            let deg_within_sign = pos.sidereal_deg % 30.0;
+            let deg_floor = deg_within_sign.floor() as i32;
+            let min_val = ((deg_within_sign - deg_floor as f64) * 60.0).round() as i32;
+            let deg_str = format!("{:02}° {:02}'", deg_floor, min_val);
+            
+            let r_name = rasi_name(locale, pos.rasi);
+            let nak_name_val = nakshatra_name(pos.nakshatra);
+            let retro_str = if pos.is_retrograde { "Yes" } else { "No" };
+            let combust_str = if pos.is_combust { "Yes" } else { "No" };
+            
+            let lord = match pos.rasi {
+                1 | 8 => VedicPlanet::Mars,
+                2 | 7 => VedicPlanet::Venus,
+                3 | 6 => VedicPlanet::Mercury,
+                4 => VedicPlanet::Moon,
+                5 => VedicPlanet::Sun,
+                9 | 12 => VedicPlanet::Jupiter,
+                10 | 11 => VedicPlanet::Saturn,
+                _ => VedicPlanet::Sun,
+            };
+            let lord_name = translate_planet(locale, lord);
+            
+            format!("| **{}** | {} | {} | {} | {} | {} | {} | {} | {} |\n", 
+                p_name, deg_str, r_name, pos.house_index, nak_name_val, pos.pada, retro_str, combust_str, lord_name)
+        };
+        
+        s.push_str(&format_ann_pos(&ann.ascendant, true));
+        for p in &ann.planets {
+            s.push_str(&format_ann_pos(p, false));
+        }
+        s.push_str("\n");
+    }
+
+    // Yogini Dasha
+    let (yogini_title, y_years_lbl) = match locale {
+        Locale::Ko => ("요기니 다샤 흐름 (Yogini Dasha)", "년"),
+        Locale::En => ("Yogini Dasha Timeline", "years"),
+        Locale::Zh => ("约吉尼大运", "年"),
+        Locale::Ru => ("Временные периоды Йогини Даша", "лет"),
+    };
+
+    if !data.report.yogini_timeline.is_empty() {
+        s.push_str(&format!("### {}\n\n", yogini_title));
+        for period in &data.report.yogini_timeline {
+            let start_fmt = period.start_time.format("%Y-%m-%d").to_string();
+            let end_fmt = period.end_time.format("%Y-%m-%d").to_string();
+            let p_name = translate_planet(locale, period.lord);
+            let duration_years = (period.end_time - period.start_time).num_days() as f64 / 365.25;
+            
+            let yogini_name = match period.lord {
+                VedicPlanet::Moon => "Mangala (망갈라)",
+                VedicPlanet::Sun => "Pingala (핑갈라)",
+                VedicPlanet::Jupiter => "Dhanya (다냐)",
+                VedicPlanet::Mars => "Bhramari (브라마리)",
+                VedicPlanet::Mercury => "Bhadrika (바드리카)",
+                VedicPlanet::Saturn => "Ulka (울카)",
+                VedicPlanet::Venus => "Siddha (시다)",
+                VedicPlanet::Rahu => "Sankata (산카타)",
+                _ => "",
+            };
+            
+            let label = if yogini_name.is_empty() {
+                p_name.to_string()
+            } else {
+                format!("{} [{}]", yogini_name, p_name)
+            };
+            
+            s.push_str(&format!("- **{} ({} ~ {})**: {:.1} {}\n", label, start_fmt, end_fmt, duration_years, y_years_lbl));
+        }
+        s.push_str("\n");
+    }
+
+    // Jaimini Chara Dasha
+    let (chara_title, c_years_lbl) = match locale {
+        Locale::Ko => ("제이머니 차라 다샤 흐름 (Jaimini Chara Dasha)", "년"),
+        Locale::En => ("Jaimini Chara Dasha Timeline", "years"),
+        Locale::Zh => ("吉米尼查拉大运", "年"),
+        Locale::Ru => ("Временные периоды Джаймини Чара Даша", "лет"),
+    };
+
+    if !data.report.chara_dasha_timeline.is_empty() {
+        s.push_str(&format!("### {}\n\n", chara_title));
+        for period in &data.report.chara_dasha_timeline {
+            let start_fmt = period.start_time.format("%Y-%m-%d").to_string();
+            let end_fmt = period.end_time.format("%Y-%m-%d").to_string();
+            let r_name = rasi_name(locale, period.rasi);
+            let duration_years = (period.end_time - period.start_time).num_days() as f64 / 365.25;
+            s.push_str(&format!("- **{} ({} ~ {})**: {:.1} {}\n", r_name, start_fmt, end_fmt, duration_years, c_years_lbl));
+        }
+        s.push_str("\n");
+    }
+
+    // Kala Chakra Dasha
+    let (kala_title, k_years_lbl) = match locale {
+        Locale::Ko => ("칼라차크라 다샤 흐름 (Kala Chakra Dasha)", "년"),
+        Locale::En => ("Kala Chakra Dasha Timeline", "years"),
+        Locale::Zh => ("时轮大运 (Kala Chakra Dasha)", "年"),
+        Locale::Ru => ("Временные периоды Калачакра Даша", "лет"),
+    };
+
+    if !data.report.kalachakra_timeline.is_empty() {
+        s.push_str(&format!("### {}\n\n", kala_title));
+        for period in &data.report.kalachakra_timeline {
+            let start_fmt = period.start_time.format("%Y-%m-%d").to_string();
+            let end_fmt = period.end_time.format("%Y-%m-%d").to_string();
+            let r_name = rasi_name(locale, period.rasi);
+            s.push_str(&format!("- **{} ({} ~ {})**: {} {}\n", r_name, start_fmt, end_fmt, period.duration_years, k_years_lbl));
+        }
+        s.push_str("\n");
+    }
 
     s
 }
