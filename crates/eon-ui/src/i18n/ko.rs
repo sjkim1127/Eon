@@ -326,5 +326,15 @@ pub fn translate(key: TK) -> &'static str {
         TK::DashaMahaDasha => "대운 (Maha Dasha)",
         TK::DashaAntarDasha => "소운 (Antar Dasha)",
         TK::DashaPratyantarDasha => "세운 (Pratyantar Dasha)",
+
+        // --- Saju Jijanggan ---
+        TK::SajuHiddenStemsTitle => "지장간 구성 (Hidden Stems)",
+        TK::SajuProjectionTitle => "지장간 투출 분석 (Hidden Stems Projection)",
+        TK::SajuProjectionDesc => "지지(지장간)에 내재된 오행 에너지가 천간으로 드러나(투출) 외부로 강하게 발현된 상태를 진단합니다.",
+        TK::SajuProjLevelMain => "격국 투출 (Main)",
+        TK::SajuProjLevelSub => "일반 투출 (Sub)",
+        TK::SajuJijangganYeogi => "여기 (Remnant)",
+        TK::SajuJijangganJunggi => "중기 (Middle)",
+        TK::SajuJijangganJeonggi => "정기 (Main)",
     }
 }

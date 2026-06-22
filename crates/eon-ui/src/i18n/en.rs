@@ -326,5 +326,15 @@ pub fn translate(key: TK) -> &'static str {
         TK::DashaMahaDasha => "Maha Dasha",
         TK::DashaAntarDasha => "Antar Dasha",
         TK::DashaPratyantarDasha => "Pratyantar Dasha",
+
+        // --- Saju Jijanggan ---
+        TK::SajuHiddenStemsTitle => "Hidden Stems (Jijanggan)",
+        TK::SajuProjectionTitle => "Hidden Stems Projection (透出)",
+        TK::SajuProjectionDesc => "Diagnoses elements hidden in Earthly Branches (Jijanggan) that emerge in Heavenly Stems (Projections), indicating strong external manifestation.",
+        TK::SajuProjLevelMain => "Main Structure Proj.",
+        TK::SajuProjLevelSub => "General Proj.",
+        TK::SajuJijangganYeogi => "Remnant (Yeogi)",
+        TK::SajuJijangganJunggi => "Middle (Junggi)",
+        TK::SajuJijangganJeonggi => "Main (Jeonggi)",
     }
 }

@@ -6,6 +6,9 @@ use eon_service::facade;
 use eon_saju::analysis::strength::StrengthType;
 use eon_saju::analysis::supplementary_pillars::InterpretationLevel;
 use crate::components::shared::birth_form::BirthForm;
+use eon_saju::core::branch::EarthlyBranch;
+use eon_saju::core::stem::HeavenlyStem;
+use eon_saju::core::ten_gods::TenGod;
 
 #[component]
 pub fn SajuTab() -> Element {
@@ -105,6 +108,83 @@ pub fn SajuTab() -> Element {
 
                         let crashes_lbl = t(locale, TK::SajuFuzzerCrashes).replace("{}", &data.crash_count.to_string());
 
+                        let day_master = data.report.pillars.day.stem;
+                        let stems = vec![
+                            data.report.pillars.hour.stem,
+                            data.report.pillars.day.stem,
+                            data.report.pillars.month.stem,
+                            data.report.pillars.year.stem,
+                        ];
+
+                        let make_jijanggans = |branch: eon_saju::core::branch::EarthlyBranch, is_month: bool| -> Vec<JijangganDisplayItem> {
+                            get_jijanggan_items(branch)
+                                .into_iter()
+                                .map(|item| {
+                                    let is_projected = stems.contains(&item.stem);
+                                    let is_main = is_month && is_projected;
+                                    let ten_god = TenGod::from_stems(day_master, item.stem);
+                                    JijangganDisplayItem {
+                                        stem: item.stem,
+                                        ratio: item.ratio,
+                                        type_key: item.type_key,
+                                        ten_god,
+                                        is_projected,
+                                        is_main,
+                                    }
+                                })
+                                .collect()
+                        };
+
+                        let hour_jijanggans = make_jijanggans(data.report.pillars.hour.branch, false);
+                        let day_jijanggans = make_jijanggans(data.report.pillars.day.branch, false);
+                        let month_jijanggans = make_jijanggans(data.report.pillars.month.branch, true);
+                        let year_jijanggans = make_jijanggans(data.report.pillars.year.branch, false);
+
+                        let mut projected_instances = Vec::new();
+
+                        let branch_positions = vec![
+                            (data.report.pillars.hour.branch, false, "시지", TK::SajuHourPillar),
+                            (data.report.pillars.day.branch, false, "일지", TK::SajuDayPillar),
+                            (data.report.pillars.month.branch, true, "월지", TK::SajuMonthPillar),
+                            (data.report.pillars.year.branch, false, "연지", TK::SajuYearPillar),
+                        ];
+
+                        let target_stems = vec![
+                            (data.report.pillars.hour.stem, "시간", TK::SajuHourPillar),
+                            (data.report.pillars.day.stem, "일간", TK::SajuDayPillar),
+                            (data.report.pillars.month.stem, "월간", TK::SajuMonthPillar),
+                            (data.report.pillars.year.stem, "연간", TK::SajuYearPillar),
+                        ];
+
+                        for &(branch, is_month, b_pos_lbl, b_pos_tk) in &branch_positions {
+                            for j_item in get_jijanggan_items(branch) {
+                                for &(t_stem, t_pos_lbl, t_pos_tk) in &target_stems {
+                                    if j_item.stem == t_stem {
+                                        let ten_god = TenGod::from_stems(day_master, j_item.stem);
+                                        projected_instances.push((
+                                            b_pos_lbl,
+                                            b_pos_tk,
+                                            branch,
+                                            j_item.stem,
+                                            j_item.ratio,
+                                            j_item.type_key,
+                                            ten_god,
+                                            t_pos_lbl,
+                                            t_pos_tk,
+                                            is_month,
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+
+                        let no_proj_msg = match locale {
+                            Locale::Ko => "천간으로 투출된 지장간이 없습니다.",
+                            Locale::En => "No hidden stems are projected to the heavenly stems.",
+                            Locale::Zh => "无地支藏干透出至天干。",
+                            Locale::Ru => "Нет скрытых небесных стволов, проецирующихся на небесные стволы.",
+                        };
+
                         rsx! {
                             // ── 1. 사주 원국 (천간/지지/십성/12운성/신살) ─────────
                             div { class: "grid grid-cols-4 gap-3.5",
@@ -119,7 +199,8 @@ pub fn SajuTab() -> Element {
                                     branch_hangul: data.report.pillars.hour.branch.hangul().to_string(),
                                     branch_element: data.report.pillars.hour.branch.element().hangul().to_string(),
                                     twelve_stage: twelve_stages.hour_stage.hangul().to_string(),
-                                    shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Hour)
+                                    shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Hour),
+                                    jijanggans: hour_jijanggans
                                 }
                                 PillarCard {
                                     title: t(locale, TK::SajuDayPillar),
@@ -132,7 +213,8 @@ pub fn SajuTab() -> Element {
                                     branch_hangul: data.report.pillars.day.branch.hangul().to_string(),
                                     branch_element: data.report.pillars.day.branch.element().hangul().to_string(),
                                     twelve_stage: twelve_stages.day_stage.hangul().to_string(),
-                                    shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Day)
+                                    shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Day),
+                                    jijanggans: day_jijanggans
                                 }
                                 PillarCard {
                                     title: t(locale, TK::SajuMonthPillar),
@@ -145,7 +227,8 @@ pub fn SajuTab() -> Element {
                                     branch_hangul: data.report.pillars.month.branch.hangul().to_string(),
                                     branch_element: data.report.pillars.month.branch.element().hangul().to_string(),
                                     twelve_stage: twelve_stages.month_stage.hangul().to_string(),
-                                    shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Month)
+                                    shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Month),
+                                    jijanggans: month_jijanggans
                                 }
                                 PillarCard {
                                     title: t(locale, TK::SajuYearPillar),
@@ -158,7 +241,132 @@ pub fn SajuTab() -> Element {
                                     branch_hangul: data.report.pillars.year.branch.hangul().to_string(),
                                     branch_element: data.report.pillars.year.branch.element().hangul().to_string(),
                                     twelve_stage: twelve_stages.year_stage.hangul().to_string(),
-                                    shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Year)
+                                    shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Year),
+                                    jijanggans: year_jijanggans
+                                }
+                            }
+
+                            // ── 1.2 지장간 투출 분석 (Hidden Stems Projection) ─────
+                            div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
+                                div { class: "flex items-center justify-between border-b border-slate-800/60 pb-3 flex-wrap gap-2",
+                                    div { class: "space-y-0.5",
+                                        h3 { class: "text-sm font-semibold text-slate-200 uppercase tracking-widest", "{t(locale, TK::SajuProjectionTitle)}" }
+                                        p { class: "text-xs text-slate-500", "{t(locale, TK::SajuProjectionDesc)}" }
+                                    }
+                                }
+                                if projected_instances.is_empty() {
+                                    p { class: "text-slate-500 text-xs py-4 text-center", "{no_proj_msg}" }
+                                } else {
+                                    div { class: "grid grid-cols-1 md:grid-cols-2 gap-3.5",
+                                        {projected_instances.iter().map(|&(b_pos_lbl, _b_pos_tk, _branch, stem, ratio, _type_key, ten_god, t_pos_lbl, _t_pos_tk, is_main)| {
+                                            let (el_color, _el_bg, el_icon) = element_card_style(stem.element().hangul());
+                                            let proj_type_lbl = if is_main { t(locale, TK::SajuProjLevelMain) } else { t(locale, TK::SajuProjLevelSub) };
+                                            let badge_cls = if is_main {
+                                                "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                                            } else {
+                                                "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
+                                            };
+                                            let (pos_branch_name, pos_stem_name) = match locale {
+                                                Locale::Ko => (
+                                                    match b_pos_lbl {
+                                                        "시지" => "시지(時支)",
+                                                        "일지" => "일지(日支)",
+                                                        "월지" => "월지(月支)",
+                                                        "연지" => "연지(年支)",
+                                                        _ => b_pos_lbl,
+                                                    },
+                                                    match t_pos_lbl {
+                                                        "시간" => "시간(時干)",
+                                                        "일간" => "일간(日干)",
+                                                        "월간" => "월간(月干)",
+                                                        "연간" => "연간(年干)",
+                                                        _ => t_pos_lbl,
+                                                    }
+                                                ),
+                                                Locale::En => (
+                                                    match b_pos_lbl {
+                                                        "시지" => "Hour Branch",
+                                                        "일지" => "Day Branch",
+                                                        "월지" => "Month Branch",
+                                                        "연지" => "Year Branch",
+                                                        _ => b_pos_lbl,
+                                                    },
+                                                    match t_pos_lbl {
+                                                        "시간" => "Hour Stem",
+                                                        "일간" => "Day Stem",
+                                                        "월간" => "Month Stem",
+                                                        "연간" => "Year Stem",
+                                                        _ => t_pos_lbl,
+                                                    }
+                                                ),
+                                                Locale::Zh => (
+                                                    match b_pos_lbl {
+                                                        "시지" => "时支",
+                                                        "일지" => "日支",
+                                                        "월지" => "月支",
+                                                        "연지" => "年支",
+                                                        _ => b_pos_lbl,
+                                                    },
+                                                    match t_pos_lbl {
+                                                        "시간" => "时干",
+                                                        "일간" => "日干",
+                                                        "월간" => "月干",
+                                                        "연간" => "年干",
+                                                        _ => t_pos_lbl,
+                                                    }
+                                                ),
+                                                Locale::Ru => (
+                                                    match b_pos_lbl {
+                                                        "시지" => "Земная ветвь часа",
+                                                        "일지" => "Земная ветвь дня",
+                                                        "월지" => "Земная ветвь месяца",
+                                                        "연지" => "Земная ветвь года",
+                                                        _ => b_pos_lbl,
+                                                    },
+                                                    match t_pos_lbl {
+                                                        "시간" => "Небесный ствол часа",
+                                                        "일간" => "Небесный ствол дня",
+                                                        "월간" => "Небесный ствол месяца",
+                                                        "연간" => "Небесный ствол года",
+                                                        _ => t_pos_lbl,
+                                                    }
+                                                ),
+                                            };
+                                            let stage_desc = match locale {
+                                                Locale::Ko => format!(
+                                                    "{}의 지장간 {}({}) [{}]이 {}로 투출하여 외부로 강하게 발현됩니다. (가중치: {}%)",
+                                                    pos_branch_name, stem.hanja(), stem.hangul(), ten_god.hangul(), pos_stem_name, ratio
+                                                ),
+                                                Locale::En => format!(
+                                                    "Hidden stem {}({}) [{}] in {} is projected to {}, manifesting strongly. (Weight: {}%)",
+                                                    stem.hanja(), stem.hangul(), ten_god.hangul(), pos_branch_name, pos_stem_name, ratio
+                                                ),
+                                                Locale::Zh => format!(
+                                                    "{}藏干{}({})[{}]透出至{}，外部作用力显著增强。（权重：{}%）",
+                                                    pos_branch_name, stem.hanja(), stem.hangul(), ten_god.hangul(), pos_stem_name, ratio
+                                                ),
+                                                Locale::Ru => format!(
+                                                    "Скрытый ствол {}({}) [{}] из {} проецируется на {}, сильно проявляясь вовне. (Вес: {}%)",
+                                                    stem.hanja(), stem.hangul(), ten_god.hangul(), pos_branch_name, pos_stem_name, ratio
+                                                ),
+                                            };
+                                            rsx! {
+                                                div { class: "p-4 rounded-xl bg-slate-850/40 border border-slate-800/80 hover:border-slate-700 transition-colors flex gap-3 shadow-inner",
+                                                    span { class: "text-2xl shrink-0 mt-0.5", "{el_icon}" }
+                                                    div { class: "space-y-1.5 flex-1",
+                                                        div { class: "flex items-center justify-between flex-wrap gap-2",
+                                                            div { class: "flex items-center gap-1.5",
+                                                                span { class: "font-serif font-extrabold text-sm {el_color}", "{stem.hanja()}({stem.hangul()})" }
+                                                                span { class: "text-xs font-semibold text-slate-350", "{ten_god.hangul()}" }
+                                                            }
+                                                            span { class: "px-2 py-0.5 rounded border text-[9px] font-extrabold {badge_cls}", "{proj_type_lbl}" }
+                                                        }
+                                                        p { class: "text-xs text-slate-400 leading-relaxed", "{stage_desc}" }
+                                                    }
+                                                }
+                                            }
+                                        })}
+                                    }
                                 }
                             }
 
@@ -1009,7 +1217,10 @@ fn PillarCard(
     branch_element: String,
     twelve_stage: String,
     shinsals: Vec<String>,
+    jijanggans: Vec<JijangganDisplayItem>,
 ) -> Element {
+    let state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
     let (s_text_color, s_bg_color, s_icon) = element_card_style(&stem_element);
     let (b_text_color, b_bg_color, b_icon) = element_card_style(&branch_element);
 
@@ -1034,6 +1245,42 @@ fn PillarCard(
                 span { class: "text-5xl font-extrabold font-serif {b_text_color} leading-none tracking-tight", "{branch_hanja}" }
                 span { class: "text-base text-slate-300 font-bold mt-1.5", "{branch_hangul}" }
                 span { class: "text-xs font-semibold text-slate-500 mt-1.5", "{branch_god}" }
+            }
+
+            // 지장간 리스트 (Jijanggan List)
+            div { class: "bg-slate-900/65 border border-slate-800/80 rounded-xl p-2.5 space-y-1.5 mt-0.5 shadow-inner",
+                p { class: "text-[9px] font-bold text-slate-500 uppercase tracking-wider text-center border-b border-slate-800/60 pb-1", 
+                    "{t(locale, TK::SajuHiddenStemsTitle)}" 
+                }
+                div { class: "space-y-1.5",
+                    {jijanggans.iter().map(|item| {
+                        let (el_color, _) = element_style(item.stem.element().hangul());
+                        let (card_style, badge_style) = if item.is_main {
+                            ("border border-amber-500/50 bg-amber-950/20 rounded-md p-1", "bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[8px] px-1.5 py-0.2 rounded font-extrabold")
+                        } else if item.is_projected {
+                            ("border border-indigo-500/40 bg-indigo-950/15 rounded-md p-1", "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[8px] px-1.5 py-0.2 rounded font-extrabold")
+                        } else {
+                            ("", "")
+                        };
+                        rsx! {
+                            div { class: "flex items-center justify-between text-[11px] {card_style}",
+                                div { class: "flex items-center gap-1.5",
+                                    span { class: "text-[8px] text-slate-500 font-mono", "{t(locale, item.type_key)}" }
+                                    span { class: "font-serif font-bold text-slate-300", "{item.stem.hanja()}({item.stem.hangul()})" }
+                                    span { class: "text-[9px] {el_color} font-medium", "{item.ten_god.hangul()}" }
+                                }
+                                div { class: "flex items-center gap-1",
+                                    if item.is_projected {
+                                        span { class: "{badge_style}", 
+                                            if item.is_main { "{t(locale, TK::SajuProjLevelMain)}" } else { "{t(locale, TK::SajuProjLevelSub)}" }
+                                        }
+                                    }
+                                    span { class: "font-mono text-[9px] text-slate-400 font-bold", "{item.ratio}%" }
+                                }
+                            }
+                        }
+                    })}
+                }
             }
 
             // Twelve Stage
@@ -1085,5 +1332,104 @@ fn MetaRow(label: &'static str, value: String) -> Element {
             span { class: "text-slate-500 shrink-0", "{label}" }
             span { class: "text-slate-300 text-right font-mono text-xs", "{value}" }
         }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq)]
+struct JijangganItem {
+    stem: HeavenlyStem,
+    ratio: u8,
+    type_key: TK,
+}
+
+#[derive(Clone, PartialEq)]
+struct JijangganDisplayItem {
+    stem: HeavenlyStem,
+    ratio: u8,
+    type_key: TK,
+    ten_god: TenGod,
+    is_projected: bool,
+    is_main: bool,
+}
+
+#[allow(dead_code)]
+fn get_branch_from_hanja(hanja: &str) -> Option<EarthlyBranch> {
+    match hanja {
+        "子" => Some(EarthlyBranch::Zi),
+        "丑" => Some(EarthlyBranch::Chou),
+        "寅" => Some(EarthlyBranch::Yin),
+        "卯" => Some(EarthlyBranch::Mao),
+        "辰" => Some(EarthlyBranch::Chen),
+        "巳" => Some(EarthlyBranch::Si),
+        "午" => Some(EarthlyBranch::Wu),
+        "未" => Some(EarthlyBranch::Wei),
+        "申" => Some(EarthlyBranch::Shen),
+        "酉" => Some(EarthlyBranch::You),
+        "戌" => Some(EarthlyBranch::Xu),
+        "亥" => Some(EarthlyBranch::Hai),
+        _ => None,
+    }
+}
+
+fn get_jijanggan_items(branch: EarthlyBranch) -> Vec<JijangganItem> {
+    use eon_saju::core::stem::HeavenlyStem::*;
+    match branch {
+        EarthlyBranch::Zi => vec![
+            JijangganItem { stem: Ren, ratio: 33, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Gui, ratio: 67, type_key: TK::SajuJijangganJeonggi },
+        ],
+        EarthlyBranch::Chou => vec![
+            JijangganItem { stem: Gui, ratio: 30, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Xin, ratio: 10, type_key: TK::SajuJijangganJunggi },
+            JijangganItem { stem: Ji, ratio: 60, type_key: TK::SajuJijangganJeonggi },
+        ],
+        EarthlyBranch::Yin => vec![
+            JijangganItem { stem: Wu, ratio: 23, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Bing, ratio: 23, type_key: TK::SajuJijangganJunggi },
+            JijangganItem { stem: Jia, ratio: 54, type_key: TK::SajuJijangganJeonggi },
+        ],
+        EarthlyBranch::Mao => vec![
+            JijangganItem { stem: Jia, ratio: 33, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Yi, ratio: 67, type_key: TK::SajuJijangganJeonggi },
+        ],
+        EarthlyBranch::Chen => vec![
+            JijangganItem { stem: Yi, ratio: 30, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Gui, ratio: 10, type_key: TK::SajuJijangganJunggi },
+            JijangganItem { stem: Wu, ratio: 60, type_key: TK::SajuJijangganJeonggi },
+        ],
+        EarthlyBranch::Si => vec![
+            JijangganItem { stem: Wu, ratio: 23, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Geng, ratio: 23, type_key: TK::SajuJijangganJunggi },
+            JijangganItem { stem: Bing, ratio: 54, type_key: TK::SajuJijangganJeonggi },
+        ],
+        EarthlyBranch::Wu => vec![
+            JijangganItem { stem: Bing, ratio: 33, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Ji, ratio: 30, type_key: TK::SajuJijangganJunggi },
+            JijangganItem { stem: Ding, ratio: 37, type_key: TK::SajuJijangganJeonggi },
+        ],
+        EarthlyBranch::Wei => vec![
+            JijangganItem { stem: Ding, ratio: 30, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Yi, ratio: 10, type_key: TK::SajuJijangganJunggi },
+            JijangganItem { stem: Ji, ratio: 60, type_key: TK::SajuJijangganJeonggi },
+        ],
+        EarthlyBranch::Shen => vec![
+            JijangganItem { stem: Wu, ratio: 23, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Ren, ratio: 23, type_key: TK::SajuJijangganJunggi },
+            JijangganItem { stem: Geng, ratio: 54, type_key: TK::SajuJijangganJeonggi },
+        ],
+        EarthlyBranch::You => vec![
+            JijangganItem { stem: Geng, ratio: 33, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Xin, ratio: 67, type_key: TK::SajuJijangganJeonggi },
+        ],
+        EarthlyBranch::Xu => vec![
+            JijangganItem { stem: Xin, ratio: 30, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Ding, ratio: 10, type_key: TK::SajuJijangganJunggi },
+            JijangganItem { stem: Wu, ratio: 60, type_key: TK::SajuJijangganJeonggi },
+        ],
+        EarthlyBranch::Hai => vec![
+            JijangganItem { stem: Wu, ratio: 23, type_key: TK::SajuJijangganYeogi },
+            JijangganItem { stem: Jia, ratio: 23, type_key: TK::SajuJijangganJunggi },
+            JijangganItem { stem: Ren, ratio: 54, type_key: TK::SajuJijangganJeonggi },
+        ],
     }
 }
