@@ -27,6 +27,9 @@ pub enum ServiceError {
     #[error("ai audit failed: {0}")]
     AiAudit(String),
 
+    #[error("zwds analysis failed: {0}")]
+    Zwds(String),
+
     #[error("serialization failed: {0}")]
     Serialization(String),
 }

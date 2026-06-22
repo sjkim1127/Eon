@@ -13,6 +13,10 @@ pub fn analyze_vedic_compatibility(input: VedicCompatibilityInput) -> Result<Ved
     crate::services::vedic::analyze_compatibility(input)
 }
 
+pub fn analyze_zwds(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceError> {
+    crate::services::zwds::analyze(input)
+}
+
 pub fn analyze_transit(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, ServiceError> {
     crate::services::transit::analyze(input)
 }

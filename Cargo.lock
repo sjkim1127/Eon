@@ -24,6 +24,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.102"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
+
+[[package]]
 name = "async-trait"
 version = "0.1.89"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -864,6 +870,7 @@ dependencies = [
  "eon-data",
  "eon-saju",
  "eon-vedic",
+ "eon-zwds",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -881,6 +888,7 @@ dependencies = [
  "eon-saju",
  "eon-service",
  "eon-vedic",
+ "eon-zwds",
  "getrandom 0.2.17",
  "gloo-timers",
  "gloo-worker",
@@ -905,6 +913,19 @@ dependencies = [
  "eon-astro",
  "serde",
  "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "eon-zwds"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "eon-core",
+ "eon-data",
+ "eon-saju",
+ "serde",
  "thiserror 1.0.69",
 ]
 

@@ -1,0 +1,342 @@
+diff --git a/crates/eon-ui/src/components/tabs/vedic_tab.rs b/crates/eon-ui/src/components/tabs/vedic_tab.rs
+index 20b17b9..420d608 100644
+--- a/crates/eon-ui/src/components/tabs/vedic_tab.rs
++++ b/crates/eon-ui/src/components/tabs/vedic_tab.rs
+@@ -2,9 +2,10 @@ use dioxus::prelude::*;
+ use crate::store::{AnalysisState, TaskStatus};
+ use crate::i18n::{
+     t, TK, Locale, translate_planet, translate_planet_str, rasi_name, rasi_name_short,
+-    translate_avastha, nakshatra_lord_localized, rasi_lord_localized
++    translate_avastha, nakshatra_lord_localized, rasi_lord_localized,
++    translate_koota_name, translate_koota_desc
+ };
+-use eon_service::dto::{VedicAnalysisInput, AnalysisInput, VedicCompatibilityInput, VedicCompatibilityOutput};
++use eon_service::dto::{VedicAnalysisInput, AnalysisInput, VedicCompatibilityInput};
+ use eon_service::facade;
+ use eon_vedic::planets::VedicPlanet;
+ use crate::components::shared::birth_form::BirthForm;
+@@ -887,8 +888,6 @@ pub fn VedicTab() -> Element {
+     let mut partner_minute = use_signal(|| 30);
+     let mut partner_lat = use_signal(|| 37.5665);
+     let mut partner_lon = use_signal(|| 126.9780);
+-    let mut compat_status = use_signal(|| TaskStatus::Idle);
+-    let mut compat_data = use_signal(|| Option::<VedicCompatibilityOutput>::None);
+ 
+     // Dasha inner selection: 0 = Vimshottari, 1 = Chara, 2 = Kala Chakra
+     let mut active_dasha_type = use_signal(|| 0);
+@@ -924,8 +923,8 @@ pub fn VedicTab() -> Element {
+ 
+     let run_compatibility = move |_| {
+         spawn(async move {
+-            compat_status.write();
+-            *compat_status.write() = TaskStatus::Loading;
++            state.compat.write().status = TaskStatus::Loading;
++            state.compat.write().error = None;
+             let form = state.form.read().clone();
+             let input = VedicCompatibilityInput {
+                 male: AnalysisInput {
+@@ -945,11 +944,12 @@ pub fn VedicTab() -> Element {
+             };
+             match facade::analyze_vedic_compatibility(input) {
+                 Ok(res) => {
+-                    *compat_data.write() = Some(res);
+-                    *compat_status.write() = TaskStatus::Success;
++                    state.compat.write().data = Some(res);
++                    state.compat.write().status = TaskStatus::Success;
+                 }
+                 Err(e) => {
+-                    *compat_status.write() = TaskStatus::Error(e.to_string());
++                    state.compat.write().error = Some(e.to_string());
++                    state.compat.write().status = TaskStatus::Error(e.to_string());
+                 }
+             }
+         });
+@@ -1997,10 +1997,10 @@ pub fn VedicTab() -> Element {
+                                     // Compatibility Tab
+                                     div { class: "space-y-6",
+                                         div { class: "p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4",
+-                                            h3 { class: "text-lg font-semibold text-slate-200", "상대방 출생 정보 입력" }
++                                            h3 { class: "text-lg font-semibold text-slate-200", "{t(locale, TK::CompatTitleInput)}" }
+                                             div { class: "grid grid-cols-2 md:grid-cols-5 gap-3",
+                                                 div { class: "flex flex-col gap-1",
+-                                                    label { class: "text-xs text-slate-500", "년도" }
++                                                    label { class: "text-xs text-slate-500", "{t(locale, TK::FormYear)}" }
+                                                     input {
+                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
+                                                         r#type: "number",
+@@ -2009,7 +2009,7 @@ pub fn VedicTab() -> Element {
+                                                     }
+                                                 }
+                                                 div { class: "flex flex-col gap-1",
+-                                                    label { class: "text-xs text-slate-500", "월" }
++                                                    label { class: "text-xs text-slate-500", "{t(locale, TK::FormMonth)}" }
+                                                     input {
+                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
+                                                         r#type: "number",
+@@ -2018,7 +2018,7 @@ pub fn VedicTab() -> Element {
+                                                     }
+                                                 }
+                                                 div { class: "flex flex-col gap-1",
+-                                                    label { class: "text-xs text-slate-500", "일" }
++                                                    label { class: "text-xs text-slate-500", "{t(locale, TK::FormDay)}" }
+                                                     input {
+                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
+                                                         r#type: "number",
+@@ -2027,7 +2027,7 @@ pub fn VedicTab() -> Element {
+                                                     }
+                                                 }
+                                                 div { class: "flex flex-col gap-1",
+-                                                    label { class: "text-xs text-slate-500", "시간 (시)" }
++                                                    label { class: "text-xs text-slate-500", "{t(locale, TK::FormHour)}" }
+                                                     input {
+                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
+                                                         r#type: "number",
+@@ -2036,7 +2036,7 @@ pub fn VedicTab() -> Element {
+                                                     }
+                                                 }
+                                                 div { class: "flex flex-col gap-1",
+-                                                    label { class: "text-xs text-slate-500", "시간 (분)" }
++                                                    label { class: "text-xs text-slate-500", "{t(locale, TK::FormMinute)}" }
+                                                     input {
+                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
+                                                         r#type: "number",
+@@ -2047,7 +2047,14 @@ pub fn VedicTab() -> Element {
+                                             }
+                                             div { class: "grid grid-cols-2 gap-3",
+                                                 div { class: "flex flex-col gap-1",
+-                                                    label { class: "text-xs text-slate-500", "위도 (Latitude)" }
++                                                    label { class: "text-xs text-slate-500",
++                                                        {match locale {
++                                                            Locale::Ko => "위도 (Latitude)",
++                                                            Locale::En => "Latitude",
++                                                            Locale::Zh => "纬度 (Latitude)",
++                                                            Locale::Ru => "Широта (Latitude)",
++                                                        }}
++                                                    }
+                                                     input {
+                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
+                                                         r#type: "number",
+@@ -2057,7 +2064,14 @@ pub fn VedicTab() -> Element {
+                                                     }
+                                                 }
+                                                 div { class: "flex flex-col gap-1",
+-                                                    label { class: "text-xs text-slate-500", "경도 (Longitude)" }
++                                                    label { class: "text-xs text-slate-500",
++                                                        {match locale {
++                                                            Locale::Ko => "경도 (Longitude)",
++                                                            Locale::En => "Longitude",
++                                                            Locale::Zh => "经度 (Longitude)",
++                                                            Locale::Ru => "Долгота (Longitude)",
++                                                        }}
++                                                    }
+                                                     input {
+                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
+                                                         r#type: "number",
+@@ -2070,103 +2084,156 @@ pub fn VedicTab() -> Element {
+                                             button {
+                                                 class: "w-full py-3 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 rounded-xl font-bold text-white shadow-lg",
+                                                 onclick: run_compatibility,
+-                                                "💞 궁합 분석 실행"
++                                                "{t(locale, TK::CompatBtnRun)}"
+                                             }
+                                         }
+ 
+-                                        match &*compat_status.read() {
++                                        match &state.compat.read().status {
+                                             TaskStatus::Loading => rsx! {
+                                                 div { class: "flex flex-col items-center py-10 gap-2",
+                                                     div { class: "w-10 h-10 rounded-full border-4 border-purple-500/30 border-t-purple-400 animate-spin" }
+-                                                    p { class: "text-purple-400 font-medium text-sm animate-pulse", "궁합 연산 중..." }
++                                                    p { class: "text-purple-400 font-medium text-sm animate-pulse", "{t(locale, TK::CompatStatusLoading)}" }
+                                                 }
+                                             },
+                                             TaskStatus::Error(e) => rsx! {
+                                                 div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400 text-sm", "오류: {e}" }
+                                             },
+                                             TaskStatus::Success => {
+-                                                if let Some(compat) = &*compat_data.read() {
++                                                if let Some(compat) = &state.compat.read().data {
++                                                    // 1. Compute translated summary & explanation
++                                                    let total_score = compat.report.total_score;
++                                                    let translated_explanation = {
++                                                        let base_desc = if compat.report.is_compatible {
++                                                            t(locale, TK::CompatExplanationGood)
++                                                        } else if total_score >= 18.0 {
++                                                            t(locale, TK::CompatExplanationWarning)
++                                                        } else {
++                                                            t(locale, TK::CompatExplanationBad)
++                                                        };
++                                                        format!("{} {}", t(locale, TK::CompatExplanationSummary).replace("{}", &format!("{:.1}", total_score)), base_desc)
++                                                    };
++
++                                                    // 2. Prepare SVG Circular Gauge dimensions
++                                                    let score_pct = (total_score / 36.0 * 100.0).min(100.0).max(0.0);
++                                                    let radius = 40.0;
++                                                    let circumference = 2.0 * std::f64::consts::PI * radius; // ~251.327
++                                                    let stroke_offset = circumference - (score_pct / 100.0) * circumference;
++
+                                                     rsx! {
+                                                         div { class: "space-y-6 animate-in fade-in duration-500",
+-                                                            // Overall Compatibility Header
+-                                                            div { class: "p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4",
+-                                                                div {
+-                                                                    h3 { class: "text-xs text-slate-500 uppercase tracking-widest font-bold", "종합 매칭 판정" }
+-                                                                    p { class: "text-2xl font-bold text-slate-200 mt-1",
+-                                                                        "호환성 점수: "
+-                                                                        span { class: "text-purple-400", "{compat.report.total_score} / 36 Gunas" }
++                                                            
++                                                            // --- Visual Progress / Gauge Header Component ---
++                                                            div { class: "p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col sm:flex-row items-center gap-5",
++                                                                // SVG Circular Progress Gauge
++                                                                div { class: "relative w-24 h-24 flex items-center justify-center shrink-0",
++                                                                    svg { class: "w-full h-full transform -rotate-90", view_box: "0 0 100 100",
++                                                                        // Background track
++                                                                        circle {
++                                                                            class: "text-slate-800",
++                                                                            stroke_width: "8",
++                                                                            stroke: "currentColor",
++                                                                            fill: "transparent",
++                                                                            r: "{radius}",
++                                                                            cx: "50",
++                                                                            cy: "50"
++                                                                        }
++                                                                        // Color-coded progress ring
++                                                                        circle {
++                                                                            class: if compat.report.is_compatible { "text-emerald-500" } else { "text-purple-500" },
++                                                                            stroke_width: "8",
++                                                                            stroke_dasharray: "{circumference}",
++                                                                            stroke_dashoffset: "{stroke_offset}",
++                                                                            stroke_linecap: "round",
++                                                                            stroke: "currentColor",
++                                                                            fill: "transparent",
++                                                                            r: "{radius}",
++                                                                            cx: "50",
++                                                                            cy: "50"
++                                                                        }
++                                                                    }
++                                                                    // Absolute score overlay text
++                                                                    div { class: "absolute flex flex-col items-center justify-center",
++                                                                        span { class: "text-xl font-bold text-slate-100", "{total_score:.1}" }
++                                                                        span { class: "text-[9px] text-slate-500 font-semibold tracking-wider uppercase", "/ 36" }
++                                                                    }
++                                                                }
++
++                                                                // Text descriptions
++                                                                div { class: "flex-1 space-y-1 text-center sm:text-left",
++                                                                    h3 { class: "text-xs text-slate-500 uppercase tracking-widest font-bold", "{t(locale, TK::CompatHeaderOverall)}" }
++                                                                    p { class: "text-base font-bold text-slate-200", 
++                                                                        "{t(locale, TK::CompatScoreLabel)}: "
++                                                                        span { class: "text-purple-400 font-mono", "{total_score:.1} / 36.0 Gunas" }
+                                                                     }
+-                                                                    p { class: "text-sm text-slate-400 mt-1.5", "{compat.report.explanation}" }
++                                                                    p { class: "text-xs text-slate-400 leading-relaxed", "{translated_explanation}" }
+                                                                 }
+-                                                                div { class: "flex gap-2",
++
++                                                                // Verdict Badge
++                                                                div { class: "shrink-0",
+                                                                     if compat.report.is_compatible {
+-                                                                        span { class: "px-4 py-2 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-sm font-bold", "✓ 상성 우수" }
++                                                                        span { class: "px-4 py-2 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-sm font-bold shadow-lg shadow-emerald-950/20", "{t(locale, TK::CompatIsCompatibleGood)}" }
+                                                                     } else {
+-                                                                        span { class: "px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-400 text-sm font-bold", "⚠️ 신중함 요구" }
++                                                                        span { class: "px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-400 text-sm font-bold shadow-lg shadow-amber-950/20", "{t(locale, TK::CompatIsCompatibleCaution)}" }
+                                                                     }
+                                                                 }
+                                                             }
+ 
+-                                                            // Mangal Dosha Card
++                                                            // --- Mangal Dosha Cards (Localized) ---
+                                                             div { class: "grid grid-cols-1 md:grid-cols-2 gap-4",
+                                                                 div { class: "p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2",
+-                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "남성 화성살 (Male Mangal Dosha)" }
++                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "{t(locale, TK::CompatMaleMangalDosha)}" }
+                                                                     p {
+-                                                                        class: if compat.report.male_mangal_dosha {
+-                                                                            "text-lg font-bold text-red-400"
+-                                                                        } else {
+-                                                                            "text-lg font-bold text-emerald-400"
+-                                                                        },
+-                                                                        if compat.report.male_mangal_dosha { "🔥 화성살(Manglik) 감지" } else { "✓ 해당 없음 (양호)" }
++                                                                        class: if compat.report.male_mangal_dosha { "text-lg font-bold text-red-400" } else { "text-lg font-bold text-emerald-400" },
++                                                                        {if compat.report.male_mangal_dosha { t(locale, TK::CompatMangalDetected) } else { t(locale, TK::CompatMangalNotDetected) }}
+                                                                     }
+                                                                 }
+                                                                 div { class: "p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2",
+-                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "여성 화성살 (Female Mangal Dosha)" }
++                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "{t(locale, TK::CompatFemaleMangalDosha)}" }
+                                                                     p {
+-                                                                        class: if compat.report.female_mangal_dosha {
+-                                                                            "text-lg font-bold text-red-400"
+-                                                                        } else {
+-                                                                            "text-lg font-bold text-emerald-400"
+-                                                                        },
+-                                                                        if compat.report.female_mangal_dosha { "🔥 화성살(Manglik) 감지" } else { "✓ 해당 없음 (양호)" }
++                                                                        class: if compat.report.female_mangal_dosha { "text-lg font-bold text-red-400" } else { "text-lg font-bold text-emerald-400" },
++                                                                        {if compat.report.female_mangal_dosha { t(locale, TK::CompatMangalDetected) } else { t(locale, TK::CompatMangalNotDetected) }}
+                                                                     }
+                                                                 }
+                                                             }
+                                                             if compat.report.mangal_dosha_cancelled {
+                                                                 div { class: "p-4 rounded-xl bg-blue-950/40 border border-blue-800/40 text-blue-300 text-xs font-semibold",
+-                                                                    "ℹ️ 상호 화성살 상쇄(Dosha Samya)가 성립되어 화성살의 부정적 영향이 소멸되었습니다."
++                                                                    "{t(locale, TK::CompatMangalCancelled)}"
+                                                                 }
+                                                             }
+ 
+-                                                            // Ashtakoota Scorecard Table
+-                                                            div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
+-                                                                div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
+-                                                                    h3 { class: "font-semibold text-slate-200", "아쉬타쿠타(Ashtakoota) 세부 매칭 평점표" }
++                                                            // --- Ashtakoota Scorecard Table (Localized) ---
++                                                            div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl",
++                                                                div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5",
++                                                                    h3 { class: "font-semibold text-slate-200", "{t(locale, TK::CompatAshtakootaTableTitle)}" }
+                                                                 }
+                                                                 div { class: "overflow-x-auto",
+                                                                     table { class: "w-full text-sm",
+                                                                         thead {
+                                                                             tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
+-                                                                                th { class: "px-4 py-3 text-left font-medium", "매칭 요인 (Koota)" }
+-                                                                                th { class: "px-4 py-3 text-center font-medium", "가중치 (Max)" }
+-                                                                                th { class: "px-4 py-3 text-center font-medium", "획득 점수" }
+-                                                                                th { class: "px-4 py-3 text-left font-medium", "설명" }
++                                                                                th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::CompatTableColKoota)}" }
++                                                                                th { class: "px-4 py-3 text-center font-medium", "{t(locale, TK::CompatTableColMax)}" }
++                                                                                th { class: "px-4 py-3 text-center font-medium", "{t(locale, TK::CompatTableColEarned)}" }
++                                                                                th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::CompatTableColDesc)}" }
+                                                                             }
+                                                                         }
+                                                                         tbody { class: "divide-y divide-slate-800",
+-                                                                            {compat.report.kootas.iter().map(|k| rsx! {
+-                                                                                tr { class: "hover:bg-slate-800/20 transition-colors",
+-                                                                                    td { class: "px-4 py-3 font-semibold text-slate-300", "{k.name}" }
+-                                                                                    td { class: "px-4 py-3 text-center font-mono text-slate-500", "{k.max_points:.1}" }
+-                                                                                    td {
+-                                                                                        class: if k.earned_points > 0.0 {
+-                                                                                            "px-4 py-3 text-center font-bold font-mono text-purple-400"
+-                                                                                        } else {
+-                                                                                            "px-4 py-3 text-center font-bold font-mono text-slate-600"
+-                                                                                        },
+-                                                                                        "{k.earned_points:.1}"
++                                                                            {compat.report.kootas.iter().map(|k| {
++                                                                                let koota_name = translate_koota_name(locale, &k.id);
++                                                                                let koota_desc = translate_koota_desc(locale, &k.id, k.earned_points);
++                                                                                rsx! {
++                                                                                    tr { class: "hover:bg-slate-800/20 transition-colors",
++                                                                                        td { class: "px-4 py-3 font-semibold text-slate-300", "{koota_name}" }
++                                                                                        td { class: "px-4 py-3 text-center font-mono text-slate-500", "{k.max_points:.1}" }
++                                                                                        td {
++                                                                                            class: if k.earned_points > 0.0 {
++                                                                                                "px-4 py-3 text-center font-bold font-mono text-purple-400"
++                                                                                            } else {
++                                                                                                "px-4 py-3 text-center font-bold font-mono text-slate-600"
++                                                                                            },
++                                                                                            "{k.earned_points:.1}"
++                                                                                        }
++                                                                                        td { class: "px-4 py-3 text-xs text-slate-400", "{koota_desc}" }
+                                                                                     }
+-                                                                                    td { class: "px-4 py-3 text-xs text-slate-400", "{k.description}" }
+                                                                                 }
+                                                                             })}
+                                                                         }

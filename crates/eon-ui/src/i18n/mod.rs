@@ -77,6 +77,7 @@ pub enum TK {
     NavSimulation,
     NavTier,
     NavAi,
+    NavZwds,
 
     // ── Form ───────────────────────────────────────────────────────────
     FormYear,

@@ -113,6 +113,30 @@ impl VedicAnalysisInput {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ZwdsAnalysisInput {
+    #[serde(flatten)]
+    pub base: AnalysisInput,
+    pub is_male: bool,
+    pub target_year: Option<i32>,
+}
+
+impl ZwdsAnalysisInput {
+    pub fn new(
+        base: AnalysisInput,
+        is_male: bool,
+        target_year: Option<i32>,
+    ) -> Self {
+        Self {
+            base,
+            is_male,
+            target_year,
+        }
+    }
+}
+
+
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -129,7 +153,7 @@ pub enum BirthTimePrecision {
     UnknownTimeNoonProxy,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AnalysisMeta {
     pub precision: BirthTimePrecision,
@@ -169,6 +193,16 @@ pub struct VedicAnalysisOutput {
         eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReports,
     pub kp_analysis: Option<eon_vedic::analysis::kp::KpAnalysis>,
 }
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ZwdsAnalysisOutput {
+    pub meta: AnalysisMeta,
+    pub chart: eon_zwds::ZwdsChart,
+    pub current_daxian: eon_zwds::types::DaXian,
+    pub current_liu_nian: eon_zwds::types::LiuNian,
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
