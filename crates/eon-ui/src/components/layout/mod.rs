@@ -42,6 +42,9 @@ fn Sidebar() -> Element {
                 SidebarLink { to: Route::AiTab {}, icon: "🤖", label: t(locale, TK::NavAi) }
             }
 
+            // ── Export Results ────────────────────────────────────────────────
+            crate::components::shared::export_markdown::ExportWidget {}
+
             // ── Language Switcher ─────────────────────────────────────────────
             div { class: "px-4 pb-4 pt-2 border-t border-slate-800/50",
                 p { class: "text-[10px] text-slate-500 uppercase tracking-widest mb-2 font-semibold", "Language" }

@@ -136,6 +136,10 @@ pub enum TK {
     // ── Common Buttons / Labels ────────────────────────────────────────
     BtnClose,
     BtnCopy,
+    BtnCopySajuMarkdown,
+    BtnCopyVedicMarkdown,
+    BtnCopyCombinedMarkdown,
+    MsgCopiedToClipboard,
     BtnReset,
     BtnAnalyze,
     BtnCalculate,
