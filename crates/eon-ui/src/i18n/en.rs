@@ -341,5 +341,26 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuJijangganYeogi => "Remnant (Yeogi)",
         TK::SajuJijangganJunggi => "Middle (Junggi)",
         TK::SajuJijangganJeonggi => "Main (Jeonggi)",
+
+        // --- ZWDS ---
+        TK::ZwdsAnalyzeBtn => "🔮 Run ZWDS Analysis",
+        TK::ZwdsReportTitle => "Zi Wei Dou Shu Chart",
+        TK::ZwdsMasterSoul => "Soul Master",
+        TK::ZwdsMasterBody => "Body Master",
+        TK::ZwdsElementsBureau => "Elements Bureau",
+        TK::ZwdsCurrentDaxian => "Current Da-Xian",
+        TK::ZwdsDaxianTitle => "10-Year Da-Xian Cycles",
+        TK::ZwdsDaxianCardTitle => "Da-Xian",
+        TK::ZwdsCurrentDaxianBadge => "Current",
+        TK::ZwdsCopyBtn => "Copy ZWDS Report (Markdown)",
+        TK::ZwdsCopySuccess => "✓ Successfully Copied!",
+        TK::ZwdsIdleHint => "Please enter birth info and click [Run ZWDS Analysis].",
+        TK::ZwdsLoadingHint => "Calculating Zi Wei Dou Shu Star Placement...",
+        TK::ZwdsErrorHint => "Analysis Error: {}",
+        TK::ZwdsLoadFailed => "Data Load Failed",
+        TK::ZwdsCenterCardTitle => "ZWDS Chart Information",
+        TK::ZwdsLiuNianBadge => "Annual",
+        TK::ZwdsPalaceSuffix => " Palace",
+        TK::ZwdsDaxianSuffix => " Da-Xian",
     }
 }

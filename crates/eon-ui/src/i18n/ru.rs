@@ -341,5 +341,26 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuJijangganYeogi => "Остаточная энергия (Йоги)",
         TK::SajuJijangganJunggi => "Средняя энергия (Джунгги)",
         TK::SajuJijangganJeonggi => "Главная энергия (Джонгги)",
+
+        // --- ZWDS ---
+        TK::ZwdsAnalyzeBtn => "🔮 Начать анализ Цзы Вэй Доу Шу",
+        TK::ZwdsReportTitle => "Карта Цзы Вэй Доу Шу",
+        TK::ZwdsMasterSoul => "Хозяин Судьбы",
+        TK::ZwdsMasterBody => "Хозяин Тела",
+        TK::ZwdsElementsBureau => "Дворец Стихий",
+        TK::ZwdsCurrentDaxian => "Текущий Да-Сянь (Десятилетие)",
+        TK::ZwdsDaxianTitle => "10-летние периоды Да-Сянь",
+        TK::ZwdsDaxianCardTitle => "Да-Сянь",
+        TK::ZwdsCurrentDaxianBadge => "Текущий",
+        TK::ZwdsCopyBtn => "Скопировать отчет ЦВдШ (Markdown)",
+        TK::ZwdsCopySuccess => "✓ Успешно скопировано!",
+        TK::ZwdsIdleHint => "Пожалуйста, введите данные рождения и нажмите [Начать анализ Цзы Вэй Доу Шу].",
+        TK::ZwdsLoadingHint => "Расчет карты Цзы Вэй Доу Шу...",
+        TK::ZwdsErrorHint => "Ошибка анализа: {}",
+        TK::ZwdsLoadFailed => "Ошибка загрузки данных",
+        TK::ZwdsCenterCardTitle => "Сведения о карте ЦВдШ",
+        TK::ZwdsLiuNianBadge => "Год",
+        TK::ZwdsPalaceSuffix => " Дворец",
+        TK::ZwdsDaxianSuffix => " Да-Сянь",
     }
 }

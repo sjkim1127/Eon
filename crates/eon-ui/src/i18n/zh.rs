@@ -341,5 +341,26 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuJijangganYeogi => "余气 (Yeogi)",
         TK::SajuJijangganJunggi => "中气 (Middle)",
         TK::SajuJijangganJeonggi => "本气 (Main)",
+
+        // --- ZWDS ---
+        TK::ZwdsAnalyzeBtn => "🔮 紫微斗数分析",
+        TK::ZwdsReportTitle => "紫微斗数命盘",
+        TK::ZwdsMasterSoul => "命主",
+        TK::ZwdsMasterBody => "身主",
+        TK::ZwdsElementsBureau => "五行局",
+        TK::ZwdsCurrentDaxian => "当前分析大限",
+        TK::ZwdsDaxianTitle => "十年大限周期",
+        TK::ZwdsDaxianCardTitle => "大限",
+        TK::ZwdsCurrentDaxianBadge => "当前进行",
+        TK::ZwdsCopyBtn => "复制紫微斗数报告 (Markdown)",
+        TK::ZwdsCopySuccess => "✓ 复制成功!",
+        TK::ZwdsIdleHint => "请输入出生信息并点击 [紫微斗数分析] 按钮。",
+        TK::ZwdsLoadingHint => "紫微星系和天府星系安星中...",
+        TK::ZwdsErrorHint => "分析错误: {}",
+        TK::ZwdsLoadFailed => "数据加载失败",
+        TK::ZwdsCenterCardTitle => "命盘综合信息",
+        TK::ZwdsLiuNianBadge => "流年",
+        TK::ZwdsPalaceSuffix => "宫",
+        TK::ZwdsDaxianSuffix => "大限",
     }
 }
