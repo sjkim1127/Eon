@@ -6,6 +6,7 @@ members = [
     "crates/eon-data",
     "crates/eon-astro",
     "crates/eon-ai", "crates/eon-vedic",
+    "crates/eon-zwds",
     "crates/eon-service",
     "crates/eon-ui",
 ]

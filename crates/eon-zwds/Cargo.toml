@@ -1,0 +1,23 @@
+[package]
+name = "eon-zwds"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Eon: Zi Wei Dou Shu (紫微斗數) Engine — 자미두수 성반 명리 엔진"
+
+[dependencies]
+eon-core = { path = "../eon-core" }
+eon-data  = { path = "../eon-data" }
+eon-saju  = { path = "../eon-saju" }
+
+chrono.workspace   = true
+serde.workspace    = true
+thiserror.workspace = true
+anyhow.workspace   = true
+
+[dev-dependencies]
+# no extra dev deps needed
+
+[features]
+default = []

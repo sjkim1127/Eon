@@ -9,6 +9,7 @@ use crate::components::tabs::{
     simulation_tab::SimulationTab,
     tier_tab::TierTab,
     ai_tab::AiTab,
+    zwds_tab::ZwdsTab,
 };
 
 #[derive(Clone, Routable, Debug, PartialEq)]
@@ -34,6 +35,9 @@ pub enum Route {
         
         #[route("/ai_audit")]
         AiTab {},
+
+        #[route("/zwds")]
+        ZwdsTab {},
     #[end_layout]
     #[route("/:..route")]
     PageNotFound { route: Vec<String> },

@@ -13,6 +13,7 @@ thiserror = { workspace = true }
 eon-core = { path = "../eon-core" }
 eon-saju = { path = "../eon-saju" }
 eon-vedic = { path = "../eon-vedic" }
+eon-zwds = { path = "../eon-zwds" }
 eon-ai = { path = "../eon-ai" }
 eon-astro = { path = "../eon-astro" }
 eon-data = { path = "../eon-data" }

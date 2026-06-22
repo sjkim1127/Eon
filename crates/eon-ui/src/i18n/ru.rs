@@ -11,6 +11,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::NavSimulation => "Симуляция жизни",
         TK::NavTier => "Уровень судьбы",
         TK::NavAi => "ИИ аналитик",
+        TK::NavZwds => "Цзы Вэй Доу Шу",
         // Form
         TK::FormYear => "Год",
         TK::FormMonth => "Мес",

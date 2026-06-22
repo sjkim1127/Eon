@@ -5,3 +5,4 @@ pub mod transit_tab;
 pub mod simulation_tab;
 pub mod tier_tab;
 pub mod ai_tab;
+pub mod zwds_tab;

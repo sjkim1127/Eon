@@ -13,6 +13,7 @@ eon-service = { path = "../eon-service" }
 eon-core = { path = "../eon-core" }
 eon-vedic = { path = "../eon-vedic" }
 eon-saju = { path = "../eon-saju" }
+eon-zwds = { path = "../eon-zwds" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }

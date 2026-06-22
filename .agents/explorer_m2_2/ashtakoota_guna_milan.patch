@@ -1,0 +1,649 @@
+diff --git a/crates/eon-vedic/src/analysis/matching.rs b/crates/eon-vedic/src/analysis/matching.rs
+index 45bf869..ae1cf88 100644
+--- a/crates/eon-vedic/src/analysis/matching.rs
++++ b/crates/eon-vedic/src/analysis/matching.rs
+@@ -4,19 +4,33 @@ use crate::planets::VedicPlanet;
+ use crate::core::chart::VedicChart;
+ 
++#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
++#[serde(rename_all = "camelCase")]
++pub enum KootaId {
++    Varna,
++    Vashya,
++    Tara,
++    Yoni,
++    GrahaMaitri,
++    Gana,
++    Bhakoot,
++    Nadi,
++}
++
+ #[derive(Debug, Clone, Serialize, Deserialize)]
+ #[serde(rename_all = "camelCase")]
+ pub struct KootaScore {
++    pub koota_id: KootaId,
+     pub name: String,
+     pub max_points: f64,
+     pub earned_points: f64,
+     pub description: String,
+ }
+ 
+ #[derive(Debug, Clone, Serialize, Deserialize)]
+ #[serde(rename_all = "camelCase")]
+ pub struct CompatibilityReport {
+     pub total_score: f64, // out of 36
+     pub is_compatible: bool, // total >= 18 and no critical Nadi/Bhakoot dosha
+     pub kootas: Vec<KootaScore>,
+     pub male_mangal_dosha: bool,
+     pub female_mangal_dosha: bool,
+@@ -60,49 +74,57 @@ impl MatchingEngine {
+         let total = varna_score + vashya_score + tara_score + yoni_score + graha_maitri_score + gana_score + bhakoot_score + nadi_score;
+ 
+         let kootas = vec![
+             KootaScore {
++                koota_id: KootaId::Varna,
+                 name: "Varna (Caste/Vocation)".to_string(),
+                 max_points: 1.0,
+                 earned_points: varna_score,
+                 description: if varna_score == 1.0 { "Good work-profile alignment.".to_string() } else { "Differing natural vocations.".to_string() },
+             },
+             KootaScore {
++                koota_id: KootaId::Vashya,
+                 name: "Vashya (Control/Attraction)".to_string(),
+                 max_points: 2.0,
+                 earned_points: vashya_score,
+                 description: format!("Mutual attraction rating: {}/2.", vashya_score),
+             },
+             KootaScore {
++                koota_id: KootaId::Tara,
+                 name: "Tara (Destiny/Health)".to_string(),
+                 max_points: 3.0,
+                 earned_points: tara_score,
+                 description: if tara_score == 3.0 { "Excellent destiny and longevity alignment.".to_string() } else if tara_score == 1.5 { "Moderate health compatibility.".to_string() } else { "Challenging health compatibility (Tara Dosha).".to_string() },
+             },
+             KootaScore {
++                koota_id: KootaId::Yoni,
+                 name: "Yoni (Sensory/Sexual)".to_string(),
+                 max_points: 4.0,
+                 earned_points: yoni_score,
+                 description: format!("Biological compatibility: {}/4.", yoni_score),
+             },
+             KootaScore {
++                koota_id: KootaId::GrahaMaitri,
+                 name: "Graha Maitri (Friendship)".to_string(),
+                 max_points: 5.0,
+                 earned_points: graha_maitri_score,
+                 description: if graha_maitri_score >= 4.0 { "High mental harmony and friendship.".to_string() } else if graha_maitri_score >= 2.0 { "Average mental harmony.".to_string() } else { "Potential communication gaps.".to_string() },
+             },
+             KootaScore {
++                koota_id: KootaId::Gana,
+                 name: "Gana (Temperament)".to_string(),
+                 max_points: 6.0,
+                 earned_points: gana_score,
+                 description: if gana_score >= 5.0 { "Compatible temperaments.".to_string() } else if gana_score >= 3.0 { "Moderate temperament gaps.".to_string() } else { "High temperamental friction (Gana Dosha).".to_string() },
+             },
+             KootaScore {
++                koota_id: KootaId::Bhakoot,
+                 name: "Bhakoot (Emotional Node)".to_string(),
+                 max_points: 7.0,
+                 earned_points: bhakoot_score,
+                 description: if bhakoot_score == 7.0 { "Stable emotional bond.".to_string() } else { "Challenging emotional/financial cycles (Bhakoot Dosha).".to_string() },
+             },
+             KootaScore {
++                koota_id: KootaId::Nadi,
+                 name: "Nadi (Health/Genetics)".to_string(),
+                 max_points: 8.0,
+                 earned_points: nadi_score,
+                 description: if nadi_score == 8.0 { "Good genetic health & lineage compatibility.".to_string() } else { "Excessive similar energy (Nadi Dosha). Possible genetic mismatches.".to_string() },
+             },
+         ];
+diff --git a/crates/eon-ui/src/i18n/mod.rs b/crates/eon-ui/src/i18n/mod.rs
+index e355df0..bc12da9 100644
+--- a/crates/eon-ui/src/i18n/mod.rs
++++ b/crates/eon-ui/src/i18n/mod.rs
+@@ -324,5 +324,50 @@ pub enum TK {
+     VedicYogaCategoryArishta,
+     VedicYogaCategoryNeecha,
++
++    // ── Vedic Compatibility / Ashtakoota ────────────────────────────────
++    VedicCompatAshtakootaTableTitle,
++    VedicCompatKootaFactor,
++    VedicCompatMaxWeight,
++    VedicCompatEarnedPoints,
++    VedicCompatDescription,
++    VedicCompatOverallJudgement,
++    VedicCompatScoreLabel,
++    VedicCompatStatusExcellent,
++    VedicCompatStatusCaution,
++    VedicCompatMaleMangal,
++    VedicCompatFemaleMangal,
++    VedicCompatMangalDetected,
++    VedicCompatMangalNone,
++    VedicCompatMangalCancelled,
++    KootaVarnaName,
++    KootaVashyaName,
++    KootaTaraName,
++    KootaYoniName,
++    KootaGrahaMaitriName,
++    KootaGanaName,
++    KootaBhakootName,
++    KootaNadiName,
++    KootaVarnaDescGood,
++    KootaVarnaDescBad,
++    KootaVashyaDesc,
++    KootaTaraDescGood,
++    KootaTaraDescWarning,
++    KootaTaraDescBad,
++    KootaYoniDesc,
++    KootaGrahaMaitriDescGood,
++    KootaGrahaMaitriDescNeutral,
++    KootaGrahaMaitriDescBad,
++    KootaGanaDescGood,
++    KootaGanaDescWarning,
++    KootaGanaDescBad,
++    KootaBhakootDescGood,
++    KootaBhakootDescBad,
++    KootaNadiDescGood,
++    KootaNadiDescBad,
++    VedicCompatExplanationPrefix,
++    VedicCompatExplanationCompatible,
++    VedicCompatExplanationDosha,
++    VedicCompatExplanationLowScore,
+ }
+ 
+ /// Main translation dispatch function.
+diff --git a/crates/eon-ui/src/i18n/en.rs b/crates/eon-ui/src/i18n/en.rs
+index a15bb7b..3e56bc4 100644
+--- a/crates/eon-ui/src/i18n/en.rs
++++ b/crates/eon-ui/src/i18n/en.rs
+@@ -248,5 +248,50 @@ pub fn translate(key: TK) -> &'static str {
+         TK::VedicYogaCategoryArishta => "⚔️ Arishta Yoga (Affliction Yogas)",
+         TK::VedicYogaCategoryNeecha => "☯️ Neecha Bhanga (Cancellation Yogas)",
++
++        // Vedic Compatibility / Ashtakoota
++        TK::VedicCompatAshtakootaTableTitle => "Ashtakoota Scorecard Table",
++        TK::VedicCompatKootaFactor => "Factor (Koota)",
++        TK::VedicCompatMaxWeight => "Max Points",
++        TK::VedicCompatEarnedPoints => "Earned Points",
++        TK::VedicCompatDescription => "Description",
++        TK::VedicCompatOverallJudgement => "Overall Judgement",
++        TK::VedicCompatScoreLabel => "Compatibility Score: ",
++        TK::VedicCompatStatusExcellent => "✓ Excellent Compatibility",
++        TK::VedicCompatStatusCaution => "⚠️ Caution Recommended",
++        TK::VedicCompatMaleMangal => "Male Mangal Dosha",
++        TK::VedicCompatFemaleMangal => "Female Mangal Dosha",
++        TK::VedicCompatMangalDetected => "🔥 Mangal Dosha Detected",
++        TK::VedicCompatMangalNone => "✓ None (Auspicious)",
++        TK::VedicCompatMangalCancelled => "ℹ️ Mutual Mangal Dosha cancellation (Dosha Samya) applies; negative effects are neutralized.",
++        TK::KootaVarnaName => "Varna (Caste/Vocation)",
++        TK::KootaVashyaName => "Vashya (Control/Attraction)",
++        TK::KootaTaraName => "Tara (Destiny/Health)",
++        TK::KootaYoniName => "Yoni (Sensory/Sexual)",
++        TK::KootaGrahaMaitriName => "Graha Maitri (Friendship)",
++        TK::KootaGanaName => "Gana (Temperament)",
++        TK::KootaBhakootName => "Bhakoot (Emotional Node)",
++        TK::KootaNadiName => "Nadi (Health/Genetics)",
++        TK::KootaVarnaDescGood => "Good work-profile alignment.",
++        TK::KootaVarnaDescBad => "Differing natural vocations.",
++        TK::KootaVashyaDesc => "Mutual attraction rating: {}/2.",
++        TK::KootaTaraDescGood => "Excellent destiny and longevity alignment.",
++        TK::KootaTaraDescWarning => "Moderate health compatibility.",
++        TK::KootaTaraDescBad => "Challenging health compatibility (Tara Dosha).",
++        TK::KootaYoniDesc => "Biological compatibility: {}/4.",
++        TK::KootaGrahaMaitriDescGood => "High mental harmony and friendship.",
++        TK::KootaGrahaMaitriDescNeutral => "Average mental harmony.",
++        TK::KootaGrahaMaitriDescBad => "Potential communication gaps.",
++        TK::KootaGanaDescGood => "Compatible temperaments.",
++        TK::KootaGanaDescWarning => "Moderate temperament gaps.",
++        TK::KootaGanaDescBad => "High temperamental friction (Gana Dosha).",
++        TK::KootaBhakootDescGood => "Stable emotional bond.",
++        TK::KootaBhakootDescBad => "Challenging emotional/financial cycles (Bhakoot Dosha).",
++        TK::KootaNadiDescGood => "Good genetic health & lineage compatibility.",
++        TK::KootaNadiDescBad => "Excessive similar energy (Nadi Dosha). Possible genetic mismatches.",
++        TK::VedicCompatExplanationPrefix => "Total {} points earned (out of 36). ",
++        TK::VedicCompatExplanationCompatible => "Overall a harmonious match. Highly recommended.",
++        TK::VedicCompatExplanationDosha => "Score is high, but caution is advised due to critical afflictions (Nadi/Bhakoot Dosha).",
++        TK::VedicCompatExplanationLowScore => "Significant temperamental or emotional differences; mutual adjustment and deep understanding are required.",
+     }
+ }
+diff --git a/crates/eon-ui/src/i18n/ko.rs b/crates/eon-ui/src/i18n/ko.rs
+index c12bb7b..3e56bc4 100644
+--- a/crates/eon-ui/src/i18n/ko.rs
++++ b/crates/eon-ui/src/i18n/ko.rs
+@@ -248,5 +248,50 @@ pub fn translate(key: TK) -> &'static str {
+         TK::VedicYogaCategoryArishta => "⚔️ 아리시타 요가 (역경 요가)",
+         TK::VedicYogaCategoryNeecha => "☯️ 니차방가 요가 (약화 소멸)",
++
++        // Vedic Compatibility / Ashtakoota
++        TK::VedicCompatAshtakootaTableTitle => "아쉬타쿠타(Ashtakoota) 세부 매칭 평점표",
++        TK::VedicCompatKootaFactor => "매칭 요인 (Koota)",
++        TK::VedicCompatMaxWeight => "가중치 (Max)",
++        TK::VedicCompatEarnedPoints => "획득 점수",
++        TK::VedicCompatDescription => "설명",
++        TK::VedicCompatOverallJudgement => "종합 매칭 판정",
++        TK::VedicCompatScoreLabel => "호환성 점수: ",
++        TK::VedicCompatStatusExcellent => "✓ 상성 우수",
++        TK::VedicCompatStatusCaution => "⚠️ 신중함 요구",
++        TK::VedicCompatMaleMangal => "남성 화성살 (Male Mangal Dosha)",
++        TK::VedicCompatFemaleMangal => "여성 화성살 (Female Mangal Dosha)",
++        TK::VedicCompatMangalDetected => "🔥 화성살(Manglik) 감지",
++        TK::VedicCompatMangalNone => "✓ 해당 없음 (양호)",
++        TK::VedicCompatMangalCancelled => "ℹ️ 상호 화성살 상쇄(Dosha Samya)가 성립되어 화성살의 부정적 영향이 소멸되었습니다.",
++        TK::KootaVarnaName => "바르나 (Varna - 계급/직업 성향)",
++        TK::KootaVashyaName => "바샤 (Vashya - 상호 지배력/이끌림)",
++        TK::KootaTaraName => "타라 (Tara - 운명/건강의 궁합)",
++        TK::KootaYoniName => "요니 (Yoni - 생물학적/성적 친밀도)",
++        TK::KootaGrahaMaitriName => "그라하 마이트리 (Graha Maitri - 우정/소통)",
++        TK::KootaGanaName => "가나 (Gana - 성품/기질의 조화)",
++        TK::KootaBhakootName => "바쿠트 (Bhakoot - 감정적 교감/정서)",
++        TK::KootaNadiName => "나디 (Nadi - 유전적 건강/체질)",
++        TK::KootaVarnaDescGood => "자연스러운 사회적 역할과 성향의 조화가 양호합니다.",
++        TK::KootaVarnaDescBad => "서로 다른 직업적/사회적 성향을 지니고 있습니다.",
++        TK::KootaVashyaDesc => "상호 매력도와 지배력 지수: {}/2.",
++        TK::KootaTaraDescGood => "훌륭한 운명적 조화와 수명적 건강을 지니고 있습니다.",
++        TK::KootaTaraDescWarning => "보통 수준의 건강 및 액운 상쇄 능력을 지닙니다.",
++        TK::KootaTaraDescBad => "어려운 건강 궁합 및 운명적 저항이 예상됩니다 (타라 도샤).",
++        TK::KootaYoniDesc => "성적 및 신체적 어울림: {}/4.",
++        TK::KootaGrahaMaitriDescGood => "서로 생각하는 가치관과 대화가 매우 잘 통합니다.",
++        TK::KootaGrahaMaitriDescNeutral => "무난하고 평균적인 생각의 합을 이룹니다.",
++        TK::KootaGrahaMaitriDescBad => "서로 간 생각의 차이와 대화 장벽이 발생할 수 있습니다.",
++        TK::KootaGanaDescGood => "비슷하고 어울리는 성향과 기질을 지니고 있습니다.",
++        TK::KootaGanaDescWarning => "약간의 기질적 차이가 있으나 조율 가능한 범위입니다.",
++        TK::KootaGanaDescBad => "강한 기질적 충돌 및 마찰이 자주 발생할 수 있습니다 (가나 도샤).",
++        TK::KootaBhakootDescGood => "안정적이고 편안한 정서적 교감을 형성합니다.",
++        TK::KootaBhakootDescBad => "감정 기복이나 재정적 가치관 충돌이 있을 수 있습니다 (바쿠트 도샤).",
++        TK::KootaNadiDescGood => "훌륭한 생체 에너지 및 우수한 2세 유전적 조화를 이룹니다.",
++        TK::KootaNadiDescBad => "유사한 기운이 과도하여 갈등과 건강상 저하가 우려됩니다 (나디 도샤).",
++        TK::VedicCompatExplanationPrefix => "총 {}점 획득 (36점 만점). ",
++        TK::VedicCompatExplanationCompatible => "전반적으로 조화로운 매칭입니다. 추천합니다.",
++        TK::VedicCompatExplanationDosha => "점수는 높으나 주요 살(Nadi/Bhakoot Dosha)의 영향으로 신중한 주의가 필요합니다.",
++        TK::VedicCompatExplanationLowScore => "성향적 차이가 커 상호 조율과 깊은 이해가 요구되는 상성입니다.",
+     }
+ }
+diff --git a/crates/eon-ui/src/i18n/zh.rs b/crates/eon-ui/src/i18n/zh.rs
+index b28bb7b..3e56bc4 100644
+--- a/crates/eon-ui/src/i18n/zh.rs
++++ b/crates/eon-ui/src/i18n/zh.rs
+@@ -248,5 +248,50 @@ pub fn translate(key: TK) -> &'static str {
+         TK::VedicYogaCategoryArishta => "⚔️ 苦难瑜伽",
+         TK::VedicYogaCategoryNeecha => "☯️ 尼查邦嘉（削弱消解）",
++
++        // Vedic Compatibility / Ashtakoota
++        TK::VedicCompatAshtakootaTableTitle => "阿什塔库塔 (Ashtakoota) 详细匹配评分表",
++        TK::VedicCompatKootaFactor => "匹配因素 (Koota)",
++        TK::VedicCompatMaxWeight => "权重 (Max)",
++        TK::VedicCompatEarnedPoints => "获得分数",
++        TK::VedicCompatDescription => "详细说明",
++        TK::VedicCompatOverallJudgement => "综合匹配判定",
++        TK::VedicCompatScoreLabel => "契合度得分: ",
++        TK::VedicCompatStatusExcellent => "✓ 契合度优秀",
++        TK::VedicCompatStatusCaution => "⚠️ 需谨慎对待",
++        TK::VedicCompatMaleMangal => "男方火星煞 (Male Mangal Dosha)",
++        TK::VedicCompatFemaleMangal => "女方火星煞 (Female Mangal Dosha)",
++        TK::VedicCompatMangalDetected => "🔥 检测到火星煞 (Manglik)",
++        TK::VedicCompatMangalNone => "✓ 无此煞 (良好)",
++        TK::VedicCompatMangalCancelled => "ℹ️ 双方火星煞相互抵消 (Dosha Samya) 成立，负面影响已消除。",
++        TK::KootaVarnaName => "瓦纳 (Varna - 阶级与职业倾向)",
++        TK::KootaVashyaName => "瓦希亚 (Vashya - 相互吸引力与控制)",
++        TK::KootaTaraName => "塔拉 (Tara - 命运与健康契合)",
++        TK::KootaYoniName => "约尼 (Yoni - 生物契合度/亲密关系)",
++        TK::KootaGrahaMaitriName => "葛拉哈迈特里 (Graha Maitri - 友情与沟通)",
++        TK::KootaGanaName => "迦纳 (Gana - 气质与性情协调)",
++        TK::KootaBhakootName => "巴库特 (Bhakoot - 情感纽带与情感共鸣)",
++        TK::KootaNadiName => "纳迪 (Nadi - 遗传健康与能量体质)",
++        TK::KootaVarnaDescGood => "自然社会角色与个性的契合度良好。",
++        TK::KootaVarnaDescBad => "双方的职业或社会性格倾向存在差异。",
++        TK::KootaVashyaDesc => "相互吸引力与关系掌控力指数: {}/2。",
++        TK::KootaTaraDescGood => "优秀的命运契合度和寿命健康运势。",
++        TK::KootaTaraDescWarning => "中等水平的健康及抵御厄运能力。",
++        TK::KootaTaraDescBad => "预计会出现具有挑战性的健康契合度或运势阻力 (Tara Dosha)。",
++        TK::KootaYoniDesc => "身体及亲密关系契合度: {}/4。",
++        TK::KootaGrahaMaitriDescGood => "思想观念高度一致，沟通顺畅。",
++        TK::KootaGrahaMaitriDescNeutral => "观念契合度处于平均水平，沟通顺畅。",
++        TK::KootaGrahaMaitriDescBad => "思想观念存在分歧，可能存在沟通壁垒。",
++        TK::KootaGanaDescGood => "气质与脾气相投，容易相处。",
++        TK::KootaGanaDescWarning => "性格稍有不同，但在可调和的范围内。",
++        TK::KootaGanaDescBad => "容易产生强烈的情绪和性格摩擦 (Gana Dosha)。",
++        TK::KootaBhakootDescGood => "建立起稳定舒适的情感交融。",
++        TK::KootaBhakootDescBad => "可能面临情绪波动或财务观念的分歧 (Bhakoot Dosha)。",
++        TK::KootaNadiDescGood => "良好的生物能量相融度与优秀的下一代遗传契合。",
++        TK::KootaNadiDescBad => "相同的遗传气场过盛，需防范感情冲突与身体机能下降 (Nadi Dosha)。",
++        TK::VedicCompatExplanationPrefix => "共获得 {} 分 (满分 36 分). ",
++        TK::VedicCompatExplanationCompatible => "整体是一个非常和谐的匹配，强烈推荐。",
++        TK::VedicCompatExplanationDosha => "虽然分数较高，但由于存在关键的刑煞 (Nadi/Bhakoot Dosha)，仍需保持谨慎。",
++        TK::VedicCompatExplanationLowScore => "性格或情感差异较大，双方需要深入调整和包容。",
+     }
+ }
+diff --git a/crates/eon-ui/src/i18n/ru.rs b/crates/eon-ui/src/i18n/ru.rs
+index d28bb7b..3e56bc4 100644
+--- a/crates/eon-ui/src/i18n/ru.rs
++++ b/crates/eon-ui/src/i18n/ru.rs
+@@ -248,5 +248,50 @@ pub fn translate(key: TK) -> &'static str {
+         TK::VedicYogaCategoryArishta => "⚔️ Аришта Йога (Йоги Испытаний)",
+         TK::VedicYogaCategoryNeecha => "☯️ Нича Бханга (Отмена Ослабления)",
++
++        // Vedic Compatibility / Ashtakoota
++        TK::VedicCompatAshtakootaTableTitle => "Подробная таблица совместимости Аштакута",
++        TK::VedicCompatKootaFactor => "Фактор совместимости (Кута)",
++        TK::VedicCompatMaxWeight => "Макс. балл",
++        TK::VedicCompatEarnedPoints => "Получено баллов",
++        TK::VedicCompatDescription => "Описание",
++        TK::VedicCompatOverallJudgement => "Общая оценка совместимости",
++        TK::VedicCompatScoreLabel => "Оценка совместимости: ",
++        TK::VedicCompatStatusExcellent => "✓ Отличная совместимость",
++        TK::VedicCompatStatusCaution => "⚠️ Требуется осторожность",
++        TK::VedicCompatMaleMangal => "Мангал Доша у мужчины",
++        TK::VedicCompatFemaleMangal => "Мангал Доша у женщины",
++        TK::VedicCompatMangalDetected => "🔥 Обнаружена Мангал Доша",
++        TK::VedicCompatMangalNone => "✓ Отсутствует (благоприятно)",
++        TK::VedicCompatMangalCancelled => "ℹ️ Взаимная Мангал Доша нейтрализована (Доша Самья); негативные эффекты сняты.",
++        TK::KootaVarnaName => "Варна (Varna - Класс/Призвание)",
++        TK::KootaVashyaName => "Вашья (Vashya - Влечение/Контроль)",
++        TK::KootaTaraName => "Тара (Tara - Судьба/Здоровье)",
++        TK::KootaYoniName => "Йони (Yoni - Физическая совместимость)",
++        TK::KootaGrahaMaitriName => "Граха Майтри (Graha Maitri - Дружба)",
++        TK::KootaGanaName => "Гана (Gana - Характер/Темперамент)",
++        TK::KootaBhakootName => "Бхакут (Bhakoot - Эмоциональная связь)",
++        TK::KootaNadiName => "Нади (Nadi - Генетика/Энергия)",
++        TK::KootaVarnaDescGood => "Хорошая совместимость по социальной роли и склонностям.",
++        TK::KootaVarnaDescBad => "Различные профессиональные и социальные устремления.",
++        TK::KootaVashyaDesc => "Индекс взаимного притяжения и влияния: {}/2.",
++        TK::KootaTaraDescGood => "Превосходная совместимость по судьбе и долголетию.",
++        TK::KootaTaraDescWarning => "Средняя совместимость по здоровью и долголетию.",
++        TK::KootaTaraDescBad => "Сложная совместимость по здоровью, возможны препятствия (Тара Доша).",
++        TK::KootaYoniDesc => "Физическая и интимная гармония: {}/4.",
++        TK::KootaGrahaMaitriDescGood => "Высокая ментальная гармония и единомыслие.",
++        TK::KootaGrahaMaitriDescNeutral => "Средний уровень ментальной гармонии, нормальное общение.",
++        TK::KootaGrahaMaitriDescBad => "Различия в мировоззрении, вероятны барьеры в общении.",
++        TK::KootaGanaDescGood => "Совместимые характеры и темпераменты.",
++        TK::KootaGanaDescWarning => "Небольшие различия в характерах, поддающиеся корректировке.",
++        TK::KootaGanaDescBad => "Вероятны сильные столкновения характеров (Гана Доша).",
++        TK::KootaBhakootDescGood => "Стабильная и глубокая эмоциональная связь.",
++        TK::KootaBhakootDescBad => "Возможны эмоциональные качели или финансовые споры (Бхакут Доша).",
++        TK::KootaNadiDescGood => "Отличный баланс биоэнергетики и хорошая генетическая совместимость для потомства.",
++        TK::KootaNadiDescBad => "Избыток схожей энергии, риск конфликтов или снижения тонуса (Нади Доша).",
++        TK::VedicCompatExplanationPrefix => "Получено {} баллов из 36. ",
++        TK::VedicCompatExplanationCompatible => "В целом гармоничный союз. Рекомендуется.",
++        TK::VedicCompatExplanationDosha => "Оценка высокая, но требуется осторожность из-за критических поражений (Нади/Бхакут Доша).",
++        TK::VedicCompatExplanationLowScore => "Существенные различия в темпераменте или целях; требуются взаимные уступки и терпение.",
+     }
+ }
+diff --git a/crates/eon-ui/src/components/tabs/vedic_tab.rs b/crates/eon-ui/src/components/tabs/vedic_tab.rs
+index b825cc2..de33ff4 100644
+--- a/crates/eon-ui/src/components/tabs/vedic_tab.rs
++++ b/crates/eon-ui/src/components/tabs/vedic_tab.rs
+@@ -2091,85 +2091,159 @@
+                                                             // Overall Compatibility Header
+-                                                            div { class: "p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4",
+-                                                                div {
+-                                                                    h3 { class: "text-xs text-slate-500 uppercase tracking-widest font-bold", "종합 매칭 판정" }
+-                                                                    p { class: "text-2xl font-bold text-slate-200 mt-1",
+-                                                                        "호환성 점수: "
+-                                                                        span { class: "text-purple-400", "{compat.report.total_score} / 36 Gunas" }
+-                                                                    }
+-                                                                    p { class: "text-sm text-slate-400 mt-1.5", "{compat.report.explanation}" }
+-                                                                }
+-                                                                div { class: "flex gap-2",
+-                                                                    if compat.report.is_compatible {
+-                                                                        span { class: "px-4 py-2 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-sm font-bold", "✓ 상성 우수" }
+-                                                                    } else {
+-                                                                        span { class: "px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-400 text-sm font-bold", "⚠️ 신중함 요구" }
+-                                                                    }
+-                                                                }
+-                                                            }
++                                                            {
++                                                                let localized_explanation = {
++                                                                    let prefix = t(locale, TK::VedicCompatExplanationPrefix).replace("{}", &format!("{:.1}", compat.report.total_score));
++                                                                    let suffix = if compat.report.is_compatible {
++                                                                        t(locale, TK::VedicCompatExplanationCompatible)
++                                                                    } else if compat.report.total_score >= 18.0 {
++                                                                        t(locale, TK::VedicCompatExplanationDosha)
++                                                                    } else {
++                                                                        t(locale, TK::VedicCompatExplanationLowScore)
++                                                                    };
++                                                                    format!("{}{}", prefix, suffix)
++                                                                };
++                                                                rsx! {
++                                                                    div { class: "p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4",
++                                                                        div { class: "flex-1 space-y-1.5",
++                                                                            h3 { class: "text-xs text-slate-500 uppercase tracking-widest font-bold", "{t(locale, TK::VedicCompatOverallJudgement)}" }
++                                                                            p { class: "text-2xl font-bold text-slate-200 mt-1",
++                                                                                "{t(locale, TK::VedicCompatScoreLabel)}"
++                                                                                span { class: "text-purple-400", "{compat.report.total_score} / 36 Gunas" }
++                                                                            }
++                                                                            p { class: "text-sm text-slate-400 mt-1.5", "{localized_explanation}" }
++                                                                            div { class: "pt-2 flex gap-2",
++                                                                                if compat.report.is_compatible {
++                                                                                    span { class: "px-4 py-2 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-sm font-bold", "{t(locale, TK::VedicCompatStatusExcellent)}" }
++                                                                                } else {
++                                                                                    span { class: "px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-400 text-sm font-bold", "{t(locale, TK::VedicCompatStatusCaution)}" }
++                                                                                }
++                                                                            }
++                                                                        }
++                                                                        div { class: "flex justify-center md:justify-end md:pl-6",
++                                                                            CircularScoreGauge { score: compat.report.total_score }
++                                                                        }
++                                                                    }
++                                                                }
++                                                            }
+ 
+                                                             // Mangal Dosha Card
+                                                             div { class: "grid grid-cols-1 md:grid-cols-2 gap-4",
+                                                                 div { class: "p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2",
+-                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "남성 화성살 (Male Mangal Dosha)" }
++                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "{t(locale, TK::VedicCompatMaleMangal)}" }
+                                                                     p {
+                                                                         class: if compat.report.male_mangal_dosha {
+                                                                             "text-lg font-bold text-red-400"
+                                                                         } else {
+                                                                             "text-lg font-bold text-emerald-400"
+                                                                         },
+-                                                                        if compat.report.male_mangal_dosha { "🔥 화성살(Manglik) 감지" } else { "✓ 해당 없음 (양호)" }
++                                                                        if compat.report.male_mangal_dosha { "{t(locale, TK::VedicCompatMangalDetected)}" } else { "{t(locale, TK::VedicCompatMangalNone)}" }
+                                                                     }
+                                                                 }
+                                                                 div { class: "p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2",
+-                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "여성 화성살 (Female Mangal Dosha)" }
++                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "{t(locale, TK::VedicCompatFemaleMangal)}" }
+                                                                     p {
+                                                                         class: if compat.report.female_mangal_dosha {
+                                                                             "text-lg font-bold text-red-400"
+                                                                         } else {
+                                                                             "text-lg font-bold text-emerald-400"
+                                                                         },
+-                                                                        if compat.report.female_mangal_dosha { "🔥 화성살(Manglik) 감지" } else { "✓ 해당 없음 (양호)" }
++                                                                        if compat.report.female_mangal_dosha { "{t(locale, TK::VedicCompatMangalDetected)}" } else { "{t(locale, TK::VedicCompatMangalNone)}" }
+                                                                     }
+                                                                 }
+                                                             }
+                                                             if compat.report.mangal_dosha_cancelled {
+                                                                 div { class: "p-4 rounded-xl bg-blue-950/40 border border-blue-800/40 text-blue-300 text-xs font-semibold",
+-                                                                    "ℹ️ 상호 화성살 상쇄(Dosha Samya)가 성립되어 화성살의 부정적 영향이 소멸되었습니다."
++                                                                    "{t(locale, TK::VedicCompatMangalCancelled)}"
+                                                                 }
+                                                             }
+ 
+                                                             // Ashtakoota Scorecard Table
+                                                             div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
+                                                                 div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
+-                                                                    h3 { class: "font-semibold text-slate-200", "아쉬타쿠타(Ashtakoota) 세부 매칭 평점표" }
++                                                                    h3 { class: "font-semibold text-slate-200", "{t(locale, TK::VedicCompatAshtakootaTableTitle)}" }
+                                                                 }
+                                                                 div { class: "overflow-x-auto",
+                                                                     table { class: "w-full text-sm",
+                                                                         thead {
+                                                                             tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
+-                                                                                th { class: "px-4 py-3 text-left font-medium", "매칭 요인 (Koota)" }
+-                                                                                th { class: "px-4 py-3 text-center font-medium", "가중치 (Max)" }
+-                                                                                th { class: "px-4 py-3 text-center font-medium", "획득 점수" }
+-                                                                                th { class: "px-4 py-3 text-left font-medium", "설명" }
++                                                                                th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::VedicCompatKootaFactor)}" }
++                                                                                th { class: "px-4 py-3 text-center font-medium", "{t(locale, TK::VedicCompatMaxWeight)}" }
++                                                                                th { class: "px-4 py-3 text-center font-medium", "{t(locale, TK::VedicCompatEarnedPoints)}" }
++                                                                                th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::VedicCompatDescription)}" }
+                                                                             }
+                                                                         }
+                                                                         tbody { class: "divide-y divide-slate-800",
+-                                                                            {compat.report.kootas.iter().map(|k| rsx! {
+-                                                                                tr { class: "hover:bg-slate-800/20 transition-colors",
+-                                                                                    td { class: "px-4 py-3 font-semibold text-slate-300", "{k.name}" }
+-                                                                                    td { class: "px-4 py-3 text-center font-mono text-slate-500", "{k.max_points:.1}" }
+-                                                                                    td {
+-                                                                                        class: if k.earned_points > 0.0 {
+-                                                                                            "px-4 py-3 text-center font-bold font-mono text-purple-400"
+-                                                                                        } else {
+-                                                                                            "px-4 py-3 text-center font-bold font-mono text-slate-600"
+-                                                                                        },
+-                                                                                        "{k.earned_points:.1}"
+-                                                                                    }
+-                                                                                    td { class: "px-4 py-3 text-xs text-slate-400", "{k.description}" }
+-                                                                                }
+-                                                                            })}
++                                                                            {compat.report.kootas.iter().map(|k| {
++                                                                                let (localized_name, localized_desc) = match k.koota_id {
++                                                                                    eon_vedic::analysis::matching::KootaId::Varna => {
++                                                                                        let name = t(locale, TK::KootaVarnaName);
++                                                                                        let desc = if k.earned_points == 1.0 {
++                                                                                            t(locale, TK::KootaVarnaDescGood)
++                                                                                        } else {
++                                                                                            t(locale, TK::KootaVarnaDescBad)
++                                                                                        };
++                                                                                        (name, desc.to_string())
++                                                                                    }
++                                                                                    eon_vedic::analysis::matching::KootaId::Vashya => {
++                                                                                        let name = t(locale, TK::KootaVashyaName);
++                                                                                        let desc = t(locale, TK::KootaVashyaDesc).replace("{}", &format!("{:.1}", k.earned_points));
++                                                                                        (name, desc)
++                                                                                    }
++                                                                                    eon_vedic::analysis::matching::KootaId::Tara => {
++                                                                                        let name = t(locale, TK::KootaTaraName);
++                                                                                        let desc = if k.earned_points == 3.0 {
++                                                                                            t(locale, TK::KootaTaraDescGood)
++                                                                                        } else if k.earned_points == 1.5 {
++                                                                                            t(locale, TK::KootaTaraDescWarning)
++                                                                                        } else {
++                                                                                            t(locale, TK::KootaTaraDescBad)
++                                                                                        };
++                                                                                        (name, desc.to_string())
++                                                                                    }
++                                                                                    eon_vedic::analysis::matching::KootaId::Yoni => {
++                                                                                        let name = t(locale, TK::KootaYoniName);
++                                                                                        let desc = t(locale, TK::KootaYoniDesc).replace("{}", &format!("{:.1}", k.earned_points));
++                                                                                        (name, desc)
++                                                                                    }
++                                                                                    eon_vedic::analysis::matching::KootaId::GrahaMaitri => {
++                                                                                        let name = t(locale, TK::KootaGrahaMaitriName);
++                                                                                        let desc = if k.earned_points >= 4.0 {
++                                                                                            t(locale, TK::KootaGrahaMaitriDescGood)
++                                                                                        } else if k.earned_points >= 2.0 {
++                                                                                            t(locale, TK::KootaGrahaMaitriDescNeutral)
++                                                                                        } else {
++                                                                                            t(locale, TK::KootaGrahaMaitriDescBad)
++                                                                                        };
++                                                                                        (name, desc.to_string())
++                                                                                    }
++                                                                                    eon_vedic::analysis::matching::KootaId::Gana => {
++                                                                                        let name = t(locale, TK::KootaGanaName);
++                                                                                        let desc = if k.earned_points >= 5.0 {
++                                                                                            t(locale, TK::KootaGanaDescGood)
++                                                                                        } else if k.earned_points >= 3.0 {
++                                                                                            t(locale, TK::KootaGanaDescWarning)
++                                                                                        } else {
++                                                                                            t(locale, TK::KootaGanaDescBad)
++                                                                                        };
++                                                                                        (name, desc.to_string())
++                                                                                    }
++                                                                                    eon_vedic::analysis::matching::KootaId::Bhakoot => {
++                                                                                        let name = t(locale, TK::KootaBhakootName);
++                                                                                        let desc = if k.earned_points == 7.0 {
++                                                                                            t(locale, TK::KootaBhakootDescGood)
++                                                                                        } else {
++                                                                                            t(locale, TK::KootaBhakootDescBad)
++                                                                                        };
++                                                                                        (name, desc.to_string())
++                                                                                    }
++                                                                                    eon_vedic::analysis::matching::KootaId::Nadi => {
++                                                                                        let name = t(locale, TK::KootaNadiName);
++                                                                                        let desc = if k.earned_points == 8.0 {
++                                                                                            t(locale, TK::KootaNadiDescGood)
++                                                                                        } else {
++                                                                                            t(locale, TK::KootaNadiDescBad)
++                                                                                        };
++                                                                                        (name, desc.to_string())
++                                                                                    }
++                                                                                };
++                                                                                rsx! {
++                                                                                    tr { class: "hover:bg-slate-800/20 transition-colors",
++                                                                                        td { class: "px-4 py-3 font-semibold text-slate-300", "{localized_name}" }
++                                                                                        td { class: "px-4 py-3 text-center font-mono text-slate-500", "{k.max_points:.1}" }
++                                                                                        td { class: "px-4 py-3 text-center",
++                                                                                            div { class: "flex flex-col items-center gap-1",
++                                                                                                span {
++                                                                                                    class: if k.earned_points > 0.0 {
++                                                                                                        "font-bold font-mono text-purple-400"
++                                                                                                    } else {
++                                                                                                        "font-bold font-mono text-slate-600"
++                                                                                                    },
++                                                                                                    "{k.earned_points:.1}"
++                                                                                                }
++                                                                                                // Mini horizontal progress/gauge bar
++                                                                                                div { class: "w-16 h-1 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50",
++                                                                                                    div {
++                                                                                                        class: "h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full",
++                                                                                                        style: "width: {k.earned_points / k.max_points * 100.0}%"
++                                                                                                    }
++                                                                                                }
++                                                                                            }
++                                                                                        }
++                                                                                        td { class: "px-4 py-3 text-xs text-slate-400", "{localized_desc}" }
++                                                                                    }
++                                                                                }
++                                                                            })}
+                                                                         }
+@@ -2897,2 +2971,34 @@
+ 
++#[component]
++fn CircularScoreGauge(score: f64) -> Element {
++    let percentage = (score / 36.0 * 100.0).min(100.0).max(0.0);
++    let radius = 40.0;
++    let circumference = 2.0 * std::f64::consts::PI * radius;
++    let stroke_dashoffset = circumference - (percentage / 100.0) * circumference;
++    
++    let color_class = if score >= 18.0 {
++        "stroke-purple-500"
++    } else {
++        "stroke-amber-500"
++    };
++
++    rsx! {
++        div { class: "relative flex items-center justify-center w-24 h-24",
++            svg { class: "w-full h-full transform -rotate-90", viewBox: "0 0 100 100",
++                circle {
++                    class: "stroke-slate-800",
++                    stroke_width: "8",
++                    fill: "transparent",
++                    r: "{radius}",
++                    cx: "50",
++                    cy: "50"
++                }
++                circle {
++                    class: "transition-all duration-1000 ease-out {color_class}",
++                    stroke_width: "8",
++                    stroke_dasharray: "{circumference}",
++                    stroke_dashoffset: "{stroke_dashoffset}",
++                    stroke_linecap: "round",
++                    fill: "transparent",
++                    r: "{radius}",
++                    cx: "50",
++                    cy: "50"
++                }
++            }
++            div { class: "absolute flex flex-col items-center justify-center",
++                span { class: "text-xl font-black text-slate-100 font-mono", "{score:.1}" }
++                span { class: "text-[9px] text-slate-500 font-medium uppercase tracking-wider", "/ 36" }
++            }
++        }
++    }
++}
++
+ #[component]

@@ -40,6 +40,7 @@ fn Sidebar() -> Element {
                 SidebarLink { to: Route::SimulationTab {}, icon: "🧪", label: t(locale, TK::NavSimulation) }
                 SidebarLink { to: Route::TierTab {}, icon: "🏆", label: t(locale, TK::NavTier) }
                 SidebarLink { to: Route::AiTab {}, icon: "🤖", label: t(locale, TK::NavAi) }
+                SidebarLink { to: Route::ZwdsTab {}, icon: "🔮", label: t(locale, TK::NavZwds) }
             }
 
             // ── Export Results ────────────────────────────────────────────────

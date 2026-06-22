@@ -1366,3 +1366,92 @@ pub fn ExportWidget() -> Element {
         }
     }
 }
+
+// ============================================================
+// 자미두수 (ZWDS) 마크다운 포맷터
+// ============================================================
+
+use eon_service::dto::ZwdsAnalysisOutput;
+
+pub fn format_zwds_inner(data: &ZwdsAnalysisOutput, locale: Locale) -> String {
+    let mut s = String::new();
+    let chart = &data.chart;
+    
+    // 명주/신주/오행국
+    s.push_str(&format!("- **명주 (命主)**: {}\n", chart.soul_master.korean()));
+    s.push_str(&format!("- **신주 (身主)**: {}\n", chart.body_master.korean()));
+    s.push_str(&format!("- **오행국 (五行局)**: {}\n\n", chart.five_elements.korean()));
+    
+    // 12궁 성반 배치 정보
+    s.push_str("### 12궁 성반 배치 정보\n\n");
+    s.push_str("| 궁위 (Palace) | 궁명 (Name) | 별 배치 (Stars) | 대한 범위 (Da-Xian) | 유년 여부 |\n");
+    s.push_str("| --- | --- | --- | --- | --- |\n");
+    for palace in chart.palaces.iter() {
+        let stars_str = palace.stars.iter()
+            .map(|s| {
+                let sihua_str = s.si_hua.map(|sh| sh.korean()).unwrap_or("");
+                if sihua_str.is_empty() {
+                    s.star.korean().to_string()
+                } else {
+                    format!("{} ({})", s.star.korean(), sihua_str)
+                }
+            })
+            .collect::<Vec<String>>()
+            .join(", ");
+            
+        let daxian_str = palace.daxian_range
+            .map(|r| format!("{}세 ~ {}세", r.0, r.1))
+            .unwrap_or_else(|| "—".to_string());
+            
+        let liunian_str = if palace.is_current_liu_nian { "★ 유년 궁" } else { "—" };
+        
+        s.push_str(&format!(
+            "| {}{} | {} | {} | {} | {} |\n",
+            palace.heavenly_stem, palace.earthly_branch,
+            palace.name.korean(),
+            stars_str,
+            daxian_str,
+            liunian_str
+        ));
+    }
+    s.push_str("\n");
+    
+    // 대한 리스트
+    s.push_str("### 10년 대한(大限) 주기\n\n");
+    s.push_str("| 순서 | 연령 범위 | 궁위 | 간지 |\n");
+    s.push_str("| --- | --- | --- | --- |\n");
+    for dx in chart.daxian.iter() {
+        s.push_str(&format!(
+            "| {}대운 | {}세 ~ {}세 | ZWDS {}궁 | {}{} |\n",
+            dx.index + 1,
+            dx.age_start,
+            dx.age_end,
+            dx.palace_idx,
+            dx.stem_hanja,
+            dx.branch_hanja
+        ));
+    }
+    s.push_str("\n");
+    
+    s
+}
+
+pub fn export_zwds_to_markdown(
+    data: &ZwdsAnalysisOutput,
+    form: &crate::store::FormState,
+    locale: Locale,
+) -> String {
+    let mut s = String::new();
+    let title = match locale {
+        Locale::Ko => "🔮 EON - 자미두수 분석 보고서",
+        Locale::En => "🔮 EON - Zi Wei Dou Shu Analysis Report",
+        Locale::Zh => "🔮 EON - 紫微斗数分析报告",
+        Locale::Ru => "🔮 EON - Отчет по Цзы Вэй Доу Шу",
+    };
+    s.push_str(&format!("# {}\n\n", title));
+    s.push_str(&format_global_header(form, locale));
+    s.push_str("## 2. 자미두수 분석 상세\n\n");
+    s.push_str(&format_zwds_inner(data, locale));
+    s
+}
+
