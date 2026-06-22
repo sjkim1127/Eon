@@ -511,6 +511,11 @@ pub struct LiuNian {
     pub stem_hanja: String,
     pub branch_hanja: String,
     pub si_hua: [ZwdsStar; 4],
+    pub liu_lu: PalaceIndex,
+    pub liu_yang: PalaceIndex,
+    pub liu_tuo: PalaceIndex,
+    pub liu_chang: PalaceIndex,
+    pub liu_qu: PalaceIndex,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -1207,15 +1207,16 @@ pub fn export_vedic_to_markdown(data: &VedicAnalysisOutput, form: &crate::store:
 pub fn export_combined_to_markdown(
     saju: Option<&SajuAnalysisOutput>,
     vedic: Option<&VedicAnalysisOutput>,
+    zwds: Option<&ZwdsAnalysisOutput>,
     form: &crate::store::FormState,
     locale: Locale,
 ) -> String {
     let mut s = String::new();
     let title = match locale {
-        Locale::Ko => "🌌✨ EON - 사주 및 베딕 통합 분석 보고서",
-        Locale::En => "🌌✨ EON - Saju & Vedic Integrated Analysis Report",
-        Locale::Zh => "🌌✨ EON - 八字与吠陀占星整合分析报告",
-        Locale::Ru => "🌌✨ EON - Интегрированный отчет по Бацзы и Ведической Астрологии",
+        Locale::Ko => "🌌✨ EON - 사주, 베딕, 자미두수 통합 분석 보고서",
+        Locale::En => "🌌✨ EON - Saju, Vedic & ZWDS Integrated Analysis Report",
+        Locale::Zh => "🌌✨ EON - 八字、吠陀与紫微斗数整合分析报告",
+        Locale::Ru => "🌌✨ EON - Интегрированный отчет по Бацзы, Ведической Астрологии и ЦВдШ",
     };
     s.push_str(&format!("# {}\n\n", title));
     s.push_str(&format_global_header(form, locale));
@@ -1241,6 +1242,17 @@ pub fn export_combined_to_markdown(
         s.push_str(&format!("## {}\n\n", vedic_title));
         s.push_str(&format_vedic_inner(vedic_data, locale));
     }
+
+    if let Some(zwds_data) = zwds {
+        let zwds_title = match locale {
+            Locale::Ko => "4. 자미두수 분석 상세 결과 (Zi Wei Dou Shu)",
+            Locale::En => "4. Zi Wei Dou Shu Details",
+            Locale::Zh => "4. 紫微斗数分析详细结果",
+            Locale::Ru => "4. Подробные результаты анализа Цзы Вэй Доу Шу",
+        };
+        s.push_str(&format!("## {}\n\n", zwds_title));
+        s.push_str(&format_zwds_inner(zwds_data, locale));
+    }
     
     s
 }
@@ -1252,16 +1264,20 @@ pub fn ExportWidget() -> Element {
 
     let saju_state = state.saju.read();
     let vedic_state = state.vedic.read();
+    let zwds_state = state.zwds.read();
     let form = state.form.read().clone();
 
     let has_saju = saju_state.status == TaskStatus::Success && saju_state.data.is_some();
     let has_vedic = vedic_state.status == TaskStatus::Success && vedic_state.data.is_some();
+    let has_zwds = zwds_state.status == TaskStatus::Success && zwds_state.data.is_some();
 
     let saju_data = saju_state.data.clone();
     let vedic_data = vedic_state.data.clone();
+    let zwds_data = zwds_state.data.clone();
 
     let mut copied_saju = use_signal(|| false);
     let mut copied_vedic = use_signal(|| false);
+    let mut copied_zwds = use_signal(|| false);
     let mut copied_combined = use_signal(|| false);
 
     let widget_title = match locale {
@@ -1273,6 +1289,7 @@ pub fn ExportWidget() -> Element {
 
     let form_cloned_saju = form.clone();
     let form_cloned_vedic = form.clone();
+    let form_cloned_zwds = form.clone();
     let form_cloned_comb = form.clone();
 
     let saju_data_cloned_saju = saju_data.clone();
@@ -1280,6 +1297,9 @@ pub fn ExportWidget() -> Element {
 
     let vedic_data_cloned_vedic = vedic_data.clone();
     let vedic_data_cloned_comb = vedic_data.clone();
+
+    let zwds_data_cloned_zwds = zwds_data.clone();
+    let zwds_data_cloned_comb = zwds_data.clone();
 
     rsx! {
         div { class: "px-4 py-4 border-t border-slate-800/50 flex flex-col gap-2.5",
@@ -1339,16 +1359,49 @@ pub fn ExportWidget() -> Element {
                 }
             }
 
-            // 3. Copy Combined
+            // 3. Copy ZWDS
             button {
-                class: if has_saju || has_vedic {
+                class: if has_zwds {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                } else {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
+                },
+                disabled: !has_zwds,
+                onclick: move |_| {
+                    if let Some(ref data) = zwds_data_cloned_zwds {
+                        let txt = export_zwds_to_markdown(data, &form_cloned_zwds, locale);
+                        copy_to_clipboard(&txt);
+                        copied_zwds.set(true);
+                        spawn(async move {
+                            gloo_timers::future::TimeoutFuture::new(2000).await;
+                            copied_zwds.set(false);
+                        });
+                    }
+                },
+                span { "🔮 {t(locale, TK::ZwdsCopyBtn)}" }
+                if *copied_zwds.read() {
+                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                } else {
+                    span { class: "text-[10px] text-slate-500", "Markdown" }
+                }
+            }
+
+            // 4. Copy Combined
+            button {
+                class: if has_saju || has_vedic || has_zwds {
                     "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-gradient-to-r from-violet-900/20 to-indigo-900/20 border-violet-800/40 text-violet-300 hover:from-violet-850/40 hover:to-indigo-850/40 hover:text-white hover:border-violet-600/50"
                 } else {
                     "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
                 },
-                disabled: !has_saju && !has_vedic,
+                disabled: !has_saju && !has_vedic && !has_zwds,
                 onclick: move |_| {
-                    let txt = export_combined_to_markdown(saju_data_cloned_comb.as_ref(), vedic_data_cloned_comb.as_ref(), &form_cloned_comb, locale);
+                    let txt = export_combined_to_markdown(
+                        saju_data_cloned_comb.as_ref(),
+                        vedic_data_cloned_comb.as_ref(),
+                        zwds_data_cloned_comb.as_ref(),
+                        &form_cloned_comb,
+                        locale
+                    );
                     copy_to_clipboard(&txt);
                     copied_combined.set(true);
                     spawn(async move {
@@ -1376,63 +1429,170 @@ use eon_service::dto::ZwdsAnalysisOutput;
 pub fn format_zwds_inner(data: &ZwdsAnalysisOutput, locale: Locale) -> String {
     let mut s = String::new();
     let chart = &data.chart;
-    
-    // 명주/신주/오행국
-    s.push_str(&format!("- **명주 (命主)**: {}\n", chart.soul_master.korean()));
-    s.push_str(&format!("- **신주 (身主)**: {}\n", chart.body_master.korean()));
-    s.push_str(&format!("- **오행국 (五行局)**: {}\n\n", chart.five_elements.korean()));
-    
+    let ln = &data.current_liu_nian;
+
+    // Translated metadata labels
+    let label_master_soul = match locale {
+        Locale::Ko => "명주 (命主)",
+        Locale::En => "Soul Master",
+        Locale::Zh => "命主",
+        Locale::Ru => "Хозяин Судьбы",
+    };
+    let label_master_body = match locale {
+        Locale::Ko => "신주 (身主)",
+        Locale::En => "Body Master",
+        Locale::Zh => "身主",
+        Locale::Ru => "Хозяин Тела",
+    };
+    let label_elements = match locale {
+        Locale::Ko => "오행국 (五行局)",
+        Locale::En => "Elements Bureau",
+        Locale::Zh => "五行局",
+        Locale::Ru => "Дворец Стихий",
+    };
+
+    s.push_str(&format!("- **{}**: {}\n", label_master_soul, crate::i18n::translate_zwds_star(locale, chart.soul_master)));
+    s.push_str(&format!("- **{}**: {}\n", label_master_body, crate::i18n::translate_zwds_star(locale, chart.body_master)));
+    s.push_str(&format!("- **{}**: {}\n\n", label_elements, crate::i18n::translate_five_elements(locale, chart.five_elements)));
+
     // 12궁 성반 배치 정보
-    s.push_str("### 12궁 성반 배치 정보\n\n");
-    s.push_str("| 궁위 (Palace) | 궁명 (Name) | 별 배치 (Stars) | 대한 범위 (Da-Xian) | 유년 여부 |\n");
+    let title_palace_info = match locale {
+        Locale::Ko => "### 12궁 성반 배치 정보",
+        Locale::En => "### 12 Palaces Placement Detail",
+        Locale::Zh => "### 12宫位安星详情",
+        Locale::Ru => "### Детализация размещения по 12 дворцам",
+    };
+    s.push_str(&format!("{}\n\n", title_palace_info));
+
+    let header_palace = match locale {
+        Locale::Ko => "| 궁위 (Palace) | 궁명 (Name) | 별 배치 (Stars) | 대한 범위 (Da-Xian) | 유년 여부 |",
+        Locale::En => "| Palace (Cusp) | Palace Name | Star Placement | Da-Xian Age | Annual Fortune |",
+        Locale::Zh => "| 宫位 (Palace) | 宫名 (Name) | 星曜配置 (Stars) | 大限年龄段 | 是否流年 |",
+        Locale::Ru => "| Дворец (Зодиак) | Имя Дворца | Расположение Звезд | Да-Сянь (Возраст) | Год |",
+    };
+    s.push_str(&format!("{}\n", header_palace));
     s.push_str("| --- | --- | --- | --- | --- |\n");
+
     for palace in chart.palaces.iter() {
-        let stars_str = palace.stars.iter()
-            .map(|s| {
-                let sihua_str = s.si_hua.map(|sh| sh.korean()).unwrap_or("");
-                if sihua_str.is_empty() {
-                    s.star.korean().to_string()
-                } else {
-                    format!("{} ({})", s.star.korean(), sihua_str)
-                }
-            })
-            .collect::<Vec<String>>()
-            .join(", ");
-            
+        // Collect annual stars for this palace
+        let mut annual_stars = Vec::new();
+        if palace.index == ln.liu_lu { annual_stars.push(eon_zwds::types::ZwdsStar::LuCun); }
+        if palace.index == ln.liu_yang { annual_stars.push(eon_zwds::types::ZwdsStar::QingYang); }
+        if palace.index == ln.liu_tuo { annual_stars.push(eon_zwds::types::ZwdsStar::TuoLuo); }
+        if palace.index == ln.liu_chang { annual_stars.push(eon_zwds::types::ZwdsStar::WenChang); }
+        if palace.index == ln.liu_qu { annual_stars.push(eon_zwds::types::ZwdsStar::WenQu); }
+
+        let mut stars_str_parts = Vec::new();
+
+        // 1. 선천 별 + 사화
+        for s_in_p in palace.stars.iter() {
+            let star_name = crate::i18n::translate_zwds_star(locale, s_in_p.star);
+            let mut parts = star_name.to_string();
+
+            let mut sihua_suffixes = Vec::new();
+
+            // 선천 사화
+            if let Some(sh) = s_in_p.si_hua {
+                sihua_suffixes.push(sh.emoji().to_string());
+            }
+
+            // 유년 사화
+            if s_in_p.star == ln.si_hua[0] { sihua_suffixes.push("流祿".to_string()); }
+            else if s_in_p.star == ln.si_hua[1] { sihua_suffixes.push("流權".to_string()); }
+            else if s_in_p.star == ln.si_hua[2] { sihua_suffixes.push("流科".to_string()); }
+            else if s_in_p.star == ln.si_hua[3] { sihua_suffixes.push("流忌".to_string()); }
+
+            if !sihua_suffixes.is_empty() {
+                parts.push_str(&format!(" ({})", sihua_suffixes.join("+")));
+            }
+
+            stars_str_parts.push(parts);
+        }
+
+        // 2. 유년 잡성
+        for a_star in annual_stars {
+            let star_name = crate::i18n::translate_zwds_star(locale, a_star);
+            stars_str_parts.push(format!("流 {}", star_name));
+        }
+
+        let stars_str = stars_str_parts.join(", ");
+
         let daxian_str = palace.daxian_range
-            .map(|r| format!("{}세 ~ {}세", r.0, r.1))
+            .map(|r| {
+                if locale == Locale::Ko { format!("{}세 ~ {}세", r.0, r.1) }
+                else if locale == Locale::Zh { format!("{}岁 ~ {}岁", r.0, r.1) }
+                else if locale == Locale::Ru { format!("{} - {} лет", r.0, r.1) }
+                else { format!("Age {} - {}", r.0, r.1) }
+            })
             .unwrap_or_else(|| "—".to_string());
-            
-        let liunian_str = if palace.is_current_liu_nian { "★ 유년 궁" } else { "—" };
-        
+
+        let liunian_str = if palace.is_current_liu_nian {
+            match locale {
+                Locale::Ko => "★ 유년 궁",
+                Locale::En => "★ Annual Fortune",
+                Locale::Zh => "★ 流年宫",
+                Locale::Ru => "★ Годовой Дворец",
+            }
+        } else {
+            "—"
+        };
+
         s.push_str(&format!(
             "| {}{} | {} | {} | {} | {} |\n",
             palace.heavenly_stem, palace.earthly_branch,
-            palace.name.korean(),
+            crate::i18n::translate_zwds_palace(locale, palace.name),
             stars_str,
             daxian_str,
             liunian_str
         ));
     }
     s.push_str("\n");
-    
+
     // 대한 리스트
-    s.push_str("### 10년 대한(大限) 주기\n\n");
-    s.push_str("| 순서 | 연령 범위 | 궁위 | 간지 |\n");
+    let title_daxian = match locale {
+        Locale::Ko => "### 10년 대한(大限) 주기",
+        Locale::En => "### 10-Year Da-Xian Cycles",
+        Locale::Zh => "### 十年大限周期",
+        Locale::Ru => "### 10-летние периоды Да-Сянь",
+    };
+    s.push_str(&format!("{}\n\n", title_daxian));
+
+    let header_daxian = match locale {
+        Locale::Ko => "| 순서 | 연령 범위 | 궁위 | 간지 |",
+        Locale::En => "| Cycle | Age Range | Palace | Stem/Branch |",
+        Locale::Zh => "| 序号 | 年龄区间 | 宫位 | 干支 |",
+        Locale::Ru => "| Номер | Возрастной Диапазон | Дворец | Ствол/Ветвь |",
+    };
+    s.push_str(&format!("{}\n", header_daxian));
     s.push_str("| --- | --- | --- | --- |\n");
+
     for dx in chart.daxian.iter() {
+        let cycle_name = if locale == Locale::Ko { format!("{}대운", dx.index + 1) }
+            else if locale == Locale::Zh { format!("第 {} 大限", dx.index + 1) }
+            else if locale == Locale::Ru { format!("{} Да-Сянь", dx.index + 1) }
+            else { format!("Cycle {}", dx.index + 1) };
+
+        let range_str = if locale == Locale::Ko { format!("{}세 ~ {}세", dx.age_start, dx.age_end) }
+            else if locale == Locale::Zh { format!("{}岁 ~ {}岁", dx.age_start, dx.age_end) }
+            else if locale == Locale::Ru { format!("{} - {} лет", dx.age_start, dx.age_end) }
+            else { format!("Age {} - {}", dx.age_start, dx.age_end) };
+
+        let palace_idx_str = if locale == Locale::Ko { format!("{}번 궁", dx.palace_idx) }
+            else if locale == Locale::Zh { format!("{}号宫", dx.palace_idx) }
+            else if locale == Locale::Ru { format!("Дворец {}", dx.palace_idx) }
+            else { format!("Palace {}", dx.palace_idx) };
+
         s.push_str(&format!(
-            "| {}대운 | {}세 ~ {}세 | ZWDS {}궁 | {}{} |\n",
-            dx.index + 1,
-            dx.age_start,
-            dx.age_end,
-            dx.palace_idx,
+            "| {} | {} | {} | {}{} |\n",
+            cycle_name,
+            range_str,
+            palace_idx_str,
             dx.stem_hanja,
             dx.branch_hanja
         ));
     }
     s.push_str("\n");
-    
+
     s
 }
 

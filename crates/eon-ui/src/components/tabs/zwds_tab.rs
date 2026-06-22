@@ -5,7 +5,7 @@
 
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, Locale};
+use crate::i18n::{t, TK, Locale, translate_zwds_palace, translate_zwds_star, translate_five_elements, format_age_range};
 use eon_service::dto::{ZwdsAnalysisInput, AnalysisInput};
 use eon_service::facade;
 use crate::components::shared::birth_form::BirthForm;
@@ -61,13 +61,13 @@ pub fn ZwdsTab() -> Element {
             // 2. 타이틀 및 분석 버튼
             div { class: "flex justify-between items-center border-b border-slate-800/40 pb-4",
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-violet-300 to-indigo-400 bg-clip-text text-transparent",
-                    "자미두수 성반 (紫微斗數 星盤)"
+                    "{t(locale, TK::ZwdsReportTitle)}"
                 }
                 div { class: "flex items-center gap-3",
                     button {
                         class: "px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl font-semibold text-white shadow-lg shadow-violet-900/30 transition-all duration-200 active:scale-95 cursor-pointer",
                         onclick: run_analysis,
-                        "🔮 자미두수 분석 실행"
+                        "{t(locale, TK::ZwdsAnalyzeBtn)}"
                     }
                 }
             }
@@ -78,18 +78,18 @@ pub fn ZwdsTab() -> Element {
                     TaskStatus::Idle => rsx! {
                         div { class: "flex flex-col items-center justify-center py-20 gap-3 text-slate-500 bg-slate-900/20 border border-slate-800/40 rounded-3xl",
                             span { class: "text-5xl animate-bounce", "🔮" }
-                            p { class: "text-lg font-medium", "출생 정보를 입력하고 [자미두수 분석 실행]을 누르세요." }
+                            p { class: "text-lg font-medium", "{t(locale, TK::ZwdsIdleHint)}" }
                         }
                     },
                     TaskStatus::Loading => rsx! {
                         div { class: "flex flex-col items-center justify-center py-20 gap-3 bg-slate-900/20 border border-slate-800/40 rounded-3xl",
                             div { class: "w-12 h-12 rounded-full border-4 border-violet-500/30 border-t-violet-400 animate-spin" }
-                            p { class: "text-violet-400 font-medium animate-pulse", "자미성계 및 천부성계 성반 포국 중..." }
+                            p { class: "text-violet-400 font-medium animate-pulse", "{t(locale, TK::ZwdsLoadingHint)}" }
                         }
                     },
                     TaskStatus::Error(e) => rsx! {
                         div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400",
-                            "분석 오류: {e}"
+                            "{t(locale, TK::StatusError)}: {e}"
                         }
                     },
                     TaskStatus::Success => {
@@ -104,7 +104,7 @@ pub fn ZwdsTab() -> Element {
                                 }
                             }
                         } else {
-                            rsx! { div { "데이터 로드 실패" } }
+                            rsx! { div { "{t(locale, TK::ZwdsLoadFailed)}" } }
                         }
                     }
                 }
@@ -144,6 +144,7 @@ fn ZwdsGrid(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
                                     palace: palace.clone(),
                                     is_soul: p_idx == chart.soul_idx,
                                     is_body: p_idx == chart.body_idx,
+                                    current_liu_nian: Some(data.current_liu_nian.clone()),
                                 }
                             }
                         },
@@ -169,7 +170,15 @@ fn ZwdsGrid(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
 
 /// 개별 궁위 카드 컴포넌트
 #[component]
-fn PalaceCard(palace: PalaceData, is_soul: bool, is_body: bool) -> Element {
+fn PalaceCard(
+    palace: PalaceData,
+    is_soul: bool,
+    is_body: bool,
+    current_liu_nian: Option<eon_zwds::types::LiuNian>,
+) -> Element {
+    let state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
+
     // 테두리 및 배경 디자인
     let border_cls = if palace.is_current_liu_nian {
         "border-amber-500/80 shadow-lg shadow-amber-900/10 bg-amber-950/10"
@@ -178,6 +187,15 @@ fn PalaceCard(palace: PalaceData, is_soul: bool, is_body: bool) -> Element {
     } else {
         "border-slate-800/70 bg-slate-900/40 hover:border-slate-700/60"
     };
+
+    let mut annual_stars = Vec::new();
+    if let Some(ref ln) = current_liu_nian {
+        if palace.index == ln.liu_lu { annual_stars.push(ZwdsStar::LuCun); }
+        if palace.index == ln.liu_yang { annual_stars.push(ZwdsStar::QingYang); }
+        if palace.index == ln.liu_tuo { annual_stars.push(ZwdsStar::TuoLuo); }
+        if palace.index == ln.liu_chang { annual_stars.push(ZwdsStar::WenChang); }
+        if palace.index == ln.liu_qu { annual_stars.push(ZwdsStar::WenQu); }
+    }
 
     rsx! {
         div { class: "h-44 p-3 rounded-2xl border flex flex-col justify-between transition-all duration-200 {border_cls}",
@@ -188,13 +206,13 @@ fn PalaceCard(palace: PalaceData, is_soul: bool, is_body: bool) -> Element {
                         "{palace.heavenly_stem}{palace.earthly_branch}"
                     }
                     span { class: "text-[10px] text-slate-400 font-bold",
-                        "{palace.earthly_branch}궁"
+                        "{palace.earthly_branch}{t(locale, TK::ZwdsPalaceSuffix)}"
                     }
                 }
                 div { class: "flex items-center gap-1",
                     if palace.is_current_liu_nian {
                         span { class: "px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[8px] font-black tracking-wider border border-amber-500/30 animate-pulse",
-                            "유년"
+                            "{t(locale, TK::ZwdsLiuNianBadge)}"
                         }
                     }
                     if is_soul {
@@ -208,7 +226,7 @@ fn PalaceCard(palace: PalaceData, is_soul: bool, is_body: bool) -> Element {
                         }
                     }
                     span { class: "text-xs font-black text-slate-200 bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-700/50 shadow-inner",
-                        "{palace.name.korean()}"
+                        "{translate_zwds_palace(locale, palace.name)}"
                     }
                 }
             }
@@ -226,25 +244,69 @@ fn PalaceCard(palace: PalaceData, is_soul: bool, is_body: bool) -> Element {
                             "text-slate-400 text-[10px]"
                         };
 
+                        let annual_sihua = if let Some(ref ln) = current_liu_nian {
+                            if star_in_p.star == ln.si_hua[0] {
+                                Some(SiHuaType::HuaLu)
+                            } else if star_in_p.star == ln.si_hua[1] {
+                                Some(SiHuaType::HuaQuan)
+                            } else if star_in_p.star == ln.si_hua[2] {
+                                Some(SiHuaType::HuaKe)
+                            } else if star_in_p.star == ln.si_hua[3] {
+                                Some(SiHuaType::HuaJi)
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        };
+
                         rsx! {
                             div { key: "{star_in_p.star.korean()}", class: "flex items-center justify-between",
                                 span { class: "{star_color}",
-                                    "{star_in_p.star.korean()}"
+                                    "{translate_zwds_star(locale, star_in_p.star)}"
                                 }
-                                if let Some(sihua) = star_in_p.si_hua {
-                                    {
-                                        let bg = match sihua {
-                                            SiHuaType::HuaLu => "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-                                            SiHuaType::HuaQuan => "bg-blue-500/20 text-blue-300 border-blue-500/30",
-                                            SiHuaType::HuaKe => "bg-violet-500/20 text-violet-300 border-violet-500/30",
-                                            SiHuaType::HuaJi => "bg-red-500/20 text-red-300 border-red-500/30",
-                                        };
-                                        rsx! {
-                                            span { class: "px-1 rounded text-[8px] font-black border {bg}",
-                                                "{sihua.emoji()}"
+                                div { class: "flex items-center gap-1",
+                                    if let Some(sihua) = star_in_p.si_hua {
+                                        {
+                                            let bg = match sihua {
+                                                SiHuaType::HuaLu => "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+                                                SiHuaType::HuaQuan => "bg-blue-500/20 text-blue-300 border-blue-500/30",
+                                                SiHuaType::HuaKe => "bg-violet-500/20 text-violet-300 border-violet-500/30",
+                                                SiHuaType::HuaJi => "bg-red-500/20 text-red-300 border-red-500/30",
+                                            };
+                                            rsx! {
+                                                span { class: "px-1 rounded text-[8px] font-black border {bg}",
+                                                    "{sihua.emoji()}"
+                                                }
                                             }
                                         }
                                     }
+                                    if let Some(ann_sihua) = annual_sihua {
+                                        {
+                                            let bg = match ann_sihua {
+                                                SiHuaType::HuaLu => "bg-amber-500/20 text-amber-300 border-amber-500/30",
+                                                SiHuaType::HuaQuan => "bg-amber-650/20 text-amber-400 border-amber-650/30",
+                                                SiHuaType::HuaKe => "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+                                                SiHuaType::HuaJi => "bg-orange-600/20 text-orange-400 border-orange-600/30",
+                                            };
+                                            rsx! {
+                                                span { class: "px-1 rounded text-[8px] font-black border {bg} animate-pulse",
+                                                    "流{ann_sihua.emoji()}"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    })
+                }
+                {
+                    annual_stars.into_iter().map(|star| {
+                        rsx! {
+                            div { key: "{star.korean()}-annual", class: "flex items-center justify-between",
+                                span { class: "text-amber-500 font-semibold text-[10px] animate-pulse",
+                                    "流 {translate_zwds_star(locale, star)}"
                                 }
                             }
                         }
@@ -256,7 +318,12 @@ fn PalaceCard(palace: PalaceData, is_soul: bool, is_body: bool) -> Element {
             div { class: "text-[9px] text-slate-500 text-right border-t border-slate-800/30 pt-1 font-mono",
                 {
                     palace.daxian_range
-                        .map(|r| format!("{} - {}세", r.0, r.1))
+                        .map(|r| {
+                            if locale == Locale::Ko { format!("{} - {}세", r.0, r.1) }
+                            else if locale == Locale::Zh { format!("{} - {}岁", r.0, r.1) }
+                            else if locale == Locale::Ru { format!("{} - {} лет", r.0, r.1) }
+                            else { format!("{} - {} yrs", r.0, r.1) }
+                        })
                         .unwrap_or_else(|| "—".to_string())
                 }
             }
@@ -285,6 +352,16 @@ fn CenterCard(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
         });
     };
 
+    let current_daxian_formatted = if locale == Locale::Ko {
+        format!("{}{}{} ({}-{}세)", data.current_daxian.stem_hanja, data.current_daxian.branch_hanja, t(locale, TK::ZwdsDaxianSuffix), data.current_daxian.age_start, data.current_daxian.age_end)
+    } else if locale == Locale::Zh {
+        format!("{}{}{} ({}-{}岁)", data.current_daxian.stem_hanja, data.current_daxian.branch_hanja, t(locale, TK::ZwdsDaxianSuffix), data.current_daxian.age_start, data.current_daxian.age_end)
+    } else if locale == Locale::Ru {
+        format!("{}{}{} ({}-{} лет)", data.current_daxian.stem_hanja, data.current_daxian.branch_hanja, t(locale, TK::ZwdsDaxianSuffix), data.current_daxian.age_start, data.current_daxian.age_end)
+    } else {
+        format!("{}{}{} (Age {}-{})", data.current_daxian.stem_hanja, data.current_daxian.branch_hanja, t(locale, TK::ZwdsDaxianSuffix), data.current_daxian.age_start, data.current_daxian.age_end)
+    };
+
     rsx! {
         div { class: "col-span-2 row-span-2 bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800/80 rounded-3xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden",
             // 은은한 그라데이션 장식 배경
@@ -295,7 +372,7 @@ fn CenterCard(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
                 div { class: "border-b border-slate-800 pb-3",
                     h3 { class: "text-lg font-bold text-slate-100 flex items-center gap-2",
                         span { "🌌" }
-                        "운명 분석 명반 정보"
+                        "{t(locale, TK::ZwdsCenterCardTitle)}"
                     }
                 }
 
@@ -303,23 +380,23 @@ fn CenterCard(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
                 div { class: "grid grid-cols-2 gap-4 text-xs",
                     div { class: "space-y-2.5",
                         div { class: "flex flex-col gap-0.5",
-                            span { class: "text-slate-500 font-medium", "명주 (命主)" }
-                            span { class: "text-slate-200 font-bold text-sm", "{chart.soul_master.korean()}" }
+                            span { class: "text-slate-500 font-medium", "{t(locale, TK::ZwdsMasterSoul)}" }
+                            span { class: "text-slate-200 font-bold text-sm", "{translate_zwds_star(locale, chart.soul_master)}" }
                         }
                         div { class: "flex flex-col gap-0.5",
-                            span { class: "text-slate-500 font-medium", "신주 (身主)" }
-                            span { class: "text-slate-200 font-bold text-sm", "{chart.body_master.korean()}" }
+                            span { class: "text-slate-500 font-medium", "{t(locale, TK::ZwdsMasterBody)}" }
+                            span { class: "text-slate-200 font-bold text-sm", "{translate_zwds_star(locale, chart.body_master)}" }
                         }
                     }
                     div { class: "space-y-2.5",
                         div { class: "flex flex-col gap-0.5",
-                            span { class: "text-slate-500 font-medium", "오행국 (五行局)" }
-                            span { class: "text-violet-300 font-bold text-sm", "{chart.five_elements.korean()}" }
+                            span { class: "text-slate-500 font-medium", "{t(locale, TK::ZwdsElementsBureau)}" }
+                            span { class: "text-violet-300 font-bold text-sm", "{translate_five_elements(locale, chart.five_elements)}" }
                         }
                         div { class: "flex flex-col gap-0.5",
-                            span { class: "text-slate-500 font-medium", "현재 분석 대한" }
+                            span { class: "text-slate-500 font-medium", "{t(locale, TK::ZwdsCurrentDaxian)}" }
                             span { class: "text-indigo-300 font-bold text-sm",
-                                "{data.current_daxian.stem_hanja}{data.current_daxian.branch_hanja} 대운 ({data.current_daxian.age_start}-{data.current_daxian.age_end}세)"
+                                "{current_daxian_formatted}"
                             }
                         }
                     }
@@ -332,10 +409,10 @@ fn CenterCard(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
                     class: "w-full py-2.5 bg-slate-850 hover:bg-slate-800 rounded-xl border border-slate-700/50 text-xs font-semibold text-slate-300 hover:text-white flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer shadow-inner active:scale-95",
                     onclick: handle_copy,
                     if *copied.read() {
-                        span { class: "text-emerald-400 font-bold animate-pulse", "✓ 성공적으로 복사됨!" }
+                        span { class: "text-emerald-400 font-bold animate-pulse", "{t(locale, TK::ZwdsCopySuccess)}" }
                     } else {
                         span { "📋" }
-                        span { "자미두수 보고서 복사 (Markdown)" }
+                        span { "{t(locale, TK::ZwdsCopyBtn)}" }
                     }
                 }
             }
@@ -346,13 +423,15 @@ fn CenterCard(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
 /// 10년 대한 주기 일람 컴포넌트
 #[component]
 fn DaXianSection(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
+    let state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
     let chart = &data.chart;
 
     rsx! {
         div { class: "bg-slate-900/30 border border-slate-800/40 rounded-3xl p-6 space-y-4 shadow-xl",
             h3 { class: "text-lg font-bold text-slate-200 flex items-center gap-2",
                 span { "⏳" }
-                "10년 대한 대운 주기"
+                "{t(locale, TK::ZwdsDaxianTitle)}"
             }
 
             div { class: "grid grid-cols-2 md:grid-cols-4 gap-3",
@@ -365,29 +444,52 @@ fn DaXianSection(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
                             "border-slate-800 bg-slate-900/20 hover:border-slate-700"
                         };
 
+                        let daxian_title = if locale == Locale::Ko {
+                            format!("{} 대운", dx.index + 1)
+                        } else if locale == Locale::Zh {
+                            format!("第 {} 大限", dx.index + 1)
+                        } else if locale == Locale::Ru {
+                            format!("{} Да-Сянь", dx.index + 1)
+                        } else {
+                            format!("Cycle {}", dx.index + 1)
+                        };
+
+                        let range_str = format_age_range(locale, dx.age_start as i32, dx.age_end as i32);
+                        let daxian_label = format!("{}{}{}", dx.stem_hanja, dx.branch_hanja, t(locale, TK::ZwdsDaxianSuffix));
+                        
+                        let palace_label = if locale == Locale::Ko {
+                            format!("{}번 궁", dx.palace_idx)
+                        } else if locale == Locale::Zh {
+                            format!("{}号宫", dx.palace_idx)
+                        } else if locale == Locale::Ru {
+                            format!("Дворец {}", dx.palace_idx)
+                        } else {
+                            format!("Palace {}", dx.palace_idx)
+                        };
+
                         rsx! {
                             div {
                                 key: "{dx.index}",
                                 class: "p-4 rounded-xl border flex flex-col justify-between gap-1.5 transition-all duration-200 {card_cls}",
                                 div { class: "flex justify-between items-center",
                                     span { class: "text-[10px] text-slate-500 font-bold uppercase tracking-wider",
-                                        "{dx.index + 1} 대운"
+                                        "{daxian_title}"
                                     }
                                     if is_current {
                                         span { class: "px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 text-[8px] font-black border border-violet-500/30",
-                                            "현재 진행"
+                                            "{t(locale, TK::ZwdsCurrentDaxianBadge)}"
                                         }
                                     }
                                 }
-                                span { class: "text-sm font-black text-slate-200",
-                                    "{dx.age_start} ~ {dx.age_end}세"
+                                span { class: "text-[11px] font-black text-slate-200",
+                                    "{range_str}"
                                 }
                                 div { class: "flex justify-between items-center text-xs border-t border-slate-800/40 pt-1.5 mt-1",
                                     span { class: "text-slate-400 font-semibold",
-                                        "{dx.stem_hanja}{dx.branch_hanja} 대운"
+                                        "{daxian_label}"
                                     }
                                     span { class: "text-slate-500 font-medium text-[10px]",
-                                        "궁위 {dx.palace_idx}"
+                                        "{palace_label}"
                                     }
                                 }
                             }

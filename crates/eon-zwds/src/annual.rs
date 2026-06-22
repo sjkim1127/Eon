@@ -22,11 +22,30 @@ pub fn calculate_liunian(target_year: i32) -> LiuNian {
     let palace_idx = std_idx_to_zwds_idx(branch_std_idx);
     let si_hua = get_sihua_stars(stem);
 
+    let (liu_lu, liu_yang, liu_tuo) = crate::stars::location::place_lucun_qingyang_tuoluo(stem);
+    let (liu_chang, liu_qu) = match stem {
+        HeavenlyStem::Jia => (3, 7),
+        HeavenlyStem::Yi => (4, 6),
+        HeavenlyStem::Bing => (6, 4),
+        HeavenlyStem::Ding => (7, 3),
+        HeavenlyStem::Wu => (6, 4),
+        HeavenlyStem::Ji => (7, 3),
+        HeavenlyStem::Geng => (9, 1),
+        HeavenlyStem::Xin => (10, 0),
+        HeavenlyStem::Ren => (0, 10),
+        HeavenlyStem::Gui => (1, 9),
+    };
+
     LiuNian {
         year: target_year,
         palace_idx,
         stem_hanja: stem.hanja().to_string(),
         branch_hanja: branch.hanja().to_string(),
         si_hua,
+        liu_lu,
+        liu_yang,
+        liu_tuo,
+        liu_chang,
+        liu_qu,
     }
 }

@@ -341,5 +341,26 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuJijangganYeogi => "여기 (Remnant)",
         TK::SajuJijangganJunggi => "중기 (Middle)",
         TK::SajuJijangganJeonggi => "정기 (Main)",
+
+        // --- ZWDS ---
+        TK::ZwdsAnalyzeBtn => "🔮 자미두수 분석 실행",
+        TK::ZwdsReportTitle => "자미두수 성반 (紫微斗數 星盤)",
+        TK::ZwdsMasterSoul => "명주 (命主)",
+        TK::ZwdsMasterBody => "신주 (身主)",
+        TK::ZwdsElementsBureau => "오행국 (五行局)",
+        TK::ZwdsCurrentDaxian => "현재 분석 대한",
+        TK::ZwdsDaxianTitle => "10년 대한 대운 주기",
+        TK::ZwdsDaxianCardTitle => "대운",
+        TK::ZwdsCurrentDaxianBadge => "현재 진행",
+        TK::ZwdsCopyBtn => "자미두수 보고서 복사 (Markdown)",
+        TK::ZwdsCopySuccess => "✓ 성공적으로 복사됨!",
+        TK::ZwdsIdleHint => "출생 정보를 입력하고 [자미두수 분석 실행]을 누르세요.",
+        TK::ZwdsLoadingHint => "자미성계 및 천부성계 성반 포국 중...",
+        TK::ZwdsErrorHint => "분석 오류: {}",
+        TK::ZwdsLoadFailed => "데이터 로드 실패",
+        TK::ZwdsCenterCardTitle => "운명 분석 명반 정보",
+        TK::ZwdsLiuNianBadge => "유년",
+        TK::ZwdsPalaceSuffix => "궁",
+        TK::ZwdsDaxianSuffix => "대운",
     }
 }
