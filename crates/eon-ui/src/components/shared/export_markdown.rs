@@ -151,12 +151,12 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
         stages.month_stage.hangul(), stages.year_stage.hangul()
     ));
 
-    // Day Master & Strength
-    let (dm_title, dm_lbl, type_lbl, score_lbl, yong_lbl, hee_lbl, deuk_ryeong_lbl, deuk_ji_lbl, deuk_se_lbl) = match locale {
-        Locale::Ko => ("일간 세력 및 용희신", "일간", "신강/신약 유형", "세력 점수", "용신 (用神)", "희신 (喜神)", "득령", "득지", "득세"),
-        Locale::En => ("Day Master Strength & Yongshin/Heeshin", "Day Master", "Strength Type", "Strength Score", "Yongshin (Deity)", "Heeshin (Assistant)", "Deuk-Ryeong", "Deuk-Ji", "Deuk-Se"),
-        Locale::Zh => ("日主强弱与用喜神", "日主", "强弱类型", "能量分数", "用神", "喜神", "得令", "得地", "得势"),
-        Locale::Ru => ("Сила Дневного Доминанта и Полезные Божества", "Дневной Доминант", "Тип силы", "Балл силы", "Полезный Дух", "Благоприятный Дух", "Дэ-Рён", "Дэ-Джи", "Дэ-Сэ"),
+       // Day Master & Strength
+    let (dm_title, dm_lbl, type_lbl, score_lbl, yong_lbl, hee_lbl, deuk_ryeong_lbl, deuk_ji_lbl, deuk_si_lbl, deuk_se_lbl) = match locale {
+        Locale::Ko => ("일간 세력 및 용희신", "일간", "신강/신약 유형", "세력 점수", "용신 (用神)", "희신 (喜神)", "득령", "득지", "득시", "득세"),
+        Locale::En => ("Day Master Strength & Yongshin/Heeshin", "Day Master", "Strength Type", "Strength Score", "Yongshin (Deity)", "Heeshin (Assistant)", "Deuk-Ryeong", "Deuk-Ji", "Deuk-Si", "Deuk-Se"),
+        Locale::Zh => ("日主强弱与用喜神", "日主", "强弱类型", "能量分数", "用神", "喜神", "得令", "得地", "得时", "得势"),
+        Locale::Ru => ("Сила Дневного Доминанта и Полезные Божества", "Дневной Доминант", "Тип силы", "Балл силы", "Полезный Дух", "Благоприятный Дух", "Дэ-Рён", "Дэ-Джи", "Дэ-Ши", "Дэ-Сэ"),
     };
 
     let str_type_str = match rep.strength.strength_type {
@@ -182,40 +182,88 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
 
     let dr_val = if rep.strength.deuk_ryeong.acquired { "Yes" } else { "No" };
     let dj_val = if rep.strength.deuk_ji.acquired { "Yes" } else { "No" };
+    let di_val = if rep.strength.deuk_si.acquired { "Yes" } else { "No" };
     let ds_val = if rep.strength.deuk_se.acquired { "Yes" } else { "No" };
 
     s.push_str(&format!("### {}\n\n", dm_title));
     s.push_str(&format!("- **{}**: {}({})\n", dm_lbl, rep.strength.day_master.hangul(), rep.strength.day_master.hanja()));
     s.push_str(&format!("- **{}**: {}\n", type_lbl, str_type_str));
     s.push_str(&format!("- **{}**: {:.1} / 100\n", score_lbl, rep.strength.strength_score));
-    s.push_str(&format!("- **{}/{}/{}**: {} / {} / {}\n", deuk_ryeong_lbl, deuk_ji_lbl, deuk_se_lbl, dr_val, dj_val, ds_val));
+    s.push_str(&format!("- **{}/{}/{}/{}**: {} / {} / {} / {}\n", deuk_ryeong_lbl, deuk_ji_lbl, deuk_si_lbl, deuk_se_lbl, dr_val, dj_val, di_val, ds_val));
     s.push_str(&format!("- **{}**: {}\n", yong_lbl, rep.yongshin.primary.hangul()));
     s.push_str(&format!("- **{}**: {}\n\n", hee_lbl, rep.yongshin.assistant.hangul()));
 
+    // Detailed Yongshin Recommendations
+    let (rec_yong_title, rec_el, rec_sum, rec_desc, rec_reason) = match locale {
+        Locale::Ko => ("용신 추천 상세 (Yongshin Recommendations)", "오행", "요약", "상세 설명", "판단 근거"),
+        Locale::En => ("Yongshin Detailed Recommendations", "Element", "Summary", "Description", "Reasons"),
+        Locale::Zh => ("用神推荐详细", "五行", "摘要", "详细说明", "依据"),
+        Locale::Ru => ("Подробные рекомендации Полезного Духа", "Элемент", "Резюме", "Описание", "Причины"),
+    };
+    s.push_str(&format!("#### {}\n\n", rec_yong_title));
+    s.push_str(&format!("| {} | {} | {} | {} |\n", rec_el, rec_sum, rec_desc, rec_reason));
+    s.push_str("| --- | --- | --- | --- |\n");
+    for rec in &rep.yongshin.recommendations {
+        let reasons_str = rec.reasons.join(", ");
+        s.push_str(&format!("| {}({}) | **{}** | {} | {} |\n", rec.element.hangul(), rec.element.hanja(), rec.summary, rec.description, reasons_str));
+    }
+    s.push_str("\n");
+
     // Diagnostics
-    let (diag_title, struct_lbl, unpacker_lbl, bottleneck_lbl, complexity_lbl, grade_lbl, crisis_lbl) = match locale {
-        Locale::Ko => ("오행 흐름 및 구조 진단", "격국", "오행 해결사", "오행 정체", "구조 복잡도", "안정성 등급", "운이 꺾이는 시기"),
-        Locale::En => ("Qi Flow & Structural Diagnostics", "Structure", "Qi Unpacker", "Qi Bottleneck", "Structural Complexity", "Stability Grade", "Crisis Period Count"),
-        Locale::Zh => ("五行流通与结构诊断", "格局", "五行通关", "五行阻滞", "结构复杂度", "稳定度评级", "危机时期数量"),
-        Locale::Ru => ("Поток Ци и Диагностика Структуры", "Структура", "Разрешитель Ци", "Затор Ци", "Сложность структуры", "Класс стабильности", "Периоды спада"),
+    let (diag_title, struct_lbl, struct_sum_lbl, struct_desc_lbl, struct_reasons_lbl, projected_stem_lbl, unpacker_lbl, bottleneck_lbl, throughput_lbl, entropy_lbl, entropy_score_lbl, entropy_desc_lbl, complexity_lbl, grade_lbl, maintenance_entropy_lbl, decision_nodes_lbl, crisis_lbl) = match locale {
+        Locale::Ko => ("오행 흐름 및 구조 진단", "격국", "격국 요약", "격국 해설", "격국 근거", "투출 천간", "오행 해결사", "오행 정체 구간", "전체 에너지 유동 효율", "인생 엔트로피 난이도", "엔트로피 점수", "엔트로피 해석", "순환 복잡도", "안정성 등급", "유지보수 지수 (파란만장함)", "주요 분기점 연령", "운이 꺾이는 시기"),
+        Locale::En => ("Qi Flow & Structural Diagnostics", "Structure Type", "Structure Summary", "Structure Description", "Structure Reasons", "Projected Stem", "Qi Unpacker", "Qi Bottleneck", "System Throughput", "Destiny Entropy Level", "Entropy Score", "Entropy Interpretation", "Cyclomatic Complexity", "Stability Grade", "Maintenance Entropy", "Decision Node Ages", "Crisis Period Count"),
+        Locale::Zh => ("五行流通与结构诊断", "格局", "格局摘要", "格局解析", "格局依据", "透出天干", "五行通关", "五行阻滞", "整体能量效率", "人生熵级复杂度", "熵得分", "熵解析", "结构复杂度", "稳定度评级", "维护熵 (波折度)", "主要决策点年龄", "危机时期数量"),
+        Locale::Ru => ("Поток Ци 및 Диагностика Структуры", "Тип структуры", "Резюме структуры", "Описание структуры", "Обоснование структуры", "Проявленный ствол", "Разрешитель Ци", "Затор Ци", "Общая эффективность потока", "Уровень энтропии судьбы", "Балл энтропии", "Толкование энтропии", "Сложность структуры", "Класс стабильности", "Индекс стабильности (Maintenance Entropy)", "Возраст ключевых развилок", "Периоды спада"),
     };
 
     let structure_str = format!("{:?}", rep.structure.structure);
+    let proj_stem_str = rep.structure.projected_stem.map(|s| format!("{} (위치: {})", s.hangul(), rep.structure.projection_path.clone().unwrap_or_default())).unwrap_or_else(|| "—".to_string());
+    
     let unpacker_str = data.entropy.unpacker_element.map(|el| el.hangul().to_string()).unwrap_or_else(|| "—".to_string());
     let bottleneck_str = data.qi_topology.bottleneck.map(|el| el.hangul().to_string()).unwrap_or_else(|| "—".to_string());
-    let (comp_val, stab_val) = if let Some(comp) = &data.complexity {
-        (comp.cyclomatic_complexity.to_string(), comp.stability_grade.clone())
+    
+    let ent_lvl_str = format!("{:?}", data.entropy.level);
+    
+    let (comp_val, stab_val, maint_entropy_str, dec_nodes_str) = if let Some(comp) = &data.complexity {
+        let nodes_str = comp.decision_nodes.iter().map(|age| format!("{}세", age)).collect::<Vec<_>>().join(", ");
+        (comp.cyclomatic_complexity.to_string(), comp.stability_grade.clone(), format!("{:.2}", comp.entropy), nodes_str)
     } else {
-        ("—".to_string(), "—".to_string())
+        ("—".to_string(), "—".to_string(), "—".to_string(), "—".to_string())
     };
 
     s.push_str(&format!("### {}\n\n", diag_title));
     s.push_str(&format!("- **{}**: {}\n", struct_lbl, structure_str));
+    s.push_str(&format!("- **{}**: {}\n", struct_sum_lbl, rep.structure.summary));
+    s.push_str(&format!("- **{}**: {}\n", struct_desc_lbl, rep.structure.description));
+    s.push_str(&format!("- **{}**: {}\n", struct_reasons_lbl, rep.structure.reasons.join(", ")));
+    s.push_str(&format!("- **{}**: {}\n", projected_stem_lbl, proj_stem_str));
     s.push_str(&format!("- **{}**: {}\n", unpacker_lbl, unpacker_str));
     s.push_str(&format!("- **{}**: {}\n", bottleneck_lbl, bottleneck_str));
+    s.push_str(&format!("- **{}**: {:.1}%\n", throughput_lbl, data.qi_topology.throughput * 100.0));
+    s.push_str(&format!("- **{}**: {}\n", entropy_lbl, ent_lvl_str));
+    s.push_str(&format!("- **{}**: {:.3} / 2.322\n", entropy_score_lbl, data.entropy.score));
+    s.push_str(&format!("- **{}**: {}\n", entropy_desc_lbl, data.entropy.description));
     s.push_str(&format!("- **{}**: {}\n", complexity_lbl, comp_val));
     s.push_str(&format!("- **{}**: {}\n", grade_lbl, stab_val));
+    s.push_str(&format!("- **{}**: {}\n", maintenance_entropy_lbl, maint_entropy_str));
+    s.push_str(&format!("- **{}**: {}\n", decision_nodes_lbl, dec_nodes_str));
     s.push_str(&format!("- **{}**: {} times detected\n\n", crisis_lbl, data.crash_count));
+
+    // Topology Nodes Detail Table
+    let (top_title, top_node, top_cap, top_out) = match locale {
+        Locale::Ko => ("오행 네트워크 유동 노드 상세", "오행", "대역폭 (Capacity)", "출력량 (Output)"),
+        Locale::En => ("Qi Network Node Capacity Details", "Element", "Bandwidth (Capacity)", "Output"),
+        Locale::Zh => ("五行网络流通节点详细", "五行", "大带宽 (Capacity)", "输出量 (Output)"),
+        Locale::Ru => ("Подробные показатели пропускной способности узлов Ци", "Элемент", "Пропускная способность (Capacity)", "Выход (Output)"),
+    };
+    s.push_str(&format!("#### {}\n\n", top_title));
+    s.push_str(&format!("| {} | {} | {} |\n", top_node, top_cap, top_out));
+    s.push_str("| --- | --- | --- |\n");
+    for node in &data.qi_topology.nodes {
+        s.push_str(&format!("| {}({}) | {:.1} | {:.1} |\n", node.element.hangul(), node.element.hanja(), node.capacity, node.output));
+    }
+    s.push_str("\n");
 
     // Power Analysis (오행 및 십성 점수)
     let (power_title, dominant_el_lbl, dominant_tg_lbl, percentage_col, score_col) = match locale {
@@ -357,6 +405,13 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     };
     s.push_str(&format!("### {}\n\n", fuzzer_title));
     if let Some(fuzz) = &data.vulnerability_report {
+        let total_crashes_lbl = match locale {
+            Locale::Ko => "발견된 총 치명적 운세 조합(Crash) 수",
+            Locale::En => "Total Critical Crashes Detected",
+            Locale::Zh => "发现的致命运势组合数 (Total Crashes)",
+            Locale::Ru => "Общее количество обнаруженных сбоев (Crashes)",
+        };
+        s.push_str(&format!("- **{}**: {}\n\n", total_crashes_lbl, fuzz.total_crashes));
         for vuln in &fuzz.critical_vectors {
             let major_gz = format!("{}{}", vuln.vector.major.hanja(), vuln.vector.major.hangul());
             let yearly_gz = format!("{}{}", vuln.vector.yearly.hanja(), vuln.vector.yearly.hangul());
