@@ -586,7 +586,16 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
     s.push_str(&format!("- **{}**: {:.2}\n", strength_lbl, data.report.overall_strength_score));
     s.push_str(&format!("- **{}**: {}\n", dasha_lbl, data.report.dasha_focus));
     s.push_str(&format!("- **{}**: {}\n", nak_lbl, data.report.nakshatra_info));
-    s.push_str(&format!("- **{}**: {}\n\n", sade_sati_lbl, ss_phase_str));
+    let ayanamsa_lbl = match locale {
+        Locale::Ko => "아야남사 (Ayanamsa)",
+        Locale::En => "Ayanamsa",
+        Locale::Zh => "岁差 (Ayanamsa)",
+        Locale::Ru => "Айанамша",
+    };
+    let deg_floor = data.chart.ayanamsa.floor() as i32;
+    let min_val = ((data.chart.ayanamsa - deg_floor as f64) * 60.0).round() as i32;
+    s.push_str(&format!("- **{}**: {}\n", sade_sati_lbl, ss_phase_str));
+    s.push_str(&format!("- **{}**: {}° {:02}' (Lahiri)\n\n", ayanamsa_lbl, deg_floor, min_val));
 
     // Ashtakavarga Points (SAV)
     s.push_str("### 3.3 아슈타카바르가 SAV 점수 (Sarvashtakavarga Points)\n\n");
@@ -1023,6 +1032,69 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
         }
         s.push_str("\n");
     }
+
+    // Bhinnashtakavarga (BAV) Points Detail
+    let (bav_title, bav_planet_col, bav_type_col) = match locale {
+        Locale::Ko => ("행성별 아슈타카바르가 상세 (Bhinnashtakavarga - BAV)", "행성", "구분"),
+        Locale::En => ("Planetary Ashtakavarga Details (Bhinnashtakavarga - BAV)", "Planet", "Type"),
+        Locale::Zh => ("各星体阿슈타카바르가 (BAV)", "星体", "类型"),
+        Locale::Ru => ("Планетарный Аштакаварга (BAV)", "Планета", "Тип"),
+    };
+
+    s.push_str(&format!("### {}\n\n", bav_title));
+    s.push_str(&format!("| {} | {} | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | Sodya Pinda |\n", bav_planet_col, bav_type_col));
+    s.push_str("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
+    for bav in &data.chart.bav {
+        let p_name = translate_planet(locale, bav.planet);
+        
+        // Raw points
+        s.push_str(&format!("| {} | Raw | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n", 
+            p_name, bav.points[0], bav.points[1], bav.points[2], bav.points[3], bav.points[4], bav.points[5], bav.points[6], bav.points[7], bav.points[8], bav.points[9], bav.points[10], bav.points[11], bav.sodya_pinda));
+        
+        // Trikona points
+        s.push_str(&format!("| | Trikona Shodhana | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | |\n", 
+            bav.trikona_points[0], bav.trikona_points[1], bav.trikona_points[2], bav.trikona_points[3], bav.trikona_points[4], bav.trikona_points[5], bav.trikona_points[6], bav.trikona_points[7], bav.trikona_points[8], bav.trikona_points[9], bav.trikona_points[10], bav.trikona_points[11]));
+
+        // Shodhana points
+        s.push_str(&format!("| | Ekadhipatya Shodhana | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | |\n", 
+            bav.shodhana_points[0], bav.shodhana_points[1], bav.shodhana_points[2], bav.shodhana_points[3], bav.shodhana_points[4], bav.shodhana_points[5], bav.shodhana_points[6], bav.shodhana_points[7], bav.shodhana_points[8], bav.shodhana_points[9], bav.shodhana_points[10], bav.shodhana_points[11]));
+    }
+    s.push_str("\n");
+
+    // Vimshopaka Scores
+    let (vim_title, v_planet_col, v_shadvarga_col, v_shodasha_col) = match locale {
+        Locale::Ko => ("빔쇼파카 강도 분석 (Vimshopaka Bala)", "행성", "Shadvarga 점수 (6분할)", "Shodashavarga 점수 (16분할)"),
+        Locale::En => ("Vimshopaka Strength Analysis (Vimshopaka Bala)", "Planet", "Shadvarga Score (Out of 20)", "Shodashavarga Score (Out of 20)"),
+        Locale::Zh => ("Vimshopaka 力量分析", "星体", "Shadvarga 得分 (20分制)", "Shodashavarga 得分 (20分制)"),
+        Locale::Ru => ("Анализ силы Вимшопака (Vimshopaka Bala)", "Планета", "Балл Шадварга (из 20)", "Балл Шодашаварга (из 20)"),
+    };
+
+    s.push_str(&format!("### {}\n\n", vim_title));
+    s.push_str(&format!("| {} | {} | {} |\n", v_planet_col, v_shadvarga_col, v_shodasha_col));
+    s.push_str("| --- | --- | --- |\n");
+    for &(p, ref score) in &data.chart.vimshopaka_scores {
+        let p_name = translate_planet(locale, p);
+        s.push_str(&format!("| {} | {:.2} / 20 | {:.2} / 20 |\n", p_name, score.shadvarga_score, score.shodashavarga_score));
+    }
+    s.push_str("\n");
+
+    // Planetary Aspects
+    let (aspect_title, aspect_planet_col, aspect_houses_col) = match locale {
+        Locale::Ko => ("행성별 애스펙트 (Planetary Aspects)", "영향을 주는 행성", "영향을 받는 하우스 목록"),
+        Locale::En => ("Planetary Aspects (Drishti)", "Aspecting Planet", "Aspected Houses"),
+        Locale::Zh => ("星体相位 (Drishti)", "相位星体", "受相位影响的宫位"),
+        Locale::Ru => ("Планетарные Аспекты (Drishti)", "Аспектирующая планета", "Аспектируемые дома"),
+    };
+
+    s.push_str(&format!("### {}\n\n", aspect_title));
+    s.push_str(&format!("| {} | {} |\n", aspect_planet_col, aspect_houses_col));
+    s.push_str("| --- | --- |\n");
+    for rel in &data.chart.aspects {
+        let p_name = translate_planet(locale, rel.aspecting_planet);
+        let houses_str = rel.aspected_houses.iter().map(|h| format!("House {}", h)).collect::<Vec<_>>().join(", ");
+        s.push_str(&format!("| {} | {} |\n", p_name, houses_str));
+    }
+    s.push_str("\n");
 
     s
 }
