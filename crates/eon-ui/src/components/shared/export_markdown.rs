@@ -1,5 +1,5 @@
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, Locale, translate_planet};
+use crate::i18n::{t, TK, Locale, translate_planet, translate_planet_str, translate_avastha, rasi_name};
 use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput};
 use eon_vedic::planets::VedicPlanet;
 use dioxus::prelude::*;
@@ -50,6 +50,55 @@ const NAKSHATRA_NAMES: &[&str] = &[
 fn nakshatra_name(n: u8) -> &'static str {
     if n == 0 || n > 27 { return "—" }
     NAKSHATRA_NAMES[n as usize]
+}
+
+fn format_baladi(av: &eon_vedic::analysis::avasthas::BaladiAvastha) -> &'static str {
+    use eon_vedic::analysis::avasthas::BaladiAvastha::*;
+    match av {
+        Bala => "Bala (Infant)",
+        Kumara => "Kumara (Youth)",
+        Yuva => "Yuva (Adult)",
+        Vriddha => "Vriddha (Old)",
+        Mrita => "Mrita (Dead)",
+    }
+}
+
+fn format_jagradadi(av: &eon_vedic::analysis::avasthas::JagradadiAvastha) -> &'static str {
+    use eon_vedic::analysis::avasthas::JagradadiAvastha::*;
+    match av {
+        Jagrat => "Jagrat (Awake)",
+        Swapna => "Swapna (Dream)",
+        Sushupti => "Sushupti (Sleep)",
+    }
+}
+
+fn format_deeptaadi(av: &eon_vedic::analysis::avasthas::DeeptaadiAvastha) -> &'static str {
+    use eon_vedic::analysis::avasthas::DeeptaadiAvastha::*;
+    match av {
+        Deepta => "Deepta (Exalted)",
+        Svastha => "Svastha (Own Sign)",
+        Mudita => "Mudita (Great Friend)",
+        Shanta => "Shanta (Friend)",
+        Deena => "Deena (Neutral)",
+        Dukhita => "Dukhita (Enemy)",
+        Vikala => "Vikala (Great Enemy)",
+        Khala => "Khala (Debilitated)",
+        Kopita => "Kopita (Combust)",
+    }
+}
+
+fn format_karaka_role(role: &eon_vedic::analysis::jaimini::JaiminiKarakaRole) -> &'static str {
+    use eon_vedic::analysis::jaimini::JaiminiKarakaRole::*;
+    match role {
+        Atmakaraka => "Atmakaraka (AK)",
+        Amatyakaraka => "Amatyakaraka (AmK)",
+        Bhratrukaraka => "Bhratrukaraka (BK)",
+        Matrukaraka => "Matrukaraka (MK)",
+        Pitrikaraka => "Pitrikaraka (PiK)",
+        Putrakaraka => "Putrakaraka (PK)",
+        Gnatikaraka => "Gnatikaraka (GK)",
+        Darakaraka => "Darakaraka (DK)",
+    }
 }
 
 // Format inner Saju content (without global header/birth info)
@@ -167,6 +216,173 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     s.push_str(&format!("- **{}**: {}\n", complexity_lbl, comp_val));
     s.push_str(&format!("- **{}**: {}\n", grade_lbl, stab_val));
     s.push_str(&format!("- **{}**: {} times detected\n\n", crisis_lbl, data.crash_count));
+
+    // Power Analysis (오행 및 십성 점수)
+    let (power_title, dominant_el_lbl, dominant_tg_lbl, percentage_col, score_col) = match locale {
+        Locale::Ko => ("오행 및 십성 세력 상세 분석 (Power Analysis)", "대표 오행", "대표 십성", "비율", "점수"),
+        Locale::En => ("Element & Ten God Power Analysis", "Dominant Element", "Dominant Ten God", "Percentage", "Score"),
+        Locale::Zh => ("五行与十神力量详细分析", "代表五行", "代表十神", "比例", "分数"),
+        Locale::Ru => ("Подробный анализ сил Первоэлементов и Божеств", "Доминирующий элемент", "Доминирующее Божество", "Процент", "Балл"),
+    };
+    s.push_str(&format!("### {}\n\n", power_title));
+    s.push_str(&format!("- **{}**: {}\n", dominant_el_lbl, rep.power.dominant_element.hangul()));
+    s.push_str(&format!("- **{}**: {}\n\n", dominant_tg_lbl, rep.power.dominant_ten_god.hangul()));
+
+    // Elements Table
+    let el_col = match locale {
+        Locale::Ko => "오행 (Element)",
+        Locale::En => "Element",
+        Locale::Zh => "五行",
+        Locale::Ru => "Первоэлемент",
+    };
+    s.push_str(&format!("| {} | {} | {} |\n", el_col, percentage_col, score_col));
+    s.push_str("| --- | --- | --- |\n");
+    for &(el, pct, score) in &rep.power.element_scores {
+        s.push_str(&format!("| {}({}) | {:.1}% | {:.1} |\n", el.hangul(), el.hanja(), pct, score));
+    }
+    s.push_str("\n");
+
+    // Ten Gods Table
+    let tg_col = match locale {
+        Locale::Ko => "십성 (Ten God)",
+        Locale::En => "Ten God",
+        Locale::Zh => "十神",
+        Locale::Ru => "Божество",
+    };
+    s.push_str(&format!("| {} | {} | {} |\n", tg_col, percentage_col, score_col));
+    s.push_str("| --- | --- | --- |\n");
+    for &(tg, pct, score) in &rep.power.ten_god_scores {
+        s.push_str(&format!("| {} | {:.1}% | {:.1} |\n", tg.hangul(), pct, score));
+    }
+    s.push_str("\n");
+
+    // Lints
+    let (lints_title, lint_code_col, lint_msg_col, lint_adv_col) = match locale {
+        Locale::Ko => ("사주 진단 및 조언 (Diagnostics & Lints)", "코드", "진단 및 메시지", "조언"),
+        Locale::En => ("Saju Diagnostics & Advice", "Code", "Message", "Advice"),
+        Locale::Zh => ("八字诊断与建议", "代码", "诊断信息", "建议"),
+        Locale::Ru => ("Диагностика и советы Бацзы", "Код", "Сообщение", "Совет"),
+    };
+    s.push_str(&format!("### {}\n\n", lints_title));
+    if !data.lints.is_empty() {
+        s.push_str(&format!("| {} | {} | {} |\n", lint_code_col, lint_msg_col, lint_adv_col));
+        s.push_str("| --- | --- | --- |\n");
+        for lint in &data.lints {
+            let sev_str = match lint.severity {
+                eon_saju::engine::linter::LintSeverity::Error => "🚨 Error",
+                eon_saju::engine::linter::LintSeverity::Warning => "⚠️ Warning",
+                eon_saju::engine::linter::LintSeverity::Info => "ℹ️ Info",
+            };
+            s.push_str(&format!("| **{} [{}]** | {} | {} |\n", lint.code, sev_str, lint.message, lint.advice));
+        }
+    } else {
+        s.push_str("—\n");
+    }
+    s.push_str("\n");
+
+    // Voids
+    let (voids_title, void_xun_lbl, void_br_lbl) = match locale {
+        Locale::Ko => ("공망 분석 (Void / Emptiness)", "순중 (Xun)", "공망 지지"),
+        Locale::En => ("Void Analysis (Emptiness)", "Xun Group", "Void Branches"),
+        Locale::Zh => ("旬空分析 (Void)", "旬群", "空亡地支"),
+        Locale::Ru => ("Анализ Пустоты (Void)", "Группа Сюнь", "Пустые Земные Ветви"),
+    };
+    s.push_str(&format!("### {}\n\n", voids_title));
+    s.push_str(&format!("- **{}**: {}\n", void_xun_lbl, rep.voids.xun_group));
+    s.push_str(&format!("- **{}**: {}({}), {}({})\n", 
+        void_br_lbl, 
+        rep.voids.void_branches[0].hangul(), rep.voids.void_branches[0].hanja(),
+        rep.voids.void_branches[1].hangul(), rep.voids.void_branches[1].hanja()
+    ));
+    if !rep.voids.mapped_voids.is_empty() {
+        s.push_str("\n**세부 공망 분석 (Void Details)**:\n");
+        for mv in &rep.voids.mapped_voids {
+            s.push_str(&format!("- **{} {}({}) [{}]**: {} - *{}*\n", 
+                mv.position, mv.branch.hangul(), mv.branch.hanja(), mv.ten_god.hangul(), mv.summary, mv.description));
+        }
+    }
+    s.push_str("\n");
+
+    // Relationships (합충형해)
+    let (rel_title, rel_type_col, rel_name_col, rel_pos_col, rel_desc_col) = match locale {
+        Locale::Ko => ("합충형해 분석 (Harmony & Clashes)", "종류", "관계명", "위치", "해석"),
+        Locale::En => ("Harmony & Clashes Analysis", "Type", "Name", "Positions", "Description"),
+        Locale::Zh => ("合冲刑害分析", "种类", "关系名", "位置", "解析"),
+        Locale::Ru => ("Анализ Слияний и Столкновений", "Тип", "Название", "Столпы", "Описание"),
+    };
+    s.push_str(&format!("### {}\n\n", rel_title));
+    if !rep.relationships.mapped_relationships.is_empty() {
+        s.push_str(&format!("| {} | {} | {} | {} |\n", rel_type_col, rel_name_col, rel_pos_col, rel_desc_col));
+        s.push_str("| --- | --- | --- | --- |\n");
+        for rel in &rep.relationships.mapped_relationships {
+            s.push_str(&format!("| {} | **{}** | {} | {} ({}) |\n", 
+                rel.relation_type, rel.name, rel.positions.join("-"), rel.summary, rel.description));
+        }
+    } else {
+        s.push_str("—\n");
+    }
+    s.push_str("\n");
+
+    // Spirit Markers (신살 상세)
+    let (spirit_title, spirit_pos_col, spirit_name_col, spirit_desc_col) = match locale {
+        Locale::Ko => ("신살 상세 해설 (Spirit Markers Detail)", "기둥 위치", "신살명", "해석 및 설명"),
+        Locale::En => ("Spirit Markers Detailed Descriptions", "Pillar Position", "Spirit Name", "Interpretation"),
+        Locale::Zh => ("神煞详细解析", "柱位", "神煞名", "说明"),
+        Locale::Ru => ("Подробный анализ Символических Звезд", "Положение", "Название", "Описание"),
+    };
+    s.push_str(&format!("### {}\n\n", spirit_title));
+    if !rep.spirit_markers.mapped_markers.is_empty() {
+        s.push_str(&format!("| {} | {} | {} |\n", spirit_pos_col, spirit_name_col, spirit_desc_col));
+        s.push_str("| --- | --- | --- |\n");
+        for m in &rep.spirit_markers.mapped_markers {
+            let pos_str = match m.position {
+                eon_saju::analysis::spirit_markers::PillarPosition::Year => t(locale, TK::SajuYearPillar),
+                eon_saju::analysis::spirit_markers::PillarPosition::Month => t(locale, TK::SajuMonthPillar),
+                eon_saju::analysis::spirit_markers::PillarPosition::Day => t(locale, TK::SajuDayPillar),
+                eon_saju::analysis::spirit_markers::PillarPosition::Hour => t(locale, TK::SajuHourPillar),
+            };
+            s.push_str(&format!("| {} | **{}** | {} - *{}* |\n", pos_str, m.marker.hangul(), m.summary, m.description));
+        }
+    } else {
+        s.push_str("—\n");
+    }
+    s.push_str("\n");
+
+    // Vulnerability/Fuzzer & Load Diagnostics
+    let (fuzzer_title, load_title) = match locale {
+        Locale::Ko => ("운명 크래시 분석 (Destiny Fuzzer)", "인생 부하 진단 (Karma Load Balancer)"),
+        Locale::En => ("Destiny Fuzzer (Vulnerability Analysis)", "Karma Load Balancer Diagnostics"),
+        Locale::Zh => ("命运漏洞分析 (Fuzzer)", "人生负荷均衡诊断"),
+        Locale::Ru => ("Анализ Уязвимостей Судьбы", "Диагностика Кармической Нагрузки"),
+    };
+    s.push_str(&format!("### {}\n\n", fuzzer_title));
+    if let Some(fuzz) = &data.vulnerability_report {
+        for vuln in &fuzz.critical_vectors {
+            let major_gz = format!("{}{}", vuln.vector.major.hanja(), vuln.vector.major.hangul());
+            let yearly_gz = format!("{}{}", vuln.vector.yearly.hanja(), vuln.vector.yearly.hangul());
+            s.push_str(&format!("- **[⚠️ {}]** (Score: {:.1}): Major: {}, Yearly: {} (Tags: {})\n", 
+                vuln.vulnerability_type, vuln.crash_score, major_gz, yearly_gz, vuln.tags.join(", ")));
+        }
+    } else {
+        s.push_str("—\n");
+    }
+    s.push_str("\n");
+
+    s.push_str(&format!("### {}\n\n", load_title));
+    if !data.load_diagnostics.is_empty() {
+        for diag in &data.load_diagnostics {
+            let status_str = match diag.status {
+                eon_saju::engine::load_balancer::TrafficStatus::Idle => "Idle",
+                eon_saju::engine::load_balancer::TrafficStatus::Normal => "Normal",
+                eon_saju::engine::load_balancer::TrafficStatus::Overloaded => "Overloaded",
+                eon_saju::engine::load_balancer::TrafficStatus::SystemDown => "SystemDown",
+            };
+            s.push_str(&format!("- **Age {} [{}]**: *{}* -> Advice: {}\n", diag.age, status_str, diag.reason, diag.strategy));
+        }
+    } else {
+        s.push_str("—\n");
+    }
+    s.push_str("\n");
 
     // Great Luck
     let (luck_title, age_lbl) = match locale {
@@ -293,6 +509,104 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
     s.push_str(&format!("- **{}**: {}\n", nak_lbl, data.report.nakshatra_info));
     s.push_str(&format!("- **{}**: {}\n\n", sade_sati_lbl, ss_phase_str));
 
+    // Ashtakavarga Points (SAV)
+    s.push_str("### 3.3 아슈타카바르가 SAV 점수 (Sarvashtakavarga Points)\n\n");
+    s.push_str("| House (하우스) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |\n");
+    s.push_str("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
+    s.push_str(&format!("| **SAV** | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n\n", 
+        data.chart.sav.points[0], data.chart.sav.points[1], data.chart.sav.points[2], data.chart.sav.points[3],
+        data.chart.sav.points[4], data.chart.sav.points[5], data.chart.sav.points[6], data.chart.sav.points[7],
+        data.chart.sav.points[8], data.chart.sav.points[9], data.chart.sav.points[10], data.chart.sav.points[11]
+    ));
+
+    // Jaimini Karakas & Special Lagnas
+    s.push_str("### 3.4 Jaimini Chara Karakas & Special Lagnas\n\n");
+    s.push_str("**Chara Karaka Assignments**:\n");
+    for k in &data.chart.karakas {
+        s.push_str(&format!("- **{}**: {} ({:.2}°)\n", 
+            format_karaka_role(&k.role), translate_planet(locale, k.planet), k.degree_in_rasi));
+    }
+    s.push_str("\n**Arudha Padas**:\n");
+    for ap in &data.chart.arudha_padas {
+        s.push_str(&format!("- **{}**: House {} ({})\n", ap.name, ap.house, rasi_name(locale, ap.rasi)));
+    }
+    s.push_str("\n**Special Lagnas**:\n");
+    for sl in &data.chart.special_lagnas {
+        s.push_str(&format!("- **{}**: {:.2}° ({})\n", sl.name, sl.longitude, rasi_name(locale, sl.rasi)));
+    }
+    s.push_str("\n");
+
+    // Planetary Avasthas (행성 상태)
+    s.push_str("### 3.5 행성 상태 분석 (Planetary Avasthas)\n\n");
+    s.push_str("| Planet (행성) | Baladi Avastha | Jagradadi Avastha | Deeptaadi Avastha | Lajjitadi Avastha |\n");
+    s.push_str("| --- | --- | --- | --- | --- |\n");
+    for av in &data.chart.avasthas {
+        s.push_str(&format!("| **{}** | {} | {} | {} | {} |\n", 
+            translate_planet(locale, av.planet),
+            format_baladi(&av.baladi),
+            format_jagradadi(&av.jagradadi),
+            format_deeptaadi(&av.deeptaadi),
+            translate_avastha(locale, &av.lajjitadi)
+        ));
+    }
+    s.push_str("\n");
+
+    // Panchanga Details (5대 판창가)
+    s.push_str("### 3.6 5대 판창가 상세 (Panchanga Details)\n\n");
+    let pan = &data.chart.panchanga;
+    s.push_str(&format!("- **Vara (요일)**: {} (Lord: {})\n", pan.vara, translate_planet(locale, pan.day_lord)));
+    s.push_str(&format!("- **Tithi (음력 날짜)**: {} (Tithi #{})\n", pan.tithi_name, pan.tithi));
+    s.push_str(&format!("- **Nakshatra (나크샤트라)**: {} (Nakshatra #{})\n", nakshatra_name(pan.nakshatra), pan.nakshatra));
+    s.push_str(&format!("- **Yoga (요가)**: Yoga #{}\n", pan.yoga));
+    s.push_str(&format!("- **Karana (카라나)**: {} (Karana #{})\n", pan.karana_name, pan.karana));
+    s.push_str(&format!("- **Yogi Planet (요기 행성)**: {} (Point: {:.2}°)\n", translate_planet(locale, pan.yogi_planet), pan.yogi_point));
+    s.push_str(&format!("- **Avayogi Planet (아바요기 행성)**: {}\n", translate_planet(locale, pan.avayogi_planet)));
+    
+    let dagdha_names: Vec<String> = pan.dagdha_rashis.iter().map(|&r| rasi_name(locale, r).to_string()).collect();
+    s.push_str(&format!("- **Dagdha Rashis (연소된 사인)**: {}\n", dagdha_names.join(", ")));
+    s.push_str(&format!("- **Sunrise/Sunset (일출/일몰)**: {} / {} ({})\n\n", 
+        pan.sunrise.format("%H:%M:%S"), pan.sunset.format("%H:%M:%S"),
+        if pan.is_day_birth { "Day Birth ☀️" } else { "Night Birth 🌙" }
+    ));
+
+    // KP System cusps/significators
+    if let Some(kp) = &data.kp_analysis {
+        s.push_str("### 3.7 KP System unequal 하우스 및 지표성 (KP Significators)\n\n");
+        s.push_str("**KP House Cusps**:\n");
+        s.push_str("| Cusp | Longitude | Sign Lord | Star Lord | Sub Lord |\n");
+        s.push_str("| --- | --- | --- | --- | --- |\n");
+        for c in &kp.cusps {
+            s.push_str(&format!("| {} | {:.2}° | {} | {} | {} |\n", 
+                c.name, c.longitude, 
+                translate_planet(locale, c.sign_lord), translate_planet(locale, c.star_lord), translate_planet(locale, c.sub_lord)));
+        }
+        s.push_str("\n");
+
+        s.push_str("**KP Planet Points**:\n");
+        s.push_str("| Planet | Longitude | Sign Lord | Star Lord | Sub Lord |\n");
+        s.push_str("| --- | --- | --- | --- | --- |\n");
+        for p in &kp.planets {
+            s.push_str(&format!("| {} | {:.2}° | {} | {} | {} |\n", 
+                translate_planet_str(locale, &p.name), p.longitude, 
+                translate_planet(locale, p.sign_lord), translate_planet(locale, p.star_lord), translate_planet(locale, p.sub_lord)));
+        }
+        s.push_str("\n");
+
+        s.push_str("**KP Significators (지표성)**:\n");
+        s.push_str("| Planet | Occupied House | Owned Houses | Level 1 (Star Occ) | Level 2 (Occ) | Level 3 (Star Own) | Level 4 (Own) |\n");
+        s.push_str("| --- | --- | --- | --- | --- | --- | --- |\n");
+        for sig in &kp.significators {
+            let owned_str = sig.owned_houses.iter().map(|h| h.to_string()).collect::<Vec<_>>().join(", ");
+            let lvl1 = sig.level1.iter().map(|h| h.to_string()).collect::<Vec<_>>().join(", ");
+            let lvl2 = sig.level2.iter().map(|h| h.to_string()).collect::<Vec<_>>().join(", ");
+            let lvl3 = sig.level3.iter().map(|h| h.to_string()).collect::<Vec<_>>().join(", ");
+            let lvl4 = sig.level4.iter().map(|h| h.to_string()).collect::<Vec<_>>().join(", ");
+            s.push_str(&format!("| **{}** | {} | [{}] | [{}] | [{}] | [{}] | [{}] |\n", 
+                translate_planet(locale, sig.planet), sig.occupied_house, owned_str, lvl1, lvl2, lvl3, lvl4));
+        }
+        s.push_str("\n");
+    }
+
     // Yogas
     let (yogas_title, yoga_name_col, yoga_desc_col) = match locale {
         Locale::Ko => ("요가 (Yogas)", "요가명", "영향 및 설명"),
@@ -360,7 +674,7 @@ pub fn export_saju_to_markdown(data: &SajuAnalysisOutput, form: &crate::store::F
         Locale::Ko => "🌌 EON - 사주 명식 분석 보고서",
         Locale::En => "🌌 EON - Saju Analysis Report",
         Locale::Zh => "🌌 EON - 八字命理分析报告",
-        Locale::Ru => "🌌 EON - Отчет по анализу Бацзы",
+        Locale::Ru => "🌌 EON - Отчет по 분석 Бацзы",
     };
     s.push_str(&format!("# {}\n\n", title));
     s.push_str(&format_global_header(form, locale));
