@@ -323,6 +323,85 @@ pub enum TK {
     VedicYogaCategoryParivartana,
     VedicYogaCategoryArishta,
     VedicYogaCategoryNeecha,
+
+    // ── Vedic Compatibility ──────────────────────────────
+    CompatTitleInput,
+    CompatBtnRun,
+    CompatStatusLoading,
+    CompatHeaderOverall,
+    CompatScoreLabel,
+    CompatIsCompatibleGood,
+    CompatIsCompatibleCaution,
+    CompatMaleMangalDosha,
+    CompatFemaleMangalDosha,
+    CompatMangalDetected,
+    CompatMangalNotDetected,
+    CompatMangalCancelled,
+    CompatAshtakootaTableTitle,
+    CompatTableColKoota,
+    CompatTableColMax,
+    CompatTableColEarned,
+    CompatTableColDesc,
+    CompatExplanationGood,
+    CompatExplanationWarning,
+    CompatExplanationBad,
+    CompatExplanationSummary,
+
+    // 8 Kootas Names
+    KootaVarnaName,
+    KootaVashyaName,
+    KootaTaraName,
+    KootaYoniName,
+    KootaGrahaMaitriName,
+    KootaGanaName,
+    KootaBhakootName,
+    KootaNadiName,
+
+    // 8 Kootas Descriptions
+    KootaVarnaDescGood,
+    KootaVarnaDescBad,
+    KootaVashyaDescPattern,
+    KootaTaraDescGood,
+    KootaTaraDescOk,
+    KootaTaraDescBad,
+    KootaYoniDescPattern,
+    KootaGrahaMaitriDescGood,
+    KootaGrahaMaitriDescOk,
+    KootaGrahaMaitriDescBad,
+    KootaGanaDescGood,
+    KootaGanaDescOk,
+    KootaGanaDescBad,
+    KootaBhakootDescGood,
+    KootaBhakootDescBad,
+    KootaNadiDescGood,
+    KootaNadiDescBad,
+
+    // --- Shadbala ---
+    ShadbalaSthanaBala,
+    ShadbalaDigBala,
+    ShadbalaKalaBala,
+    ShadbalaChestaBala,
+    ShadbalaNaisargikaBala,
+    ShadbalaDrikBala,
+    ShadbalaRequired,
+    ShadbalaActual,
+    ShadbalaSatisfied,
+    ShadbalaUnsatisfied,
+    ShadbalaRupa,
+
+    // --- KP System ---
+    KpLevel1,
+    KpLevel2,
+    KpLevel3,
+    KpLevel4,
+    KpSignificatorsTitle,
+    KpHouseSignificatorsTitle,
+    KpTableColSignificators,
+
+    // --- Dasha ---
+    DashaMahaDasha,
+    DashaAntarDasha,
+    DashaPratyantarDasha,
 }
 
 /// Main translation dispatch function.
@@ -333,6 +412,80 @@ pub fn t(locale: Locale, key: TK) -> &'static str {
         Locale::En => en::translate(key),
         Locale::Zh => zh::translate(key),
         Locale::Ru => ru::translate(key),
+    }
+}
+
+pub fn translate_koota_name(locale: Locale, id: &str) -> &'static str {
+    match id {
+        "varna" => t(locale, TK::KootaVarnaName),
+        "vashya" => t(locale, TK::KootaVashyaName),
+        "tara" => t(locale, TK::KootaTaraName),
+        "yoni" => t(locale, TK::KootaYoniName),
+        "graha_maitri" => t(locale, TK::KootaGrahaMaitriName),
+        "gana" => t(locale, TK::KootaGanaName),
+        "bhakoot" => t(locale, TK::KootaBhakootName),
+        "nadi" => t(locale, TK::KootaNadiName),
+        _ => "",
+    }
+}
+
+pub fn translate_koota_desc(locale: Locale, id: &str, earned_points: f64) -> String {
+    match id {
+        "varna" => {
+            if earned_points == 1.0 {
+                t(locale, TK::KootaVarnaDescGood).to_string()
+            } else {
+                t(locale, TK::KootaVarnaDescBad).to_string()
+            }
+        }
+        "vashya" => {
+            t(locale, TK::KootaVashyaDescPattern).replace("{}", &format!("{:.1}", earned_points))
+        }
+        "tara" => {
+            if earned_points == 3.0 {
+                t(locale, TK::KootaTaraDescGood).to_string()
+            } else if earned_points == 1.5 {
+                t(locale, TK::KootaTaraDescOk).to_string()
+            } else {
+                t(locale, TK::KootaTaraDescBad).to_string()
+            }
+        }
+        "yoni" => {
+            t(locale, TK::KootaYoniDescPattern).replace("{}", &format!("{:.1}", earned_points))
+        }
+        "graha_maitri" => {
+            if earned_points >= 4.0 {
+                t(locale, TK::KootaGrahaMaitriDescGood).to_string()
+            } else if earned_points >= 2.0 {
+                t(locale, TK::KootaGrahaMaitriDescOk).to_string()
+            } else {
+                t(locale, TK::KootaGrahaMaitriDescBad).to_string()
+            }
+        }
+        "gana" => {
+            if earned_points >= 5.0 {
+                t(locale, TK::KootaGanaDescGood).to_string()
+            } else if earned_points >= 3.0 {
+                t(locale, TK::KootaGanaDescOk).to_string()
+            } else {
+                t(locale, TK::KootaGanaDescBad).to_string()
+            }
+        }
+        "bhakoot" => {
+            if earned_points == 7.0 {
+                t(locale, TK::KootaBhakootDescGood).to_string()
+            } else {
+                t(locale, TK::KootaBhakootDescBad).to_string()
+            }
+        }
+        "nadi" => {
+            if earned_points == 8.0 {
+                t(locale, TK::KootaNadiDescGood).to_string()
+            } else {
+                t(locale, TK::KootaNadiDescBad).to_string()
+            }
+        }
+        _ => "".to_string(),
     }
 }
 

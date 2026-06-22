@@ -147,7 +147,7 @@ impl VedicAnalysisReport {
             let timeline = crate::analysis::dasha::VimshottariDasha::calculate_timeline(
                 birth_time,
                 m.sidereal_deg,
-                2, // Mahadasha + Antardasha
+                3, // Maha + Antar + Pratyantar
             );
             let focus = if let Some(d) = timeline.first() {
                 format!("Current Major Period: {:?}", d.lord)
