@@ -69,6 +69,7 @@ pub struct AnalysisState {
     pub vedic: Signal<AnalysisTaskState<VedicAnalysisOutput>>,
     pub transit: Signal<AnalysisTaskState<TransitAnalysisOutput>>,
     pub tier: Signal<AnalysisTaskState<TierResult>>,
+    pub compat: Signal<AnalysisTaskState<eon_service::dto::VedicCompatibilityOutput>>,
     pub locale: Signal<Locale>,
 }
 
@@ -80,6 +81,7 @@ impl AnalysisState {
             vedic: Signal::new(AnalysisTaskState::default()),
             transit: Signal::new(AnalysisTaskState::default()),
             tier: Signal::new(AnalysisTaskState::default()),
+            compat: Signal::new(AnalysisTaskState::default()),
             locale: Signal::new(Locale::Ko),
         }
     }

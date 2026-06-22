@@ -19,9 +19,24 @@ pub struct KpPoint {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct KpSignificator {
+    pub planet: VedicPlanet,
+    pub occupied_house: u8,
+    pub owned_houses: Vec<u8>,
+    pub star_lord_occupied: u8,
+    pub star_lord_owned: Vec<u8>,
+    pub level1: Vec<u8>,
+    pub level2: Vec<u8>,
+    pub level3: Vec<u8>,
+    pub level4: Vec<u8>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct KpAnalysis {
     pub cusps: Vec<KpPoint>,
     pub planets: Vec<KpPoint>,
+    pub significators: Vec<KpSignificator>,
 }
 
 impl KpAnalysis {
@@ -33,9 +48,12 @@ impl KpAnalysis {
         natal_planets: &[VedicPosition],
         engine: &AstroEngine,
     ) -> Result<Self, String> {
-        // 1. Calculate Placidus unequal house cusps
+        // 1. Calculate Placidus unequal house cusps (fallback to Koch, Porphyry, or Equal if Placidus fails at polar latitudes)
         let (cusps, _) = engine
             .get_houses(time, latitude, longitude, b'P' as i32)
+            .or_else(|_| engine.get_houses(time, latitude, longitude, b'K' as i32))
+            .or_else(|_| engine.get_houses(time, latitude, longitude, b'O' as i32))
+            .or_else(|_| engine.get_houses(time, latitude, longitude, b'E' as i32))
             .map_err(|e| e.to_string())?;
 
         let mut kp_cusps = Vec::new();
@@ -70,11 +88,124 @@ impl KpAnalysis {
             });
         }
 
+        // 3. Calculate Significators
+        let cusp_longs: Vec<f64> = kp_cusps.iter().map(|c| c.longitude).collect();
+        let name_to_planet = |name: &str| -> Option<VedicPlanet> {
+            match name {
+                "Sun" => Some(VedicPlanet::Sun),
+                "Moon" => Some(VedicPlanet::Moon),
+                "Mars" => Some(VedicPlanet::Mars),
+                "Mercury" => Some(VedicPlanet::Mercury),
+                "Jupiter" => Some(VedicPlanet::Jupiter),
+                "Venus" => Some(VedicPlanet::Venus),
+                "Saturn" => Some(VedicPlanet::Saturn),
+                "Rahu" => Some(VedicPlanet::Rahu),
+                "Ketu" => Some(VedicPlanet::Ketu),
+                "Ascendant" => Some(VedicPlanet::Ascendant),
+                _ => None,
+            }
+        };
+
+        let get_planet_long = |planet: VedicPlanet, planets_list: &[KpPoint]| -> f64 {
+            planets_list.iter()
+                .find(|kp_p| name_to_planet(&kp_p.name) == Some(planet))
+                .map(|kp_p| kp_p.longitude)
+                .unwrap_or(0.0)
+        };
+
+        let owned_houses_of = |planet: VedicPlanet, cusps_list: &[KpPoint]| -> Vec<u8> {
+            let mut houses = Vec::new();
+            for (idx, cusp) in cusps_list.iter().enumerate() {
+                if cusp.sign_lord == planet {
+                    houses.push((idx + 1) as u8);
+                }
+            }
+            houses
+        };
+
+        let mut significators = Vec::new();
+        let target_planets = [
+            VedicPlanet::Sun,
+            VedicPlanet::Moon,
+            VedicPlanet::Mars,
+            VedicPlanet::Mercury,
+            VedicPlanet::Jupiter,
+            VedicPlanet::Venus,
+            VedicPlanet::Saturn,
+            VedicPlanet::Rahu,
+            VedicPlanet::Ketu,
+        ];
+
+        for &p in &target_planets {
+            let p_long = get_planet_long(p, &kp_planets);
+            let occupied_house = get_kp_house(p_long, &cusp_longs);
+            let owned_houses = owned_houses_of(p, &kp_cusps);
+
+            // Find planet's star lord
+            let star_lord = kp_planets.iter()
+                .find(|kp_p| name_to_planet(&kp_p.name) == Some(p))
+                .map(|kp_p| kp_p.star_lord)
+                .unwrap_or(VedicPlanet::Sun);
+
+            let star_lord_long = get_planet_long(star_lord, &kp_planets);
+            let star_lord_occupied = get_kp_house(star_lord_long, &cusp_longs);
+            let star_lord_owned = owned_houses_of(star_lord, &kp_cusps);
+
+            let level1 = vec![star_lord_occupied];
+            let level2 = vec![occupied_house];
+            let level3 = star_lord_owned.clone();
+            let level4 = owned_houses.clone();
+
+            significators.push(KpSignificator {
+                planet: p,
+                occupied_house,
+                owned_houses,
+                star_lord_occupied,
+                star_lord_owned,
+                level1,
+                level2,
+                level3,
+                level4,
+            });
+        }
+
         Ok(Self {
             cusps: kp_cusps,
             planets: kp_planets,
+            significators,
         })
     }
+}
+
+fn get_kp_house(deg: f64, cusps: &[f64]) -> u8 {
+    if cusps.len() < 12 {
+        return 1;
+    }
+    for i in 0..11 {
+        let c1 = cusps[i];
+        let c2 = cusps[i + 1];
+        if c2 > c1 {
+            if deg >= c1 && deg < c2 {
+                return (i + 1) as u8;
+            }
+        } else {
+            if deg >= c1 || deg < c2 {
+                return (i + 1) as u8;
+            }
+        }
+    }
+    let c12 = cusps[11];
+    let c1 = cusps[0];
+    if c1 > c12 {
+        if deg >= c12 && deg < c1 {
+            return 12;
+        }
+    } else {
+        if deg >= c12 || deg < c1 {
+            return 12;
+        }
+    }
+    12
 }
 
 fn calculate_lords(sidereal: f64) -> (u8, u8, u8, VedicPlanet, VedicPlanet, VedicPlanet) {

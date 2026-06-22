@@ -12,12 +12,6 @@ use crate::components::shared::birth_form::BirthForm;
 // 전역 상태에서 이미 계산된 saju, vedic 데이터를 활용하거나
 // 없으면 이 탭에서 직접 호출합니다.
 
-const PLANETS: &[VedicPlanet] = &[
-    VedicPlanet::Sun, VedicPlanet::Moon, VedicPlanet::Mars,
-    VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus,
-    VedicPlanet::Saturn, VedicPlanet::Rahu, VedicPlanet::Ketu,
-];
-
 fn planet_bar_color(p: VedicPlanet) -> &'static str {
     match p {
         VedicPlanet::Sun => "bg-orange-500",
@@ -250,65 +244,111 @@ pub fn StrengthTab() -> Element {
             // 베딕 샤드발라
             if has_vedic {
                 if let Some(vedic) = &state.vedic.read().data {
-                    div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5",
-                        h3 { class: "text-lg font-semibold text-blue-300 mb-4", "{t(locale, TK::SectionStrength)}" }
-                        div { class: "space-y-3",
+                    div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl",
+                        div { class: "flex items-center justify-between border-b border-slate-800 pb-4",
+                            h3 { class: "text-lg font-bold bg-gradient-to-r from-blue-200 to-indigo-400 bg-clip-text text-transparent",
+                                "{t(locale, TK::SectionStrength)} (Shadbala)"
+                            }
+                            span { class: "text-xs text-slate-500 font-mono", "1 Rupa = 60 Shashtiamsa" }
+                        }
+                        
+                        div { class: "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6",
                             {
-                                // 최대 점수를 찾아서 바 비율 계산
+                                // 7대 행성만 필터링하여 Shadbala 계산
+                                let target_planets = [
+                                    VedicPlanet::Sun, VedicPlanet::Moon, VedicPlanet::Mars,
+                                    VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus,
+                                    VedicPlanet::Saturn
+                                ];
+                                
                                 let strengths: Vec<_> = vedic.chart.planets.iter()
-                                    .filter(|p| PLANETS.contains(&p.planet))
+                                    .filter(|p| target_planets.contains(&p.planet))
                                     .map(|p| (p.planet, StrengthEngine::calculate(p, &vedic.chart)))
                                     .collect();
-                                let max_score = strengths.iter().map(|(_, s)| s.total_score).fold(0.0_f64, f64::max).max(1.0);
- 
+
                                 rsx! {
                                     {strengths.iter().map(|(planet, s)| {
-                                        let pct = (s.total_score / max_score * 100.0) as u32;
+                                        let rupa_req = match planet {
+                                            VedicPlanet::Sun => 6.5,
+                                            VedicPlanet::Moon => 6.0,
+                                            VedicPlanet::Mars => 5.0,
+                                            VedicPlanet::Mercury => 7.0,
+                                            VedicPlanet::Jupiter => 6.5,
+                                            VedicPlanet::Venus => 5.5,
+                                            VedicPlanet::Saturn => 5.0,
+                                            _ => 0.0,
+                                        };
+                                        let req_score = rupa_req * 60.0;
+                                        let sat_ratio = (s.total_score / req_score * 100.0) as u32;
+                                        let is_satisfied = s.total_score >= req_score;
+                                        
+                                        let badge_class = if is_satisfied {
+                                            "bg-emerald-950/40 text-emerald-400 border-emerald-900/50"
+                                        } else {
+                                            "bg-rose-950/40 text-rose-400 border-rose-900/50"
+                                        };
+                                        
+                                        let badge_lbl = if is_satisfied {
+                                            t(locale, TK::ShadbalaSatisfied)
+                                        } else {
+                                            t(locale, TK::ShadbalaUnsatisfied)
+                                        };
+                                        
                                         let bar_color = planet_bar_color(*planet);
-                                        let status_color = match s.status.as_str() {
-                                            "Exalted" => "text-yellow-400",
-                                            "Strong" => "text-emerald-400",
-                                            "Debilitated" | "Weak" => "text-red-400",
-                                            _ => "text-slate-400",
-                                        };
-                                        let status_lbl = match locale {
-                                            Locale::Ko => match s.status.as_str() {
-                                                "Exalted" => "고양 (Exalted)",
-                                                "Strong" => "강함",
-                                                "Weak" => "약함",
-                                                "Debilitated" => "쇠퇴 (Debilitated)",
-                                                _ => s.status.as_str(),
-                                            },
-                                            Locale::En => s.status.as_str(),
-                                            Locale::Zh => match s.status.as_str() {
-                                                "Exalted" => "庙旺",
-                                                "Strong" => "强旺",
-                                                "Weak" => "虚弱",
-                                                "Debilitated" => "落陷",
-                                                _ => s.status.as_str(),
-                                            },
-                                            Locale::Ru => match s.status.as_str() {
-                                                "Exalted" => "Экзальтация",
-                                                "Strong" => "Сильный",
-                                                "Weak" => "Слабый",
-                                                "Debilitated" => "Падение",
-                                                _ => s.status.as_str(),
-                                            },
-                                        };
+                                        
+                                        let factors = vec![
+                                            (t(locale, TK::ShadbalaSthanaBala), s.sthana_bala, "bg-blue-500"),
+                                            (t(locale, TK::ShadbalaDigBala), s.dig_bala, "bg-green-500"),
+                                            (t(locale, TK::ShadbalaKalaBala), s.kala_bala, "bg-purple-500"),
+                                            (t(locale, TK::ShadbalaChestaBala), s.chesta_bala, "bg-cyan-500"),
+                                            (t(locale, TK::ShadbalaNaisargikaBala), s.naisargika_bala, "bg-amber-500"),
+                                            (t(locale, TK::ShadbalaDrikBala), s.drik_bala, "bg-red-500"),
+                                        ];
+
                                         rsx! {
-                                            div { class: "flex items-center gap-3",
-                                                div { class: "w-24 text-sm font-medium text-right text-slate-300 shrink-0",
-                                                    "{translate_planet(locale, *planet)}"
-                                                }
-                                                div { class: "flex-1 h-4 bg-slate-800 rounded-full overflow-hidden",
-                                                    div {
-                                                        class: "h-full {bar_color} rounded-full transition-all duration-1000",
-                                                        style: "width: {pct}%"
+                                            div { class: "bg-slate-950/40 border border-slate-800/80 rounded-xl p-4 space-y-4 hover:border-slate-700/60 transition-all duration-300 shadow-md",
+                                                // 카드 헤더
+                                                div { class: "flex justify-between items-center",
+                                                    div { class: "flex items-center gap-2",
+                                                        span { class: "w-2.5 h-2.5 rounded-full {bar_color}" }
+                                                        span { class: "text-sm font-bold text-slate-200", "{translate_planet(locale, *planet)}" }
+                                                    }
+                                                    span { class: "px-2 py-0.5 rounded text-[10px] font-bold border {badge_class}",
+                                                        "{badge_lbl} ({sat_ratio}%)"
                                                     }
                                                 }
-                                                div { class: "w-24 text-xs text-right shrink-0",
-                                                    span { class: "font-mono text-slate-400", "{s.total_score:.0}" }
-                                                    span { class: "ml-2 {status_color} font-medium", "{status_lbl}" }
+                                                
+                                                // 총점 요약
+                                                div { class: "bg-slate-900/50 border border-slate-900 rounded-lg p-2.5 flex justify-between items-center text-xs font-mono",
+                                                    div { class: "space-y-0.5",
+                                                        p { class: "text-[9px] text-slate-500 uppercase tracking-wider", "{t(locale, TK::ShadbalaActual)}" }
+                                                        p { class: "text-slate-200 font-bold", "{s.total_score:.1} / {req_score:.0} pt" }
+                                                    }
+                                                    div { class: "text-right space-y-0.5",
+                                                        p { class: "text-[9px] text-slate-500 uppercase tracking-wider", "{t(locale, TK::ShadbalaRequired)}" }
+                                                        p { class: "text-indigo-400 font-bold", "{s.total_score / 60.0:.2} / {rupa_req:.1} R" }
+                                                    }
+                                                }
+                                                
+                                                // 6대 강도 요인 리스트
+                                                div { class: "space-y-2 pt-1",
+                                                    {factors.iter().map(|(label, val, f_color)| {
+                                                        let f_pct = (*val / 60.0 * 100.0).clamp(0.0, 100.0) as u32;
+                                                        rsx! {
+                                                            div { class: "space-y-1",
+                                                                div { class: "flex justify-between text-[10px] text-slate-400 font-medium",
+                                                                    span { "{label}" }
+                                                                    span { class: "font-mono font-bold text-slate-350", "{val:.1}" }
+                                                                }
+                                                                div { class: "h-1.5 bg-slate-900 rounded-full overflow-hidden",
+                                                                    div {
+                                                                        class: "h-full {f_color} rounded-full transition-all duration-500",
+                                                                        style: "width: {f_pct}%"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    })}
                                                 }
                                             }
                                         }

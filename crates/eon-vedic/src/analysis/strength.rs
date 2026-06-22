@@ -25,6 +25,12 @@ pub struct PlanetStrength {
     pub kashta_phala: f64,          // Inauspiciousness (0-60)
     pub total_score: f64,           // Aggregate for MVP
     pub status: String,             // "Exalted", "Debilitated", "Strong", "Weak", "Neutral"
+    pub sthana_bala: f64,
+    pub dig_bala: f64,
+    pub kala_bala: f64,
+    pub chesta_bala: f64,
+    pub naisargika_bala: f64,
+    pub drik_bala: f64,
 }
 
 pub struct StrengthEngine;
@@ -78,6 +84,13 @@ impl StrengthEngine {
             "Neutral".to_string()
         };
 
+        let sthana_bala = ex_score + sapta_score + kendra_bala + drekkana_bala + ojayugmarasyamsa_bala;
+        let dig_bala = dig_score;
+        let kala_bala = kala_score;
+        let chesta_bala = chesta_score;
+        let naisargika_bala = naisargika_score;
+        let drik_bala = drik_score.clamp(-60.0, 60.0);
+
         PlanetStrength {
             planet: pos.planet,
             exaltation_score: ex_score,
@@ -97,6 +110,12 @@ impl StrengthEngine {
             kashta_phala,
             total_score: total,
             status,
+            sthana_bala,
+            dig_bala,
+            kala_bala,
+            chesta_bala,
+            naisargika_bala,
+            drik_bala,
         }
     }
 

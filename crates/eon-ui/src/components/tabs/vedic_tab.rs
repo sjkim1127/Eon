@@ -2,9 +2,10 @@ use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
 use crate::i18n::{
     t, TK, Locale, translate_planet, translate_planet_str, rasi_name, rasi_name_short,
-    translate_avastha, nakshatra_lord_localized, rasi_lord_localized
+    translate_avastha, nakshatra_lord_localized, rasi_lord_localized,
+    translate_koota_name, translate_koota_desc
 };
-use eon_service::dto::{VedicAnalysisInput, AnalysisInput, VedicCompatibilityInput, VedicCompatibilityOutput};
+use eon_service::dto::{VedicAnalysisInput, AnalysisInput, VedicCompatibilityInput};
 use eon_service::facade;
 use eon_vedic::planets::VedicPlanet;
 use crate::components::shared::birth_form::BirthForm;
@@ -887,12 +888,13 @@ pub fn VedicTab() -> Element {
     let mut partner_minute = use_signal(|| 30);
     let mut partner_lat = use_signal(|| 37.5665);
     let mut partner_lon = use_signal(|| 126.9780);
-    let mut compat_status = use_signal(|| TaskStatus::Idle);
-    let mut compat_data = use_signal(|| Option::<VedicCompatibilityOutput>::None);
 
     // Dasha inner selection: 0 = Vimshottari, 1 = Chara, 2 = Kala Chakra
     let mut active_dasha_type = use_signal(|| 0);
     let mut selected_varga = use_signal(|| "rasi".to_string());
+    
+    let mut expanded_mahadasha = use_signal(|| Option::<usize>::None);
+    let mut expanded_antardasha = use_signal(|| Option::<usize>::None);
 
 
     let run_analysis = move |_| {
@@ -924,8 +926,8 @@ pub fn VedicTab() -> Element {
 
     let run_compatibility = move |_| {
         spawn(async move {
-            compat_status.write();
-            *compat_status.write() = TaskStatus::Loading;
+            state.compat.write().status = TaskStatus::Loading;
+            state.compat.write().error = None;
             let form = state.form.read().clone();
             let input = VedicCompatibilityInput {
                 male: AnalysisInput {
@@ -945,11 +947,12 @@ pub fn VedicTab() -> Element {
             };
             match facade::analyze_vedic_compatibility(input) {
                 Ok(res) => {
-                    *compat_data.write() = Some(res);
-                    *compat_status.write() = TaskStatus::Success;
+                    state.compat.write().data = Some(res);
+                    state.compat.write().status = TaskStatus::Success;
                 }
                 Err(e) => {
-                    *compat_status.write() = TaskStatus::Error(e.to_string());
+                    state.compat.write().error = Some(e.to_string());
+                    state.compat.write().status = TaskStatus::Error(e.to_string());
                 }
             }
         });
@@ -1709,63 +1712,158 @@ pub fn VedicTab() -> Element {
                                 1 => rsx! {
                                     // KP System Tab
                                     if let Some(kp) = &data.kp_analysis {
-                                        div { class: "grid grid-cols-1 lg:grid-cols-2 gap-6",
-                                            // Cusps
-                                            div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
-                                                div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
-                                                    h3 { class: "font-semibold text-slate-200", "KP Unequal House Cusps (하우스 경계)" }
-                                                }
-                                                div { class: "overflow-x-auto",
-                                                    table { class: "w-full text-sm",
-                                                        thead {
-                                                            tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
-                                                                th { class: "px-4 py-3 text-left font-medium", "하우스" }
-                                                                th { class: "px-4 py-3 text-left font-medium", "황경 (Sidereal)" }
-                                                                th { class: "px-4 py-3 text-left font-medium", "Sign Lord" }
-                                                                th { class: "px-4 py-3 text-left font-medium", "Star Lord" }
-                                                                th { class: "px-4 py-3 text-left font-medium", "Sub Lord" }
+                                        div { class: "space-y-6",
+                                            div { class: "grid grid-cols-1 lg:grid-cols-2 gap-6",
+                                                // Cusps
+                                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
+                                                    div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
+                                                        h3 { class: "font-semibold text-slate-200", "KP Unequal House Cusps (하우스 경계)" }
+                                                    }
+                                                    div { class: "overflow-x-auto",
+                                                        table { class: "w-full text-sm",
+                                                            thead {
+                                                                tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
+                                                                    th { class: "px-4 py-3 text-left font-medium", "하우스" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "황경 (Sidereal)" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "Sign Lord" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "Star Lord" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "Sub Lord" }
+                                                                }
+                                                            }
+                                                            tbody { class: "divide-y divide-slate-800",
+                                                                {kp.cusps.iter().map(|c| rsx! {
+                                                                    tr { class: "hover:bg-slate-800/20 transition-colors",
+                                                                        td { class: "px-4 py-3 font-bold text-indigo-300", "{c.name}" }
+                                                                        td { class: "px-4 py-3 font-mono text-xs text-slate-400", "{c.longitude:.2}° ({rasi_name(c.rasi)})" }
+                                                                        td { class: "px-4 py-3 text-xs font-semibold text-orange-400", "{planet_name_kr(c.sign_lord)}" }
+                                                                        td { class: "px-4 py-3 text-xs font-semibold text-emerald-400", "{planet_name_kr(c.star_lord)}" }
+                                                                        td { class: "px-4 py-3 text-xs font-semibold text-yellow-400", "{planet_name_kr(c.sub_lord)}" }
+                                                                    }
+                                                                })}
                                                             }
                                                         }
-                                                        tbody { class: "divide-y divide-slate-800",
-                                                            {kp.cusps.iter().map(|c| rsx! {
-                                                                tr { class: "hover:bg-slate-800/20 transition-colors",
-                                                                    td { class: "px-4 py-3 font-bold text-indigo-300", "{c.name}" }
-                                                                    td { class: "px-4 py-3 font-mono text-xs text-slate-400", "{c.longitude:.2}° ({rasi_name(c.rasi)})" }
-                                                                    td { class: "px-4 py-3 text-xs font-semibold text-orange-400", "{planet_name_kr(c.sign_lord)}" }
-                                                                    td { class: "px-4 py-3 text-xs font-semibold text-emerald-400", "{planet_name_kr(c.star_lord)}" }
-                                                                    td { class: "px-4 py-3 text-xs font-semibold text-yellow-400", "{planet_name_kr(c.sub_lord)}" }
+                                                    }
+                                                }
+                                                // Planets
+                                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
+                                                    div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
+                                                        h3 { class: "font-semibold text-slate-200", "KP Planet Significators (행성 지배자)" }
+                                                    }
+                                                    div { class: "overflow-x-auto",
+                                                        table { class: "w-full text-sm",
+                                                            thead {
+                                                                tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
+                                                                    th { class: "px-4 py-3 text-left font-medium", "행성" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "황경 (Sidereal)" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "Sign Lord" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "Star Lord" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "Sub Lord" }
                                                                 }
-                                                            })}
+                                                            }
+                                                            tbody { class: "divide-y divide-slate-800",
+                                                                {kp.planets.iter().map(|p| rsx! {
+                                                                    tr { class: "hover:bg-slate-800/20 transition-colors",
+                                                                        td { class: "px-4 py-3 font-bold text-slate-200", "{p.name}" }
+                                                                        td { class: "px-4 py-3 font-mono text-xs text-slate-400", "{p.longitude:.2}° ({rasi_name(p.rasi)})" }
+                                                                        td { class: "px-4 py-3 text-xs font-semibold text-orange-400", "{planet_name_kr(p.sign_lord)}" }
+                                                                        td { class: "px-4 py-3 text-xs font-semibold text-emerald-400", "{planet_name_kr(p.star_lord)}" }
+                                                                        td { class: "px-4 py-3 text-xs font-semibold text-yellow-400", "{planet_name_kr(p.sub_lord)}" }
+                                                                    }
+                                                                })}
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
-                                            // Planets
-                                            div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
-                                                div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
-                                                    h3 { class: "font-semibold text-slate-200", "KP Planet Significators (행성 지배자)" }
-                                                }
-                                                div { class: "overflow-x-auto",
-                                                    table { class: "w-full text-sm",
-                                                        thead {
-                                                            tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
-                                                                th { class: "px-4 py-3 text-left font-medium", "행성" }
-                                                                th { class: "px-4 py-3 text-left font-medium", "황경 (Sidereal)" }
-                                                                th { class: "px-4 py-3 text-left font-medium", "Sign Lord" }
-                                                                th { class: "px-4 py-3 text-left font-medium", "Star Lord" }
-                                                                th { class: "px-4 py-3 text-left font-medium", "Sub Lord" }
+
+                                            div { class: "grid grid-cols-1 lg:grid-cols-2 gap-6",
+                                                // Planet Significators Table
+                                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
+                                                    div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
+                                                        h3 { class: "font-semibold text-slate-200", "{t(locale, TK::KpSignificatorsTitle)}" }
+                                                    }
+                                                    div { class: "overflow-x-auto",
+                                                        table { class: "w-full text-sm",
+                                                            thead {
+                                                                tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
+                                                                    th { class: "px-4 py-3 text-left font-medium", "행성" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::KpLevel1)}" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::KpLevel2)}" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::KpLevel3)}" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::KpLevel4)}" }
+                                                                }
+                                                            }
+                                                            tbody { class: "divide-y divide-slate-800",
+                                                                {kp.significators.iter().map(|sig| {
+                                                                    let p_color = planet_color(sig.planet);
+                                                                    let format_houses = |hs: &[u8]| {
+                                                                        if hs.is_empty() {
+                                                                            "-".to_string()
+                                                                        } else {
+                                                                            hs.iter().map(|h| h.to_string()).collect::<Vec<_>>().join(", ")
+                                                                        }
+                                                                    };
+                                                                    rsx! {
+                                                                        tr { class: "hover:bg-slate-800/20 transition-colors",
+                                                                            td { class: "px-4 py-3 font-bold {p_color}", "{planet_name_kr(sig.planet)}" }
+                                                                            td { class: "px-4 py-3 font-mono text-slate-350 text-xs", "{format_houses(&sig.level1)}" }
+                                                                            td { class: "px-4 py-3 font-mono text-slate-350 text-xs", "{format_houses(&sig.level2)}" }
+                                                                            td { class: "px-4 py-3 font-mono text-slate-350 text-xs", "{format_houses(&sig.level3)}" }
+                                                                            td { class: "px-4 py-3 font-mono text-slate-350 text-xs", "{format_houses(&sig.level4)}" }
+                                                                        }
+                                                                    }
+                                                                })}
                                                             }
                                                         }
-                                                        tbody { class: "divide-y divide-slate-800",
-                                                            {kp.planets.iter().map(|p| rsx! {
-                                                                tr { class: "hover:bg-slate-800/20 transition-colors",
-                                                                    td { class: "px-4 py-3 font-bold text-slate-200", "{p.name}" }
-                                                                    td { class: "px-4 py-3 font-mono text-xs text-slate-400", "{p.longitude:.2}° ({rasi_name(p.rasi)})" }
-                                                                    td { class: "px-4 py-3 text-xs font-semibold text-orange-400", "{planet_name_kr(p.sign_lord)}" }
-                                                                    td { class: "px-4 py-3 text-xs font-semibold text-emerald-400", "{planet_name_kr(p.star_lord)}" }
-                                                                    td { class: "px-4 py-3 text-xs font-semibold text-yellow-400", "{planet_name_kr(p.sub_lord)}" }
+                                                    }
+                                                }
+
+                                                // House Significators Table
+                                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
+                                                    div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
+                                                        h3 { class: "font-semibold text-slate-200", "{t(locale, TK::KpHouseSignificatorsTitle)}" }
+                                                    }
+                                                    div { class: "overflow-x-auto",
+                                                        table { class: "w-full text-sm",
+                                                            thead {
+                                                                tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
+                                                                    th { class: "px-4 py-3 text-left font-medium", "하우스" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "Level A" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "Level B" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "Level C" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "Level D" }
                                                                 }
-                                                            })}
+                                                            }
+                                                            tbody { class: "divide-y divide-slate-800",
+                                                                {(1..=12).map(|h| {
+                                                                    let mut level_a_list = Vec::new();
+                                                                    let mut level_b_list = Vec::new();
+                                                                    let mut level_c_list = Vec::new();
+                                                                    let mut level_d_list = Vec::new();
+                                                                    for sig in &kp.significators {
+                                                                        if sig.level1.contains(&h) { level_a_list.push(planet_name_kr(sig.planet)); }
+                                                                        if sig.level2.contains(&h) { level_b_list.push(planet_name_kr(sig.planet)); }
+                                                                        if sig.level3.contains(&h) { level_c_list.push(planet_name_kr(sig.planet)); }
+                                                                        if sig.level4.contains(&h) { level_d_list.push(planet_name_kr(sig.planet)); }
+                                                                    }
+                                                                    let format_list = |list: &[&str]| {
+                                                                        if list.is_empty() {
+                                                                            "-".to_string()
+                                                                        } else {
+                                                                            list.join(", ")
+                                                                        }
+                                                                    };
+                                                                    rsx! {
+                                                                        tr { class: "hover:bg-slate-800/20 transition-colors",
+                                                                            td { class: "px-4 py-3 font-bold text-indigo-300", "{h}하우스" }
+                                                                            td { class: "px-4 py-3 text-slate-300 text-xs", "{format_list(&level_a_list)}" }
+                                                                            td { class: "px-4 py-3 text-slate-300 text-xs", "{format_list(&level_b_list)}" }
+                                                                            td { class: "px-4 py-3 text-slate-300 text-xs", "{format_list(&level_c_list)}" }
+                                                                            td { class: "px-4 py-3 text-slate-300 text-xs", "{format_list(&level_d_list)}" }
+                                                                        }
+                                                                    }
+                                                                })}
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1819,38 +1917,174 @@ pub fn VedicTab() -> Element {
 
                                         match *active_dasha_type.read() {
                                             0 => rsx! {
-                                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
-                                                    div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
-                                                        h3 { class: "font-semibold text-slate-200", "빔쇼따리 마하다샤 (Vimshottari Mahadasha)" }
+                                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl",
+                                                    div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5 flex justify-between items-center",
+                                                        h3 { class: "font-semibold text-slate-200", "빔쇼따리 3단계 다샤 타임라인 (Vimshottari Dasha Hierarchy)" }
+                                                        span { class: "text-[10px] text-indigo-400 bg-indigo-950/40 px-2 py-0.5 rounded border border-indigo-900/30", "대운 → 소운 → 세운 아코디언" }
                                                     }
                                                     div { class: "overflow-x-auto",
                                                         table { class: "w-full text-sm",
                                                             thead {
-                                                                tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
-                                                                    th { class: "px-4 py-3 text-left font-medium", "Lord" }
-                                                                    th { class: "px-4 py-3 text-left font-medium", "시작" }
-                                                                    th { class: "px-4 py-3 text-left font-medium", "종료" }
-                                                                    th { class: "px-4 py-3 text-left font-medium", "기간" }
-                                                                    th { class: "px-4 py-3 text-left font-medium", "상태" }
+                                                                tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase border-b border-slate-800",
+                                                                    th { class: "px-4 py-3 text-left font-medium w-1/5", "{t(locale, TK::DashaMahaDasha)}" }
+                                                                    th { class: "px-4 py-3 text-left font-medium w-1/5", "시작" }
+                                                                    th { class: "px-4 py-3 text-left font-medium w-1/5", "종료" }
+                                                                    th { class: "px-4 py-3 text-left font-medium w-1/5", "기간" }
+                                                                    th { class: "px-4 py-3 text-left font-medium w-1/5", "상태" }
                                                                 }
                                                             }
                                                             tbody { class: "divide-y divide-slate-800",
-                                                                {data.report.dasha_timeline.iter().map(|d| {
+                                                                {data.report.dasha_timeline.iter().enumerate().map(|(i, d)| {
                                                                     let color = planet_color(d.lord);
-                                                                    let start_str = d.start_time.format("%Y-%m").to_string();
-                                                                    let end_str = d.end_time.format("%Y-%m").to_string();
+                                                                    let start_str = d.start_time.format("%Y-%m-%d").to_string();
+                                                                    let end_str = d.end_time.format("%Y-%m-%d").to_string();
                                                                     let duration_years = (d.end_time - d.start_time).num_days() / 365;
                                                                     let now = chrono::Utc::now();
-                                                                    let is_current = d.start_time <= now && now < d.end_time;
+                                                                    let is_current_maha = d.start_time <= now && now < d.end_time;
+                                                                    let is_expanded_maha = *expanded_mahadasha.read() == Some(i);
+                                                                    
+                                                                    let row_bg = if is_current_maha {
+                                                                        "bg-blue-950/20 hover:bg-blue-950/30 font-semibold"
+                                                                    } else {
+                                                                        "hover:bg-slate-800/20"
+                                                                    };
+                                                                    
+                                                                    let toggle_maha = move |_| {
+                                                                        *expanded_antardasha.write() = None;
+                                                                        *expanded_mahadasha.write() = if is_expanded_maha {
+                                                                            None
+                                                                        } else {
+                                                                            Some(i)
+                                                                        };
+                                                                    };
+
                                                                     rsx! {
-                                                                        tr { class: "hover:bg-slate-800/20 transition-colors",
-                                                                            td { class: "px-4 py-3 font-bold {color}", "{planet_name_kr(d.lord)}" }
-                                                                            td { class: "px-4 py-3 font-mono text-slate-300 text-xs", "{start_str}" }
-                                                                            td { class: "px-4 py-3 font-mono text-slate-400 text-xs", "{end_str}" }
-                                                                            td { class: "px-4 py-3 text-slate-400 text-xs", "{duration_years}년" }
-                                                                            td { class: "px-4 py-3",
-                                                                                if is_current {
-                                                                                    span { class: "px-2 py-0.5 rounded-full text-xs bg-blue-600/40 text-blue-200 border border-blue-500/40 font-semibold", "⬤ 현재 대운" }
+                                                                        tr { 
+                                                                            class: "cursor-pointer transition-colors {row_bg}",
+                                                                            onclick: toggle_maha,
+                                                                            td { class: "px-4 py-3.5 font-bold {color} flex items-center gap-1.5", 
+                                                                                span { class: "text-[10px] text-slate-500", if is_expanded_maha { "▼" } else { "▶" } }
+                                                                                "{planet_name_kr(d.lord)}" 
+                                                                            }
+                                                                            td { class: "px-4 py-3.5 font-mono text-slate-350 text-xs", "{start_str}" }
+                                                                            td { class: "px-4 py-3.5 font-mono text-slate-400 text-xs", "{end_str}" }
+                                                                            td { class: "px-4 py-3.5 text-slate-400 text-xs", "{duration_years}년" }
+                                                                            td { class: "px-4 py-3.5",
+                                                                                if is_current_maha {
+                                                                                    span { class: "px-2.5 py-0.5 rounded-full text-[10px] bg-blue-600/40 text-blue-200 border border-blue-500/40 font-bold animate-pulse", "⬤ 현재 대운" }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                        
+                                                                        if is_expanded_maha {
+                                                                            tr { class: "bg-slate-950/40",
+                                                                                td { colspan: 5, class: "p-4 border-t border-b border-slate-850",
+                                                                                    div { class: "rounded-xl border border-slate-800/80 bg-slate-900/20 overflow-hidden",
+                                                                                        table { class: "w-full text-xs",
+                                                                                            thead {
+                                                                                                tr { class: "bg-slate-800/40 text-[10px] text-slate-500 uppercase font-bold border-b border-slate-800",
+                                                                                                    th { class: "px-4 py-2 text-left w-1/5", "{t(locale, TK::DashaAntarDasha)}" }
+                                                                                                    th { class: "px-4 py-2 text-left w-1/5", "시작" }
+                                                                                                    th { class: "px-4 py-2 text-left w-1/5", "종료" }
+                                                                                                    th { class: "px-4 py-2 text-left w-1/5", "기간" }
+                                                                                                    th { class: "px-4 py-2 text-left w-1/5", "상태" }
+                                                                                                }
+                                                                                            }
+                                                                                            tbody { class: "divide-y divide-slate-850",
+                                                                                                {d.sub_dashas.iter().enumerate().map(|(j, sub)| {
+                                                                                                    let sub_color = planet_color(sub.lord);
+                                                                                                    let sub_start_str = sub.start_time.format("%Y-%m-%d").to_string();
+                                                                                                    let sub_end_str = sub.end_time.format("%Y-%m-%d").to_string();
+                                                                                                    let sub_duration_days = (sub.end_time - sub.start_time).num_days();
+                                                                                                    let sub_duration_months = (sub_duration_days as f64 / 30.436).round() as i32;
+                                                                                                    let is_current_antar = sub.start_time <= now && now < sub.end_time;
+                                                                                                    let is_expanded_antar = *expanded_antardasha.read() == Some(j);
+                                                                                                    
+                                                                                                    let sub_row_bg = if is_current_antar {
+                                                                                                        "bg-emerald-950/20 hover:bg-emerald-950/30 font-semibold"
+                                                                                                    } else {
+                                                                                                        "hover:bg-slate-800/10"
+                                                                                                    };
+                                                                                                    
+                                                                                                    let toggle_antar = move |_| {
+                                                                                                        *expanded_antardasha.write() = if is_expanded_antar {
+                                                                                                            None
+                                                                                                        } else {
+                                                                                                            Some(j)
+                                                                                                        };
+                                                                                                    };
+
+                                                                                                    rsx! {
+                                                                                                        tr { 
+                                                                                                            class: "cursor-pointer transition-colors {sub_row_bg}",
+                                                                                                            onclick: toggle_antar,
+                                                                                                            td { class: "px-4 py-2.5 font-bold {sub_color} flex items-center gap-1.5", 
+                                                                                                                span { class: "text-[9px] text-slate-600", if is_expanded_antar { "▼" } else { "▶" } }
+                                                                                                                "{planet_name_kr(sub.lord)}" 
+                                                                                                            }
+                                                                                                            td { class: "px-4 py-2.5 font-mono text-slate-350", "{sub_start_str}" }
+                                                                                                            td { class: "px-4 py-2.5 font-mono text-slate-400", "{sub_end_str}" }
+                                                                                                            td { class: "px-4 py-2.5 text-slate-400", "{sub_duration_months}개월" }
+                                                                                                            td { class: "px-4 py-2.5",
+                                                                                                                if is_current_antar {
+                                                                                                                    span { class: "px-2 py-0.5 rounded-full text-[9px] bg-emerald-600/40 text-emerald-200 border border-emerald-500/40 font-bold", "⬤ 현재 소운" }
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                        
+                                                                                                        if is_expanded_antar {
+                                                                                                            tr { class: "bg-slate-900/60",
+                                                                                                                td { colspan: 5, class: "p-3 border-t border-b border-slate-800/60",
+                                                                                                                    div { class: "rounded-lg border border-slate-800 bg-slate-950/20 overflow-hidden",
+                                                                                                                        table { class: "w-full text-[11px]",
+                                                                                                                            thead {
+                                                                                                                                tr { class: "bg-slate-850 text-[9px] text-slate-500 uppercase font-bold border-b border-slate-800",
+                                                                                                                                    th { class: "px-4 py-1.5 text-left w-1/5", "{t(locale, TK::DashaPratyantarDasha)}" }
+                                                                                                                                    th { class: "px-4 py-1.5 text-left w-1/5", "시작" }
+                                                                                                                                    th { class: "px-4 py-1.5 text-left w-1/5", "종료" }
+                                                                                                                                    th { class: "px-4 py-1.5 text-left w-1/5", "기간" }
+                                                                                                                                    th { class: "px-4 py-1.5 text-left w-1/5", "상태" }
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                            tbody { class: "divide-y divide-slate-850",
+                                                                                                                                {sub.sub_dashas.iter().map(|prat| {
+                                                                                                                                    let prat_color = planet_color(prat.lord);
+                                                                                                                                    let prat_start_str = prat.start_time.format("%Y-%m-%d").to_string();
+                                                                                                                                    let prat_end_str = prat.end_time.format("%Y-%m-%d").to_string();
+                                                                                                                                    let prat_duration_days = (prat.end_time - prat.start_time).num_days();
+                                                                                                                                    let is_current_prat = prat.start_time <= now && now < prat.end_time;
+                                                                                                                                    
+                                                                                                                                    let prat_row_bg = if is_current_prat {
+                                                                                                                                        "bg-amber-950/20 hover:bg-amber-950/30 font-semibold"
+                                                                                                                                    } else {
+                                                                                                                                        "hover:bg-slate-800/5"
+                                                                                                                                    };
+
+                                                                                                                                    rsx! {
+                                                                                                                                        tr { class: "transition-colors {prat_row_bg}",
+                                                                                                                                            td { class: "px-4 py-2 font-bold {prat_color}", "{planet_name_kr(prat.lord)}" }
+                                                                                                                                            td { class: "px-4 py-2 font-mono text-slate-350", "{prat_start_str}" }
+                                                                                                                                            td { class: "px-4 py-2 font-mono text-slate-400", "{prat_end_str}" }
+                                                                                                                                            td { class: "px-4 py-2 text-slate-400", "{prat_duration_days}일" }
+                                                                                                                                            td { class: "px-4 py-2",
+                                                                                                                                                if is_current_prat {
+                                                                                                                                                    span { class: "px-2 py-0.5 rounded-full text-[9px] bg-amber-600/40 text-amber-200 border border-amber-500/40 font-bold", "⬤ 현재 세운" }
+                                                                                                                                                }
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                })}
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                })}
+                                                                                            }
+                                                                                        }
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         }
@@ -1997,10 +2231,10 @@ pub fn VedicTab() -> Element {
                                     // Compatibility Tab
                                     div { class: "space-y-6",
                                         div { class: "p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-4",
-                                            h3 { class: "text-lg font-semibold text-slate-200", "상대방 출생 정보 입력" }
+                                            h3 { class: "text-lg font-semibold text-slate-200", "{t(locale, TK::CompatTitleInput)}" }
                                             div { class: "grid grid-cols-2 md:grid-cols-5 gap-3",
                                                 div { class: "flex flex-col gap-1",
-                                                    label { class: "text-xs text-slate-500", "년도" }
+                                                    label { class: "text-xs text-slate-500", "{t(locale, TK::FormYear)}" }
                                                     input {
                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
                                                         r#type: "number",
@@ -2009,7 +2243,7 @@ pub fn VedicTab() -> Element {
                                                     }
                                                 }
                                                 div { class: "flex flex-col gap-1",
-                                                    label { class: "text-xs text-slate-500", "월" }
+                                                    label { class: "text-xs text-slate-500", "{t(locale, TK::FormMonth)}" }
                                                     input {
                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
                                                         r#type: "number",
@@ -2018,7 +2252,7 @@ pub fn VedicTab() -> Element {
                                                     }
                                                 }
                                                 div { class: "flex flex-col gap-1",
-                                                    label { class: "text-xs text-slate-500", "일" }
+                                                    label { class: "text-xs text-slate-500", "{t(locale, TK::FormDay)}" }
                                                     input {
                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
                                                         r#type: "number",
@@ -2027,7 +2261,7 @@ pub fn VedicTab() -> Element {
                                                     }
                                                 }
                                                 div { class: "flex flex-col gap-1",
-                                                    label { class: "text-xs text-slate-500", "시간 (시)" }
+                                                    label { class: "text-xs text-slate-500", "{t(locale, TK::FormHour)}" }
                                                     input {
                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
                                                         r#type: "number",
@@ -2036,7 +2270,7 @@ pub fn VedicTab() -> Element {
                                                     }
                                                 }
                                                 div { class: "flex flex-col gap-1",
-                                                    label { class: "text-xs text-slate-500", "시간 (분)" }
+                                                    label { class: "text-xs text-slate-500", "{t(locale, TK::FormMinute)}" }
                                                     input {
                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
                                                         r#type: "number",
@@ -2047,7 +2281,14 @@ pub fn VedicTab() -> Element {
                                             }
                                             div { class: "grid grid-cols-2 gap-3",
                                                 div { class: "flex flex-col gap-1",
-                                                    label { class: "text-xs text-slate-500", "위도 (Latitude)" }
+                                                    label { class: "text-xs text-slate-500",
+                                                        {match locale {
+                                                            Locale::Ko => "위도 (Latitude)",
+                                                            Locale::En => "Latitude",
+                                                            Locale::Zh => "纬度 (Latitude)",
+                                                            Locale::Ru => "Широта (Latitude)",
+                                                        }}
+                                                    }
                                                     input {
                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
                                                         r#type: "number",
@@ -2057,7 +2298,14 @@ pub fn VedicTab() -> Element {
                                                     }
                                                 }
                                                 div { class: "flex flex-col gap-1",
-                                                    label { class: "text-xs text-slate-500", "경도 (Longitude)" }
+                                                    label { class: "text-xs text-slate-500",
+                                                        {match locale {
+                                                            Locale::Ko => "경도 (Longitude)",
+                                                            Locale::En => "Longitude",
+                                                            Locale::Zh => "经度 (Longitude)",
+                                                            Locale::Ru => "Долгота (Longitude)",
+                                                        }}
+                                                    }
                                                     input {
                                                         class: "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200",
                                                         r#type: "number",
@@ -2070,103 +2318,156 @@ pub fn VedicTab() -> Element {
                                             button {
                                                 class: "w-full py-3 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 rounded-xl font-bold text-white shadow-lg",
                                                 onclick: run_compatibility,
-                                                "💞 궁합 분석 실행"
+                                                "{t(locale, TK::CompatBtnRun)}"
                                             }
                                         }
 
-                                        match &*compat_status.read() {
+                                        match &state.compat.read().status {
                                             TaskStatus::Loading => rsx! {
                                                 div { class: "flex flex-col items-center py-10 gap-2",
                                                     div { class: "w-10 h-10 rounded-full border-4 border-purple-500/30 border-t-purple-400 animate-spin" }
-                                                    p { class: "text-purple-400 font-medium text-sm animate-pulse", "궁합 연산 중..." }
+                                                    p { class: "text-purple-400 font-medium text-sm animate-pulse", "{t(locale, TK::CompatStatusLoading)}" }
                                                 }
                                             },
                                             TaskStatus::Error(e) => rsx! {
                                                 div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400 text-sm", "오류: {e}" }
                                             },
                                             TaskStatus::Success => {
-                                                if let Some(compat) = &*compat_data.read() {
+                                                if let Some(compat) = &state.compat.read().data {
+                                                    // 1. Compute translated summary & explanation
+                                                    let total_score = compat.report.total_score;
+                                                    let translated_explanation = {
+                                                        let base_desc = if compat.report.is_compatible {
+                                                            t(locale, TK::CompatExplanationGood)
+                                                        } else if total_score >= 18.0 {
+                                                            t(locale, TK::CompatExplanationWarning)
+                                                        } else {
+                                                            t(locale, TK::CompatExplanationBad)
+                                                        };
+                                                        format!("{} {}", t(locale, TK::CompatExplanationSummary).replace("{}", &format!("{:.1}", total_score)), base_desc)
+                                                    };
+
+                                                    // 2. Prepare SVG Circular Gauge dimensions
+                                                    let score_pct = (total_score / 36.0 * 100.0).min(100.0).max(0.0);
+                                                    let radius = 40.0;
+                                                    let circumference = 2.0 * std::f64::consts::PI * radius; // ~251.327
+                                                    let stroke_offset = circumference - (score_pct / 100.0) * circumference;
+
                                                     rsx! {
                                                         div { class: "space-y-6 animate-in fade-in duration-500",
-                                                            // Overall Compatibility Header
-                                                            div { class: "p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4",
-                                                                div {
-                                                                    h3 { class: "text-xs text-slate-500 uppercase tracking-widest font-bold", "종합 매칭 판정" }
-                                                                    p { class: "text-2xl font-bold text-slate-200 mt-1",
-                                                                        "호환성 점수: "
-                                                                        span { class: "text-purple-400", "{compat.report.total_score} / 36 Gunas" }
+                                                            
+                                                            // --- Visual Progress / Gauge Header Component ---
+                                                            div { class: "p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col sm:flex-row items-center gap-5",
+                                                                // SVG Circular Progress Gauge
+                                                                div { class: "relative w-24 h-24 flex items-center justify-center shrink-0",
+                                                                    svg { class: "w-full h-full transform -rotate-90", view_box: "0 0 100 100",
+                                                                        // Background track
+                                                                        circle {
+                                                                            class: "text-slate-800",
+                                                                            stroke_width: "8",
+                                                                            stroke: "currentColor",
+                                                                            fill: "transparent",
+                                                                            r: "{radius}",
+                                                                            cx: "50",
+                                                                            cy: "50"
+                                                                        }
+                                                                        // Color-coded progress ring
+                                                                        circle {
+                                                                            class: if compat.report.is_compatible { "text-emerald-500" } else { "text-purple-500" },
+                                                                            stroke_width: "8",
+                                                                            stroke_dasharray: "{circumference}",
+                                                                            stroke_dashoffset: "{stroke_offset}",
+                                                                            stroke_linecap: "round",
+                                                                            stroke: "currentColor",
+                                                                            fill: "transparent",
+                                                                            r: "{radius}",
+                                                                            cx: "50",
+                                                                            cy: "50"
+                                                                        }
                                                                     }
-                                                                    p { class: "text-sm text-slate-400 mt-1.5", "{compat.report.explanation}" }
+                                                                    // Absolute score overlay text
+                                                                    div { class: "absolute flex flex-col items-center justify-center",
+                                                                        span { class: "text-xl font-bold text-slate-100", "{total_score:.1}" }
+                                                                        span { class: "text-[9px] text-slate-500 font-semibold tracking-wider uppercase", "/ 36" }
+                                                                    }
                                                                 }
-                                                                div { class: "flex gap-2",
+
+                                                                // Text descriptions
+                                                                div { class: "flex-1 space-y-1 text-center sm:text-left",
+                                                                    h3 { class: "text-xs text-slate-500 uppercase tracking-widest font-bold", "{t(locale, TK::CompatHeaderOverall)}" }
+                                                                    p { class: "text-base font-bold text-slate-200", 
+                                                                        "{t(locale, TK::CompatScoreLabel)}: "
+                                                                        span { class: "text-purple-400 font-mono", "{total_score:.1} / 36.0 Gunas" }
+                                                                    }
+                                                                    p { class: "text-xs text-slate-400 leading-relaxed", "{translated_explanation}" }
+                                                                }
+
+                                                                // Verdict Badge
+                                                                div { class: "shrink-0",
                                                                     if compat.report.is_compatible {
-                                                                        span { class: "px-4 py-2 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-sm font-bold", "✓ 상성 우수" }
+                                                                        span { class: "px-4 py-2 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-sm font-bold shadow-lg shadow-emerald-950/20", "{t(locale, TK::CompatIsCompatibleGood)}" }
                                                                     } else {
-                                                                        span { class: "px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-400 text-sm font-bold", "⚠️ 신중함 요구" }
+                                                                        span { class: "px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-400 text-sm font-bold shadow-lg shadow-amber-950/20", "{t(locale, TK::CompatIsCompatibleCaution)}" }
                                                                     }
                                                                 }
                                                             }
 
-                                                            // Mangal Dosha Card
+                                                            // --- Mangal Dosha Cards (Localized) ---
                                                             div { class: "grid grid-cols-1 md:grid-cols-2 gap-4",
                                                                 div { class: "p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2",
-                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "남성 화성살 (Male Mangal Dosha)" }
+                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "{t(locale, TK::CompatMaleMangalDosha)}" }
                                                                     p {
-                                                                        class: if compat.report.male_mangal_dosha {
-                                                                            "text-lg font-bold text-red-400"
-                                                                        } else {
-                                                                            "text-lg font-bold text-emerald-400"
-                                                                        },
-                                                                        if compat.report.male_mangal_dosha { "🔥 화성살(Manglik) 감지" } else { "✓ 해당 없음 (양호)" }
+                                                                        class: if compat.report.male_mangal_dosha { "text-lg font-bold text-red-400" } else { "text-lg font-bold text-emerald-400" },
+                                                                        {if compat.report.male_mangal_dosha { t(locale, TK::CompatMangalDetected) } else { t(locale, TK::CompatMangalNotDetected) }}
                                                                     }
                                                                 }
                                                                 div { class: "p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2",
-                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "여성 화성살 (Female Mangal Dosha)" }
+                                                                    h4 { class: "text-xs text-slate-500 font-semibold uppercase tracking-wider", "{t(locale, TK::CompatFemaleMangalDosha)}" }
                                                                     p {
-                                                                        class: if compat.report.female_mangal_dosha {
-                                                                            "text-lg font-bold text-red-400"
-                                                                        } else {
-                                                                            "text-lg font-bold text-emerald-400"
-                                                                        },
-                                                                        if compat.report.female_mangal_dosha { "🔥 화성살(Manglik) 감지" } else { "✓ 해당 없음 (양호)" }
+                                                                        class: if compat.report.female_mangal_dosha { "text-lg font-bold text-red-400" } else { "text-lg font-bold text-emerald-400" },
+                                                                        {if compat.report.female_mangal_dosha { t(locale, TK::CompatMangalDetected) } else { t(locale, TK::CompatMangalNotDetected) }}
                                                                     }
                                                                 }
                                                             }
                                                             if compat.report.mangal_dosha_cancelled {
                                                                 div { class: "p-4 rounded-xl bg-blue-950/40 border border-blue-800/40 text-blue-300 text-xs font-semibold",
-                                                                    "ℹ️ 상호 화성살 상쇄(Dosha Samya)가 성립되어 화성살의 부정적 영향이 소멸되었습니다."
+                                                                    "{t(locale, TK::CompatMangalCancelled)}"
                                                                 }
                                                             }
 
-                                                            // Ashtakoota Scorecard Table
-                                                            div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
-                                                                div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
-                                                                    h3 { class: "font-semibold text-slate-200", "아쉬타쿠타(Ashtakoota) 세부 매칭 평점표" }
+                                                            // --- Ashtakoota Scorecard Table (Localized) ---
+                                                            div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl",
+                                                                div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5",
+                                                                    h3 { class: "font-semibold text-slate-200", "{t(locale, TK::CompatAshtakootaTableTitle)}" }
                                                                 }
                                                                 div { class: "overflow-x-auto",
                                                                     table { class: "w-full text-sm",
                                                                         thead {
                                                                             tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
-                                                                                th { class: "px-4 py-3 text-left font-medium", "매칭 요인 (Koota)" }
-                                                                                th { class: "px-4 py-3 text-center font-medium", "가중치 (Max)" }
-                                                                                th { class: "px-4 py-3 text-center font-medium", "획득 점수" }
-                                                                                th { class: "px-4 py-3 text-left font-medium", "설명" }
+                                                                                th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::CompatTableColKoota)}" }
+                                                                                th { class: "px-4 py-3 text-center font-medium", "{t(locale, TK::CompatTableColMax)}" }
+                                                                                th { class: "px-4 py-3 text-center font-medium", "{t(locale, TK::CompatTableColEarned)}" }
+                                                                                th { class: "px-4 py-3 text-left font-medium", "{t(locale, TK::CompatTableColDesc)}" }
                                                                             }
                                                                         }
                                                                         tbody { class: "divide-y divide-slate-800",
-                                                                            {compat.report.kootas.iter().map(|k| rsx! {
-                                                                                tr { class: "hover:bg-slate-800/20 transition-colors",
-                                                                                    td { class: "px-4 py-3 font-semibold text-slate-300", "{k.name}" }
-                                                                                    td { class: "px-4 py-3 text-center font-mono text-slate-500", "{k.max_points:.1}" }
-                                                                                    td {
-                                                                                        class: if k.earned_points > 0.0 {
-                                                                                            "px-4 py-3 text-center font-bold font-mono text-purple-400"
-                                                                                        } else {
-                                                                                            "px-4 py-3 text-center font-bold font-mono text-slate-600"
-                                                                                        },
-                                                                                        "{k.earned_points:.1}"
+                                                                            {compat.report.kootas.iter().map(|k| {
+                                                                                let koota_name = translate_koota_name(locale, &k.id);
+                                                                                let koota_desc = translate_koota_desc(locale, &k.id, k.earned_points);
+                                                                                rsx! {
+                                                                                    tr { class: "hover:bg-slate-800/20 transition-colors",
+                                                                                        td { class: "px-4 py-3 font-semibold text-slate-300", "{koota_name}" }
+                                                                                        td { class: "px-4 py-3 text-center font-mono text-slate-500", "{k.max_points:.1}" }
+                                                                                        td {
+                                                                                            class: if k.earned_points > 0.0 {
+                                                                                                "px-4 py-3 text-center font-bold font-mono text-purple-400"
+                                                                                            } else {
+                                                                                                "px-4 py-3 text-center font-bold font-mono text-slate-600"
+                                                                                            },
+                                                                                            "{k.earned_points:.1}"
+                                                                                        }
+                                                                                        td { class: "px-4 py-3 text-xs text-slate-400", "{koota_desc}" }
                                                                                     }
-                                                                                    td { class: "px-4 py-3 text-xs text-slate-400", "{k.description}" }
                                                                                 }
                                                                             })}
                                                                         }

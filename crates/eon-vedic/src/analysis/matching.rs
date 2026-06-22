@@ -5,6 +5,7 @@ use crate::core::chart::VedicChart;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct KootaScore {
+    pub id: String,
     pub name: String,
     pub max_points: f64,
     pub earned_points: f64,
@@ -61,48 +62,56 @@ impl MatchingEngine {
 
         let kootas = vec![
             KootaScore {
+                id: "varna".to_string(),
                 name: "Varna (Caste/Vocation)".to_string(),
                 max_points: 1.0,
                 earned_points: varna_score,
                 description: if varna_score == 1.0 { "Good work-profile alignment.".to_string() } else { "Differing natural vocations.".to_string() },
             },
             KootaScore {
+                id: "vashya".to_string(),
                 name: "Vashya (Control/Attraction)".to_string(),
                 max_points: 2.0,
                 earned_points: vashya_score,
                 description: format!("Mutual attraction rating: {}/2.", vashya_score),
             },
             KootaScore {
+                id: "tara".to_string(),
                 name: "Tara (Destiny/Health)".to_string(),
                 max_points: 3.0,
                 earned_points: tara_score,
                 description: if tara_score == 3.0 { "Excellent destiny and longevity alignment.".to_string() } else if tara_score == 1.5 { "Moderate health compatibility.".to_string() } else { "Challenging health compatibility (Tara Dosha).".to_string() },
             },
             KootaScore {
+                id: "yoni".to_string(),
                 name: "Yoni (Sensory/Sexual)".to_string(),
                 max_points: 4.0,
                 earned_points: yoni_score,
                 description: format!("Biological compatibility: {}/4.", yoni_score),
             },
             KootaScore {
+                id: "graha_maitri".to_string(),
                 name: "Graha Maitri (Friendship)".to_string(),
                 max_points: 5.0,
                 earned_points: graha_maitri_score,
                 description: if graha_maitri_score >= 4.0 { "High mental harmony and friendship.".to_string() } else if graha_maitri_score >= 2.0 { "Average mental harmony.".to_string() } else { "Potential communication gaps.".to_string() },
             },
             KootaScore {
+                id: "gana".to_string(),
                 name: "Gana (Temperament)".to_string(),
                 max_points: 6.0,
                 earned_points: gana_score,
                 description: if gana_score >= 5.0 { "Compatible temperaments.".to_string() } else if gana_score >= 3.0 { "Moderate temperament gaps.".to_string() } else { "High temperamental friction (Gana Dosha).".to_string() },
             },
             KootaScore {
+                id: "bhakoot".to_string(),
                 name: "Bhakoot (Emotional Node)".to_string(),
                 max_points: 7.0,
                 earned_points: bhakoot_score,
                 description: if bhakoot_score == 7.0 { "Stable emotional bond.".to_string() } else { "Challenging emotional/financial cycles (Bhakoot Dosha).".to_string() },
             },
             KootaScore {
+                id: "nadi".to_string(),
                 name: "Nadi (Health/Genetics)".to_string(),
                 max_points: 8.0,
                 earned_points: nadi_score,
