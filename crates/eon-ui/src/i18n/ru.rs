@@ -326,5 +326,15 @@ pub fn translate(key: TK) -> &'static str {
         TK::DashaMahaDasha => "Маха Даша",
         TK::DashaAntarDasha => "Антар Даша",
         TK::DashaPratyantarDasha => "Пратьянтар Даша",
+
+        // --- Saju Jijanggan ---
+        TK::SajuHiddenStemsTitle => "Скрытые небесные стволы (Джиджангган)",
+        TK::SajuProjectionTitle => "Анализ проекций скрытых стволов (透出)",
+        TK::SajuProjectionDesc => "Определяет элементы, скрытые в земных ветвях (Джиджангган), которые проявляются в небесных стволах (проекции), указывая на их сильное внешнее проявление.",
+        TK::SajuProjLevelMain => "Главная структурная проекция (Main)",
+        TK::SajuProjLevelSub => "Общая проекция (Sub)",
+        TK::SajuJijangganYeogi => "Остаточная энергия (Йоги)",
+        TK::SajuJijangganJunggi => "Средняя энергия (Джунгги)",
+        TK::SajuJijangganJeonggi => "Главная энергия (Джонгги)",
     }
 }

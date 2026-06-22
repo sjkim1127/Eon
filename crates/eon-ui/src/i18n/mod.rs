@@ -402,6 +402,16 @@ pub enum TK {
     DashaMahaDasha,
     DashaAntarDasha,
     DashaPratyantarDasha,
+
+    // --- Saju Jijanggan ---
+    SajuHiddenStemsTitle,
+    SajuProjectionTitle,
+    SajuProjectionDesc,
+    SajuProjLevelMain,
+    SajuProjLevelSub,
+    SajuJijangganYeogi,
+    SajuJijangganJunggi,
+    SajuJijangganJeonggi,
 }
 
 /// Main translation dispatch function.

@@ -326,5 +326,15 @@ pub fn translate(key: TK) -> &'static str {
         TK::DashaMahaDasha => "大运 (Maha Dasha)",
         TK::DashaAntarDasha => "小运 (Antar Dasha)",
         TK::DashaPratyantarDasha => "细运 (Pratyantar Dasha)",
+
+        // --- Saju Jijanggan ---
+        TK::SajuHiddenStemsTitle => "地支藏干 (Jijanggan)",
+        TK::SajuProjectionTitle => "地支藏干透出分析 (Projection)",
+        TK::SajuProjectionDesc => "分析地支中隐藏的五行能量显现（透出）于天干的状态，代表其在外部环境的强力显现。",
+        TK::SajuProjLevelMain => "格局透出 (Main)",
+        TK::SajuProjLevelSub => "一般透出 (Sub)",
+        TK::SajuJijangganYeogi => "余气 (Yeogi)",
+        TK::SajuJijangganJunggi => "中气 (Middle)",
+        TK::SajuJijangganJeonggi => "本气 (Main)",
     }
 }
