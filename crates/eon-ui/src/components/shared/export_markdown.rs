@@ -1260,6 +1260,26 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
     if data.report.upapada_lagna > 0 {
         s.push_str(&format!("- **{}**: {} ({})\n", ul_lbl, data.report.upapada_lagna, rasi_name(locale, data.report.upapada_lagna)));
     }
+    if !data.report.special_lagnas_summary.is_empty() {
+        let (spl_lbl, sl_lbl, il_lbl, hl_lbl, gl_lbl, pl_lbl) = match locale {
+            Locale::Ko => ("특수 라그나 (Special Lagnas)", "Shri Lagna (SL - 번영)", "Indu Lagna (IL - 부)", "Hora Lagna (HL - 자산)", "Ghati Lagna (GL - 지위)", "Pranapada Lagna (PL - 생명)"),
+            Locale::En => ("Special Lagnas", "Shri Lagna (SL - Prosperity)", "Indu Lagna (IL - Wealth)", "Hora Lagna (HL - Assets)", "Ghati Lagna (GL - Power)", "Pranapada Lagna (PL - Vitality)"),
+            Locale::Zh => ("特殊命宫 (Special Lagnas)", "Shri Lagna (SL - 繁荣)", "Indu Lagna (IL - 财富)", "Hora Lagna (HL - 资产)", "Ghati Lagna (GL - 地位)", "Pranapada Lagna (PL - 生命)"),
+            Locale::Ru => ("Специальные Лагны", "Шри Лагна (SL - Процветание)", "Инду Лагна (IL - Богатство)", "Хора Лагна (HL - Активы)", "Гхати Лагна (GL - Влияние)", "Пранапада Лагна (PL - Жизнь)"),
+        };
+        s.push_str(&format!("- **{}**:\n", spl_lbl));
+        for (name, rasi) in &data.report.special_lagnas_summary {
+            let label = match name.as_str() {
+                "Shri Lagna" => sl_lbl,
+                "Indu Lagna" => il_lbl,
+                "Hora Lagna" => hl_lbl,
+                "Ghati Lagna" => gl_lbl,
+                "Pranapada Lagna" => pl_lbl,
+                _ => name.as_str(),
+            };
+            s.push_str(&format!("  - {}: {}\n", label, rasi_name(locale, *rasi)));
+        }
+    }
     s.push_str("\n");
 
     // ── Phase 1: Shadbala 6-Factor Planetary Strength Table ─────────────────
