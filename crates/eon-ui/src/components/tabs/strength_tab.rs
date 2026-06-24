@@ -47,7 +47,7 @@ pub fn StrengthTab() -> Element {
             };
 
             // 병렬 계산 (사주 먼저, 베딕 이후)
-            match facade::analyze_saju(SajuAnalysisInput::new(base.clone(), form.is_male, false, Some(false))) {
+            match facade::analyze_saju(SajuAnalysisInput::new(base.clone(), form.is_male, form.use_night_rat_hour, Some(false))) {
                 Ok(res) => {
                     state.saju.write().data = Some(res);
                     state.saju.write().status = TaskStatus::Success;

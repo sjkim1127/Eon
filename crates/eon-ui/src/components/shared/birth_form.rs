@@ -307,6 +307,18 @@ pub fn BirthForm() -> Element {
                         "{t(locale, TK::FormMale)}"
                     }
                 }
+                // Night Rat Hour checkbox
+                div { class: "flex items-center gap-2 mb-1",
+                    input {
+                        r#type: "checkbox", id: "use_night_rat_hour",
+                        class: "w-4 h-4 rounded border-slate-700 bg-slate-950 accent-violet-600",
+                        checked: "{state.form.read().use_night_rat_hour}",
+                        onchange: move |evt| state.form.write().use_night_rat_hour = evt.value() == "true"
+                    }
+                    label { r#for: "use_night_rat_hour", class: "text-sm text-slate-300 select-none cursor-pointer whitespace-nowrap",
+                        "{t(locale, TK::FormUseNightRatHour)}"
+                    }
+                }
             }
         }
     }

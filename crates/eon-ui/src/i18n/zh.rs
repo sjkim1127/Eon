@@ -23,6 +23,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::FormCityPlaceholder => "城市（如：首尔）",
         TK::FormLunar => "农历",
         TK::FormMale => "男性",
+        TK::FormUseNightRatHour => "应用夜子时",
         TK::FormSavedProfiles => "已保存档案",
         TK::FormLoadProfile => "--- 加载档案 ---",
         TK::FormSaveProfile => "保存当前设置",
@@ -211,6 +212,19 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuPillarStem => "天干",
         TK::SajuPillarBranch => "地支",
         TK::SajuSpiritRequirement => "成立条件:",
+
+        TK::SajuStructTitle => "格局分析 (Structure & Pattern)",
+        TK::SajuStructDesc => "基于月令藏干透出状态判断社会格局与职业取向。",
+        TK::SajuStructDecision => "格局决定: {}",
+        TK::SajuProjectedStem => "透出天干",
+        TK::SajuProjectionPath => "透出位置",
+        TK::SajuStructReasons => "格局成格依据",
+        TK::SajuHiddenHarmonyTitle => "暗合与明暗合 (Hidden Harmony)",
+        TK::SajuHiddenHarmonyDesc => "分析未显露的内在心理结合及隐秘的相互作用。",
+        TK::SajuAmHarmonyTitle => "地支暗合 (暗合 — 隐秘契约/秘密结盟)",
+        TK::SajuMyungAmHarmonyTitle => "明暗合 (明暗合 — 外在名分与内在实利的契合)",
+        TK::SajuLabelHarmony => "成格合",
+        TK::SajuLabelTransformedElement => "合化五行",
 
         // Simulation Tab
         TK::SimVulnerability => "风险时点",

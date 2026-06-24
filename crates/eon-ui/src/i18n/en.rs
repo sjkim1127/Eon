@@ -23,6 +23,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::FormCityPlaceholder => "City (e.g. Seoul)",
         TK::FormLunar => "Lunar",
         TK::FormMale => "Male",
+        TK::FormUseNightRatHour => "Apply Ya-ja-si (Night Rat)",
         TK::FormSavedProfiles => "Saved Profiles",
         TK::FormLoadProfile => "--- Load profile ---",
         TK::FormSaveProfile => "Save current settings",
@@ -211,6 +212,19 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuPillarStem => "Stem",
         TK::SajuPillarBranch => "Branch",
         TK::SajuSpiritRequirement => "Requirements:",
+
+        TK::SajuStructTitle => "Structure & Pattern",
+        TK::SajuStructDesc => "Determines the inherent social capacity and career orientation based on the projection of hidden stems from the Month Branch.",
+        TK::SajuStructDecision => "Structure: {}",
+        TK::SajuProjectedStem => "Projected Stem",
+        TK::SajuProjectionPath => "Projection Path",
+        TK::SajuStructReasons => "Reasons for Structure Formation",
+        TK::SajuHiddenHarmonyTitle => "Hidden Harmony (암합/명암합)",
+        TK::SajuHiddenHarmonyDesc => "Analyzes hidden internal psychological associations and subtle interactions.",
+        TK::SajuAmHarmonyTitle => "Hidden Harmony (암합 — Hidden Contract / Secret Alliance)",
+        TK::SajuMyungAmHarmonyTitle => "Visible-Hidden Harmony (명암합 — Outer Cause & Inner Interest)",
+        TK::SajuLabelHarmony => "Harmony",
+        TK::SajuLabelTransformedElement => "Transformed Element",
 
         // Simulation Tab
         TK::SimVulnerability => "Risk Points",
