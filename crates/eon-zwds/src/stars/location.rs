@@ -4,7 +4,7 @@
 
 use eon_saju::core::stem::HeavenlyStem;
 use eon_saju::core::branch::EarthlyBranch;
-use crate::types::{PalaceIndex, ZwdsStar, LunarBirthInfo};
+use crate::types::{PalaceIndex, ZwdsStar};
 use crate::palace::fix_index;
 
 /// 록존(禄存), 경양(擎羊), 타라(陀羅)의 ZWDS 지지 인덱스 계산
