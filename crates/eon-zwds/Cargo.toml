@@ -7,9 +7,9 @@ license.workspace = true
 description = "Eon: Zi Wei Dou Shu (紫微斗數) Engine — 자미두수 성반 명리 엔진"
 
 [dependencies]
-eon-core = { path = "../eon-core" }
-eon-data  = { path = "../eon-data" }
-eon-saju  = { path = "../eon-saju" }
+eon-core = { workspace = true }
+eon-data  = { workspace = true }
+eon-saju  = { workspace = true }
 
 chrono.workspace   = true
 serde.workspace    = true

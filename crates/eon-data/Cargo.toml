@@ -7,8 +7,8 @@ license.workspace = true
 description = "Static data for Eon destiny platform (Manseryuk calendar, etc.)"
 
 [dependencies]
-eon-core = { path = "../eon-core" }
-eon-astro = { path = "../eon-astro" }
+eon-core = { workspace = true }
+eon-astro = { workspace = true }
 chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true

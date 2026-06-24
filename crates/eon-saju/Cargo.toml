@@ -11,9 +11,9 @@ default = ["parallel"]
 parallel = ["rayon", "rand"]
 
 [dependencies]
-eon-core = { path = "../eon-core" }
-eon-data = { path = "../eon-data" }
-eon-astro = { path = "../eon-astro" }
+eon-core = { workspace = true }
+eon-data = { workspace = true }
+eon-astro = { workspace = true }
 chrono.workspace = true
 serde.workspace = true
 thiserror.workspace = true

@@ -10,7 +10,7 @@ repository.workspace = true
 serde = { workspace = true }
 chrono = { workspace = true }
 thiserror = { workspace = true }
-eon-astro = { path = "../eon-astro" }
+eon-astro = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }

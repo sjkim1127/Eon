@@ -1,7 +1,10 @@
 [package]
 name = "eon-service"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Service facade and DTO layer for Eon destiny platform"
 
 [dependencies]
 chrono = { workspace = true, features = ["serde"] }
@@ -10,11 +13,11 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 
-eon-core = { path = "../eon-core" }
-eon-saju = { path = "../eon-saju" }
-eon-vedic = { path = "../eon-vedic" }
-eon-zwds = { path = "../eon-zwds" }
-eon-ai = { path = "../eon-ai" }
-eon-astro = { path = "../eon-astro" }
-eon-data = { path = "../eon-data" }
+eon-core = { workspace = true }
+eon-saju = { workspace = true }
+eon-vedic = { workspace = true }
+eon-zwds = { workspace = true }
+eon-ai = { workspace = true }
+eon-astro = { workspace = true }
+eon-data = { workspace = true }
 ts-rs = { version = "10", features = ["chrono-impl"] }

@@ -7,7 +7,7 @@ license.workspace = true
 description = "High-precision astronomical engine for Eon"
 
 [dependencies]
-eon-core = { path = "../eon-core" }
+eon-core = { workspace = true }
 swiss-eph.workspace = true
 chrono.workspace = true
 serde.workspace = true
