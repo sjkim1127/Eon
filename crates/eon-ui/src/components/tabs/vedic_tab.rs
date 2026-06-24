@@ -895,6 +895,7 @@ pub fn VedicTab() -> Element {
     
     let mut expanded_mahadasha = use_signal(|| Option::<usize>::None);
     let mut expanded_antardasha = use_signal(|| Option::<usize>::None);
+    let copied_compat = use_signal(|| false);
 
 
     let run_analysis = move |_| {
@@ -1280,10 +1281,51 @@ pub fn VedicTab() -> Element {
                                                 } else {
                                                     data.chart.panchanga.sunset.format("%H:%M:%S").to_string()
                                                 };
+                                                let formatted_rahu = if let Ok(tz) = tz_res {
+                                                    let (start, end) = data.chart.panchanga.rahu_kalam;
+                                                    format!("{}-{}", start.with_timezone(&tz).format("%H:%M").to_string(), end.with_timezone(&tz).format("%H:%M").to_string())
+                                                } else {
+                                                    let (start, end) = data.chart.panchanga.rahu_kalam;
+                                                    format!("{}-{}", start.format("%H:%M").to_string(), end.format("%H:%M").to_string())
+                                                };
+                                                let formatted_yama = if let Ok(tz) = tz_res {
+                                                    let (start, end) = data.chart.panchanga.yamaganda;
+                                                    format!("{}-{}", start.with_timezone(&tz).format("%H:%M").to_string(), end.with_timezone(&tz).format("%H:%M").to_string())
+                                                } else {
+                                                    let (start, end) = data.chart.panchanga.yamaganda;
+                                                    format!("{}-{}", start.format("%H:%M").to_string(), end.format("%H:%M").to_string())
+                                                };
+                                                let formatted_guli = if let Ok(tz) = tz_res {
+                                                    let (start, end) = data.chart.panchanga.gulika;
+                                                    format!("{}-{}", start.with_timezone(&tz).format("%H:%M").to_string(), end.with_timezone(&tz).format("%H:%M").to_string())
+                                                } else {
+                                                    let (start, end) = data.chart.panchanga.gulika;
+                                                    format!("{}-{}", start.format("%H:%M").to_string(), end.format("%H:%M").to_string())
+                                                };
+
+                                                let rahu_lbl = match locale {
+                                                    Locale::Ko => "라후 칼람 (Rahu Kalam)",
+                                                    Locale::Zh => "罗喉时间 (Rahu)",
+                                                    Locale::Ru => "Раху Калам",
+                                                    _ => "Rahu Kalam",
+                                                };
+                                                let yama_lbl = match locale {
+                                                    Locale::Ko => "야마간다 (Yamaganda)",
+                                                    Locale::Zh => "伽达时间 (Yama)",
+                                                    Locale::Ru => "Ямаганда",
+                                                    _ => "Yamaganda",
+                                                };
+                                                let guli_lbl = match locale {
+                                                    Locale::Ko => "굴리카 (Gulika)",
+                                                    Locale::Zh => "古利卡时间 (Guli)",
+                                                    Locale::Ru => "Гулика",
+                                                    _ => "Gulika",
+                                                };
+
                                                 let birth_time_lbl = format!("{:02}:{:02}", form.hour, form.minute);
                                                 let birth_day_or_night = if data.chart.panchanga.is_day_birth { "낮 출생 ☀️" } else { "밤 출생 🌙" };
                                                 rsx! {
-                                                    div { class: "p-3.5 rounded-xl bg-slate-900/40 border border-slate-800/80 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-400 font-mono justify-between items-center",
+                                                    div { class: "p-3.5 rounded-xl bg-slate-900/40 border border-slate-800/80 flex flex-wrap gap-x-6 gap-y-2.5 text-xs text-slate-400 font-mono justify-between items-center",
                                                         div { "출생 시각: "
                                                             span { class: "text-slate-200 font-bold", "{form.year}년 {form.month}월 {form.day}일 {birth_time_lbl}" }
                                                         }
@@ -1301,6 +1343,15 @@ pub fn VedicTab() -> Element {
                                                         }
                                                         div { "시간 지배성 (Hora Lord): "
                                                             span { class: "text-yellow-400 font-bold", "{planet_name_kr(data.chart.panchanga.hour_lord)}" }
+                                                        }
+                                                        div { "{rahu_lbl}: "
+                                                            span { class: "text-red-400 font-bold", "{formatted_rahu}" }
+                                                        }
+                                                        div { "{yama_lbl}: "
+                                                            span { class: "text-amber-400 font-bold", "{formatted_yama}" }
+                                                        }
+                                                        div { "{guli_lbl}: "
+                                                            span { class: "text-emerald-400 font-bold", "{formatted_guli}" }
                                                         }
                                                     }
                                                 }
@@ -2353,6 +2404,37 @@ pub fn VedicTab() -> Element {
                                                     let circumference = 2.0 * std::f64::consts::PI * radius; // ~251.327
                                                     let stroke_offset = circumference - (score_pct / 100.0) * circumference;
 
+                                                    let mut copied_compat = copied_compat.clone();
+                                                    let compat_cloned = compat.clone();
+                                                    let form_cloned = state.form.read().clone();
+                                                    let f_year = *partner_year.read();
+                                                    let f_month = *partner_month.read();
+                                                    let f_day = *partner_day.read();
+                                                    let f_hour = *partner_hour.read();
+                                                    let f_min = *partner_minute.read();
+                                                    let f_lat = *partner_lat.read();
+                                                    let f_lon = *partner_lon.read();
+                                                    let handle_copy_compat = move |_| {
+                                                        let md = crate::components::shared::export_markdown::export_compatibility_to_markdown(
+                                                            &compat_cloned,
+                                                            &form_cloned,
+                                                            f_year,
+                                                            f_month,
+                                                            f_day,
+                                                            f_hour,
+                                                            f_min,
+                                                            f_lat,
+                                                            f_lon,
+                                                            locale
+                                                        );
+                                                        crate::components::shared::export_markdown::copy_to_clipboard(&md);
+                                                        copied_compat.set(true);
+                                                        spawn(async move {
+                                                            gloo_timers::future::TimeoutFuture::new(2000).await;
+                                                            copied_compat.set(false);
+                                                        });
+                                                    };
+
                                                     rsx! {
                                                         div { class: "space-y-6 animate-in fade-in duration-500",
                                                             
@@ -2402,12 +2484,21 @@ pub fn VedicTab() -> Element {
                                                                     p { class: "text-xs text-slate-400 leading-relaxed", "{translated_explanation}" }
                                                                 }
 
-                                                                // Verdict Badge
-                                                                div { class: "shrink-0",
+                                                                // Verdict Badge & Copy Button
+                                                                div { class: "shrink-0 flex flex-col items-center gap-2",
                                                                     if compat.report.is_compatible {
-                                                                        span { class: "px-4 py-2 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-sm font-bold shadow-lg shadow-emerald-950/20", "{t(locale, TK::CompatIsCompatibleGood)}" }
+                                                                        span { class: "px-4 py-2 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-sm font-bold shadow-lg shadow-emerald-950/20 text-center block", "{t(locale, TK::CompatIsCompatibleGood)}" }
                                                                     } else {
-                                                                        span { class: "px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-400 text-sm font-bold shadow-lg shadow-amber-950/20", "{t(locale, TK::CompatIsCompatibleCaution)}" }
+                                                                        span { class: "px-4 py-2 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-400 text-sm font-bold shadow-lg shadow-amber-950/20 text-center block", "{t(locale, TK::CompatIsCompatibleCaution)}" }
+                                                                    }
+                                                                    button {
+                                                                        class: "w-full px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] font-semibold text-slate-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1",
+                                                                        onclick: handle_copy_compat,
+                                                                        if *copied_compat.read() {
+                                                                            span { class: "text-emerald-400 animate-pulse", "Copied! ✅" }
+                                                                        } else {
+                                                                            span { "📋 Copy Report" }
+                                                                        }
                                                                     }
                                                                 }
                                                             }

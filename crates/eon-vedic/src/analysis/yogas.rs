@@ -1332,6 +1332,18 @@ mod tests {
                 yogi_planet: VedicPlanet::Sun,
                 avayogi_planet: VedicPlanet::Saturn,
                 dagdha_rashis: vec![],
+                rahu_kalam: (
+                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc),
+                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc)
+                ),
+                yamaganda: (
+                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc),
+                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc)
+                ),
+                gulika: (
+                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc),
+                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc)
+                ),
             },
             ayanamsa: 23.0,
         }

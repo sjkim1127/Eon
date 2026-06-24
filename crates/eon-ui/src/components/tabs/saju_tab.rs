@@ -198,7 +198,8 @@ pub fn SajuTab() -> Element {
                                     branch_hanja: data.report.pillars.hour.branch.hanja().to_string(),
                                     branch_hangul: data.report.pillars.hour.branch.hangul().to_string(),
                                     branch_element: data.report.pillars.hour.branch.element().hangul().to_string(),
-                                    twelve_stage: twelve_stages.hour_stage.hangul().to_string(),
+                                    twelve_stage: crate::i18n::translate_saju_twelve_stage(locale, twelve_stages.hour_stage).to_string(),
+                                    nayin: crate::i18n::translate_saju_nayin(locale, data.report.pillars.hour.nayin()),
                                     shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Hour),
                                     jijanggans: hour_jijanggans
                                 }
@@ -212,7 +213,8 @@ pub fn SajuTab() -> Element {
                                     branch_hanja: data.report.pillars.day.branch.hanja().to_string(),
                                     branch_hangul: data.report.pillars.day.branch.hangul().to_string(),
                                     branch_element: data.report.pillars.day.branch.element().hangul().to_string(),
-                                    twelve_stage: twelve_stages.day_stage.hangul().to_string(),
+                                    twelve_stage: crate::i18n::translate_saju_twelve_stage(locale, twelve_stages.day_stage).to_string(),
+                                    nayin: crate::i18n::translate_saju_nayin(locale, data.report.pillars.day.nayin()),
                                     shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Day),
                                     jijanggans: day_jijanggans
                                 }
@@ -226,7 +228,8 @@ pub fn SajuTab() -> Element {
                                     branch_hanja: data.report.pillars.month.branch.hanja().to_string(),
                                     branch_hangul: data.report.pillars.month.branch.hangul().to_string(),
                                     branch_element: data.report.pillars.month.branch.element().hangul().to_string(),
-                                    twelve_stage: twelve_stages.month_stage.hangul().to_string(),
+                                    twelve_stage: crate::i18n::translate_saju_twelve_stage(locale, twelve_stages.month_stage).to_string(),
+                                    nayin: crate::i18n::translate_saju_nayin(locale, data.report.pillars.month.nayin()),
                                     shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Month),
                                     jijanggans: month_jijanggans
                                 }
@@ -240,7 +243,8 @@ pub fn SajuTab() -> Element {
                                     branch_hanja: data.report.pillars.year.branch.hanja().to_string(),
                                     branch_hangul: data.report.pillars.year.branch.hangul().to_string(),
                                     branch_element: data.report.pillars.year.branch.element().hangul().to_string(),
-                                    twelve_stage: twelve_stages.year_stage.hangul().to_string(),
+                                    twelve_stage: crate::i18n::translate_saju_twelve_stage(locale, twelve_stages.year_stage).to_string(),
+                                    nayin: crate::i18n::translate_saju_nayin(locale, data.report.pillars.year.nayin()),
                                     shinsals: shinsals_for(eon_saju::analysis::spirit_markers::PillarPosition::Year),
                                     jijanggans: year_jijanggans
                                 }
@@ -1216,6 +1220,7 @@ fn PillarCard(
     branch_hangul: String,
     branch_element: String,
     twelve_stage: String,
+    nayin: String,
     shinsals: Vec<String>,
     jijanggans: Vec<JijangganDisplayItem>,
 ) -> Element {
@@ -1281,6 +1286,11 @@ fn PillarCard(
                         }
                     })}
                 }
+            }
+
+            // Nayin (납음오행)
+            div { class: "text-center py-1.5 px-3 rounded-xl bg-slate-900/60 border border-slate-800/80 text-[10px] font-bold text-slate-400 shadow-inner",
+                "☯ {nayin}"
             }
 
             // Twelve Stage

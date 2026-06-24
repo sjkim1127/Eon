@@ -29,6 +29,11 @@ pub struct Panchanga {
     pub yogi_planet: VedicPlanet,
     pub avayogi_planet: VedicPlanet,
     pub dagdha_rashis: Vec<u8>,
+
+    // Rahu Kalam, Yamaganda, Gulika
+    pub rahu_kalam: (DateTime<Utc>, DateTime<Utc>),
+    pub yamaganda: (DateTime<Utc>, DateTime<Utc>),
+    pub gulika: (DateTime<Utc>, DateTime<Utc>),
 }
 
 fn get_nakshatra_lord(nakshatra: u8) -> VedicPlanet {
@@ -157,6 +162,53 @@ impl PanchangaEngine {
 
         let dagdha_rashis = get_dagdha_rashis(tithi);
 
+        // Rahu Kalam, Yamaganda, Gulika calculations (daytime divided into 8 parts)
+        let rahu_part = match vara_date.weekday() {
+            chrono::Weekday::Sun => 8,
+            chrono::Weekday::Mon => 2,
+            chrono::Weekday::Tue => 7,
+            chrono::Weekday::Wed => 5,
+            chrono::Weekday::Thu => 6,
+            chrono::Weekday::Fri => 4,
+            chrono::Weekday::Sat => 3,
+        };
+
+        let yama_part = match vara_date.weekday() {
+            chrono::Weekday::Sun => 5,
+            chrono::Weekday::Mon => 4,
+            chrono::Weekday::Tue => 3,
+            chrono::Weekday::Wed => 2,
+            chrono::Weekday::Thu => 1,
+            chrono::Weekday::Fri => 7,
+            chrono::Weekday::Sat => 6,
+        };
+
+        let guli_part = match vara_date.weekday() {
+            chrono::Weekday::Sun => 7,
+            chrono::Weekday::Mon => 6,
+            chrono::Weekday::Tue => 5,
+            chrono::Weekday::Wed => 4,
+            chrono::Weekday::Thu => 3,
+            chrono::Weekday::Fri => 2,
+            chrono::Weekday::Sat => 1,
+        };
+
+        let day_duration_ms = sunset.signed_duration_since(sunrise).num_milliseconds() as f64;
+        let part_ms = day_duration_ms / 8.0;
+
+        let get_time_range = |part_idx: u8| -> (DateTime<Utc>, DateTime<Utc>) {
+            let start_offset_ms = (part_idx - 1) as f64 * part_ms;
+            let end_offset_ms = part_idx as f64 * part_ms;
+            
+            let start_time = sunrise + chrono::Duration::milliseconds(start_offset_ms as i64);
+            let end_time = sunrise + chrono::Duration::milliseconds(end_offset_ms as i64);
+            (start_time, end_time)
+        };
+
+        let rahu_kalam = get_time_range(rahu_part);
+        let yamaganda = get_time_range(yama_part);
+        let gulika = get_time_range(guli_part);
+
         Panchanga {
             vara,
             tithi,
@@ -178,6 +230,9 @@ impl PanchangaEngine {
             yogi_planet,
             avayogi_planet,
             dagdha_rashis,
+            rahu_kalam,
+            yamaganda,
+            gulika,
         }
     }
 
