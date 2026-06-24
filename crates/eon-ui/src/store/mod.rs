@@ -43,6 +43,7 @@ pub struct FormState {
     pub lat: f64,
     pub lon: f64,
     pub is_male: bool,
+    pub use_night_rat_hour: bool,
 }
 
 impl Default for FormState {
@@ -58,6 +59,7 @@ impl Default for FormState {
             lat: 37.5665,
             lon: 126.9780,
             is_male: true,
+            use_night_rat_hour: false,
         }
     }
 }

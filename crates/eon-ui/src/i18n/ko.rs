@@ -23,6 +23,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::FormCityPlaceholder => "도시명 (예: 서울)",
         TK::FormLunar => "음력",
         TK::FormMale => "남성",
+        TK::FormUseNightRatHour => "야자시 적용",
         TK::FormSavedProfiles => "저장된 프로필",
         TK::FormLoadProfile => "--- 불러오기 ---",
         TK::FormSaveProfile => "현재 설정 저장",
@@ -211,6 +212,19 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuPillarStem => "천간",
         TK::SajuPillarBranch => "지지",
         TK::SajuSpiritRequirement => "성립 요건:",
+
+        TK::SajuStructTitle => "격국 분석 (Structure & Pattern)",
+        TK::SajuStructDesc => "월지 지장간의 투출 상태를 근거로 타고난 사회적 그릇과 직업적 성향의 격식을 판별합니다.",
+        TK::SajuStructDecision => "격국 결정: {}",
+        TK::SajuProjectedStem => "투출 천간",
+        TK::SajuProjectionPath => "투출 위치",
+        TK::SajuStructReasons => "격국 성립 근거",
+        TK::SajuHiddenHarmonyTitle => "지장간 암합 & 명암합 (Hidden Harmony)",
+        TK::SajuHiddenHarmonyDesc => "드러나지 않는 내면적 심리 결합 및 은밀하게 이루어지는 상호작용을 분석합니다.",
+        TK::SajuAmHarmonyTitle => "지장간 암합 (暗合 — 내밀한 계약/비밀 연대)",
+        TK::SajuMyungAmHarmonyTitle => "명암합 (明暗合 — 대외적 명분과 실리의 결착)",
+        TK::SajuLabelHarmony => "성립합",
+        TK::SajuLabelTransformedElement => "합화오행",
 
         // Simulation Tab
         TK::SimVulnerability => "위기 시점",

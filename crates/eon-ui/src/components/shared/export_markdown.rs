@@ -1,5 +1,9 @@
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, Locale, translate_planet, translate_planet_str, translate_avastha, rasi_name};
+use crate::i18n::{t, TK, Locale, translate_planet, translate_planet_str, translate_avastha, rasi_name,
+    translate_saju_stem, translate_saju_branch, translate_saju_element, translate_saju_ten_god,
+    translate_saju_spirit_marker_name, translate_saju_void_desc, translate_saju_ganzi, translate_saju_tag_str,
+    translate_saju_load_balancer, translate_spirit_desc, translate_saju_reason, translate_saju_relation_str,
+    translate_saju_twelve_stage_str};
 use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult};
 use eon_vedic::planets::VedicPlanet;
 use dioxus::prelude::*;
@@ -271,7 +275,7 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     s.push_str(&format!("| {} | {} | {} |\n", top_node, top_cap, top_out));
     s.push_str("| --- | --- | --- |\n");
     for node in &data.qi_topology.nodes {
-        s.push_str(&format!("| {}({}) | {:.1} | {:.1} |\n", node.element.hangul(), node.element.hanja(), node.capacity, node.output));
+        s.push_str(&format!("| {}({}) | {:.1} | {:.1} |\n", translate_saju_element(locale, node.element), node.element.hanja(), node.capacity, node.output));
     }
     s.push_str("\n");
 
@@ -283,8 +287,8 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
         Locale::Ru => ("Подробный анализ сил Первоэлементов и Божеств", "Доминирующий элемент", "Доминирующее Божество", "Процент", "Балл"),
     };
     s.push_str(&format!("### {}\n\n", power_title));
-    s.push_str(&format!("- **{}**: {}\n", dominant_el_lbl, rep.power.dominant_element.hangul()));
-    s.push_str(&format!("- **{}**: {}\n\n", dominant_tg_lbl, rep.power.dominant_ten_god.hangul()));
+    s.push_str(&format!("- **{}**: {}\n", dominant_el_lbl, translate_saju_element(locale, rep.power.dominant_element)));
+    s.push_str(&format!("- **{}**: {}\n\n", dominant_tg_lbl, translate_saju_ten_god(locale, rep.power.dominant_ten_god)));
 
     // Elements Table
     let el_col = match locale {
@@ -296,7 +300,7 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     s.push_str(&format!("| {} | {} | {} |\n", el_col, percentage_col, score_col));
     s.push_str("| --- | --- | --- |\n");
     for &(el, pct, score) in &rep.power.element_scores {
-        s.push_str(&format!("| {}({}) | {:.1}% | {:.1} |\n", el.hangul(), el.hanja(), pct, score));
+        s.push_str(&format!("| {}({}) | {:.1}% | {:.1} |\n", translate_saju_element(locale, el), el.hanja(), pct, score));
     }
     s.push_str("\n");
 
@@ -310,7 +314,7 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     s.push_str(&format!("| {} | {} | {} |\n", tg_col, percentage_col, score_col));
     s.push_str("| --- | --- | --- |\n");
     for &(tg, pct, score) in &rep.power.ten_god_scores {
-        s.push_str(&format!("| {} | {:.1}% | {:.1} |\n", tg.hangul(), pct, score));
+        s.push_str(&format!("| {} | {:.1}% | {:.1} |\n", translate_saju_ten_god(locale, tg), pct, score));
     }
     s.push_str("\n");
 
@@ -349,14 +353,36 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     s.push_str(&format!("- **{}**: {}\n", void_xun_lbl, rep.voids.xun_group));
     s.push_str(&format!("- **{}**: {}({}), {}({})\n", 
         void_br_lbl, 
-        rep.voids.void_branches[0].hangul(), rep.voids.void_branches[0].hanja(),
-        rep.voids.void_branches[1].hangul(), rep.voids.void_branches[1].hanja()
+        translate_saju_branch(locale, rep.voids.void_branches[0]), rep.voids.void_branches[0].hanja(),
+        translate_saju_branch(locale, rep.voids.void_branches[1]), rep.voids.void_branches[1].hanja()
     ));
     if !rep.voids.mapped_voids.is_empty() {
-        s.push_str("\n**세부 공망 분석 (Void Details)**:\n");
+        let void_details_title = match locale {
+            Locale::Ko => "세부 공망 분석",
+            Locale::En => "Void Details",
+            Locale::Zh => "详细空亡分析",
+            Locale::Ru => "Подробный анализ Пустоты",
+        };
+        s.push_str(&format!("\n**{}**:\n", void_details_title));
         for mv in &rep.voids.mapped_voids {
+            let pos_str = match mv.position.as_str() {
+                "연주" | "Year" => t(locale, TK::SajuYearPillar),
+                "월주" | "Month" => t(locale, TK::SajuMonthPillar),
+                "일주" | "Day" => t(locale, TK::SajuDayPillar),
+                "시주" | "Hour" => t(locale, TK::SajuHourPillar),
+                _ => &mv.position,
+            };
+            let label_tg = translate_saju_ten_god(locale, mv.ten_god);
+            let void_summary = match locale {
+                Locale::Ko => format!("{}에 위치한 {} 공망", pos_str, label_tg),
+                Locale::Zh => format!("位于{}的{}空亡", pos_str, label_tg),
+                Locale::En => format!("{} Void located in {}", label_tg, pos_str),
+                Locale::Ru => format!("Пустота {} в {}", label_tg, pos_str),
+            };
+            let trans_desc = translate_saju_void_desc(locale, &mv.position);
+            let void_desc = if trans_desc.is_empty() { &mv.description } else { trans_desc };
             s.push_str(&format!("- **{} {}({}) [{}]**: {} - *{}*\n", 
-                mv.position, mv.branch.hangul(), mv.branch.hanja(), mv.ten_god.hangul(), mv.summary, mv.description));
+                pos_str, translate_saju_branch(locale, mv.branch), mv.branch.hanja(), label_tg, void_summary, void_desc));
         }
     }
     s.push_str("\n");
@@ -373,8 +399,50 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
         s.push_str(&format!("| {} | {} | {} | {} |\n", rel_type_col, rel_name_col, rel_pos_col, rel_desc_col));
         s.push_str("| --- | --- | --- | --- |\n");
         for rel in &rep.relationships.mapped_relationships {
+            let rel_type_trans = match rel.relation_type.as_str() {
+                "합" | "Combo" | "Harmony" => match locale {
+                    Locale::Ko => "합",
+                    Locale::Zh => "合",
+                    Locale::En => "Harmony",
+                    Locale::Ru => "Слияние",
+                },
+                "충" | "Clash" => match locale {
+                    Locale::Ko => "충",
+                    Locale::Zh => "冲",
+                    Locale::En => "Clash",
+                    Locale::Ru => "Столкновение",
+                },
+                "형" | "Punishment" => match locale {
+                    Locale::Ko => "형",
+                    Locale::Zh => "刑",
+                    Locale::En => "Punishment",
+                    Locale::Ru => "Наказание",
+                },
+                "해" | "Harm" => match locale {
+                    Locale::Ko => "해",
+                    Locale::Zh => "害",
+                    Locale::En => "Harm",
+                    Locale::Ru => "Вред",
+                },
+                "파" | "Destruction" => match locale {
+                    Locale::Ko => "파",
+                    Locale::Zh => "破",
+                    Locale::En => "Destruction",
+                    Locale::Ru => "Разрушение",
+                },
+                "원진" | "Resentment" => match locale {
+                    Locale::Ko => "원진",
+                    Locale::Zh => "怨嗔",
+                    Locale::En => "Resentment",
+                    Locale::Ru => "Вражда",
+                },
+                _ => &rel.relation_type,
+            };
+            let pos_str = rel.positions.iter().map(|p| translate_saju_tag_str(locale, p)).collect::<Vec<_>>().join("-");
+            let summary_trans = translate_saju_tag_str(locale, &rel.summary);
+            let desc_trans = translate_saju_tag_str(locale, &rel.description);
             s.push_str(&format!("| {} | **{}** | {} | {} ({}) |\n", 
-                rel.relation_type, rel.name, rel.positions.join("-"), rel.summary, rel.description));
+                rel_type_trans, translate_saju_relation_str(locale, &rel.name), pos_str, summary_trans, desc_trans));
         }
     } else {
         s.push_str("—\n");
@@ -399,7 +467,14 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
                 eon_saju::analysis::spirit_markers::PillarPosition::Day => t(locale, TK::SajuDayPillar),
                 eon_saju::analysis::spirit_markers::PillarPosition::Hour => t(locale, TK::SajuHourPillar),
             };
-            s.push_str(&format!("| {} | **{}** | {} - *{}* |\n", pos_str, m.marker.hangul(), m.summary, m.description));
+            let marker_label = match locale {
+                Locale::Ko => format!("{} ({})", m.marker.hangul(), m.marker.hanja()),
+                Locale::Zh => m.marker.hanja().to_string(),
+                _ => translate_saju_spirit_marker_name(locale, m.marker).to_string(),
+            };
+            let marker_summary = translate_saju_spirit_marker_name(locale, m.marker);
+            let marker_desc = translate_spirit_desc(locale, m.marker, m.position, &m.description);
+            s.push_str(&format!("| {} | **{}** | {} - *{}* |\n", pos_str, marker_label, marker_summary, marker_desc));
         }
     } else {
         s.push_str("—\n");
@@ -418,7 +493,11 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
         s.push_str(&format!("| {} | {} | {} |\n", aux_name_col, aux_basis_col, aux_result_col));
         s.push_str("| --- | --- | --- |\n");
         for (name, basis, result) in &rep.spirit_markers.aux_shinsals {
-            s.push_str(&format!("| {} | {} | {} |\n", name, basis, result));
+            s.push_str(&format!("| {} | {} | {} |\n", 
+                translate_saju_tag_str(locale, name), 
+                translate_saju_tag_str(locale, basis), 
+                translate_saju_tag_str(locale, result)
+            ));
         }
         s.push_str("\n");
     }
@@ -440,10 +519,21 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
         };
         s.push_str(&format!("- **{}**: {}\n\n", total_crashes_lbl, fuzz.total_crashes));
         for vuln in &fuzz.critical_vectors {
-            let major_gz = format!("{}{}", vuln.vector.major.hanja(), vuln.vector.major.hangul());
-            let yearly_gz = format!("{}{}", vuln.vector.yearly.hanja(), vuln.vector.yearly.hangul());
+            let vuln_type = translate_saju_tag_str(locale, &vuln.vulnerability_type);
+            let major_gz = match locale {
+                Locale::Ko => format!("{}({})", vuln.vector.major.hanja(), vuln.vector.major.hangul()),
+                Locale::Zh => vuln.vector.major.hanja().to_string(),
+                _ => translate_saju_ganzi(locale, &vuln.vector.major),
+            };
+            let yearly_gz = match locale {
+                Locale::Ko => format!("{}({})", vuln.vector.yearly.hanja(), vuln.vector.yearly.hangul()),
+                Locale::Zh => vuln.vector.yearly.hanja().to_string(),
+                _ => translate_saju_ganzi(locale, &vuln.vector.yearly),
+            };
+            let tags_translated: Vec<String> = vuln.tags.iter().map(|tag| translate_saju_tag_str(locale, tag)).collect();
+            let tags_list = tags_translated.join(", ");
             s.push_str(&format!("- **[⚠️ {}]** (Score: {:.1}): Major: {}, Yearly: {} (Tags: {})\n", 
-                vuln.vulnerability_type, vuln.crash_score, major_gz, yearly_gz, vuln.tags.join(", ")));
+                vuln_type, vuln.crash_score, major_gz, yearly_gz, tags_list));
         }
     } else {
         s.push_str("—\n");
@@ -454,12 +544,34 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     if !data.load_diagnostics.is_empty() {
         for diag in &data.load_diagnostics {
             let status_str = match diag.status {
-                eon_saju::engine::load_balancer::TrafficStatus::Idle => "Idle",
-                eon_saju::engine::load_balancer::TrafficStatus::Normal => "Normal",
-                eon_saju::engine::load_balancer::TrafficStatus::Overloaded => "Overloaded",
-                eon_saju::engine::load_balancer::TrafficStatus::SystemDown => "SystemDown",
+                eon_saju::engine::load_balancer::TrafficStatus::Idle => match locale {
+                    Locale::Ko => "평온 (Idle)",
+                    Locale::En => "Idle",
+                    Locale::Zh => "平稳 (Idle)",
+                    Locale::Ru => "Покой (Idle)",
+                },
+                eon_saju::engine::load_balancer::TrafficStatus::Normal => match locale {
+                    Locale::Ko => "보통 (Normal)",
+                    Locale::En => "Normal",
+                    Locale::Zh => "正常 (Normal)",
+                    Locale::Ru => "Нормально (Normal)",
+                },
+                eon_saju::engine::load_balancer::TrafficStatus::Overloaded => match locale {
+                    Locale::Ko => "오버로드 (Overload)",
+                    Locale::En => "Overload",
+                    Locale::Zh => "过载 (Overload)",
+                    Locale::Ru => "Перегрузка (Overload)",
+                },
+                eon_saju::engine::load_balancer::TrafficStatus::SystemDown => match locale {
+                    Locale::Ko => "다운 (System Down)",
+                    Locale::En => "System Down",
+                    Locale::Zh => "系统故障 (System Down)",
+                    Locale::Ru => "Системный сбой (System Down)",
+                },
             };
-            s.push_str(&format!("- **Age {} [{}]**: *{}* -> Advice: {}\n", diag.age, status_str, diag.reason, diag.strategy));
+            let age_str = crate::i18n::format_age(locale, diag.age as i32);
+            let (reason_desc, strategy_desc) = translate_saju_load_balancer(locale, &diag.reason, &diag.strategy);
+            s.push_str(&format!("- **{} [{}]**: *{}* -> Advice: {}\n", age_str, status_str, reason_desc, strategy_desc));
         }
     } else {
         s.push_str("—\n");
@@ -477,10 +589,22 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     s.push_str(&format!("### {}\n\n", luck_title));
     if let Some(ml) = &rep.major_luck {
         for cycle in &ml.cycles {
-            s.push_str(&format!("- **{} {} ~ {}**: {}{} 대운 ({}/{})\n", 
+            let cycle_ganzi_str = match locale {
+                Locale::Ko => format!("{}{}", cycle.ganzi.stem.hangul(), cycle.ganzi.branch.hangul()),
+                _ => translate_saju_ganzi(locale, &cycle.ganzi),
+            };
+            let luck_suffix = match locale {
+                Locale::Ko => " 대운",
+                Locale::En => " Major Luck",
+                Locale::Zh => " 大运",
+                Locale::Ru => " Столп Удачи",
+            };
+            let stem_god_str = translate_saju_ten_god(locale, cycle.stem_god);
+            let branch_god_str = translate_saju_ten_god(locale, cycle.branch_god);
+            s.push_str(&format!("- **{} {} ~ {}**: {}{} ({}/{})\n", 
                 age_lbl, cycle.start_age, cycle.end_age, 
-                cycle.ganzi.stem.hangul(), cycle.ganzi.branch.hangul(),
-                cycle.stem_god.hangul(), cycle.branch_god.hangul()
+                cycle_ganzi_str, luck_suffix,
+                stem_god_str, branch_god_str
             ));
         }
     } else {
@@ -497,21 +621,52 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     };
 
     s.push_str(&format!("### {}\n\n", supp_title));
-    s.push_str(&format!("- **{}**: {}({})\n", taewon_lbl, rep.supplementary_pillars.taewon.stem.hangul(), rep.supplementary_pillars.taewon.branch.hangul()));
-    s.push_str(&format!("- **{}**: {}({})\n", myeonggung_lbl, rep.supplementary_pillars.myeonggung.stem.hangul(), rep.supplementary_pillars.myeonggung.branch.hangul()));
-    s.push_str(&format!("- **{}**: {}({})\n\n", shingung_lbl, rep.supplementary_pillars.shingung.stem.hangul(), rep.supplementary_pillars.shingung.branch.hangul()));
+    let format_supp_pillar = |loc, stem: eon_saju::core::stem::HeavenlyStem, branch: eon_saju::core::branch::EarthlyBranch| {
+        match loc {
+            Locale::Ko => format!("{}{}({}{})", translate_saju_stem(loc, stem), translate_saju_branch(loc, branch), stem.hanja(), branch.hanja()),
+            Locale::Zh => format!("{}{}", stem.hanja(), branch.hanja()),
+            _ => format!("{}-{}({}{})", translate_saju_stem(loc, stem), translate_saju_branch(loc, branch), stem.hanja(), branch.hanja()),
+        }
+    };
+    s.push_str(&format!("- **{}**: {}\n", taewon_lbl, format_supp_pillar(locale, rep.supplementary_pillars.taewon.stem, rep.supplementary_pillars.taewon.branch)));
+    s.push_str(&format!("- **{}**: {}\n", myeonggung_lbl, format_supp_pillar(locale, rep.supplementary_pillars.myeonggung.stem, rep.supplementary_pillars.myeonggung.branch)));
+    s.push_str(&format!("- **{}**: {}\n\n", shingung_lbl, format_supp_pillar(locale, rep.supplementary_pillars.shingung.stem, rep.supplementary_pillars.shingung.branch)));
 
     if !rep.supplementary_pillars.interpretations.is_empty() {
         s.push_str(&format!("| {} | {} | {} | {} |\n", supp_pillar_col, supp_level_col, supp_desc_col, supp_reason_col));
         s.push_str("| --- | --- | --- | --- |\n");
         for interp in &rep.supplementary_pillars.interpretations {
             let lvl_str = match interp.level {
-                eon_saju::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "🟢 Auspicious",
-                eon_saju::analysis::supplementary_pillars::InterpretationLevel::Caution => "🔴 Caution",
-                eon_saju::analysis::supplementary_pillars::InterpretationLevel::Neutral => "⚪ Neutral",
+                eon_saju::analysis::supplementary_pillars::InterpretationLevel::Auspicious => match locale {
+                    Locale::Ko => "🟢 길(吉)",
+                    Locale::Zh => "🟢 吉",
+                    Locale::En => "🟢 Auspicious",
+                    Locale::Ru => "🟢 Благоприятно",
+                },
+                eon_saju::analysis::supplementary_pillars::InterpretationLevel::Caution => match locale {
+                    Locale::Ko => "🔴 흉(凶)",
+                    Locale::Zh => "🔴 凶",
+                    Locale::En => "🔴 Caution",
+                    Locale::Ru => "🔴 Предупреждение",
+                },
+                eon_saju::analysis::supplementary_pillars::InterpretationLevel::Neutral => match locale {
+                    Locale::Ko => "⚪ 평(平)",
+                    Locale::Zh => "⚪ 平",
+                    Locale::En => "⚪ Neutral",
+                    Locale::Ru => "⚪ Нейтрально",
+                },
             };
-            let reasons_str = interp.reasons.join(", ");
-            s.push_str(&format!("| {} | {} | **{}** - {} | {} |\n", interp.pillar_name, lvl_str, interp.summary, interp.description, reasons_str));
+            let pillar_name_trans = match interp.pillar_name.as_str() {
+                "태원" => taewon_lbl,
+                "명궁" => myeonggung_lbl,
+                "신궁" => shingung_lbl,
+                _ => &interp.pillar_name,
+            };
+            let summary_trans = translate_saju_tag_str(locale, &interp.summary);
+            let desc_trans = translate_saju_tag_str(locale, &interp.description);
+            let reasons_trans: Vec<String> = interp.reasons.iter().map(|r| translate_saju_reason(locale, r)).collect();
+            let reasons_str = reasons_trans.join(", ");
+            s.push_str(&format!("| {} | {} | **{}** - {} | {} |\n", pillar_name_trans, lvl_str, summary_trans, desc_trans, reasons_str));
         }
         s.push_str("\n");
     }
@@ -524,10 +679,22 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
         Locale::Ru => ("Золотой период жизни (Golden Time)", "Золотой возраст", "Средний балл"),
     };
     if let Some(gt) = &rep.golden_time {
+        let age_range_str = match locale {
+            Locale::Ko => format!("{}세 ~ {}세", gt.start_age, gt.end_age),
+            Locale::Zh => format!("{}岁 ~ {}岁", gt.start_age, gt.end_age),
+            Locale::Ru => format!("{} ~ {} лет", gt.start_age, gt.end_age),
+            _ => format!("Age {} ~ {}", gt.start_age, gt.end_age),
+        };
+        let golden_desc = match locale {
+            Locale::Ko => format!("{}세부터 {}세까지 가장 운의 밀도가 높은 골든 타임입니다.", gt.start_age, gt.end_age),
+            Locale::En => format!("The period from age {} to {} is the golden time with the highest density of luck.", gt.start_age, gt.end_age),
+            Locale::Zh => format!("{}岁到{}岁是好运密度最高的黄金时期。", gt.start_age, gt.end_age),
+            Locale::Ru => format!("Период с {} по {} лет — это золотое время с наибольшей плотностью удачи.", gt.start_age, gt.end_age),
+        };
         s.push_str(&format!("### {}\n\n", golden_title));
-        s.push_str(&format!("- **{}**: {}세 ~ {}세\n", golden_range_lbl, gt.start_age, gt.end_age));
+        s.push_str(&format!("- **{}**: {}\n", golden_range_lbl, age_range_str));
         s.push_str(&format!("- **{}**: {:.2} / 100\n", golden_score_lbl, gt.average_score));
-        s.push_str(&format!("- **{}**\n\n", gt.description));
+        s.push_str(&format!("- **{}**\n\n", golden_desc));
     }
 
     // VM Summary
@@ -567,14 +734,32 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
             },
         };
         s.push_str(&format!("- **{}**: {}\n", ml_dir, dir_str));
-        s.push_str(&format!("- **{}**: {}세 ({}개월 {}일)\n\n", ml_age, ml.start_age, ml.start_months, ml.start_days));
+        let ml_age_val = match locale {
+            Locale::Ko => format!("{}세 ({}개월 {}일)", ml.start_age, ml.start_months, ml.start_days),
+            Locale::Zh => format!("{}岁 ({}个月 {}天)", ml.start_age, ml.start_months, ml.start_days),
+            Locale::Ru => format!("{} лет ({} мес. {} дн.)", ml.start_age, ml.start_months, ml.start_days),
+            _ => format!("Age {} ({} months {} days)", ml.start_age, ml.start_months, ml.start_days),
+        };
+        s.push_str(&format!("- **{}**: {}\n\n", ml_age, ml_age_val));
 
         s.push_str(&format!("| {} | {} | {} | {} |\n", ml_cycle, ml_ganzi, ml_gods, ml_start_date));
         s.push_str("| --- | --- | --- | --- |\n");
         for cycle in &ml.cycles {
-            let cycle_str = format!("{}세 ~ {}세", cycle.start_age, cycle.end_age);
-            let ganzi_str = format!("{}({})", cycle.ganzi.hangul(), cycle.ganzi.hanja());
-            let gods_str = format!("{}/{}", cycle.stem_god.hangul(), cycle.branch_god.hangul());
+            let cycle_str = match locale {
+                Locale::Ko => format!("{}세 ~ {}세", cycle.start_age, cycle.end_age),
+                Locale::Zh => format!("{}岁 ~ {}岁", cycle.start_age, cycle.end_age),
+                Locale::Ru => format!("{} ~ {} лет", cycle.start_age, cycle.end_age),
+                _ => format!("Age {} ~ {}", cycle.start_age, cycle.end_age),
+            };
+            let ganzi_str = match locale {
+                Locale::Ko => format!("{}({})", cycle.ganzi.hangul(), cycle.ganzi.hanja()),
+                Locale::Zh => cycle.ganzi.hanja().to_string(),
+                _ => format!("{}({})", translate_saju_ganzi(locale, &cycle.ganzi), cycle.ganzi.hanja()),
+            };
+            let gods_str = format!("{}/{}", 
+                translate_saju_ten_god(locale, cycle.stem_god),
+                translate_saju_ten_god(locale, cycle.branch_god)
+            );
             let date_str = cycle.start_date.format("%Y-%m-%d").to_string();
             s.push_str(&format!("| {} | {} | {} | {} |\n", cycle_str, ganzi_str, gods_str, date_str));
         }
@@ -596,10 +781,42 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
 
     for score in &rep.timeline {
         let frame_opt = rep.simulation_frames.iter().find(|f| f.age == score.age);
-        let seun_str = frame_opt.map(|f| format!("{}{}", f.ganzi.stem.hangul(), f.ganzi.branch.hangul())).unwrap_or_else(|| "—".to_string());
-        let daeun_str = frame_opt.map(|f| format!("{}{}", f.major_ganzi.stem.hangul(), f.major_ganzi.branch.hangul())).unwrap_or_else(|| "—".to_string());
-        let tags_str = frame_opt.map(|f| f.tags_as_strings().join(", ")).unwrap_or_else(|| "—".to_string());
-        let transition_str = if score.is_transition_period { "Yes" } else { "No" };
+        let seun_str = frame_opt.map(|f| {
+            match locale {
+                Locale::Ko => format!("{}{}", f.ganzi.stem.hangul(), f.ganzi.branch.hangul()),
+                Locale::Zh => f.ganzi.hanja().to_string(),
+                _ => translate_saju_ganzi(locale, &f.ganzi),
+            }
+        }).unwrap_or_else(|| "—".to_string());
+
+        let daeun_str = frame_opt.map(|f| {
+            match locale {
+                Locale::Ko => format!("{}{}", f.major_ganzi.stem.hangul(), f.major_ganzi.branch.hangul()),
+                Locale::Zh => f.major_ganzi.hanja().to_string(),
+                _ => translate_saju_ganzi(locale, &f.major_ganzi),
+            }
+        }).unwrap_or_else(|| "—".to_string());
+
+        let tags_str = frame_opt.map(|f| {
+            let translated_tags: Vec<String> = f.tags_as_strings().iter().map(|tag| translate_saju_tag_str(locale, tag)).collect();
+            translated_tags.join(", ")
+        }).unwrap_or_else(|| "—".to_string());
+
+        let transition_str = if score.is_transition_period {
+            match locale {
+                Locale::Ko => "Yes",
+                Locale::Zh => "是",
+                Locale::Ru => "Да",
+                _ => "Yes",
+            }
+        } else {
+            match locale {
+                Locale::Ko => "No",
+                Locale::Zh => "否",
+                Locale::Ru => "Нет",
+                _ => "No",
+            }
+        };
         
         s.push_str(&format!("| {} | {} | {} | {} | {:.1} | {:.1} | {:.1} | {:.1} | {:.1} | {:.1} | {} | {} |\n",
             score.age, score.year, seun_str, daeun_str, score.total_score, score.wealth_score, score.career_score, score.academic_score, score.health_score, score.volatility_index, transition_str, tags_str));
@@ -2183,52 +2400,157 @@ fn format_transit_inner(data: &TransitAnalysisOutput, locale: Locale) -> String 
     s.push_str(&format!("### {}\n\n", transit_title));
     s.push_str(&format!("- **{}**: {}\n\n", current_age_lbl, age_str));
 
+    // Helper to translate influence relations
+    let translate_inf_list = |loc: Locale, inf_str: &str| -> String {
+        if inf_str == "—" || inf_str.is_empty() {
+            return "—".to_string();
+        }
+        inf_str.split(", ")
+            .map(|s| translate_saju_tag_str(loc, s.trim()))
+            .collect::<Vec<String>>()
+            .join(", ")
+    };
+
+    // Helper to translate special events
+    let translate_spec_list = |loc: Locale, spec_str: &str| -> String {
+        if spec_str == "—" || spec_str.is_empty() {
+            return "—".to_string();
+        }
+        spec_str.split(", ")
+            .map(|s| translate_saju_tag_str(loc, s.trim()))
+            .collect::<Vec<String>>()
+            .join(", ")
+    };
+
+    // Helper to translate 12 stages
+    let translate_stage_val = |loc: Locale, stage_str: &str| -> String {
+        if stage_str == "—" || stage_str.is_empty() {
+            return "—".to_string();
+        }
+        let translated = translate_saju_twelve_stage_str(loc, stage_str);
+        if translated.is_empty() { stage_str.to_string() } else { translated.to_string() }
+    };
+
+    let category_lbl = match locale {
+        Locale::Ko => "구분",
+        Locale::Zh => "分类",
+        Locale::Ru => "Категория",
+        _ => "Category",
+    };
+
     // Summary table
-    s.push_str(&format!("| 구분 | {} | {} | {} | {} | {} |\n", pillar_col, god_col, relation_col, stage_col, special_col));
+    s.push_str(&format!("| {} | {} | {} | {} | {} | {} |\n", category_lbl, pillar_col, god_col, relation_col, stage_col, special_col));
     s.push_str("| --- | --- | --- | --- | --- | --- |\n");
 
     // Yearly
     let yr = &data.yearly_luck;
     let yr_inf = yr.influence.as_ref().map(|i| i.relations_with_natal.join(", ")).unwrap_or_else(|| "—".to_string());
+    let yr_inf_trans = translate_inf_list(locale, &yr_inf);
     let yr_stage = yr.twelve_stage.as_deref().unwrap_or("—");
+    let yr_stage_trans = translate_stage_val(locale, yr_stage);
     let yr_spec = if yr.special_events.is_empty() { "—".to_string() } else { yr.special_events.join(", ") };
-    s.push_str(&format!("| **{} ({}년)** | {}({}) | {} / {} | {} | {} | {} |\n",
-        yearly_luck_lbl, yr.year, yr.ganzi.hanja(), yr.ganzi.hangul(),
-        yr.stem_god.hangul(), yr.branch_god.hangul(),
-        yr_inf, yr_stage, yr_spec
+    let yr_spec_trans = translate_spec_list(locale, &yr_spec);
+    let yr_label_formatted = match locale {
+        Locale::Ko => format!("{} ({}년)", yearly_luck_lbl, yr.year),
+        Locale::Zh => format!("{} ({}年)", yearly_luck_lbl, yr.year),
+        _ => format!("{} ({})", yearly_luck_lbl, yr.year),
+    };
+    let yr_ganzi_str = match locale {
+        Locale::Ko => format!("{}({})", yr.ganzi.hanja(), yr.ganzi.hangul()),
+        Locale::Zh => yr.ganzi.hanja().to_string(),
+        _ => format!("{}({})", translate_saju_ganzi(locale, &yr.ganzi), yr.ganzi.hanja()),
+    };
+    let yr_gods_str = format!("{} / {}", 
+        translate_saju_ten_god(locale, yr.stem_god), 
+        translate_saju_ten_god(locale, yr.branch_god)
+    );
+    s.push_str(&format!("| **{}** | {} | {} | {} | {} | {} |\n",
+        yr_label_formatted, yr_ganzi_str, yr_gods_str,
+        yr_inf_trans, yr_stage_trans, yr_spec_trans
     ));
 
     // Monthly
     let mo = &data.monthly_luck;
     let mo_inf = mo.influence.as_ref().map(|i| i.relations_with_natal.join(", ")).unwrap_or_else(|| "—".to_string());
+    let mo_inf_trans = translate_inf_list(locale, &mo_inf);
     let mo_stage = mo.twelve_stage.as_deref().unwrap_or("—");
+    let mo_stage_trans = translate_stage_val(locale, mo_stage);
     let mo_spec = if mo.special_events.is_empty() { "—".to_string() } else { mo.special_events.join(", ") };
-    s.push_str(&format!("| **{} ({}월)** | {}({}) | {} / {} | {} | {} | {} |\n",
-        monthly_luck_lbl, mo.month, mo.ganzi.hanja(), mo.ganzi.hangul(),
-        mo.stem_god.hangul(), mo.branch_god.hangul(),
-        mo_inf, mo_stage, mo_spec
+    let mo_spec_trans = translate_spec_list(locale, &mo_spec);
+    let mo_label_formatted = match locale {
+        Locale::Ko => format!("{} ({}월)", monthly_luck_lbl, mo.month),
+        Locale::Zh => format!("{} ({}月)", monthly_luck_lbl, mo.month),
+        Locale::Ru => format!("{} ({} мес.)", monthly_luck_lbl, mo.month),
+        _ => format!("{} (Month {})", monthly_luck_lbl, mo.month),
+    };
+    let mo_ganzi_str = match locale {
+        Locale::Ko => format!("{}({})", mo.ganzi.hanja(), mo.ganzi.hangul()),
+        Locale::Zh => mo.ganzi.hanja().to_string(),
+        _ => format!("{}({})", translate_saju_ganzi(locale, &mo.ganzi), mo.ganzi.hanja()),
+    };
+    let mo_gods_str = format!("{} / {}", 
+        translate_saju_ten_god(locale, mo.stem_god), 
+        translate_saju_ten_god(locale, mo.branch_god)
+    );
+    s.push_str(&format!("| **{}** | {} | {} | {} | {} | {} |\n",
+        mo_label_formatted, mo_ganzi_str, mo_gods_str,
+        mo_inf_trans, mo_stage_trans, mo_spec_trans
     ));
 
     // Daily
     let dy = &data.daily_luck;
     let dy_inf = dy.influence.as_ref().map(|i| i.relations_with_natal.join(", ")).unwrap_or_else(|| "—".to_string());
+    let dy_inf_trans = translate_inf_list(locale, &dy_inf);
     let dy_stage = dy.twelve_stage.as_deref().unwrap_or("—");
+    let dy_stage_trans = translate_stage_val(locale, dy_stage);
     let dy_spec = if dy.special_events.is_empty() { "—".to_string() } else { dy.special_events.join(", ") };
-    s.push_str(&format!("| **{} ({}일)** | {}({}) | {} / {} | {} | {} | {} |\n",
-        daily_luck_lbl, dy.day, dy.ganzi.hanja(), dy.ganzi.hangul(),
-        dy.stem_god.hangul(), dy.branch_god.hangul(),
-        dy_inf, dy_stage, dy_spec
+    let dy_spec_trans = translate_spec_list(locale, &dy_spec);
+    let dy_label_formatted = match locale {
+        Locale::Ko => format!("{} ({}일)", daily_luck_lbl, dy.day),
+        Locale::Zh => format!("{} ({}日)", daily_luck_lbl, dy.day),
+        Locale::Ru => format!("{} ({} дн.)", daily_luck_lbl, dy.day),
+        _ => format!("{} (Day {})", daily_luck_lbl, dy.day),
+    };
+    let dy_ganzi_str = match locale {
+        Locale::Ko => format!("{}({})", dy.ganzi.hanja(), dy.ganzi.hangul()),
+        Locale::Zh => dy.ganzi.hanja().to_string(),
+        _ => format!("{}({})", translate_saju_ganzi(locale, &dy.ganzi), dy.ganzi.hanja()),
+    };
+    let dy_gods_str = format!("{} / {}", 
+        translate_saju_ten_god(locale, dy.stem_god), 
+        translate_saju_ten_god(locale, dy.branch_god)
+    );
+    s.push_str(&format!("| **{}** | {} | {} | {} | {} | {} |\n",
+        dy_label_formatted, dy_ganzi_str, dy_gods_str,
+        dy_inf_trans, dy_stage_trans, dy_spec_trans
     ));
 
     // Hourly
     let hr = &data.hourly_luck;
     let hr_inf = hr.influence.as_ref().map(|i| i.relations_with_natal.join(", ")).unwrap_or_else(|| "—".to_string());
+    let hr_inf_trans = translate_inf_list(locale, &hr_inf);
     let hr_stage = hr.twelve_stage.as_deref().unwrap_or("—");
+    let hr_stage_trans = translate_stage_val(locale, hr_stage);
     let hr_spec = if hr.special_events.is_empty() { "—".to_string() } else { hr.special_events.join(", ") };
-    s.push_str(&format!("| **{} ({}시)** | {}({}) | {} / {} | {} | {} | {} |\n\n",
-        hourly_luck_lbl, hr.hour, hr.ganzi.hanja(), hr.ganzi.hangul(),
-        hr.stem_god.hangul(), hr.branch_god.hangul(),
-        hr_inf, hr_stage, hr_spec
+    let hr_spec_trans = translate_spec_list(locale, &hr_spec);
+    let hr_label_formatted = match locale {
+        Locale::Ko => format!("{} ({}시)", hourly_luck_lbl, hr.hour),
+        Locale::Zh => format!("{} ({}时)", hourly_luck_lbl, hr.hour),
+        Locale::Ru => format!("{} ({} ч.)", hourly_luck_lbl, hr.hour),
+        _ => format!("{} (Hour {})", hourly_luck_lbl, hr.hour),
+    };
+    let hr_ganzi_str = match locale {
+        Locale::Ko => format!("{}({})", hr.ganzi.hanja(), hr.ganzi.hangul()),
+        Locale::Zh => hr.ganzi.hanja().to_string(),
+        _ => format!("{}({})", translate_saju_ganzi(locale, &hr.ganzi), hr.ganzi.hanja()),
+    };
+    let hr_gods_str = format!("{} / {}", 
+        translate_saju_ten_god(locale, hr.stem_god), 
+        translate_saju_ten_god(locale, hr.branch_god)
+    );
+    s.push_str(&format!("| **{}** | {} | {} | {} | {} | {} |\n\n",
+        hr_label_formatted, hr_ganzi_str, hr_gods_str,
+        hr_inf_trans, hr_stage_trans, hr_spec_trans
     ));
 
     // 12 Months details
@@ -2237,11 +2559,27 @@ fn format_transit_inner(data: &TransitAnalysisOutput, locale: Locale) -> String 
     s.push_str("| --- | --- | --- | --- | --- | --- |\n");
     for m_luck in &data.monthly_lucks {
         let m_inf = m_luck.influence.as_ref().map(|i| i.relations_with_natal.join(", ")).unwrap_or_else(|| "—".to_string());
+        let m_inf_trans = translate_inf_list(locale, &m_inf);
         let m_stage = m_luck.twelve_stage.as_deref().unwrap_or("—");
-        s.push_str(&format!("| {} | {}월 | {}({}) | {} / {} | {} | {} |\n",
-            m_luck.year, m_luck.month, m_luck.ganzi.hanja(), m_luck.ganzi.hangul(),
-            m_luck.stem_god.hangul(), m_luck.branch_god.hangul(),
-            m_stage, m_inf
+        let m_stage_trans = translate_stage_val(locale, m_stage);
+        let m_month_formatted = match locale {
+            Locale::Ko => format!("{}월", m_luck.month),
+            Locale::Zh => format!("{}月", m_luck.month),
+            Locale::Ru => format!("{} мес.", m_luck.month),
+            _ => format!("Month {}", m_luck.month),
+        };
+        let m_ganzi_str = match locale {
+            Locale::Ko => format!("{}({})", m_luck.ganzi.hanja(), m_luck.ganzi.hangul()),
+            Locale::Zh => m_luck.ganzi.hanja().to_string(),
+            _ => format!("{}({})", translate_saju_ganzi(locale, &m_luck.ganzi), m_luck.ganzi.hanja()),
+        };
+        let m_gods_str = format!("{} / {}", 
+            translate_saju_ten_god(locale, m_luck.stem_god), 
+            translate_saju_ten_god(locale, m_luck.branch_god)
+        );
+        s.push_str(&format!("| {} | {} | {} | {} | {} | {} |\n",
+            m_luck.year, m_month_formatted, m_ganzi_str, m_gods_str,
+            m_stage_trans, m_inf_trans
         ));
     }
     s.push_str("\n");

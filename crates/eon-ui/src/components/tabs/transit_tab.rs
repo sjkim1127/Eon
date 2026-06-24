@@ -23,7 +23,7 @@ pub fn TransitTab() -> Element {
                 lat: form.lat, lon: form.lon,
                 timezone: "Asia/Seoul".to_string(),
             };
-            let saju_input = SajuAnalysisInput::new(base, form.is_male, false, Some(false));
+            let saju_input = SajuAnalysisInput::new(base, form.is_male, form.use_night_rat_hour, Some(false));
             let transit_input = TransitAnalysisInput::new(saju_input, None);
 
             match facade::analyze_transit(transit_input) {
@@ -47,7 +47,7 @@ pub fn TransitTab() -> Element {
                     lat: form2.lat, lon: form2.lon,
                     timezone: "Asia/Seoul".to_string(),
                 };
-                if let Ok(saju_res) = facade::analyze_saju(SajuAnalysisInput::new(base2, form2.is_male, false, Some(false))) {
+                if let Ok(saju_res) = facade::analyze_saju(SajuAnalysisInput::new(base2, form2.is_male, form2.use_night_rat_hour, Some(false))) {
                     state.saju.write().data = Some(saju_res);
                     state.saju.write().status = TaskStatus::Success;
                 }

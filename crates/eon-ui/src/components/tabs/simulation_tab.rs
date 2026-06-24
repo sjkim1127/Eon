@@ -23,7 +23,7 @@ pub fn SimulationTab() -> Element {
                     lat: form.lat, lon: form.lon,
                     timezone: "Asia/Seoul".to_string(),
                 },
-                form.is_male, false, Some(false),
+                form.is_male, form.use_night_rat_hour, Some(false),
             );
             match facade::analyze_saju(input) {
                 Ok(res) => {

@@ -23,6 +23,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::FormCityPlaceholder => "Город (напр. Сеул)",
         TK::FormLunar => "Лунный кал.",
         TK::FormMale => "Мужской",
+        TK::FormUseNightRatHour => "Применить Ядзя-си",
         TK::FormSavedProfiles => "Сохранённые профили",
         TK::FormLoadProfile => "--- Загрузить профиль ---",
         TK::FormSaveProfile => "Сохранить текущие настройки",
@@ -211,6 +212,19 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuPillarStem => "Небесный ствол",
         TK::SajuPillarBranch => "Земная ветвь",
         TK::SajuSpiritRequirement => "Требования к формированию:",
+
+        TK::SajuStructTitle => "Анализ структуры карты (Structure & Pattern)",
+        TK::SajuStructDesc => "Определяет врожденный социальный потенциал и карьерную ориентацию на основе проявления скрытых стволов в земной ветви месяца.",
+        TK::SajuStructDecision => "Установленная структура: {}",
+        TK::SajuProjectedStem => "Проявленный ствол",
+        TK::SajuProjectionPath => "Путь проекции",
+        TK::SajuStructReasons => "Основание для структуры карты",
+        TK::SajuHiddenHarmonyTitle => "Скрытое слияние земных ветвей (Hidden Harmony)",
+        TK::SajuHiddenHarmonyDesc => "Анализирует скрытые психологические связи и тайные взаимодействия.",
+        TK::SajuAmHarmonyTitle => "Скрытое слияние земных ветвей (Ам Хап — Тайный союз)",
+        TK::SajuMyungAmHarmonyTitle => "Явно-скрытое слияние (Мён-Ам Хап — Внешний повод и внутренняя выгода)",
+        TK::SajuLabelHarmony => "Слияние",
+        TK::SajuLabelTransformedElement => "Превращенный элемент",
 
         // Simulation Tab
         TK::SimVulnerability => "Рисковые периоды",

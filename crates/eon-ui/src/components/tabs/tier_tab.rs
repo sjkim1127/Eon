@@ -30,7 +30,7 @@ pub fn TierTab() -> Element {
                 timezone: "Asia/Seoul".to_string(),
             };
 
-            let saju_input = SajuAnalysisInput::new(base_input.clone(), form.is_male, false, Some(false));
+            let saju_input = SajuAnalysisInput::new(base_input.clone(), form.is_male, form.use_night_rat_hour, Some(false));
             let vedic_input = VedicAnalysisInput::new(base_input.clone(), Some(form.is_male), None);
             
             // 병렬이 좋지만 간소화를 위해 순차 실행
