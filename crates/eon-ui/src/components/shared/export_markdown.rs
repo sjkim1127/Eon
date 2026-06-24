@@ -114,11 +114,11 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
         Locale::Ru => ("Четыре Столпа Судьбы", "Категория", "Столп Часа", "Столп Дня", "Столп Месяца", "Столп Года"),
     };
     
-    let (stem_row, branch_row, god_stem_row, god_branch_row, stage_row) = match locale {
-        Locale::Ko => ("천간 (Heavenly Stem)", "지지 (Earthly Branch)", "천간 십성", "지지 십성", "12운성 (Twelve Stage)"),
-        Locale::En => ("Heavenly Stem", "Earthly Branch", "Stem Ten-God", "Branch Ten-God", "Twelve Stage"),
-        Locale::Zh => ("天干", "地支", "天干十神", "地支十神", "十二运星"),
-        Locale::Ru => ("Небесный ствол", "Земная ветвь", "Божество Ствола", "Божество Ветви", "12 стадий судьбы"),
+    let (stem_row, branch_row, god_stem_row, god_branch_row, stage_row, nayin_row) = match locale {
+        Locale::Ko => ("천간 (Heavenly Stem)", "지지 (Earthly Branch)", "천간 십성", "지지 십성", "12운성 (Twelve Stage)", "납음오행 (Nayin)"),
+        Locale::En => ("Heavenly Stem", "Earthly Branch", "Stem Ten-God", "Branch Ten-God", "Twelve Stage", "Nayin"),
+        Locale::Zh => ("天干", "地支", "天干十神", "地支十神", "十二运星", "纳音五行"),
+        Locale::Ru => ("Небесный ствол", "Земная ветвь", "Божество Ствола", "Божество Ветви", "12 стадий судьбы", "Найин"),
     };
 
     s.push_str(&format!("### {}\n\n", pillars_title));
@@ -146,9 +146,19 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     ));
     
     let stages = rep.pillars.twelve_stages();
+    s.push_str(&format!("| **{}** | {} | {} | {} | {} |\n", 
+        stage_row,
+        crate::i18n::translate_saju_twelve_stage(locale, stages.hour_stage),
+        crate::i18n::translate_saju_twelve_stage(locale, stages.day_stage),
+        crate::i18n::translate_saju_twelve_stage(locale, stages.month_stage),
+        crate::i18n::translate_saju_twelve_stage(locale, stages.year_stage)
+    ));
     s.push_str(&format!("| **{}** | {} | {} | {} | {} |\n\n", 
-        stage_row, stages.hour_stage.hangul(), stages.day_stage.hangul(),
-        stages.month_stage.hangul(), stages.year_stage.hangul()
+        nayin_row,
+        crate::i18n::translate_saju_nayin(locale, rep.pillars.hour.nayin()),
+        crate::i18n::translate_saju_nayin(locale, rep.pillars.day.nayin()),
+        crate::i18n::translate_saju_nayin(locale, rep.pillars.month.nayin()),
+        crate::i18n::translate_saju_nayin(locale, rep.pillars.year.nayin())
     ));
 
        // Day Master & Strength
@@ -396,6 +406,23 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     }
     s.push_str("\n");
 
+    // ── Phase 5: Aux Shinsals (보조 신살) ───────────────────────────────────
+    let (aux_title, aux_name_col, aux_basis_col, aux_result_col) = match locale {
+        Locale::Ko => ("보조 신살 목록 (Auxiliary Spirit Markers)", "신살명", "기준", "결과 지지"),
+        Locale::En => ("Auxiliary Spirit Markers", "Marker Name", "Basis", "Result Branch"),
+        Locale::Zh => ("辅助神煞列表", "神煞名", "基准", "结果地支"),
+        Locale::Ru => ("Вспомогательные Символические Звезды", "Название", "Основа", "Результат"),
+    };
+    if !rep.spirit_markers.aux_shinsals.is_empty() {
+        s.push_str(&format!("#### {}\n\n", aux_title));
+        s.push_str(&format!("| {} | {} | {} |\n", aux_name_col, aux_basis_col, aux_result_col));
+        s.push_str("| --- | --- | --- |\n");
+        for (name, basis, result) in &rep.spirit_markers.aux_shinsals {
+            s.push_str(&format!("| {} | {} | {} |\n", name, basis, result));
+        }
+        s.push_str("\n");
+    }
+
     // Vulnerability/Fuzzer & Load Diagnostics
     let (fuzzer_title, load_title) = match locale {
         Locale::Ko => ("운명 크래시 분석 (Destiny Fuzzer)", "인생 부하 진단 (Karma Load Balancer)"),
@@ -513,6 +540,45 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
     if let Some(ref vm_sum) = rep.vm_summary {
         s.push_str(&format!("### {}\n\n", vm_title));
         s.push_str(&format!("{}\n\n", vm_sum));
+    }
+
+    // 10년 대운 주기 (Major Luck Cycles)
+    if let Some(ref ml) = rep.major_luck {
+        let (ml_title, ml_dir, ml_age, ml_cycle, ml_ganzi, ml_gods, ml_start_date) = match locale {
+            Locale::Ko => ("10년 대운 주기 (10-Year Major Luck Cycles)", "대운 순행/역행", "대운수 (시작 나이)", "대운 주기", "간지 (GanZi)", "십성 (Ten Gods)", "대운 시작 날짜 (초정밀 교운기)"),
+            Locale::En => ("10-Year Major Luck Cycles", "Direction", "Luck Number (Start Age)", "Cycle", "GanZi", "Ten Gods", "Precise Start Date"),
+            Locale::Zh => ("十年大运周期", "大运顺逆", "大运数 (起运年龄)", "大运区间", "干支", "十神", "起运日期"),
+            Locale::Ru => ("10-летние периоды столпов удачи", "Направление удачи", "Число удачи (Возраст)", "Период", "Гань-Чжи", "Божества", "Точная дата начала"),
+        };
+
+        s.push_str(&format!("### {}\n\n", ml_title));
+        let dir_str = match ml.direction {
+            eon_saju::analysis::major_luck::LuckDirection::Forward => match locale {
+                Locale::Ko => "순행 (Forward)",
+                Locale::En => "Forward",
+                Locale::Zh => "顺行",
+                Locale::Ru => "Прямое направление",
+            },
+            eon_saju::analysis::major_luck::LuckDirection::Reverse => match locale {
+                Locale::Ko => "역행 (Reverse)",
+                Locale::En => "Reverse",
+                Locale::Zh => "逆行",
+                Locale::Ru => "Обратное направление",
+            },
+        };
+        s.push_str(&format!("- **{}**: {}\n", ml_dir, dir_str));
+        s.push_str(&format!("- **{}**: {}세 ({}개월 {}일)\n\n", ml_age, ml.start_age, ml.start_months, ml.start_days));
+
+        s.push_str(&format!("| {} | {} | {} | {} |\n", ml_cycle, ml_ganzi, ml_gods, ml_start_date));
+        s.push_str("| --- | --- | --- | --- |\n");
+        for cycle in &ml.cycles {
+            let cycle_str = format!("{}세 ~ {}세", cycle.start_age, cycle.end_age);
+            let ganzi_str = format!("{}({})", cycle.ganzi.hangul(), cycle.ganzi.hanja());
+            let gods_str = format!("{}/{}", cycle.stem_god.hangul(), cycle.branch_god.hangul());
+            let date_str = cycle.start_date.format("%Y-%m-%d").to_string();
+            s.push_str(&format!("| {} | {} | {} | {} |\n", cycle_str, ganzi_str, gods_str, date_str));
+        }
+        s.push_str("\n");
     }
 
     // 100-Year Life Path Simulation Table
@@ -707,10 +773,16 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
     
     let dagdha_names: Vec<String> = pan.dagdha_rashis.iter().map(|&r| rasi_name(locale, r).to_string()).collect();
     s.push_str(&format!("- **Dagdha Rashis (연소된 사인)**: {}\n", dagdha_names.join(", ")));
-    s.push_str(&format!("- **Sunrise/Sunset (일출/일몰)**: {} / {} ({})\n\n", 
+    s.push_str(&format!("- **Sunrise/Sunset (일출/일몰)**: {} / {} ({})\n", 
         pan.sunrise.format("%H:%M:%S"), pan.sunset.format("%H:%M:%S"),
         if pan.is_day_birth { "Day Birth ☀️" } else { "Night Birth 🌙" }
     ));
+    let (rahu_start, rahu_end) = pan.rahu_kalam;
+    let (yama_start, yama_end) = pan.yamaganda;
+    let (guli_start, guli_end) = pan.gulika;
+    s.push_str(&format!("- **Rahu Kalam (라후 칼람)**: {} ~ {}\n", rahu_start.format("%H:%M"), rahu_end.format("%H:%M")));
+    s.push_str(&format!("- **Yamaganda (야마간다)**: {} ~ {}\n", yama_start.format("%H:%M"), yama_end.format("%H:%M")));
+    s.push_str(&format!("- **Gulika (굴리카)**: {} ~ {}\n\n", guli_start.format("%H:%M"), guli_end.format("%H:%M")));
 
     // KP System cusps/significators
     if let Some(kp) = &data.kp_analysis {
@@ -770,12 +842,12 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
     }
     s.push_str("\n");
 
-    // Vimshottari Dasha
-    let (dasha_title, dasha_years_lbl) = match locale {
-        Locale::Ko => ("빔쇼타리 다샤 흐름 (Vimshottari Dasha)", "년"),
-        Locale::En => ("Vimshottari Dasha Timeline", "years"),
-        Locale::Zh => ("维姆绍塔里大运", "年"),
-        Locale::Ru => ("Временные периоды Вимшоттари Даша", "лет"),
+    // ── Phase 3: Vimshottari Dasha with Antar Dasha (hierarchical) ──────────
+    let (dasha_title, dasha_years_lbl, antar_lbl) = match locale {
+        Locale::Ko => ("빔쇼타리 다샤 흐름 (Vimshottari Dasha + 소운)", "년", "소운"),
+        Locale::En => ("Vimshottari Dasha Timeline (with Antar Dasha)", "years", "Antar"),
+        Locale::Zh => ("维姆绍塔里大运 (含小运)", "年", "小运"),
+        Locale::Ru => ("Вимшоттари Даша (с Антар Дашой)", "лет", "Антар"),
     };
 
     s.push_str(&format!("### {}\n\n", dasha_title));
@@ -785,6 +857,14 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
         let p_name = translate_planet(locale, period.lord);
         let duration_years = (period.end_time - period.start_time).num_days() as f64 / 365.25;
         s.push_str(&format!("- **{} ({} ~ {})**: {:.1} {}\n", p_name, start_fmt, end_fmt, duration_years, dasha_years_lbl));
+        // Antar Dasha (소운) — up to 9 sub-periods
+        for antar in period.sub_dashas.iter().take(9) {
+            let a_start = antar.start_time.format("%Y-%m-%d").to_string();
+            let a_end = antar.end_time.format("%Y-%m-%d").to_string();
+            let a_name = translate_planet(locale, antar.lord);
+            let a_dur = (antar.end_time - antar.start_time).num_days() as f64 / 365.25;
+            s.push_str(&format!("  - *{} {}: {} ~ {}* ({:.2} {})\n", antar_lbl, a_name, a_start, a_end, a_dur, dasha_years_lbl));
+        }
     }
     s.push_str("\n");
 
@@ -1151,6 +1231,87 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
     }
     s.push_str("\n");
 
+    // ── Phase 2: Primary Karakas + Arudha/Upapada Lagna ────────────────────
+    let (karaka_title, ak_lbl, amk_lbl, bk_lbl, mk_lbl, pk_lbl, gk_lbl, dk_lbl, al_lbl, ul_lbl) = match locale {
+        Locale::Ko => ("자이미니 핵심 카라카 (Primary Karakas)", "아트마카라카 (AK - 자아)", "아마트야카라카 (AmK - 직업)", "브라트루카라카 (BK - 형제)", "마트루카라카 (MK - 어머니)", "푸트라카라카 (PK - 자녀)", "그나티카라카 (GK - 친족)", "다라카라카 (DK - 배우자)", "아루다 라그나 (AL)", "우파파다 라그나 (UL)"),
+        Locale::En => ("Jaimini Primary Karakas", "Atmakaraka (AK - Self)", "Amatyakaraka (AmK - Career)", "Bhratrukaraka (BK - Siblings)", "Matrukaraka (MK - Mother)", "Putrakaraka (PK - Children)", "Gnatikaraka (GK - Relatives)", "Darakaraka (DK - Spouse)", "Arudha Lagna (AL)", "Upapada Lagna (UL)"),
+        Locale::Zh => ("贾米尼核心功能星 (Primary Karakas)", "命主星 (AK - 自我)", "业主星 (AmK - 事业)", "兄弟星 (BK - 兄弟)", "母星 (MK - 母亲)", "子女星 (PK - 子女)", "亲族星 (GK - 亲属)", "配偶星 (DK - 配偶)", "月亮升华点 (AL)", "婚姻升华点 (UL)"),
+        Locale::Ru => ("Основные Каракас Джаймини", "Атмакарака (AK — Я)", "Аматьякарака (AmK — Карьера)", "Братрукарака (BK — Братья)", "Матрукарака (MK — Мать)", "Путракарака (PK — Дети)", "Гнатикарака (GK — Родня)", "Даракарака (DK — Супруг)", "Аруда Лагна (AL)", "Упапада Лагна (UL)"),
+    };
+    s.push_str(&format!("### {}\n\n", karaka_title));
+    s.push_str(&format!("- **{}**: {}\n", ak_lbl, translate_planet(locale, data.report.primary_karakas.atmakaraka)));
+    s.push_str(&format!("- **{}**: {}\n", amk_lbl, translate_planet(locale, data.report.primary_karakas.amatyakaraka)));
+    if let Some(bk) = data.report.primary_karakas.bhratrukaraka {
+        s.push_str(&format!("- **{}**: {}\n", bk_lbl, translate_planet(locale, bk)));
+    }
+    if let Some(mk) = data.report.primary_karakas.matrukaraka {
+        s.push_str(&format!("- **{}**: {}\n", mk_lbl, translate_planet(locale, mk)));
+    }
+    if let Some(pk) = data.report.primary_karakas.putrakaraka {
+        s.push_str(&format!("- **{}**: {}\n", pk_lbl, translate_planet(locale, pk)));
+    }
+    if let Some(gk) = data.report.primary_karakas.gnatikaraka {
+        s.push_str(&format!("- **{}**: {}\n", gk_lbl, translate_planet(locale, gk)));
+    }
+    s.push_str(&format!("- **{}**: {}\n", dk_lbl, translate_planet(locale, data.report.primary_karakas.darakaraka)));
+    if data.report.arudha_lagna > 0 {
+        s.push_str(&format!("- **{}**: {} ({})\n", al_lbl, data.report.arudha_lagna, rasi_name(locale, data.report.arudha_lagna)));
+    }
+    if data.report.upapada_lagna > 0 {
+        s.push_str(&format!("- **{}**: {} ({})\n", ul_lbl, data.report.upapada_lagna, rasi_name(locale, data.report.upapada_lagna)));
+    }
+    s.push_str("\n");
+
+    // ── Phase 1: Shadbala 6-Factor Planetary Strength Table ─────────────────
+    let (shadbala_title, sb_planet, sb_sthana, sb_dig, sb_kala, sb_chesta, sb_naisargika, sb_drik, sb_total, sb_status, sb_ishta, sb_kashta) = match locale {
+        Locale::Ko => (
+            "샤드발라 행성 강도 6대 요인 상세 (Shadbala)",
+            "행성", "위치 강도 (Sthana)", "방향 강도 (Dig)", "시간 강도 (Kala)",
+            "운동 강도 (Chesta)", "본질 강도 (Naisargika)", "상호 강도 (Drik)",
+            "총점", "상태", "이쉬타 팔라 (길조)", "카쉬타 팔라 (흉조)",
+        ),
+        Locale::En => (
+            "Shadbala Planetary Strength — 6 Factors",
+            "Planet", "Sthana Bala", "Dig Bala", "Kala Bala",
+            "Chesta Bala", "Naisargika Bala", "Drik Bala",
+            "Total", "Status", "Ishta Phala (Auspicious)", "Kashta Phala (Inauspicious)",
+        ),
+        Locale::Zh => (
+            "沙德拔拉行星力量六大要素",
+            "星体", "位置力 (Sthana)", "方向力 (Dig)", "时间力 (Kala)",
+            "运动力 (Chesta)", "本质力 (Naisargika)", "相互力 (Drik)",
+            "总分", "状态", "吉祥指数 (Ishta)", "凶兆指数 (Kashta)",
+        ),
+        Locale::Ru => (
+            "Шадбала — 6 факторов силы планет",
+            "Планета", "Позиц. сила (Sthana)", "Направл. (Dig)", "Времен. (Kala)",
+            "Движен. (Chesta)", "Нат. сила (Naisargika)", "Аспект. (Drik)",
+            "Итого", "Статус", "Иштха Пхала (Удача)", "Каштха Пхала (Трудности)",
+        ),
+    };
+    s.push_str(&format!("### {}\n\n", shadbala_title));
+    s.push_str(&format!("| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
+        sb_planet, sb_sthana, sb_dig, sb_kala, sb_chesta, sb_naisargika, sb_drik, sb_total, sb_status, sb_ishta, sb_kashta));
+    s.push_str("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
+    for planet_pos in &data.chart.planets {
+        let strength = eon_vedic::analysis::strength::StrengthEngine::calculate(planet_pos, &data.chart);
+        let p_name = translate_planet(locale, planet_pos.planet);
+        s.push_str(&format!("| **{}** | {:.1} | {:.1} | {:.1} | {:.1} | {:.1} | {:.1} | **{:.1}** | {} | {:.1} | {:.1} |\n",
+            p_name,
+            strength.sthana_bala,
+            strength.dig_bala,
+            strength.kala_bala,
+            strength.chesta_bala,
+            strength.naisargika_bala,
+            strength.drik_bala,
+            strength.total_score,
+            strength.status,
+            strength.ishta_phala,
+            strength.kashta_phala,
+        ));
+    }
+    s.push_str("\n");
+
     s
 }
 
@@ -1430,6 +1591,55 @@ pub fn format_zwds_inner(data: &ZwdsAnalysisOutput, locale: Locale) -> String {
     let mut s = String::new();
     let chart = &data.chart;
     let ln = &data.current_liu_nian;
+    let dx = &data.current_daxian;
+
+    // ── Phase 4: Current Daxian / Liunian Summary ──────────────────────────
+    let (cur_title, cur_daxian_lbl, cur_liunian_lbl, _cur_age_lbl, _cur_year_lbl, _cur_palace_lbl, cur_sihua_lbl) = match locale {
+        Locale::Ko => ("현재 대한 / 유년 현황", "현재 대한 (大限)", "현재 유년 (流年)", "나이 범위", "유년 연도", "유년 궁위", "유년 사화"),
+        Locale::En => ("Current Da-Xian / Liu-Nian Status", "Current Da-Xian (Major Period)", "Current Liu-Nian (Annual Fortune)", "Age Range", "Annual Year", "Annual Palace", "Annual Si-Hua"),
+        Locale::Zh => ("当前大限/流年状态", "当前大限", "当前流年", "年龄段", "流年年份", "流年宫位", "流年四化"),
+        Locale::Ru => ("Текущее состояние Да-Сянь / Лю-Нянь", "Текущий Да-Сянь", "Текущий Лю-Нянь", "Возрастной диапазон", "Год", "Дворец года", "Четыре трансформации года"),
+    };
+    s.push_str(&format!("### {}\n\n", cur_title));
+
+    // Current Da-Xian
+    let dx_range_str = if locale == Locale::Ko {
+        format!("{}세 ~ {}세", dx.age_start, dx.age_end)
+    } else if locale == Locale::Zh {
+        format!("{}岁 ~ {}岁", dx.age_start, dx.age_end)
+    } else if locale == Locale::Ru {
+        format!("{} - {} лет", dx.age_start, dx.age_end)
+    } else {
+        format!("Age {} - {}", dx.age_start, dx.age_end)
+    };
+    s.push_str(&format!("- **{}**: {}{}  ({}{}  |  {})\n",
+        cur_daxian_lbl,
+        dx.stem_hanja, dx.branch_hanja,
+        crate::i18n::translate_zwds_palace(locale, eon_zwds::palace::get_palace_name(dx.palace_idx, dx.palace_idx)),
+        match locale { Locale::Ko => "궁", Locale::Zh => "宫", _ => " Palace" },
+        dx_range_str
+    ));
+
+    // Current Liu-Nian
+    let ln_sihua_str = {
+        let stars = [
+            ("祿", ln.si_hua[0]),
+            ("權", ln.si_hua[1]),
+            ("科", ln.si_hua[2]),
+            ("忌", ln.si_hua[3]),
+        ];
+        stars.iter()
+            .map(|(sym, star)| format!("{}({})", sym, crate::i18n::translate_zwds_star(locale, *star)))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    s.push_str(&format!("- **{}**: {} ({}: {})\n",
+        cur_liunian_lbl,
+        ln.year,
+        cur_sihua_lbl,
+        ln_sihua_str
+    ));
+    s.push_str("\n");
 
     // Translated metadata labels
     let label_master_soul = match locale {
@@ -1454,6 +1664,44 @@ pub fn format_zwds_inner(data: &ZwdsAnalysisOutput, locale: Locale) -> String {
     s.push_str(&format!("- **{}**: {}\n", label_master_soul, crate::i18n::translate_zwds_star(locale, chart.soul_master)));
     s.push_str(&format!("- **{}**: {}\n", label_master_body, crate::i18n::translate_zwds_star(locale, chart.body_master)));
     s.push_str(&format!("- **{}**: {}\n\n", label_elements, crate::i18n::translate_five_elements(locale, chart.five_elements)));
+
+    // 감지된 전통 격국
+    if !chart.destiny_patterns.is_empty() {
+        let label_patterns = match locale {
+            Locale::Ko => "### 감지된 전통 격국",
+            Locale::En => "### Detected Destiny Patterns",
+            Locale::Zh => "### 检测到的传统格局",
+            Locale::Ru => "### Обнаруженные традиционные структуры",
+        };
+        s.push_str(&format!("{}\n\n", label_patterns));
+        for pat in chart.destiny_patterns.iter() {
+            let pat_name = match locale {
+                Locale::Zh => pat.name_hanja.clone(),
+                _ => format!("{} ({})", pat.name_korean, pat.name_hanja),
+            };
+            let type_str = if pat.is_auspicious {
+                match locale {
+                    Locale::Ko => "길격(吉格)",
+                    Locale::Zh => "吉格",
+                    Locale::En => "Auspicious",
+                    Locale::Ru => "Благоприятный",
+                }
+            } else {
+                match locale {
+                    Locale::Ko => "흉격(凶格)",
+                    Locale::Zh => "凶格",
+                    Locale::En => "Inauspicious",
+                    Locale::Ru => "Неблагоприятный",
+                }
+            };
+            let desc = match locale {
+                Locale::Ko => &pat.description_korean,
+                _ => &pat.description_english,
+            };
+            s.push_str(&format!("- **{}** [{}] - {}\n", pat_name, type_str, desc));
+        }
+        s.push_str("\n");
+    }
 
     // 12궁 성반 배치 정보
     let title_palace_info = match locale {
@@ -1488,6 +1736,11 @@ pub fn format_zwds_inner(data: &ZwdsAnalysisOutput, locale: Locale) -> String {
         for s_in_p in palace.stars.iter() {
             let star_name = crate::i18n::translate_zwds_star(locale, s_in_p.star);
             let mut parts = star_name.to_string();
+
+            // 별 밝기 추가
+            if let Some(brightness) = s_in_p.brightness {
+                parts.push_str(&format!(" ({})", crate::i18n::translate_zwds_brightness(locale, brightness)));
+            }
 
             let mut sihua_suffixes = Vec::new();
 
@@ -1537,10 +1790,32 @@ pub fn format_zwds_inner(data: &ZwdsAnalysisOutput, locale: Locale) -> String {
             "—"
         };
 
+        let daxian_name = eon_zwds::palace::get_palace_name(data.current_daxian.palace_idx, palace.index);
+        let liunian_name = eon_zwds::palace::get_palace_name(data.current_liu_nian.palace_idx, palace.index);
+
+        let dx_abbr = crate::i18n::translate_zwds_palace_abbr(locale, daxian_name);
+        let ln_abbr = crate::i18n::translate_zwds_palace_abbr(locale, liunian_name);
+
+        let dx_prefix = match locale {
+            Locale::Ko => "대",
+            Locale::Zh => "大",
+            Locale::En => "D-",
+            Locale::Ru => "Д-",
+        };
+        let ln_prefix = match locale {
+            Locale::Ko => "유",
+            Locale::Zh => "流",
+            Locale::En => "A-",
+            Locale::Ru => "Г-",
+        };
+
+        let dynamic_palaces_str = format!(" ({}{}/{}{})", dx_prefix, dx_abbr, ln_prefix, ln_abbr);
+
         s.push_str(&format!(
-            "| {}{} | {} | {} | {} | {} |\n",
+            "| {}{} | {}{} | {} | {} | {} |\n",
             palace.heavenly_stem, palace.earthly_branch,
             crate::i18n::translate_zwds_palace(locale, palace.name),
+            dynamic_palaces_str,
             stars_str,
             daxian_str,
             liunian_str
@@ -1612,6 +1887,102 @@ pub fn export_zwds_to_markdown(
     s.push_str(&format_global_header(form, locale));
     s.push_str("## 2. 자미두수 분석 상세\n\n");
     s.push_str(&format_zwds_inner(data, locale));
+    s
+}
+
+pub fn export_compatibility_to_markdown(
+    compat: &eon_service::dto::VedicCompatibilityOutput,
+    male_form: &crate::store::FormState,
+    female_year: i32,
+    female_month: u32,
+    female_day: u32,
+    female_hour: u32,
+    female_minute: u32,
+    female_lat: f64,
+    female_lon: f64,
+    locale: Locale,
+) -> String {
+    let mut s = String::new();
+    let title = match locale {
+        Locale::Ko => "✨ EON - 베딕 점성학 궁합(Compatibility) 분석 보고서",
+        Locale::En => "✨ EON - Vedic Astrology Compatibility Analysis Report",
+        Locale::Zh => "✨ EON - 吠陀占星八字合婚分析报告",
+        Locale::Ru => "✨ EON - Отчет о совместимости в Ведической Астрологии",
+    };
+    s.push_str(&format!("# {}\n\n", title));
+
+    let (lbl_birth_info, lbl_male, lbl_female, lbl_date, lbl_loc) = match locale {
+        Locale::Ko => ("1. 출생 정보 (Birth Info)", "남성 (Male)", "여성 (Female)", "일시", "좌표"),
+        Locale::En => ("1. Birth Information", "Male Partner", "Female Partner", "Date/Time", "Coords"),
+        Locale::Zh => ("1. 出生信息", "男方", "女方", "日期/时间", "经纬度"),
+        Locale::Ru => ("1. Информация о рождении", "Мужчина", "Женщина", "Дата/Время", "Координаты"),
+    };
+
+    s.push_str(&format!("## {}\n\n", lbl_birth_info));
+    s.push_str(&format!("### {}\n", lbl_male));
+    s.push_str(&format!("- **{}**: {}-{:02}-{:02} {:02}:{:02}\n", lbl_date, male_form.year, male_form.month, male_form.day, male_form.hour, male_form.minute));
+    s.push_str(&format!("- **{}**: {:.4}°N, {:.4}°E\n\n", lbl_loc, male_form.lat, male_form.lon));
+
+    s.push_str(&format!("### {}\n", lbl_female));
+    s.push_str(&format!("- **{}**: {}-{:02}-{:02} {:02}:{:02}\n", lbl_date, female_year, female_month, female_day, female_hour, female_minute));
+    s.push_str(&format!("- **{}**: {:.4}°N, {:.4}°E\n\n", lbl_loc, female_lat, female_lon));
+
+    let (lbl_summary, lbl_score, lbl_status, lbl_exp) = match locale {
+        Locale::Ko => ("2. 궁합 분석 요약 (Compatibility Summary)", "획득 점수", "최종 판단", "총평"),
+        Locale::En => ("2. Compatibility Summary", "Total Guna Score", "Final Determination", "Explanation"),
+        Locale::Zh => ("2. 合婚分析摘要", "获得分数", "最终判定", "解析"),
+        Locale::Ru => ("2. Сводка совместимости", "Общий балл Гуна", "Итоговое решение", "Объяснение"),
+    };
+
+    s.push_str(&format!("## {}\n\n", lbl_summary));
+    s.push_str(&format!("- **{}**: {:.1} / 36.0\n", lbl_score, compat.report.total_score));
+
+    let status_str = if compat.report.is_compatible {
+        match locale {
+            Locale::Ko => "🟢 길 (조화로움)",
+            Locale::En => "🟢 Compatible (Harmonious)",
+            Locale::Zh => "🟢 合婚 (和谐)",
+            Locale::Ru => "🟢 Совместимы (Гармония)",
+        }
+    } else {
+        match locale {
+            Locale::Ko => "🔴 흉 (불협화음 / 주의 필요)",
+            Locale::En => "🔴 Incompatible (Requires Attention)",
+            Locale::Zh => "🔴 不合 (需要注意)",
+            Locale::Ru => "🔴 Несовместимы (Требуется внимание)",
+        }
+    };
+    s.push_str(&format!("- **{}**: {}\n", lbl_status, status_str));
+
+    let (lbl_mangal, lbl_male_mangal, lbl_female_mangal, lbl_mangal_cxl, txt_detected, txt_not_detected, txt_cancelled, txt_not_cancelled) = match locale {
+        Locale::Ko => ("### 망갈 도샤 (Mangal Dosha / 화성 살성)", "남성 망갈 도샤", "여성 망갈 도샤", "상쇄 여부", "감지됨 (🚨)", "감지되지 않음 (✅)", "상쇄됨 (✅)", "상쇄되지 않음 (🚨)"),
+        Locale::En => ("### Mangal Dosha (Martial Affliction)", "Male Mangal Dosha", "Female Mangal Dosha", "Cancellation Status", "Detected (🚨)", "Not Detected (✅)", "Cancelled (✅)", "Not Cancelled (🚨)"),
+        Locale::Zh => ("### 火星煞 (Mangal Dosha)", "男方火星煞", "女方火星煞", "是否化解", "检测到 (🚨)", "未检测到 (✅)", "已化解 (✅)", "未化解 (🚨)"),
+        Locale::Ru => ("### Мангалик Доша (Влияние Марса)", "Мангал Доша у мужчины", "Мангал Доша у женщины", "Статус отмены", "Обнаружено (🚨)", "Не обнаружено (✅)", "Отменено (✅)", "Не отменено (🚨)"),
+    };
+    s.push_str(&format!("{}\n\n", lbl_mangal));
+    s.push_str(&format!("- **{}**: {}\n", lbl_male_mangal, if compat.report.male_mangal_dosha { txt_detected } else { txt_not_detected }));
+    s.push_str(&format!("- **{}**: {}\n", lbl_female_mangal, if compat.report.female_mangal_dosha { txt_detected } else { txt_not_detected }));
+    s.push_str(&format!("- **{}**: {}\n\n", lbl_mangal_cxl, if compat.report.mangal_dosha_cancelled { txt_cancelled } else { txt_not_cancelled }));
+
+    s.push_str(&format!("- **{}**: {}\n\n", lbl_exp, compat.report.explanation));
+
+    let (lbl_koota_title, col_koota_name, col_earned, col_max, col_desc) = match locale {
+        Locale::Ko => ("3. 아슈타쿠타 8대 세부 항목 (Ashtakoota Breakdown)", "항목", "획득 점수", "만점", "설명"),
+        Locale::En => ("3. Ashtakoota 8 Kootas Breakdown", "Koota Name", "Earned Score", "Max Score", "Description"),
+        Locale::Zh => ("3. 八大项目评分 (Ashtakoota)", "项目名称", "获得分数", "最高分数", "解析"),
+        Locale::Ru => ("3. Детализация 8 кут Аштакуты", "Название Куты", "Полученный балл", "Макс. балл", "Описание"),
+    };
+
+    s.push_str(&format!("## {}\n\n", lbl_koota_title));
+    s.push_str(&format!("| {} | {} | {} | {} |\n", col_koota_name, col_earned, col_max, col_desc));
+    s.push_str("| --- | --- | --- | --- |\n");
+
+    for k in &compat.report.kootas {
+        s.push_str(&format!("| **{}** | {:.1} | {:.1} | {} |\n", k.name, k.earned_points, k.max_points, k.description));
+    }
+    s.push_str("\n");
+
     s
 }
 

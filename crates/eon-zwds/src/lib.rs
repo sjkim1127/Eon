@@ -18,7 +18,9 @@ pub mod stars;
 pub mod transformations;
 pub mod decadal;
 pub mod annual;
+pub mod brightness;
 pub mod chart;
+pub mod destiny_patterns;
 
 pub use error::ZwdsError;
 pub use types::*;

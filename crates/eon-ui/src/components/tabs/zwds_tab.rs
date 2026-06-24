@@ -144,6 +144,7 @@ fn ZwdsGrid(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
                                     palace: palace.clone(),
                                     is_soul: p_idx == chart.soul_idx,
                                     is_body: p_idx == chart.body_idx,
+                                    current_daxian: Some(data.current_daxian.clone()),
                                     current_liu_nian: Some(data.current_liu_nian.clone()),
                                 }
                             }
@@ -174,10 +175,41 @@ fn PalaceCard(
     palace: PalaceData,
     is_soul: bool,
     is_body: bool,
+    current_daxian: Option<eon_zwds::types::DaXian>,
     current_liu_nian: Option<eon_zwds::types::LiuNian>,
 ) -> Element {
     let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
+
+    // 대운 동적 궁위명 구하기
+    let daxian_palace_name = if let Some(ref dx) = current_daxian {
+        let name = eon_zwds::palace::get_palace_name(dx.palace_idx, palace.index);
+        let prefix = match locale {
+            Locale::Ko => "대",
+            Locale::Zh => "大",
+            Locale::En => "D-",
+            Locale::Ru => "Д-",
+        };
+        let abbr = crate::i18n::translate_zwds_palace_abbr(locale, name);
+        Some(format!("{}{}", prefix, abbr))
+    } else {
+        None
+    };
+
+    // 유년 동적 궁위명 구하기
+    let liunian_palace_name = if let Some(ref ln) = current_liu_nian {
+        let name = eon_zwds::palace::get_palace_name(ln.palace_idx, palace.index);
+        let prefix = match locale {
+            Locale::Ko => "유",
+            Locale::Zh => "流",
+            Locale::En => "A-",
+            Locale::Ru => "Г-",
+        };
+        let abbr = crate::i18n::translate_zwds_palace_abbr(locale, name);
+        Some(format!("{}{}", prefix, abbr))
+    } else {
+        None
+    };
 
     // 테두리 및 배경 디자인
     let border_cls = if palace.is_current_liu_nian {
@@ -260,10 +292,16 @@ fn PalaceCard(
                             None
                         };
 
+                        let brightness_suffix = if let Some(brightness) = star_in_p.brightness {
+                            format!(" ({})", crate::i18n::translate_zwds_brightness(locale, brightness))
+                        } else {
+                            "".to_string()
+                        };
+
                         rsx! {
                             div { key: "{star_in_p.star.korean()}", class: "flex items-center justify-between",
                                 span { class: "{star_color}",
-                                    "{translate_zwds_star(locale, star_in_p.star)}"
+                                    "{translate_zwds_star(locale, star_in_p.star)}{brightness_suffix}"
                                 }
                                 div { class: "flex items-center gap-1",
                                     if let Some(sihua) = star_in_p.si_hua {
@@ -314,17 +352,33 @@ fn PalaceCard(
                 }
             }
 
-            // 대한 연령대 범위 표시
-            div { class: "text-[9px] text-slate-500 text-right border-t border-slate-800/30 pt-1 font-mono",
-                {
-                    palace.daxian_range
-                        .map(|r| {
-                            if locale == Locale::Ko { format!("{} - {}세", r.0, r.1) }
-                            else if locale == Locale::Zh { format!("{} - {}岁", r.0, r.1) }
-                            else if locale == Locale::Ru { format!("{} - {} лет", r.0, r.1) }
-                            else { format!("{} - {} yrs", r.0, r.1) }
-                        })
-                        .unwrap_or_else(|| "—".to_string())
+            // 하단 바: 동적 궁위 & 대한 연령대 범위
+            div { class: "flex justify-between items-center text-[9px] border-t border-slate-800/30 pt-1 font-mono",
+                // 동적 궁위 배지
+                div { class: "flex items-center gap-1.5",
+                    if let Some(ref dx_name) = daxian_palace_name {
+                        span { class: "px-1 py-0.2 rounded bg-violet-500/10 text-violet-300 font-bold border border-violet-500/10 text-[8px]",
+                            "{dx_name}"
+                        }
+                    }
+                    if let Some(ref ln_name) = liunian_palace_name {
+                        span { class: "px-1 py-0.2 rounded bg-amber-500/10 text-amber-300 font-bold border border-amber-500/10 text-[8px]",
+                            "{ln_name}"
+                        }
+                    }
+                }
+                // 연령 범위
+                span { class: "text-slate-500",
+                    {
+                        palace.daxian_range
+                            .map(|r| {
+                                if locale == Locale::Ko { format!("{} - {}세", r.0, r.1) }
+                                else if locale == Locale::Zh { format!("{} - {}岁", r.0, r.1) }
+                                else if locale == Locale::Ru { format!("{} - {} лет", r.0, r.1) }
+                                else { format!("{} - {} yrs", r.0, r.1) }
+                            })
+                            .unwrap_or_else(|| "—".to_string())
+                    }
                 }
             }
         }
@@ -397,6 +451,47 @@ fn CenterCard(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
                             span { class: "text-slate-500 font-medium", "{t(locale, TK::ZwdsCurrentDaxian)}" }
                             span { class: "text-indigo-300 font-bold text-sm",
                                 "{current_daxian_formatted}"
+                            }
+                        }
+                    }
+                }
+
+                // 격국 리스트 (Destiny Patterns Badge List)
+                if !chart.destiny_patterns.is_empty() {
+                    div { class: "border-t border-slate-800/60 pt-3 space-y-2",
+                        span { class: "text-[10px] text-slate-500 font-semibold tracking-wider uppercase block",
+                            if locale == Locale::Ko { "감지된 격국" }
+                            else if locale == Locale::Zh { "检测到的格局" }
+                            else if locale == Locale::Ru { "Обнаруженные структуры" }
+                            else { "Detected Patterns" }
+                        }
+                        div { class: "flex flex-wrap gap-1.5",
+                            {
+                                chart.destiny_patterns.iter().map(|pat| {
+                                    let badge_cls = if pat.is_auspicious {
+                                        "bg-emerald-500/10 text-emerald-300 border-emerald-500/20 hover:bg-emerald-500/20"
+                                    } else {
+                                        "bg-red-500/10 text-red-300 border-red-500/20 hover:bg-red-500/20"
+                                    };
+                                    let display_name = if locale == Locale::Zh {
+                                        pat.name_hanja.clone()
+                                    } else {
+                                        format!("{} ({})", pat.name_korean, pat.name_hanja)
+                                    };
+                                    let tooltip_desc = if locale == Locale::Ko {
+                                        pat.description_korean.clone()
+                                    } else {
+                                        pat.description_english.clone()
+                                    };
+                                    rsx! {
+                                        span {
+                                            key: "{pat.name_hanja}",
+                                            class: "px-2 py-1 rounded-lg border text-[11px] font-black cursor-help transition-colors duration-150 {badge_cls}",
+                                            title: "{tooltip_desc}",
+                                            "{display_name}"
+                                        }
+                                    }
+                                })
                             }
                         }
                     }

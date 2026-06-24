@@ -447,11 +447,32 @@ impl SiHuaType {
 // 각 궁(宮)의 데이터
 // ============================================================
 
+/// 자미두수 별의 밝기 (廟旺利陷)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ZwdsBrightness {
+    /// 廟 (Temple) — 가장 밝고 길함
+    Miao,
+    /// 旺 (Bright) — 매우 밝고 길함
+    Wang,
+    /// 得 (Gain) — 얻음, 길함
+    De,
+    /// 利 (Benefit) — 이로움, 보통 이상
+    Li,
+    /// 平 (Peace) — 평범함
+    Ping,
+    /// 不 (Not) — 밝지 않음, 不得地
+    Bu,
+    /// 陷 (Fallen) — 낙함, 가장 어둡고 흉함
+    Xian,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StarInPalace {
     pub star: ZwdsStar,
     /// 사화 태그 (해당 별에 사화가 붙는 경우)
     pub si_hua: Option<SiHuaType>,
+    /// 별의 밝기 (廟旺利陷)
+    pub brightness: Option<ZwdsBrightness>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -519,6 +540,15 @@ pub struct LiuNian {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DestinyPattern {
+    pub name_hanja: String,
+    pub name_korean: String,
+    pub is_auspicious: bool,
+    pub description_korean: String,
+    pub description_english: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ZwdsChart {
     pub palaces: [PalaceData; 12],
     pub soul_idx: PalaceIndex,
@@ -527,5 +557,6 @@ pub struct ZwdsChart {
     pub body_master: ZwdsStar,
     pub five_elements: FiveElementsClass,
     pub daxian: Vec<DaXian>,
+    pub destiny_patterns: Vec<DestinyPattern>,
 }
 

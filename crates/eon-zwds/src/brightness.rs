@@ -1,0 +1,114 @@
+use crate::types::{ZwdsStar, ZwdsBrightness, PalaceIndex};
+
+/// 자미두수 별과 지지 인덱스(0=寅宫 ~ 11=丑宫)에 따른 묘왕이함(廟旺利陷) 밝기 상태를 반환합니다.
+pub fn get_star_brightness(star: ZwdsStar, palace_idx: PalaceIndex) -> Option<ZwdsBrightness> {
+    if palace_idx >= 12 {
+        return None;
+    }
+
+    let key = match star {
+        ZwdsStar::ZiWei => &[
+            Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Wang),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Wang),
+            Some(ZwdsBrightness::De), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Miao)
+        ],
+        ZwdsStar::TianJi => &[
+            Some(ZwdsBrightness::De), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Ping),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Wang),
+            Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian)
+        ],
+        ZwdsStar::TaiYang => &[
+            Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Wang),
+            Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::De), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Xian),
+            Some(ZwdsBrightness::Bu), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Bu)
+        ],
+        ZwdsStar::WuQu => &[
+            Some(ZwdsBrightness::De), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Ping),
+            Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Li),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Miao)
+        ],
+        ZwdsStar::TianTong => &[
+            Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Miao),
+            Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Bu), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Ping),
+            Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Bu)
+        ],
+        ZwdsStar::LianZhen => &[
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Xian),
+            Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Ping),
+            Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Li)
+        ],
+        ZwdsStar::TianFu => &[
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::De),
+            Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Wang),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Miao)
+        ],
+        ZwdsStar::TaiYin => &[
+            Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Xian),
+            Some(ZwdsBrightness::Bu), Some(ZwdsBrightness::Bu), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Bu),
+            Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Miao)
+        ],
+        ZwdsStar::TanLang => &[
+            Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian),
+            Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Li),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Miao)
+        ],
+        ZwdsStar::JuMen => &[
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Wang),
+            Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Bu), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Miao),
+            Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Bu)
+        ],
+        ZwdsStar::TianXiang => &[
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::De), Some(ZwdsBrightness::De),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian),
+            Some(ZwdsBrightness::De), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Miao)
+        ],
+        ZwdsStar::TianLiang => &[
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::De),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Wang)
+        ],
+        ZwdsStar::QiSha => &[
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Ping),
+            Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Miao),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Miao)
+        ],
+        ZwdsStar::PoJun => &[
+            Some(ZwdsBrightness::De), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Ping),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Xian),
+            Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Wang)
+        ],
+        ZwdsStar::WenChang => &[
+            Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Miao),
+            Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Miao),
+            Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Miao)
+        ],
+        ZwdsStar::WenQu => &[
+            Some(ZwdsBrightness::Ping), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Miao),
+            Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Miao),
+            Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Wang), Some(ZwdsBrightness::De), Some(ZwdsBrightness::Miao)
+        ],
+        ZwdsStar::HuoXing => &[
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::De),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::De),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::De)
+        ],
+        ZwdsStar::LingXing => &[
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::De),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::De),
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Li), Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::De)
+        ],
+        ZwdsStar::QingYang => &[
+            None, Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Miao), None,
+            Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Miao), None, Some(ZwdsBrightness::Xian),
+            Some(ZwdsBrightness::Miao), None, Some(ZwdsBrightness::Xian), Some(ZwdsBrightness::Miao)
+        ],
+        ZwdsStar::TuoLuo => &[
+            Some(ZwdsBrightness::Xian), None, Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian),
+            None, Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian), None,
+            Some(ZwdsBrightness::Miao), Some(ZwdsBrightness::Xian), None, Some(ZwdsBrightness::Miao)
+        ],
+        _ => return None,
+    };
+
+    key[palace_idx]
+}

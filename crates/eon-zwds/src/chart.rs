@@ -81,7 +81,11 @@ pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Resu
                     None
                 };
 
-                stars_in_palace.push(StarInPalace { star, si_hua });
+                stars_in_palace.push(StarInPalace {
+                    star,
+                    si_hua,
+                    brightness: crate::brightness::get_star_brightness(star, p_idx),
+                });
             }
         }
 
@@ -143,6 +147,8 @@ pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Resu
         _ => unreachable!(),
     };
 
+    let destiny_patterns = crate::destiny_patterns::analyze_destiny_patterns(soul_idx, &star_positions, &palaces);
+
     Ok(ZwdsChart {
         palaces,
         soul_idx,
@@ -151,6 +157,7 @@ pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Resu
         body_master,
         five_elements,
         daxian: daxian_list,
+        destiny_patterns,
     })
 }
 
@@ -177,5 +184,17 @@ mod tests {
 
         // 2004년 甲申년생 -> 년지 申(8) -> 신주: 天梁
         assert_eq!(chart.body_master, ZwdsStar::TianLiang);
+
+        // 모든 주성에 대해 밝기가 올바르게 채워졌는지 검증
+        let mut main_star_count = 0;
+        for palace in chart.palaces.iter() {
+            for star_in_p in palace.stars.iter() {
+                if star_in_p.star.is_main_star() {
+                    assert!(star_in_p.brightness.is_some(), "주성 {:?}의 밝기가 누락되었습니다.", star_in_p.star);
+                    main_star_count += 1;
+                }
+            }
+        }
+        assert_eq!(main_star_count, 14, "14주성이 모두 배치되어야 합니다.");
     }
 }
