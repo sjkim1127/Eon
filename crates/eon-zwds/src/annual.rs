@@ -4,7 +4,7 @@
 
 use eon_saju::core::stem::HeavenlyStem;
 use eon_saju::core::branch::EarthlyBranch;
-use crate::types::{PalaceIndex, LiuNian};
+use crate::types::LiuNian;
 use crate::palace::std_idx_to_zwds_idx;
 use crate::transformations::get_sihua_stars;
 

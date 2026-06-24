@@ -9,7 +9,6 @@ pub mod location;
 use std::collections::HashMap;
 use eon_saju::core::stem::HeavenlyStem;
 use crate::types::{PalaceIndex, ZwdsStar, LunarBirthInfo};
-use crate::palace::fix_index;
 
 /// 모든 자미두수 별들의 위치를 계산하여 맵으로 반환합니다.
 ///

@@ -3,7 +3,7 @@
 //! 자미성과 천부성의 위치를 계산하고, 이를 기준으로 14주성을 각 궁에 배치합니다.
 
 use std::collections::HashMap;
-use crate::types::{PalaceIndex, ZwdsStar, FiveElementsClass};
+use crate::types::{PalaceIndex, ZwdsStar};
 use crate::palace::fix_index;
 
 /// 자미성(紫微星)의 ZWDS 지지 인덱스 (0=寅) 계산
