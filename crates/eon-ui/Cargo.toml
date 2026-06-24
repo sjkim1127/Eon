@@ -6,14 +6,15 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 description.workspace = true
+publish = false
 
 [dependencies]
 dioxus = { version = "0.6.0", features = ["web", "router"] }
-eon-service = { path = "../eon-service" }
-eon-core = { path = "../eon-core" }
-eon-vedic = { path = "../eon-vedic" }
-eon-saju = { path = "../eon-saju" }
-eon-zwds = { path = "../eon-zwds" }
+eon-service = { workspace = true }
+eon-core = { workspace = true }
+eon-vedic = { workspace = true }
+eon-saju = { workspace = true }
+eon-zwds = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }

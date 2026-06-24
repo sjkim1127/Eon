@@ -6,8 +6,8 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-eon-core = { path = "../eon-core" }
-eon-saju = { path = "../eon-saju" }
+eon-core = { workspace = true }
+eon-saju = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 toml = "0.8"
