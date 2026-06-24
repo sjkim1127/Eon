@@ -4,8 +4,9 @@ use crate::i18n::{t, TK, Locale, translate_planet, translate_planet_str, transla
     translate_saju_spirit_marker_name, translate_saju_void_desc, translate_saju_ganzi, translate_saju_tag_str,
     translate_saju_load_balancer, translate_spirit_desc, translate_saju_reason, translate_saju_relation_str,
     translate_saju_twelve_stage_str};
-use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult};
+use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult, IChingAnalysisOutput};
 use eon_vedic::planets::VedicPlanet;
+use crate::i18n::iching_db::{get_hexagram_info, get_yao_name, get_yao_description};
 use dioxus::prelude::*;
 use wasm_bindgen::prelude::*;
 
@@ -1608,15 +1609,16 @@ pub fn export_combined_to_markdown(
     zwds: Option<&ZwdsAnalysisOutput>,
     tier: Option<&TierResult>,
     transit: Option<&TransitAnalysisOutput>,
+    iching: Option<&IChingAnalysisOutput>,
     form: &crate::store::FormState,
     locale: Locale,
 ) -> String {
     let mut s = String::new();
     let title = match locale {
-        Locale::Ko => "🌌✨ EON - 사주, 베딕, 자미두수, 티어, 운세 통합 분석 보고서",
-        Locale::En => "🌌✨ EON - Saju, Vedic, ZWDS, Tier & Transit Integrated Analysis Report",
-        Locale::Zh => "🌌✨ EON - 八字、吠陀、紫微斗数、阶级与运势整合分析报告",
-        Locale::Ru => "🌌✨ EON - Интегрированный отчет по Бацзы, Ведической Астрологии, ЦВдШ, Уровням и Транзитам",
+        Locale::Ko => "🌌✨ EON - 사주, 베딕, 자미두수, 티어, 운세, 주역 통합 분석 보고서",
+        Locale::En => "🌌✨ EON - Saju, Vedic, ZWDS, Tier, Transit & I Ching Integrated Analysis Report",
+        Locale::Zh => "🌌✨ EON - 八字、吠陀、紫微斗数、阶级、运势与周易整合分析报告",
+        Locale::Ru => "🌌✨ EON - Интегрированный отчет по Бацзы, Ведической Астрологии, ЦВдШ, Уровням, Транзитам и И Цзин",
     };
     s.push_str(&format!("# {}\n\n", title));
     s.push_str(&format_global_header(form, locale));
@@ -1659,6 +1661,18 @@ pub fn export_combined_to_markdown(
         sec_num += 1;
     }
 
+    if let Some(iching_data) = iching {
+        let iching_title = match locale {
+            Locale::Ko => "주역 / 하락이수 분석 상세 결과 (I Ching / He Luo Li Shu)",
+            Locale::En => "I Ching / He Luo Li Shu Lifetime Analysis Details",
+            Locale::Zh => "周易 / 河洛理数分析详细结果",
+            Locale::Ru => "Подробные результаты анализа И Цзин / Хэ Ло Ли Shu",
+        };
+        s.push_str(&format!("## {}. {}\n\n", sec_num, iching_title));
+        s.push_str(&format_iching_inner(iching_data, locale));
+        sec_num += 1;
+    }
+
     if let Some(tier_data) = tier {
         let tier_title = match locale {
             Locale::Ko => "종합 운명 티어 분석 결과 (Destiny Tier)",
@@ -1695,6 +1709,7 @@ pub fn ExportWidget() -> Element {
     let zwds_state = state.zwds.read();
     let tier_state = state.tier.read();
     let transit_state = state.transit.read();
+    let iching_state = state.iching.read();
     let form = state.form.read().clone();
 
     let has_saju = saju_state.status == TaskStatus::Success && saju_state.data.is_some();
@@ -1702,18 +1717,21 @@ pub fn ExportWidget() -> Element {
     let has_zwds = zwds_state.status == TaskStatus::Success && zwds_state.data.is_some();
     let has_tier = tier_state.status == TaskStatus::Success && tier_state.data.is_some();
     let has_transit = transit_state.status == TaskStatus::Success && transit_state.data.is_some();
+    let has_iching = iching_state.status == TaskStatus::Success && iching_state.data.is_some();
 
     let saju_data = saju_state.data.clone();
     let vedic_data = vedic_state.data.clone();
     let zwds_data = zwds_state.data.clone();
     let tier_data = tier_state.data.clone();
     let transit_data = transit_state.data.clone();
+    let iching_data = iching_state.data.clone();
 
     let mut copied_saju = use_signal(|| false);
     let mut copied_vedic = use_signal(|| false);
     let mut copied_zwds = use_signal(|| false);
     let mut copied_tier = use_signal(|| false);
     let mut copied_transit = use_signal(|| false);
+    let mut copied_iching = use_signal(|| false);
     let mut copied_combined = use_signal(|| false);
 
     let widget_title = match locale {
@@ -1759,12 +1777,19 @@ pub fn ExportWidget() -> Element {
         Locale::Zh => "复制综合分析报告",
         Locale::Ru => "Копировать объединенный отчет",
     };
+    let iching_btn_lbl = match locale {
+        Locale::Ko => "주역 보고서 복사",
+        Locale::En => "Copy I Ching Report",
+        Locale::Zh => "复制周易报告",
+        Locale::Ru => "Копировать отчет И Цзин",
+    };
 
     let form_cloned_saju = form.clone();
     let form_cloned_vedic = form.clone();
     let form_cloned_zwds = form.clone();
     let form_cloned_tier = form.clone();
     let form_cloned_transit = form.clone();
+    let form_cloned_iching = form.clone();
     let form_cloned_comb = form.clone();
 
     let saju_data_cloned_saju = saju_data.clone();
@@ -1781,6 +1806,9 @@ pub fn ExportWidget() -> Element {
 
     let transit_data_cloned_transit = transit_data.clone();
     let transit_data_cloned_comb = transit_data.clone();
+
+    let iching_data_cloned_iching = iching_data.clone();
+    let iching_data_cloned_comb = iching_data.clone();
 
     rsx! {
         div { class: "px-4 py-4 border-t border-slate-800/50 flex flex-col gap-2.5",
@@ -1921,14 +1949,41 @@ pub fn ExportWidget() -> Element {
                 }
             }
 
+            // 5.5 Copy I Ching
+            button {
+                class: if has_iching {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                } else {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
+                },
+                disabled: !has_iching,
+                onclick: move |_| {
+                    if let Some(ref data) = iching_data_cloned_iching {
+                        let txt = export_iching_to_markdown(data, &form_cloned_iching, locale);
+                        copy_to_clipboard(&txt);
+                        copied_iching.set(true);
+                        spawn(async move {
+                            gloo_timers::future::TimeoutFuture::new(2000).await;
+                            copied_iching.set(false);
+                        });
+                    }
+                },
+                span { "☯️ {iching_btn_lbl}" }
+                if *copied_iching.read() {
+                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                } else {
+                    span { class: "text-[10px] text-slate-500", "Markdown" }
+                }
+            }
+
             // 6. Copy Combined
             button {
-                class: if has_saju || has_vedic || has_zwds || has_tier || has_transit {
+                class: if has_saju || has_vedic || has_zwds || has_tier || has_transit || has_iching {
                     "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-gradient-to-r from-violet-900/20 to-indigo-900/20 border-violet-800/40 text-violet-300 hover:from-violet-850/40 hover:to-indigo-850/40 hover:text-white hover:border-violet-600/50"
                 } else {
                     "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
                 },
-                disabled: !has_saju && !has_vedic && !has_zwds && !has_tier && !has_transit,
+                disabled: !has_saju && !has_vedic && !has_zwds && !has_tier && !has_transit && !has_iching,
                 onclick: move |_| {
                     let txt = export_combined_to_markdown(
                         saju_data_cloned_comb.as_ref(),
@@ -1936,6 +1991,7 @@ pub fn ExportWidget() -> Element {
                         zwds_data_cloned_comb.as_ref(),
                         tier_data_cloned_comb.as_ref(),
                         transit_data_cloned_comb.as_ref(),
+                        iching_data_cloned_comb.as_ref(),
                         &form_cloned_comb,
                         locale
                     );
@@ -2797,6 +2853,149 @@ pub fn export_compatibility_to_markdown(
     }
     s.push_str("\n");
 
+    s
+}
+
+pub fn format_iching_inner(data: &IChingAnalysisOutput, locale: Locale) -> String {
+    let mut s = String::new();
+    let res = &data.result;
+    
+    let pre_natal_hex = get_hexagram_info(res.pre_natal_hexagram);
+    let post_natal_hex = get_hexagram_info(res.post_natal_hexagram);
+    let yuan_dang = res.yuan_dang_yao;
+
+    let (pre_name, pre_desc) = match locale {
+        Locale::Ko => (pre_natal_hex.name, pre_natal_hex.desc_ko),
+        Locale::En => (pre_natal_hex.name_en, pre_natal_hex.desc_en),
+        Locale::Zh => (pre_natal_hex.name_zh, pre_natal_hex.desc_zh),
+        Locale::Ru => (pre_natal_hex.name_ru, pre_natal_hex.desc_ru),
+    };
+    let (post_name, post_desc) = match locale {
+        Locale::Ko => (post_natal_hex.name, post_natal_hex.desc_ko),
+        Locale::En => (post_natal_hex.name_en, post_natal_hex.desc_en),
+        Locale::Zh => (post_natal_hex.name_zh, post_natal_hex.desc_zh),
+        Locale::Ru => (post_natal_hex.name_ru, post_natal_hex.desc_ru),
+    };
+
+    let (lbl_overview, lbl_pre_title, lbl_post_title, lbl_yd_title) = match locale {
+        Locale::Ko => ("### ☯️ 선천괘 및 후천괘 개요 (Overview)", "선천괘 (先天卦 - Innate)", "후천괘 (後天卦 - Acquired)", "평생의 원당효 (Yuan Dang Yao)"),
+        Locale::En => ("### ☯️ Hexagrams Overview", "Pre-Natal Hexagram (Innate)", "Post-Natal Hexagram (Acquired)", "Lifetime Yuan Dang Yao"),
+        Locale::Zh => ("### ☯️ 卦象概要", "先天卦 (Innate)", "后天卦 (Acquired)", "终身元当爻"),
+        Locale::Ru => ("### ☯️ Обзор гексаграмм", "Врожденная гексаграмма (Innate)", "Приобретенная гексаграмма (Acquired)", "Пожизненный Юань Дан Яо"),
+    };
+
+    s.push_str(&format!("{}\n\n", lbl_overview));
+    s.push_str(&format!("- **{}**: **{} (n.{})** - {}\n", lbl_pre_title, pre_name, res.pre_natal_hexagram, pre_desc));
+    s.push_str(&format!("- **{}**: **{} (n.{})** - {}\n", lbl_post_title, post_name, res.post_natal_hexagram, post_desc));
+    s.push_str(&format!("- **{}**: **{} {}**\n\n", lbl_yd_title, yuan_dang, match locale {
+        Locale::Ko => "효",
+        Locale::En => "Yao",
+        Locale::Zh => "爻",
+        Locale::Ru => "Яо",
+    }));
+
+    let (col_age, col_phase, col_hex, col_yao, col_yd, lbl_prenatal, lbl_postnatal, lbl_yes, lbl_no) = match locale {
+        Locale::Ko => ("연령대", "시기", "괘상", "효", "원당효 여부", "선천괘", "후천괘", "예 (★)", "아니오"),
+        Locale::En => ("Age Range", "Phase", "Hexagram", "Yao Line", "Yuan Dang?", "Innate", "Acquired", "Yes (★)", "No"),
+        Locale::Zh => ("年龄段", "时期", "卦象", "爻", "是否元当爻", "先天", "后天", "是 (★)", "否"),
+        Locale::Ru => ("Возраст", "Период", "Гексаграмма", "Линия", "Юань Дан?", "Врожд.", "Приобр.", "Да (★)", "Нет"),
+    };
+
+    let lbl_timeline = match locale {
+        Locale::Ko => "### 📅 하락이수 평생 대운 타임라인",
+        Locale::En => "### 📅 He Luo Li Shu Lifetime Cycles",
+        Locale::Zh => "### 📅 河洛理数终身大运时间线",
+        Locale::Ru => "### 📅 Пожизненные циклы Хэ Ло Ли Шу",
+    };
+    s.push_str(&format!("{}\n\n", lbl_timeline));
+
+    s.push_str(&format!("| {} | {} | {} | {} | {} |\n", col_age, col_phase, col_hex, col_yao, col_yd));
+    s.push_str("| --- | --- | --- | --- | --- |\n");
+    for cycle in &res.lifetime_cycles {
+        let c_hex = get_hexagram_info(cycle.hexagram_index);
+        let c_name = match locale {
+            Locale::Ko => c_hex.name,
+            Locale::En => c_hex.name_en,
+            Locale::Zh => c_hex.name_zh,
+            Locale::Ru => c_hex.name_ru,
+        };
+        let cycle_is_yang = (cycle.end_age - cycle.start_age + 1) == 9;
+        let line_name = get_yao_name(cycle.line_index, cycle_is_yang, locale);
+        let phase_str = if cycle.is_pre_natal { lbl_prenatal } else { lbl_postnatal };
+        let is_yd = cycle.is_pre_natal && cycle.line_index == res.yuan_dang_yao;
+        let yd_str = if is_yd { lbl_yes } else { lbl_no };
+        s.push_str(&format!("| {} - {} | {} | {} (n.{}) | {} | {} |\n",
+            cycle.start_age, cycle.end_age, phase_str, c_name, cycle.hexagram_index, line_name, yd_str));
+    }
+    s.push_str("\n");
+
+    let lbl_detail_title = match locale {
+        Locale::Ko => "### 🔍 대운 세부 해설 (Detailed Interpretation)",
+        Locale::En => "### 🔍 Detailed Cycle Interpretations",
+        Locale::Zh => "### 🔍 大运详细解析",
+        Locale::Ru => "### 🔍 Подробное толкование циклов",
+    };
+    s.push_str(&format!("{}\n\n", lbl_detail_title));
+
+    for cycle in &res.lifetime_cycles {
+        let c_hex = get_hexagram_info(cycle.hexagram_index);
+        let c_name = match locale {
+            Locale::Ko => c_hex.name,
+            Locale::En => c_hex.name_en,
+            Locale::Zh => c_hex.name_zh,
+            Locale::Ru => c_hex.name_ru,
+        };
+        let c_hanja = c_hex.hanja;
+        let c_desc = match locale {
+            Locale::Ko => c_hex.desc_ko,
+            Locale::En => c_hex.desc_en,
+            Locale::Zh => c_hex.desc_zh,
+            Locale::Ru => c_hex.desc_ru,
+        };
+        let cycle_is_yang = (cycle.end_age - cycle.start_age + 1) == 9;
+        let line_name = get_yao_name(cycle.line_index, cycle_is_yang, locale);
+        let phase_str = if cycle.is_pre_natal { lbl_prenatal } else { lbl_postnatal };
+        let is_yd = cycle.is_pre_natal && cycle.line_index == res.yuan_dang_yao;
+        let yao_desc = get_yao_description(cycle.line_index, cycle_is_yang, is_yd, locale);
+
+        s.push_str(&format!("#### 📅 [{} - {}] {} / {}\n\n", cycle.start_age, cycle.end_age, phase_str, c_name));
+        s.push_str(&format!("- **{}**: {} ({})\n", col_hex, c_name, c_hanja));
+        s.push_str(&format!("- **{}**: {}\n", col_yao, line_name));
+        s.push_str(&format!("- **{}**: {}\n\n", match locale {
+            Locale::Ko => "괘 설명",
+            Locale::En => "Hexagram Description",
+            Locale::Zh => "卦象说明",
+            Locale::Ru => "Описание гексаграммы",
+        }, c_desc));
+        s.push_str(&format!("##### ✦ {}\n\n", match locale {
+            Locale::Ko => "효사 해설",
+            Locale::En => "Yao Line Interpretation",
+            Locale::Zh => "爻辞解析",
+            Locale::Ru => "Толкование линии",
+        }));
+        s.push_str(&format!("{}\n\n", yao_desc.trim()));
+        s.push_str("---\n\n");
+    }
+
+    s
+}
+
+pub fn export_iching_to_markdown(
+    data: &IChingAnalysisOutput,
+    form: &crate::store::FormState,
+    locale: Locale,
+) -> String {
+    let mut s = String::new();
+    let title = match locale {
+        Locale::Ko => "☯️ EON - 주역 / 하락이수 평생 괘상 분석 보고서",
+        Locale::En => "☯️ EON - I Ching / He Luo Li Shu Lifetime Analysis Report",
+        Locale::Zh => "☯️ EON - 周易 / 河洛理数终身卦象分析报告",
+        Locale::Ru => "☯️ EON - Отчет по анализу гексаграмм И Цзин / Хэ Ло Ли Шу",
+    };
+    s.push_str(&format!("# {}\n\n", title));
+    s.push_str(&format_global_header(form, locale));
+    s.push_str("## 2. 주역 / 하락이수 분석 상세\n\n");
+    s.push_str(&format_iching_inner(data, locale));
     s
 }
 
