@@ -1,6 +1,6 @@
 use crate::store::{AnalysisState, TaskStatus};
 use crate::i18n::{t, TK, Locale, translate_planet, translate_planet_str, translate_avastha, rasi_name};
-use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput};
+use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult};
 use eon_vedic::planets::VedicPlanet;
 use dioxus::prelude::*;
 use wasm_bindgen::prelude::*;
@@ -1369,50 +1369,80 @@ pub fn export_combined_to_markdown(
     saju: Option<&SajuAnalysisOutput>,
     vedic: Option<&VedicAnalysisOutput>,
     zwds: Option<&ZwdsAnalysisOutput>,
+    tier: Option<&TierResult>,
+    transit: Option<&TransitAnalysisOutput>,
     form: &crate::store::FormState,
     locale: Locale,
 ) -> String {
     let mut s = String::new();
     let title = match locale {
-        Locale::Ko => "🌌✨ EON - 사주, 베딕, 자미두수 통합 분석 보고서",
-        Locale::En => "🌌✨ EON - Saju, Vedic & ZWDS Integrated Analysis Report",
-        Locale::Zh => "🌌✨ EON - 八字、吠陀与紫微斗数整合分析报告",
-        Locale::Ru => "🌌✨ EON - Интегрированный отчет по Бацзы, Ведической Астрологии и ЦВдШ",
+        Locale::Ko => "🌌✨ EON - 사주, 베딕, 자미두수, 티어, 운세 통합 분석 보고서",
+        Locale::En => "🌌✨ EON - Saju, Vedic, ZWDS, Tier & Transit Integrated Analysis Report",
+        Locale::Zh => "🌌✨ EON - 八字、吠陀、紫微斗数、阶级与运势整合分析报告",
+        Locale::Ru => "🌌✨ EON - Интегрированный отчет по Бацзы, Ведической Астрологии, ЦВдШ, Уровням и Транзитам",
     };
     s.push_str(&format!("# {}\n\n", title));
     s.push_str(&format_global_header(form, locale));
     
+    let mut sec_num = 2;
+
     if let Some(saju_data) = saju {
         let saju_title = match locale {
-            Locale::Ko => "2. 사주 분석 상세 결과 (Saju Analysis)",
-            Locale::En => "2. Saju Analysis Details",
-            Locale::Zh => "2. 八字分析详细结果",
-            Locale::Ru => "2. Подробные результаты анализа Бацзы",
+            Locale::Ko => "사주 분석 상세 결과 (Saju Analysis)",
+            Locale::En => "Saju Analysis Details",
+            Locale::Zh => "八字分析详细结果",
+            Locale::Ru => "Подробные результаты анализа Бацзы",
         };
-        s.push_str(&format!("## {}\n\n", saju_title));
+        s.push_str(&format!("## {}. {}\n\n", sec_num, saju_title));
         s.push_str(&format_saju_inner(saju_data, locale));
+        sec_num += 1;
     }
     
     if let Some(vedic_data) = vedic {
         let vedic_title = match locale {
-            Locale::Ko => "3. 베딕 분석 상세 결과 (Vedic Analysis)",
-            Locale::En => "3. Vedic Analysis Details",
-            Locale::Zh => "3. 吠陀分析详细结果",
-            Locale::Ru => "3. Подробные результаты Ведического анализа",
+            Locale::Ko => "베딕 분석 상세 결과 (Vedic Analysis)",
+            Locale::En => "Vedic Analysis Details",
+            Locale::Zh => "吠陀分析详细结果",
+            Locale::Ru => "Подробные результаты Ведического анализа",
         };
-        s.push_str(&format!("## {}\n\n", vedic_title));
+        s.push_str(&format!("## {}. {}\n\n", sec_num, vedic_title));
         s.push_str(&format_vedic_inner(vedic_data, locale));
+        sec_num += 1;
     }
 
     if let Some(zwds_data) = zwds {
         let zwds_title = match locale {
-            Locale::Ko => "4. 자미두수 분석 상세 결과 (Zi Wei Dou Shu)",
-            Locale::En => "4. Zi Wei Dou Shu Details",
-            Locale::Zh => "4. 紫微斗数分析详细结果",
-            Locale::Ru => "4. Подробные результаты анализа Цзы Вэй Доу Шу",
+            Locale::Ko => "자미두수 분석 상세 결과 (Zi Wei Dou Shu)",
+            Locale::En => "Zi Wei Dou Shu Details",
+            Locale::Zh => "紫微斗数分析详细结果",
+            Locale::Ru => "Подробные результаты анализа Цзы Вэй Доу Шу",
         };
-        s.push_str(&format!("## {}\n\n", zwds_title));
+        s.push_str(&format!("## {}. {}\n\n", sec_num, zwds_title));
         s.push_str(&format_zwds_inner(zwds_data, locale));
+        sec_num += 1;
+    }
+
+    if let Some(tier_data) = tier {
+        let tier_title = match locale {
+            Locale::Ko => "종합 운명 티어 분석 결과 (Destiny Tier)",
+            Locale::En => "Integrated Destiny Tier Details",
+            Locale::Zh => "综合命运阶级结果",
+            Locale::Ru => "Результаты уровня судьбы",
+        };
+        s.push_str(&format!("## {}. {}\n\n", sec_num, tier_title));
+        s.push_str(&format_tier_inner(tier_data, locale));
+        sec_num += 1;
+    }
+
+    if let Some(transit_data) = transit {
+        let transit_title = match locale {
+            Locale::Ko => "실시간 운세 분석 결과 (Transit Luck)",
+            Locale::En => "Real-time Transit Luck Details",
+            Locale::Zh => "实时运势分析结果",
+            Locale::Ru => "Результаты транзитной удачи",
+        };
+        s.push_str(&format!("## {}. {}\n\n", sec_num, transit_title));
+        s.push_str(&format_transit_inner(transit_data, locale));
     }
     
     s
@@ -1426,19 +1456,27 @@ pub fn ExportWidget() -> Element {
     let saju_state = state.saju.read();
     let vedic_state = state.vedic.read();
     let zwds_state = state.zwds.read();
+    let tier_state = state.tier.read();
+    let transit_state = state.transit.read();
     let form = state.form.read().clone();
 
     let has_saju = saju_state.status == TaskStatus::Success && saju_state.data.is_some();
     let has_vedic = vedic_state.status == TaskStatus::Success && vedic_state.data.is_some();
     let has_zwds = zwds_state.status == TaskStatus::Success && zwds_state.data.is_some();
+    let has_tier = tier_state.status == TaskStatus::Success && tier_state.data.is_some();
+    let has_transit = transit_state.status == TaskStatus::Success && transit_state.data.is_some();
 
     let saju_data = saju_state.data.clone();
     let vedic_data = vedic_state.data.clone();
     let zwds_data = zwds_state.data.clone();
+    let tier_data = tier_state.data.clone();
+    let transit_data = transit_state.data.clone();
 
     let mut copied_saju = use_signal(|| false);
     let mut copied_vedic = use_signal(|| false);
     let mut copied_zwds = use_signal(|| false);
+    let mut copied_tier = use_signal(|| false);
+    let mut copied_transit = use_signal(|| false);
     let mut copied_combined = use_signal(|| false);
 
     let widget_title = match locale {
@@ -1448,9 +1486,48 @@ pub fn ExportWidget() -> Element {
         Locale::Ru => "ЭКСПОРТ ОТЧЕТА",
     };
 
+    let saju_btn_lbl = match locale {
+        Locale::Ko => "사주 보고서 복사",
+        Locale::En => "Copy Saju Report",
+        Locale::Zh => "复制八字报告",
+        Locale::Ru => "Копировать отчет Бацзы",
+    };
+    let vedic_btn_lbl = match locale {
+        Locale::Ko => "베딕 보고서 복사",
+        Locale::En => "Copy Vedic Report",
+        Locale::Zh => "复制吠陀报告",
+        Locale::Ru => "Копировать Ведический отчет",
+    };
+    let zwds_btn_lbl = match locale {
+        Locale::Ko => "자미두수 보고서 복사",
+        Locale::En => "Copy ZWDS Report",
+        Locale::Zh => "复制紫微斗数报告",
+        Locale::Ru => "Копировать отчет ЦВдШ",
+    };
+    let tier_btn_lbl = match locale {
+        Locale::Ko => "운명 티어 보고서 복사",
+        Locale::En => "Copy Destiny Tier Report",
+        Locale::Zh => "复制命运阶级报告",
+        Locale::Ru => "Копировать отчет уровня судьбы",
+    };
+    let transit_btn_lbl = match locale {
+        Locale::Ko => "실시간 운세 보고서 복사",
+        Locale::En => "Copy Transit Luck Report",
+        Locale::Zh => "复制实时运势报告",
+        Locale::Ru => "Копировать отчет транзитной удачи",
+    };
+    let combined_btn_lbl = match locale {
+        Locale::Ko => "통합 분석 보고서 복사",
+        Locale::En => "Copy Combined Report",
+        Locale::Zh => "复制综合分析报告",
+        Locale::Ru => "Копировать объединенный отчет",
+    };
+
     let form_cloned_saju = form.clone();
     let form_cloned_vedic = form.clone();
     let form_cloned_zwds = form.clone();
+    let form_cloned_tier = form.clone();
+    let form_cloned_transit = form.clone();
     let form_cloned_comb = form.clone();
 
     let saju_data_cloned_saju = saju_data.clone();
@@ -1461,6 +1538,12 @@ pub fn ExportWidget() -> Element {
 
     let zwds_data_cloned_zwds = zwds_data.clone();
     let zwds_data_cloned_comb = zwds_data.clone();
+
+    let tier_data_cloned_tier = tier_data.clone();
+    let tier_data_cloned_comb = tier_data.clone();
+
+    let transit_data_cloned_transit = transit_data.clone();
+    let transit_data_cloned_comb = transit_data.clone();
 
     rsx! {
         div { class: "px-4 py-4 border-t border-slate-800/50 flex flex-col gap-2.5",
@@ -1485,7 +1568,7 @@ pub fn ExportWidget() -> Element {
                         });
                     }
                 },
-                span { "📝 {t(locale, TK::BtnCopySajuMarkdown)}" }
+                span { "📝 {saju_btn_lbl}" }
                 if *copied_saju.read() {
                     span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
                 } else {
@@ -1512,7 +1595,7 @@ pub fn ExportWidget() -> Element {
                         });
                     }
                 },
-                span { "✨ {t(locale, TK::BtnCopyVedicMarkdown)}" }
+                span { "✨ {vedic_btn_lbl}" }
                 if *copied_vedic.read() {
                     span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
                 } else {
@@ -1539,7 +1622,7 @@ pub fn ExportWidget() -> Element {
                         });
                     }
                 },
-                span { "🔮 {t(locale, TK::ZwdsCopyBtn)}" }
+                span { "🔮 {zwds_btn_lbl}" }
                 if *copied_zwds.read() {
                     span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
                 } else {
@@ -1547,19 +1630,75 @@ pub fn ExportWidget() -> Element {
                 }
             }
 
-            // 4. Copy Combined
+            // 4. Copy Destiny Tier
             button {
-                class: if has_saju || has_vedic || has_zwds {
+                class: if has_tier {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                } else {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
+                },
+                disabled: !has_tier,
+                onclick: move |_| {
+                    if let Some(ref data) = tier_data_cloned_tier {
+                        let txt = export_tier_to_markdown(data, &form_cloned_tier, locale);
+                        copy_to_clipboard(&txt);
+                        copied_tier.set(true);
+                        spawn(async move {
+                            gloo_timers::future::TimeoutFuture::new(2000).await;
+                            copied_tier.set(false);
+                        });
+                    }
+                },
+                span { "🏆 {tier_btn_lbl}" }
+                if *copied_tier.read() {
+                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                } else {
+                    span { class: "text-[10px] text-slate-500", "Markdown" }
+                }
+            }
+
+            // 5. Copy Transit Luck
+            button {
+                class: if has_transit {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                } else {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
+                },
+                disabled: !has_transit,
+                onclick: move |_| {
+                    if let Some(ref data) = transit_data_cloned_transit {
+                        let txt = export_transit_to_markdown(data, &form_cloned_transit, locale);
+                        copy_to_clipboard(&txt);
+                        copied_transit.set(true);
+                        spawn(async move {
+                            gloo_timers::future::TimeoutFuture::new(2000).await;
+                            copied_transit.set(false);
+                        });
+                    }
+                },
+                span { "⏳ {transit_btn_lbl}" }
+                if *copied_transit.read() {
+                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                } else {
+                    span { class: "text-[10px] text-slate-500", "Markdown" }
+                }
+            }
+
+            // 6. Copy Combined
+            button {
+                class: if has_saju || has_vedic || has_zwds || has_tier || has_transit {
                     "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-gradient-to-r from-violet-900/20 to-indigo-900/20 border-violet-800/40 text-violet-300 hover:from-violet-850/40 hover:to-indigo-850/40 hover:text-white hover:border-violet-600/50"
                 } else {
                     "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
                 },
-                disabled: !has_saju && !has_vedic && !has_zwds,
+                disabled: !has_saju && !has_vedic && !has_zwds && !has_tier && !has_transit,
                 onclick: move |_| {
                     let txt = export_combined_to_markdown(
                         saju_data_cloned_comb.as_ref(),
                         vedic_data_cloned_comb.as_ref(),
                         zwds_data_cloned_comb.as_ref(),
+                        tier_data_cloned_comb.as_ref(),
+                        transit_data_cloned_comb.as_ref(),
                         &form_cloned_comb,
                         locale
                     );
@@ -1570,7 +1709,7 @@ pub fn ExportWidget() -> Element {
                         copied_combined.set(false);
                     });
                 },
-                span { "🌌✨ {t(locale, TK::BtnCopyCombinedMarkdown)}" }
+                span { "🌌✨ {combined_btn_lbl}" }
                 if *copied_combined.read() {
                     span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
                 } else {
@@ -1870,6 +2009,264 @@ pub fn format_zwds_inner(data: &ZwdsAnalysisOutput, locale: Locale) -> String {
 
     s
 }
+
+fn format_tier_inner(data: &TierResult, locale: Locale) -> String {
+    let mut s = String::new();
+
+    let (tier_hdr, domain_hdr, saju_vedic_hdr, str_weak_hdr, components_hdr,
+         destiny_tier_lbl, destiny_score_lbl, potential_tier_lbl, potential_score_lbl,
+         domain_col, tier_col, saju_score_lbl, vedic_score_lbl,
+         strengths_lbl, weaknesses_lbl, component_col, score_col, weight_col, reasons_col,
+         growth_gap_lbl, risk_level_lbl, profile_lbl) = match locale {
+        Locale::Ko => (
+            "종합 운명 티어 분석 (Destiny Tier)",
+            "분야별 운명 티어 (Domain Tiers)",
+            "사주 및 베딕 세부 결과 (Eastern & Vedic Detailed Results)",
+            "선천적 강점 및 주의점 (Strengths & Weaknesses)",
+            "운명 구성요소 가중치 세부 정보 (Detailed Components & Weights)",
+            "종합 운명 티어", "종합 운명 점수", "잠재력 티어", "잠재력 점수",
+            "분야", "티어", "동양 사주 점수", "베딕 점성학 점수",
+            "선천적 강점", "주의할 약점/주의점", "구성요소", "점수", "가중치", "판단 근거 / 세부 이유",
+            "성장 갭 (Growth Gap)", "위험도 레벨 (Risk Level)", "인생 프로필 유형 (Profile)"
+        ),
+        Locale::En => (
+            "Integrated Destiny Tier Analysis",
+            "Domain Tiers",
+            "Eastern & Vedic Detailed Results",
+            "Inherent Strengths & Weaknesses",
+            "Destiny Component Weights & Details",
+            "Overall Destiny Tier", "Overall Destiny Score", "Potential Tier", "Potential Score",
+            "Domain", "Tier", "Eastern Saju Score", "Vedic Score",
+            "Inherent Strengths", "Inherent Weaknesses / Cautions", "Component", "Score", "Weight", "Reasons / Details",
+            "Growth Gap", "Risk Level", "Life Profile Type"
+        ),
+        Locale::Zh => (
+            "综合命运阶级分析 (Destiny Tier)",
+            "各领域命运阶级 (Domain Tiers)",
+            "八字与吠陀详细评分 (Eastern & Vedic Detailed Results)",
+            "先天优势与注意事项 (Strengths & Weaknesses)",
+            "命运构成要素权重细节 (Detailed Components & Weights)",
+            "综合命运阶级", "综合命运分数", "潜能阶级", "潜能分数",
+            "领域", "阶级", "东洋八字分数", "吠陀占星分数",
+            "先天优势", "需要注意的弱点", "构成要素", "分数", "权重", "判断依据 / 细节原因",
+            "成长空间 (Growth Gap)", "风险等级 (Risk Level)", "人生侧影类型 (Profile)"
+        ),
+        Locale::Ru => (
+            "Интегрированный анализ уровня судьбы (Destiny Tier)",
+            "Уровни судьбы по сферам (Domain Tiers)",
+            "Подробные результаты Бацзы и Ведической астрологии",
+            "Врожденные сильные стороны и предостережения",
+            "Веса и детали компонентов судьбы",
+            "Итоговый уровень судьбы", "Итоговый балл судьбы", "Потенциальный уровень", "Потенциальный балл",
+            "Сфера", "Уровень", "Балл восточного Бацзы", "Балл ведической астрологии",
+            "Врожденные преимущества", "Слабые стороны / Предостережения", "Компонент", "Балл", "Вес", "Обоснование / Детали",
+            "Разрыв роста (Growth Gap)", "Уровень риска (Risk Level)", "Тип жизненного профиля (Profile)"
+        ),
+    };
+
+    s.push_str(&format!("### {}\n\n", tier_hdr));
+    s.push_str(&format!("- **{}**: **{}** ({})\n", destiny_tier_lbl, data.destiny_tier.grade, data.destiny_tier.label));
+    s.push_str(&format!("- **{}**: {:.1} / 100.0\n", destiny_score_lbl, data.destiny_score));
+    s.push_str(&format!("- **{}**: **{}** ({})\n", potential_tier_lbl, data.potential_tier.grade, data.potential_tier.label));
+    s.push_str(&format!("- **{}**: {:.1} / 100.0\n", potential_score_lbl, data.potential_score));
+    s.push_str(&format!("- **{}**: {:.1}\n", growth_gap_lbl, data.growth_gap));
+    s.push_str(&format!("- **{}**: {}\n", risk_level_lbl, data.risk_level));
+    s.push_str(&format!("- **{}**: {}\n\n", profile_lbl, data.profile));
+    s.push_str(&format!("> **{}**\n\n", data.destiny_tier.desc));
+
+    // Domain Tiers
+    s.push_str(&format!("#### {}\n\n", domain_hdr));
+    s.push_str(&format!("| {} | {} |\n", domain_col, tier_col));
+    s.push_str("| --- | --- |\n");
+    for dt in &data.domain_tiers {
+        s.push_str(&format!("| {} | **{}** |\n", dt.domain, dt.tier));
+    }
+    s.push_str("\n");
+
+    // Saju & Vedic details
+    s.push_str(&format!("#### {}\n\n", saju_vedic_hdr));
+    s.push_str(&format!("**{} ({:.1})**:\n", saju_score_lbl, data.saju_result.score));
+    for hl in &data.saju_result.highlights {
+        s.push_str(&format!("- ✓ {}\n", hl));
+    }
+    s.push_str("\n");
+    s.push_str(&format!("**{} ({:.1})**:\n", vedic_score_lbl, data.vedic_result.score));
+    for hl in &data.vedic_result.highlights {
+        s.push_str(&format!("- ✓ {}\n", hl));
+    }
+    s.push_str("\n");
+
+    // Strengths & Weaknesses
+    s.push_str(&format!("#### {}\n\n", str_weak_hdr));
+    s.push_str(&format!("**{}**:\n", strengths_lbl));
+    for st in &data.strengths {
+        s.push_str(&format!("- • {}\n", st));
+    }
+    s.push_str("\n");
+    s.push_str(&format!("**{}**:\n", weaknesses_lbl));
+    for we in &data.weaknesses {
+        s.push_str(&format!("- • {}\n", we));
+    }
+    s.push_str("\n");
+
+    // Detailed Components
+    if !data.detailed_components.is_empty() {
+        s.push_str(&format!("#### {}\n\n", components_hdr));
+        s.push_str(&format!("| {} | {} | {} | {} |\n", component_col, score_col, weight_col, reasons_col));
+        s.push_str("| --- | --- | --- | --- |\n");
+        for comp in &data.detailed_components {
+            let weight_pct = format!("{:.1}%", comp.weight * 100.0);
+            let reasons_str = comp.reasons.join(", ");
+            s.push_str(&format!("| {} | {:.1} | {} | {} |\n", comp.label, comp.score, weight_pct, reasons_str));
+        }
+        s.push_str("\n");
+    }
+
+    s
+}
+
+fn format_transit_inner(data: &TransitAnalysisOutput, locale: Locale) -> String {
+    let mut s = String::new();
+
+    let (transit_title, current_age_lbl, yearly_luck_lbl, monthly_luck_lbl, daily_luck_lbl, hourly_luck_lbl,
+         pillar_col, god_col, relation_col, special_col, stage_col, year_col, month_col,
+         monthly_lucks_title) = match locale {
+        Locale::Ko => (
+            "실시간 운세 분석 (Transit Luck)", "현재 나이", "세운 (연운)", "월운 (이번 달)", "일운 (오늘)", "시운 (현재 시간대)",
+            "간지 (Pillar)", "십성 (Ten-God)", "원국 상호작용 (Natal Relations)", "특이사항 (Special Events)", "12운성", "연도", "월",
+            "12개월 월운 상세 (Monthly Luck Details)"
+        ),
+        Locale::En => (
+            "Real-time Transit Luck Analysis", "Current Age", "Annual Luck", "Monthly Luck (This Month)", "Daily Luck (Today)", "Hourly Luck (Current Time)",
+            "GanZi (Pillar)", "Ten-God", "Natal Relations", "Special Events", "Twelve Stage", "Year", "Month",
+            "12-Month Luck Details"
+        ),
+        Locale::Zh => (
+            "实时运势分析 (Transit Luck)", "当前年龄", "流年运势", "流月运势 (本月)", "流日运势 (今日)", "流时运势 (当前时段)",
+            "干支", "十神", "原局作用", "特殊注意事项", "十二运星", "年份", "月份",
+            "12个月流月运势详情"
+        ),
+        Locale::Ru => (
+            "Анализ транзитной удачи в реальном времени", "Текущий возраст", "Годовая удача", "Месячная удача", "Дневная удача", "Часовая удача",
+            "Столп (Гань-Чжи)", "Десять Божеств", "Взаимодействие с картой", "Особые события", "12 Стадий Судьбы", "Год", "Месяц",
+            "Подробности месячной удачи на 12 месяцев"
+        ),
+    };
+
+    let age_str = match locale {
+        Locale::Ko => format!("만 {}세", data.current_age),
+        Locale::Zh => format!("{}岁", data.current_age),
+        Locale::Ru => format!("{} лет", data.current_age),
+        _ => format!("Age {}", data.current_age),
+    };
+
+    s.push_str(&format!("### {}\n\n", transit_title));
+    s.push_str(&format!("- **{}**: {}\n\n", current_age_lbl, age_str));
+
+    // Summary table
+    s.push_str(&format!("| 구분 | {} | {} | {} | {} | {} |\n", pillar_col, god_col, relation_col, stage_col, special_col));
+    s.push_str("| --- | --- | --- | --- | --- | --- |\n");
+
+    // Yearly
+    let yr = &data.yearly_luck;
+    let yr_inf = yr.influence.as_ref().map(|i| i.relations_with_natal.join(", ")).unwrap_or_else(|| "—".to_string());
+    let yr_stage = yr.twelve_stage.as_deref().unwrap_or("—");
+    let yr_spec = if yr.special_events.is_empty() { "—".to_string() } else { yr.special_events.join(", ") };
+    s.push_str(&format!("| **{} ({}년)** | {}({}) | {} / {} | {} | {} | {} |\n",
+        yearly_luck_lbl, yr.year, yr.ganzi.hanja(), yr.ganzi.hangul(),
+        yr.stem_god.hangul(), yr.branch_god.hangul(),
+        yr_inf, yr_stage, yr_spec
+    ));
+
+    // Monthly
+    let mo = &data.monthly_luck;
+    let mo_inf = mo.influence.as_ref().map(|i| i.relations_with_natal.join(", ")).unwrap_or_else(|| "—".to_string());
+    let mo_stage = mo.twelve_stage.as_deref().unwrap_or("—");
+    let mo_spec = if mo.special_events.is_empty() { "—".to_string() } else { mo.special_events.join(", ") };
+    s.push_str(&format!("| **{} ({}월)** | {}({}) | {} / {} | {} | {} | {} |\n",
+        monthly_luck_lbl, mo.month, mo.ganzi.hanja(), mo.ganzi.hangul(),
+        mo.stem_god.hangul(), mo.branch_god.hangul(),
+        mo_inf, mo_stage, mo_spec
+    ));
+
+    // Daily
+    let dy = &data.daily_luck;
+    let dy_inf = dy.influence.as_ref().map(|i| i.relations_with_natal.join(", ")).unwrap_or_else(|| "—".to_string());
+    let dy_stage = dy.twelve_stage.as_deref().unwrap_or("—");
+    let dy_spec = if dy.special_events.is_empty() { "—".to_string() } else { dy.special_events.join(", ") };
+    s.push_str(&format!("| **{} ({}일)** | {}({}) | {} / {} | {} | {} | {} |\n",
+        daily_luck_lbl, dy.day, dy.ganzi.hanja(), dy.ganzi.hangul(),
+        dy.stem_god.hangul(), dy.branch_god.hangul(),
+        dy_inf, dy_stage, dy_spec
+    ));
+
+    // Hourly
+    let hr = &data.hourly_luck;
+    let hr_inf = hr.influence.as_ref().map(|i| i.relations_with_natal.join(", ")).unwrap_or_else(|| "—".to_string());
+    let hr_stage = hr.twelve_stage.as_deref().unwrap_or("—");
+    let hr_spec = if hr.special_events.is_empty() { "—".to_string() } else { hr.special_events.join(", ") };
+    s.push_str(&format!("| **{} ({}시)** | {}({}) | {} / {} | {} | {} | {} |\n\n",
+        hourly_luck_lbl, hr.hour, hr.ganzi.hanja(), hr.ganzi.hangul(),
+        hr.stem_god.hangul(), hr.branch_god.hangul(),
+        hr_inf, hr_stage, hr_spec
+    ));
+
+    // 12 Months details
+    s.push_str(&format!("#### {}\n\n", monthly_lucks_title));
+    s.push_str(&format!("| {} | {} | {} | {} | {} | {} |\n", year_col, month_col, pillar_col, god_col, stage_col, relation_col));
+    s.push_str("| --- | --- | --- | --- | --- | --- |\n");
+    for m_luck in &data.monthly_lucks {
+        let m_inf = m_luck.influence.as_ref().map(|i| i.relations_with_natal.join(", ")).unwrap_or_else(|| "—".to_string());
+        let m_stage = m_luck.twelve_stage.as_deref().unwrap_or("—");
+        s.push_str(&format!("| {} | {}월 | {}({}) | {} / {} | {} | {} |\n",
+            m_luck.year, m_luck.month, m_luck.ganzi.hanja(), m_luck.ganzi.hangul(),
+            m_luck.stem_god.hangul(), m_luck.branch_god.hangul(),
+            m_stage, m_inf
+        ));
+    }
+    s.push_str("\n");
+
+    s
+}
+
+pub fn export_tier_to_markdown(
+    data: &TierResult,
+    form: &crate::store::FormState,
+    locale: Locale,
+) -> String {
+    let mut s = String::new();
+    let title = match locale {
+        Locale::Ko => "🏆 EON - 운명 티어 분석 보고서",
+        Locale::En => "🏆 EON - Destiny Tier Analysis Report",
+        Locale::Zh => "🏆 EON - 命运阶级分析报告",
+        Locale::Ru => "🏆 EON - Отчет по уровню судьбы",
+    };
+    s.push_str(&format!("# {}\n\n", title));
+    s.push_str(&format_global_header(form, locale));
+    s.push_str("## 2. 운명 티어 분석 상세 결과\n\n");
+    s.push_str(&format_tier_inner(data, locale));
+    s
+}
+
+pub fn export_transit_to_markdown(
+    data: &TransitAnalysisOutput,
+    form: &crate::store::FormState,
+    locale: Locale,
+) -> String {
+    let mut s = String::new();
+    let title = match locale {
+        Locale::Ko => "⏳ EON - 실시간 운세 분석 보고서",
+        Locale::En => "⏳ EON - Real-time Transit Luck Analysis Report",
+        Locale::Zh => "⏳ EON - 实时运势分析报告",
+        Locale::Ru => "⏳ EON - Отчет по транзитной удаче",
+    };
+    s.push_str(&format!("# {}\n\n", title));
+    s.push_str(&format_global_header(form, locale));
+    s.push_str("## 2. 실시간 운세 분석 상세 결과\n\n");
+    s.push_str(&format_transit_inner(data, locale));
+    s
+}
+
 
 pub fn export_zwds_to_markdown(
     data: &ZwdsAnalysisOutput,
