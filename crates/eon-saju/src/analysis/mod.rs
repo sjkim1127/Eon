@@ -12,6 +12,7 @@ pub mod periodic_luck;
 pub mod dynamic_luck;
 pub mod shinsal;
 pub mod supplementary_pillars;
+pub mod heluo;
 
 pub use crate::core::config::AnalysisConfig;
 pub use crate::core::pillars::FourPillars;
@@ -19,6 +20,7 @@ pub use crate::core::pillars::FourPillars;
 pub use void::VoidAnalysis;
 pub use dynamic_luck::DynamicLuckAnalysis;
 pub use supplementary_pillars::SupplementaryPillars;
+pub use heluo::{calculate_heluo, HeLuoResult, HeLuoCycle, Era};
 
 /// 사주 분석용 공통 인터페이스
 pub trait Analyzable {

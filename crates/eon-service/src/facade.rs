@@ -34,3 +34,23 @@ pub fn analyze_destiny_tier(
 ) -> Result<TierResult, ServiceError> {
     Ok(crate::services::tier::analyze(saju, vedic, transit))
 }
+
+pub fn analyze_iching(input: SajuAnalysisInput) -> Result<IChingAnalysisOutput, ServiceError> {
+    let saju_res = analyze_saju(input.clone())?;
+    let pillars = &saju_res.report.pillars;
+    let birth_year = input.base.year;
+    
+    let res = eon_saju::analysis::heluo::calculate_heluo(
+        birth_year,
+        input.is_male,
+        &pillars.year,
+        &pillars.month,
+        &pillars.day,
+        &pillars.hour,
+    );
+    
+    Ok(IChingAnalysisOutput {
+        meta: saju_res.meta,
+        result: res,
+    })
+}

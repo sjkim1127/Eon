@@ -30,6 +30,7 @@ pub use analysis::structure::{StructureType, StructureAnalysis};
 pub use analysis::yongshin::{YongshinType, YongshinAnalysis};
 pub use analysis::void::{VoidAnalysis};
 pub use analysis::dynamic_luck::DynamicLuckAnalysis;
+pub use analysis::heluo::{calculate_heluo, HeLuoResult, HeLuoCycle, Era};
 
 pub use engine::vm::{SajuVM, LifeFrame};
 pub use engine::emulator::{LifePathEmulator, LifePathReport};

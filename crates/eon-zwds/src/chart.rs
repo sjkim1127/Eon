@@ -149,6 +149,33 @@ pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Resu
 
     let destiny_patterns = crate::destiny_patterns::analyze_destiny_patterns(soul_idx, &star_positions, &palaces);
 
+    // 9. 궁간 비성사화(Flying SiHua) 계산
+    let mut flying_sihua = Vec::new();
+    for p_idx in 0..12 {
+        let p_stem = get_palace_stem(year_stem, p_idx);
+        let sihua_stars = get_sihua_stars(p_stem);
+        let from_palace = get_palace_name(soul_idx, p_idx);
+        
+        let types = [
+            (sihua_stars[0], crate::types::SiHuaType::HuaLu),
+            (sihua_stars[1], crate::types::SiHuaType::HuaQuan),
+            (sihua_stars[2], crate::types::SiHuaType::HuaKe),
+            (sihua_stars[3], crate::types::SiHuaType::HuaJi),
+        ];
+        
+        for (star, sihua_type) in types {
+            if let Some(&to_p_idx) = star_positions.get(&star) {
+                let to_palace = get_palace_name(soul_idx, to_p_idx);
+                flying_sihua.push(crate::types::FlyingSiHua {
+                    from_palace,
+                    to_palace,
+                    sihua_type,
+                    star,
+                });
+            }
+        }
+    }
+
     Ok(ZwdsChart {
         palaces,
         soul_idx,
@@ -158,6 +185,7 @@ pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Resu
         five_elements,
         daxian: daxian_list,
         destiny_patterns,
+        flying_sihua,
     })
 }
 
@@ -165,6 +193,7 @@ pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Resu
 mod tests {
     use super::*;
     use eon_core::birth::Gender;
+    use crate::types::{PalaceName, SiHuaType};
 
     #[test]
     fn test_build_chart() {
@@ -196,5 +225,40 @@ mod tests {
             }
         }
         assert_eq!(main_star_count, 14, "14주성이 모두 배치되어야 합니다.");
+    }
+
+    #[test]
+    fn test_flying_sihua_calculation() {
+        let birth = BirthInfo::solar(2004, 11, 27, 22, 0)
+            .with_gender(Gender::Male)
+            .with_location(eon_core::Location::seoul())
+            .with_korea_timezone();
+
+        let chart = build_chart(&birth).unwrap();
+
+        // 1. 비성사화가 비어 있지 않은가
+        assert!(!chart.flying_sihua.is_empty(), "비성사화 목록이 비어 있으면 안 됩니다.");
+        // 12개 궁 * 4개 사화 = 48개
+        assert_eq!(chart.flying_sihua.len(), 48, "총 48개의 비성사화가 생성되어야 합니다.");
+
+        // 2. 명궁(子궁 = index 10)에서 날아가는 비성사화 검증
+        // 2004년생 甲申년 -> 寅궁은 丙寅 -> 子궁은 丙子 (천간: 丙)
+        // 丙간 사화: 同機昌廉 -> 天同(祿), 天機(權), 文昌(科), 廉貞(忌)
+        let outbound_from_子 = chart.flying_sihua.iter()
+            .filter(|fs| fs.from_palace == PalaceName::Ming) // 명궁이 子(10)에 위치함
+            .collect::<Vec<_>>();
+        assert_eq!(outbound_from_子.len(), 4, "명궁(子궁)에서 나가는 사화는 4개여야 합니다.");
+
+        let lu_star = outbound_from_子.iter().find(|fs| fs.sihua_type == SiHuaType::HuaLu).unwrap();
+        assert_eq!(lu_star.star, ZwdsStar::TianTong, "丙간 화록은 天同이어야 합니다.");
+
+        let quan_star = outbound_from_子.iter().find(|fs| fs.sihua_type == SiHuaType::HuaQuan).unwrap();
+        assert_eq!(quan_star.star, ZwdsStar::TianJi, "丙간 화권은 天機이어야 합니다.");
+
+        let ke_star = outbound_from_子.iter().find(|fs| fs.sihua_type == SiHuaType::HuaKe).unwrap();
+        assert_eq!(ke_star.star, ZwdsStar::WenChang, "丙간 화과는 文昌이어야 합니다.");
+
+        let ji_star = outbound_from_子.iter().find(|fs| fs.sihua_type == SiHuaType::HuaJi).unwrap();
+        assert_eq!(ji_star.star, ZwdsStar::LianZhen, "丙간 화기는 廉貞이어야 합니다.");
     }
 }

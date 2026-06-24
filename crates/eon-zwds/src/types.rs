@@ -549,6 +549,14 @@ pub struct DestinyPattern {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct FlyingSiHua {
+    pub from_palace: PalaceName,
+    pub to_palace: PalaceName,
+    pub sihua_type: SiHuaType,
+    pub star: ZwdsStar,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ZwdsChart {
     pub palaces: [PalaceData; 12],
     pub soul_idx: PalaceIndex,
@@ -558,5 +566,6 @@ pub struct ZwdsChart {
     pub five_elements: FiveElementsClass,
     pub daxian: Vec<DaXian>,
     pub destiny_patterns: Vec<DestinyPattern>,
+    pub flying_sihua: Vec<FlyingSiHua>,
 }
 

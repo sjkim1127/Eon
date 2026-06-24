@@ -18,6 +18,7 @@ pub fn ZwdsTab() -> Element {
     let locale = *state.locale.read();
     let target_year = use_signal(|| 2026i32);
     let selected_palace_idx = use_signal(|| None::<usize>);
+    let hovered_palace_idx = use_signal(|| None::<usize>);
 
     // Copy signals to avoid borrowing state mutably in closures
     let zwds_signal = state.zwds;
@@ -157,7 +158,7 @@ pub fn ZwdsTab() -> Element {
                             rsx! {
                                 div { class: "space-y-6",
                                     // 4x4 성반 격자 시각화
-                                    ZwdsGrid { data: res.clone(), selected_palace_idx }
+                                    ZwdsGrid { data: res.clone(), selected_palace_idx, hovered_palace_idx }
 
                                     // 10년 대한 주기 목록
                                     DaXianSection { data: res.clone() }
@@ -194,7 +195,11 @@ pub fn ZwdsTab() -> Element {
 
 /// 자미두수 4x4 격자 성반 렌더링 컴포넌트
 #[component]
-fn ZwdsGrid(data: eon_service::dto::ZwdsAnalysisOutput, selected_palace_idx: Signal<Option<usize>>) -> Element {
+fn ZwdsGrid(
+    data: eon_service::dto::ZwdsAnalysisOutput,
+    selected_palace_idx: Signal<Option<usize>>,
+    hovered_palace_idx: Signal<Option<usize>>,
+) -> Element {
     // 4x4 Grid의 16칸 셀 배치 (외곽 12칸 궁 매핑, 중앙 4칸 비움)
     // ZWDS 지지 인덱스: 0=寅, 1=卯, 2=辰, 3=巳, 4=午, 5=未, 6=申, 7=酉, 8=戌, 9=亥, 10=子, 11=丑
     let grid_cells = vec![
@@ -227,6 +232,12 @@ fn ZwdsGrid(data: eon_service::dto::ZwdsAnalysisOutput, selected_palace_idx: Sig
                                     current_liu_nian: Some(data.current_liu_nian.clone()),
                                     onclick: move |_| {
                                         selected_palace_idx.set(Some(p_idx));
+                                    },
+                                    onmouseenter: move |_| {
+                                        hovered_palace_idx.set(Some(p_idx));
+                                    },
+                                    onmouseleave: move |_| {
+                                        hovered_palace_idx.set(None);
                                     }
                                 }
                             }
@@ -247,6 +258,193 @@ fn ZwdsGrid(data: eon_service::dto::ZwdsAnalysisOutput, selected_palace_idx: Sig
                     }
                 })
             }
+
+            // SVG flying stars layer
+            if let Some(from_idx) = *hovered_palace_idx.read() {
+                {
+                    let chart = &data.chart;
+                    let hovered_p_name = chart.palaces[from_idx].name;
+                    let state = use_context::<AnalysisState>();
+                    let locale = *state.locale.read();
+
+                    let flying_lines = chart.flying_sihua.iter()
+                        .filter(|fs| fs.from_palace == hovered_p_name)
+                        .filter_map(|fs| {
+                            let to_idx = chart.palaces.iter().position(|p| p.name == fs.to_palace)?;
+                            Some((fs, to_idx))
+                        })
+                        .collect::<Vec<_>>();
+
+                    if !flying_lines.is_empty() {
+                        rsx! {
+                            svg {
+                                class: "absolute inset-0 w-full h-full pointer-events-none z-10",
+                                view_box: "0 0 100 100",
+                                defs {
+                                    marker {
+                                        id: "arrow-lu",
+                                        view_box: "0 0 10 10",
+                                        ref_x: "8",
+                                        ref_y: "5",
+                                        marker_width: "6",
+                                        marker_height: "6",
+                                        orient: "auto-start-reverse",
+                                        path { d: "M 0 2 L 8 5 L 0 8 z", fill: "#10b981" }
+                                    }
+                                    marker {
+                                        id: "arrow-quan",
+                                        view_box: "0 0 10 10",
+                                        ref_x: "8",
+                                        ref_y: "5",
+                                        marker_width: "6",
+                                        marker_height: "6",
+                                        orient: "auto-start-reverse",
+                                        path { d: "M 0 2 L 8 5 L 0 8 z", fill: "#3b82f6" }
+                                    }
+                                    marker {
+                                        id: "arrow-ke",
+                                        view_box: "0 0 10 10",
+                                        ref_x: "8",
+                                        ref_y: "5",
+                                        marker_width: "6",
+                                        marker_height: "6",
+                                        orient: "auto-start-reverse",
+                                        path { d: "M 0 2 L 8 5 L 0 8 z", fill: "#8b5cf6" }
+                                    }
+                                    marker {
+                                        id: "arrow-ji",
+                                        view_box: "0 0 10 10",
+                                        ref_x: "8",
+                                        ref_y: "5",
+                                        marker_width: "6",
+                                        marker_height: "6",
+                                        orient: "auto-start-reverse",
+                                        path { d: "M 0 2 L 8 5 L 0 8 z", fill: "#ef4444" }
+                                    }
+                                }
+                                {
+                                    flying_lines.into_iter().map(|(fs, to_idx)| {
+                                        let (x1, y1) = get_palace_center(from_idx);
+                                        let (x2, y2) = get_palace_center(to_idx);
+
+                                        let (color, marker_id) = match fs.sihua_type {
+                                            SiHuaType::HuaLu => ("#10b981", "arrow-lu"),
+                                            SiHuaType::HuaQuan => ("#3b82f6", "arrow-quan"),
+                                            SiHuaType::HuaKe => ("#8b5cf6", "arrow-ke"),
+                                            SiHuaType::HuaJi => ("#ef4444", "arrow-ji"),
+                                        };
+
+                                        let star_label = translate_zwds_star(locale, fs.star);
+                                        let sihua_emoji = fs.sihua_type.emoji();
+
+                                        if from_idx == to_idx {
+                                            let path_d = format!(
+                                                "M {} {} C {} {}, {} {}, {} {}",
+                                                x1 - 2.0, y1 - 2.0,
+                                                x1 - 5.0, y1 - 8.0,
+                                                x1 + 5.0, y1 - 8.0,
+                                                x1 + 2.0, y1 - 2.0
+                                            );
+                                            let mx = x1;
+                                            let my = y1 - 9.0;
+                                            let label_len = star_label.chars().count();
+                                            let rect_w = 4.0 + (label_len as f64) * 1.5;
+                                            let rect_h = 3.6;
+
+                                            rsx! {
+                                                g { key: "self-{fs.star.korean()}-{sihua_emoji}",
+                                                    path {
+                                                        d: "{path_d}",
+                                                        fill: "none",
+                                                        stroke: "{color}",
+                                                        stroke_width: "1.2",
+                                                        marker_end: "url(#{marker_id})"
+                                                    }
+                                                    rect {
+                                                        x: "{mx - rect_w / 2.0}",
+                                                        y: "{my - rect_h / 2.0}",
+                                                        width: "{rect_w}",
+                                                        height: "{rect_h}",
+                                                        rx: "1.0",
+                                                        fill: "#0b0f19",
+                                                        stroke: "{color}",
+                                                        stroke_width: "0.4"
+                                                    }
+                                                    text {
+                                                        x: "{mx}",
+                                                        y: "{my + 1.0}",
+                                                        fill: "#cbd5e1",
+                                                        font_size: "2.0",
+                                                        font_weight: "bold",
+                                                        text_anchor: "middle",
+                                                        "{star_label}{sihua_emoji}"
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            let dx = x2 - x1;
+                                            let dy = y2 - y1;
+                                            let dist = (dx*dx + dy*dy).sqrt();
+                                            let (x2_short, y2_short) = if dist > 0.0 {
+                                                let offset = 8.5;
+                                                if dist > offset {
+                                                    (x2 - dx * (offset / dist), y2 - dy * (offset / dist))
+                                                } else {
+                                                    (x2, y2)
+                                                }
+                                            } else {
+                                                (x2, y2)
+                                            };
+
+                                            let mx = (x1 + x2) / 2.0;
+                                            let my = (y1 + y2) / 2.0;
+                                            let label_len = star_label.chars().count();
+                                            let rect_w = 4.0 + (label_len as f64) * 1.5;
+                                            let rect_h = 3.6;
+
+                                            rsx! {
+                                                g { key: "line-{from_idx}-{to_idx}-{fs.star.korean()}",
+                                                    line {
+                                                        x1: "{x1}",
+                                                        y1: "{y1}",
+                                                        x2: "{x2_short}",
+                                                        y2: "{y2_short}",
+                                                        stroke: "{color}",
+                                                        stroke_width: "1.2",
+                                                        stroke_dasharray: "3 1.5",
+                                                        marker_end: "url(#{marker_id})"
+                                                    }
+                                                    rect {
+                                                        x: "{mx - rect_w / 2.0}",
+                                                        y: "{my - rect_h / 2.0}",
+                                                        width: "{rect_w}",
+                                                        height: "{rect_h}",
+                                                        rx: "1.0",
+                                                        fill: "#0b0f19",
+                                                        stroke: "{color}",
+                                                        stroke_width: "0.4"
+                                                    }
+                                                    text {
+                                                        x: "{mx}",
+                                                        y: "{my + 1.0}",
+                                                        fill: "#cbd5e1",
+                                                        font_size: "2.0",
+                                                        font_weight: "bold",
+                                                        text_anchor: "middle",
+                                                        "{star_label}{sihua_emoji}"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+                        }
+                    } else {
+                        rsx! {}
+                    }
+                }
+            }
         }
     }
 }
@@ -260,6 +458,8 @@ fn PalaceCard(
     current_daxian: Option<eon_zwds::types::DaXian>,
     current_liu_nian: Option<eon_zwds::types::LiuNian>,
     onclick: EventHandler<MouseEvent>,
+    onmouseenter: EventHandler<MouseEvent>,
+    onmouseleave: EventHandler<MouseEvent>,
 ) -> Element {
     let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
@@ -316,6 +516,8 @@ fn PalaceCard(
         div {
             class: "h-44 p-3 rounded-2xl border flex flex-col justify-between transition-all duration-200 cursor-pointer hover:scale-[1.02] hover:shadow-xl hover:shadow-violet-950/10 active:scale-98 {border_cls}",
             onclick: move |e| onclick.call(e),
+            onmouseenter: move |e| onmouseenter.call(e),
+            onmouseleave: move |e| onmouseleave.call(e),
             // 궁 헤더: 천간/지지 & 궁명
             div { class: "flex justify-between items-start",
                 div { class: "flex flex-col",
@@ -752,6 +954,41 @@ fn PalaceDetailModal(
                     div { class: "grid grid-cols-1 md:grid-cols-12 gap-6",
                         // 왼쪽 칼럼: 배치 성계 (7/12)
                         div { class: "md:col-span-7 space-y-5",
+                            // 1. 궁위 심층 분석 리딩 (Advanced Reading)
+                            {
+                                let advanced_reading = crate::i18n::zwds_interpret::get_advanced_palace_interpretation(
+                                    locale,
+                                    palace.name,
+                                    &palace.stars,
+                                    &chart.destiny_patterns,
+                                );
+                                rsx! {
+                                    div { class: "p-4.5 rounded-2xl bg-gradient-to-r from-violet-950/20 to-indigo-950/20 border border-violet-800/20 space-y-2.5 shadow-md",
+                                        h4 { class: "text-xs font-black text-violet-300 uppercase tracking-wider flex items-center gap-2",
+                                            span { "📖" }
+                                            match locale {
+                                                Locale::Ko => "궁위 심층 분석 리딩 (Life Reading)",
+                                                Locale::Zh => "宫位深层分析命运导读",
+                                                Locale::En => "Palace Deep Destiny Reading",
+                                                Locale::Ru => "Глубокое толкование судьбы дворца",
+                                            }
+                                        }
+                                        div { class: "space-y-2 text-slate-300 text-xs leading-relaxed font-sans",
+                                            {
+                                                advanced_reading.split("\n\n").enumerate().map(|(idx, p)| {
+                                                    rsx! {
+                                                        p { key: "{idx}",
+                                                            "{p}"
+                                                        }
+                                                    }
+                                                })
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 2. 본궁 성계 목록
                             div { class: "space-y-3",
                                 h4 { class: "text-xs font-black text-slate-400 uppercase tracking-wider border-l-2 border-violet-500 pl-2",
                                     match locale {
@@ -819,6 +1056,108 @@ fn PalaceDetailModal(
                                                     }
                                                 }
                                             })
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 3. 비성사화 분석 (Flying Stars)
+                            {
+                                let outbound_stars = chart.flying_sihua.iter()
+                                    .filter(|fs| fs.from_palace == palace.name)
+                                    .collect::<Vec<_>>();
+                                let inbound_stars = chart.flying_sihua.iter()
+                                    .filter(|fs| fs.to_palace == palace.name)
+                                    .collect::<Vec<_>>();
+
+                                rsx! {
+                                    div { class: "space-y-3",
+                                        h4 { class: "text-xs font-black text-slate-400 uppercase tracking-wider border-l-2 border-emerald-500 pl-2",
+                                            match locale {
+                                                Locale::Ko => "궁간 비성사화 분석 (Palace Flying Stars)",
+                                                Locale::Zh => "宫干飞星四化分析",
+                                                Locale::En => "Palace Flying Stars Analysis",
+                                                Locale::Ru => "Анализ Летящих Звезд Дворца",
+                                            }
+                                        }
+                                        div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+                                            // 송출 (Outbound)
+                                            div { class: "bg-slate-950/20 border border-slate-850 rounded-xl p-3.5 space-y-2.5",
+                                                span { class: "text-[10px] text-emerald-400 font-bold flex items-center gap-1.5",
+                                                    span { class: "w-1.5 h-1.5 rounded-full bg-emerald-500" }
+                                                    match locale {
+                                                        Locale::Ko => "송출 사화 (Outbound)",
+                                                        Locale::Zh => "送出飞星 (向外)",
+                                                        Locale::En => "Outbound Sihua",
+                                                        Locale::Ru => "Исходящие Сихуа",
+                                                    }
+                                                }
+                                                if outbound_stars.is_empty() {
+                                                    p { class: "text-[10px] text-slate-500 italic pl-3", "—" }
+                                                } else {
+                                                    div { class: "space-y-1.5 pl-3",
+                                                        {
+                                                            outbound_stars.iter().map(|fs| {
+                                                                let color = match fs.sihua_type {
+                                                                    SiHuaType::HuaLu => "text-emerald-400",
+                                                                    SiHuaType::HuaQuan => "text-blue-400",
+                                                                    SiHuaType::HuaKe => "text-violet-400",
+                                                                    SiHuaType::HuaJi => "text-red-400",
+                                                                };
+                                                                let star_label = translate_zwds_star(locale, fs.star);
+                                                                let to_label = translate_zwds_palace(locale, fs.to_palace);
+                                                                rsx! {
+                                                                    div { key: "{fs.star.korean()}-out", class: "text-xs flex items-center gap-1.5 text-slate-300",
+                                                                        span { class: "font-semibold {color}", "{fs.sihua_type.emoji()}" }
+                                                                        span { class: "text-slate-400", "{star_label}" }
+                                                                        span { class: "text-slate-500", "➔" }
+                                                                        span { class: "font-bold text-slate-200", "{to_label}" }
+                                                                    }
+                                                                }
+                                                            })
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            // 유입 (Inbound)
+                                            div { class: "bg-slate-950/20 border border-slate-850 rounded-xl p-3.5 space-y-2.5",
+                                                span { class: "text-[10px] text-indigo-400 font-bold flex items-center gap-1.5",
+                                                    span { class: "w-1.5 h-1.5 rounded-full bg-indigo-500" }
+                                                    match locale {
+                                                        Locale::Ko => "유입 사화 (Inbound)",
+                                                        Locale::Zh => "引入飞星 (向内)",
+                                                        Locale::En => "Inbound Sihua",
+                                                        Locale::Ru => "Входящие Сихуа",
+                                                    }
+                                                }
+                                                if inbound_stars.is_empty() {
+                                                    p { class: "text-[10px] text-slate-500 italic pl-3", "—" }
+                                                } else {
+                                                    div { class: "space-y-1.5 pl-3",
+                                                        {
+                                                            inbound_stars.iter().map(|fs| {
+                                                                let color = match fs.sihua_type {
+                                                                    SiHuaType::HuaLu => "text-emerald-400",
+                                                                    SiHuaType::HuaQuan => "text-blue-400",
+                                                                    SiHuaType::HuaKe => "text-violet-400",
+                                                                    SiHuaType::HuaJi => "text-red-400",
+                                                                };
+                                                                let star_label = translate_zwds_star(locale, fs.star);
+                                                                let from_label = translate_zwds_palace(locale, fs.from_palace);
+                                                                rsx! {
+                                                                    div { key: "{fs.star.korean()}-in", class: "text-xs flex items-center gap-1.5 text-slate-300",
+                                                                        span { class: "font-semibold {color}", "{fs.sihua_type.emoji()}" }
+                                                                        span { class: "text-slate-400", "{star_label}" }
+                                                                        span { class: "text-slate-500", "➔" }
+                                                                        span { class: "font-bold text-slate-200", "{from_label}" }
+                                                                    }
+                                                                }
+                                                            })
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -1117,5 +1456,25 @@ fn get_star_description(locale: Locale, star: eon_zwds::types::ZwdsStar) -> &'st
             _ => "A minor helper star in Zi Wei Dou Shu.",
         }
     }
+}
+
+/// ZWDS 12궁위의 성반 4x4 Grid 상의 중심 좌표 (0..100 기준)
+fn get_palace_center(p_idx: usize) -> (f64, f64) {
+    let (r, c) = match p_idx {
+        0 => (3, 0), // 寅
+        1 => (2, 0), // 卯
+        2 => (1, 0), // 辰
+        3 => (0, 0), // 巳
+        4 => (0, 1), // 午
+        5 => (0, 2), // 未
+        6 => (0, 3), // 申
+        7 => (1, 3), // 酉
+        8 => (2, 3), // 戌
+        9 => (3, 3), // 亥
+        10 => (3, 2), // 子
+        11 => (3, 1), // 丑
+        _ => (0, 0),
+    };
+    ((c as f64 * 2.0 + 1.0) * 12.5, (r as f64 * 2.0 + 1.0) * 12.5)
 }
 

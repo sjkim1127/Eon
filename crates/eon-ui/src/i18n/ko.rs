@@ -376,5 +376,18 @@ pub fn translate(key: TK) -> &'static str {
         TK::ZwdsLiuNianBadge => "유년",
         TK::ZwdsPalaceSuffix => "궁",
         TK::ZwdsDaxianSuffix => "대운",
+
+        // --- I Ching / He Luo ---
+        TK::NavIChing => "주역 괘상",
+        TK::IChingTitle => "주역 / 하락이수 평생 괘상 분석",
+        TK::IChingPreNatal => "선천괘 (先天卦 - Innate)",
+        TK::IChingPostNatal => "후천괘 (後天卦 - Acquired)",
+        TK::IChingYuanDang => "원당효 (元當爻)",
+        TK::IChingTimelineTitle => "하락이수 평생 대운 타임라인",
+        TK::IChingSelectYaoHint => "💡 왼쪽의 효(Yao) 바를 마우스로 가리키거나 클릭하시면 자세한 효사와 연령대별 해설을 보실 수 있습니다.",
+        TK::IChingAgeSuffix => "세",
+        TK::IChingYangYao => "양효 (Yang)",
+        TK::IChingYinYao => "음효 (Yin)",
+        TK::StatusLoadingIChing => "하락이수 괘상 연산 중...",
     }
 }

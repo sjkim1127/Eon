@@ -6,6 +6,8 @@ pub mod en;
 pub mod ko;
 pub mod ru;
 pub mod zh;
+pub mod zwds_interpret;
+pub mod iching_db;
 
 use serde::{Deserialize, Serialize};
 use eon_vedic::planets::VedicPlanet;
@@ -452,6 +454,19 @@ pub enum TK {
     ZwdsLiuNianBadge,
     ZwdsPalaceSuffix,
     ZwdsDaxianSuffix,
+
+    // I Ching / He Luo
+    NavIChing,
+    IChingTitle,
+    IChingPreNatal,
+    IChingPostNatal,
+    IChingYuanDang,
+    IChingTimelineTitle,
+    IChingSelectYaoHint,
+    IChingAgeSuffix,
+    IChingYangYao,
+    IChingYinYao,
+    StatusLoadingIChing,
 }
 
 /// Main translation dispatch function.

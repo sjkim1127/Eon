@@ -376,5 +376,18 @@ pub fn translate(key: TK) -> &'static str {
         TK::ZwdsLiuNianBadge => "Annual",
         TK::ZwdsPalaceSuffix => " Palace",
         TK::ZwdsDaxianSuffix => " Da-Xian",
+
+        // --- I Ching / He Luo ---
+        TK::NavIChing => "I Ching Hexagrams",
+        TK::IChingTitle => "I Ching / He Luo Li Shu Lifetime Analysis",
+        TK::IChingPreNatal => "Pre-Natal Hexagram (Innate)",
+        TK::IChingPostNatal => "Post-Natal Hexagram (Acquired)",
+        TK::IChingYuanDang => "Yuan Dang Yao",
+        TK::IChingTimelineTitle => "He Luo Li Shu Lifetime Cycles",
+        TK::IChingSelectYaoHint => "💡 Hover or click any Yao line on the left to display its detailed interpretation and age span.",
+        TK::IChingAgeSuffix => " Years Old",
+        TK::IChingYangYao => "Yang Yao",
+        TK::IChingYinYao => "Yin Yao",
+        TK::StatusLoadingIChing => "Calculating He Luo Li Shu Hexagrams...",
     }
 }
