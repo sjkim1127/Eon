@@ -2045,43 +2045,44 @@ pub fn translate_saju_relation_str(locale: Locale, s: &str) -> String {
             continue;
         }
 
-        if s[i..].starts_with("삼합") {
+        let remaining_chars = &chars[i..];
+        if remaining_chars.starts_with(&['삼', '합']) {
             relation_type = "삼합";
             i += 2;
-        } else if s[i..].starts_with("방합") {
+        } else if remaining_chars.starts_with(&['방', '합']) {
             relation_type = "방합";
             i += 2;
-        } else if s[i..].starts_with("반합") {
+        } else if remaining_chars.starts_with(&['반', '합']) {
             relation_type = "반합";
             i += 2;
-        } else if s[i..].starts_with("육합") {
+        } else if remaining_chars.starts_with(&['육', '합']) {
             relation_type = "육합";
             i += 2;
-        } else if s[i..].starts_with("자형") {
+        } else if remaining_chars.starts_with(&['자', '형']) {
             relation_type = "자형";
             i += 2;
-        } else if s[i..].starts_with("삼형") {
+        } else if remaining_chars.starts_with(&['삼', '형']) {
             relation_type = "삼형";
             i += 2;
-        } else if s[i..].starts_with("충") {
+        } else if remaining_chars.starts_with(&['충']) {
             relation_type = "충";
             i += 1;
-        } else if s[i..].starts_with("형") {
+        } else if remaining_chars.starts_with(&['형']) {
             relation_type = "형";
             i += 1;
-        } else if s[i..].starts_with("해") {
+        } else if remaining_chars.starts_with(&['해']) {
             relation_type = "해";
             i += 1;
-        } else if s[i..].starts_with("파") {
+        } else if remaining_chars.starts_with(&['파']) {
             relation_type = "파";
             i += 1;
-        } else if s[i..].starts_with("합") {
+        } else if remaining_chars.starts_with(&['합']) {
             relation_type = "합";
             i += 1;
-        } else if s[i..].starts_with("원진") {
+        } else if remaining_chars.starts_with(&['원', '진']) {
             relation_type = "원진";
             i += 2;
-        } else if s[i..].starts_with("귀문") {
+        } else if remaining_chars.starts_with(&['귀', '문']) {
             relation_type = "귀문";
             i += 2;
         } else {
