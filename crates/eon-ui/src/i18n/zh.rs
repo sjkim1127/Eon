@@ -376,5 +376,18 @@ pub fn translate(key: TK) -> &'static str {
         TK::ZwdsLiuNianBadge => "流年",
         TK::ZwdsPalaceSuffix => "宫",
         TK::ZwdsDaxianSuffix => "大限",
+
+        // --- I Ching / He Luo ---
+        TK::NavIChing => "周易卦象",
+        TK::IChingTitle => "周易 / 河洛理数终身卦象分析",
+        TK::IChingPreNatal => "先天卦 (Innate)",
+        TK::IChingPostNatal => "后天卦 (Acquired)",
+        TK::IChingYuanDang => "元当爻",
+        TK::IChingTimelineTitle => "河洛理数终身大运时间线",
+        TK::IChingSelectYaoHint => "💡 将鼠标悬停或点击左侧的爻(Yao)以查看详细爻辞和年龄阶段解析。",
+        TK::IChingAgeSuffix => "岁",
+        TK::IChingYangYao => "阳爻 (Yang)",
+        TK::IChingYinYao => "阴爻 (Yin)",
+        TK::StatusLoadingIChing => "河洛理数卦象计算中...",
     }
 }

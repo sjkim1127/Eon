@@ -376,5 +376,18 @@ pub fn translate(key: TK) -> &'static str {
         TK::ZwdsLiuNianBadge => "Год",
         TK::ZwdsPalaceSuffix => " Дворец",
         TK::ZwdsDaxianSuffix => " Да-Сянь",
+
+        // --- I Ching / He Luo ---
+        TK::NavIChing => "Гексаграммы И Цзин",
+        TK::IChingTitle => "Пожизненный анализ И Цзин / Хэ Ло Ли Шу",
+        TK::IChingPreNatal => "Врожденная гексаграмма (Innate)",
+        TK::IChingPostNatal => "Приобретенная гексаграмма (Acquired)",
+        TK::IChingYuanDang => "Юань Дан Яо",
+        TK::IChingTimelineTitle => "Пожизненные циклы Хэ Ло Ли Шу",
+        TK::IChingSelectYaoHint => "💡 Наведите мышь или нажмите на линию Яо слева, чтобы увидеть подробную интерпретацию и возрастной диапазон.",
+        TK::IChingAgeSuffix => " лет",
+        TK::IChingYangYao => "Яо Ян",
+        TK::IChingYinYao => "Яо Инь",
+        TK::StatusLoadingIChing => "Расчет гексаграмм Хэ Ло Ли Шу...",
     }
 }

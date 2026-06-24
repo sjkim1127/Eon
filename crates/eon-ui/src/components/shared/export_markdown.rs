@@ -2244,6 +2244,65 @@ pub fn format_zwds_inner(data: &ZwdsAnalysisOutput, locale: Locale) -> String {
     }
     s.push_str("\n");
 
+    // ── 궁위별 심층 분석 리딩 (Advanced Palace Destiny Interpretations) ──
+    let title_deep_reading = match locale {
+        Locale::Ko => "### 12궁위 상세 심층 분석 리딩 (Deep Destiny Readings)",
+        Locale::Zh => "### 12宫位深层命运导读 (Deep Readings)",
+        Locale::En => "### 12 Palaces Deep Destiny Readings",
+        Locale::Ru => "### Подробное толкование по 12 дворцам",
+    };
+    s.push_str(&format!("{}\n\n", title_deep_reading));
+    for palace in chart.palaces.iter() {
+        let palace_name_str = crate::i18n::translate_zwds_palace(locale, palace.name);
+        s.push_str(&format!("#### {} ({}{})\n\n", palace_name_str, palace.heavenly_stem, palace.earthly_branch));
+        let advanced_reading = crate::i18n::zwds_interpret::get_advanced_palace_interpretation(
+            locale,
+            palace.name,
+            &palace.stars,
+            &chart.destiny_patterns,
+        );
+        s.push_str(&advanced_reading);
+        s.push_str("\n\n");
+    }
+
+    // ── 비성사화 분석표 (Palace Flying Stars Analysis Table) ──
+    let title_flying_stars = match locale {
+        Locale::Ko => "### 궁간 비성사화 분석표 (Palace Flying Stars)",
+        Locale::Zh => "### 宫干飞星四化分析表 (Flying Stars)",
+        Locale::En => "### Palace Flying Stars Analysis Table",
+        Locale::Ru => "### Таблица Летящих Звезд Дворца",
+    };
+    s.push_str(&format!("{}\n\n", title_flying_stars));
+
+    let header_flying = match locale {
+        Locale::Ko => "| 출발 궁위 (From) | 궁위 천간 | 성계 (Star) | 사화 (Sihua) | 대상 궁위 (To) |",
+        Locale::Zh => "| 出发宫位 (From) | 宫干 (Stem) | 星曜 (Star) | 四化 (Sihua) | 目标宫位 (To) |",
+        Locale::En => "| From Palace | Stem | Star | Si-Hua | To Palace |",
+        Locale::Ru => "| Из дворца | Ствол | Звезда | Си-Хуа | В дворец |",
+    };
+    s.push_str(&format!("{}\n", header_flying));
+    s.push_str("| --- | --- | --- | --- | --- |\n");
+
+    for fs in chart.flying_sihua.iter() {
+        let from_palace_data = chart.palaces.iter().find(|p| p.name == fs.from_palace);
+        let stem_str = from_palace_data.map(|p| p.heavenly_stem.as_str()).unwrap_or("—");
+        
+        let from_palace_name = crate::i18n::translate_zwds_palace(locale, fs.from_palace);
+        let to_palace_name = crate::i18n::translate_zwds_palace(locale, fs.to_palace);
+        let star_name = crate::i18n::translate_zwds_star(locale, fs.star);
+        let sihua_emoji = fs.sihua_type.emoji();
+        
+        s.push_str(&format!(
+            "| {} | {} | {} | {} | {} |\n",
+            from_palace_name,
+            stem_str,
+            star_name,
+            sihua_emoji,
+            to_palace_name
+        ));
+    }
+    s.push_str("\n");
+
     s
 }
 

@@ -203,6 +203,13 @@ pub struct ZwdsAnalysisOutput {
     pub current_liu_nian: eon_zwds::types::LiuNian,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IChingAnalysisOutput {
+    pub meta: AnalysisMeta,
+    pub result: eon_saju::analysis::heluo::HeLuoResult,
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
