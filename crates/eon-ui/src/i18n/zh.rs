@@ -389,5 +389,24 @@ pub fn translate(key: TK) -> &'static str {
         TK::IChingYangYao => "阳爻 (Yang)",
         TK::IChingYinYao => "阴爻 (Yin)",
         TK::StatusLoadingIChing => "河洛理数卦象计算中...",
+
+        // I Ching Advanced Keys
+        TK::IChingYuanQi => "元气",
+        TK::IChingHuaGong => "化工",
+        TK::IChingGetYuanQi => "得元气",
+        TK::IChingLoseYuanQi => "失元气",
+        TK::IChingGetHuaGong => "得化工",
+        TK::IChingLoseHuaGong => "失化工",
+        TK::IChingSeYao => "世爻",
+        TK::IChingYingYao => "应爻",
+        TK::IChingTi => "体",
+        TK::IChingYong => "用",
+        TK::IChingTiYong => "体用分析",
+        TK::IChingYearlyHex => "流年卦",
+        TK::IChingMonthlyHex => "流月卦",
+        TK::IChingNoble => "天乙贵人",
+        TK::IChingVoid => "旬空 (空亡)",
+        TK::IChingRok => "禄神",
+        TK::IChingHorse => "驿马星",
     }
 }

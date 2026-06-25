@@ -389,5 +389,24 @@ pub fn translate(key: TK) -> &'static str {
         TK::IChingYangYao => "Yang Yao",
         TK::IChingYinYao => "Yin Yao",
         TK::StatusLoadingIChing => "Calculating He Luo Li Shu Hexagrams...",
+
+        // I Ching Advanced Keys
+        TK::IChingYuanQi => "Yuan Qi (Primal Force)",
+        TK::IChingHuaGong => "Hua Gong (Seasonal Force)",
+        TK::IChingGetYuanQi => "Gained Yuan Qi",
+        TK::IChingLoseYuanQi => "Lost Yuan Qi",
+        TK::IChingGetHuaGong => "Gained Hua Gong",
+        TK::IChingLoseHuaGong => "Lost Hua Gong",
+        TK::IChingSeYao => "Se Yao (Subject)",
+        TK::IChingYingYao => "Ying Yao (Object)",
+        TK::IChingTi => "Ti (Self)",
+        TK::IChingYong => "Yong (Environment)",
+        TK::IChingTiYong => "Ti-Yong Analysis",
+        TK::IChingYearlyHex => "Yearly Hexagram (流年卦)",
+        TK::IChingMonthlyHex => "Monthly Hexagram (流月卦)",
+        TK::IChingNoble => "Heavenly Noble",
+        TK::IChingVoid => "Death & Emptiness (Void)",
+        TK::IChingRok => "Prosperity (Rok)",
+        TK::IChingHorse => "Travel Star (Horse)",
     }
 }

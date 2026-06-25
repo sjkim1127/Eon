@@ -389,5 +389,24 @@ pub fn translate(key: TK) -> &'static str {
         TK::IChingYangYao => "양효 (Yang)",
         TK::IChingYinYao => "음효 (Yin)",
         TK::StatusLoadingIChing => "하락이수 괘상 연산 중...",
+
+        // I Ching Advanced Keys
+        TK::IChingYuanQi => "원기(元氣)",
+        TK::IChingHuaGong => "화공(化工)",
+        TK::IChingGetYuanQi => "득원기 (得元氣)",
+        TK::IChingLoseYuanQi => "실원기 (失元氣)",
+        TK::IChingGetHuaGong => "득화공 (得化工)",
+        TK::IChingLoseHuaGong => "실화공 (失化工)",
+        TK::IChingSeYao => "세효 (世爻)",
+        TK::IChingYingYao => "응효 (應爻)",
+        TK::IChingTi => "체 (體)",
+        TK::IChingYong => "용 (用)",
+        TK::IChingTiYong => "체용(體用) 분석",
+        TK::IChingYearlyHex => "유년괘 (流年卦)",
+        TK::IChingMonthlyHex => "유월괘 (流月卦)",
+        TK::IChingNoble => "천을귀인",
+        TK::IChingVoid => "공망",
+        TK::IChingRok => "록",
+        TK::IChingHorse => "역마",
     }
 }

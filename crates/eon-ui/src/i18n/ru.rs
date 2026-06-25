@@ -389,5 +389,24 @@ pub fn translate(key: TK) -> &'static str {
         TK::IChingYangYao => "Яо Ян",
         TK::IChingYinYao => "Яо Инь",
         TK::StatusLoadingIChing => "Расчет гексаграмм Хэ Ло Ли Шу...",
+
+        // I Ching Advanced Keys
+        TK::IChingYuanQi => "Юань Ци (Первичная сила)",
+        TK::IChingHuaGong => "Хуа Гун (Сезонная сила)",
+        TK::IChingGetYuanQi => "Получена Юань Ци",
+        TK::IChingLoseYuanQi => "Утеряна Юань Ци",
+        TK::IChingGetHuaGong => "Получена Хуа Гун",
+        TK::IChingLoseHuaGong => "Утеряна Хуа Гун",
+        TK::IChingSeYao => "Се Яо (Субъект)",
+        TK::IChingYingYao => "Ин Яо (Объект)",
+        TK::IChingTi => "Ти (Субъект)",
+        TK::IChingYong => "Юн (Объект)",
+        TK::IChingTiYong => "Анализ Ти-Юн",
+        TK::IChingYearlyHex => "Годовая гексаграмма",
+        TK::IChingMonthlyHex => "Месячная гексаграмма",
+        TK::IChingNoble => "Благородный Человек",
+        TK::IChingVoid => "Пустота (Сюнь Кон)",
+        TK::IChingRok => "Процветание (Рок)",
+        TK::IChingHorse => "Путешествующая Лошадь",
     }
 }
