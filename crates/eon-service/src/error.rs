@@ -30,6 +30,9 @@ pub enum ServiceError {
     #[error("zwds analysis failed: {0}")]
     Zwds(String),
 
+    #[error("western analysis failed: {0}")]
+    Western(String),
+
     #[error("serialization failed: {0}")]
     Serialization(String),
 }

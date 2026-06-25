@@ -11,6 +11,7 @@ use crate::components::tabs::{
     ai_tab::AiTab,
     zwds_tab::ZwdsTab,
     iching_tab::IChingTab,
+    western_tab::WesternTab,
 };
 
 #[derive(Clone, Routable, Debug, PartialEq)]
@@ -42,6 +43,9 @@ pub enum Route {
 
         #[route("/iching")]
         IChingTab {},
+
+        #[route("/western")]
+        WesternTab {},
     #[end_layout]
     #[route("/:..route")]
     PageNotFound { route: Vec<String> },

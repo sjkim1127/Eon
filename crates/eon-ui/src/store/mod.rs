@@ -1,6 +1,6 @@
 pub mod db;
 use dioxus::prelude::*;
-use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult, ZwdsAnalysisOutput, IChingAnalysisOutput};
+use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult, ZwdsAnalysisOutput, IChingAnalysisOutput, WesternAnalysisOutput};
 use crate::i18n::Locale;
 
 #[derive(Clone, PartialEq, Default)]
@@ -74,6 +74,7 @@ pub struct AnalysisState {
     pub compat: Signal<AnalysisTaskState<eon_service::dto::VedicCompatibilityOutput>>,
     pub zwds: Signal<AnalysisTaskState<ZwdsAnalysisOutput>>,
     pub iching: Signal<AnalysisTaskState<IChingAnalysisOutput>>,
+    pub western: Signal<AnalysisTaskState<WesternAnalysisOutput>>,
     pub locale: Signal<Locale>,
 }
 
@@ -88,6 +89,7 @@ impl AnalysisState {
             compat: Signal::new(AnalysisTaskState::default()),
             zwds: Signal::new(AnalysisTaskState::default()),
             iching: Signal::new(AnalysisTaskState::default()),
+            western: Signal::new(AnalysisTaskState::default()),
             locale: Signal::new(Locale::Ko),
         }
     }

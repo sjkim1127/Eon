@@ -19,6 +19,8 @@ pub fn IChingTab() -> Element {
     
     // 유년괘 선택용 나이 상태 (기본값 30세)
     let mut selected_age = use_signal(|| 30u32);
+    // 복사 피드백 상태
+    let mut copied_feedback = use_signal(|| false);
 
     let run_analysis = move |_| {
         spawn(async move {
@@ -80,10 +82,55 @@ pub fn IChingTab() -> Element {
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent",
                     "{t(locale, TK::IChingTitle)}"
                 }
-                button {
-                    class: "px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl font-semibold text-white shadow-lg shadow-indigo-900/30 transition-all duration-200 active:scale-95 cursor-pointer",
-                    onclick: run_analysis,
-                    "🔮 {t(locale, TK::FormAnalyzeBtn)}"
+                div { class: "flex items-center gap-3",
+                    if let TaskStatus::Success = &state.iching.read().status {
+                        if let Some(iching_output) = &state.iching.read().data {
+                            {
+                                let data_cloned = iching_output.clone();
+                                let form_cloned = state.form.read().clone();
+                                let btn_text = if *copied_feedback.read() {
+                                    match locale {
+                                        Locale::Ko => "복사 완료! (Copied!)",
+                                        Locale::En => "Copied!",
+                                        Locale::Zh => "复制成功!",
+                                        Locale::Ru => "Скопировано!",
+                                    }
+                                } else {
+                                    match locale {
+                                        Locale::Ko => "📋 보고서 복사",
+                                        Locale::En => "Copy Report",
+                                        Locale::Zh => "复制报告",
+                                        Locale::Ru => "Копировать отчет",
+                                    }
+                                };
+                                let btn_cls = if *copied_feedback.read() {
+                                    "px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-semibold shadow-lg transition-all duration-200 active:scale-95 cursor-pointer"
+                                } else {
+                                    "px-5 py-2.5 bg-slate-800 hover:bg-slate-700/80 text-slate-200 rounded-xl font-semibold border border-slate-700/60 shadow-lg transition-all duration-200 active:scale-95 cursor-pointer"
+                                };
+                                rsx! {
+                                    button {
+                                        class: "{btn_cls}",
+                                        onclick: move |_| {
+                                            let txt = crate::components::shared::export_markdown::export_iching_to_markdown(&data_cloned, &form_cloned, locale);
+                                            crate::components::shared::export_markdown::copy_to_clipboard(&txt);
+                                            copied_feedback.set(true);
+                                            spawn(async move {
+                                                gloo_timers::future::TimeoutFuture::new(2000).await;
+                                                copied_feedback.set(false);
+                                            });
+                                        },
+                                        "{btn_text}"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    button {
+                        class: "px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl font-semibold text-white shadow-lg shadow-indigo-900/30 transition-all duration-200 active:scale-95 cursor-pointer",
+                        onclick: run_analysis,
+                        "🔮 {t(locale, TK::FormAnalyzeBtn)}"
+                    }
                 }
             }
 

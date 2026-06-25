@@ -1,0 +1,14 @@
+[package]
+name = "eon-western"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Eon: Western Astrology Engine — 서양 점성술 명리 엔진"
+
+[dependencies]
+eon-core = { workspace = true }
+eon-astro = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }

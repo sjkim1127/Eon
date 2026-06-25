@@ -4,7 +4,7 @@ use crate::i18n::{t, TK, Locale, translate_planet, translate_planet_str, transla
     translate_saju_spirit_marker_name, translate_saju_void_desc, translate_saju_ganzi, translate_saju_tag_str,
     translate_saju_load_balancer, translate_spirit_desc, translate_saju_reason, translate_saju_relation_str,
     translate_saju_twelve_stage_str};
-use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult, IChingAnalysisOutput};
+use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult, IChingAnalysisOutput, WesternAnalysisOutput};
 use eon_vedic::planets::VedicPlanet;
 use crate::i18n::iching_db::{get_hexagram_info, get_yao_name, get_yao_description};
 use dioxus::prelude::*;
@@ -1610,15 +1610,16 @@ pub fn export_combined_to_markdown(
     tier: Option<&TierResult>,
     transit: Option<&TransitAnalysisOutput>,
     iching: Option<&IChingAnalysisOutput>,
+    western: Option<&WesternAnalysisOutput>,
     form: &crate::store::FormState,
     locale: Locale,
 ) -> String {
     let mut s = String::new();
     let title = match locale {
-        Locale::Ko => "🌌✨ EON - 사주, 베딕, 자미두수, 티어, 운세, 주역 통합 분석 보고서",
-        Locale::En => "🌌✨ EON - Saju, Vedic, ZWDS, Tier, Transit & I Ching Integrated Analysis Report",
-        Locale::Zh => "🌌✨ EON - 八字、吠陀、紫微斗数、阶级、运势与周易整合分析报告",
-        Locale::Ru => "🌌✨ EON - Интегрированный отчет по Бацзы, Ведической Астрологии, ЦВдШ, Уровням, Транзитам и И Цзин",
+        Locale::Ko => "🌌✨ EON - 사주, 베딕, 자미두수, 티어, 운세, 주역, 점성학 통합 분석 보고서",
+        Locale::En => "🌌✨ EON - Saju, Vedic, ZWDS, Tier, Transit, I Ching & Western Astro Integrated Analysis Report",
+        Locale::Zh => "🌌✨ EON - 八字、吠陀、紫微斗数、阶级、运势、周易与占星整合分析报告",
+        Locale::Ru => "🌌✨ EON - Интегрированный отчет по Бацзы, Ведической Астрологии, ЦВдШ, Уровням, Транзитам, И Цзин и Западной астрологии",
     };
     s.push_str(&format!("# {}\n\n", title));
     s.push_str(&format_global_header(form, locale));
@@ -1665,11 +1666,23 @@ pub fn export_combined_to_markdown(
         let iching_title = match locale {
             Locale::Ko => "주역 / 하락이수 분석 상세 결과 (I Ching / He Luo Li Shu)",
             Locale::En => "I Ching / He Luo Li Shu Lifetime Analysis Details",
-            Locale::Zh => "周易 / 河洛理数分析详细结果",
-            Locale::Ru => "Подробные результаты анализа И Цзин / Хэ Ло Ли Shu",
+            Locale::Zh => "周易 / 河洛理数 analysis 详细结果",
+            Locale::Ru => "Подробные результаты анализа И Cзин / Хэ Ло Ли Шу",
         };
         s.push_str(&format!("## {}. {}\n\n", sec_num, iching_title));
         s.push_str(&format_iching_inner(iching_data, locale));
+        sec_num += 1;
+    }
+
+    if let Some(western_data) = western {
+        let western_title = match locale {
+            Locale::Ko => "서양 점성학 분석 상세 결과 (Western Astrology)",
+            Locale::En => "Western Astrology Analysis Details",
+            Locale::Zh => "西洋占星分析详细结果",
+            Locale::Ru => "Подробные результаты Западной астрологии",
+        };
+        s.push_str(&format!("## {}. {}\n\n", sec_num, western_title));
+        s.push_str(&format_western_inner(western_data, locale));
         sec_num += 1;
     }
 
@@ -1710,6 +1723,7 @@ pub fn ExportWidget() -> Element {
     let tier_state = state.tier.read();
     let transit_state = state.transit.read();
     let iching_state = state.iching.read();
+    let western_state = state.western.read();
     let form = state.form.read().clone();
 
     let has_saju = saju_state.status == TaskStatus::Success && saju_state.data.is_some();
@@ -1718,6 +1732,7 @@ pub fn ExportWidget() -> Element {
     let has_tier = tier_state.status == TaskStatus::Success && tier_state.data.is_some();
     let has_transit = transit_state.status == TaskStatus::Success && transit_state.data.is_some();
     let has_iching = iching_state.status == TaskStatus::Success && iching_state.data.is_some();
+    let has_western = western_state.status == TaskStatus::Success && western_state.data.is_some();
 
     let saju_data = saju_state.data.clone();
     let vedic_data = vedic_state.data.clone();
@@ -1725,6 +1740,7 @@ pub fn ExportWidget() -> Element {
     let tier_data = tier_state.data.clone();
     let transit_data = transit_state.data.clone();
     let iching_data = iching_state.data.clone();
+    let western_data = western_state.data.clone();
 
     let mut copied_saju = use_signal(|| false);
     let mut copied_vedic = use_signal(|| false);
@@ -1732,6 +1748,7 @@ pub fn ExportWidget() -> Element {
     let mut copied_tier = use_signal(|| false);
     let mut copied_transit = use_signal(|| false);
     let mut copied_iching = use_signal(|| false);
+    let mut copied_western = use_signal(|| false);
     let mut copied_combined = use_signal(|| false);
 
     let widget_title = match locale {
@@ -1783,6 +1800,12 @@ pub fn ExportWidget() -> Element {
         Locale::Zh => "复制周易报告",
         Locale::Ru => "Копировать отчет И Цзин",
     };
+    let western_btn_lbl = match locale {
+        Locale::Ko => "서양 점성학 보고서 복사",
+        Locale::En => "Copy Western Astro Report",
+        Locale::Zh => "复制西洋占星报告",
+        Locale::Ru => "Копировать отчет западной астрологии",
+    };
 
     let form_cloned_saju = form.clone();
     let form_cloned_vedic = form.clone();
@@ -1790,6 +1813,7 @@ pub fn ExportWidget() -> Element {
     let form_cloned_tier = form.clone();
     let form_cloned_transit = form.clone();
     let form_cloned_iching = form.clone();
+    let form_cloned_western = form.clone();
     let form_cloned_comb = form.clone();
 
     let saju_data_cloned_saju = saju_data.clone();
@@ -1809,6 +1833,8 @@ pub fn ExportWidget() -> Element {
 
     let iching_data_cloned_iching = iching_data.clone();
     let iching_data_cloned_comb = iching_data.clone();
+    let western_data_cloned_western = western_data.clone();
+    let western_data_cloned_comb = western_data.clone();
 
     rsx! {
         div { class: "px-4 py-4 border-t border-slate-800/50 flex flex-col gap-2.5",
@@ -1976,14 +2002,41 @@ pub fn ExportWidget() -> Element {
                 }
             }
 
+            // 5.6 Copy Western Astrology
+            button {
+                class: if has_western {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                } else {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
+                },
+                disabled: !has_western,
+                onclick: move |_| {
+                    if let Some(ref data) = western_data_cloned_western {
+                        let txt = export_western_to_markdown(data, &form_cloned_western, locale);
+                        copy_to_clipboard(&txt);
+                        copied_western.set(true);
+                        spawn(async move {
+                            gloo_timers::future::TimeoutFuture::new(2000).await;
+                            copied_western.set(false);
+                        });
+                    }
+                },
+                span { "🪐 {western_btn_lbl}" }
+                if *copied_western.read() {
+                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                } else {
+                    span { class: "text-[10px] text-slate-500", "Markdown" }
+                }
+            }
+
             // 6. Copy Combined
             button {
-                class: if has_saju || has_vedic || has_zwds || has_tier || has_transit || has_iching {
+                class: if has_saju || has_vedic || has_zwds || has_tier || has_transit || has_iching || has_western {
                     "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-gradient-to-r from-violet-900/20 to-indigo-900/20 border-violet-800/40 text-violet-300 hover:from-violet-850/40 hover:to-indigo-850/40 hover:text-white hover:border-violet-600/50"
                 } else {
                     "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
                 },
-                disabled: !has_saju && !has_vedic && !has_zwds && !has_tier && !has_transit && !has_iching,
+                disabled: !has_saju && !has_vedic && !has_zwds && !has_tier && !has_transit && !has_iching && !has_western,
                 onclick: move |_| {
                     let txt = export_combined_to_markdown(
                         saju_data_cloned_comb.as_ref(),
@@ -1992,6 +2045,7 @@ pub fn ExportWidget() -> Element {
                         tier_data_cloned_comb.as_ref(),
                         transit_data_cloned_comb.as_ref(),
                         iching_data_cloned_comb.as_ref(),
+                        western_data_cloned_comb.as_ref(),
                         &form_cloned_comb,
                         locale
                     );
@@ -2996,6 +3050,120 @@ pub fn export_iching_to_markdown(
     s.push_str(&format_global_header(form, locale));
     s.push_str("## 2. 주역 / 하락이수 분석 상세\n\n");
     s.push_str(&format_iching_inner(data, locale));
+    s
+}
+
+
+
+pub fn export_western_to_markdown(
+    data: &WesternAnalysisOutput,
+    form: &crate::store::FormState,
+    locale: Locale,
+) -> String {
+    let mut s = String::new();
+    let title = match locale {
+        Locale::Ko => "🪐 EON - 서양 점성학 천체 차트 분석 보고서",
+        Locale::En => "🪐 EON - Western Astrology Natal Chart Analysis Report",
+        Locale::Zh => "🪐 EON - 西洋占星天体星盘 analysis 报告",
+        Locale::Ru => "🪐 EON - Отчет по анализу натальной карты западной астрологии",
+    };
+    s.push_str(&format!("# {}\n\n", title));
+    s.push_str(&format_global_header(form, locale));
+    s.push_str("## 2. 서양 점성학 분석 상세\n\n");
+    s.push_str(&format_western_inner(data, locale));
+    s
+}
+
+pub fn format_western_inner(data: &WesternAnalysisOutput, locale: Locale) -> String {
+    let mut s = String::new();
+    let res = &data.result;
+    
+    // ASC sign and degree
+    let asc_sign_idx = (res.ascendant / 30.0).floor() as usize;
+    let (_, asc_sign_name) = crate::components::tabs::western_tab::get_sign_emoji_and_name(asc_sign_idx, locale);
+    let asc_deg = res.ascendant % 30.0;
+    let asc_deg_str = format!("{:.0}° {:.0}'", asc_deg.floor(), (asc_deg.fract() * 60.0).round());
+    
+    let (_, cr_name) = crate::components::tabs::western_tab::get_planet_emoji_and_name(&res.chart_ruler, locale);
+    
+    let (lbl_overview, lbl_asc, lbl_cr, lbl_dom_el, lbl_dom_mo) = match locale {
+        Locale::Ko => ("### 🪐 핵심 천체 지표 요약", "상승궁 (Ascendant)", "상승성주 (Chart Ruler)", "우세 원소 (Dominant Element)", "우세 양태 (Dominant Modality)"),
+        _ => ("### 🪐 Key Celestial Indicators", "Ascendant (ASC)", "Chart Ruler", "Dominant Element", "Dominant Modality"),
+    };
+    
+    s.push_str(&format!("{}\n\n", lbl_overview));
+    s.push_str(&format!("- **{}**: {} ({})\n", lbl_asc, asc_sign_name, asc_deg_str));
+    s.push_str(&format!("- **{}**: {}\n", lbl_cr, cr_name));
+    s.push_str(&format!("- **{}**: {}\n", lbl_dom_el, res.dominant_element));
+    s.push_str(&format!("- **{}**: {}\n\n", lbl_dom_mo, res.dominant_modality));
+
+    // Elements & Modalities distribution
+    let (lbl_dist, lbl_el, lbl_mo) = match locale {
+        Locale::Ko => ("### 📊 성향 지표 분포", "4대 원소 (Elements) 분포", "3대 양태 (Modalities) 분포"),
+        _ => ("### 📊 Temperament Distributions", "4 Elements Distribution", "3 Modalities Distribution"),
+    };
+    s.push_str(&format!("{}\n\n", lbl_dist));
+    s.push_str(&format!("#### {}\n", lbl_el));
+    s.push_str(&format!("- **Fire (불)**: {:.1}%\n", res.elements.fire));
+    s.push_str(&format!("- **Earth (흙)**: {:.1}%\n", res.elements.earth));
+    s.push_str(&format!("- **Air (공기)**: {:.1}%\n", res.elements.air));
+    s.push_str(&format!("- **Water (물)**: {:.1}%\n\n", res.elements.water));
+
+    s.push_str(&format!("#### {}\n", lbl_mo));
+    s.push_str(&format!("- **Cardinal (활동)**: {:.1}%\n", res.modalities.cardinal));
+    s.push_str(&format!("- **Fixed (고정)**: {:.1}%\n", res.modalities.fixed));
+    s.push_str(&format!("- **Mutable (변통)**: {:.1}%\n\n", res.modalities.mutable));
+
+    // Planet positions table
+    let (lbl_planets, col_planet, col_sign, col_deg, col_house) = match locale {
+        Locale::Ko => ("### 🪐 행성별 배치 상세 (Planet Positions)", "행성", "사인 (Sign)", "도수 (Degree)", "하우스 (House)"),
+        _ => ("### 🪐 Planet Positions", "Planet", "Zodiac Sign", "Degree", "House"),
+    };
+    s.push_str(&format!("{}\n\n", lbl_planets));
+    s.push_str(&format!("| {} | {} | {} | {} |\n", col_planet, col_sign, col_deg, col_house));
+    s.push_str("| --- | --- | --- | --- |\n");
+    for p in &res.planets {
+        let (p_emoji, p_name) = crate::components::tabs::western_tab::get_planet_emoji_and_name(&p.name, locale);
+        let (s_emoji, s_name) = crate::components::tabs::western_tab::get_sign_emoji_and_name(p.sign_index, locale);
+        let p_deg = p.degree_in_sign;
+        let p_deg_str = format!("{:.0}° {:.0}'", p_deg.floor(), (p_deg.fract() * 60.0).round());
+        let rx = if p.is_retrograde { " ℞" } else { "" };
+        s.push_str(&format!("| {} {} | {} {} | {}{} | 제 {} 하우스 |\n", p_emoji, p_name, s_emoji, s_name, p_deg_str, rx, p.house_number));
+    }
+    s.push_str("\n");
+
+    // House cusps table
+    let (lbl_cusps, col_cusp) = match locale {
+        Locale::Ko => ("### 🏠 하우스 경계 좌표 (House Cusps)", "하우스"),
+        _ => ("### 🏠 House Cusps", "House"),
+    };
+    s.push_str(&format!("{}\n\n", lbl_cusps));
+    s.push_str(&format!("| {} | {} | {} |\n", col_cusp, col_sign, col_deg));
+    s.push_str("| --- | --- | --- |\n");
+    for h in &res.houses {
+        let (s_emoji, s_name) = crate::components::tabs::western_tab::get_sign_emoji_and_name(h.sign_index, locale);
+        let h_deg = h.degree_in_sign;
+        let h_deg_str = format!("{:.0}° {:.0}'", h_deg.floor(), (h_deg.fract() * 60.0).round());
+        s.push_str(&format!("| 제 {} 하우스 | {} {} | {} |\n", h.house_number, s_emoji, s_name, h_deg_str));
+    }
+    s.push_str("\n");
+
+    // Aspects table
+    let (lbl_aspects, col_body_a, col_body_b, col_aspect, col_orb) = match locale {
+        Locale::Ko => ("### 📐 행성 간 아스펙트 (Aspects)", "천체 A", "천체 B", "관계 (Aspect)", "오차 (Orb)"),
+        _ => ("### 📐 Planetary Aspects", "Celestial A", "Celestial B", "Aspect Type", "Orb"),
+    };
+    s.push_str(&format!("{}\n\n", lbl_aspects));
+    s.push_str(&format!("| {} | {} | {} | {} |\n", col_body_a, col_body_b, col_aspect, col_orb));
+    s.push_str("| --- | --- | --- | --- |\n");
+    for asp in &res.aspects {
+        let (_, b_a_name) = crate::components::tabs::western_tab::get_planet_emoji_and_name(&asp.body_a_name, locale);
+        let (_, b_b_name) = crate::components::tabs::western_tab::get_planet_emoji_and_name(&asp.body_b_name, locale);
+        let (asp_emoji, asp_name) = crate::components::tabs::western_tab::get_aspect_emoji_and_name(asp.aspect_type, locale);
+        s.push_str(&format!("| {} | {} | {} {} | {:.2}° |\n", b_a_name, b_b_name, asp_emoji, asp_name, asp.orb));
+    }
+    s.push_str("\n");
+
     s
 }
 
