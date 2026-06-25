@@ -225,6 +225,20 @@ pub struct WesternAnalysisOutput {
     pub result: eon_western::WesternResult,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HumanDesignAnalysisInput {
+    #[serde(flatten)]
+    pub base: AnalysisInput,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HumanDesignAnalysisOutput {
+    pub meta: AnalysisMeta,
+    pub result: eon_human_design::HumanDesignResult,
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

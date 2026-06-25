@@ -6,3 +6,4 @@ pub mod transit;
 pub mod vedic;
 pub mod zwds;
 pub mod western;
+pub mod human_design;

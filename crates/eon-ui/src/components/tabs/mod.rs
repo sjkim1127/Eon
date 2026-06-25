@@ -8,3 +8,4 @@ pub mod ai_tab;
 pub mod zwds_tab;
 pub mod iching_tab;
 pub mod western_tab;
+pub mod human_design_tab;
