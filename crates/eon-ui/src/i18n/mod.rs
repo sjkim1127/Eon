@@ -467,6 +467,25 @@ pub enum TK {
     IChingYangYao,
     IChingYinYao,
     StatusLoadingIChing,
+
+    // I Ching Advanced Keys
+    IChingYuanQi,
+    IChingHuaGong,
+    IChingGetYuanQi,
+    IChingLoseYuanQi,
+    IChingGetHuaGong,
+    IChingLoseHuaGong,
+    IChingSeYao,
+    IChingYingYao,
+    IChingTi,
+    IChingYong,
+    IChingTiYong,
+    IChingYearlyHex,
+    IChingMonthlyHex,
+    IChingNoble,
+    IChingVoid,
+    IChingRok,
+    IChingHorse,
 }
 
 /// Main translation dispatch function.
