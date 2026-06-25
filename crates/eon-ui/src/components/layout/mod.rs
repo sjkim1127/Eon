@@ -39,7 +39,6 @@ fn Sidebar() -> Element {
                 SidebarLink { to: Route::TransitTab {}, icon: "⏳", label: t(locale, TK::NavTransit) }
                 SidebarLink { to: Route::SimulationTab {}, icon: "🧪", label: t(locale, TK::NavSimulation) }
                 SidebarLink { to: Route::TierTab {}, icon: "🏆", label: t(locale, TK::NavTier) }
-                SidebarLink { to: Route::AiTab {}, icon: "🤖", label: t(locale, TK::NavAi) }
                 SidebarLink { to: Route::ZwdsTab {}, icon: "🔮", label: t(locale, TK::NavZwds) }
                 SidebarLink { to: Route::IChingTab {}, icon: "☯️", label: t(locale, TK::NavIChing) }
                 SidebarLink { to: Route::WesternTab {}, icon: "🪐", label: t(locale, TK::NavWestern) }
