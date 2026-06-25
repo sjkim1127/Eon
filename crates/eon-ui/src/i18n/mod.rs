@@ -82,6 +82,7 @@ pub enum TK {
     NavZwds,
     NavIChing,
     NavWestern,
+    NavHumanDesign,
 
     // ── Western Astrology ──────────────────────────────────────────────
     WestTitle,
@@ -108,6 +109,29 @@ pub enum TK {
     WestAspectsTitle,
     WestReportCopyBtn,
     WestReportCopiedBtn,
+
+    // ── Human Design ───────────────────────────────────────────────────
+    HdTitle,
+    HdType,
+    HdProfile,
+    HdAuthority,
+    HdActiveGates,
+    HdActiveChannels,
+    HdDefinedCenters,
+    HdOpenCenters,
+    HdDesignSide,
+    HdPersonalitySide,
+    HdCenterHead,
+    HdCenterAjna,
+    HdCenterThroat,
+    HdCenterSelf,
+    HdCenterHeart,
+    HdCenterSacral,
+    HdCenterRoot,
+    HdCenterSpleen,
+    HdCenterSolarPlexus,
+    HdReportCopyBtn,
+    HdReportCopiedBtn,
 
     // ── Form ───────────────────────────────────────────────────────────
     FormYear,
@@ -2966,6 +2990,104 @@ pub fn translate_aux_shinsal_tuple(locale: Locale, name: &str, basis: &str, resu
     let result_t = translate_aux_shinsal(locale, result);
 
     (name_t, basis_t, result_t)
+}
+
+pub fn translate_hd_center(locale: Locale, center: eon_human_design::HdCenter) -> &'static str {
+    match center {
+        eon_human_design::HdCenter::Head => t(locale, TK::HdCenterHead),
+        eon_human_design::HdCenter::Ajna => t(locale, TK::HdCenterAjna),
+        eon_human_design::HdCenter::Throat => t(locale, TK::HdCenterThroat),
+        eon_human_design::HdCenter::SelfG => t(locale, TK::HdCenterSelf),
+        eon_human_design::HdCenter::Heart => t(locale, TK::HdCenterHeart),
+        eon_human_design::HdCenter::Sacral => t(locale, TK::HdCenterSacral),
+        eon_human_design::HdCenter::Root => t(locale, TK::HdCenterRoot),
+        eon_human_design::HdCenter::Spleen => t(locale, TK::HdCenterSpleen),
+        eon_human_design::HdCenter::SolarPlexus => t(locale, TK::HdCenterSolarPlexus),
+    }
+}
+
+pub fn translate_hd_type(locale: Locale, chart_type: &str) -> String {
+    match chart_type {
+        "Generator" => match locale {
+            Locale::Ko => "제네레이터 (Generator)".to_string(),
+            Locale::Zh => "生产者".to_string(),
+            Locale::Ru => "Генератор".to_string(),
+            _ => "Generator".to_string(),
+        },
+        "Manifesting Generator" => match locale {
+            Locale::Ko => "매니페스팅 제네레이터 (Manifesting Generator)".to_string(),
+            Locale::Zh => "显生者".to_string(),
+            Locale::Ru => "Манифестирующий генератор".to_string(),
+            _ => "Manifesting Generator".to_string(),
+        },
+        "Manifestor" => match locale {
+            Locale::Ko => "매니페스토 (Manifestor)".to_string(),
+            Locale::Zh => "发起者".to_string(),
+            Locale::Ru => "Манифестор".to_string(),
+            _ => "Manifestor".to_string(),
+        },
+        "Projector" => match locale {
+            Locale::Ko => "프로젝터 (Projector)".to_string(),
+            Locale::Zh => "投射者".to_string(),
+            Locale::Ru => "Проектор".to_string(),
+            _ => "Projector".to_string(),
+        },
+        "Reflector" => match locale {
+            Locale::Ko => "리플렉터 (Reflector)".to_string(),
+            Locale::Zh => "反映者".to_string(),
+            Locale::Ru => "Рефлектор".to_string(),
+            _ => "Reflector".to_string(),
+        },
+        _ => chart_type.to_string(),
+    }
+}
+
+pub fn translate_hd_authority(locale: Locale, auth: &str) -> String {
+    match auth {
+        "Emotional" => match locale {
+            Locale::Ko => "감정 권위 (Emotional)".to_string(),
+            Locale::Zh => "情绪权威".to_string(),
+            Locale::Ru => "Эмоциональный Авторитет".to_string(),
+            _ => "Emotional".to_string(),
+        },
+        "Sacral" => match locale {
+            Locale::Ko => "천골 권위 (Sacral)".to_string(),
+            Locale::Zh => "荐骨权威".to_string(),
+            Locale::Ru => "Сакральный Авторитет".to_string(),
+            _ => "Sacral".to_string(),
+        },
+        "Splenic" => match locale {
+            Locale::Ko => "직관/비장 권위 (Splenic)".to_string(),
+            Locale::Zh => "脾脏权威".to_string(),
+            Locale::Ru => "Селезеночный Авторитет".to_string(),
+            _ => "Splenic".to_string(),
+        },
+        "Ego" => match locale {
+            Locale::Ko => "에고 권위 (Ego)".to_string(),
+            Locale::Zh => "意志力权威".to_string(),
+            Locale::Ru => "Эго Авторитет".to_string(),
+            _ => "Ego".to_string(),
+        },
+        "Self-Projected" => match locale {
+            Locale::Ko => "자기 투사 권위 (Self-Projected)".to_string(),
+            Locale::Zh => "自我投射权威".to_string(),
+            Locale::Ru => "Самопроецируемый Авторитет".to_string(),
+            _ => "Self-Projected".to_string(),
+        },
+        "Mental/Outer" => match locale {
+            Locale::Ko => "정신/환경 권위 (Mental/Outer)".to_string(),
+            Locale::Zh => "心智/无내权威".to_string(),
+            Locale::Ru => "Ментальный Авторитет".to_string(),
+            _ => "Mental/Outer".to_string(),
+        },
+        "None/Outer" => match locale {
+            Locale::Ko => "없음/외적 권위 (None/Outer)".to_string(),
+            Locale::Zh => "无权威".to_string(),
+            Locale::Ru => "Нет Авторитета".to_string(),
+            _ => "None/Outer".to_string(),
+        },
+        _ => auth.to_string(),
+    }
 }
 
 

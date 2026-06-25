@@ -4,7 +4,7 @@ use crate::i18n::{t, TK, Locale, translate_planet, translate_planet_str, transla
     translate_saju_spirit_marker_name, translate_saju_void_desc, translate_saju_ganzi, translate_saju_tag_str,
     translate_saju_load_balancer, translate_spirit_desc, translate_saju_reason, translate_saju_relation_str,
     translate_saju_twelve_stage_str};
-use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult, IChingAnalysisOutput, WesternAnalysisOutput};
+use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult, IChingAnalysisOutput, WesternAnalysisOutput, HumanDesignAnalysisOutput};
 use eon_vedic::planets::VedicPlanet;
 use crate::i18n::iching_db::{get_hexagram_info, get_yao_name, get_yao_description};
 use dioxus::prelude::*;
@@ -1611,15 +1611,16 @@ pub fn export_combined_to_markdown(
     transit: Option<&TransitAnalysisOutput>,
     iching: Option<&IChingAnalysisOutput>,
     western: Option<&WesternAnalysisOutput>,
+    human_design: Option<&HumanDesignAnalysisOutput>,
     form: &crate::store::FormState,
     locale: Locale,
 ) -> String {
     let mut s = String::new();
     let title = match locale {
-        Locale::Ko => "🌌✨ EON - 사주, 베딕, 자미두수, 티어, 운세, 주역, 점성학 통합 분석 보고서",
-        Locale::En => "🌌✨ EON - Saju, Vedic, ZWDS, Tier, Transit, I Ching & Western Astro Integrated Analysis Report",
-        Locale::Zh => "🌌✨ EON - 八字、吠陀、紫微斗数、阶级、运势、周易与占星整合分析报告",
-        Locale::Ru => "🌌✨ EON - Интегрированный отчет по Бацзы, Ведической Астрологии, ЦВдШ, Уровням, Транзитам, И Цзин и Западной астрологии",
+        Locale::Ko => "🌌✨ EON - 사주, 베딕, 자미두수, 티어, 운세, 주역, 점성학, 휴먼디자인 통합 분석 보고서",
+        Locale::En => "🌌✨ EON - Saju, Vedic, ZWDS, Tier, Transit, I Ching, Western Astro & Human Design Integrated Report",
+        Locale::Zh => "🌌✨ EON - 八字、吠陀、紫微斗数、阶级、运势、周易、占星与人类图整合分析报告",
+        Locale::Ru => "🌌✨ EON - Интегрированный отчет по Бацзы, Ведической Астрологии, ЦВдШ, Уровням, Транзитам, И Цзин, Западной астрологии и Дизайну Человека",
     };
     s.push_str(&format!("# {}\n\n", title));
     s.push_str(&format_global_header(form, locale));
@@ -1686,6 +1687,18 @@ pub fn export_combined_to_markdown(
         sec_num += 1;
     }
 
+    if let Some(hd_data) = human_design {
+        let hd_title = match locale {
+            Locale::Ko => "휴먼디자인 분석 상세 결과 (Human Design)",
+            Locale::En => "Human Design BodyGraph Analysis Details",
+            Locale::Zh => "人类图分析详细结果",
+            Locale::Ru => "Подробные результаты анализа Дизайна Человека",
+        };
+        s.push_str(&format!("## {}. {}\n\n", sec_num, hd_title));
+        s.push_str(&format_human_design_inner(hd_data, locale));
+        sec_num += 1;
+    }
+
     if let Some(tier_data) = tier {
         let tier_title = match locale {
             Locale::Ko => "종합 운명 티어 분석 결과 (Destiny Tier)",
@@ -1733,6 +1746,8 @@ pub fn ExportWidget() -> Element {
     let has_transit = transit_state.status == TaskStatus::Success && transit_state.data.is_some();
     let has_iching = iching_state.status == TaskStatus::Success && iching_state.data.is_some();
     let has_western = western_state.status == TaskStatus::Success && western_state.data.is_some();
+    let hd_state = state.human_design.read();
+    let has_hd = hd_state.status == TaskStatus::Success && hd_state.data.is_some();
 
     let saju_data = saju_state.data.clone();
     let vedic_data = vedic_state.data.clone();
@@ -1741,6 +1756,7 @@ pub fn ExportWidget() -> Element {
     let transit_data = transit_state.data.clone();
     let iching_data = iching_state.data.clone();
     let western_data = western_state.data.clone();
+    let hd_data = hd_state.data.clone();
 
     let mut copied_saju = use_signal(|| false);
     let mut copied_vedic = use_signal(|| false);
@@ -1749,6 +1765,7 @@ pub fn ExportWidget() -> Element {
     let mut copied_transit = use_signal(|| false);
     let mut copied_iching = use_signal(|| false);
     let mut copied_western = use_signal(|| false);
+    let mut copied_hd = use_signal(|| false);
     let mut copied_combined = use_signal(|| false);
 
     let widget_title = match locale {
@@ -1806,6 +1823,12 @@ pub fn ExportWidget() -> Element {
         Locale::Zh => "复制西洋占星报告",
         Locale::Ru => "Копировать отчет западной астрологии",
     };
+    let hd_btn_lbl = match locale {
+        Locale::Ko => "휴먼디자인 보고서 복사",
+        Locale::En => "Copy Human Design Report",
+        Locale::Zh => "复制人类图报告",
+        Locale::Ru => "Копировать отчет Дизайна Человека",
+    };
 
     let form_cloned_saju = form.clone();
     let form_cloned_vedic = form.clone();
@@ -1814,6 +1837,7 @@ pub fn ExportWidget() -> Element {
     let form_cloned_transit = form.clone();
     let form_cloned_iching = form.clone();
     let form_cloned_western = form.clone();
+    let form_cloned_hd = form.clone();
     let form_cloned_comb = form.clone();
 
     let saju_data_cloned_saju = saju_data.clone();
@@ -1835,6 +1859,8 @@ pub fn ExportWidget() -> Element {
     let iching_data_cloned_comb = iching_data.clone();
     let western_data_cloned_western = western_data.clone();
     let western_data_cloned_comb = western_data.clone();
+    let hd_data_cloned_hd = hd_data.clone();
+    let hd_data_cloned_comb = hd_data.clone();
 
     rsx! {
         div { class: "px-4 py-4 border-t border-slate-800/50 flex flex-col gap-2.5",
@@ -2029,14 +2055,41 @@ pub fn ExportWidget() -> Element {
                 }
             }
 
+            // 5.7 Copy Human Design
+            button {
+                class: if has_hd {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                } else {
+                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
+                },
+                disabled: !has_hd,
+                onclick: move |_| {
+                    if let Some(ref data) = hd_data_cloned_hd {
+                        let txt = export_human_design_to_markdown(data, &form_cloned_hd, locale);
+                        copy_to_clipboard(&txt);
+                        copied_hd.set(true);
+                        spawn(async move {
+                            gloo_timers::future::TimeoutFuture::new(2000).await;
+                            copied_hd.set(false);
+                        });
+                    }
+                },
+                span { "🧬 {hd_btn_lbl}" }
+                if *copied_hd.read() {
+                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                } else {
+                    span { class: "text-[10px] text-slate-500", "Markdown" }
+                }
+            }
+
             // 6. Copy Combined
             button {
-                class: if has_saju || has_vedic || has_zwds || has_tier || has_transit || has_iching || has_western {
+                class: if has_saju || has_vedic || has_zwds || has_tier || has_transit || has_iching || has_western || has_hd {
                     "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-gradient-to-r from-violet-900/20 to-indigo-900/20 border-violet-800/40 text-violet-300 hover:from-violet-850/40 hover:to-indigo-850/40 hover:text-white hover:border-violet-600/50"
                 } else {
                     "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
                 },
-                disabled: !has_saju && !has_vedic && !has_zwds && !has_tier && !has_transit && !has_iching && !has_western,
+                disabled: !has_saju && !has_vedic && !has_zwds && !has_tier && !has_transit && !has_iching && !has_western && !has_hd,
                 onclick: move |_| {
                     let txt = export_combined_to_markdown(
                         saju_data_cloned_comb.as_ref(),
@@ -2046,6 +2099,7 @@ pub fn ExportWidget() -> Element {
                         transit_data_cloned_comb.as_ref(),
                         iching_data_cloned_comb.as_ref(),
                         western_data_cloned_comb.as_ref(),
+                        hd_data_cloned_comb.as_ref(),
                         &form_cloned_comb,
                         locale
                     );
@@ -3161,6 +3215,126 @@ pub fn format_western_inner(data: &WesternAnalysisOutput, locale: Locale) -> Str
         let (_, b_b_name) = crate::components::tabs::western_tab::get_planet_emoji_and_name(&asp.body_b_name, locale);
         let (asp_emoji, asp_name) = crate::components::tabs::western_tab::get_aspect_emoji_and_name(asp.aspect_type, locale);
         s.push_str(&format!("| {} | {} | {} {} | {:.2}° |\n", b_a_name, b_b_name, asp_emoji, asp_name, asp.orb));
+    }
+    s.push_str("\n");
+
+    s
+}
+
+pub fn export_human_design_to_markdown(
+    data: &HumanDesignAnalysisOutput,
+    form: &crate::store::FormState,
+    locale: Locale,
+) -> String {
+    let mut s = String::new();
+    let title = match locale {
+        Locale::Ko => "🧬 EON - 휴먼디자인 분석 보고서",
+        Locale::En => "🧬 EON - Human Design Analysis Report",
+        Locale::Zh => "🧬 EON - 人类图分析报告",
+        Locale::Ru => "🧬 EON - Отчет по Дизайну Человека",
+    };
+    s.push_str(&format!("# {}\n\n", title));
+    s.push_str(&format_global_header(form, locale));
+    s.push_str("## 2. 휴먼디자인 분석 상세 결과\n\n");
+    s.push_str(&format_human_design_inner(data, locale));
+    s
+}
+
+pub fn format_human_design_inner(data: &HumanDesignAnalysisOutput, locale: Locale) -> String {
+    use crate::i18n::{translate_hd_type, translate_hd_authority, translate_hd_center};
+    let mut s = String::new();
+    let res = &data.result;
+
+    // Overview
+    let (lbl_overview, lbl_type, lbl_profile, lbl_auth) = match locale {
+        Locale::Ko => ("### 🧬 기본 디자인 정보", "타입 (Type)", "프로파일 (Profile)", "내면의 권위 (Authority)"),
+        _ => ("### 🧬 Basic Design Information", "Type", "Profile", "Inner Authority"),
+    };
+    s.push_str(&format!("{}\n\n", lbl_overview));
+    s.push_str(&format!("- **{}**: {}\n", lbl_type, translate_hd_type(locale, &res.chart_type)));
+    s.push_str(&format!("- **{}**: {}\n", lbl_profile, res.profile));
+    s.push_str(&format!("- **{}**: {}\n\n", lbl_auth, translate_hd_authority(locale, &res.authority)));
+
+    // Centers
+    let (lbl_centers, lbl_defined, lbl_undefined) = match locale {
+        Locale::Ko => ("### 💎 에너지 센터 (Energy Centers)", "정의된 센터 (Defined Centers)", "미정의/열린 센터 (Undefined/Open Centers)"),
+        _ => ("### 💎 Energy Centers", "Defined Centers", "Undefined/Open Centers"),
+    };
+    s.push_str(&format!("{}\n\n", lbl_centers));
+    
+    let def_centers_str = res.defined_centers.iter()
+        .map(|&c| translate_hd_center(locale, c))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let undef_centers_str = res.undefined_centers.iter()
+        .map(|&c| translate_hd_center(locale, c))
+        .collect::<Vec<_>>()
+        .join(", ");
+        
+    s.push_str(&format!("- **{}**: {}\n", lbl_defined, if def_centers_str.is_empty() { "-" } else { &def_centers_str }));
+    s.push_str(&format!("- **{}**: {}\n\n", lbl_undefined, if undef_centers_str.is_empty() { "-" } else { &undef_centers_str }));
+
+    // Channels
+    let lbl_channels = match locale {
+        Locale::Ko => "### 🔀 연결된 채널 (Active Channels)",
+        _ => "### 🔀 Active Channels",
+    };
+    s.push_str(&format!("{}\n\n", lbl_channels));
+    if res.active_channels.is_empty() {
+        s.push_str("*(None)*\n\n");
+    } else {
+        for (g1, g2) in &res.active_channels {
+            s.push_str(&format!("- Channel {}-{}\n", g1, g2));
+        }
+        s.push_str("\n");
+    }
+
+    // Activations
+    let (lbl_planets, col_planet, col_personality, col_design) = match locale {
+        Locale::Ko => ("### 📊 행성별 게이트 활성화 상세 (Planet Activations)", "천체 (Planet)", "의식 (Personality)", "무의식 (Design)"),
+        _ => ("### 📊 Planet Activations", "Planet", "Personality (Black)", "Design (Red)"),
+    };
+    s.push_str(&format!("{}\n\n", lbl_planets));
+    s.push_str(&format!("| {} | {} | {} |\n", col_planet, col_personality, col_design));
+    s.push_str("| --- | --- | --- |\n");
+
+    let planets_ordered = vec![
+        "Sun", "Earth", "Moon", "NorthNode", "SouthNode", 
+        "Mercury", "Venus", "Mars", "Jupiter", "Saturn", 
+        "Uranus", "Neptune", "Pluto"
+    ];
+
+    for &p in &planets_ordered {
+        let p_name_trans = match p {
+            "Sun" => match locale { Locale::Ko => "태양 (Sun)", _ => "Sun" },
+            "Earth" => match locale { Locale::Ko => "지구 (Earth)", _ => "Earth" },
+            "Moon" => match locale { Locale::Ko => "달 (Moon)", _ => "Moon" },
+            "NorthNode" => match locale { Locale::Ko => "북교점 (North Node)", _ => "North Node" },
+            "SouthNode" => match locale { Locale::Ko => "남교점 (South Node)", _ => "South Node" },
+            "Mercury" => match locale { Locale::Ko => "수성 (Mercury)", _ => "Mercury" },
+            "Venus" => match locale { Locale::Ko => "금성 (Venus)", _ => "Venus" },
+            "Mars" => match locale { Locale::Ko => "화성 (Mars)", _ => "Mars" },
+            "Jupiter" => match locale { Locale::Ko => "목성 (Jupiter)", _ => "Jupiter" },
+            "Saturn" => match locale { Locale::Ko => "토성 (Saturn)", _ => "Saturn" },
+            "Uranus" => match locale { Locale::Ko => "천왕성 (Uranus)", _ => "Uranus" },
+            "Neptune" => match locale { Locale::Ko => "해왕성 (Neptune)", _ => "Neptune" },
+            "Pluto" => match locale { Locale::Ko => "명왕성 (Pluto)", _ => "Pluto" },
+            _ => p,
+        };
+
+        let pers_str = if let Some(p_data) = res.personality.get(p) {
+            format!("{}.{}", p_data.gate, p_data.line)
+        } else {
+            "-".to_string()
+        };
+
+        let des_str = if let Some(p_data) = res.design.get(p) {
+            format!("{}.{}", p_data.gate, p_data.line)
+        } else {
+            "-".to_string()
+        };
+
+        s.push_str(&format!("| {} | {} | {} |\n", p_name_trans, pers_str, des_str));
     }
     s.push_str("\n");
 

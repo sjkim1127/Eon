@@ -33,6 +33,9 @@ pub enum ServiceError {
     #[error("western analysis failed: {0}")]
     Western(String),
 
+    #[error("human design analysis failed: {0}")]
+    HumanDesign(String),
+
     #[error("serialization failed: {0}")]
     Serialization(String),
 }

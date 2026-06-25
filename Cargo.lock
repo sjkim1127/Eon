@@ -845,6 +845,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "eon-human-design"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "eon-astro",
+ "eon-core",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "eon-saju"
 version = "0.1.0"
 dependencies = [
@@ -868,6 +879,7 @@ dependencies = [
  "eon-astro",
  "eon-core",
  "eon-data",
+ "eon-human-design",
  "eon-saju",
  "eon-vedic",
  "eon-western",
@@ -886,6 +898,7 @@ dependencies = [
  "chrono-tz",
  "dioxus",
  "eon-core",
+ "eon-human-design",
  "eon-saju",
  "eon-service",
  "eon-vedic",

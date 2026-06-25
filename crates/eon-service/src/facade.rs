@@ -58,3 +58,7 @@ pub fn analyze_iching(input: SajuAnalysisInput) -> Result<IChingAnalysisOutput, 
 pub fn analyze_western(input: WesternAnalysisInput) -> Result<WesternAnalysisOutput, ServiceError> {
     crate::services::western::analyze(input)
 }
+
+pub fn analyze_human_design(input: HumanDesignAnalysisInput) -> Result<HumanDesignAnalysisOutput, ServiceError> {
+    crate::services::human_design::analyze(input)
+}
