@@ -7,3 +7,4 @@ pub mod vedic;
 pub mod zwds;
 pub mod western;
 pub mod human_design;
+pub mod report;

@@ -511,3 +511,30 @@ impl TryFrom<VedicAnalysisRequest> for VedicAnalysisInput {
         })
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReportTheme {
+    WealthAndCareer,   // 재물 및 커리어 테마
+    LoveAndMarriage,   // 연애 및 결혼 테마
+    HealthAndVitality, // 건강 및 마음 치유 테마
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThemedReportInput {
+    pub base: SajuAnalysisInput,
+    pub theme: ReportTheme,
+    pub user_name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ThemedReportOutput {
+    pub meta: AnalysisMeta,
+    pub theme: ReportTheme,
+    pub user_name: String,
+    pub title: String,
+    pub content: String,
+}
+

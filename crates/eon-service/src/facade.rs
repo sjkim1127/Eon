@@ -62,3 +62,8 @@ pub fn analyze_western(input: WesternAnalysisInput) -> Result<WesternAnalysisOut
 pub fn analyze_human_design(input: HumanDesignAnalysisInput) -> Result<HumanDesignAnalysisOutput, ServiceError> {
     crate::services::human_design::analyze(input)
 }
+
+pub fn generate_themed_report(input: ThemedReportInput) -> Result<ThemedReportOutput, ServiceError> {
+    crate::services::report::generate(input)
+}
+
