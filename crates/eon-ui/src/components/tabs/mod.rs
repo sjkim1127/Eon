@@ -7,3 +7,4 @@ pub mod tier_tab;
 pub mod ai_tab;
 pub mod zwds_tab;
 pub mod iching_tab;
+pub mod western_tab;

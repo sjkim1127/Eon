@@ -210,6 +210,21 @@ pub struct IChingAnalysisOutput {
     pub result: eon_saju::analysis::heluo::HeLuoResult,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WesternAnalysisInput {
+    #[serde(flatten)]
+    pub base: AnalysisInput,
+    pub house_system: String, // "P", "K", "W", "E" 등
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WesternAnalysisOutput {
+    pub meta: AnalysisMeta,
+    pub result: eon_western::WesternResult,
+}
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

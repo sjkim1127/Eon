@@ -17,6 +17,7 @@ eon-core = { workspace = true }
 eon-saju = { workspace = true }
 eon-vedic = { workspace = true }
 eon-zwds = { workspace = true }
+eon-western = { workspace = true }
 eon-ai = { workspace = true }
 eon-astro = { workspace = true }
 eon-data = { workspace = true }

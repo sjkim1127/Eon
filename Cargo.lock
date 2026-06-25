@@ -870,6 +870,7 @@ dependencies = [
  "eon-data",
  "eon-saju",
  "eon-vedic",
+ "eon-western",
  "eon-zwds",
  "serde",
  "serde_json",
@@ -888,6 +889,7 @@ dependencies = [
  "eon-saju",
  "eon-service",
  "eon-vedic",
+ "eon-western",
  "eon-zwds",
  "getrandom 0.2.17",
  "gloo-timers",
@@ -913,6 +915,17 @@ dependencies = [
  "eon-astro",
  "serde",
  "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "eon-western"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "eon-astro",
+ "eon-core",
+ "serde",
  "thiserror 1.0.69",
 ]
 

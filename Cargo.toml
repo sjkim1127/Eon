@@ -7,6 +7,7 @@ members = [
     "crates/eon-astro",
     "crates/eon-ai", "crates/eon-vedic",
     "crates/eon-zwds",
+    "crates/eon-western",
     "crates/eon-service",
     "crates/eon-ui",
 ]
@@ -35,6 +36,7 @@ eon-saju = { path = "crates/eon-saju", version = "0.1.0" }
 eon-vedic = { path = "crates/eon-vedic", version = "0.1.0" }
 eon-zwds = { path = "crates/eon-zwds", version = "0.1.0" }
 eon-ai = { path = "crates/eon-ai", version = "0.1.0" }
+eon-western = { path = "crates/eon-western", version = "0.1.0" }
 eon-service = { path = "crates/eon-service", version = "0.1.0" }
 
 [profile.release]

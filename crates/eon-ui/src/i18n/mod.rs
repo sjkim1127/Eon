@@ -80,6 +80,34 @@ pub enum TK {
     NavTier,
     NavAi,
     NavZwds,
+    NavIChing,
+    NavWestern,
+
+    // ── Western Astrology ──────────────────────────────────────────────
+    WestTitle,
+    WestPlanet,
+    WestSign,
+    WestDegree,
+    WestHouse,
+    WestSpeed,
+    WestRetrograde,
+    WestAspect,
+    WestOrb,
+    WestCusp,
+    WestElement,
+    WestModality,
+    WestChartRuler,
+    WestHouseSystem,
+    WestPlacidus,
+    WestKoch,
+    WestWholeSign,
+    WestEqual,
+    WestDominantTitle,
+    WestElementsTitle,
+    WestModalitiesTitle,
+    WestAspectsTitle,
+    WestReportCopyBtn,
+    WestReportCopiedBtn,
 
     // ── Form ───────────────────────────────────────────────────────────
     FormYear,
@@ -456,7 +484,6 @@ pub enum TK {
     ZwdsDaxianSuffix,
 
     // I Ching / He Luo
-    NavIChing,
     IChingTitle,
     IChingPreNatal,
     IChingPostNatal,

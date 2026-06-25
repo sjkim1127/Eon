@@ -54,3 +54,7 @@ pub fn analyze_iching(input: SajuAnalysisInput) -> Result<IChingAnalysisOutput, 
         result: res,
     })
 }
+
+pub fn analyze_western(input: WesternAnalysisInput) -> Result<WesternAnalysisOutput, ServiceError> {
+    crate::services::western::analyze(input)
+}
