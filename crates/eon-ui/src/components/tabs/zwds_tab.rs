@@ -6,7 +6,7 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
 use crate::i18n::{t, TK, Locale, translate_zwds_palace, translate_zwds_star, translate_five_elements, format_age_range};
-use eon_service::dto::{ZwdsAnalysisInput, AnalysisInput};
+use eon_service::dto::ZwdsAnalysisInput;
 use eon_service::facade;
 use crate::components::shared::birth_form::BirthForm;
 use eon_zwds::types::{PalaceData, ZwdsStar, SiHuaType};
@@ -32,18 +32,7 @@ pub fn ZwdsTab() -> Element {
             zwds_signal.write().status = TaskStatus::Loading;
             let form = form_signal.read().clone();
             let input = ZwdsAnalysisInput::new(
-                AnalysisInput {
-                    year: form.year,
-                    month: form.month,
-                    day: form.day,
-                    hour: form.hour,
-                    minute: form.minute,
-                    is_lunar: form.is_lunar,
-                    is_leap_month: form.is_leap_month,
-                    lat: form.lat,
-                    lon: form.lon,
-                    timezone: "Asia/Seoul".to_string(),
-                },
+                form.to_analysis_input(),
                 form.is_male,
                 Some(year),
             );
@@ -1477,4 +1466,3 @@ fn get_palace_center(p_idx: usize) -> (f64, f64) {
     };
     ((c as f64 * 2.0 + 1.0) * 12.5, (r as f64 * 2.0 + 1.0) * 12.5)
 }
-

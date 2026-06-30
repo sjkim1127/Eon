@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
 use crate::i18n::{t, TK, Locale};
-use eon_service::dto::{SajuAnalysisInput, TransitAnalysisInput, AnalysisInput};
+use eon_service::dto::{SajuAnalysisInput, TransitAnalysisInput};
 use eon_service::facade;
 use eon_saju::LuckDirection;
 use crate::components::shared::birth_form::BirthForm;
@@ -16,13 +16,7 @@ pub fn TransitTab() -> Element {
             state.transit.write().status = TaskStatus::Loading;
 
             let form = state.form.read().clone();
-            let base = AnalysisInput {
-                year: form.year, month: form.month, day: form.day,
-                hour: form.hour, minute: form.minute,
-                is_lunar: form.is_lunar, is_leap_month: form.is_leap_month,
-                lat: form.lat, lon: form.lon,
-                timezone: "Asia/Seoul".to_string(),
-            };
+            let base = form.to_analysis_input();
             let saju_input = SajuAnalysisInput::new(base, form.is_male, form.use_night_rat_hour, Some(false));
             let transit_input = TransitAnalysisInput::new(saju_input, None);
 
@@ -40,13 +34,7 @@ pub fn TransitTab() -> Element {
             // 사주 데이터도 없으면 함께 분석 (대운 타임라인 위해)
             if !matches!(state.saju.read().status, TaskStatus::Success) {
                 let form2 = state.form.read().clone();
-                let base2 = AnalysisInput {
-                    year: form2.year, month: form2.month, day: form2.day,
-                    hour: form2.hour, minute: form2.minute,
-                    is_lunar: form2.is_lunar, is_leap_month: form2.is_leap_month,
-                    lat: form2.lat, lon: form2.lon,
-                    timezone: "Asia/Seoul".to_string(),
-                };
+                let base2 = form2.to_analysis_input();
                 if let Ok(saju_res) = facade::analyze_saju(SajuAnalysisInput::new(base2, form2.is_male, form2.use_night_rat_hour, Some(false))) {
                     state.saju.write().data = Some(saju_res);
                     state.saju.write().status = TaskStatus::Success;

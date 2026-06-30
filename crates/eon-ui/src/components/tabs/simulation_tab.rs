@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
 use crate::i18n::{t, TK, Locale, format_age, format_age_range};
-use eon_service::dto::{SajuAnalysisInput, AnalysisInput};
+use eon_service::dto::SajuAnalysisInput;
 use eon_service::facade;
 use eon_saju::engine::emulator::YearlyScore;
 use crate::components::shared::birth_form::BirthForm;
@@ -16,13 +16,7 @@ pub fn SimulationTab() -> Element {
             state.saju.write().status = TaskStatus::Loading;
             let form = state.form.read().clone();
             let input = SajuAnalysisInput::new(
-                AnalysisInput {
-                    year: form.year, month: form.month, day: form.day,
-                    hour: form.hour, minute: form.minute,
-                    is_lunar: form.is_lunar, is_leap_month: form.is_leap_month,
-                    lat: form.lat, lon: form.lon,
-                    timezone: "Asia/Seoul".to_string(),
-                },
+                form.to_analysis_input(),
                 form.is_male, form.use_night_rat_hour, Some(false),
             );
             match facade::analyze_saju(input) {

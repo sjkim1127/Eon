@@ -7,7 +7,7 @@ use crate::i18n::{t, TK, Locale, format_strength_summary, format_age, format_age
     translate_saju_tag_str, translate_saju_load_balancer, translate_saju_ganzi, translate_aux_shinsal,
     translate_saju_strength_type, translate_saju_relation_str, translate_saju_stem_combination,
     translate_saju_yongshin_type, translate_saju_void_desc, translate_spirit_desc};
-use eon_service::dto::{SajuAnalysisInput, AnalysisInput};
+use eon_service::dto::SajuAnalysisInput;
 use eon_service::facade;
 use eon_saju::analysis::strength::StrengthType;
 use eon_saju::analysis::supplementary_pillars::InterpretationLevel;
@@ -26,14 +26,8 @@ pub fn SajuTab() -> Element {
             state.saju.write().status = TaskStatus::Loading;
             let form = state.form.read().clone();
             let input = SajuAnalysisInput::new(
-                AnalysisInput {
-                    year: form.year, month: form.month, day: form.day,
-                    hour: form.hour, minute: form.minute,
-                    is_lunar: form.is_lunar, is_leap_month: form.is_leap_month,
-                    lat: form.lat, lon: form.lon,
-                    timezone: "Asia/Seoul".to_string(),
-                },
-                form.is_male, false, Some(false),
+                form.to_analysis_input(),
+                form.is_male, form.use_night_rat_hour, Some(false),
             );
             match facade::analyze_saju(input) {
                 Ok(res) => {

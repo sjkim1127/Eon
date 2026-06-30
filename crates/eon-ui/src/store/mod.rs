@@ -1,6 +1,6 @@
 pub mod db;
 use dioxus::prelude::*;
-use eon_service::dto::{SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult, ZwdsAnalysisOutput, IChingAnalysisOutput, WesternAnalysisOutput, HumanDesignAnalysisOutput};
+use eon_service::dto::{AnalysisInput, SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult, ZwdsAnalysisOutput, IChingAnalysisOutput, WesternAnalysisOutput, HumanDesignAnalysisOutput};
 use crate::i18n::Locale;
 
 #[derive(Clone, PartialEq, Default)]
@@ -60,6 +60,23 @@ impl Default for FormState {
             lon: 126.9780,
             is_male: true,
             use_night_rat_hour: false,
+        }
+    }
+}
+
+impl FormState {
+    pub fn to_analysis_input(&self) -> AnalysisInput {
+        AnalysisInput {
+            year: self.year,
+            month: self.month,
+            day: self.day,
+            hour: self.hour,
+            minute: self.minute,
+            is_lunar: self.is_lunar,
+            is_leap_month: self.is_leap_month,
+            lat: self.lat,
+            lon: self.lon,
+            timezone: "Asia/Seoul".to_string(),
         }
     }
 }
