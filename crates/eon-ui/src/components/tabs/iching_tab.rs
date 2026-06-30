@@ -4,7 +4,7 @@ use crate::store::{AnalysisState, TaskStatus};
 use crate::i18n::{t, TK, Locale};
 use crate::i18n::iching_db::{get_hexagram_info, get_yao_name, get_yao_description};
 use eon_service::facade;
-use eon_service::dto::{AnalysisInput, SajuAnalysisInput};
+use eon_service::dto::SajuAnalysisInput;
 use crate::components::shared::birth_form::BirthForm;
 use eon_saju::core::element::ElementRelation;
 
@@ -27,18 +27,7 @@ pub fn IChingTab() -> Element {
             state.iching.write().status = TaskStatus::Loading;
             let form = state.form.read().clone();
 
-            let base_input = AnalysisInput {
-                year: form.year,
-                month: form.month,
-                day: form.day,
-                hour: form.hour,
-                minute: form.minute,
-                is_lunar: form.is_lunar,
-                is_leap_month: form.is_leap_month,
-                lat: form.lat,
-                lon: form.lon,
-                timezone: "Asia/Seoul".to_string(),
-            };
+            let base_input = form.to_analysis_input();
 
             let saju_input = SajuAnalysisInput::new(
                 base_input,

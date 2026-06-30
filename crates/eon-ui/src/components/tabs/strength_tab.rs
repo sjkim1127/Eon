@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
 use crate::i18n::{t, TK, Locale, translate_planet};
-use eon_service::dto::{SajuAnalysisInput, VedicAnalysisInput, AnalysisInput};
+use eon_service::dto::{SajuAnalysisInput, VedicAnalysisInput};
 use eon_service::facade;
 use eon_vedic::analysis::strength::StrengthEngine;
 use eon_vedic::planets::VedicPlanet;
@@ -38,13 +38,7 @@ pub fn StrengthTab() -> Element {
             state.vedic.write().status = TaskStatus::Loading;
 
             let form = state.form.read().clone();
-            let base = AnalysisInput {
-                year: form.year, month: form.month, day: form.day,
-                hour: form.hour, minute: form.minute,
-                is_lunar: form.is_lunar, is_leap_month: form.is_leap_month,
-                lat: form.lat, lon: form.lon,
-                timezone: "Asia/Seoul".to_string(),
-            };
+            let base = form.to_analysis_input();
 
             // 병렬 계산 (사주 먼저, 베딕 이후)
             match facade::analyze_saju(SajuAnalysisInput::new(base.clone(), form.is_male, form.use_night_rat_hour, Some(false))) {

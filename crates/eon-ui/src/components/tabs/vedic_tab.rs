@@ -903,13 +903,7 @@ pub fn VedicTab() -> Element {
             state.vedic.write().status = TaskStatus::Loading;
             let form = state.form.read().clone();
             let input = VedicAnalysisInput::new(
-                AnalysisInput {
-                    year: form.year, month: form.month, day: form.day,
-                    hour: form.hour, minute: form.minute,
-                    is_lunar: form.is_lunar, is_leap_month: form.is_leap_month,
-                    lat: form.lat, lon: form.lon,
-                    timezone: "Asia/Seoul".to_string(),
-                },
+                form.to_analysis_input(),
                 Some(false), None,
             );
             match facade::analyze_vedic(input) {
@@ -931,13 +925,7 @@ pub fn VedicTab() -> Element {
             state.compat.write().error = None;
             let form = state.form.read().clone();
             let input = VedicCompatibilityInput {
-                male: AnalysisInput {
-                    year: form.year, month: form.month, day: form.day,
-                    hour: form.hour, minute: form.minute,
-                    is_lunar: form.is_lunar, is_leap_month: form.is_leap_month,
-                    lat: form.lat, lon: form.lon,
-                    timezone: "Asia/Seoul".to_string(),
-                },
+                male: form.to_analysis_input(),
                 female: AnalysisInput {
                     year: *partner_year.read(), month: *partner_month.read(), day: *partner_day.read(),
                     hour: *partner_hour.read(), minute: *partner_minute.read(),

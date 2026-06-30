@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
 use crate::i18n::{t, TK, Locale, translate_hd_center, translate_hd_type, translate_hd_authority};
 use eon_service::facade;
-use eon_service::dto::{AnalysisInput, HumanDesignAnalysisInput};
+use eon_service::dto::HumanDesignAnalysisInput;
 use crate::components::shared::birth_form::BirthForm;
 
 #[component]
@@ -17,18 +17,7 @@ pub fn HumanDesignTab() -> Element {
             state.human_design.write().status = TaskStatus::Loading;
             let form = state.form.read().clone();
 
-            let base_input = AnalysisInput {
-                year: form.year,
-                month: form.month,
-                day: form.day,
-                hour: form.hour,
-                minute: form.minute,
-                is_lunar: form.is_lunar,
-                is_leap_month: form.is_leap_month,
-                lat: form.lat,
-                lon: form.lon,
-                timezone: "Asia/Seoul".to_string(),
-            };
+            let base_input = form.to_analysis_input();
 
             let hd_input = HumanDesignAnalysisInput {
                 base: base_input,

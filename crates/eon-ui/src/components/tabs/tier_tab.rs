@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use crate::store::{AnalysisState, TaskStatus};
 use crate::i18n::{t, TK, format_weight_score};
-use eon_service::dto::{AnalysisInput, SajuAnalysisInput, VedicAnalysisInput};
+use eon_service::dto::{SajuAnalysisInput, VedicAnalysisInput};
 use eon_service::facade;
 
 use crate::components::shared::birth_form::BirthForm;
@@ -17,21 +17,10 @@ pub fn TierTab() -> Element {
             
             let form = state.form.read().clone();
 
-            let base_input = AnalysisInput {
-                year: form.year,
-                month: form.month,
-                day: form.day,
-                hour: form.hour,
-                minute: form.minute,
-                is_lunar: form.is_lunar,
-                is_leap_month: form.is_leap_month,
-                lat: form.lat,
-                lon: form.lon,
-                timezone: "Asia/Seoul".to_string(),
-            };
+            let base_input = form.to_analysis_input();
 
             let saju_input = SajuAnalysisInput::new(base_input.clone(), form.is_male, form.use_night_rat_hour, Some(false));
-            let vedic_input = VedicAnalysisInput::new(base_input.clone(), Some(form.is_male), None);
+            let vedic_input = VedicAnalysisInput::new(base_input.clone(), Some(false), None);
             
             // 병렬이 좋지만 간소화를 위해 순차 실행
             let saju_res = match facade::analyze_saju(saju_input) {
