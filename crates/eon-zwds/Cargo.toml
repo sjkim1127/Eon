@@ -5,6 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 description = "Eon: Zi Wei Dou Shu (紫微斗數) Engine — 자미두수 성반 명리 엔진"
+repository.workspace = true
 
 [dependencies]
 eon-core = { workspace = true }

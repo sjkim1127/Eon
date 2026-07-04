@@ -5,6 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 description = "Core types and utilities for Eon destiny platform"
+repository.workspace = true
 
 [dependencies]
 chrono.workspace = true

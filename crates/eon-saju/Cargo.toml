@@ -5,6 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 description = "Four Pillars of Destiny (Saju/四柱) calculation library"
+repository.workspace = true
 
 [features]
 default = ["parallel"]

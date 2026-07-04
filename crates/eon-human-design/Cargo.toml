@@ -5,6 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 description = "Eon: Human Design Engine — 휴먼디자인 연산 엔진"
+repository.workspace = true
 
 [dependencies]
 eon-core = { workspace = true }

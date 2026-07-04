@@ -5,6 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 description = "Static data for Eon destiny platform (Manseryuk calendar, etc.)"
+repository.workspace = true
 
 [dependencies]
 eon-core = { workspace = true }
