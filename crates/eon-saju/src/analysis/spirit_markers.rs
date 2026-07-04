@@ -71,6 +71,12 @@ pub enum SpiritMarker {
     Jiesha,
     /// 원진살(怨嗔煞) - 원한
     Yuanzhen,
+    /// 양인살(羊刃煞) - 강력한 칼을 쥔 기세
+    Yangin,
+    /// 천라살(天羅煞) - 하늘의 그물
+    Tianluo,
+    /// 지망살(地網煞) - 땅의 그물
+    Jimang,
     
     // === 12신살 (추가분) ===
     /// 재살(災煞) - 수옥살, 재난
@@ -118,6 +124,9 @@ impl SpiritMarker {
             Self::Wangshen => "망신살",
             Self::Jiesha => "겁살",
             Self::Yuanzhen => "원진살",
+            Self::Yangin => "양인살",
+            Self::Tianluo => "천라살",
+            Self::Jimang => "지망살",
             Self::Jaesha => "재살",
             Self::Cheonsha => "천살",
             Self::Jisha => "지살",
@@ -155,6 +164,9 @@ impl SpiritMarker {
             Self::Wangshen => "亡身煞",
             Self::Jiesha => "劫煞",
             Self::Yuanzhen => "怨嗔煞",
+            Self::Yangin => "羊刃煞",
+            Self::Tianluo => "天羅煞",
+            Self::Jimang => "地網煞",
             Self::Jaesha => "災煞",
             Self::Cheonsha => "天煞",
             Self::Jisha => "地煞",
@@ -201,6 +213,9 @@ impl SpiritMarker {
             Self::Wangshen => "실수나 치부의 노출, 그러나 화려한 변신",
             Self::Jiesha => "외부에 의한 강압적 변화나 손실",
             Self::Yuanzhen => "대인관계 갈등 및 불화",
+            Self::Yangin => "강력한 기세와 고집, 수술수 및 급격한 재물 손실 우려",
+            Self::Tianluo => "하늘의 그물에 갇힌 듯한 답답함, 정신적 탐구 및 종교/예술 적합",
+            Self::Jimang => "땅의 그물에 걸린 듯한 제약, 현실적 한계 극복 및 기술 분야 적합",
             Self::Jaesha => "재난과 사고, 혹은 타인에 의한 구속",
             Self::Cheonsha => "하늘의 뜻에 따른 거부할 수 없는 변화",
             Self::Jisha => "지리적 이동과 활동 영역의 변화",
@@ -597,6 +612,48 @@ impl SpiritMarkerAnalysis {
                     position: *pos,
                     is_stem: false,
                 });
+            }
+        }
+
+        // === 양인살 (羊刃煞) ===
+        let yangin_branch = Self::get_yangin_branch(day_stem);
+        for (branch, pos) in &branches {
+            if *branch == yangin_branch {
+                markers.push(FoundMarker {
+                    marker: SpiritMarker::Yangin,
+                    position: *pos,
+                    is_stem: false,
+                });
+            }
+        }
+
+        // === 천라살 (天羅煞) ===
+        let has_xu = branches.iter().any(|(b, _)| *b == EarthlyBranch::Xu);
+        let has_hai = branches.iter().any(|(b, _)| *b == EarthlyBranch::Hai);
+        if has_xu && has_hai {
+            for (branch, pos) in &branches {
+                if *branch == EarthlyBranch::Xu || *branch == EarthlyBranch::Hai {
+                    markers.push(FoundMarker {
+                        marker: SpiritMarker::Tianluo,
+                        position: *pos,
+                        is_stem: false,
+                    });
+                }
+            }
+        }
+
+        // === 지망살 (地網煞) ===
+        let has_chen = branches.iter().any(|(b, _)| *b == EarthlyBranch::Chen);
+        let has_si = branches.iter().any(|(b, _)| *b == EarthlyBranch::Si);
+        if has_chen && has_si {
+            for (branch, pos) in &branches {
+                if *branch == EarthlyBranch::Chen || *branch == EarthlyBranch::Si {
+                    markers.push(FoundMarker {
+                        marker: SpiritMarker::Jimang,
+                        position: *pos,
+                        is_stem: false,
+                    });
+                }
             }
         }
 
@@ -1015,6 +1072,20 @@ impl SpiritMarkerAnalysis {
             (Si, Xu) | (Xu, Si)
         )
     }
+
+    /// 양인살 (羊刃煞) - 일간 기준 (제왕지/음간은 관대지)
+    fn get_yangin_branch(day_stem: HeavenlyStem) -> EarthlyBranch {
+        match day_stem {
+            HeavenlyStem::Jia => EarthlyBranch::Mao,
+            HeavenlyStem::Yi => EarthlyBranch::Chen,
+            HeavenlyStem::Bing | HeavenlyStem::Wu => EarthlyBranch::Wu,
+            HeavenlyStem::Ding | HeavenlyStem::Ji => EarthlyBranch::Wei,
+            HeavenlyStem::Geng => EarthlyBranch::You,
+            HeavenlyStem::Xin => EarthlyBranch::Xu,
+            HeavenlyStem::Ren => EarthlyBranch::Zi,
+            HeavenlyStem::Gui => EarthlyBranch::Chou,
+        }
+    }
 }
 
 impl std::fmt::Display for SpiritMarkerAnalysis {
@@ -1103,5 +1174,47 @@ mod tests {
             SpiritMarkerAnalysis::_get_yima_branch(EarthlyBranch::Xu),
             EarthlyBranch::Shen
         );
+    }
+
+    fn make_mock_pillars(year: GanZi, month: GanZi, day: GanZi, hour: GanZi) -> FourPillars {
+        FourPillars {
+            year,
+            month,
+            day,
+            hour,
+            birth_time: chrono::Utc::now(),
+            gender: eon_core::Gender::Male,
+            raw_input: SajuInput::new_solar(2000, 1, 1, 12, 0),
+            supplementary_pillars: Default::default(),
+        }
+    }
+
+    #[test]
+    fn test_new_spirit_markers() {
+        // 양인살 검증: 甲일간 -> 卯
+        assert_eq!(
+            SpiritMarkerAnalysis::get_yangin_branch(HeavenlyStem::Jia),
+            EarthlyBranch::Mao
+        );
+
+        // 천라살 검증: 庚戌일 丁亥시 사주 (戌, 亥 존재)
+        let pillars = make_mock_pillars(
+            GanZi { stem: HeavenlyStem::Jia, branch: EarthlyBranch::Shen },
+            GanZi { stem: HeavenlyStem::Yi, branch: EarthlyBranch::Hai },
+            GanZi { stem: HeavenlyStem::Geng, branch: EarthlyBranch::Xu },
+            GanZi { stem: HeavenlyStem::Ding, branch: EarthlyBranch::Hai },
+        );
+        let analysis = SpiritMarkerAnalysis::from_pillars(&pillars);
+        assert!(analysis.markers.iter().any(|m| m.marker == SpiritMarker::Tianluo));
+
+        // 지망살 검증: 辰, 巳 존재 사주
+        let pillars_jimang = make_mock_pillars(
+            GanZi { stem: HeavenlyStem::Jia, branch: EarthlyBranch::Chen },
+            GanZi { stem: HeavenlyStem::Yi, branch: EarthlyBranch::Si },
+            GanZi { stem: HeavenlyStem::Geng, branch: EarthlyBranch::Wu },
+            GanZi { stem: HeavenlyStem::Ding, branch: EarthlyBranch::Hai },
+        );
+        let analysis_jimang = SpiritMarkerAnalysis::from_pillars(&pillars_jimang);
+        assert!(analysis_jimang.markers.iter().any(|m| m.marker == SpiritMarker::Jimang));
     }
 }
