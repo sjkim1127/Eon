@@ -227,34 +227,27 @@ impl TajikaBala {
             // 1. Sthana (House)
             let h = p.house_index;
             match planet {
-                VedicPlanet::Sun
-                    if h == 9 => {
-                        score += 5;
-                    }
-                VedicPlanet::Moon
-                    if h == 4 => {
-                        score += 5;
-                    }
-                VedicPlanet::Mars
-                    if h == 6 => {
-                        score += 5;
-                    }
-                VedicPlanet::Mercury
-                    if h == 1 => {
-                        score += 5;
-                    }
-                VedicPlanet::Jupiter
-                    if h == 11 => {
-                        score += 5;
-                    }
-                VedicPlanet::Venus
-                    if h == 5 => {
-                        score += 5;
-                    }
-                VedicPlanet::Saturn
-                    if h == 12 => {
-                        score += 5;
-                    }
+                VedicPlanet::Sun if h == 9 => {
+                    score += 5;
+                }
+                VedicPlanet::Moon if h == 4 => {
+                    score += 5;
+                }
+                VedicPlanet::Mars if h == 6 => {
+                    score += 5;
+                }
+                VedicPlanet::Mercury if h == 1 => {
+                    score += 5;
+                }
+                VedicPlanet::Jupiter if h == 11 => {
+                    score += 5;
+                }
+                VedicPlanet::Venus if h == 5 => {
+                    score += 5;
+                }
+                VedicPlanet::Saturn if h == 12 => {
+                    score += 5;
+                }
                 _ => {}
             }
 
@@ -267,14 +260,12 @@ impl TajikaBala {
             // 3. Stri-Purusha (Gender/Sect)
             let is_day = chart.panchanga.is_day_birth;
             match planet {
-                VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter
-                    if is_day => {
-                        score += 5;
-                    }
-                VedicPlanet::Moon | VedicPlanet::Venus | VedicPlanet::Saturn
-                    if !is_day => {
-                        score += 5;
-                    }
+                VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter if is_day => {
+                    score += 5;
+                }
+                VedicPlanet::Moon | VedicPlanet::Venus | VedicPlanet::Saturn if !is_day => {
+                    score += 5;
+                }
                 _ => {}
             }
 

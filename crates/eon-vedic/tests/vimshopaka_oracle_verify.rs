@@ -75,13 +75,12 @@ fn verify_vimshopaka_oracle_fixtures() {
             .iter()
             .find(|(p, _)| *p == target_planet)
             .map(|(_, s)| s)
-            .unwrap_or_else(|| panic!("Planet {} not found in chart scores",
-                case.test_planet));
+            .unwrap_or_else(|| panic!("Planet {} not found in chart scores", case.test_planet));
 
         // 1. Verify Dignity Points per Varga (Hierarchy: Sign -> Point)
         for (v_id, expected_point) in &case.expected_dignity_points {
-            let v_type =
-                common::get_varga_type(v_id).unwrap_or_else(|| panic!("Unknown varga ID: {}", v_id));
+            let v_type = common::get_varga_type(v_id)
+                .unwrap_or_else(|| panic!("Unknown varga ID: {}", v_id));
 
             let actual_rasi = score_entry
                 .details

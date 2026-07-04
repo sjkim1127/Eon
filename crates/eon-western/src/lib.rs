@@ -360,16 +360,20 @@ pub fn calculate_western(
     }
 
     // 우세 원소/모달리티 문자열 도출
-    let mut el_vec = [("Fire", elements.fire),
+    let mut el_vec = [
+        ("Fire", elements.fire),
         ("Earth", elements.earth),
         ("Air", elements.air),
-        ("Water", elements.water)];
+        ("Water", elements.water),
+    ];
     el_vec.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
     let dominant_element = el_vec[0].0.to_string();
 
-    let mut mo_vec = [("Cardinal", modalities.cardinal),
+    let mut mo_vec = [
+        ("Cardinal", modalities.cardinal),
         ("Fixed", modalities.fixed),
-        ("Mutable", modalities.mutable)];
+        ("Mutable", modalities.mutable),
+    ];
     mo_vec.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
     let dominant_modality = mo_vec[0].0.to_string();
 

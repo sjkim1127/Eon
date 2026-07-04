@@ -1,4 +1,11 @@
-#![allow(clippy::match_like_matches_macro, clippy::wildcard_in_or_patterns, clippy::if_same_then_else, clippy::manual_checked_ops, clippy::vec_init_then_push, clippy::field_reassign_with_default)]
+#![allow(
+    clippy::match_like_matches_macro,
+    clippy::wildcard_in_or_patterns,
+    clippy::if_same_then_else,
+    clippy::manual_checked_ops,
+    clippy::vec_init_then_push,
+    clippy::field_reassign_with_default
+)]
 //! # Eon Vedic
 //!
 //! `eon-vedic` is the core library for Vedic astrology calculations in the Eon ecosystem.

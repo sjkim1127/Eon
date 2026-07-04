@@ -104,8 +104,8 @@ mod tests {
                 use_night_rat_hour: false, // Default for oracle
                 precision: BirthTimePrecision::Exact,
             };
-            let saju_res =
-                facade::analyze_saju(saju_input).unwrap_or_else(|_| panic!("Saju failed for {}", f.id));
+            let saju_res = facade::analyze_saju(saju_input)
+                .unwrap_or_else(|_| panic!("Saju failed for {}", f.id));
 
             // 2. Vedic Verification
             let vedic_input = VedicAnalysisInput {
@@ -117,8 +117,8 @@ mod tests {
                 },
                 target_year: None,
             };
-            let vedic_res =
-                facade::analyze_vedic(vedic_input).unwrap_or_else(|_| panic!("Vedic failed for {}", f.id));
+            let vedic_res = facade::analyze_vedic(vedic_input)
+                .unwrap_or_else(|_| panic!("Vedic failed for {}", f.id));
 
             if f.id == "lunar-edge-case" {
                 println!("SAJU: {:#?}", saju_res.report.pillars);

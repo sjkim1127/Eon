@@ -136,7 +136,9 @@ impl YongshinAnalysis {
                 yongshin_type: YongshinType::Eokbu,
                 element: eokbu_element,
                 summary: format!("격국의 기세를 따르는 {} 용신", eokbu_element.hangul()),
-                description: "강한 세력에 대항하기보다 그 흐름을 따르는 것이 운의 흐름을 원활하게 합니다.".to_string(),
+                description:
+                    "강한 세력에 대항하기보다 그 흐름을 따르는 것이 운의 흐름을 원활하게 합니다."
+                        .to_string(),
                 reasons,
             });
 

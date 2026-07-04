@@ -1,4 +1,11 @@
-#![allow(clippy::too_many_arguments, clippy::needless_range_loop, clippy::doc_lazy_continuation, clippy::manual_clamp, clippy::unnecessary_sort_by, clippy::vec_init_then_push)]
+#![allow(
+    clippy::too_many_arguments,
+    clippy::needless_range_loop,
+    clippy::doc_lazy_continuation,
+    clippy::manual_clamp,
+    clippy::unnecessary_sort_by,
+    clippy::vec_init_then_push
+)]
 //! # Eon Saju (四柱)
 //!
 //! 사주(四柱, Four Pillars of Destiny) 계산 라이브러리입니다.
