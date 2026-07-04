@@ -49,6 +49,9 @@ pub enum StructureType {
     /// 종왕격 (從旺格) - 비겁으로 종함
     JongWang,
 
+    /// 화기격 (化氣格) - 일간이 합화하여 성질이 변함
+    HwaGi,
+
     /// 종격 (기타/일반)
     Follower,
     /// 전왕격 (專旺格) - 자신의 기운이 극도로 강함
@@ -74,6 +77,7 @@ impl StructureType {
             Self::JongSal => "종살격",
             Self::JongGang => "종강격",
             Self::JongWang => "종왕격",
+            Self::HwaGi => "화기격",
             Self::Follower => "종격(從格)",
             Self::SpecialTransformation => "전왕격(專旺格)",
         }
@@ -97,6 +101,7 @@ impl StructureType {
             Self::JongSal => "從殺格",
             Self::JongGang => "從强格",
             Self::JongWang => "從旺格",
+            Self::HwaGi => "化氣格",
             Self::Follower => "從格",
             Self::SpecialTransformation => "專旺格",
         }
