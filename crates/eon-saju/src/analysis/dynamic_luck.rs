@@ -31,12 +31,22 @@ pub struct DynamicLuckAnalysis {
     pub combined_relations: RelationshipAnalysis,
 }
 
+/// 삶의 영역(Domain)에 대한 구체적인 영향을 담는 구조체
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DomainImpact {
+    pub target_position: String,
+    pub ten_god: String,
+    pub interaction: String,
+    pub description: String,
+}
+
 /// 특정 운(대운/세운)이 원국에 미치는 영향
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LuckInfluence {
     pub ganzi: GanZi,
     pub label: String, // "대운", "세운" 등
     pub relations_with_natal: Vec<String>,
+    pub domain_impacts: Vec<DomainImpact>,
 }
 
 impl DynamicLuckAnalysis {
@@ -304,62 +314,93 @@ impl DynamicLuckAnalysis {
 
     pub fn get_influence(luck: GanZi, label: &str, natal: &FourPillars) -> LuckInfluence {
         let mut relations = Vec::new();
-        // 원국과의 관계 정리
+        let mut impacts = Vec::new();
+        
         let n_stems = [
-            natal.year.stem,
-            natal.month.stem,
-            natal.day.stem,
-            natal.hour.stem,
+            ("년간", natal.year.stem),
+            ("월간", natal.month.stem),
+            ("일간", natal.day.stem),
+            ("시간", natal.hour.stem),
         ];
         let n_branches = [
-            natal.year.branch,
-            natal.month.branch,
-            natal.day.branch,
-            natal.hour.branch,
+            ("년지", natal.year.branch),
+            ("월지", natal.month.branch),
+            ("일지", natal.day.branch),
+            ("시지", natal.hour.branch),
         ];
 
         use crate::analysis::relationships::*;
+        use crate::core::ten_gods::TenGod;
+        
+        let dm = natal.day_master();
 
         // 1. 천간 관계
-        for s in &n_stems {
-            if let Some(_c) = StemCombination::check(luck.stem, *s) {
+        for (pos, s) in &n_stems {
+            let tg = TenGod::from_stems(dm, *s);
+            if let Some(c) = StemCombination::check(luck.stem, *s) {
                 relations.push(format!("천간합: {} - {}", luck.stem.hanja(), s.hanja()));
+                impacts.push(DomainImpact {
+                    target_position: pos.to_string(),
+                    ten_god: tg.hangul().to_string(),
+                    interaction: format!("{}합", c.hangul()),
+                    description: Self::get_stem_impact_description(pos, tg, true),
+                });
             }
-            if let Some(_c) = StemClash::check(luck.stem, *s) {
+            if let Some(c) = StemClash::check(luck.stem, *s) {
                 relations.push(format!("천간충: {} - {}", luck.stem.hanja(), s.hanja()));
+                impacts.push(DomainImpact {
+                    target_position: pos.to_string(),
+                    ten_god: tg.hangul().to_string(),
+                    interaction: format!("{}충", c.hangul()),
+                    description: Self::get_stem_impact_description(pos, tg, false),
+                });
             }
         }
 
         // 2. 지지 관계
-        for b in &n_branches {
+        for (pos, b) in &n_branches {
+            let hidden = b.hidden_stems();
+            let main_qi = hidden.last().unwrap();
+            let tg = TenGod::from_stems(dm, *main_qi);
+
+            let mut add_impact = |interaction: &str, is_positive: bool| {
+                impacts.push(DomainImpact {
+                    target_position: pos.to_string(),
+                    ten_god: tg.hangul().to_string(),
+                    interaction: interaction.to_string(),
+                    description: Self::get_branch_impact_description(pos, tg, is_positive),
+                });
+            };
+
             // 육합
             if let Some(_c) = SixCombination::check(luck.branch, *b) {
                 relations.push(format!("육합: {} - {}", luck.branch.hanja(), b.hanja()));
+                add_impact("육합", true);
             }
             // 반합
             if let Some(semi) = SemiCombination::check(luck.branch, *b) {
-                relations.push(format!(
-                    "반합: {} ({}-{})",
-                    semi.hangul(),
-                    luck.branch.hanja(),
-                    b.hanja()
-                ));
+                relations.push(format!("반합: {} ({}-{})", semi.hangul(), luck.branch.hanja(), b.hanja()));
+                add_impact("반합", true);
             }
             // 충
             if let Some(_c) = BranchClash::check(luck.branch, *b) {
                 relations.push(format!("지지충: {} - {}", luck.branch.hanja(), b.hanja()));
+                add_impact("충", false);
             }
             // 형
             if let Some(p) = BranchPunishment::check_self(luck.branch, *b) {
                 relations.push(format!("지지형: {}", p.hangul()));
+                add_impact("형", false);
             }
             // 해
             if let Some(_h) = BranchHarm::check(luck.branch, *b) {
                 relations.push(format!("지지해: {} - {}", luck.branch.hanja(), b.hanja()));
+                add_impact("해", false);
             }
             // 파
             if let Some(_d) = BranchDestruction::check(luck.branch, *b) {
                 relations.push(format!("지지파: {} - {}", luck.branch.hanja(), b.hanja()));
+                add_impact("파", false);
             }
         }
 
@@ -367,6 +408,55 @@ impl DynamicLuckAnalysis {
             ganzi: luck,
             label: label.to_string(),
             relations_with_natal: relations,
+            domain_impacts: impacts,
+        }
+    }
+
+    fn get_stem_impact_description(pos: &str, tg: crate::core::ten_gods::TenGod, is_positive: bool) -> String {
+        let pos_desc = match pos {
+            "년간" => "국가/사회적 환경이나 윗사람과의 관계",
+            "월간" => "사회생활, 직장, 외부로 드러난 명예",
+            "일간" => "자신의 정체성 및 신념",
+            "시간" => "개인적 사생활이나 말년의 목표",
+            _ => "해당 궁성",
+        };
+        
+        let tg_desc = match tg {
+            crate::core::ten_gods::TenGod::Bijian | crate::core::ten_gods::TenGod::Jiecai => "동료, 대인관계, 주체성",
+            crate::core::ten_gods::TenGod::Shishen | crate::core::ten_gods::TenGod::Shangguan => "활동력, 진로, 표현력",
+            crate::core::ten_gods::TenGod::Zhengcai | crate::core::ten_gods::TenGod::Piancai => "재물운, 성과, 결과물",
+            crate::core::ten_gods::TenGod::Zhengguan | crate::core::ten_gods::TenGod::Pianguan => "직장, 명예, 책임감",
+            crate::core::ten_gods::TenGod::Zhengyin | crate::core::ten_gods::TenGod::Pianyin => "학업, 문서운, 자격/계약",
+        };
+
+        if is_positive {
+            format!("{}에서 긍정적 결속이나 안정(합)이 발생하여, {}이/가 유리하게 작용하거나 새로운 기회가 열립니다.", pos_desc, tg_desc)
+        } else {
+            format!("{}에 변동성이나 충돌(충)이 발생하여, {}과/와 관련된 불안정성이나 예기치 않은 변화가 예상됩니다.", pos_desc, tg_desc)
+        }
+    }
+
+    fn get_branch_impact_description(pos: &str, tg: crate::core::ten_gods::TenGod, is_positive: bool) -> String {
+        let pos_desc = match pos {
+            "년지" => "조상, 태생적 기반, 큰 스케일의 환경",
+            "월지" => "직장, 부모궁, 사회적 무대와 주거 환경",
+            "일지" => "배우자, 연인, 가정 내의 사적인 공간",
+            "시지" => "자식, 아랫사람, 은밀한 계획",
+            _ => "해당 궁성",
+        };
+
+        let tg_desc = match tg {
+            crate::core::ten_gods::TenGod::Bijian | crate::core::ten_gods::TenGod::Jiecai => "경쟁구도 및 주체적 결단",
+            crate::core::ten_gods::TenGod::Shishen | crate::core::ten_gods::TenGod::Shangguan => "투자, 사업적 활동, 진로 개척",
+            crate::core::ten_gods::TenGod::Zhengcai | crate::core::ten_gods::TenGod::Piancai => "현실적 수익원 및 재물 관리",
+            crate::core::ten_gods::TenGod::Zhengguan | crate::core::ten_gods::TenGod::Pianguan => "직장 내 변동 및 책임/명예",
+            crate::core::ten_gods::TenGod::Zhengyin | crate::core::ten_gods::TenGod::Pianyin => "부동산, 문서 계약 및 수용성",
+        };
+
+        if is_positive {
+            format!("{}이/가 합으로 묶여 안정을 찾으며, {} 측면에서 원활한 흐름과 조력이 따를 가능성이 높습니다.", pos_desc, tg_desc)
+        } else {
+            format!("{}에 변동, 이동, 혹은 갈등 요소가 작용하며, {} 문제에 있어서 갑작스런 변화수나 지출/스트레스가 있을 수 있습니다.", pos_desc, tg_desc)
         }
     }
 }
@@ -376,24 +466,38 @@ impl std::fmt::Display for DynamicLuckAnalysis {
         writeln!(f, "【동적 종합 분석 (원국 + 대운 + 세운)】")?;
         writeln!(f, "─────────────────────────────────")?;
 
-        if let Some(infl) = &self.major_influence {
+        let print_influence = |f: &mut std::fmt::Formatter<'_>, infl: &LuckInfluence| -> std::fmt::Result {
             writeln!(
                 f,
-                "▶ 대운 영향 ({}): {}",
+                "▶ {} 영향 ({}): {}",
+                infl.label,
                 infl.ganzi,
                 infl.relations_with_natal.join(", ")
             )?;
+            for impact in &infl.domain_impacts {
+                writeln!(f, "   - [{}({}) {}]: {}", impact.target_position, impact.ten_god, impact.interaction, impact.description)?;
+            }
+            Ok(())
+        };
+
+        if let Some(infl) = &self.major_influence {
+            print_influence(f, infl)?;
         }
         if let Some(infl) = &self.yearly_influence {
-            writeln!(
-                f,
-                "▶ 세운 영향 ({}): {}",
-                infl.ganzi,
-                infl.relations_with_natal.join(", ")
-            )?;
+            print_influence(f, infl)?;
+        }
+        if let Some(infl) = &self.monthly_influence {
+            print_influence(f, infl)?;
+        }
+        if let Some(infl) = &self.daily_influence {
+            print_influence(f, infl)?;
+        }
+        if let Some(infl) = &self.hourly_influence {
+            print_influence(f, infl)?;
         }
 
-        writeln!(f, "\n[종합 합충 결과]")?;
+        writeln!(f, "
+[종합 합충 결과]")?;
         write!(f, "{}", self.combined_relations)?;
 
         Ok(())
