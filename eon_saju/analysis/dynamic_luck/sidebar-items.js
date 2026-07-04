@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["DynamicLuckAnalysis","LuckInfluence"]};
+window.SIDEBAR_ITEMS = {"struct":["DomainImpact","DynamicLuckAnalysis","LuckInfluence"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["YongshinType"],"fn":["calculate_thermal_index"],"struct":["RecommendedYongshin","YongshinAnalysis"]};
+window.SIDEBAR_ITEMS = {"enum":["YongshinType"],"fn":["calculate_humidity_index","calculate_thermal_index"],"struct":["RecommendedYongshin","YongshinAnalysis"]};

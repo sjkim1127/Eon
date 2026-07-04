@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["analytics","dynamic_luck","heluo","major_luck","periodic_luck","power","relationships","shinsal","spirit_markers","strength","structure","supplementary_pillars","transformations","void","yongshin"],"trait":["Analyzable"]};
+window.SIDEBAR_ITEMS = {"mod":["analytics","dynamic_luck","heluo","major_luck","periodic_luck","power","relationships","remedies","shinsal","spirit_markers","strength","structure","supplementary_pillars","themes","transformations","void","yongshin"],"trait":["Analyzable"]};
