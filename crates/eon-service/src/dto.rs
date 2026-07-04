@@ -218,6 +218,15 @@ pub struct WesternAnalysisInput {
     pub house_system: String, // "P", "K", "W", "E" 등
 }
 
+impl WesternAnalysisInput {
+    pub fn new(base: AnalysisInput, house_system: String) -> Self {
+        Self {
+            base,
+            house_system,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WesternAnalysisOutput {
@@ -230,6 +239,14 @@ pub struct WesternAnalysisOutput {
 pub struct HumanDesignAnalysisInput {
     #[serde(flatten)]
     pub base: AnalysisInput,
+}
+
+impl HumanDesignAnalysisInput {
+    pub fn new(base: AnalysisInput) -> Self {
+        Self {
+            base,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

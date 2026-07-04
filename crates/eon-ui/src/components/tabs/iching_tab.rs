@@ -22,41 +22,46 @@ pub fn IChingTab() -> Element {
     // 복사 피드백 상태
     let mut copied_feedback = use_signal(|| false);
 
-    let run_analysis = move |_| {
-        spawn(async move {
-            state.iching.write().status = TaskStatus::Loading;
-            let form = state.form.read().clone();
+    // Reactive trigger for manual analysis runs
+    let mut analysis_trigger = use_signal(|| 0);
 
-            let base_input = form.to_analysis_input();
+    // Auto-run analysis when form or trigger changes
+    let state_cloned = state.clone();
+    use_effect(move || {
+        let form = state_cloned.form.read().clone();
+        let _trig = *analysis_trigger.read();
+        if form.year > 0 {
+            let mut state = state_cloned.clone();
+            spawn(async move {
+                state.iching.write().status = TaskStatus::Loading;
+                let saju_input = SajuAnalysisInput::new(
+                    form.to_analysis_input(),
+                    form.is_male,
+                    form.use_night_rat_hour,
+                    Some(false),
+                );
 
-            let saju_input = SajuAnalysisInput::new(
-                base_input,
-                form.is_male,
-                form.use_night_rat_hour,
-                Some(false),
-            );
-
-            match facade::analyze_iching(saju_input) {
-                Ok(res) => {
-                    state.iching.write().data = Some(res);
-                    state.iching.write().status = TaskStatus::Success;
-                    if let Some(iching_data) = &state.iching.read().data {
-                        let yd = iching_data.result.yuan_dang_yao;
-                        selected_yao.set(Some((true, yd)));
-                        
-                        // 현재 만나이 계산하여 초기 나이 설정
-                        let form_year = state.form.read().year;
-                        let current_age = (2026 - form_year).max(1) as u32;
-                        selected_age.set(current_age.min(100));
+                match facade::analyze_iching(saju_input) {
+                    Ok(res) => {
+                        state.iching.write().data = Some(res);
+                        state.iching.write().status = TaskStatus::Success;
+                        if let Some(iching_data) = &state.iching.read().data {
+                            let yd = iching_data.result.yuan_dang_yao;
+                            selected_yao.set(Some((true, yd)));
+                            
+                            // 현재 만나이 계산하여 초기 나이 설정
+                            let current_age = (2026 - form.year).max(1) as u32;
+                            selected_age.set(current_age.min(100));
+                        }
+                    }
+                    Err(e) => {
+                        state.iching.write().error = Some(e.to_string());
+                        state.iching.write().status = TaskStatus::Error(e.to_string());
                     }
                 }
-                Err(e) => {
-                    state.iching.write().error = Some(e.to_string());
-                    state.iching.write().status = TaskStatus::Error(e.to_string());
-                }
-            }
-        });
-    };
+            });
+        }
+    });
 
     let form_year = state.form.read().year;
     let current_age = (2026 - form_year).max(0) as u32;
@@ -116,9 +121,24 @@ pub fn IChingTab() -> Element {
                         }
                     }
                     button {
-                        class: "px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl font-semibold text-white shadow-lg shadow-indigo-900/30 transition-all duration-200 active:scale-95 cursor-pointer",
-                        onclick: run_analysis,
-                        "🔮 {t(locale, TK::FormAnalyzeBtn)}"
+                        class: "p-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center active:scale-95",
+                        onclick: move |_| {
+                            let current = *analysis_trigger.peek();
+                            analysis_trigger.set(current + 1);
+                        },
+                        title: "{t(locale, TK::FormAnalyzeBtn)}",
+                        svg {
+                            class: "w-5 h-5",
+                            fill: "none",
+                            stroke: "currentColor",
+                            view_box: "0 0 24 24",
+                            path {
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "2",
+                                d: "M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M21 3v5h-5"
+                            }
+                        }
                     }
                 }
             }

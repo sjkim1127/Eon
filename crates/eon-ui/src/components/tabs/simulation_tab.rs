@@ -11,26 +11,40 @@ pub fn SimulationTab() -> Element {
     let mut state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
 
+    // Reactive trigger for manual analysis runs
+    let mut analysis_trigger = use_signal(|| 0);
     let run_analysis = move |_| {
-        spawn(async move {
-            state.saju.write().status = TaskStatus::Loading;
-            let form = state.form.read().clone();
-            let input = SajuAnalysisInput::new(
-                form.to_analysis_input(),
-                form.is_male, form.use_night_rat_hour, Some(false),
-            );
-            match facade::analyze_saju(input) {
-                Ok(res) => {
-                    state.saju.write().data = Some(res);
-                    state.saju.write().status = TaskStatus::Success;
-                }
-                Err(e) => {
-                    state.saju.write().error = Some(e.to_string());
-                    state.saju.write().status = TaskStatus::Error(e.to_string());
-                }
-            }
-        });
+        let current = *analysis_trigger.peek();
+        analysis_trigger.set(current + 1);
     };
+
+    // Auto-run or manually triggered analysis when form or trigger changes
+    let state_cloned = state.clone();
+    use_effect(move || {
+        let form = state_cloned.form.read().clone();
+        let _trig = *analysis_trigger.read();
+
+        if form.year > 0 {
+            let mut state = state_cloned.clone();
+            spawn(async move {
+                state.saju.write().status = TaskStatus::Loading;
+                let input = SajuAnalysisInput::new(
+                    form.to_analysis_input(),
+                    form.is_male, form.use_night_rat_hour, Some(false),
+                );
+                match facade::analyze_saju(input) {
+                    Ok(res) => {
+                        state.saju.write().data = Some(res);
+                        state.saju.write().status = TaskStatus::Success;
+                    }
+                    Err(e) => {
+                        state.saju.write().error = Some(e.to_string());
+                        state.saju.write().status = TaskStatus::Error(e.to_string());
+                    }
+                }
+            });
+        }
+    });
 
     rsx! {
         div { class: "space-y-6 animate-in fade-in duration-700",
@@ -41,9 +55,21 @@ pub fn SimulationTab() -> Element {
                     "{t(locale, TK::SectionSimulation)}"
                 }
                 button {
-                    class: "px-5 py-2.5 bg-gradient-to-r from-purple-700 to-pink-700 hover:from-purple-600 hover:to-pink-600 rounded-xl font-semibold text-white shadow-lg shadow-purple-900/30 transition-all duration-200 active:scale-95",
+                    class: "p-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center active:scale-95",
                     onclick: run_analysis,
-                    "{t(locale, TK::BtnCalculate)} 🧬"
+                    title: "{t(locale, TK::BtnCalculate)}",
+                    svg {
+                        class: "w-5 h-5",
+                        fill: "none",
+                        stroke: "currentColor",
+                        view_box: "0 0 24 24",
+                        path {
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "2",
+                            d: "M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M21 3v5h-5"
+                        }
+                    }
                 }
             }
 
