@@ -189,6 +189,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuVoidSuffix => "空亡",
         TK::SajuLevelAuspicious => "吉兆(吉)",
         TK::SajuLevelCaution => "警惕(凶)",
+        TK::SajuLevelDanger => "Danger",
         TK::SajuFuzzerTitle => "容易走穷的时期分析",
         TK::SajuFuzzerCrashes => "风险时点: {}个",
         TK::SajuFuzzerDesc => "以当前月支为基准，代兠60甲子流年，找出运势明显下滑的风险时期。",
@@ -216,6 +217,21 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuMyungAmHarmonyTitle => "明暗合 (明暗合 — 外在名分与内在实利的契合)",
         TK::SajuLabelHarmony => "成格合",
         TK::SajuLabelTransformedElement => "合化五行",
+
+        TK::SajuTabSummary => "命盘摘要",
+        TK::SajuTabThemes => "主题解析",
+        TK::SajuTabTransit => "流年运势",
+        TK::SajuTabRemedies => "开运指南",
+
+        TK::SajuThemeCareer => "职业与特长",
+        TK::SajuThemeWealth => "财运分析",
+        TK::SajuThemeRomance => "感情与婚姻",
+        TK::SajuThemeHealth => "健康与体质",
+
+        TK::SajuRemediesColors => "幸运颜色",
+        TK::SajuRemediesNumbers => "幸运数字",
+        TK::SajuRemediesDirections => "有利方位",
+        TK::SajuRemediesAdvice => "行动指南",
 
         // Simulation Tab
         TK::SimVulnerability => "风险时点",

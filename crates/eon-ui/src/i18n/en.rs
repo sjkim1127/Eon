@@ -189,6 +189,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuVoidSuffix => "Void",
         TK::SajuLevelAuspicious => "Auspicious (吉)",
         TK::SajuLevelCaution => "Caution (凶)",
+        TK::SajuLevelDanger => "Danger",
         TK::SajuFuzzerTitle => "Difficult Period Analysis",
         TK::SajuFuzzerCrashes => "Risk Points: {} found",
         TK::SajuFuzzerDesc => "Tests all 60 annual cycle combinations against the current Month Branch to identify years when energy is most likely to drop sharply.",
@@ -216,6 +217,21 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuMyungAmHarmonyTitle => "Visible-Hidden Harmony (명암합 — Outer Cause & Inner Interest)",
         TK::SajuLabelHarmony => "Harmony",
         TK::SajuLabelTransformedElement => "Transformed Element",
+
+        TK::SajuTabSummary => "Summary",
+        TK::SajuTabThemes => "Themed Analysis",
+        TK::SajuTabTransit => "Annual Luck",
+        TK::SajuTabRemedies => "Remedies",
+
+        TK::SajuThemeCareer => "Career & Aptitude",
+        TK::SajuThemeWealth => "Wealth & Finance",
+        TK::SajuThemeRomance => "Romance & Marriage",
+        TK::SajuThemeHealth => "Health & Constitution",
+
+        TK::SajuRemediesColors => "Lucky Colors",
+        TK::SajuRemediesNumbers => "Lucky Numbers",
+        TK::SajuRemediesDirections => "Favorable Directions",
+        TK::SajuRemediesAdvice => "Lifestyle Advice",
 
         // Simulation Tab
         TK::SimVulnerability => "Risk Points",

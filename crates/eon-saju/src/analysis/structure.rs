@@ -157,6 +157,34 @@ impl StructureAnalysis {
             ("시간", pillars.hour.stem),
         ];
 
+        // -1. 화기격(HwaGi) 우선 판정
+        // 월간이나 시간과 천간합을 이루고, 합화 오행이 월지(Month Branch) 오행과 일치하는지 확인
+        let mut hwagi_result = None;
+        let adjacent_stems = [("월간", pillars.month.stem), ("시간", pillars.hour.stem)];
+        for (path, stem_on_top) in &adjacent_stems {
+            if let Some(combo) = crate::analysis::relationships::StemCombination::check(dm, *stem_on_top) {
+                let transformed_elem = combo.transformed_element();
+                if month_branch.element() == transformed_elem {
+                    hwagi_result = Some((path, combo, transformed_elem, *stem_on_top));
+                    break;
+                }
+            }
+        }
+
+        if let Some((path, combo, transformed_elem, matched_stem)) = hwagi_result {
+            return Self {
+                structure: StructureType::HwaGi,
+                projected_stem: Some(matched_stem),
+                projection_path: Some(path.to_string()),
+                summary: format!("일간이 {}과 {}을 이루어 {}로 변하는 화기격", path, combo.hangul(), transformed_elem.hangul()),
+                description: "일간이 인접한 천간과 합을 이루고, 태어난 월(계절)이 그 합화된 기운을 강하게 뒷받침하여 완전히 새로운 기운으로 변화(化)한 특별한 사주입니다.".to_string(),
+                reasons: vec![
+                    format!("일간 {}와 {} {}이 {}", dm.hanja(), path, matched_stem.hanja(), combo.hanja()),
+                    format!("합화 오행({})이 월지 {}과 일치", transformed_elem.hanja(), month_branch.hanja()),
+                ],
+            };
+        }
+
         // 0. 특수 격국(종격/전왕격) 우선 판정
         let strength = pillars.strength_with_config(config);
         let is_polarized = strength.deuk_se.support_ratio >= config.strength.polarized_high
@@ -342,3 +370,4 @@ impl Analyzable for StructureAnalysis {
         StructureAnalysis::from_pillars_with_config(pillars, config)
     }
 }
+

@@ -189,6 +189,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuVoidSuffix => "공망",
         TK::SajuLevelAuspicious => "길조(吉)",
         TK::SajuLevelCaution => "주의(凶)",
+        TK::SajuLevelDanger => "위험(발동)",
         TK::SajuFuzzerTitle => "운이 꺾이는 시기 분석",
         TK::SajuFuzzerCrashes => "위기 시점: {}회 발견",
         TK::SajuFuzzerDesc => "현재 월지를 기준으로 60갑자 세운을 대입하여, 기운이 크게 꺾이는 위기 시점을 찾아낸 진단입니다.",
@@ -216,6 +217,21 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuMyungAmHarmonyTitle => "명암합 (明暗合 — 대외적 명분과 실리의 결착)",
         TK::SajuLabelHarmony => "성립합",
         TK::SajuLabelTransformedElement => "합화오행",
+
+        TK::SajuTabSummary => "명식 요약",
+        TK::SajuTabThemes => "테마 해설",
+        TK::SajuTabTransit => "세운 흐름",
+        TK::SajuTabRemedies => "나만의 개운법",
+
+        TK::SajuThemeCareer => "직업 및 적성",
+        TK::SajuThemeWealth => "재물운",
+        TK::SajuThemeRomance => "애정 및 배우자",
+        TK::SajuThemeHealth => "건강 및 체질",
+
+        TK::SajuRemediesColors => "행운의 색상",
+        TK::SajuRemediesNumbers => "행운의 숫자",
+        TK::SajuRemediesDirections => "유리한 방향",
+        TK::SajuRemediesAdvice => "행동 지침",
 
         // Simulation Tab
         TK::SimVulnerability => "위기 시점",

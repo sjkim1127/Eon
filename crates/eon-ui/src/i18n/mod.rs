@@ -318,6 +318,7 @@ pub enum TK {
     SajuVoidSuffix,
     SajuLevelAuspicious,
     SajuLevelCaution,
+    SajuLevelDanger,
     SajuFuzzerTitle,
     SajuFuzzerCrashes,
     SajuFuzzerDesc,
@@ -345,6 +346,24 @@ pub enum TK {
     SajuMyungAmHarmonyTitle,
     SajuLabelHarmony,
     SajuLabelTransformedElement,
+
+    // Saju Sub Tabs
+    SajuTabSummary,
+    SajuTabThemes,
+    SajuTabTransit,
+    SajuTabRemedies,
+
+    // Themes
+    SajuThemeCareer,
+    SajuThemeWealth,
+    SajuThemeRomance,
+    SajuThemeHealth,
+
+    // Remedies
+    SajuRemediesColors,
+    SajuRemediesNumbers,
+    SajuRemediesDirections,
+    SajuRemediesAdvice,
 
     // ── Simulation Tab ──────────────────────────────────────────────────
     SimVulnerability,
@@ -1821,6 +1840,7 @@ pub fn translate_saju_structure(
             }
             eon_saju::analysis::structure::StructureType::YangIn => "Yang Blade Structure",
             eon_saju::analysis::structure::StructureType::Special => "Companion Structure",
+            eon_saju::analysis::structure::StructureType::HwaGi => "HwaGi (Transformation)",
             eon_saju::analysis::structure::StructureType::JongAh => "Follow Child Structure",
             eon_saju::analysis::structure::StructureType::JongJae => "Follow Wealth Structure",
             eon_saju::analysis::structure::StructureType::JongSal => "Follow Power Structure",
@@ -1847,6 +1867,7 @@ pub fn translate_saju_structure(
             eon_saju::analysis::structure::StructureType::JianLu => "Структура Службы (Лу)",
             eon_saju::analysis::structure::StructureType::YangIn => "Структура Овечьего Ножа",
             eon_saju::analysis::structure::StructureType::Special => "Структура Равного Плеча",
+            eon_saju::analysis::structure::StructureType::HwaGi => "Трансформация (Хва-ги)",
             eon_saju::analysis::structure::StructureType::JongAh => "Структура Следования за Дитя",
             eon_saju::analysis::structure::StructureType::JongJae => {
                 "Структура Следования за Богатством"

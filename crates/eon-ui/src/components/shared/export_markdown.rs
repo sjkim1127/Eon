@@ -1344,6 +1344,14 @@ fn format_saju_inner(data: &SajuAnalysisOutput, locale: Locale) -> String {
                         Locale::Ru => "🔴 Предупреждение",
                     }
                 }
+                eon_saju::analysis::supplementary_pillars::InterpretationLevel::Danger => {
+                    match locale {
+                        Locale::Ko => "🚨 파탈(發動)",
+                        Locale::Zh => "🚨 破局(发动)",
+                        Locale::En => "🚨 Danger",
+                        Locale::Ru => "🚨 Опасность",
+                    }
+                }
                 eon_saju::analysis::supplementary_pillars::InterpretationLevel::Neutral => {
                     match locale {
                         Locale::Ko => "⚪ 평(平)",

@@ -11,6 +11,8 @@ use crate::analysis::{
     strength::StrengthAnalysis,
     structure::StructureAnalysis,
     supplementary_pillars::SupplementaryPillars,
+    themes::ThemedAnalysis,
+    remedies::RemediesAnalysis,
     void::VoidAnalysis,
     yongshin::YongshinAnalysis,
 };
@@ -38,6 +40,8 @@ pub struct SajuReport {
     pub voids: VoidAnalysis,
     pub relationships: RelationshipAnalysis,
     pub supplementary_pillars: SupplementaryPillars,
+    pub themes: Option<ThemedAnalysis>,
+    pub remedies: Option<RemediesAnalysis>,
 }
 
 impl SajuReport {
@@ -54,6 +58,10 @@ impl SajuReport {
         let voids = pillars.void_analysis();
         let relationships = RelationshipAnalysis::from_pillars(&pillars);
         let mut supplementary_pillars = SupplementaryPillars::calculate(&pillars);
+        
+        let config = crate::core::config::AnalysisConfig::default();
+        let themes = Some(<ThemedAnalysis as crate::analysis::Analyzable>::analyze(&pillars, &config));
+        let remedies = Some(<RemediesAnalysis as crate::analysis::Analyzable>::analyze(&pillars, &config));
 
         // 하위 호환성 및 SSOT를 위해 신살 정보를 명시적으로 전달하여 해석 생성
         supplementary_pillars.analyze_interpretations(&spirit_markers.aux_shinsals);
@@ -74,6 +82,8 @@ impl SajuReport {
             voids,
             relationships,
             supplementary_pillars,
+            themes,
+            remedies,
         }
     }
 

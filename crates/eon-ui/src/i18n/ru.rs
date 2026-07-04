@@ -189,6 +189,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuVoidSuffix => "Пустота",
         TK::SajuLevelAuspicious => "Благоприятно (吉)",
         TK::SajuLevelCaution => "Осторожно (凶)",
+        TK::SajuLevelDanger => "Danger",
         TK::SajuFuzzerTitle => "Анализ трудных периодов",
         TK::SajuFuzzerCrashes => "Рисковых периодов: {} найдено",
         TK::SajuFuzzerDesc => "На основе текущей Земной ветви месяца вычисляются все 60 годовых циклов для определения лет, когда энергия резко падает.",
@@ -216,6 +217,21 @@ pub fn translate(key: TK) -> &'static str {
         TK::SajuMyungAmHarmonyTitle => "Явно-скрытое слияние (Мён-Ам Хап — Внешний повод и внутренняя выгода)",
         TK::SajuLabelHarmony => "Слияние",
         TK::SajuLabelTransformedElement => "Превращенный элемент",
+
+        TK::SajuTabSummary => "Резюме",
+        TK::SajuTabThemes => "Анализ по темам",
+        TK::SajuTabTransit => "Годовая удача",
+        TK::SajuTabRemedies => "Советы и средства",
+
+        TK::SajuThemeCareer => "Карьера",
+        TK::SajuThemeWealth => "Богатство",
+        TK::SajuThemeRomance => "Отношения",
+        TK::SajuThemeHealth => "Здоровье",
+
+        TK::SajuRemediesColors => "Счастливые цвета",
+        TK::SajuRemediesNumbers => "Счастливые числа",
+        TK::SajuRemediesDirections => "Благоприятные направления",
+        TK::SajuRemediesAdvice => "Жизненные советы",
 
         // Simulation Tab
         TK::SimVulnerability => "Рисковые периоды",

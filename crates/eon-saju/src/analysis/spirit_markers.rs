@@ -281,7 +281,7 @@ impl std::fmt::Display for FoundMarker {
 }
 
 /// 신살 상세 정보 (Explainable Spirit Marker)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SpiritMarkerDetail {
     pub marker: SpiritMarker,

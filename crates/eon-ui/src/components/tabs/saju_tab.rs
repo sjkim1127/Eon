@@ -18,6 +18,14 @@ use eon_saju::core::ten_gods::TenGod;
 use eon_service::dto::SajuAnalysisInput;
 use eon_service::facade;
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SubTab {
+    Summary,
+    Themes,
+    Transit,
+    Remedies,
+}
+
 #[component]
 pub fn SajuTab() -> Element {
     let state = use_context::<AnalysisState>();
@@ -25,6 +33,9 @@ pub fn SajuTab() -> Element {
 
     // Reactive trigger for manual analysis runs
     let mut analysis_trigger = use_signal(|| 0);
+    
+    // Sub-tab state
+    let mut active_sub_tab = use_signal(|| SubTab::Summary);
 
     // Auto-run or manually triggered analysis when form or trigger changes
     let state_cloned = state.clone();
@@ -109,8 +120,8 @@ pub fn SajuTab() -> Element {
                         let shinsals_for = |pos: eon_saju::analysis::spirit_markers::PillarPosition| {
                             data.report.spirit_markers.mapped_markers.iter()
                                 .filter(|m| m.position == pos)
-                                .map(|m| m.marker)
-                                .collect::<Vec<eon_saju::analysis::spirit_markers::SpiritMarker>>()
+                                .cloned()
+                                .collect::<Vec<eon_saju::analysis::spirit_markers::SpiritMarkerDetail>>()
                         };
                         let unpacker_info = data.entropy.unpacker_element.map(|unpacker| {
                             let label = match locale {
@@ -268,6 +279,32 @@ pub fn SajuTab() -> Element {
                         });
 
                         rsx! {
+                            div { class: "w-full max-w-7xl mx-auto space-y-6",
+                                div { class: "flex flex-wrap gap-2 border-b border-slate-800 pb-2 mb-4",
+                                    button {
+                                        class: if *active_sub_tab.read() == SubTab::Summary { "px-4 py-2 bg-slate-800 text-slate-100 rounded-t font-semibold" } else { "px-4 py-2 text-slate-400 hover:text-slate-200" },
+                                        onclick: move |_| { active_sub_tab.set(SubTab::Summary); },
+                                        "{t(locale, TK::SajuTabSummary)}"
+                                    }
+                                    button {
+                                        class: if *active_sub_tab.read() == SubTab::Themes { "px-4 py-2 bg-slate-800 text-amber-300 rounded-t font-semibold" } else { "px-4 py-2 text-slate-400 hover:text-slate-200" },
+                                        onclick: move |_| { active_sub_tab.set(SubTab::Themes); },
+                                        "{t(locale, TK::SajuTabThemes)}"
+                                    }
+                                    button {
+                                        class: if *active_sub_tab.read() == SubTab::Transit { "px-4 py-2 bg-slate-800 text-blue-300 rounded-t font-semibold" } else { "px-4 py-2 text-slate-400 hover:text-slate-200" },
+                                        onclick: move |_| { active_sub_tab.set(SubTab::Transit); },
+                                        "{t(locale, TK::SajuTabTransit)}"
+                                    }
+                                    button {
+                                        class: if *active_sub_tab.read() == SubTab::Remedies { "px-4 py-2 bg-slate-800 text-rose-300 rounded-t font-semibold" } else { "px-4 py-2 text-slate-400 hover:text-slate-200" },
+                                        onclick: move |_| { active_sub_tab.set(SubTab::Remedies); },
+                                        "{t(locale, TK::SajuTabRemedies)}"
+                                    }
+                                }
+                                
+                                if *active_sub_tab.read() == SubTab::Summary {
+                                    div { class: "space-y-8 animate-fade-in",
                             // ── 1. 사주 원국 (천간/지지/십성/12운성/신살) ─────────
                             div { class: "grid grid-cols-4 gap-3.5",
                                 PillarCard {
@@ -844,6 +881,7 @@ pub fn SajuTab() -> Element {
                                                     eon_saju::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "text-emerald-400 bg-emerald-950/20 border-emerald-800/30",
                                                     eon_saju::analysis::supplementary_pillars::InterpretationLevel::Caution => "text-rose-400 bg-rose-950/20 border-rose-800/30",
                                                     eon_saju::analysis::supplementary_pillars::InterpretationLevel::Neutral => "text-slate-400 bg-slate-800 border-slate-700",
+                                                                    InterpretationLevel::Danger => "text-red-400 bg-red-950/40 border-red-500 animate-pulse",
                                                 };
                                                 let label_branch = format!("{}({})", void_dt.branch.hanja(), translate_saju_branch(locale, void_dt.branch));
                                                 let label_tg = translate_saju_ten_god(locale, void_dt.ten_god).to_string();
@@ -874,6 +912,7 @@ pub fn SajuTab() -> Element {
                                                                         eon_saju::analysis::supplementary_pillars::InterpretationLevel::Auspicious => t(locale, TK::SajuLevelAuspicious),
                                                                         eon_saju::analysis::supplementary_pillars::InterpretationLevel::Caution => t(locale, TK::SajuLevelCaution),
                                                                         eon_saju::analysis::supplementary_pillars::InterpretationLevel::Neutral => t(locale, TK::LabelNeutral),
+                                                                        InterpretationLevel::Danger => t(locale, TK::SajuLevelDanger),
                                                                     }}
                                                                 }
                                                             }
@@ -890,16 +929,39 @@ pub fn SajuTab() -> Element {
                             }
 
                             // ── 5.1.2 격국 분석 (Structure / Pattern) ─────────────
-                            div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
-                                div { class: "flex items-center justify-between border-b border-slate-800/60 pb-3 flex-wrap gap-2",
-                                    div { class: "space-y-0.5",
-                                        h3 { class: "text-sm font-semibold text-slate-200 uppercase tracking-widest", "{t(locale, TK::SajuStructTitle)}" }
-                                        p { class: "text-xs text-slate-500", "{t(locale, TK::SajuStructDesc)}" }
-                                    }
-                                    span { class: "text-xs font-bold text-amber-400 bg-amber-950/20 px-3 py-1 rounded border border-amber-900/30",
-                                        "{struct_decision_lbl}"
-                                    }
-                                }
+                            {
+                                let struct_type = &data.report.structure.structure;
+                                let struct_type_str = format!("{:?}", struct_type);
+                                let is_golden = struct_type_str.contains("Jong") || struct_type_str == "HwaGi" || struct_type_str == "SpecialTransformation";
+                                let is_crimson = struct_type_str == "YangIn" || struct_type_str == "JianLu";
+                                
+                                let container_class = if is_golden {
+                                    "bg-gradient-to-r from-amber-950/40 to-yellow-900/20 border border-amber-500/50 rounded-2xl p-5 space-y-4 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                                } else if is_crimson {
+                                    "bg-gradient-to-r from-red-950/40 to-rose-900/20 border border-red-500/50 rounded-2xl p-5 space-y-4 shadow-[0_0_15px_rgba(225,29,72,0.2)]"
+                                } else {
+                                    "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl"
+                                };
+
+                                let title_class = if is_golden { "text-sm font-semibold text-amber-200 uppercase tracking-widest" }
+                                                  else if is_crimson { "text-sm font-semibold text-rose-200 uppercase tracking-widest" }
+                                                  else { "text-sm font-semibold text-slate-200 uppercase tracking-widest" };
+
+                                let badge_class = if is_golden { "text-xs font-bold text-amber-900 bg-amber-400 px-3 py-1 rounded border border-amber-500/80 shadow-[0_0_8px_rgba(251,191,36,0.5)]" }
+                                                  else if is_crimson { "text-xs font-bold text-rose-900 bg-rose-400 px-3 py-1 rounded border border-rose-500/80 shadow-[0_0_8px_rgba(2fb,113,133,0.5)]" }
+                                                  else { "text-xs font-bold text-amber-400 bg-amber-950/20 px-3 py-1 rounded border border-amber-900/30" };
+                                
+                                rsx! {
+                                    div { class: "{container_class}",
+                                        div { class: "flex items-center justify-between border-b border-slate-800/60 pb-3 flex-wrap gap-2",
+                                            div { class: "space-y-0.5",
+                                                h3 { class: "{title_class}", "{t(locale, TK::SajuStructTitle)}" }
+                                                p { class: "text-xs text-slate-500", "{t(locale, TK::SajuStructDesc)}" }
+                                            }
+                                            span { class: "{badge_class}",
+                                                "{struct_decision_lbl}"
+                                            }
+                                        }
                                 div { class: "p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3.5 shadow-inner",
                                     if let Some(stem_lbl) = &proj_stem_lbl {
                                         div { class: "flex items-center gap-4 text-xs font-mono text-slate-400 flex-wrap",
@@ -921,14 +983,26 @@ pub fn SajuTab() -> Element {
                                         div { class: "border-t border-slate-800/80 pt-3 space-y-2",
                                             p { class: "text-[10px] font-bold text-slate-500 uppercase tracking-wider", "{t(locale, TK::SajuStructReasons)}" }
                                             div { class: "flex flex-wrap gap-2",
-                                                {data.report.structure.reasons.iter().map(|reason| rsx! {
-                                                    span { class: "px-2 py-0.5 bg-slate-900 border border-slate-800/80 text-[10px] text-slate-400 rounded-md", "{translate_saju_reason(locale, reason)}" }
-                                                })}
+                                                {
+                                                    let reason_class = if is_golden {
+                                                        "px-2 py-0.5 bg-amber-950/20 border border-amber-500/30 text-[10px] text-amber-300 rounded-md shadow-sm"
+                                                    } else if is_crimson {
+                                                        "px-2 py-0.5 bg-rose-950/20 border border-rose-500/30 text-[10px] text-rose-300 rounded-md shadow-sm"
+                                                    } else {
+                                                        "px-2 py-0.5 bg-slate-900 border border-slate-800/80 text-[10px] text-slate-400 rounded-md"
+                                                    };
+                                                    
+                                                    data.report.structure.reasons.iter().map(move |reason| rsx! {
+                                                        span { class: "{reason_class}", "{translate_saju_reason(locale, reason)}" }
+                                                    })
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
+                        }
+                    }
 
                             // ── 5.2 합충형해 분석 (Harmony & Clashes) ──────────────
                             if !data.report.relationships.mapped_relationships.is_empty() {
@@ -947,6 +1021,7 @@ pub fn SajuTab() -> Element {
                                                 eon_saju::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "text-emerald-400 bg-emerald-950/30 border-emerald-800/40",
                                                 eon_saju::analysis::supplementary_pillars::InterpretationLevel::Caution => "text-rose-400 bg-rose-950/30 border-rose-800/40",
                                                 eon_saju::analysis::supplementary_pillars::InterpretationLevel::Neutral => "text-slate-400 bg-slate-850 border-slate-800",
+                                                InterpretationLevel::Danger => "text-red-400 bg-red-950/40 border-red-500 animate-pulse",
                                             };
                                             let pos_str = rel.positions.iter().map(|p| translate_saju_tag_str(locale, p)).collect::<Vec<_>>().join("-");
                                             let rel_name = translate_saju_relation_str(locale, &rel.name);
@@ -979,6 +1054,12 @@ pub fn SajuTab() -> Element {
                                                                         Locale::Zh => "作用",
                                                                         Locale::En => "Influence",
                                                                         Locale::Ru => "Влияние",
+                                                                    },
+                                                                    eon_saju::analysis::supplementary_pillars::InterpretationLevel::Danger => match locale {
+                                                                        Locale::Ko => "파탈(發動)",
+                                                                        Locale::Zh => "破局(发动)",
+                                                                        Locale::En => "Danger (Triggered)",
+                                                                        Locale::Ru => "Опасность (Срабатывание)",
                                                                     },
                                                                 }}
                                                              }
@@ -1436,6 +1517,7 @@ pub fn SajuTab() -> Element {
                                             let lvl_cls = match m.level {
                                                 InterpretationLevel::Auspicious => "text-emerald-400 bg-emerald-950/30 border-emerald-800/40",
                                                 InterpretationLevel::Caution => "text-rose-400 bg-rose-950/30 border-rose-800/40",
+                                                InterpretationLevel::Danger => "text-red-400 bg-red-950/40 border-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]",
                                                 InterpretationLevel::Neutral => "text-slate-400 bg-slate-850 border-slate-800",
                                             };
                                             let pos_name = match m.position {
@@ -1445,23 +1527,35 @@ pub fn SajuTab() -> Element {
                                                 eon_saju::analysis::spirit_markers::PillarPosition::Hour => t(locale, TK::SajuHourPillar),
                                             };
                                             let part = if m.is_stem { t(locale, TK::SajuPillarStem) } else { t(locale, TK::SajuPillarBranch) };
+                                            
+                                            let clash_title_cls = if m.is_clashed { "line-through opacity-60 decoration-red-500/80 decoration-2" } else { "" };
+                                            let combine_title_cls = if m.is_combined { "drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]" } else { "" };
+                                            
                                             let marker_label = match locale {
                                                 Locale::Ko => format!("{} ({})", m.marker.hangul(), m.marker.hanja()),
                                                 Locale::Zh => m.marker.hanja().to_string(),
                                                 _ => translate_saju_spirit_marker_name(locale, m.marker).to_string(),
                                             };
-                                            let marker_summary = translate_saju_spirit_marker_name(locale, m.marker);
+                                            let marker_summary = translate_saju_spirit_marker_name(locale, m.marker); // We might want to use m.summary for KO to show "(파극됨)" etc, but keeping translation logic for now
+                                            
+                                            // Handle the localized summary manually to inject the "(파극됨)" or "(발동됨)" status from m.summary if it's Korean
+                                            let localized_summary = if locale == Locale::Ko { m.summary.clone() } else { marker_summary.to_string() };
+                                            
                                             let marker_desc = translate_spirit_desc(locale, m.marker, m.position, &m.description);
                                             let pos_part = format!("{} {}", pos_name, part);
+                                            
+                                            let box_bg_cls = if m.is_clashed { "bg-red-950/10 border-red-900/30" } else if m.is_combined { "bg-blue-950/10 border-blue-900/30" } else { "bg-slate-800/20 border-slate-800/60" };
+                                            
                                             rsx! {
-                                                div { class: "p-4 rounded-xl bg-slate-800/20 border border-slate-800/60 space-y-2 hover:border-slate-700 transition-colors",
+                                                div { class: "p-4 rounded-xl space-y-2 hover:border-slate-700 transition-colors border {box_bg_cls}",
                                                     div { class: "flex items-center justify-between gap-2 flex-wrap",
                                                         div { class: "flex items-center gap-2",
-                                                            span { class: "text-base font-bold text-slate-200", "{marker_label}" }
+                                                            span { class: "text-base font-bold text-slate-200 {clash_title_cls} {combine_title_cls}", "{marker_label}" }
                                                             span { class: "text-xs px-2.5 py-0.5 rounded border font-bold {lvl_cls}",
                                                                 {match m.level {
                                                                     InterpretationLevel::Auspicious => t(locale, TK::SajuLevelAuspicious),
                                                                     InterpretationLevel::Caution => t(locale, TK::SajuLevelCaution),
+                                                                    InterpretationLevel::Danger => t(locale, TK::SajuLevelDanger),
                                                                     InterpretationLevel::Neutral => t(locale, TK::LabelNeutral),
                                                                 }}
                                                             }
@@ -1470,7 +1564,7 @@ pub fn SajuTab() -> Element {
                                                             "{pos_part}"
                                                         }
                                                     }
-                                                    p { class: "text-sm text-slate-300 font-semibold", "{marker_summary}" }
+                                                    p { class: "text-sm text-slate-300 font-semibold {clash_title_cls} {combine_title_cls}", "{localized_summary}" }
                                                     p { class: "text-xs text-slate-400 leading-relaxed", "{marker_desc}" }
                                                     if !m.reasons.is_empty() {
                                                         div { class: "flex items-center gap-1.5 flex-wrap pt-1",
@@ -1487,6 +1581,149 @@ pub fn SajuTab() -> Element {
                                 }
                             }
                         }
+                        // =================== Summary End ===================
+                        }
+                        
+                        if *active_sub_tab.read() == SubTab::Themes {
+                            if let Some(themes) = &data.report.themes {
+                                div { class: "w-full space-y-6 animate-fade-in",
+                                    h2 { class: "text-xl font-bold text-slate-100", "{t(locale, TK::SajuTabThemes)}" }
+                                    // Career
+                                    div { class: "p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3",
+                                        h3 { class: "text-lg font-bold text-amber-400", "{t(locale, TK::SajuThemeCareer)}" }
+                                        p { class: "text-slate-300", "{themes.career.summary}" }
+                                        p { class: "text-sm text-slate-400 mt-2", "{themes.career.recommendation}" }
+                                    }
+                                    // Wealth
+                                    div { class: "p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3",
+                                        h3 { class: "text-lg font-bold text-emerald-400", "{t(locale, TK::SajuThemeWealth)}" }
+                                        p { class: "text-slate-300", "{themes.wealth.summary}" }
+                                        p { class: "text-sm text-slate-400 mt-2", "{themes.wealth.flow}" }
+                                    }
+                                    // Romance
+                                    div { class: "p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3",
+                                        h3 { class: "text-lg font-bold text-pink-400", "{t(locale, TK::SajuThemeRomance)}" }
+                                        p { class: "text-slate-300", "{themes.romance.summary}" }
+                                        p { class: "text-sm text-slate-400 mt-2", "{themes.romance.advice}" }
+                                    }
+                                    // Health
+                                    div { class: "p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3",
+                                        h3 { class: "text-lg font-bold text-blue-400", "{t(locale, TK::SajuThemeHealth)}" }
+                                        p { class: "text-slate-300", "{themes.health.summary}" }
+                                        div { class: "flex gap-2 text-xs",
+                                            for organ in &themes.health.vulnerable_organs {
+                                                span { class: "px-2 py-1 rounded bg-blue-950/40 text-blue-300 border border-blue-900/50", "{organ}" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if *active_sub_tab.read() == SubTab::Transit {
+                            div { class: "w-full space-y-6 animate-fade-in",
+                                h2 { class: "text-xl font-bold text-slate-100", "{t(locale, TK::SajuTabTransit)}" }
+                                div { class: "p-6 rounded-3xl bg-slate-900 border border-slate-800",
+                                    div { class: "relative border-l-2 border-slate-700/50 ml-4 pl-6 space-y-8",
+                                        {data.report.simulation_frames.iter().map(|frame| {
+                                            let age = frame.age;
+                                            let ganzi = &frame.ganzi;
+                                            let m_ganzi = &frame.major_ganzi;
+                                            let score = frame.score;
+                                            let tags = frame.tags_as_strings();
+                                            
+                                            let (dot_color, score_color) = if score >= 70.0 {
+                                                ("bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]", "text-emerald-400")
+                                            } else if score < 40.0 {
+                                                ("bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]", "text-rose-400")
+                                            } else {
+                                                ("bg-slate-500", "text-slate-400")
+                                            };
+                                            
+                                            let stem_god = TenGod::from_stems(day_master, ganzi.stem);
+                                            let branch_god = TenGod::from_stem_and_branch(day_master, ganzi.branch);
+                                            let stem_god_str = translate_saju_ten_god(locale, stem_god);
+                                            let branch_god_str = translate_saju_ten_god(locale, branch_god);
+                                            let ganzi_str = translate_saju_ganzi(locale, ganzi);
+                                            let m_ganzi_str = translate_saju_ganzi(locale, m_ganzi);
+                                            
+                                            rsx! {
+                                                div { class: "relative group",
+                                                    div { class: "absolute -left-[31px] top-4 w-3 h-3 rounded-full border-2 border-slate-900 {dot_color} group-hover:scale-150 transition-transform" }
+                                                    
+                                                    div { class: "flex flex-col md:flex-row md:items-center gap-4 bg-slate-800/30 p-5 rounded-2xl border border-slate-800/60 hover:bg-slate-800/80 hover:border-slate-700 transition-all shadow-sm",
+                                                        div { class: "flex-shrink-0 w-24",
+                                                            div { class: "text-2xl font-black text-slate-200 tracking-tight", "{age}세" }
+                                                            div { class: "text-xs text-slate-500 mt-1 font-medium", "대운: {m_ganzi_str}" }
+                                                        }
+                                                        
+                                                        div { class: "flex-1 flex gap-4 md:gap-6",
+                                                            div { class: "text-center",
+                                                                div { class: "text-[10px] uppercase tracking-wider text-slate-400 mb-1 font-semibold", "{stem_god_str}" }
+                                                                div { class: "text-2xl font-bold {element_style(ganzi.stem.hangul()).0}", "{ganzi.stem.hanja()}" }
+                                                            }
+                                                            div { class: "text-center",
+                                                                div { class: "text-[10px] uppercase tracking-wider text-slate-400 mb-1 font-semibold", "{branch_god_str}" }
+                                                                div { class: "text-2xl font-bold {element_style(ganzi.branch.hangul()).0}", "{ganzi.branch.hanja()}" }
+                                                            }
+                                                            div { class: "self-center text-lg font-medium text-slate-300 ml-2",
+                                                                "{ganzi_str}년"
+                                                            }
+                                                        }
+                                                        
+                                                        div { class: "flex-1 flex flex-col md:items-end gap-2",
+                                                            div { class: "text-2xl font-black tracking-tighter {score_color}", "{score as i32}점" }
+                                                            div { class: "flex flex-wrap gap-1.5 justify-end",
+                                                                {tags.iter().map(|tag| rsx! {
+                                                                    span { class: "px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-950/60 border border-slate-700/50 text-slate-300 shadow-sm",
+                                                                        "{translate_saju_tag_str(locale, tag)}"
+                                                                    }
+                                                                })}
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        })}
+                                    }
+                                }
+                            }
+                        }
+
+                        if *active_sub_tab.read() == SubTab::Remedies {
+                            if let Some(remedies) = &data.report.remedies {
+                                div { class: "w-full space-y-6 animate-fade-in",
+                                    h2 { class: "text-xl font-bold text-slate-100", "{t(locale, TK::SajuTabRemedies)}" }
+                                    div { class: "grid grid-cols-2 gap-4",
+                                        div { class: "p-5 rounded-xl bg-slate-800/40 border border-slate-700/50",
+                                            h3 { class: "text-sm font-semibold text-slate-400 mb-2", "{t(locale, TK::SajuRemediesColors)}" }
+                                            div { class: "flex gap-2",
+                                                for color in &remedies.lucky_colors {
+                                                    span { class: "px-3 py-1 bg-slate-900 rounded border border-slate-700 text-sm font-medium", "{color}" }
+                                                }
+                                            }
+                                        }
+                                        div { class: "p-5 rounded-xl bg-slate-800/40 border border-slate-700/50",
+                                            h3 { class: "text-sm font-semibold text-slate-400 mb-2", "{t(locale, TK::SajuRemediesNumbers)}" }
+                                            div { class: "flex gap-2",
+                                                for num in &remedies.lucky_numbers {
+                                                    span { class: "px-3 py-1 bg-slate-900 rounded border border-slate-700 text-sm font-bold text-amber-400", "{num}" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    div { class: "p-5 rounded-xl bg-slate-800/40 border border-slate-700/50 space-y-3",
+                                        h3 { class: "text-sm font-semibold text-slate-400", "{t(locale, TK::SajuRemediesAdvice)}" }
+                                        p { class: "text-slate-300 leading-relaxed", "{remedies.lifestyle_advice}" }
+                                        div { class: "mt-4 p-3 rounded bg-red-950/20 border border-red-900/30 text-red-300 text-sm",
+                                            "주의: {remedies.warning}"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    }
                     } else {
                         rsx! { div {} }
                     }
@@ -1540,7 +1777,7 @@ fn PillarCard(
     branch: EarthlyBranch,
     twelve_stage: String,
     nayin: String,
-    shinsals: Vec<eon_saju::analysis::spirit_markers::SpiritMarker>,
+    shinsals: Vec<eon_saju::analysis::spirit_markers::SpiritMarkerDetail>,
     jijanggans: Vec<JijangganDisplayItem>,
 ) -> Element {
     let state = use_context::<AnalysisState>();
@@ -1632,16 +1869,21 @@ fn PillarCard(
             // Shinsal list
             if !shinsals.is_empty() {
                 div { class: "flex flex-col gap-1 mt-1.5",
-                    {shinsals.iter().map(|&s| {
-                        let label = translate_saju_spirit_marker_name(locale, s);
-                        let is_ausp = s.hangul().contains("귀인") || s.hangul().contains("록") || s.hangul().contains("덕");
-                        let bg_cls = if is_ausp {
-                            "bg-emerald-950/30 text-emerald-400 border-emerald-800/40"
-                        } else {
-                            "bg-indigo-950/30 text-indigo-400 border-indigo-800/40"
+                    {shinsals.iter().map(|s| {
+                        let label = translate_saju_spirit_marker_name(locale, s.marker);
+                        
+                        let bg_cls = match s.level {
+                            InterpretationLevel::Auspicious => "bg-emerald-950/30 text-emerald-400 border-emerald-800/40",
+                            InterpretationLevel::Caution => "bg-rose-950/30 text-rose-400 border-rose-800/40",
+                            InterpretationLevel::Danger => "bg-red-950/50 text-red-400 border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse",
+                            InterpretationLevel::Neutral => "bg-slate-800 text-slate-400 border-slate-700",
                         };
+
+                        let clash_cls = if s.is_clashed { "line-through opacity-70 decoration-red-500/70" } else { "" };
+                        let combine_cls = if s.is_combined { "ring-1 ring-blue-400/50 shadow-[0_0_10px_rgba(96,165,250,0.3)]" } else { "" };
+
                         rsx! {
-                            span { class: "text-[10px] py-1 px-2.5 rounded-full border text-center font-bold tracking-tight truncate {bg_cls}",
+                            span { class: "text-[10px] py-1 px-2.5 rounded-full border text-center font-bold tracking-tight truncate transition-all {bg_cls} {clash_cls} {combine_cls}",
                                 "✦ {label}"
                             }
                         }
