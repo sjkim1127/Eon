@@ -23,7 +23,7 @@ eon-human-design = { workspace = true }
 eon-ai = { workspace = true }
 eon-astro = { workspace = true }
 eon-data = { workspace = true }
-ts-rs = { version = "10", features = ["chrono-impl"] }
+ts-rs = { version = "12", features = ["chrono-impl"] }
 
 [lints]
 workspace = true
