@@ -15,7 +15,7 @@ jobs:
     name: Security Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Run Vulnerability Audit
         uses: rustsec/audit-action@v0.4.0
