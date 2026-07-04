@@ -1,0 +1,23 @@
+name: Dependency Security Audit
+
+on:
+  schedule:
+    # 매주 일요일 자정(UTC)에 실행
+    - cron: '0 0 * * 0'
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  security_audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Vulnerability Audit
+        uses: rustsec/audit-action@v0.4.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

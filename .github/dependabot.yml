@@ -1,0 +1,21 @@
+version: 2
+updates:
+  # Rust Cargo 의존성 자동 업데이트 설정 (매주 확인)
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "00:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 10
+
+  # GitHub Actions 의존성 자동 업데이트 설정 (매주 확인)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "00:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5

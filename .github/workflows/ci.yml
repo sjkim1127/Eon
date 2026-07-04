@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ── 1단계: 코드 품질 검사 (Format & Clippy) ───────────────────────────────────
+  lints:
+    name: Format & Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy Linter
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+  # ── 2단계: 테스트 및 테스트 커버리지 측정 ─────────────────────────────────────
+  test:
+    name: Test & Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Run Tests & Generate Coverage
+        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: lcov.info
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # ── 3단계: WASM 빌드 검증 및 바이너리 크기 측정 ──────────────────────────────
+  wasm-build:
+    name: WASM Build & Size Monitor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable + wasm target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Dioxus CLI
+        run: cargo binstall dioxus-cli@0.6.1 -y
+
+      - name: Install WASI SDK
+        run: |
+          wget -q https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz
+          sudo tar xf wasi-sdk-24.0-x86_64-linux.tar.gz -C /opt
+          sudo ln -sf /opt/wasi-sdk-24.0-x86_64-linux /opt/wasi-sdk
+
+      - name: Build Web App (Dioxus Release)
+        working-directory: ./crates/eon-ui
+        env:
+          CARGO_BUILD_JOBS: 1
+          CC_wasm32_unknown_unknown: clang
+          AR_wasm32_unknown_unknown: llvm-ar
+          WASI_SDK_PATH: /opt/wasi-sdk
+        run: dx build --release --trace
+
+      - name: Measure & Report WASM File Size
+        run: |
+          echo "### WebAssembly Binary Sizes 📊" >> $GITHUB_STEP_SUMMARY
+          echo "| File Path | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          find target -name "*.wasm" -exec ls -lh {} \; | awk '{print "| `" $9 "` | **" $5 "** |"}' >> $GITHUB_STEP_SUMMARY
