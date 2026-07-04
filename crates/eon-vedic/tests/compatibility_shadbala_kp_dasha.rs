@@ -1,14 +1,20 @@
-use chrono::{TimeZone, Utc, DateTime};
-use eon_vedic::core::chart::{VedicChart, VedicPosition, VedicChartCalculator};
-use eon_vedic::planets::VedicPlanet;
+use chrono::{TimeZone, Utc};
+use eon_vedic::analysis::kp::KpAnalysis;
 use eon_vedic::analysis::matching::MatchingEngine;
 use eon_vedic::analysis::strength::StrengthEngine;
-use eon_vedic::analysis::kp::KpAnalysis;
+use eon_vedic::config::VedicYearType;
+use eon_vedic::core::chart::{VedicChart, VedicChartCalculator, VedicPosition};
+use eon_vedic::planets::VedicPlanet;
 use eon_vedic::prediction::dasha::Vimshottari;
-use eon_vedic::config::{VedicConfig, AyanamsaSystem, VedicYearType, HouseSystem, NodeCalculation};
 
 // Mock chart and position helpers for testing
-fn create_mock_position(planet: VedicPlanet, rasi: u8, nakshatra: u8, house: u8, sidereal_deg: f64) -> VedicPosition {
+fn create_mock_position(
+    planet: VedicPlanet,
+    rasi: u8,
+    nakshatra: u8,
+    house: u8,
+    sidereal_deg: f64,
+) -> VedicPosition {
     VedicPosition {
         planet,
         tropical_deg: 0.0,
@@ -85,7 +91,11 @@ fn test_ashtakoota_varna_caste() {
         create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0),
     ]);
     let report = MatchingEngine::calculate_compatibility(&male, &female);
-    let varna = report.kootas.iter().find(|k| k.name.contains("Varna")).unwrap();
+    let varna = report
+        .kootas
+        .iter()
+        .find(|k| k.name.contains("Varna"))
+        .unwrap();
     assert_eq!(varna.earned_points, 1.0);
 }
 
@@ -103,7 +113,11 @@ fn test_ashtakoota_vashya_attraction() {
         create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0),
     ]);
     let report = MatchingEngine::calculate_compatibility(&male, &female);
-    let vashya = report.kootas.iter().find(|k| k.name.contains("Vashya")).unwrap();
+    let vashya = report
+        .kootas
+        .iter()
+        .find(|k| k.name.contains("Vashya"))
+        .unwrap();
     assert_eq!(vashya.earned_points, 2.0);
 }
 
@@ -121,7 +135,11 @@ fn test_ashtakoota_tara_destiny() {
         create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0),
     ]);
     let report = MatchingEngine::calculate_compatibility(&male, &female);
-    let tara = report.kootas.iter().find(|k| k.name.contains("Tara")).unwrap();
+    let tara = report
+        .kootas
+        .iter()
+        .find(|k| k.name.contains("Tara"))
+        .unwrap();
     assert_eq!(tara.earned_points, 3.0);
 }
 
@@ -137,7 +155,11 @@ fn test_ashtakoota_yoni_sensory() {
         create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0),
     ]);
     let report = MatchingEngine::calculate_compatibility(&male, &female);
-    let yoni = report.kootas.iter().find(|k| k.name.contains("Yoni")).unwrap();
+    let yoni = report
+        .kootas
+        .iter()
+        .find(|k| k.name.contains("Yoni"))
+        .unwrap();
     assert_eq!(yoni.earned_points, 4.0);
 }
 
@@ -154,7 +176,11 @@ fn test_ashtakoota_graha_maitri() {
         create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0),
     ]);
     let report = MatchingEngine::calculate_compatibility(&male, &female);
-    let graha = report.kootas.iter().find(|k| k.name.contains("Graha")).unwrap();
+    let graha = report
+        .kootas
+        .iter()
+        .find(|k| k.name.contains("Graha"))
+        .unwrap();
     assert_eq!(graha.earned_points, 5.0);
 }
 
@@ -186,9 +212,7 @@ fn test_shadbala_dig_bala_factor() {
 
 #[test]
 fn test_shadbala_kala_bala_factor() {
-    let chart = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0),
-    ]);
+    let chart = create_mock_chart(vec![create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0)]);
     let pos = &chart.planets[0];
     let strength = StrengthEngine::calculate(pos, &chart);
     // Assert the new field added by the implementation track
@@ -197,9 +221,7 @@ fn test_shadbala_kala_bala_factor() {
 
 #[test]
 fn test_shadbala_chesta_bala_factor() {
-    let chart = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0),
-    ]);
+    let chart = create_mock_chart(vec![create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0)]);
     let pos = &chart.planets[0];
     let strength = StrengthEngine::calculate(pos, &chart);
     // Assert the new field added by the implementation track
@@ -208,9 +230,7 @@ fn test_shadbala_chesta_bala_factor() {
 
 #[test]
 fn test_shadbala_naisargika_bala_factor() {
-    let chart = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0),
-    ]);
+    let chart = create_mock_chart(vec![create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0)]);
     let pos = &chart.planets[0];
     let strength = StrengthEngine::calculate(pos, &chart);
     // Assert the new field added by the implementation track
@@ -313,7 +333,7 @@ fn test_dasha_year_types() {
     let birth = Utc.with_ymd_and_hms(2000, 1, 1, 12, 0, 0).unwrap();
     let timeline_greg = Vimshottari::calculate(0.0, birth, 1, VedicYearType::Gregorian);
     let timeline_sav = Vimshottari::calculate(0.0, birth, 1, VedicYearType::Savana);
-    
+
     // Savana year (360 days) is shorter than Gregorian (365.2425 days)
     // Hence the end date of Ketu Mahadasha (7 years) should be earlier in Savana
     assert!(timeline_sav[0].end_date < timeline_greg[0].end_date);
@@ -339,7 +359,11 @@ fn test_ashtakoota_gana_temperament_boundary() {
         create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0),
     ]);
     let report = MatchingEngine::calculate_compatibility(&male_deva, &female_rakshasa);
-    let gana = report.kootas.iter().find(|k| k.name.contains("Gana")).unwrap();
+    let gana = report
+        .kootas
+        .iter()
+        .find(|k| k.name.contains("Gana"))
+        .unwrap();
     assert_eq!(gana.earned_points, 1.0);
 }
 
@@ -357,7 +381,11 @@ fn test_ashtakoota_bhakoot_emotional_boundary() {
         create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0),
     ]);
     let report = MatchingEngine::calculate_compatibility(&male, &female);
-    let bhakoot = report.kootas.iter().find(|k| k.name.contains("Bhakoot")).unwrap();
+    let bhakoot = report
+        .kootas
+        .iter()
+        .find(|k| k.name.contains("Bhakoot"))
+        .unwrap();
     assert_eq!(bhakoot.earned_points, 0.0);
 }
 
@@ -374,7 +402,11 @@ fn test_ashtakoota_nadi_genetic_boundary() {
         create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0),
     ]);
     let report = MatchingEngine::calculate_compatibility(&male, &female);
-    let nadi = report.kootas.iter().find(|k| k.name.contains("Nadi")).unwrap();
+    let nadi = report
+        .kootas
+        .iter()
+        .find(|k| k.name.contains("Nadi"))
+        .unwrap();
     assert_eq!(nadi.earned_points, 0.0);
 }
 
@@ -417,9 +449,7 @@ fn test_ashtakoota_total_score_limit() {
 
 #[test]
 fn test_shadbala_drik_bala_factor_boundary() {
-    let chart = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0),
-    ]);
+    let chart = create_mock_chart(vec![create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0)]);
     let pos = &chart.planets[0];
     let strength = StrengthEngine::calculate(pos, &chart);
     // Assert the new field added by the implementation track
@@ -430,12 +460,15 @@ fn test_shadbala_drik_bala_factor_boundary() {
 fn test_shadbala_exaltation_debilitation_uchcha_boundary() {
     // Deep Exaltation of Sun: Aries 10 deg -> Uchcha Bala 60.0
     // Deep Debilitation of Sun: Libra 10 deg (190 deg) -> Uchcha Bala 0.0
-    let chart_exalt = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0),
-    ]);
-    let chart_debilit = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Sun, 7, 13, 7, 190.0),
-    ]);
+    let chart_exalt =
+        create_mock_chart(vec![create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0)]);
+    let chart_debilit = create_mock_chart(vec![create_mock_position(
+        VedicPlanet::Sun,
+        7,
+        13,
+        7,
+        190.0,
+    )]);
 
     let strength_ex = StrengthEngine::calculate(&chart_exalt.planets[0], &chart_exalt);
     let strength_deb = StrengthEngine::calculate(&chart_debilit.planets[0], &chart_debilit);
@@ -465,9 +498,7 @@ fn test_shadbala_planetary_war_yuddha_boundary() {
 
 #[test]
 fn test_shadbala_ishta_kashta_phala_limits() {
-    let chart = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0),
-    ]);
+    let chart = create_mock_chart(vec![create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0)]);
     let strength = StrengthEngine::calculate(&chart.planets[0], &chart);
     assert!(strength.ishta_phala >= 0.0 && strength.ishta_phala <= 60.0);
     assert!(strength.kashta_phala >= 0.0 && strength.kashta_phala <= 60.0);
@@ -477,11 +508,14 @@ fn test_shadbala_ishta_kashta_phala_limits() {
 
 #[test]
 fn test_shadbala_total_score_status_mapping() {
-    let chart = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0),
-    ]);
+    let chart = create_mock_chart(vec![create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0)]);
     let strength = StrengthEngine::calculate(&chart.planets[0], &chart);
-    assert!(strength.status == "Exalted" || strength.status == "Strong" || strength.status == "Neutral" || strength.status == "Weak");
+    assert!(
+        strength.status == "Exalted"
+            || strength.status == "Strong"
+            || strength.status == "Neutral"
+            || strength.status == "Weak"
+    );
     // Assert the new fields added by the implementation track
     assert!(strength.naisargika_bala >= 0.0);
 }
@@ -626,10 +660,8 @@ fn test_cross_compatibility_and_dasha() {
 fn test_cross_strength_and_kp_lords() {
     let calc = VedicChartCalculator::new();
     let time = Utc.with_ymd_and_hms(2026, 6, 20, 12, 0, 0).unwrap();
-    let chart = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0),
-    ]);
-    
+    let chart = create_mock_chart(vec![create_mock_position(VedicPlanet::Sun, 1, 1, 1, 10.0)]);
+
     let strength = StrengthEngine::calculate(&chart.planets[0], &chart);
     let kp = KpAnalysis::calculate(time, 13.0, 80.0, 24.0, &chart.planets, calc.engine()).unwrap();
 
@@ -648,9 +680,7 @@ fn test_cross_dasha_lord_strength() {
     let dasha_lord = timeline[0].planet;
 
     // 2. Mock a chart where that lord has a specific position
-    let chart = create_mock_chart(vec![
-        create_mock_position(dasha_lord, 1, 1, 1, 10.0),
-    ]);
+    let chart = create_mock_chart(vec![create_mock_position(dasha_lord, 1, 1, 1, 10.0)]);
 
     // 3. Compute strength of that dasha lord
     let strength = StrengthEngine::calculate(&chart.planets[0], &chart);
@@ -664,7 +694,7 @@ fn test_cross_dasha_lord_strength() {
 fn test_cross_compatibility_mangal_dosha_and_kp_houses() {
     let calc = VedicChartCalculator::new();
     let time = Utc.with_ymd_and_hms(2026, 6, 20, 12, 0, 0).unwrap();
-    
+
     // Male chart with Mars in 1st house (Mangal Dosha)
     let male = create_mock_chart(vec![
         create_mock_position(VedicPlanet::Moon, 4, 1, 1, 95.0),
@@ -712,12 +742,24 @@ fn test_workload_standard_natal_reading() {
     }
 
     // 3. Perform KP Analysis
-    let kp = KpAnalysis::calculate(time, latitude, longitude, chart.ayanamsa, &chart.planets, calc.engine()).unwrap();
+    let kp = KpAnalysis::calculate(
+        time,
+        latitude,
+        longitude,
+        chart.ayanamsa,
+        &chart.planets,
+        calc.engine(),
+    )
+    .unwrap();
     assert_eq!(kp.cusps.len(), 12);
-    assert!(kp.planets.len() > 0);
+    assert!(!kp.planets.is_empty());
 
     // 4. Calculate Vimshottari Dasha timeline (3 levels)
-    let moon = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon).unwrap();
+    let moon = chart
+        .planets
+        .iter()
+        .find(|p| p.planet == VedicPlanet::Moon)
+        .unwrap();
     let dasha = Vimshottari::calculate(moon.sidereal_deg, time, 3, VedicYearType::Gregorian);
     assert!(!dasha.is_empty());
     assert_eq!(dasha[0].level, 1);
@@ -741,11 +783,29 @@ fn test_workload_relationship_compatibility() {
     assert!(report.total_score >= 0.0 && report.total_score <= 36.0);
 
     // 2. Perform active dasha checking for both partners
-    let moon_male = chart_male.planets.iter().find(|p| p.planet == VedicPlanet::Moon).unwrap();
-    let moon_female = chart_female.planets.iter().find(|p| p.planet == VedicPlanet::Moon).unwrap();
+    let moon_male = chart_male
+        .planets
+        .iter()
+        .find(|p| p.planet == VedicPlanet::Moon)
+        .unwrap();
+    let moon_female = chart_female
+        .planets
+        .iter()
+        .find(|p| p.planet == VedicPlanet::Moon)
+        .unwrap();
 
-    let dasha_male = Vimshottari::calculate(moon_male.sidereal_deg, time_male, 1, VedicYearType::Gregorian);
-    let dasha_female = Vimshottari::calculate(moon_female.sidereal_deg, time_female, 1, VedicYearType::Gregorian);
+    let dasha_male = Vimshottari::calculate(
+        moon_male.sidereal_deg,
+        time_male,
+        1,
+        VedicYearType::Gregorian,
+    );
+    let dasha_female = Vimshottari::calculate(
+        moon_female.sidereal_deg,
+        time_female,
+        1,
+        VedicYearType::Gregorian,
+    );
 
     assert!(!dasha_male.is_empty());
     assert!(!dasha_female.is_empty());
@@ -761,8 +821,16 @@ fn test_workload_career_wealth_audit() {
     let chart = calc.calculate(birth_time, lat, lon).unwrap();
 
     // KP significator audit: find 2nd, 6th, 10th and 11th house/cusp sign and star lords
-    let kp = KpAnalysis::calculate(birth_time, lat, lon, chart.ayanamsa, &chart.planets, calc.engine()).unwrap();
-    
+    let kp = KpAnalysis::calculate(
+        birth_time,
+        lat,
+        lon,
+        chart.ayanamsa,
+        &chart.planets,
+        calc.engine(),
+    )
+    .unwrap();
+
     let cusp_2 = &kp.cusps[1];
     let cusp_6 = &kp.cusps[5];
     let cusp_10 = &kp.cusps[9];
@@ -789,19 +857,30 @@ fn test_workload_career_wealth_audit() {
 fn test_workload_extreme_location_analysis() {
     let calc = VedicChartCalculator::new();
     let time = Utc.with_ymd_and_hms(2026, 6, 20, 0, 0, 0).unwrap();
-    
+
     // Polar location: Tromsø, Norway (latitude: 69.6492, longitude: 18.9560)
     let lat = 69.6492;
     let lon = 18.9560;
 
     let chart = calc.calculate(time, lat, lon).unwrap();
-    
+
     // Ensure we can calculate KP cusps successfully under extreme latitudes
-    let kp = KpAnalysis::calculate(time, lat, lon, chart.ayanamsa, &chart.planets, calc.engine());
+    let kp = KpAnalysis::calculate(
+        time,
+        lat,
+        lon,
+        chart.ayanamsa,
+        &chart.planets,
+        calc.engine(),
+    );
     assert!(kp.is_ok());
 
     // Perform Shadbala for Ascendant lord / Sun
-    let sun = chart.planets.iter().find(|p| p.planet == VedicPlanet::Sun).unwrap();
+    let sun = chart
+        .planets
+        .iter()
+        .find(|p| p.planet == VedicPlanet::Sun)
+        .unwrap();
     let strength = StrengthEngine::calculate(sun, &chart);
     assert_eq!(strength.planet, VedicPlanet::Sun);
     // Assert the new fields added by the implementation track
@@ -854,57 +933,63 @@ fn test_workload_historical_timeline_reconstruction() {
 
 #[test]
 fn test_stress_ashtakoota_missing_moon_panic() {
-    let male = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0),
-    ]);
-    let female = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Moon, 4, 1, 1, 95.0),
-    ]);
-    
+    let male = create_mock_chart(vec![create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0)]);
+    let female = create_mock_chart(vec![create_mock_position(VedicPlanet::Moon, 4, 1, 1, 95.0)]);
+
     let result = std::panic::catch_unwind(|| {
         MatchingEngine::calculate_compatibility(&male, &female);
     });
-    assert!(result.is_err(), "Expected panic due to missing Moon in male chart");
+    assert!(
+        result.is_err(),
+        "Expected panic due to missing Moon in male chart"
+    );
 }
 
 #[test]
 fn test_stress_ashtakoota_missing_moon_mangal_dosha_panic() {
-    let male = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Moon, 4, 1, 1, 95.0),
-    ]);
-    let female = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0),
-    ]);
-    
+    let male = create_mock_chart(vec![create_mock_position(VedicPlanet::Moon, 4, 1, 1, 95.0)]);
+    let female = create_mock_chart(vec![create_mock_position(VedicPlanet::Mars, 1, 1, 1, 10.0)]);
+
     let result = std::panic::catch_unwind(|| {
         MatchingEngine::calculate_compatibility(&male, &female);
     });
-    assert!(result.is_err(), "Expected panic due to missing Moon in female chart during Mangal Dosha check");
+    assert!(
+        result.is_err(),
+        "Expected panic due to missing Moon in female chart during Mangal Dosha check"
+    );
 }
 
 #[test]
 fn test_stress_ashtakoota_custom_nakshatras_out_of_bounds() {
-    let male = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Moon, 1, 0, 1, 10.0),
-    ]);
-    let female = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Moon, 1, 28, 1, 10.0),
-    ]);
-    
+    let male = create_mock_chart(vec![create_mock_position(VedicPlanet::Moon, 1, 0, 1, 10.0)]);
+    let female = create_mock_chart(vec![create_mock_position(
+        VedicPlanet::Moon,
+        1,
+        28,
+        1,
+        10.0,
+    )]);
+
     let report = MatchingEngine::calculate_compatibility(&male, &female);
-    let tara = report.kootas.iter().find(|k| k.name.contains("Tara")).unwrap();
+    let tara = report
+        .kootas
+        .iter()
+        .find(|k| k.name.contains("Tara"))
+        .unwrap();
     println!("Earned Tara points: {}", tara.earned_points);
 }
 
 #[test]
 fn test_stress_ashtakoota_custom_rasi_out_of_bounds() {
-    let male = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Moon, 0, 1, 1, 10.0),
-    ]);
-    let female = create_mock_chart(vec![
-        create_mock_position(VedicPlanet::Moon, 13, 1, 1, 10.0),
-    ]);
-    
+    let male = create_mock_chart(vec![create_mock_position(VedicPlanet::Moon, 0, 1, 1, 10.0)]);
+    let female = create_mock_chart(vec![create_mock_position(
+        VedicPlanet::Moon,
+        13,
+        1,
+        1,
+        10.0,
+    )]);
+
     let report = MatchingEngine::calculate_compatibility(&male, &female);
     assert!(report.total_score >= 0.0);
 }
@@ -913,10 +998,10 @@ fn test_stress_ashtakoota_custom_rasi_out_of_bounds() {
 fn test_stress_kp_extreme_coordinates_crash() {
     let calc = VedicChartCalculator::new();
     let time = Utc.with_ymd_and_hms(2026, 6, 20, 12, 0, 0).unwrap();
-    
+
     let result_north = calc.calculate(time, 90.0, 0.0);
     let result_south = calc.calculate(time, -90.0, 0.0);
-    
+
     println!("North Pole calculate: {:?}", result_north.is_ok());
     println!("South Pole calculate: {:?}", result_south.is_ok());
 }
@@ -931,9 +1016,8 @@ fn test_stress_ashtakoota_minimum_possible_score() {
         create_mock_position(VedicPlanet::Moon, 5, 13, 1, 130.0),
         create_mock_position(VedicPlanet::Mars, 1, 1, 2, 10.0),
     ]);
-    
+
     let report = MatchingEngine::calculate_compatibility(&male, &female);
     assert_eq!(report.total_score, 2.5);
     assert!(!report.is_compatible);
 }
-

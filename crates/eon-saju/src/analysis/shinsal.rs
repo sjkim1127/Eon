@@ -3,9 +3,9 @@
 //! 사주의 길흉화복을 판단하는 보조적 도구인 신살을 분석합니다.
 //! 12신살, 원진살, 귀문관살 등을 포함합니다.
 
-use serde::{Deserialize, Serialize};
 use crate::core::branch::EarthlyBranch;
 use crate::core::pillars::FourPillars;
+use serde::{Deserialize, Serialize};
 
 // ============================================
 // 12신살 (Twelve Divine Spirits)
@@ -98,7 +98,7 @@ impl TwelveShinsal {
     /// 보통 기준은 일지(Day Branch) 또는 년지(Year Branch)를 사용함.
     pub fn calculate(criteria: EarthlyBranch, target: EarthlyBranch) -> Self {
         use EarthlyBranch::*;
-        
+
         // 삼합 국(Frame)의 첫 글자(생지) 찾기
         // 인오술(火) -> 인
         // 신자진(水) -> 신
@@ -110,10 +110,10 @@ impl TwelveShinsal {
             Si | You | Chou => Si,
             Hai | Mao | Wei => Hai,
         };
-        
+
         // 생지와의 거리 계산 (순행)
         let diff = (target.index() as i32 - start_branch.index() as i32).rem_euclid(12);
-        
+
         match diff {
             0 => Self::Jisal,
             1 => Self::Yeonsal,
@@ -175,7 +175,6 @@ impl Gilsin {
     }
 }
 
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EvilSpirit {
     /// 원진살(元嗔殺) - 불화, 증오
@@ -224,7 +223,7 @@ impl EvilSpirit {
             (Yin, You) | (You, Yin) => Some(Self::Wonjin), // 인유 원진
             (Mao, Shen) | (Shen, Mao) => Some(Self::Wonjin), // 묘신 원진
             (Chen, Hai) | (Hai, Chen) => Some(Self::Wonjin), // 진해 원진
-            (Si, Xu) | (Xu, Si) => Some(Self::Wonjin), // 사술 원진
+            (Si, Xu) | (Xu, Si) => Some(Self::Wonjin),   // 사술 원진
             _ => None,
         }
     }
@@ -238,7 +237,7 @@ impl EvilSpirit {
             (Yin, Wei) | (Wei, Yin) => Some(Self::Gwimun), // 인미 귀문
             (Mao, Shen) | (Shen, Mao) => Some(Self::Gwimun), // 묘신 귀문
             (Chen, Hai) | (Hai, Chen) => Some(Self::Gwimun), // 진해 귀문
-            (Si, Xu) | (Xu, Si) => Some(Self::Gwimun), // 사술 귀문
+            (Si, Xu) | (Xu, Si) => Some(Self::Gwimun),   // 사술 귀문
             _ => None,
         }
     }
@@ -291,7 +290,7 @@ impl ShinsalAnalysis {
             for j in (i + 1)..branches.len() {
                 let (n1, b1) = branches[i];
                 let (n2, b2) = branches[j];
-                
+
                 if let Some(w) = EvilSpirit::check_wonjin(b1, b2) {
                     special_shinsals.push((n1.to_string(), n2.to_string(), w));
                 }
@@ -319,10 +318,13 @@ impl ShinsalAnalysis {
     }
 
     /// 특정 운(대운/세운 등)에 대한 신살 분석
-    pub fn calculate_for_luck(luck_ganzi: crate::core::ganzi::GanZi, pillars: &FourPillars) -> Vec<String> {
+    pub fn calculate_for_luck(
+        luck_ganzi: crate::core::ganzi::GanZi,
+        pillars: &FourPillars,
+    ) -> Vec<String> {
         let mut results = Vec::new();
         let day_master = pillars.day_master();
-        
+
         // 1. 12신살 (일지 기준)
         let s_day = TwelveShinsal::calculate(pillars.day.branch, luck_ganzi.branch);
         results.push(format!("(일) {}", s_day.hangul()));
@@ -338,24 +340,33 @@ impl ShinsalAnalysis {
         }
 
         // 4. 백호/괴강 등 특수 지지
-        use crate::core::stem::HeavenlyStem as S;
         use crate::core::branch::EarthlyBranch as B;
-        
+        use crate::core::stem::HeavenlyStem as S;
+
         // 백호살 (Luck Ganzi 자체가 백호인 경우)
         match (luck_ganzi.stem, luck_ganzi.branch) {
-            (S::Jia, B::Chen) | (S::Yi, B::Wei) | (S::Bing, B::Xu) | (S::Ding, B::Chou) | 
-            (S::Wu, B::Chen) | (S::Ren, B::Xu) | (S::Gui, B::Chou) => {
+            (S::Jia, B::Chen)
+            | (S::Yi, B::Wei)
+            | (S::Bing, B::Xu)
+            | (S::Ding, B::Chou)
+            | (S::Wu, B::Chen)
+            | (S::Ren, B::Xu)
+            | (S::Gui, B::Chou) => {
                 results.push("백호살".to_string());
-            },
+            }
             _ => {}
         }
-        
+
         // 괴강살
         match (luck_ganzi.stem, luck_ganzi.branch) {
-            (S::Wu, B::Xu) | (S::Wu, B::Chen) | (S::Geng, B::Xu) | (S::Geng, B::Chen) |
-            (S::Ren, B::Xu) | (S::Ren, B::Chen) => {
+            (S::Wu, B::Xu)
+            | (S::Wu, B::Chen)
+            | (S::Geng, B::Xu)
+            | (S::Geng, B::Chen)
+            | (S::Ren, B::Xu)
+            | (S::Ren, B::Chen) => {
                 results.push("괴강살".to_string());
-            },
+            }
             _ => {}
         }
 
@@ -367,19 +378,19 @@ impl std::fmt::Display for ShinsalAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "【신살(神殺) 분석】")?;
         writeln!(f, "─────────────────────────────────")?;
-        
+
         writeln!(f, "[12신살 - 일지 기준]")?;
         for (pos, shinsal) in &self.twelve_shinsal_day {
             write!(f, "  {}: {} ", pos, shinsal.hangul())?;
         }
         writeln!(f)?;
-        
+
         writeln!(f, "\n[12신살 - 년지 기준]")?;
         for (pos, shinsal) in &self.twelve_shinsal_year {
             write!(f, "  {}: {} ", pos, shinsal.hangul())?;
         }
         writeln!(f)?;
-        
+
         if !self.special_shinsals.is_empty() {
             writeln!(f, "\n[특수 신살 (원진/귀문)]")?;
             for (p1, p2, spirit) in &self.special_shinsals {
@@ -393,7 +404,7 @@ impl std::fmt::Display for ShinsalAnalysis {
                 writeln!(f, "  {}: {}", pos, spirit.hangul())?;
             }
         }
-        
+
         Ok(())
     }
 }
@@ -413,9 +424,15 @@ mod tests {
     #[test]
     fn test_wonjin_gwimun() {
         // 자(Zi) - 미(Wei) 원진
-        assert_eq!(EvilSpirit::check_wonjin(EarthlyBranch::Zi, EarthlyBranch::Wei), Some(EvilSpirit::Wonjin));
+        assert_eq!(
+            EvilSpirit::check_wonjin(EarthlyBranch::Zi, EarthlyBranch::Wei),
+            Some(EvilSpirit::Wonjin)
+        );
         // 축(Chou) - 오(Wu) 귀문
-        assert_eq!(EvilSpirit::check_gwimun(EarthlyBranch::Chou, EarthlyBranch::Wu), Some(EvilSpirit::Gwimun));
+        assert_eq!(
+            EvilSpirit::check_gwimun(EarthlyBranch::Chou, EarthlyBranch::Wu),
+            Some(EvilSpirit::Gwimun)
+        );
     }
 
     #[test]
@@ -424,7 +441,7 @@ mod tests {
         // 기준: 인(寅), 대상: 오(Wu) -> 장성살
         let s = TwelveShinsal::calculate(EarthlyBranch::Yin, EarthlyBranch::Wu);
         assert_eq!(s, TwelveShinsal::Jangseongsal);
-        
+
         // 대상: 신(Shen) -> 역마살
         let s2 = TwelveShinsal::calculate(EarthlyBranch::Yin, EarthlyBranch::Shen);
         assert_eq!(s2, TwelveShinsal::Yeokmasal);
@@ -433,25 +450,33 @@ mod tests {
     #[test]
     fn test_user_shinsal() {
         // 김성주: 갑신년 을해월 경인일 정해시
-        let input = SajuInput::new_solar(2004, 11, 27, 22, 0); 
+        let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
         let pillars = FourPillars::calculate(&input).unwrap();
-        
+
         // 일지(인) 기준
         // 인오술 화국 -> 생지 인(Jisal)
         // 년지(신): 인신충 -> 역마(Yeokmasal) (인 기준 신은 6칸 차이)
-        // 월지(해): 인해합 -> 겁살(Geopsal)? 
+        // 월지(해): 인해합 -> 겁살(Geopsal)?
         // 계산: 인(0) -> 해(9) -> 겁살
-        
+
         let analysis = pillars.shinsal();
         println!("{}", analysis);
-        
+
         // 각 위치별 신살 확인
         // 년지(신): 인(0) ~ 신(6) -> 역마살
-        let year_shinsal = analysis.twelve_shinsal_day.iter().find(|(p, _)| p == "년지").unwrap();
+        let year_shinsal = analysis
+            .twelve_shinsal_day
+            .iter()
+            .find(|(p, _)| p == "년지")
+            .unwrap();
         assert_eq!(year_shinsal.1, TwelveShinsal::Yeokmasal);
-        
+
         // 월지(해): 인(0) ~ 해(9) -> 겁살
-        let month_shinsal = analysis.twelve_shinsal_day.iter().find(|(p, _)| p == "월지").unwrap();
+        let month_shinsal = analysis
+            .twelve_shinsal_day
+            .iter()
+            .find(|(p, _)| p == "월지")
+            .unwrap();
         assert_eq!(month_shinsal.1, TwelveShinsal::Geopsal);
     }
 }

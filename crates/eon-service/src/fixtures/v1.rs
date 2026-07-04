@@ -40,7 +40,8 @@ pub fn get_v1_fixtures() -> Vec<OracleFixture> {
         // 2. Lunar Month Edge Case
         OracleFixture {
             id: "lunar-edge-case".to_string(),
-            description: "Lunar Edge Case: 1988 Lunar 2-15 10:00 (Standard Solar 1988-04-01)".to_string(),
+            description: "Lunar Edge Case: 1988 Lunar 2-15 10:00 (Standard Solar 1988-04-01)"
+                .to_string(),
             input: AnalysisInput {
                 year: 1988,
                 month: 2,
@@ -70,7 +71,6 @@ pub fn get_v1_fixtures() -> Vec<OracleFixture> {
                 moon_rasi: 6,
                 moon_nakshatra: 12, // Hasta
             },
-
         },
         // 3. Overseas Timezone (NY)
         OracleFixture {
@@ -101,8 +101,8 @@ pub fn get_v1_fixtures() -> Vec<OracleFixture> {
                 day_master: "Yi".to_string(),
             },
             expected_vedic: ExpectedVedic {
-                ascendant_rasi: 6, // Virgo
-                moon_rasi: 12,    // Pisces
+                ascendant_rasi: 6,  // Virgo
+                moon_rasi: 12,      // Pisces
                 moon_nakshatra: 26, // Uttara Bhadrapada
             },
         },

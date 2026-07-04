@@ -84,7 +84,8 @@ impl StrengthEngine {
             "Neutral".to_string()
         };
 
-        let sthana_bala = ex_score + sapta_score + kendra_bala + drekkana_bala + ojayugmarasyamsa_bala;
+        let sthana_bala =
+            ex_score + sapta_score + kendra_bala + drekkana_bala + ojayugmarasyamsa_bala;
         let dig_bala = dig_score;
         let kala_bala = kala_score;
         let chesta_bala = chesta_score;

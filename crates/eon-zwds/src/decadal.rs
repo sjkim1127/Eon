@@ -2,11 +2,11 @@
 //!
 //! 성별과 생년 천간의 음양에 따라 순행/역행 방향을 정하고, 12개 궁에 대한의 나이 범위와 대간(大干)을 설정합니다.
 
-use eon_core::birth::Gender;
-use eon_saju::core::stem::HeavenlyStem;
-use eon_saju::core::branch::EarthlyBranch;
-use crate::types::{PalaceIndex, FiveElementsClass, DaXian};
 use crate::palace::{fix_index, get_palace_stem, zwds_idx_to_std_idx};
+use crate::types::{DaXian, FiveElementsClass, PalaceIndex};
+use eon_core::birth::Gender;
+use eon_saju::core::branch::EarthlyBranch;
+use eon_saju::core::stem::HeavenlyStem;
 
 /// 대한 목록을 생성하여 반환합니다.
 ///
@@ -26,7 +26,7 @@ pub fn calculate_daxian(
     // 양남음녀(陽男陰女) -> 순행, 음남양녀(陰男陽女) -> 역행
     // 양천간: 甲, 丙, 戊, 庚, 壬 (index % 2 == 0)
     // 음천간: 乙, 丁, 己, 辛, 癸 (index % 2 == 1)
-    let is_yang_stem = year_stem.index() % 2 == 0;
+    let is_yang_stem = year_stem.index().is_multiple_of(2);
     let is_male = matches!(gender, Gender::Male);
 
     let is_forward = if is_male {

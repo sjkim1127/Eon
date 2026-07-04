@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AyanamsaSystem {
-    Lahiri = 1,      // SWE_SIDM_LAHIRI
+    Lahiri = 1,       // SWE_SIDM_LAHIRI
     FaganBradley = 0, // SWE_SIDM_FAGAN_BRADLEY
-    Raman = 3,       // SWE_SIDM_RAMAN
+    Raman = 3,        // SWE_SIDM_RAMAN
     Krishnamurti = 5, // SWE_SIDM_KRISHNAMURTI
 }
 

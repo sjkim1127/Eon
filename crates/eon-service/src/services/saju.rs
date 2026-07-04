@@ -1,6 +1,6 @@
+use crate::birth::prepare_birth_context;
 use crate::dto::{AnalysisMeta, SajuAnalysisInput, SajuAnalysisOutput};
 use crate::error::ServiceError;
-use crate::birth::prepare_birth_context;
 use eon_core::Gender;
 use eon_saju::analysis::analytics::Analyzer;
 use eon_saju::analysis::major_luck::MajorLuckAnalysis;

@@ -1,5 +1,5 @@
-use eon_vedic::chart::VedicChartCalculator;
 use chrono::{TimeZone, Utc};
+use eon_vedic::chart::VedicChartCalculator;
 
 fn main() {
     println!("=== Ansan Chart Verification ===");
@@ -13,14 +13,21 @@ fn main() {
     let chart = calculator.calculate(birth_time, lat, lon).unwrap();
 
     println!("Birth Time: {}", birth_time);
-    println!("Ascendant (Lagna): {:.2}° (Rasi: {})", chart.ascendant.sidereal_deg, chart.ascendant.rasi);
-    println!("Nakshatra: {}, Pada: {}", chart.ascendant.nakshatra, chart.ascendant.pada);
+    println!(
+        "Ascendant (Lagna): {:.2}° (Rasi: {})",
+        chart.ascendant.sidereal_deg, chart.ascendant.rasi
+    );
+    println!(
+        "Nakshatra: {}, Pada: {}",
+        chart.ascendant.nakshatra, chart.ascendant.pada
+    );
 
     println!("\nPlanetary Positions:");
     for pos in &chart.planets {
-        println!("{:<12} | Sidereal: {:>6.2}° | Rasi: {:>2} | House: {:>2} | Nak: {:>2} | Pada: {}", 
-            format!("{:?}", pos.planet), 
-            pos.sidereal_deg, 
+        println!(
+            "{:<12} | Sidereal: {:>6.2}° | Rasi: {:>2} | House: {:>2} | Nak: {:>2} | Pada: {}",
+            format!("{:?}", pos.planet),
+            pos.sidereal_deg,
             pos.rasi,
             pos.house_index,
             pos.nakshatra,

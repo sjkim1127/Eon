@@ -1,11 +1,13 @@
-use crate::dto::{AnalysisMeta, WesternAnalysisInput, WesternAnalysisOutput, BirthTimePrecision};
-use crate::error::ServiceError;
 use crate::birth::prepare_birth_context;
+use crate::dto::{AnalysisMeta, BirthTimePrecision, WesternAnalysisInput, WesternAnalysisOutput};
+use crate::error::ServiceError;
 
 pub fn analyze(input: WesternAnalysisInput) -> Result<WesternAnalysisOutput, ServiceError> {
     let birth_ctx = prepare_birth_context(&input.base, None, false)?;
-    
-    let dt = birth_ctx.birth_info.to_utc()
+
+    let dt = birth_ctx
+        .birth_info
+        .to_utc()
         .map_err(|e| ServiceError::BirthInfo(e.to_string()))?;
 
     let house_char = input.house_system.chars().next().unwrap_or('P');

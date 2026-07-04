@@ -6,10 +6,9 @@
 //! ## 참조
 //! - bazica (Go BaZi Calculator) - get_ganzhi.go
 
-use serde::{Deserialize, Serialize};
-use crate::core::ganzi::GanZi;
 use crate::core::element::Element;
-
+use crate::core::ganzi::GanZi;
+use serde::{Deserialize, Serialize};
 
 /// 납음 오행 유형 (60갑자를 30쌍으로 그룹화)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -80,20 +79,40 @@ impl NayinType {
     /// 납음 오행의 기본 오행을 반환
     pub fn element(&self) -> Element {
         match self {
-            Self::SeaGold | Self::SwordGold | Self::WaxGold | Self::SandGold |
-            Self::PreciousGold | Self::JewelryGold => Element::Metal,
-            
-            Self::FurnaceFire | Self::VolcanoFire | Self::LightningFire |
-            Self::ForestFire | Self::LampFire | Self::SunFire => Element::Fire,
-            
-            Self::ForestWood | Self::WillowWood | Self::PineWood |
-            Self::MeadowWood | Self::MulberryWood | Self::PomegranateWood => Element::Wood,
-            
-            Self::RoadEarth | Self::FortressEarth | Self::RoofEarth |
-            Self::AdobeEarth | Self::HighwayEarth | Self::DesertEarth => Element::Earth,
-            
-            Self::CaveWater | Self::StreamWater | Self::RiverWater |
-            Self::SkyWater | Self::RapidsWater | Self::OceanWater => Element::Water,
+            Self::SeaGold
+            | Self::SwordGold
+            | Self::WaxGold
+            | Self::SandGold
+            | Self::PreciousGold
+            | Self::JewelryGold => Element::Metal,
+
+            Self::FurnaceFire
+            | Self::VolcanoFire
+            | Self::LightningFire
+            | Self::ForestFire
+            | Self::LampFire
+            | Self::SunFire => Element::Fire,
+
+            Self::ForestWood
+            | Self::WillowWood
+            | Self::PineWood
+            | Self::MeadowWood
+            | Self::MulberryWood
+            | Self::PomegranateWood => Element::Wood,
+
+            Self::RoadEarth
+            | Self::FortressEarth
+            | Self::RoofEarth
+            | Self::AdobeEarth
+            | Self::HighwayEarth
+            | Self::DesertEarth => Element::Earth,
+
+            Self::CaveWater
+            | Self::StreamWater
+            | Self::RiverWater
+            | Self::SkyWater
+            | Self::RapidsWater
+            | Self::OceanWater => Element::Water,
         }
     }
 
@@ -173,65 +192,95 @@ impl NayinType {
 /// 60갑자 납음 테이블 (인덱스 0-59)
 const NAYIN_TABLE: [NayinType; 60] = [
     // 갑자(0), 을축(1)
-    NayinType::SeaGold, NayinType::SeaGold,
+    NayinType::SeaGold,
+    NayinType::SeaGold,
     // 병인(2), 정묘(3)
-    NayinType::FurnaceFire, NayinType::FurnaceFire,
+    NayinType::FurnaceFire,
+    NayinType::FurnaceFire,
     // 무진(4), 기사(5)
-    NayinType::ForestWood, NayinType::ForestWood,
+    NayinType::ForestWood,
+    NayinType::ForestWood,
     // 경오(6), 신미(7)
-    NayinType::RoadEarth, NayinType::RoadEarth,
+    NayinType::RoadEarth,
+    NayinType::RoadEarth,
     // 임신(8), 계유(9)
-    NayinType::SwordGold, NayinType::SwordGold,
+    NayinType::SwordGold,
+    NayinType::SwordGold,
     // 갑술(10), 을해(11)
-    NayinType::VolcanoFire, NayinType::VolcanoFire,
+    NayinType::VolcanoFire,
+    NayinType::VolcanoFire,
     // 병자(12), 정축(13)
-    NayinType::CaveWater, NayinType::CaveWater,
+    NayinType::CaveWater,
+    NayinType::CaveWater,
     // 무인(14), 기묘(15)
-    NayinType::FortressEarth, NayinType::FortressEarth,
+    NayinType::FortressEarth,
+    NayinType::FortressEarth,
     // 경진(16), 신사(17)
-    NayinType::WaxGold, NayinType::WaxGold,
+    NayinType::WaxGold,
+    NayinType::WaxGold,
     // 임오(18), 계미(19)
-    NayinType::WillowWood, NayinType::WillowWood,
+    NayinType::WillowWood,
+    NayinType::WillowWood,
     // 갑신(20), 을유(21)
-    NayinType::StreamWater, NayinType::StreamWater,
+    NayinType::StreamWater,
+    NayinType::StreamWater,
     // 병술(22), 정해(23)
-    NayinType::RoofEarth, NayinType::RoofEarth,
+    NayinType::RoofEarth,
+    NayinType::RoofEarth,
     // 무자(24), 기축(25)
-    NayinType::LightningFire, NayinType::LightningFire,
+    NayinType::LightningFire,
+    NayinType::LightningFire,
     // 경인(26), 신묘(27)
-    NayinType::PineWood, NayinType::PineWood,
+    NayinType::PineWood,
+    NayinType::PineWood,
     // 임진(28), 계사(29)
-    NayinType::RiverWater, NayinType::RiverWater,
+    NayinType::RiverWater,
+    NayinType::RiverWater,
     // 갑오(30), 을미(31)
-    NayinType::SandGold, NayinType::SandGold,
+    NayinType::SandGold,
+    NayinType::SandGold,
     // 병신(32), 정유(33)
-    NayinType::ForestFire, NayinType::ForestFire,
+    NayinType::ForestFire,
+    NayinType::ForestFire,
     // 무술(34), 기해(35)
-    NayinType::MeadowWood, NayinType::MeadowWood,
+    NayinType::MeadowWood,
+    NayinType::MeadowWood,
     // 경자(36), 신축(37)
-    NayinType::AdobeEarth, NayinType::AdobeEarth,
+    NayinType::AdobeEarth,
+    NayinType::AdobeEarth,
     // 임인(38), 계묘(39)
-    NayinType::PreciousGold, NayinType::PreciousGold,
+    NayinType::PreciousGold,
+    NayinType::PreciousGold,
     // 갑진(40), 을사(41)
-    NayinType::LampFire, NayinType::LampFire,
+    NayinType::LampFire,
+    NayinType::LampFire,
     // 병오(42), 정미(43)
-    NayinType::SkyWater, NayinType::SkyWater,
+    NayinType::SkyWater,
+    NayinType::SkyWater,
     // 무신(44), 기유(45)
-    NayinType::HighwayEarth, NayinType::HighwayEarth,
+    NayinType::HighwayEarth,
+    NayinType::HighwayEarth,
     // 경술(46), 신해(47)
-    NayinType::JewelryGold, NayinType::JewelryGold,
+    NayinType::JewelryGold,
+    NayinType::JewelryGold,
     // 임자(48), 계축(49)
-    NayinType::MulberryWood, NayinType::MulberryWood,
+    NayinType::MulberryWood,
+    NayinType::MulberryWood,
     // 갑인(50), 을묘(51)
-    NayinType::RapidsWater, NayinType::RapidsWater,
+    NayinType::RapidsWater,
+    NayinType::RapidsWater,
     // 병진(52), 정사(53)
-    NayinType::DesertEarth, NayinType::DesertEarth,
+    NayinType::DesertEarth,
+    NayinType::DesertEarth,
     // 무오(54), 기미(55)
-    NayinType::SunFire, NayinType::SunFire,
+    NayinType::SunFire,
+    NayinType::SunFire,
     // 경신(56), 신유(57)
-    NayinType::PomegranateWood, NayinType::PomegranateWood,
+    NayinType::PomegranateWood,
+    NayinType::PomegranateWood,
     // 임술(58), 계해(59)
-    NayinType::OceanWater, NayinType::OceanWater,
+    NayinType::OceanWater,
+    NayinType::OceanWater,
 ];
 
 /// GanZi에서 납음 오행을 계산
@@ -250,9 +299,8 @@ impl GanZi {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::stem::HeavenlyStem;
     use crate::core::branch::EarthlyBranch;
-
+    use crate::core::stem::HeavenlyStem;
 
     #[test]
     fn test_nayin_basic() {
@@ -260,12 +308,12 @@ mod tests {
         let jiazi = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi);
         assert_eq!(jiazi.nayin(), NayinType::SeaGold);
         assert_eq!(jiazi.nayin().element(), Element::Metal);
-        
+
         // 병인 = 노중화
         let bingyin = GanZi::new(HeavenlyStem::Bing, EarthlyBranch::Yin);
         assert_eq!(bingyin.nayin(), NayinType::FurnaceFire);
         assert_eq!(bingyin.nayin().element(), Element::Fire);
-        
+
         // 경술 = 차천금 (김성주 일주)
         let gengxu = GanZi::new(HeavenlyStem::Geng, EarthlyBranch::Xu);
         assert_eq!(gengxu.nayin(), NayinType::JewelryGold);

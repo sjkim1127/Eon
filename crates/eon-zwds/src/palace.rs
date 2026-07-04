@@ -2,9 +2,9 @@
 //!
 //! 명궁(命宮)과 신궁(身宮) 계산, 오행국(五行局) 결정, 12궁명 매핑을 처리합니다.
 
-use crate::types::{PalaceIndex, PalaceName, FiveElementsClass};
-use eon_saju::core::stem::HeavenlyStem;
+use crate::types::{FiveElementsClass, PalaceIndex, PalaceName};
 use eon_saju::core::branch::EarthlyBranch;
+use eon_saju::core::stem::HeavenlyStem;
 
 /// 인덱스 보정 (0~11 범위)
 pub fn fix_index(i: i32) -> usize {
@@ -30,7 +30,10 @@ pub fn std_idx_to_zwds_idx(std_idx: usize) -> usize {
 ///
 /// * `lunar_month` - 음력 월 (1~12)
 /// * `time_branch_std_idx` - 태어난 시의 표준 지지 인덱스 (0=子)
-pub fn get_soul_and_body_index(lunar_month: u32, time_branch_std_idx: usize) -> (PalaceIndex, PalaceIndex) {
+pub fn get_soul_and_body_index(
+    lunar_month: u32,
+    time_branch_std_idx: usize,
+) -> (PalaceIndex, PalaceIndex) {
     let month_idx = (lunar_month - 1) as i32;
     let time_idx = time_branch_std_idx as i32;
 

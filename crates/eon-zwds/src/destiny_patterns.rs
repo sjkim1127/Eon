@@ -1,10 +1,10 @@
 //! 자미두수 격국(Destiny Patterns) 감지 모듈
 //!
-//! 명반의 삼방사정(본궁, 대궁, 재백궁, 관록궁)을 연산하고, 
+//! 명반의 삼방사정(본궁, 대궁, 재백궁, 관록궁)을 연산하고,
 //! 주요 6대 전통 길흉 격국을 감지하여 반환합니다.
 
+use crate::types::{DestinyPattern, PalaceData, SiHuaType, ZwdsStar};
 use std::collections::HashMap;
-use crate::types::{DestinyPattern, PalaceData, ZwdsStar, SiHuaType};
 
 /// 명궁의 삼방사정을 분석하여 길격/흉격 격국 리스트를 반환합니다.
 pub fn analyze_destiny_patterns(
@@ -44,7 +44,8 @@ pub fn analyze_destiny_patterns(
     // 1. 자부조원격 (紫府朝垣格)
     // 조건: 자미(ZiWei)와 천부(TianFu)가 삼방사정(명궁, 재백궁, 관록궁, 천이궁)에 모두 있으면서, 둘 다 명궁(Ming)에 있지 않은 경우.
     if has_star_in_three_four(ZwdsStar::ZiWei) && has_star_in_three_four(ZwdsStar::TianFu) {
-        let both_in_ming = has_star_in_palace(ZwdsStar::ZiWei, ming_idx) && has_star_in_palace(ZwdsStar::TianFu, ming_idx);
+        let both_in_ming = has_star_in_palace(ZwdsStar::ZiWei, ming_idx)
+            && has_star_in_palace(ZwdsStar::TianFu, ming_idx);
         if !both_in_ming {
             patterns.push(DestinyPattern {
                 name_hanja: "紫府朝垣".to_string(),
@@ -149,12 +150,22 @@ pub fn analyze_destiny_patterns(
 
     // 7. 기월동량격 (機月同梁格)
     // 조건: 명궁에 천기/태음/천동/천량 중 하나가 있고, 삼방사정에 이 네 별이 모두 모이는 격국.
-    let is_ming_gi_wol_dong_ryang = [ZwdsStar::TianJi, ZwdsStar::TaiYin, ZwdsStar::TianTong, ZwdsStar::TianLiang]
-        .iter()
-        .any(|&s| has_star_in_palace(s, ming_idx));
-    let has_all_four_gi_wol_dong_ryang = [ZwdsStar::TianJi, ZwdsStar::TaiYin, ZwdsStar::TianTong, ZwdsStar::TianLiang]
-        .iter()
-        .all(|&s| has_star_in_three_four(s));
+    let is_ming_gi_wol_dong_ryang = [
+        ZwdsStar::TianJi,
+        ZwdsStar::TaiYin,
+        ZwdsStar::TianTong,
+        ZwdsStar::TianLiang,
+    ]
+    .iter()
+    .any(|&s| has_star_in_palace(s, ming_idx));
+    let has_all_four_gi_wol_dong_ryang = [
+        ZwdsStar::TianJi,
+        ZwdsStar::TaiYin,
+        ZwdsStar::TianTong,
+        ZwdsStar::TianLiang,
+    ]
+    .iter()
+    .all(|&s| has_star_in_three_four(s));
     if is_ming_gi_wol_dong_ryang && has_all_four_gi_wol_dong_ryang {
         patterns.push(DestinyPattern {
             name_hanja: "機月同梁".to_string(),
@@ -167,12 +178,24 @@ pub fn analyze_destiny_patterns(
 
     // 8. 자부염무상격 (紫府廉武相格)
     // 조건: 명궁에 자미/천부/염정/무곡/천상 중 하나가 있고, 삼방사정에 이 다섯 별이 모두 모이는 격국.
-    let is_ming_zi_fu_lian_wu_xiang = [ZwdsStar::ZiWei, ZwdsStar::TianFu, ZwdsStar::LianZhen, ZwdsStar::WuQu, ZwdsStar::TianXiang]
-        .iter()
-        .any(|&s| has_star_in_palace(s, ming_idx));
-    let has_all_five_zi_fu_lian_wu_xiang = [ZwdsStar::ZiWei, ZwdsStar::TianFu, ZwdsStar::LianZhen, ZwdsStar::WuQu, ZwdsStar::TianXiang]
-        .iter()
-        .all(|&s| has_star_in_three_four(s));
+    let is_ming_zi_fu_lian_wu_xiang = [
+        ZwdsStar::ZiWei,
+        ZwdsStar::TianFu,
+        ZwdsStar::LianZhen,
+        ZwdsStar::WuQu,
+        ZwdsStar::TianXiang,
+    ]
+    .iter()
+    .any(|&s| has_star_in_palace(s, ming_idx));
+    let has_all_five_zi_fu_lian_wu_xiang = [
+        ZwdsStar::ZiWei,
+        ZwdsStar::TianFu,
+        ZwdsStar::LianZhen,
+        ZwdsStar::WuQu,
+        ZwdsStar::TianXiang,
+    ]
+    .iter()
+    .all(|&s| has_star_in_three_four(s));
     if is_ming_zi_fu_lian_wu_xiang && has_all_five_zi_fu_lian_wu_xiang {
         patterns.push(DestinyPattern {
             name_hanja: "紫府廉武相".to_string(),
@@ -217,8 +240,10 @@ pub fn analyze_destiny_patterns(
     // 조건: 명궁의 양 옆 궁에 태양과 태음이 나란히 배치되어 명궁을 협하는 격국.
     let adj1 = (ming_idx + 1) % 12;
     let adj2 = (ming_idx + 11) % 12;
-    let has_sun_yin_adj = (has_star_in_palace(ZwdsStar::TaiYang, adj1) && has_star_in_palace(ZwdsStar::TaiYin, adj2))
-        || (has_star_in_palace(ZwdsStar::TaiYang, adj2) && has_star_in_palace(ZwdsStar::TaiYin, adj1));
+    let has_sun_yin_adj = (has_star_in_palace(ZwdsStar::TaiYang, adj1)
+        && has_star_in_palace(ZwdsStar::TaiYin, adj2))
+        || (has_star_in_palace(ZwdsStar::TaiYang, adj2)
+            && has_star_in_palace(ZwdsStar::TaiYin, adj1));
     if has_sun_yin_adj {
         patterns.push(DestinyPattern {
             name_hanja: "日月夾命".to_string(),
@@ -263,7 +288,10 @@ pub fn analyze_destiny_patterns(
             ZwdsStar::WenChang,
             ZwdsStar::WenQu,
         ];
-        let assistant_count = assistants.iter().filter(|&&s| has_star_in_three_four(s)).count();
+        let assistant_count = assistants
+            .iter()
+            .filter(|&&s| has_star_in_three_four(s))
+            .count();
         if assistant_count >= 4 {
             patterns.push(DestinyPattern {
                 name_hanja: "百官朝拱".to_string(),
@@ -277,9 +305,14 @@ pub fn analyze_destiny_patterns(
 
     // 14. 령창타무격 (鈴昌陀武格)
     // 조건: 영성(LingXing), 문창(WenChang), 타라(TuoLuo), 무곡(WuQu)이 삼방사정에서 모두 모이는 흉격.
-    let has_ling_chang_tuo_wu = [ZwdsStar::LingXing, ZwdsStar::WenChang, ZwdsStar::TuoLuo, ZwdsStar::WuQu]
-        .iter()
-        .all(|&s| has_star_in_three_four(s));
+    let has_ling_chang_tuo_wu = [
+        ZwdsStar::LingXing,
+        ZwdsStar::WenChang,
+        ZwdsStar::TuoLuo,
+        ZwdsStar::WuQu,
+    ]
+    .iter()
+    .all(|&s| has_star_in_three_four(s));
     if has_ling_chang_tuo_wu {
         patterns.push(DestinyPattern {
             name_hanja: "鈴昌陀武".to_string(),
@@ -301,7 +334,10 @@ pub fn analyze_destiny_patterns(
                 if star_in_p.si_hua == Some(SiHuaType::HuaJi) {
                     has_ji = true;
                 }
-                if star_in_p.star == ZwdsStar::QingYang || star_in_p.star == ZwdsStar::TuoLuo || star_in_p.star == ZwdsStar::TianXing {
+                if star_in_p.star == ZwdsStar::QingYang
+                    || star_in_p.star == ZwdsStar::TuoLuo
+                    || star_in_p.star == ZwdsStar::TianXing
+                {
                     has_xing_or_yang = true;
                 }
             }
@@ -391,7 +427,7 @@ mod tests {
         // 명궁=0(寅), 삼방사정 = 0, 6(대궁), 4(재백), 8(관록)
         let soul_idx = 0;
         let mut star_positions = HashMap::new();
-        star_positions.insert(ZwdsStar::QiSha, 6);  // 대궁에 칠살
+        star_positions.insert(ZwdsStar::QiSha, 6); // 대궁에 칠살
         star_positions.insert(ZwdsStar::DiKong, 4); // 재백에 지공
 
         let mut palaces = vec![];
@@ -417,9 +453,9 @@ mod tests {
         // 기월동량격: 명궁에 천기가 있고 삼방사정에 천기, 태음, 천동, 천량이 모두 있는 경우.
         let soul_idx = 0;
         let mut star_positions = HashMap::new();
-        star_positions.insert(ZwdsStar::TianJi, 0);   // 본궁에 천기
-        star_positions.insert(ZwdsStar::TaiYin, 6);   // 대궁에 태음
-        star_positions.insert(ZwdsStar::TianTong, 4);  // 재백에 천동
+        star_positions.insert(ZwdsStar::TianJi, 0); // 본궁에 천기
+        star_positions.insert(ZwdsStar::TaiYin, 6); // 대궁에 태음
+        star_positions.insert(ZwdsStar::TianTong, 4); // 재백에 천동
         star_positions.insert(ZwdsStar::TianLiang, 8); // 관록에 천량
 
         let mut palaces = vec![];
@@ -445,10 +481,10 @@ mod tests {
         // 자부염무상격: 명궁에 자미가 있고 삼방사정에 자미, 천부, 염정, 무곡, 천상이 모두 있는 경우.
         let soul_idx = 0;
         let mut star_positions = HashMap::new();
-        star_positions.insert(ZwdsStar::ZiWei, 0);     // 본궁 자미
-        star_positions.insert(ZwdsStar::TianFu, 6);    // 대궁 천부
-        star_positions.insert(ZwdsStar::LianZhen, 4);  // 재백 염정
-        star_positions.insert(ZwdsStar::WuQu, 8);     // 관록 무곡
+        star_positions.insert(ZwdsStar::ZiWei, 0); // 본궁 자미
+        star_positions.insert(ZwdsStar::TianFu, 6); // 대궁 천부
+        star_positions.insert(ZwdsStar::LianZhen, 4); // 재백 염정
+        star_positions.insert(ZwdsStar::WuQu, 8); // 관록 무곡
         star_positions.insert(ZwdsStar::TianXiang, 0); // 본궁 천상 (동궁 가능)
 
         let mut palaces = vec![];

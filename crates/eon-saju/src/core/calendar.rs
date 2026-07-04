@@ -130,7 +130,10 @@ pub struct SolarTermTime {
 }
 
 /// 특정 시점을 기준으로 해당 절기의 정확한 시작 시각 계산 (eon-astro 활용)
-pub fn get_solar_term_time(dt: DateTime<Utc>, term: SolarTerm) -> Result<DateTime<Utc>, CalendarError> {
+pub fn get_solar_term_time(
+    dt: DateTime<Utc>,
+    term: SolarTerm,
+) -> Result<DateTime<Utc>, CalendarError> {
     use eon_astro::AstroEngine;
     // use chrono::{Datelike, Timelike}; (Removed to fix unused imports)
     let engine = AstroEngine::new();

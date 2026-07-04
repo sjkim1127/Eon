@@ -4,34 +4,33 @@
 
 use eon_core::birth::BirthInfo;
 use eon_core::birth::Gender;
-use eon_saju::core::stem::HeavenlyStem;
 use eon_saju::core::branch::EarthlyBranch;
+use eon_saju::core::stem::HeavenlyStem;
 
-use crate::types::{ZwdsChart, PalaceData, StarInPalace, ZwdsStar, LunarBirthInfo};
-use crate::error::ZwdsError;
 use crate::calendar::solar_to_lunar_birth;
+use crate::decadal::calculate_daxian;
+use crate::error::ZwdsError;
 use crate::palace::{
-    get_soul_and_body_index, get_palace_stem, get_five_elements, get_palace_name, zwds_idx_to_std_idx
+    get_five_elements, get_palace_name, get_palace_stem, get_soul_and_body_index,
+    zwds_idx_to_std_idx,
 };
 use crate::stars::place_all_stars;
 use crate::transformations::get_sihua_stars;
-use crate::decadal::calculate_daxian;
+use crate::types::{LunarBirthInfo, PalaceData, StarInPalace, ZwdsChart, ZwdsStar};
 
 /// 출생 정보(`BirthInfo`)를 받아 자미두수 성반(`ZwdsChart`)을 빌드합니다.
 pub fn build_chart(birth: &BirthInfo) -> Result<ZwdsChart, ZwdsError> {
     // 1. 양력 생년월일시 -> 음력 변환
-    let lunar = solar_to_lunar_birth(
-        birth.year,
-        birth.month,
-        birth.day,
-        birth.hour,
-    )?;
+    let lunar = solar_to_lunar_birth(birth.year, birth.month, birth.day, birth.hour)?;
 
     build_chart_from_lunar(&lunar, birth)
 }
 
 /// 변환 완료된 음력 정보로부터 자미두수 성반을 빌드합니다.
-pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Result<ZwdsChart, ZwdsError> {
+pub fn build_chart_from_lunar(
+    lunar: &LunarBirthInfo,
+    birth: &BirthInfo,
+) -> Result<ZwdsChart, ZwdsError> {
     let year_stem = HeavenlyStem::from_index(lunar.year_stem_idx as i32);
 
     // 2. 명궁(soul) 및 신궁(body) 인덱스 계산
@@ -93,7 +92,8 @@ pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Resu
         stars_in_palace.sort_by_key(|s| !s.star.is_main_star());
 
         // 대한 나이 범위 매핑
-        let daxian_range = daxian_list.iter()
+        let daxian_range = daxian_list
+            .iter()
             .find(|d| d.palace_idx == p_idx)
             .map(|d| (d.age_start as u8, d.age_end as u8));
 
@@ -108,7 +108,8 @@ pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Resu
         });
     }
 
-    let palaces: [PalaceData; 12] = palaces_vec.try_into()
+    let palaces: [PalaceData; 12] = palaces_vec
+        .try_into()
         .map_err(|_| ZwdsError::Internal("12궁 데이터 생성 실패".to_string()))?;
 
     // 8. 명주(命主) / 신주(身主) 결정
@@ -132,22 +133,23 @@ pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Resu
 
     // 태어난 년의 표준 지지에 따라 신주 결정
     let body_master = match lunar.year_branch_idx {
-        0 => ZwdsStar::HuoXing,    // 子
-        1 => ZwdsStar::TianXiang,  // 丑
-        2 => ZwdsStar::TianLiang,  // 寅
-        3 => ZwdsStar::TianTong,   // 卯
-        4 => ZwdsStar::WenChang,   // 辰
-        5 => ZwdsStar::TianJi,     // 巳
-        6 => ZwdsStar::HuoXing,    // 午
-        7 => ZwdsStar::TianXiang,  // 未
-        8 => ZwdsStar::TianLiang,  // 申
-        9 => ZwdsStar::TianTong,   // 酉
-        10 => ZwdsStar::WenChang,  // 戌
-        11 => ZwdsStar::TianJi,    // 亥
+        0 => ZwdsStar::HuoXing,   // 子
+        1 => ZwdsStar::TianXiang, // 丑
+        2 => ZwdsStar::TianLiang, // 寅
+        3 => ZwdsStar::TianTong,  // 卯
+        4 => ZwdsStar::WenChang,  // 辰
+        5 => ZwdsStar::TianJi,    // 巳
+        6 => ZwdsStar::HuoXing,   // 午
+        7 => ZwdsStar::TianXiang, // 未
+        8 => ZwdsStar::TianLiang, // 申
+        9 => ZwdsStar::TianTong,  // 酉
+        10 => ZwdsStar::WenChang, // 戌
+        11 => ZwdsStar::TianJi,   // 亥
         _ => unreachable!(),
     };
 
-    let destiny_patterns = crate::destiny_patterns::analyze_destiny_patterns(soul_idx, &star_positions, &palaces);
+    let destiny_patterns =
+        crate::destiny_patterns::analyze_destiny_patterns(soul_idx, &star_positions, &palaces);
 
     // 9. 궁간 비성사화(Flying SiHua) 계산
     let mut flying_sihua = Vec::new();
@@ -155,14 +157,14 @@ pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Resu
         let p_stem = get_palace_stem(year_stem, p_idx);
         let sihua_stars = get_sihua_stars(p_stem);
         let from_palace = get_palace_name(soul_idx, p_idx);
-        
+
         let types = [
             (sihua_stars[0], crate::types::SiHuaType::HuaLu),
             (sihua_stars[1], crate::types::SiHuaType::HuaQuan),
             (sihua_stars[2], crate::types::SiHuaType::HuaKe),
             (sihua_stars[3], crate::types::SiHuaType::HuaJi),
         ];
-        
+
         for (star, sihua_type) in types {
             if let Some(&to_p_idx) = star_positions.get(&star) {
                 let to_palace = get_palace_name(soul_idx, to_p_idx);
@@ -192,8 +194,8 @@ pub fn build_chart_from_lunar(lunar: &LunarBirthInfo, birth: &BirthInfo) -> Resu
 #[cfg(test)]
 mod tests {
     use super::*;
-    use eon_core::birth::Gender;
     use crate::types::{PalaceName, SiHuaType};
+    use eon_core::birth::Gender;
 
     #[test]
     fn test_build_chart() {
@@ -219,7 +221,11 @@ mod tests {
         for palace in chart.palaces.iter() {
             for star_in_p in palace.stars.iter() {
                 if star_in_p.star.is_main_star() {
-                    assert!(star_in_p.brightness.is_some(), "주성 {:?}의 밝기가 누락되었습니다.", star_in_p.star);
+                    assert!(
+                        star_in_p.brightness.is_some(),
+                        "주성 {:?}의 밝기가 누락되었습니다.",
+                        star_in_p.star
+                    );
                     main_star_count += 1;
                 }
             }
@@ -237,28 +243,69 @@ mod tests {
         let chart = build_chart(&birth).unwrap();
 
         // 1. 비성사화가 비어 있지 않은가
-        assert!(!chart.flying_sihua.is_empty(), "비성사화 목록이 비어 있으면 안 됩니다.");
+        assert!(
+            !chart.flying_sihua.is_empty(),
+            "비성사화 목록이 비어 있으면 안 됩니다."
+        );
         // 12개 궁 * 4개 사화 = 48개
-        assert_eq!(chart.flying_sihua.len(), 48, "총 48개의 비성사화가 생성되어야 합니다.");
+        assert_eq!(
+            chart.flying_sihua.len(),
+            48,
+            "총 48개의 비성사화가 생성되어야 합니다."
+        );
 
         // 2. 명궁(子궁 = index 10)에서 날아가는 비성사화 검증
         // 2004년생 甲申년 -> 寅궁은 丙寅 -> 子궁은 丙子 (천간: 丙)
         // 丙간 사화: 同機昌廉 -> 天同(祿), 天機(權), 文昌(科), 廉貞(忌)
-        let outbound_from_子 = chart.flying_sihua.iter()
+        let outbound_from_子 = chart
+            .flying_sihua
+            .iter()
             .filter(|fs| fs.from_palace == PalaceName::Ming) // 명궁이 子(10)에 위치함
             .collect::<Vec<_>>();
-        assert_eq!(outbound_from_子.len(), 4, "명궁(子궁)에서 나가는 사화는 4개여야 합니다.");
+        assert_eq!(
+            outbound_from_子.len(),
+            4,
+            "명궁(子궁)에서 나가는 사화는 4개여야 합니다."
+        );
 
-        let lu_star = outbound_from_子.iter().find(|fs| fs.sihua_type == SiHuaType::HuaLu).unwrap();
-        assert_eq!(lu_star.star, ZwdsStar::TianTong, "丙간 화록은 天同이어야 합니다.");
+        let lu_star = outbound_from_子
+            .iter()
+            .find(|fs| fs.sihua_type == SiHuaType::HuaLu)
+            .unwrap();
+        assert_eq!(
+            lu_star.star,
+            ZwdsStar::TianTong,
+            "丙간 화록은 天同이어야 합니다."
+        );
 
-        let quan_star = outbound_from_子.iter().find(|fs| fs.sihua_type == SiHuaType::HuaQuan).unwrap();
-        assert_eq!(quan_star.star, ZwdsStar::TianJi, "丙간 화권은 天機이어야 합니다.");
+        let quan_star = outbound_from_子
+            .iter()
+            .find(|fs| fs.sihua_type == SiHuaType::HuaQuan)
+            .unwrap();
+        assert_eq!(
+            quan_star.star,
+            ZwdsStar::TianJi,
+            "丙간 화권은 天機이어야 합니다."
+        );
 
-        let ke_star = outbound_from_子.iter().find(|fs| fs.sihua_type == SiHuaType::HuaKe).unwrap();
-        assert_eq!(ke_star.star, ZwdsStar::WenChang, "丙간 화과는 文昌이어야 합니다.");
+        let ke_star = outbound_from_子
+            .iter()
+            .find(|fs| fs.sihua_type == SiHuaType::HuaKe)
+            .unwrap();
+        assert_eq!(
+            ke_star.star,
+            ZwdsStar::WenChang,
+            "丙간 화과는 文昌이어야 합니다."
+        );
 
-        let ji_star = outbound_from_子.iter().find(|fs| fs.sihua_type == SiHuaType::HuaJi).unwrap();
-        assert_eq!(ji_star.star, ZwdsStar::LianZhen, "丙간 화기는 廉貞이어야 합니다.");
+        let ji_star = outbound_from_子
+            .iter()
+            .find(|fs| fs.sihua_type == SiHuaType::HuaJi)
+            .unwrap();
+        assert_eq!(
+            ji_star.star,
+            ZwdsStar::LianZhen,
+            "丙간 화기는 廉貞이어야 합니다."
+        );
     }
 }

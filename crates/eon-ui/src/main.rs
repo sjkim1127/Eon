@@ -14,14 +14,14 @@ use router::Route;
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
     log::info!("Starting Eon Dioxus UI...");
-    
+
     dioxus::launch(App);
 }
 
 #[component]
 fn App() -> Element {
     // Initialize global state here using Dioxus signals Context
-    let mut state = use_context_provider(|| store::AnalysisState::new());
+    let mut state = use_context_provider(store::AnalysisState::new);
 
     // Restore locale from localStorage on first render
     use_effect(move || {

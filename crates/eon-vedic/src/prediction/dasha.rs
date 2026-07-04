@@ -424,6 +424,6 @@ mod tests {
         // 10 years in Gregorian (~365.2425 days) = 3652 days (approx)
         let end_greg = Vimshottari::add_years(birth, 10.0, VedicYearType::Gregorian);
         let diff_greg = end_greg.signed_duration_since(birth).num_days();
-        assert!(diff_greg >= 3652 && diff_greg <= 3653);
+        assert!((3652..=3653).contains(&diff_greg));
     }
 }

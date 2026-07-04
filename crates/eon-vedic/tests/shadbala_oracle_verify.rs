@@ -14,8 +14,12 @@ struct ShadbalaOracleCase {
 
 #[derive(Debug, Deserialize)]
 struct InputData {
-    year: i32, month: u32, day: u32, hour: u32,
-    lat: f64, lon: f64,
+    year: i32,
+    month: u32,
+    day: u32,
+    hour: u32,
+    lat: f64,
+    lon: f64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -51,21 +55,28 @@ fn get_planet_enum(name: &str) -> VedicPlanet {
 fn verify_shadbala_oracle_fixtures() {
     let data = fs::read_to_string("tests/fixtures/shadbala_oracle.json")
         .expect("Unable to read shadbala_oracle.json");
-    let cases: Vec<ShadbalaOracleCase> = serde_json::from_str(&data)
-        .expect("JSON was not well-formatted");
+    let cases: Vec<ShadbalaOracleCase> =
+        serde_json::from_str(&data).expect("JSON was not well-formatted");
 
     for case in cases {
         println!("Verifying Shadbala case: {}", case.case_id);
-        
+
         let chart = common::create_test_chart(
-            case.input.year, case.input.month, case.input.day, case.input.hour,
-            case.input.lat, case.input.lon
+            case.input.year,
+            case.input.month,
+            case.input.day,
+            case.input.hour,
+            case.input.lat,
+            case.input.lon,
         );
-        
+
         let target_planet = get_planet_enum(&case.test_planet);
-        let planet_pos = chart.planets.iter().find(|p| p.planet == target_planet)
-            .expect(&format!("Planet {} not found in chart", case.test_planet));
-            
+        let planet_pos = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == target_planet)
+            .unwrap_or_else(|| panic!("Planet {} not found in chart", case.test_planet));
+
         let strength = eon_vedic::analysis::strength::StrengthEngine::calculate(planet_pos, &chart);
 
         // 1. Position/Dignity
@@ -97,7 +108,12 @@ fn verify_shadbala_oracle_fixtures() {
 
         // 4. Varga/Relations
         if let Some(expected_val) = case.expected.saptavargaja_bala {
-            common::assert_approx_eq(strength.saptavargaja_score, expected_val, 5.0, &case.case_id);
+            common::assert_approx_eq(
+                strength.saptavargaja_score,
+                expected_val,
+                5.0,
+                &case.case_id,
+            );
         }
 
         // 5. External Factors (War/Aspect)
@@ -105,20 +121,30 @@ fn verify_shadbala_oracle_fixtures() {
             common::assert_approx_eq(strength.drik_score, expected_val, 5.0, &case.case_id);
         }
         if let Some(min_abs_yuddha) = case.expected.yuddha_bala_abs_min {
-            assert!(strength.yuddha_bala.abs() >= min_abs_yuddha, 
-                    "Case {} failed: Yuddha Bala {} abs should be >= {}", 
-                    case.case_id, strength.yuddha_bala, min_abs_yuddha);
+            assert!(
+                strength.yuddha_bala.abs() >= min_abs_yuddha,
+                "Case {} failed: Yuddha Bala {} abs should be >= {}",
+                case.case_id,
+                strength.yuddha_bala,
+                min_abs_yuddha
+            );
         }
 
         // 6. Context
         if let Some(expected_night) = case.expected.is_night_birth {
-            assert_eq!(chart.panchanga.is_night_birth, expected_night, "Case {} is_night_birth mismatch", case.case_id);
+            assert_eq!(
+                chart.panchanga.is_night_birth, expected_night,
+                "Case {} is_night_birth mismatch",
+                case.case_id
+            );
         }
 
         // Soft log for total
         if let Some(expected_total) = case.expected.total_score {
-            println!("Case {}: Overall Shadbala Actual: {:.2}, Expected: {:.2}", 
-                     case.case_id, strength.total_score, expected_total);
+            println!(
+                "Case {}: Overall Shadbala Actual: {:.2}, Expected: {:.2}",
+                case.case_id, strength.total_score, expected_total
+            );
         }
     }
 }

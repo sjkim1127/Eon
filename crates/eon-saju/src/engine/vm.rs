@@ -247,16 +247,14 @@ impl SajuVM {
                                 && self.get_branch_by_path(p1, dynamic) == Some(b))
                                 || (p2.contains(label)
                                     && self.get_branch_by_path(p2, dynamic) == Some(b)))
-                            {
-                                is_escaped = true;
-                                let period = LuckPeriod::from_label(label);
-                                tags.push(TraceTag::EscapedVoidClash { period });
-                                esil_trace.push_str(&format!(
-                                    "void_escape:{}_clash,restore:10.0; ",
-                                    label
-                                ));
-                                break;
-                            }
+                        {
+                            is_escaped = true;
+                            let period = LuckPeriod::from_label(label);
+                            tags.push(TraceTag::EscapedVoidClash { period });
+                            esil_trace
+                                .push_str(&format!("void_escape:{}_clash,restore:10.0; ", label));
+                            break;
+                        }
                     }
 
                     // 탈공 조건 2: 합 (육합, 삼합, 방합)
@@ -705,9 +703,9 @@ impl SajuVM {
         // 생(生) 상생 사이클 시뮬레이션
         // Wood -> Fire -> Earth -> Metal -> Water -> Wood
         // 소모되는 에너지는 줄이고 생성되는 에너지는 증가 (보존)
-        
+
         let transfer_rate = 0.1; // 10% 에너지 전이
-        
+
         let wood_transfer = registers.r0_wood * transfer_rate;
         let fire_transfer = registers.r1_fire * transfer_rate;
         let earth_transfer = registers.r2_earth * transfer_rate;
@@ -717,19 +715,19 @@ impl SajuVM {
         // Wood -> Fire
         registers.r0_wood -= wood_transfer;
         registers.r1_fire += wood_transfer;
-        
+
         // Fire -> Earth
         registers.r1_fire -= fire_transfer;
         registers.r2_earth += fire_transfer;
-        
+
         // Earth -> Metal
         registers.r2_earth -= earth_transfer;
         registers.r3_metal += earth_transfer;
-        
+
         // Metal -> Water
         registers.r3_metal -= metal_transfer;
         registers.r4_water += metal_transfer;
-        
+
         // Water -> Wood
         registers.r4_water -= water_transfer;
         registers.r0_wood += water_transfer;
@@ -756,8 +754,14 @@ impl SajuVM {
             // 1. 고우선순위 인터럽트: 백호살 (Baihu)
             // 지지 충돌 시 백호대살이 겹치면 '심각한 하드웨어 예외' 발생
             let el = y.stem.element();
-            let thermal_index = crate::analysis::yongshin::calculate_thermal_index(&self.natal, &self.config);
-            let p = self.get_element_priority(el, self.yongshin.primary, self.yongshin.assistant, thermal_index);
+            let thermal_index =
+                crate::analysis::yongshin::calculate_thermal_index(&self.natal, &self.config);
+            let p = self.get_element_priority(
+                el,
+                self.yongshin.primary,
+                self.yongshin.assistant,
+                thermal_index,
+            );
 
             if crate::analysis::spirit_markers::SpiritMarkerAnalysis::is_baihu(y) {
                 let mut irq = SajuInterrupt::CriticalException;

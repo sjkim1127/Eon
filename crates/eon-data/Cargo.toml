@@ -17,3 +17,6 @@ bincode = "1.3"
 thiserror.workspace = true
 
 [dev-dependencies]
+
+[lints]
+workspace = true

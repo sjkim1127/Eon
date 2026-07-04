@@ -2,24 +2,26 @@
 //!
 //! 록존, 경양, 타라, 천마, 화성, 영성, 지공, 지겁 및 기타 약 30개의 중소형 잡성들의 위치를 계산합니다.
 
-use eon_saju::core::stem::HeavenlyStem;
-use eon_saju::core::branch::EarthlyBranch;
-use crate::types::{PalaceIndex, ZwdsStar};
 use crate::palace::fix_index;
+use crate::types::{PalaceIndex, ZwdsStar};
+use eon_saju::core::branch::EarthlyBranch;
+use eon_saju::core::stem::HeavenlyStem;
 
 /// 록존(禄存), 경양(擎羊), 타라(陀羅)의 ZWDS 지지 인덱스 계산
-pub fn place_lucun_qingyang_tuoluo(year_stem: HeavenlyStem) -> (PalaceIndex, PalaceIndex, PalaceIndex) {
+pub fn place_lucun_qingyang_tuoluo(
+    year_stem: HeavenlyStem,
+) -> (PalaceIndex, PalaceIndex, PalaceIndex) {
     let lucun = match year_stem {
-        HeavenlyStem::Jia => 0,   // 寅
-        HeavenlyStem::Yi => 1,    // 卯
-        HeavenlyStem::Bing => 3,  // 巳
-        HeavenlyStem::Ding => 4,  // 午
-        HeavenlyStem::Wu => 3,    // 巳
-        HeavenlyStem::Ji => 4,    // 午
-        HeavenlyStem::Geng => 6,  // 申
-        HeavenlyStem::Xin => 7,   // 酉
-        HeavenlyStem::Ren => 9,   // 亥
-        HeavenlyStem::Gui => 10,  // 子
+        HeavenlyStem::Jia => 0,  // 寅
+        HeavenlyStem::Yi => 1,   // 卯
+        HeavenlyStem::Bing => 3, // 巳
+        HeavenlyStem::Ding => 4, // 午
+        HeavenlyStem::Wu => 3,   // 巳
+        HeavenlyStem::Ji => 4,   // 午
+        HeavenlyStem::Geng => 6, // 申
+        HeavenlyStem::Xin => 7,  // 酉
+        HeavenlyStem::Ren => 9,  // 亥
+        HeavenlyStem::Gui => 10, // 子
     };
     let qingyang = fix_index(lucun as i32 + 1);
     let tuoluo = fix_index(lucun as i32 - 1);
@@ -30,23 +32,26 @@ pub fn place_lucun_qingyang_tuoluo(year_stem: HeavenlyStem) -> (PalaceIndex, Pal
 pub fn place_tianma(year_branch_std_idx: usize) -> PalaceIndex {
     let branch = EarthlyBranch::from_index(year_branch_std_idx as i32);
     match branch {
-        EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => 6,  // 申
+        EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => 6, // 申
         EarthlyBranch::Shen | EarthlyBranch::Zi | EarthlyBranch::Chen => 0, // 寅
-        EarthlyBranch::Si | EarthlyBranch::You | EarthlyBranch::Chou => 9,  // 亥
-        EarthlyBranch::Hai | EarthlyBranch::Mao | EarthlyBranch::Wei => 3,  // 巳
+        EarthlyBranch::Si | EarthlyBranch::You | EarthlyBranch::Chou => 9, // 亥
+        EarthlyBranch::Hai | EarthlyBranch::Mao | EarthlyBranch::Wei => 3, // 巳
     }
 }
 
 /// 화성(火星)과 영성(鈴星)의 ZWDS 지지 인덱스 계산
-pub fn place_huoxing_lingxing(year_branch_std_idx: usize, time_branch_std_idx: usize) -> (PalaceIndex, PalaceIndex) {
+pub fn place_huoxing_lingxing(
+    year_branch_std_idx: usize,
+    time_branch_std_idx: usize,
+) -> (PalaceIndex, PalaceIndex) {
     let branch = EarthlyBranch::from_index(year_branch_std_idx as i32);
     let t = time_branch_std_idx as i32;
 
     let (huo_start, ling_start) = match branch {
-        EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => (11, 1),  // 화=丑(11), 영=卯(1)
+        EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => (11, 1), // 화=丑(11), 영=卯(1)
         EarthlyBranch::Shen | EarthlyBranch::Zi | EarthlyBranch::Chen => (0, 8), // 화=寅(0), 영=戌(8)
-        EarthlyBranch::Si | EarthlyBranch::You | EarthlyBranch::Chou => (1, 8),  // 화=卯(1), 영=戌(8)
-        EarthlyBranch::Hai | EarthlyBranch::Mao | EarthlyBranch::Wei => (7, 8),  // 화=酉(7), 영=戌(8)
+        EarthlyBranch::Si | EarthlyBranch::You | EarthlyBranch::Chou => (1, 8), // 화=卯(1), 영=戌(8)
+        EarthlyBranch::Hai | EarthlyBranch::Mao | EarthlyBranch::Wei => (7, 8), // 화=酉(7), 영=戌(8)
     };
 
     let huoxing = fix_index(huo_start + t);
@@ -58,8 +63,8 @@ pub fn place_huoxing_lingxing(year_branch_std_idx: usize, time_branch_std_idx: u
 /// 지겁(地劫)과 지공(地空)의 ZWDS 지지 인덱스 계산
 pub fn place_dijie_dikong(time_branch_std_idx: usize) -> (PalaceIndex, PalaceIndex) {
     let t = time_branch_std_idx as i32;
-    let dijie = fix_index(9 + t);   // 亥궁(9)에서 순행
-    let dikong = fix_index(9 - t);  // 亥궁(9)에서 역행
+    let dijie = fix_index(9 + t); // 亥궁(9)에서 순행
+    let dikong = fix_index(9 - t); // 亥궁(9)에서 역행
     (dijie, dikong)
 }
 
@@ -107,7 +112,7 @@ pub fn place_hour_stars(time_branch_std_idx: usize) -> Vec<(ZwdsStar, PalaceInde
     // 대보(台輔): 午궁(4)에서 순행
     stars.push((ZwdsStar::TaiFu, fix_index(4 + t)));
     // 봉고(封誥): 寅궁(0)에서 순행
-    stars.push((ZwdsStar::FengGao, fix_index(0 + t)));
+    stars.push((ZwdsStar::FengGao, fix_index(t)));
 
     stars
 }
@@ -150,7 +155,7 @@ pub fn place_year_branch_stars(year_branch_std_idx: usize) -> Vec<(ZwdsStar, Pal
     // 화개(華蓋) & 함지(咸池) & 겁살(劫殺)
     let branch = EarthlyBranch::from_index(year_branch_std_idx as i32);
     let (huagai, xianchi, jiesha) = match branch {
-        EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => (8, 1, 9),  // 戌, 卯, 亥
+        EarthlyBranch::Yin | EarthlyBranch::Wu | EarthlyBranch::Xu => (8, 1, 9), // 戌, 卯, 亥
         EarthlyBranch::Shen | EarthlyBranch::Zi | EarthlyBranch::Chen => (2, 7, 3), // 辰, 酉, 巳
         EarthlyBranch::Si | EarthlyBranch::You | EarthlyBranch::Chou => (11, 4, 0), // 丑, 午, 寅
         EarthlyBranch::Hai | EarthlyBranch::Mao | EarthlyBranch::Wei => (5, 10, 6), // 未, 子, 申
@@ -161,10 +166,10 @@ pub fn place_year_branch_stars(year_branch_std_idx: usize) -> Vec<(ZwdsStar, Pal
 
     // 고신(孤辰) & 과숙(寡宿)
     let (guchen, guasu) = match branch {
-        EarthlyBranch::Yin | EarthlyBranch::Mao | EarthlyBranch::Chen => (3, 11),  // 巳, 丑
+        EarthlyBranch::Yin | EarthlyBranch::Mao | EarthlyBranch::Chen => (3, 11), // 巳, 丑
         EarthlyBranch::Si | EarthlyBranch::Wu | EarthlyBranch::Wei => (6, 2),     // 申, 辰
         EarthlyBranch::Shen | EarthlyBranch::You | EarthlyBranch::Xu => (9, 5),   // 亥, 未
-        EarthlyBranch::Hai | EarthlyBranch::Zi | EarthlyBranch::Chou => (0, 8),    // 寅, 戌
+        EarthlyBranch::Hai | EarthlyBranch::Zi | EarthlyBranch::Chou => (0, 8),   // 寅, 戌
     };
     stars.push((ZwdsStar::GuChen, guchen));
     stars.push((ZwdsStar::GuaSu, guasu));

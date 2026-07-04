@@ -1,24 +1,26 @@
-use dioxus::prelude::*;
+use crate::components::shared::birth_form::BirthForm;
+use crate::i18n::{
+    format_age, format_age_from, format_age_shift, format_strength_summary, t,
+    translate_aux_shinsal, translate_saju_branch, translate_saju_element, translate_saju_ganzi,
+    translate_saju_load_balancer, translate_saju_reason, translate_saju_relation_str,
+    translate_saju_spirit_marker_name, translate_saju_stem, translate_saju_stem_combination,
+    translate_saju_strength_type, translate_saju_structure, translate_saju_structure_desc,
+    translate_saju_structure_summary, translate_saju_tag_str, translate_saju_ten_god,
+    translate_saju_void_desc, translate_saju_yongshin_type, translate_spirit_desc, Locale, TK,
+};
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, Locale, format_strength_summary, format_age, format_age_shift, format_age_from,
-    translate_saju_stem, translate_saju_branch, translate_saju_ten_god, translate_saju_element,
-    translate_saju_spirit_marker_name, translate_saju_structure,
-    translate_saju_structure_summary, translate_saju_structure_desc, translate_saju_reason,
-    translate_saju_tag_str, translate_saju_load_balancer, translate_saju_ganzi, translate_aux_shinsal,
-    translate_saju_strength_type, translate_saju_relation_str, translate_saju_stem_combination,
-    translate_saju_yongshin_type, translate_saju_void_desc, translate_spirit_desc};
-use eon_service::dto::SajuAnalysisInput;
-use eon_service::facade;
+use dioxus::prelude::*;
 use eon_saju::analysis::strength::StrengthType;
 use eon_saju::analysis::supplementary_pillars::InterpretationLevel;
-use crate::components::shared::birth_form::BirthForm;
 use eon_saju::core::branch::EarthlyBranch;
 use eon_saju::core::stem::HeavenlyStem;
 use eon_saju::core::ten_gods::TenGod;
+use eon_service::dto::SajuAnalysisInput;
+use eon_service::facade;
 
 #[component]
 pub fn SajuTab() -> Element {
-    let mut state = use_context::<AnalysisState>();
+    let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
 
     // Reactive trigger for manual analysis runs
@@ -29,14 +31,16 @@ pub fn SajuTab() -> Element {
     use_effect(move || {
         let form = state_cloned.form.read().clone();
         let _trig = *analysis_trigger.read();
-        
+
         if form.year > 0 {
             let mut state = state_cloned.clone();
             spawn(async move {
                 state.saju.write().status = TaskStatus::Loading;
                 let input = SajuAnalysisInput::new(
                     form.to_analysis_input(),
-                    form.is_male, form.use_night_rat_hour, Some(false),
+                    form.is_male,
+                    form.use_night_rat_hour,
+                    Some(false),
                 );
                 match facade::analyze_saju(input) {
                     Ok(res) => {
@@ -144,12 +148,10 @@ pub fn SajuTab() -> Element {
                         let crashes_lbl = t(locale, TK::SajuFuzzerCrashes).replace("{}", &data.crash_count.to_string());
 
                         let day_master = data.report.pillars.day.stem;
-                        let stems = vec![
-                            data.report.pillars.hour.stem,
+                        let stems = [data.report.pillars.hour.stem,
                             data.report.pillars.day.stem,
                             data.report.pillars.month.stem,
-                            data.report.pillars.year.stem,
-                        ];
+                            data.report.pillars.year.stem];
 
                         let make_jijanggans = |branch: eon_saju::core::branch::EarthlyBranch, is_month: bool| -> Vec<JijangganDisplayItem> {
                             get_jijanggan_items(branch)
@@ -474,7 +476,7 @@ pub fn SajuTab() -> Element {
                             div { class: "grid grid-cols-1 md:grid-cols-3 gap-4",
                                 // 신강신약 배지
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-3",
-                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", 
+                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest",
                                         {match locale {
                                             Locale::Ko => "신강/신약",
                                             Locale::Zh => "身强/身弱",
@@ -616,7 +618,7 @@ pub fn SajuTab() -> Element {
                                 // 오행 상세 세기
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4",
                                     div { class: "flex justify-between items-center",
-                                        h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", 
+                                        h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest",
                                             {match locale {
                                                 Locale::Ko => "오행 상세 세기 (Weighted Five Elements)",
                                                 Locale::Zh => "五行详细强度 (Weighted Five Elements)",
@@ -679,7 +681,7 @@ pub fn SajuTab() -> Element {
                                 // 십성 상세 세기
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4",
                                     div { class: "flex justify-between items-center",
-                                        h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", 
+                                        h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest",
                                             {match locale {
                                                 Locale::Ko => "십성 세기 (Ten Gods Power)",
                                                 Locale::Zh => "十神强度 (Ten Gods Power)",
@@ -931,7 +933,7 @@ pub fn SajuTab() -> Element {
                             // ── 5.2 합충형해 분석 (Harmony & Clashes) ──────────────
                             if !data.report.relationships.mapped_relationships.is_empty() {
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4",
-                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", 
+                                    h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest",
                                         {match locale {
                                             Locale::Ko => "합충형해 분석 (Harmony & Clashes)",
                                             Locale::Zh => "合冲刑害分析 (Harmony & Clashes)",
@@ -1015,7 +1017,7 @@ pub fn SajuTab() -> Element {
                                         // 암합 (지장간끼리의 비밀스런 합)
                                         if !data.report.relationships.am_combinations.is_empty() {
                                             div { class: "space-y-3",
-                                                h4 { class: "text-xs font-bold text-amber-400/90 tracking-wider flex items-center gap-1.5", 
+                                                h4 { class: "text-xs font-bold text-amber-400/90 tracking-wider flex items-center gap-1.5",
                                                     span { "🔒" }
                                                     span { "{t(locale, TK::SajuAmHarmonyTitle)}" }
                                                 }
@@ -1069,7 +1071,7 @@ pub fn SajuTab() -> Element {
                                         // 명암합 (천간과 지장간 사이의 합)
                                         if !data.report.relationships.myung_am_combinations.is_empty() {
                                             div { class: "space-y-3",
-                                                h4 { class: "text-xs font-bold text-indigo-400 tracking-wider flex items-center gap-1.5", 
+                                                h4 { class: "text-xs font-bold text-indigo-400 tracking-wider flex items-center gap-1.5",
                                                     span { "🔓" }
                                                     span { "{t(locale, TK::SajuMyungAmHarmonyTitle)}" }
                                                 }
@@ -1126,7 +1128,7 @@ pub fn SajuTab() -> Element {
 
                             // ── 5.3 시스템 공학 진단 (System Engineering Diagnostics) ──
                             div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
-                                h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", 
+                                h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest",
                                     {match locale {
                                         Locale::Ko => "시스템 공학 진단 (System Engineering & Topology)",
                                         Locale::Zh => "系统工程诊断 (System Engineering & Topology)",
@@ -1138,7 +1140,7 @@ pub fn SajuTab() -> Element {
                                     // 1) Entropy & Obfuscation
                                     div { class: "p-4 rounded-xl bg-slate-850/50 border border-slate-800 space-y-3 flex flex-col justify-between shadow-inner",
                                         div { class: "space-y-1.5",
-                                            p { class: "text-xs font-bold text-slate-500 uppercase tracking-wider", 
+                                            p { class: "text-xs font-bold text-slate-500 uppercase tracking-wider",
                                                 {match locale {
                                                     Locale::Ko => "운명 난독화 및 엔트로피",
                                                     Locale::Zh => "命运混淆与熵",
@@ -1198,7 +1200,7 @@ pub fn SajuTab() -> Element {
                                     // 2) Qi Network Flow Topology
                                     div { class: "p-4 rounded-xl bg-slate-850/50 border border-slate-800 space-y-3 flex flex-col justify-between shadow-inner",
                                         div { class: "space-y-1.5",
-                                            p { class: "text-xs font-bold text-slate-500 uppercase tracking-wider", 
+                                            p { class: "text-xs font-bold text-slate-500 uppercase tracking-wider",
                                                 {match locale {
                                                     Locale::Ko => "에너지 네트워크 토폴로지",
                                                     Locale::Zh => "能量网络拓扑",
@@ -1206,7 +1208,7 @@ pub fn SajuTab() -> Element {
                                                     Locale::Ru => "Топология энергетической сети",
                                                 }}
                                             }
-                                            p { class: "text-lg font-bold text-emerald-400", 
+                                            p { class: "text-lg font-bold text-emerald-400",
                                                 {match locale {
                                                     Locale::Ko => format!("유동 효율: {:.1}%", data.qi_topology.throughput * 100.0),
                                                     Locale::Zh => format!("流通效率: {:.1}%", data.qi_topology.throughput * 100.0),
@@ -1246,7 +1248,7 @@ pub fn SajuTab() -> Element {
                                                     span { class: "font-bold {style}", "{label}" }
                                                 }
                                             } else {
-                                                p { 
+                                                p {
                                                     {match locale {
                                                         Locale::Ko => "흐름 정체 구간 (Bottleneck): 없음",
                                                         Locale::Zh => "流量瓶颈区间 (Bottleneck): 无",
@@ -1261,7 +1263,7 @@ pub fn SajuTab() -> Element {
                                     // 3) Cyclomatic Complexity (VM execution)
                                     div { class: "p-4 rounded-xl bg-slate-850/50 border border-slate-800 space-y-3 flex flex-col justify-between shadow-inner",
                                         div { class: "space-y-1.5",
-                                            p { class: "text-xs font-bold text-slate-500 uppercase tracking-wider", 
+                                            p { class: "text-xs font-bold text-slate-500 uppercase tracking-wider",
                                                 {match locale {
                                                     Locale::Ko => "가상머신(VM) 순환 복잡도",
                                                     Locale::Zh => "虚拟机 (VM) 循环复杂度",
@@ -1280,7 +1282,7 @@ pub fn SajuTab() -> Element {
                                                     }}
                                                 }
                                             } else {
-                                                p { class: "text-slate-500 text-xs", 
+                                                p { class: "text-slate-500 text-xs",
                                                     {match locale {
                                                         Locale::Ko => "VM 시뮬레이션 복잡도 분석 결과 없음",
                                                         Locale::Zh => "无虚拟机模拟复杂度分析结果",
@@ -1497,10 +1499,22 @@ pub fn SajuTab() -> Element {
 
 fn element_card_style(el_name: &str) -> (&'static str, &'static str, &'static str) {
     match el_name {
-        "목" => ("text-emerald-400", "bg-emerald-950/20 border-emerald-800/30", "🌿"),
+        "목" => (
+            "text-emerald-400",
+            "bg-emerald-950/20 border-emerald-800/30",
+            "🌿",
+        ),
         "화" => ("text-rose-400", "bg-rose-950/20 border-rose-800/30", "🔥"),
-        "토" => ("text-yellow-400", "bg-amber-950/20 border-amber-900/30", "⛰️"),
-        "금" => ("text-slate-300", "bg-slate-800/40 border-slate-700/30", "⚙️"),
+        "토" => (
+            "text-yellow-400",
+            "bg-amber-950/20 border-amber-900/30",
+            "⛰️",
+        ),
+        "금" => (
+            "text-slate-300",
+            "bg-slate-800/40 border-slate-700/30",
+            "⚙️",
+        ),
         "수" => ("text-blue-400", "bg-blue-950/20 border-blue-800/30", "💧"),
         _ => ("text-slate-400", "bg-slate-900/40 border-slate-800/30", "◆"),
     }
@@ -1534,7 +1548,9 @@ fn PillarCard(
     let (s_text_color, s_bg_color, s_icon) = element_card_style(stem.element().hangul());
     let (b_text_color, b_bg_color, b_icon) = element_card_style(branch.element().hangul());
 
-    let stem_god_str = stem_god.map(|g| translate_saju_ten_god(locale, g)).unwrap_or_else(|| t(locale, TK::SajuDayMaster));
+    let stem_god_str = stem_god
+        .map(|g| translate_saju_ten_god(locale, g))
+        .unwrap_or_else(|| t(locale, TK::SajuDayMaster));
     let stem_hanja = stem.hanja();
     let stem_hangul = translate_saju_stem(locale, stem);
     let stem_element = translate_saju_element(locale, stem.element());
@@ -1569,8 +1585,8 @@ fn PillarCard(
 
             // 지장간 리스트 (Jijanggan List)
             div { class: "bg-slate-900/65 border border-slate-800/80 rounded-xl p-2.5 space-y-1.5 mt-0.5 shadow-inner",
-                p { class: "text-[9px] font-bold text-slate-500 uppercase tracking-wider text-center border-b border-slate-800/60 pb-1", 
-                    "{t(locale, TK::SajuHiddenStemsTitle)}" 
+                p { class: "text-[9px] font-bold text-slate-500 uppercase tracking-wider text-center border-b border-slate-800/60 pb-1",
+                    "{t(locale, TK::SajuHiddenStemsTitle)}"
                 }
                 div { class: "space-y-1.5",
                     {jijanggans.iter().map(|item| {
@@ -1591,7 +1607,7 @@ fn PillarCard(
                                 }
                                 div { class: "flex items-center gap-1",
                                     if item.is_projected {
-                                        span { class: "{badge_style}", 
+                                        span { class: "{badge_style}",
                                             if item.is_main { "{t(locale, TK::SajuProjLevelMain)}" } else { "{t(locale, TK::SajuProjLevelSub)}" }
                                         }
                                     }
@@ -1639,7 +1655,10 @@ fn PillarCard(
 #[component]
 fn DeukBadge(label: &'static str, acquired: bool) -> Element {
     let (bg, text) = if acquired {
-        ("bg-emerald-900/40 border-emerald-700/50 text-emerald-300", "○")
+        (
+            "bg-emerald-900/40 border-emerald-700/50 text-emerald-300",
+            "○",
+        )
     } else {
         ("bg-slate-800/40 border-slate-700/50 text-slate-500", "✗")
     };
@@ -1701,61 +1720,193 @@ fn get_jijanggan_items(branch: EarthlyBranch) -> Vec<JijangganItem> {
     use eon_saju::core::stem::HeavenlyStem::*;
     match branch {
         EarthlyBranch::Zi => vec![
-            JijangganItem { stem: Ren, ratio: 33, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Gui, ratio: 67, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Ren,
+                ratio: 33,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Gui,
+                ratio: 67,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
         EarthlyBranch::Chou => vec![
-            JijangganItem { stem: Gui, ratio: 30, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Xin, ratio: 10, type_key: TK::SajuJijangganJunggi },
-            JijangganItem { stem: Ji, ratio: 60, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Gui,
+                ratio: 30,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Xin,
+                ratio: 10,
+                type_key: TK::SajuJijangganJunggi,
+            },
+            JijangganItem {
+                stem: Ji,
+                ratio: 60,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
         EarthlyBranch::Yin => vec![
-            JijangganItem { stem: Wu, ratio: 23, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Bing, ratio: 23, type_key: TK::SajuJijangganJunggi },
-            JijangganItem { stem: Jia, ratio: 54, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Wu,
+                ratio: 23,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Bing,
+                ratio: 23,
+                type_key: TK::SajuJijangganJunggi,
+            },
+            JijangganItem {
+                stem: Jia,
+                ratio: 54,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
         EarthlyBranch::Mao => vec![
-            JijangganItem { stem: Jia, ratio: 33, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Yi, ratio: 67, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Jia,
+                ratio: 33,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Yi,
+                ratio: 67,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
         EarthlyBranch::Chen => vec![
-            JijangganItem { stem: Yi, ratio: 30, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Gui, ratio: 10, type_key: TK::SajuJijangganJunggi },
-            JijangganItem { stem: Wu, ratio: 60, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Yi,
+                ratio: 30,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Gui,
+                ratio: 10,
+                type_key: TK::SajuJijangganJunggi,
+            },
+            JijangganItem {
+                stem: Wu,
+                ratio: 60,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
         EarthlyBranch::Si => vec![
-            JijangganItem { stem: Wu, ratio: 23, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Geng, ratio: 23, type_key: TK::SajuJijangganJunggi },
-            JijangganItem { stem: Bing, ratio: 54, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Wu,
+                ratio: 23,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Geng,
+                ratio: 23,
+                type_key: TK::SajuJijangganJunggi,
+            },
+            JijangganItem {
+                stem: Bing,
+                ratio: 54,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
         EarthlyBranch::Wu => vec![
-            JijangganItem { stem: Bing, ratio: 33, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Ji, ratio: 30, type_key: TK::SajuJijangganJunggi },
-            JijangganItem { stem: Ding, ratio: 37, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Bing,
+                ratio: 33,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Ji,
+                ratio: 30,
+                type_key: TK::SajuJijangganJunggi,
+            },
+            JijangganItem {
+                stem: Ding,
+                ratio: 37,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
         EarthlyBranch::Wei => vec![
-            JijangganItem { stem: Ding, ratio: 30, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Yi, ratio: 10, type_key: TK::SajuJijangganJunggi },
-            JijangganItem { stem: Ji, ratio: 60, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Ding,
+                ratio: 30,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Yi,
+                ratio: 10,
+                type_key: TK::SajuJijangganJunggi,
+            },
+            JijangganItem {
+                stem: Ji,
+                ratio: 60,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
         EarthlyBranch::Shen => vec![
-            JijangganItem { stem: Wu, ratio: 23, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Ren, ratio: 23, type_key: TK::SajuJijangganJunggi },
-            JijangganItem { stem: Geng, ratio: 54, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Wu,
+                ratio: 23,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Ren,
+                ratio: 23,
+                type_key: TK::SajuJijangganJunggi,
+            },
+            JijangganItem {
+                stem: Geng,
+                ratio: 54,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
         EarthlyBranch::You => vec![
-            JijangganItem { stem: Geng, ratio: 33, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Xin, ratio: 67, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Geng,
+                ratio: 33,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Xin,
+                ratio: 67,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
         EarthlyBranch::Xu => vec![
-            JijangganItem { stem: Xin, ratio: 30, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Ding, ratio: 10, type_key: TK::SajuJijangganJunggi },
-            JijangganItem { stem: Wu, ratio: 60, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Xin,
+                ratio: 30,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Ding,
+                ratio: 10,
+                type_key: TK::SajuJijangganJunggi,
+            },
+            JijangganItem {
+                stem: Wu,
+                ratio: 60,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
         EarthlyBranch::Hai => vec![
-            JijangganItem { stem: Wu, ratio: 23, type_key: TK::SajuJijangganYeogi },
-            JijangganItem { stem: Jia, ratio: 23, type_key: TK::SajuJijangganJunggi },
-            JijangganItem { stem: Ren, ratio: 54, type_key: TK::SajuJijangganJeonggi },
+            JijangganItem {
+                stem: Wu,
+                ratio: 23,
+                type_key: TK::SajuJijangganYeogi,
+            },
+            JijangganItem {
+                stem: Jia,
+                ratio: 23,
+                type_key: TK::SajuJijangganJunggi,
+            },
+            JijangganItem {
+                stem: Ren,
+                ratio: 54,
+                type_key: TK::SajuJijangganJeonggi,
+            },
         ],
     }
 }

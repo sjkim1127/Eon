@@ -68,7 +68,11 @@ const VARGA_MAPPING: [(VargaType, &str, &str); 23] = [
     (VargaType::D60, "shashtyamsa", "D60 - Shashtyamsa"),
     (VargaType::D81, "navanavamsa", "D81 - Navanavamsa"),
     (VargaType::D108, "ashtottaramsa", "D108 - Ashtottaramsa"),
-    (VargaType::D144, "dwadasdwadasamsa", "D144 - Dwadasdwadasamsa"),
+    (
+        VargaType::D144,
+        "dwadasdwadasamsa",
+        "D144 - Dwadasdwadasamsa",
+    ),
 ];
 
 fn fmt_degree(deg: f64) -> String {
@@ -77,7 +81,7 @@ fn fmt_degree(deg: f64) -> String {
     let deg_in_sign = total % 30.0;
     let mut dd = deg_in_sign.floor() as u32;
     let mut mm = ((deg_in_sign - dd as f64) * 60.0).round() as u32;
-    
+
     if mm >= 60 {
         mm = 0;
         dd += 1;
@@ -86,7 +90,7 @@ fn fmt_degree(deg: f64) -> String {
             sign_1based = (sign_1based % 12) + 1;
         }
     }
-    
+
     let sign_name = get_rasi_name(sign_1based);
     format!("{}°{:02}' {}", dd, mm, sign_name)
 }

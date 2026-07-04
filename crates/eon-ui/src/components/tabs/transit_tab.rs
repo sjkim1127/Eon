@@ -1,14 +1,14 @@
-use dioxus::prelude::*;
+use crate::components::shared::birth_form::BirthForm;
+use crate::i18n::{t, Locale, TK};
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, Locale};
+use dioxus::prelude::*;
+use eon_saju::LuckDirection;
 use eon_service::dto::{SajuAnalysisInput, TransitAnalysisInput};
 use eon_service::facade;
-use eon_saju::LuckDirection;
-use crate::components::shared::birth_form::BirthForm;
 
 #[component]
 pub fn TransitTab() -> Element {
-    let mut state = use_context::<AnalysisState>();
+    let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
 
     // Reactive trigger for manual analysis runs
@@ -25,7 +25,12 @@ pub fn TransitTab() -> Element {
                 state.transit.write().status = TaskStatus::Loading;
 
                 let base = form.to_analysis_input();
-                let saju_input = SajuAnalysisInput::new(base, form.is_male, form.use_night_rat_hour, Some(false));
+                let saju_input = SajuAnalysisInput::new(
+                    base,
+                    form.is_male,
+                    form.use_night_rat_hour,
+                    Some(false),
+                );
                 let transit_input = TransitAnalysisInput::new(saju_input, None);
 
                 match facade::analyze_transit(transit_input) {
@@ -43,7 +48,12 @@ pub fn TransitTab() -> Element {
                 if !matches!(state.saju.read().status, TaskStatus::Success) {
                     let form2 = state.form.read().clone();
                     let base2 = form2.to_analysis_input();
-                    if let Ok(saju_res) = facade::analyze_saju(SajuAnalysisInput::new(base2, form2.is_male, form2.use_night_rat_hour, Some(false))) {
+                    if let Ok(saju_res) = facade::analyze_saju(SajuAnalysisInput::new(
+                        base2,
+                        form2.is_male,
+                        form2.use_night_rat_hour,
+                        Some(false),
+                    )) {
                         state.saju.write().data = Some(saju_res);
                         state.saju.write().status = TaskStatus::Success;
                     }
@@ -330,7 +340,13 @@ pub fn TransitTab() -> Element {
 }
 
 #[component]
-fn LuckCard(title: String, value: String, sub: String, color: String, icon: &'static str) -> Element {
+fn LuckCard(
+    title: String,
+    value: String,
+    sub: String,
+    color: String,
+    icon: &'static str,
+) -> Element {
     rsx! {
         div { class: "p-4 rounded-2xl bg-gradient-to-b {color} border flex flex-col gap-2",
             div { class: "flex items-center gap-2",

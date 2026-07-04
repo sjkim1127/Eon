@@ -12,12 +12,12 @@
 //! `chrono-tz`를 활용하여 역사적 썸머타임(DST)을 자동 처리합니다.
 //! 예: 1988년 서울 올림픽 기간의 썸머타임 적용
 
+pub mod birth;
 pub mod error;
 pub mod location;
-pub mod birth;
 pub mod timezone;
 
-pub use error::{EonError, CoreError};
+pub use birth::{timezones, BirthInfo, CalendarType, Gender};
+pub use error::{CoreError, EonError};
 pub use location::Location;
-pub use birth::{BirthInfo, Gender, CalendarType, timezones};
 pub use timezone::standard_meridian_from_tz;

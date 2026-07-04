@@ -1,14 +1,14 @@
-use dioxus::prelude::*;
+use crate::components::shared::birth_form::BirthForm;
+use crate::i18n::{format_age, format_age_range, t, Locale, TK};
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, Locale, format_age, format_age_range};
+use dioxus::prelude::*;
+use eon_saju::engine::emulator::YearlyScore;
 use eon_service::dto::SajuAnalysisInput;
 use eon_service::facade;
-use eon_saju::engine::emulator::YearlyScore;
-use crate::components::shared::birth_form::BirthForm;
 
 #[component]
 pub fn SimulationTab() -> Element {
-    let mut state = use_context::<AnalysisState>();
+    let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
 
     // Reactive trigger for manual analysis runs
@@ -30,7 +30,9 @@ pub fn SimulationTab() -> Element {
                 state.saju.write().status = TaskStatus::Loading;
                 let input = SajuAnalysisInput::new(
                     form.to_analysis_input(),
-                    form.is_male, form.use_night_rat_hour, Some(false),
+                    form.is_male,
+                    form.use_night_rat_hour,
+                    Some(false),
                 );
                 match facade::analyze_saju(input) {
                     Ok(res) => {
@@ -157,8 +159,8 @@ pub fn SimulationTab() -> Element {
                                         div { class: "text-4xl", "👑" }
                                         div { class: "space-y-1",
                                             h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "{t(locale, TK::SimGoldenTimeTitle)}" }
-                                            p { class: "text-lg font-bold bg-gradient-to-r from-amber-200 to-yellow-400 bg-clip-text text-transparent", 
-                                                "{format_age_range(locale, gt.start_age as i32, gt.end_age as i32)}" 
+                                            p { class: "text-lg font-bold bg-gradient-to-r from-amber-200 to-yellow-400 bg-clip-text text-transparent",
+                                                "{format_age_range(locale, gt.start_age as i32, gt.end_age as i32)}"
                                             }
                                             p { class: "text-xs text-slate-400 leading-relaxed", "{gt.description}" }
                                         }
@@ -260,19 +262,30 @@ fn LifelineChart(timeline: &[YearlyScore]) -> Element {
     let chart_w = width - pad_left - pad_right;
     let chart_h = height - pad_top - pad_bottom;
 
-    let min_score = timeline.iter().map(|t| t.total_score).fold(f64::INFINITY, f64::min);
-    let max_score = timeline.iter().map(|t| t.total_score).fold(f64::NEG_INFINITY, f64::max);
+    let min_score = timeline
+        .iter()
+        .map(|t| t.total_score)
+        .fold(f64::INFINITY, f64::min);
+    let max_score = timeline
+        .iter()
+        .map(|t| t.total_score)
+        .fold(f64::NEG_INFINITY, f64::max);
     let avg_score = timeline.iter().map(|t| t.total_score).sum::<f64>() / timeline.len() as f64;
     let score_range = (max_score - min_score).max(1.0);
 
     let n = timeline.len() as f64;
-    let points: Vec<(f64, f64)> = timeline.iter().enumerate().map(|(i, t)| {
-        let x = pad_left + (i as f64 / (n - 1.0).max(1.0)) * chart_w;
-        let y = pad_top + (1.0 - (t.total_score - min_score) / score_range) * chart_h;
-        (x, y)
-    }).collect();
+    let points: Vec<(f64, f64)> = timeline
+        .iter()
+        .enumerate()
+        .map(|(i, t)| {
+            let x = pad_left + (i as f64 / (n - 1.0).max(1.0)) * chart_w;
+            let y = pad_top + (1.0 - (t.total_score - min_score) / score_range) * chart_h;
+            (x, y)
+        })
+        .collect();
 
-    let polyline_pts = points.iter()
+    let polyline_pts = points
+        .iter()
         .map(|(x, y)| format!("{x:.1},{y:.1}"))
         .collect::<Vec<_>>()
         .join(" ");
@@ -281,14 +294,23 @@ fn LifelineChart(timeline: &[YearlyScore]) -> Element {
 
     let threshold = min_score + score_range * 0.8;
 
-    let last_pt = points.last().cloned().unwrap_or((pad_left, pad_top + chart_h));
-    let first_pt = points.first().cloned().unwrap_or((pad_left, pad_top + chart_h));
+    let last_pt = points
+        .last()
+        .cloned()
+        .unwrap_or((pad_left, pad_top + chart_h));
+    let first_pt = points
+        .first()
+        .cloned()
+        .unwrap_or((pad_left, pad_top + chart_h));
     let area_path = format!(
         "M{:.1},{:.1} {} L{:.1},{:.1} L{:.1},{:.1} Z",
-        first_pt.0, pad_top + chart_h,
+        first_pt.0,
+        pad_top + chart_h,
         polyline_pts,
-        last_pt.0, pad_top + chart_h,
-        first_pt.0, pad_top + chart_h,
+        last_pt.0,
+        pad_top + chart_h,
+        first_pt.0,
+        pad_top + chart_h,
     );
 
     let max_lbl = format!("{max_score:.0}");
@@ -375,7 +397,13 @@ fn LifelineChart(timeline: &[YearlyScore]) -> Element {
 #[component]
 fn EnergyBar(value: f64) -> Element {
     let pct = value.clamp(0.0, 100.0) as u32;
-    let color = if value > 60.0 { "bg-emerald-500" } else if value < 30.0 { "bg-red-500" } else { "bg-amber-500" };
+    let color = if value > 60.0 {
+        "bg-emerald-500"
+    } else if value < 30.0 {
+        "bg-red-500"
+    } else {
+        "bg-amber-500"
+    };
     rsx! {
         div { class: "w-20 h-2 bg-slate-700 rounded-full overflow-hidden",
             div { class: "h-full {color} rounded-full", style: "width: {pct}%" }
@@ -384,7 +412,13 @@ fn EnergyBar(value: f64) -> Element {
 }
 
 #[component]
-fn StatCard(icon: &'static str, label: &'static str, value: String, sub: String, color: String) -> Element {
+fn StatCard(
+    icon: &'static str,
+    label: &'static str,
+    value: String,
+    sub: String,
+    color: String,
+) -> Element {
     rsx! {
         div { class: "p-4 rounded-2xl bg-gradient-to-b {color} border flex flex-col gap-1",
             div { class: "flex items-center gap-2",

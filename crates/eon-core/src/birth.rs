@@ -186,11 +186,13 @@ impl BirthInfo {
     ///
     /// IANA 타임존 데이터베이스를 사용하여 역사적 DST를 자동 처리합니다.
     pub fn to_utc(&self) -> Result<DateTime<Utc>, crate::error::CoreError> {
-        let naive = self.local_datetime()
+        let naive = self
+            .local_datetime()
             .ok_or(crate::error::CoreError::InvalidDateTime)?;
 
         let tz = if let Some(ref tz_str) = self.timezone {
-            tz_str.parse::<chrono_tz::Tz>()
+            tz_str
+                .parse::<chrono_tz::Tz>()
                 .map_err(|_| crate::error::CoreError::InvalidTimezone(tz_str.clone()))?
         } else {
             chrono_tz::Asia::Seoul

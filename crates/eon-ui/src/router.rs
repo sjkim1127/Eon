@@ -2,50 +2,43 @@ use dioxus::prelude::*;
 
 use crate::components::layout::AppLayout;
 use crate::components::tabs::{
-    saju_tab::SajuTab,
-    vedic_tab::VedicTab,
-    strength_tab::StrengthTab,
-    transit_tab::TransitTab,
-    simulation_tab::SimulationTab,
-    tier_tab::TierTab,
-    zwds_tab::ZwdsTab,
-    iching_tab::IChingTab,
-    western_tab::WesternTab,
-    human_design_tab::HumanDesignTab,
+    human_design_tab::HumanDesignTab, iching_tab::IChingTab, saju_tab::SajuTab,
+    simulation_tab::SimulationTab, strength_tab::StrengthTab, tier_tab::TierTab,
+    transit_tab::TransitTab, vedic_tab::VedicTab, western_tab::WesternTab, zwds_tab::ZwdsTab,
 };
 
 #[derive(Clone, Routable, Debug, PartialEq)]
 pub enum Route {
     #[layout(AppLayout)]
-        #[route("/")]
-        SajuTab {},
-        
-        #[route("/vedic_charts")]
-        VedicTab {},
-        
-        #[route("/strength")]
-        StrengthTab {},
-        
-        #[route("/transit")]
-        TransitTab {},
-        
-        #[route("/simulation")]
-        SimulationTab {},
-        
-        #[route("/destiny_tier")]
-        TierTab {},
+    #[route("/")]
+    SajuTab {},
 
-        #[route("/zwds")]
-        ZwdsTab {},
+    #[route("/vedic_charts")]
+    VedicTab {},
 
-        #[route("/iching")]
-        IChingTab {},
+    #[route("/strength")]
+    StrengthTab {},
 
-        #[route("/western")]
-        WesternTab {},
+    #[route("/transit")]
+    TransitTab {},
 
-        #[route("/human_design")]
-        HumanDesignTab {},
+    #[route("/simulation")]
+    SimulationTab {},
+
+    #[route("/destiny_tier")]
+    TierTab {},
+
+    #[route("/zwds")]
+    ZwdsTab {},
+
+    #[route("/iching")]
+    IChingTab {},
+
+    #[route("/western")]
+    WesternTab {},
+
+    #[route("/human_design")]
+    HumanDesignTab {},
     #[end_layout]
     #[route("/:..route")]
     PageNotFound { route: Vec<String> },

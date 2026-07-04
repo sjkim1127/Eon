@@ -1,6 +1,6 @@
 use crate::dto::*;
 use crate::facade;
-use chrono::{Utc, TimeZone};
+use chrono::Utc;
 
 #[cfg(test)]
 mod tests {
@@ -27,9 +27,16 @@ mod tests {
             let lat = 37.566 + (i as f64 * 0.001);
 
             let birth = AnalysisInput {
-                year, month: month as u32, day: day as u32, hour: hour as u32, minute: 0,
-                is_lunar: false, is_leap_month: false,
-                lat, lon, timezone: "Asia/Seoul".to_string(),
+                year,
+                month: month as u32,
+                day: day as u32,
+                hour: hour as u32,
+                minute: 0,
+                is_lunar: false,
+                is_leap_month: false,
+                lat,
+                lon,
+                timezone: "Asia/Seoul".to_string(),
             };
 
             let saju_input = SajuAnalysisInput {
@@ -39,38 +46,47 @@ mod tests {
                 precision: BirthTimePrecision::Exact,
             };
 
-            let vedic_input = VedicAnalysisInput::new(
-                birth.clone(),
-                Some(false),
-                Some(now)
-            );
+            let vedic_input = VedicAnalysisInput::new(birth.clone(), Some(false), Some(now));
 
             let saju_res = facade::analyze_saju(saju_input.clone()).expect("Saju failed");
             let vedic_res = facade::analyze_vedic(vedic_input).expect("Vedic failed");
 
-            let transit_res = facade::analyze_transit(TransitAnalysisInput::new(
-                saju_input.clone(),
-                Some(now)
-            )).ok();
+            let transit_res =
+                facade::analyze_transit(TransitAnalysisInput::new(saju_input.clone(), Some(now)))
+                    .ok();
 
             let tier_res = facade::analyze_destiny_tier(saju_res, vedic_res, transit_res).unwrap();
 
-            *tier_counts.entry(tier_res.destiny_tier.grade.clone()).or_insert(0) += 1;
+            *tier_counts
+                .entry(tier_res.destiny_tier.grade.clone())
+                .or_insert(0) += 1;
             raw_scores.push(tier_res.destiny_raw_score);
             tier_scores.push(tier_res.destiny_score);
 
             for comp in tier_res.detailed_components {
-                let entry = component_totals.entry(comp.label.clone()).or_insert((0.0, 0.0));
+                let entry = component_totals
+                    .entry(comp.label.clone())
+                    .or_insert((0.0, 0.0));
                 entry.0 += comp.score;
                 entry.1 += 1.0;
             }
         }
 
-        println!("\n=== Destiny Tier v3 Tuning Report (Samples: {}) ===", sample_count);
+        println!(
+            "\n=== Destiny Tier v3 Tuning Report (Samples: {}) ===",
+            sample_count
+        );
         println!("Tier Distribution:");
-        for grade in ["S+", "S", "A+", "A", "B+", "B", "C+", "C", "D+", "D", "E", "F"] {
+        for grade in [
+            "S+", "S", "A+", "A", "B+", "B", "C+", "C", "D+", "D", "E", "F",
+        ] {
             let count = tier_counts.get(grade).unwrap_or(&0);
-            println!("  {:>3}: {:>4} ({:>5.1}%)", grade, count, (*count as f32 / sample_count as f32) * 100.0);
+            println!(
+                "  {:>3}: {:>4} ({:>5.1}%)",
+                grade,
+                count,
+                (*count as f32 / sample_count as f32) * 100.0
+            );
         }
 
         let avg_raw = raw_scores.iter().sum::<f32>() / sample_count as f32;

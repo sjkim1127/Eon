@@ -6,12 +6,12 @@
 //! 3. 궁성/조후 보정 적용
 //! 4. 합화 + 궁성/조후 보정 모두 적용
 
-use serde::{Deserialize, Serialize};
-use crate::core::stem::HeavenlyStem;
 use crate::core::branch::EarthlyBranch;
 use crate::core::element::Element;
 use crate::core::pillars::FourPillars;
+use crate::core::stem::HeavenlyStem;
 use crate::core::ten_gods::TenGod;
+use serde::{Deserialize, Serialize};
 
 /// 분석 옵션
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -48,21 +48,25 @@ pub struct IntegratedAnalysis {
 }
 
 impl IntegratedAnalysis {
-    pub fn calculate(pillars: &FourPillars, options: AnalysisOptions, config: &crate::core::config::AnalysisConfig) -> Self {
+    pub fn calculate(
+        pillars: &FourPillars,
+        options: AnalysisOptions,
+        config: &crate::core::config::AnalysisConfig,
+    ) -> Self {
         let dm = pillars.day_master();
         let month_branch = pillars.month.branch;
 
         // 1. 가중치 설정
         let weights = if options.apply_correction {
             [
-                config.weights.stem, 
-                config.weights.stem, 
-                config.weights.stem, 
-                config.weights.stem, 
-                config.weights.other_branch, 
-                config.weights.month_branch, 
-                config.weights.day_branch, 
-                config.weights.other_branch
+                config.weights.stem,
+                config.weights.stem,
+                config.weights.stem,
+                config.weights.stem,
+                config.weights.other_branch,
+                config.weights.month_branch,
+                config.weights.day_branch,
+                config.weights.other_branch,
             ]
         } else {
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
@@ -71,7 +75,7 @@ impl IntegratedAnalysis {
         // 가중치 스케일링 (전체 합이 가중치 합이 되도록 함)
         // 기존 110점법 호환을 위해, 만약 stem=1.0이면 10.0으로 취급하고 싶을 경우를 고려할 수 있으나
         // 여기서는 config에 정의된 대로 사용함. (보통 stem 1.0, month 3.5 등)
-        
+
         let total_weight: f32 = weights.iter().sum();
 
         // 2. 각 위치별 실질 오행 및 십성 결정
@@ -83,24 +87,39 @@ impl IntegratedAnalysis {
             pillars.effective_elements()
         } else {
             let mut map = [(Element::Wood, Element::Wood); 8];
-            let stems = [pillars.year.stem, pillars.month.stem, pillars.day.stem, pillars.hour.stem];
-            let branches = [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch];
+            let stems = [
+                pillars.year.stem,
+                pillars.month.stem,
+                pillars.day.stem,
+                pillars.hour.stem,
+            ];
+            let branches = [
+                pillars.year.branch,
+                pillars.month.branch,
+                pillars.day.branch,
+                pillars.hour.branch,
+            ];
             for i in 0..4 {
                 map[i] = (stems[i].element(), stems[i].element());
-                map[i+4] = (branches[i].element(), branches[i].element());
+                map[i + 4] = (branches[i].element(), branches[i].element());
             }
             map
         };
 
         // 2-1. 천간 처리 (0~3)
-        let stems = [pillars.year.stem, pillars.month.stem, pillars.day.stem, pillars.hour.stem];
+        let stems = [
+            pillars.year.stem,
+            pillars.month.stem,
+            pillars.day.stem,
+            pillars.hour.stem,
+        ];
         for i in 0..4 {
             let stem = stems[i];
             let (_, effective_el) = eff_map[i];
             let weight = weights[i];
 
             el_scores[effective_el.index() as usize] += weight;
-            
+
             // 십성 계산
             let god = if effective_el != stem.element() {
                 // 합화된 경우
@@ -112,7 +131,12 @@ impl IntegratedAnalysis {
         }
 
         // 2-2. 지지 처리 (4~7)
-        let branches = [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch];
+        let branches = [
+            pillars.year.branch,
+            pillars.month.branch,
+            pillars.day.branch,
+            pillars.hour.branch,
+        ];
         for i in 0..4 {
             let branch = branches[i];
             let (_, mut effective_el) = eff_map[i + 4];
@@ -125,10 +149,13 @@ impl IntegratedAnalysis {
             }
 
             el_scores[effective_el.index() as usize] += weight;
-            
+
             // 지지 십성
             let god = if effective_el != branch.element() {
-                TenGod::from_stems(dm, get_dummy_stem(effective_el, branch.primary_stem().polarity()))
+                TenGod::from_stems(
+                    dm,
+                    get_dummy_stem(effective_el, branch.primary_stem().polarity()),
+                )
             } else {
                 TenGod::from_stems(dm, branch.primary_stem())
             };
@@ -150,8 +177,16 @@ impl IntegratedAnalysis {
             final_tg.push((god, (score / total_weight) * 100.0, score));
         }
 
-        let dominant_element = final_el.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)).unwrap_or(&final_el[0]).0;
-        let dominant_ten_god = final_tg.iter().max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)).unwrap_or(&final_tg[0]).0;
+        let dominant_element = final_el
+            .iter()
+            .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+            .unwrap_or(&final_el[0])
+            .0;
+        let dominant_ten_god = final_tg
+            .iter()
+            .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+            .unwrap_or(&final_tg[0])
+            .0;
 
         Self {
             options,
@@ -168,15 +203,21 @@ fn apply_climate_correction(branch: EarthlyBranch, month: EarthlyBranch) -> Elem
     match branch {
         EarthlyBranch::Wei => {
             // 여름(巳, 午)의 미토는 화(火)의 기운이 강함
-            if matches!(month, EarthlyBranch::Si | EarthlyBranch::Wu) { Element::Fire } 
-            else { Element::Earth }
-        },
+            if matches!(month, EarthlyBranch::Si | EarthlyBranch::Wu) {
+                Element::Fire
+            } else {
+                Element::Earth
+            }
+        }
         EarthlyBranch::Chou => {
             // 겨울(亥, 子)의 축토는 수(水)의 기운이 강함
-            if matches!(month, EarthlyBranch::Hai | EarthlyBranch::Zi) { Element::Water }
-            else { Element::Earth }
-        },
-        _ => branch.element()
+            if matches!(month, EarthlyBranch::Hai | EarthlyBranch::Zi) {
+                Element::Water
+            } else {
+                Element::Earth
+            }
+        }
+        _ => branch.element(),
     }
 }
 
@@ -199,18 +240,54 @@ fn get_dummy_stem(element: Element, polarity: crate::core::element::Polarity) ->
 
 impl std::fmt::Display for IntegratedAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "합에 따른 오행 변화 적용 {}", if self.options.apply_transform { "o" } else { "x" })?;
-        writeln!(f, "조후와 궁성 보정값 적용 {}", if self.options.apply_correction { "o" } else { "x" })?;
-        writeln!(f, "{} {}", self.dominant_element.hanja(), self.dominant_ten_god.hanja())?;
-        
+        writeln!(
+            f,
+            "합에 따른 오행 변화 적용 {}",
+            if self.options.apply_transform {
+                "o"
+            } else {
+                "x"
+            }
+        )?;
+        writeln!(
+            f,
+            "조후와 궁성 보정값 적용 {}",
+            if self.options.apply_correction {
+                "o"
+            } else {
+                "x"
+            }
+        )?;
+        writeln!(
+            f,
+            "{} {}",
+            self.dominant_element.hanja(),
+            self.dominant_ten_god.hanja()
+        )?;
+
         writeln!(f, "오행")?;
         for (el, percent, _) in &self.element_scores {
             if *percent > 0.0 {
-                let state = if *percent < 10.0 { "부족" } else if *percent <= 20.0 { "적정" } else if *percent <= 35.0 { "발달" } else { "과다" };
-                writeln!(f, "  {}({})  {:.1}% {}", el.hangul(), el.hanja(), percent, state)?;
+                let state = if *percent < 10.0 {
+                    "부족"
+                } else if *percent <= 20.0 {
+                    "적정"
+                } else if *percent <= 35.0 {
+                    "발달"
+                } else {
+                    "과다"
+                };
+                writeln!(
+                    f,
+                    "  {}({})  {:.1}% {}",
+                    el.hangul(),
+                    el.hanja(),
+                    percent,
+                    state
+                )?;
             }
         }
-        
+
         writeln!(f, "십성")?;
         for (god, percent, _) in &self.ten_god_scores {
             if *percent > 0.0 {
@@ -225,13 +302,20 @@ impl std::fmt::Display for IntegratedAnalysis {
 
 impl FourPillars {
     /// 통합 정밀 분석
-    pub fn integrated_analysis(&self, options: AnalysisOptions, config: &crate::core::config::AnalysisConfig) -> IntegratedAnalysis {
+    pub fn integrated_analysis(
+        &self,
+        options: AnalysisOptions,
+        config: &crate::core::config::AnalysisConfig,
+    ) -> IntegratedAnalysis {
         IntegratedAnalysis::calculate(self, options, config)
     }
 
     /// 기본 옵션 및 기본 설정으로 분석 수행
     pub fn analyze(&self) -> IntegratedAnalysis {
-        self.integrated_analysis(AnalysisOptions::default(), &crate::core::config::AnalysisConfig::default())
+        self.integrated_analysis(
+            AnalysisOptions::default(),
+            &crate::core::config::AnalysisConfig::default(),
+        )
     }
 }
 
@@ -239,7 +323,10 @@ use crate::analysis::Analyzable;
 
 impl Analyzable for IntegratedAnalysis {
     type Output = IntegratedAnalysis;
-    fn analyze(pillars: &FourPillars, config: &crate::core::config::AnalysisConfig) -> Self::Output {
+    fn analyze(
+        pillars: &FourPillars,
+        config: &crate::core::config::AnalysisConfig,
+    ) -> Self::Output {
         IntegratedAnalysis::calculate(pillars, AnalysisOptions::default(), config)
     }
 }

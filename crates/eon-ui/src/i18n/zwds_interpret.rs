@@ -1,5 +1,5 @@
-use eon_zwds::types::{PalaceName, StarInPalace, ZwdsStar, SiHuaType, DestinyPattern};
 use crate::i18n::Locale;
+use eon_zwds::types::{DestinyPattern, PalaceName, SiHuaType, StarInPalace, ZwdsStar};
 
 /// 자미두수 특정 궁위의 고급 종합 리딩 텍스트를 생성합니다.
 pub fn get_advanced_palace_interpretation(
@@ -149,7 +149,7 @@ pub fn get_advanced_palace_interpretation(
                 (ZwdsStar::ZiWei, PalaceName::Caibo) => Some("• 자미(재백궁): 규모가 크고 지위 높은 곳에서 발생하는 고귀한 재물을 취합니다. 주로 명예와 리더십을 활용해 부를 쌓으나, 품위 유지를 위한 씀씀이를 경계해야 합니다."),
                 (ZwdsStar::ZiWei, PalaceName::Fuqi) => Some("• 자미(부처궁): 배우자가 자존심이 세고 높은 자의식을 지닌 경우가 많습니다. 리더십이 있는 동반자이나 서로 주도권 다툼을 조심해야 가정이 평안합니다."),
                 (ZwdsStar::ZiWei, PalaceName::Guanlu) => Some("• 자미(관록궁): 리더가 될 직업적 운명을 지닙니다. 기관이나 기업에서 관리직, 독립적인 사업가, 혹은 높은 사회적 명예를 획득하는 직군에 잘 맞습니다."),
-                
+
                 (ZwdsStar::TianJi, PalaceName::Ming) => Some("• 천기(명궁): 총명하고 지혜로우며 분석력과 기획력이 매우 뛰어납니다. 새로운 지식 습득이 빠르나 과도한 근심과 생각으로 예민해지기 쉬우니 마인드 컨트롤이 요망됩니다."),
                 (ZwdsStar::TianJi, PalaceName::Caibo) => Some("• 천기(재백궁): 번뜩이는 기획력, 계산, 지적 재산 또는 유통과 변화가 잦은 업종을 통해 재물을 법니다. 고정적이고 지루한 재정 운용보다는 머리를 활용한 동적 재무에 유리합니다."),
                 (ZwdsStar::TianJi, PalaceName::Fuqi) => Some("• 천기(부처궁): 영리하고 말재주 있는 배우자와 인연이 깊습니다. 때로 부부 사이에 잦은 이동이나 의견 불일치로 인한 감정 변동을 유의하십시오."),
@@ -162,7 +162,7 @@ pub fn get_advanced_palace_interpretation(
                 (ZwdsStar::WuQu, PalaceName::Ming) => Some("• 무곡(명궁): 성격이 곧고 결단력이 강하며 실리적입니다. 다소 차가운 느낌을 주거나 고독한 성향이 있을 수 있으니 인간관계의 유연성을 기르면 매사 길합니다."),
 
                 (ZwdsStar::TianTong, PalaceName::Ming) => Some("• 천동(명궁): 온화하고 순박하며 감성적입니다. 주변 사람들에게 편안함과 조화를 주며 일생 의식의 곤란이 적은 복성이나, 의지력 부족이나 게으름에 빠지지 않도록 정진해야 합니다."),
-                
+
                 (ZwdsStar::LianZhen, PalaceName::Ming) => Some("• 염정(명궁): 주관이 아주 뚜렷하고 예술성이나 직관력이 뛰어납니다. 내면의 집념과 고집이 대단하며, 사교적인 도화 기운이 잘 조화될 때 큰 사회적 성공을 이룹니다."),
 
                 (ZwdsStar::TianFu, PalaceName::Tianzhai) => Some("• 천부(전택궁): 하늘의 곳간이 전택궁에 놓여 부동산 복과 가정의 안전성이 확립됩니다. 저축과 실질적 건물 확보를 통해 자산을 가장 견고하게 지켜내는 흐름입니다."),
@@ -183,7 +183,7 @@ pub fn get_advanced_palace_interpretation(
                 (ZwdsStar::ZiWei, PalaceName::Caibo) => Some("• 紫微(财帛)：主求财于大型或高尚机构，善用名誉与地位积聚财富。消费上需控制财力流出。"),
                 (ZwdsStar::ZiWei, PalaceName::Fuqi) => Some("• 紫微(夫妻)：配偶自尊心强，具自我主张。虽有担当，但日常需防范双方争夺主导权以致争执。"),
                 (ZwdsStar::ZiWei, PalaceName::Guanlu) => Some("• 紫微(官禄)：事业上有做领导的潜质。适合大企业管理岗位、独立创业，或追求高社会荣誉的行业。"),
-                
+
                 (ZwdsStar::TianJi, PalaceName::Ming) => Some("• 天机(命宫)：聪慧过人，极擅分析与企划。吸纳新知快，但易思虑过度导致精神紧绷，宜多放松。"),
                 (ZwdsStar::TianJi, PalaceName::Caibo) => Some("• 天机(财帛)：凭借企划、计算、智商或流动性行业赚取财富。利于动中求财，不适呆板理财。"),
                 (ZwdsStar::TianJi, PalaceName::Fuqi) => Some("• 天机(夫妻)：易结识伶俐、善辩的伴侣。注意因时常沟通不畅或经常在外奔波引发的感情波动。"),
@@ -196,7 +196,7 @@ pub fn get_advanced_palace_interpretation(
                 (ZwdsStar::WuQu, PalaceName::Ming) => Some("• 武曲(命宫)：刚直果决，求真务实。人际交往中可能略显冷漠或孤僻，宜以和为贵，放宽心态。"),
 
                 (ZwdsStar::TianTong, PalaceName::Ming) => Some("• 天同(命宫)：温和纯真，多愁善感。主一生福报深厚，衣食不缺，但需防沉溺于安逸而丧失进取意志。"),
-                
+
                 (ZwdsStar::LianZhen, PalaceName::Ming) => Some("• 廉贞(命宫)：主见极强，艺术感官敏锐。心高气傲，遇吉则才华横溢，遇煞则固执任性，属于高可塑性之星。"),
 
                 (ZwdsStar::TianFu, PalaceName::Tianzhai) => Some("• 天府(田宅)：天库落入不动产宫。主家业稳固，买房置产顺利，通过理财与房产持有最稳健储蓄财富。"),
@@ -217,7 +217,7 @@ pub fn get_advanced_palace_interpretation(
                 (ZwdsStar::ZiWei, PalaceName::Caibo) => Some("• Цзы Вэй (Богатство): Накопление богатства через высокий статус или управление крупными делами."),
                 (ZwdsStar::ZiWei, PalaceName::Fuqi) => Some("• Цзы Вэй (Супружество): Гордый и независимый партнер. Контролируйте стремление к доминированию."),
                 (ZwdsStar::ZiWei, PalaceName::Guanlu) => Some("• Цзы Вэй (Карьера): Судьба лидера. Подходит для руководящих постов и престижных профессий."),
-                
+
                 (ZwdsStar::TianJi, PalaceName::Ming) => Some("• Тянь Цзи (Жизнь): Исключительный интеллект и планирование. Склонность к тревожности из-за лишних мыслей."),
                 (ZwdsStar::TianJi, PalaceName::Caibo) => Some("• Тянь Цзи (Богатство): Заработок умом, анализом или в динамичной сфере торговли."),
                 (ZwdsStar::TianJi, PalaceName::Fuqi) => Some("• Тянь Цзи (Супружество): Умный и разговорчивый партнер. Возможны колебания из-за частых перемен."),
@@ -230,7 +230,7 @@ pub fn get_advanced_palace_interpretation(
                 (ZwdsStar::WuQu, PalaceName::Ming) => Some("• У Цюй (Жизнь): Решительность, честность и холодный прагматизм. Учитесь гибкости в отношениях."),
 
                 (ZwdsStar::TianTong, PalaceName::Ming) => Some("• Тянь Тон (Жизнь): Мягкий характер, стремление к уюту и гармонии. Опасайтесь лени."),
-                
+
                 (ZwdsStar::LianZhen, PalaceName::Ming) => Some("• Лянь Чжэнь (Жизнь): Сильный стержень, обостренная интуиция и харизма. Упорство в достижении целей."),
 
                 (ZwdsStar::TianFu, PalaceName::Tianzhai) => Some("• Тянь Фу (Имущество): Укрепление семейного очага и успешное вложение в недвижимость."),
@@ -251,7 +251,7 @@ pub fn get_advanced_palace_interpretation(
                 (ZwdsStar::ZiWei, PalaceName::Caibo) => Some("• Zi Wei (Wealth): Acquires wealth from high-status environments. Watch out for luxury spending to maintain vanity."),
                 (ZwdsStar::ZiWei, PalaceName::Fuqi) => Some("• Zi Wei (Spouse): Partner has strong self-awareness. Guard against power struggles to keep marriage peaceful."),
                 (ZwdsStar::ZiWei, PalaceName::Guanlu) => Some("• Zi Wei (Career): Destiny of a leader. Suited for management, independent entrepreneurship, or high-prestige roles."),
-                
+
                 (ZwdsStar::TianJi, PalaceName::Ming) => Some("• Tian Ji (Life): Quick-witted, analytical, and brilliant planner. Knowledge-seeker but prone to anxiety. Keep a peaceful mind."),
                 (ZwdsStar::TianJi, PalaceName::Caibo) => Some("• Tian Ji (Wealth): Generates wealth through smart planning, calculations, or rapid circulation. Avoid static financial styles."),
                 (ZwdsStar::TianJi, PalaceName::Fuqi) => Some("• Tian Ji (Spouse): Deep affinity with a smart, communicative partner. Mind potential instability due to frequent relocations."),
@@ -264,7 +264,7 @@ pub fn get_advanced_palace_interpretation(
                 (ZwdsStar::WuQu, PalaceName::Ming) => Some("• Wu Qu (Life): Straightforward, decisive, and pragmatic. Cultivate warmth to prevent interpersonal coldness."),
 
                 (ZwdsStar::TianTong, PalaceName::Ming) => Some("• Tian Tong (Life): Gentle, artistic, and peaceful. Blessed with comfort, but needs self-drive to avoid procrastination."),
-                
+
                 (ZwdsStar::LianZhen, PalaceName::Ming) => Some("• Lian Zhen (Life): Highly independent with great artistic sense. Possesses intense ambition and magnetism."),
 
                 (ZwdsStar::TianFu, PalaceName::Tianzhai) => Some("• Tian Fu (Property): The treasury star guards real estate. Highly favorable for purchasing land and accumulating house assets."),

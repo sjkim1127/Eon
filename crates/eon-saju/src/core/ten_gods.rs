@@ -12,11 +12,11 @@
 //! | 나를 극 | 편관 | 정관 |
 //! | 나를 생 | 편인 | 정인 |
 
-use serde::{Deserialize, Serialize};
-use crate::core::stem::HeavenlyStem;
 use crate::core::branch::EarthlyBranch;
 use crate::core::element::ElementRelation;
 use crate::core::pillars::FourPillars;
+use crate::core::stem::HeavenlyStem;
+use serde::{Deserialize, Serialize};
 
 /// 십성(十神)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -56,33 +56,35 @@ pub enum TenGod {
 impl TenGod {
     /// 모든 십성 배열
     pub const ALL: [TenGod; 10] = [
-        Self::Bijian, Self::Jiecai,
-        Self::Shishen, Self::Shangguan,
-        Self::Piancai, Self::Zhengcai,
-        Self::Pianguan, Self::Zhengguan,
-        Self::Pianyin, Self::Zhengyin,
+        Self::Bijian,
+        Self::Jiecai,
+        Self::Shishen,
+        Self::Shangguan,
+        Self::Piancai,
+        Self::Zhengcai,
+        Self::Pianguan,
+        Self::Zhengguan,
+        Self::Pianyin,
+        Self::Zhengyin,
     ];
 
     /// 한자 표기
     pub const HANJA: [&'static str; 10] = [
-        "比肩", "劫財", "食神", "傷官", "偏財",
-        "正財", "偏官", "正官", "偏印", "正印",
+        "比肩", "劫財", "食神", "傷官", "偏財", "正財", "偏官", "正官", "偏印", "正印",
     ];
 
     /// 한글 표기
     pub const HANGUL: [&'static str; 10] = [
-        "비견", "겁재", "식신", "상관", "편재",
-        "정재", "편관", "정관", "편인", "정인",
+        "비견", "겁재", "식신", "상관", "편재", "정재", "편관", "정관", "편인", "정인",
     ];
 
     /// 약어 (2글자)
     pub const ABBREV: [&'static str; 10] = [
-        "비", "겁", "식", "상", "편재",
-        "정재", "편관", "정관", "편인", "정인",
+        "비", "겁", "식", "상", "편재", "정재", "편관", "정관", "편인", "정인",
     ];
 
     /// 일간(日干)과 다른 천간의 관계로 십성 계산
-    /// 
+    ///
     /// # Arguments
     /// * `day_master` - 일간 (기준)
     /// * `other` - 비교할 천간
@@ -105,7 +107,7 @@ impl TenGod {
     }
 
     /// 일간(日干)과 지지의 정기(正氣)로 십성 계산
-    /// 
+    ///
     /// 지지는 장간(藏干)을 가지고 있지만, 간단히 정기만 사용합니다.
     pub fn from_stem_and_branch(day_master: HeavenlyStem, branch: EarthlyBranch) -> Self {
         // 지지의 정기 천간 구하기
@@ -141,14 +143,18 @@ impl TenGod {
 
     /// 길신/흉신 여부 (일반적 해석, 상황에 따라 달라질 수 있음)
     pub const fn is_auspicious(self) -> bool {
-        matches!(self, 
+        matches!(
+            self,
             Self::Shishen | Self::Zhengcai | Self::Zhengguan | Self::Zhengyin
         )
     }
 
     /// 일간을 돕는 기운(비겁, 인성) 여부
     pub const fn is_supportive(self) -> bool {
-        matches!(self, Self::Bijian | Self::Jiecai | Self::Pianyin | Self::Zhengyin)
+        matches!(
+            self,
+            Self::Bijian | Self::Jiecai | Self::Pianyin | Self::Zhengyin
+        )
     }
 
     /// 일간의 힘을 빼는 기운(식상, 재성, 관성) 여부
@@ -213,16 +219,27 @@ impl TenGodAnalysis {
     /// 십성별 개수 집계
     pub fn counts(&self) -> [(TenGod, u32); 10] {
         let mut counts = [
-            (TenGod::Bijian, 0), (TenGod::Jiecai, 0),
-            (TenGod::Shishen, 0), (TenGod::Shangguan, 0),
-            (TenGod::Piancai, 0), (TenGod::Zhengcai, 0),
-            (TenGod::Pianguan, 0), (TenGod::Zhengguan, 0),
-            (TenGod::Pianyin, 0), (TenGod::Zhengyin, 0),
+            (TenGod::Bijian, 0),
+            (TenGod::Jiecai, 0),
+            (TenGod::Shishen, 0),
+            (TenGod::Shangguan, 0),
+            (TenGod::Piancai, 0),
+            (TenGod::Zhengcai, 0),
+            (TenGod::Pianguan, 0),
+            (TenGod::Zhengguan, 0),
+            (TenGod::Pianyin, 0),
+            (TenGod::Zhengyin, 0),
         ];
 
         let all = [
-            self.year_stem, self.month_stem, self.day_stem, self.hour_stem,
-            self.year_branch, self.month_branch, self.day_branch, self.hour_branch,
+            self.year_stem,
+            self.month_stem,
+            self.day_stem,
+            self.hour_stem,
+            self.year_branch,
+            self.month_branch,
+            self.day_branch,
+            self.hour_branch,
         ];
 
         for god in all {
@@ -235,7 +252,8 @@ impl TenGodAnalysis {
     /// 가장 많은 십성
     pub fn dominant(&self) -> TenGod {
         let counts = self.counts();
-        counts.iter()
+        counts
+            .iter()
             .max_by_key(|(_, count)| count)
             .map(|(god, _)| *god)
             .unwrap_or(TenGod::Bijian)
@@ -258,20 +276,29 @@ impl std::fmt::Display for TenGodAnalysis {
         writeln!(f, "┌────────┬────────┬────────┬────────┐")?;
         writeln!(f, "│  時柱  │  日柱  │  月柱  │  年柱  │")?;
         writeln!(f, "├────────┼────────┼────────┼────────┤")?;
-        writeln!(f, "│ {:^6} │ {:^6} │ {:^6} │ {:^6} │",
+        writeln!(
+            f,
+            "│ {:^6} │ {:^6} │ {:^6} │ {:^6} │",
             self.hour_stem.hangul(),
             self.day_stem.hangul(),
             self.month_stem.hangul(),
             self.year_stem.hangul()
         )?;
-        writeln!(f, "│ {:^6} │ {:^6} │ {:^6} │ {:^6} │",
+        writeln!(
+            f,
+            "│ {:^6} │ {:^6} │ {:^6} │ {:^6} │",
             self.hour_branch.hangul(),
             self.day_branch.hangul(),
             self.month_branch.hangul(),
             self.year_branch.hangul()
         )?;
         writeln!(f, "└────────┴────────┴────────┴────────┘")?;
-        writeln!(f, "일간(日干): {} ({})", self.day_master, self.day_master.element())
+        writeln!(
+            f,
+            "일간(日干): {} ({})",
+            self.day_master,
+            self.day_master.element()
+        )
     }
 }
 
@@ -287,31 +314,34 @@ mod tests {
 
         // 같은 오행, 같은 음양 = 비견
         assert_eq!(TenGod::from_stems(dm, HeavenlyStem::Geng), TenGod::Bijian);
-        
+
         // 같은 오행, 다른 음양 = 겁재
         assert_eq!(TenGod::from_stems(dm, HeavenlyStem::Xin), TenGod::Jiecai);
-        
+
         // 내가 생하는 오행(水), 같은 음양 = 식신
         assert_eq!(TenGod::from_stems(dm, HeavenlyStem::Ren), TenGod::Shishen);
-        
+
         // 내가 생하는 오행(水), 다른 음양 = 상관
         assert_eq!(TenGod::from_stems(dm, HeavenlyStem::Gui), TenGod::Shangguan);
-        
+
         // 내가 극하는 오행(木), 같은 음양 = 편재
         assert_eq!(TenGod::from_stems(dm, HeavenlyStem::Jia), TenGod::Piancai);
-        
+
         // 내가 극하는 오행(木), 다른 음양 = 정재
         assert_eq!(TenGod::from_stems(dm, HeavenlyStem::Yi), TenGod::Zhengcai);
-        
+
         // 나를 극하는 오행(火), 같은 음양 = 편관
         assert_eq!(TenGod::from_stems(dm, HeavenlyStem::Bing), TenGod::Pianguan);
-        
+
         // 나를 극하는 오행(火), 다른 음양 = 정관
-        assert_eq!(TenGod::from_stems(dm, HeavenlyStem::Ding), TenGod::Zhengguan);
-        
+        assert_eq!(
+            TenGod::from_stems(dm, HeavenlyStem::Ding),
+            TenGod::Zhengguan
+        );
+
         // 나를 생하는 오행(土), 같은 음양 = 편인
         assert_eq!(TenGod::from_stems(dm, HeavenlyStem::Wu), TenGod::Pianyin);
-        
+
         // 나를 생하는 오행(土), 다른 음양 = 정인
         assert_eq!(TenGod::from_stems(dm, HeavenlyStem::Ji), TenGod::Zhengyin);
     }

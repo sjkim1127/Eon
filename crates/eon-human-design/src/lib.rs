@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use eon_astro::{AstroEngine, AstroError};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 #[derive(Debug, thiserror::Error)]
@@ -60,30 +60,58 @@ pub struct HumanDesignResult {
 }
 
 pub const GATE_SEQUENCE: [u8; 64] = [
-    25, 17, 21, 51, 42, 3,   // Aries
-    27, 24, 2,  23, 8,  20,  // Taurus
-    16, 35, 45, 12, 15, 52,  // Gemini
-    39, 53, 62, 56, 31, 33,  // Cancer
-    7,  4,  29, 59, 40, 64,  // Leo
-    47, 6,  46, 18, 48, 57,  // Virgo+Libra
-    32, 50, 28, 44, 1,  43,  // Libra+Scorpio
-    14, 34, 9,  5,  26, 11,  // Scorpio+Sag
-    10, 58, 38, 54, 61, 60,  // Cap
-    41, 19, 13, 49, 30, 55,  // Aquarius
-    37, 63, 22, 36            // Pisces
+    25, 17, 21, 51, 42, 3, // Aries
+    27, 24, 2, 23, 8, 20, // Taurus
+    16, 35, 45, 12, 15, 52, // Gemini
+    39, 53, 62, 56, 31, 33, // Cancer
+    7, 4, 29, 59, 40, 64, // Leo
+    47, 6, 46, 18, 48, 57, // Virgo+Libra
+    32, 50, 28, 44, 1, 43, // Libra+Scorpio
+    14, 34, 9, 5, 26, 11, // Scorpio+Sag
+    10, 58, 38, 54, 61, 60, // Cap
+    41, 19, 13, 49, 30, 55, // Aquarius
+    37, 63, 22, 36, // Pisces
 ];
 
 pub const HD_START_DEGREE: f64 = 358.25;
 
 pub const CHANNELS: [(u8, u8); 36] = [
-    (1, 8), (2, 14), (3, 60), (4, 63), (5, 15),
-    (6, 59), (7, 31), (9, 52), (10, 20), (10, 34),
-    (10, 57), (11, 56), (12, 22), (13, 33), (16, 48),
-    (17, 62), (18, 58), (19, 49), (20, 34), (20, 57),
-    (21, 45), (23, 43), (24, 61), (25, 51), (26, 44),
-    (27, 50), (28, 38), (29, 46), (30, 41), (32, 54),
-    (34, 57), (35, 36), (37, 40), (39, 55), (42, 53),
-    (47, 64)
+    (1, 8),
+    (2, 14),
+    (3, 60),
+    (4, 63),
+    (5, 15),
+    (6, 59),
+    (7, 31),
+    (9, 52),
+    (10, 20),
+    (10, 34),
+    (10, 57),
+    (11, 56),
+    (12, 22),
+    (13, 33),
+    (16, 48),
+    (17, 62),
+    (18, 58),
+    (19, 49),
+    (20, 34),
+    (20, 57),
+    (21, 45),
+    (23, 43),
+    (24, 61),
+    (25, 51),
+    (26, 44),
+    (27, 50),
+    (28, 38),
+    (29, 46),
+    (30, 41),
+    (32, 54),
+    (34, 57),
+    (35, 36),
+    (37, 40),
+    (39, 55),
+    (42, 53),
+    (47, 64),
 ];
 
 pub fn get_channel_centers(g1: u8, g2: u8) -> Option<(HdCenter, HdCenter)> {
@@ -150,41 +178,53 @@ pub fn get_planet_positions(
     // Let's use get_sun_longitude or swe_calc_ut.
     let sun_deg = engine.get_sun_longitude(datetime)?;
     let (gate, line) = degree_to_gate_line(sun_deg);
-    results.insert("Sun".to_string(), HdPlanetData {
-        name: "Sun".to_string(),
-        degree: sun_deg,
-        gate,
-        line,
-    });
+    results.insert(
+        "Sun".to_string(),
+        HdPlanetData {
+            name: "Sun".to_string(),
+            degree: sun_deg,
+            gate,
+            line,
+        },
+    );
 
     let earth_deg = (sun_deg + 180.0) % 360.0;
     let (gate, line) = degree_to_gate_line(earth_deg);
-    results.insert("Earth".to_string(), HdPlanetData {
-        name: "Earth".to_string(),
-        degree: earth_deg,
-        gate,
-        line,
-    });
+    results.insert(
+        "Earth".to_string(),
+        HdPlanetData {
+            name: "Earth".to_string(),
+            degree: earth_deg,
+            gate,
+            line,
+        },
+    );
 
     // 2. Nodes (True Node)
     // Planet id: 11 is SE_TRUE_NODE
-    let nn_deg = engine.get_planet_position(datetime, 11, 2)?;// SEFLG_SWIEPH = 2
+    let nn_deg = engine.get_planet_position(datetime, 11, 2)?; // SEFLG_SWIEPH = 2
     let (gate, line) = degree_to_gate_line(nn_deg);
-    results.insert("N.Node".to_string(), HdPlanetData {
-        name: "N.Node".to_string(),
-        degree: nn_deg,
-        gate,
-        line,
-    });
+    results.insert(
+        "N.Node".to_string(),
+        HdPlanetData {
+            name: "N.Node".to_string(),
+            degree: nn_deg,
+            gate,
+            line,
+        },
+    );
 
     let sn_deg = (nn_deg + 180.0) % 360.0;
     let (gate, line) = degree_to_gate_line(sn_deg);
-    results.insert("S.Node".to_string(), HdPlanetData {
-        name: "S.Node".to_string(),
-        degree: sn_deg,
-        gate,
-        line,
-    });
+    results.insert(
+        "S.Node".to_string(),
+        HdPlanetData {
+            name: "S.Node".to_string(),
+            degree: sn_deg,
+            gate,
+            line,
+        },
+    );
 
     // 3. Remaining Planets
     let planets = vec![
@@ -202,18 +242,23 @@ pub fn get_planet_positions(
     for (name, planet_id) in planets {
         let pos = engine.get_planet_position(datetime, planet_id, 2)?;
         let (gate, line) = degree_to_gate_line(pos);
-        results.insert(name.to_string(), HdPlanetData {
-            name: name.to_string(),
-            degree: pos,
-            gate,
-            line,
-        });
+        results.insert(
+            name.to_string(),
+            HdPlanetData {
+                name: name.to_string(),
+                degree: pos,
+                gate,
+                line,
+            },
+        );
     }
 
     Ok(results)
 }
 
-pub fn get_defined_centers_and_channels(all_gates: &HashSet<u8>) -> (HashSet<HdCenter>, Vec<(u8, u8)>) {
+pub fn get_defined_centers_and_channels(
+    all_gates: &HashSet<u8>,
+) -> (HashSet<HdCenter>, Vec<(u8, u8)>) {
     let mut defined_centers = HashSet::new();
     let mut active_channels = Vec::new();
 
@@ -250,8 +295,15 @@ pub fn determine_type(defined_centers: &HashSet<HdCenter>, active_channels: &[(u
         // Build graph of defined centers
         let mut adj = HashMap::new();
         for &center in &[
-            HdCenter::Head, HdCenter::Ajna, HdCenter::Throat, HdCenter::SelfG,
-            HdCenter::Heart, HdCenter::Sacral, HdCenter::Root, HdCenter::Spleen, HdCenter::SolarPlexus
+            HdCenter::Head,
+            HdCenter::Ajna,
+            HdCenter::Throat,
+            HdCenter::SelfG,
+            HdCenter::Heart,
+            HdCenter::Sacral,
+            HdCenter::Root,
+            HdCenter::Spleen,
+            HdCenter::SolarPlexus,
         ] {
             adj.insert(center, HashSet::new());
         }
@@ -360,8 +412,15 @@ pub fn calculate_human_design(
     defined_centers.sort_by_key(|c| *c as u8);
 
     let mut undefined_centers: Vec<HdCenter> = [
-        HdCenter::Head, HdCenter::Ajna, HdCenter::Throat, HdCenter::SelfG,
-        HdCenter::Heart, HdCenter::Sacral, HdCenter::Root, HdCenter::Spleen, HdCenter::SolarPlexus
+        HdCenter::Head,
+        HdCenter::Ajna,
+        HdCenter::Throat,
+        HdCenter::SelfG,
+        HdCenter::Heart,
+        HdCenter::Sacral,
+        HdCenter::Root,
+        HdCenter::Spleen,
+        HdCenter::SolarPlexus,
     ]
     .iter()
     .filter(|c| !defined_set.contains(c))

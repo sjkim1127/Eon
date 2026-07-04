@@ -1,19 +1,21 @@
 // crates/eon-service/src/services/report.rs
-use crate::dto::{ThemedReportInput, ThemedReportOutput, ReportTheme, SajuAnalysisOutput};
+use crate::dto::{ReportTheme, SajuAnalysisOutput, ThemedReportInput, ThemedReportOutput};
 use crate::error::ServiceError;
 use crate::services::saju;
+use eon_saju::core::branch::EarthlyBranch;
 use eon_saju::core::element::Element;
 use eon_saju::core::stem::HeavenlyStem;
-use eon_saju::core::branch::EarthlyBranch;
 
 pub fn generate(input: ThemedReportInput) -> Result<ThemedReportOutput, ServiceError> {
     // 1. 사주 분석 수행
     let saju_out = saju::analyze(input.base.clone())?;
-    
+
     // 2. 테마에 따른 보고서 제목 및 본문 조합
     let (title, content) = match input.theme {
         ReportTheme::WealthAndCareer => generate_wealth_report(&saju_out, &input.user_name),
-        ReportTheme::LoveAndMarriage => generate_love_report(&saju_out, &input.user_name, input.base.is_male),
+        ReportTheme::LoveAndMarriage => {
+            generate_love_report(&saju_out, &input.user_name, input.base.is_male)
+        }
         ReportTheme::HealthAndVitality => generate_health_report(&saju_out, &input.user_name),
     };
 
@@ -38,7 +40,7 @@ fn generate_wealth_report(saju: &SajuAnalysisOutput, name: &str) -> (String, Str
 
     // Section 1: 타고난 재물 그릇과 성향
     s.push_str("### 1. 타고난 재물 성향 & 천부적 기질\n\n");
-    
+
     let day_stem_kor = HeavenlyStem::HANGUL[day_stem.index() as usize];
     let day_stem_han = HeavenlyStem::HANJA[day_stem.index() as usize];
     let yong_sin_kor = Element::HANGUL[yong_sin_el.index() as usize];
@@ -111,8 +113,9 @@ fn generate_wealth_report(saju: &SajuAnalysisOutput, name: &str) -> (String, Str
             let branch_god = cycle.branch_god.hangul();
             let stem_kor = HeavenlyStem::HANGUL[cycle.ganzi.stem.index() as usize];
             let branch_kor = EarthlyBranch::HANGUL[cycle.ganzi.branch.index() as usize];
-            
-            let is_good = stem_god.contains("재") || stem_god.contains("관") || branch_god.contains("재");
+
+            let is_good =
+                stem_god.contains("재") || stem_god.contains("관") || branch_god.contains("재");
             let guide = if is_good {
                 "재물/커리어 확장기. 신규 투자 및 주도적인 역할 추천."
             } else {
@@ -120,12 +123,11 @@ fn generate_wealth_report(saju: &SajuAnalysisOutput, name: &str) -> (String, Str
             };
             s.push_str(&format!(
                 "| {}-{}세 | {}{} | {}-{} | {} |\n",
-                cycle.start_age, cycle.end_age, stem_kor, branch_kor,
-                stem_god, branch_god, guide
+                cycle.start_age, cycle.end_age, stem_kor, branch_kor, stem_god, branch_god, guide
             ));
         }
     }
-    s.push_str("\n");
+    s.push('\n');
 
     // Section 4: 실천 솔루션
     s.push_str("### 4. 재물운 극대화를 위한 실천 가이드\n\n");
@@ -148,7 +150,7 @@ fn generate_love_report(saju: &SajuAnalysisOutput, name: &str, is_male: bool) ->
 
     // Section 1: 타고난 연애 기질
     s.push_str("### 1. 타고난 연애 기질 & 이상형 스타일\n\n");
-    
+
     let day_stem_kor = HeavenlyStem::HANGUL[day_stem.index() as usize];
     let day_stem_han = HeavenlyStem::HANJA[day_stem.index() as usize];
     let day_branch_kor = EarthlyBranch::HANGUL[day_branch.index() as usize];
@@ -172,7 +174,10 @@ fn generate_love_report(saju: &SajuAnalysisOutput, name: &str, is_male: bool) ->
     s.push_str("명식 내의 합(合), 충(冲), 그리고 공망(空亡)의 분포를 통해 바라본 연애상의 장단점 분석입니다.\n\n");
 
     let has_conflict = saju.relationships.mapped_relationships.iter().any(|r| {
-        r.relation_type.contains("충") || r.relation_type.contains("형") || r.relation_type.contains("해") || r.relation_type.contains("원진")
+        r.relation_type.contains("충")
+            || r.relation_type.contains("형")
+            || r.relation_type.contains("해")
+            || r.relation_type.contains("원진")
     });
     let relationships_desc = if has_conflict {
         "사주 원국 내에 일지(배우자궁)와 관련된 충(冲)이나 원진(怨嗔)의 기운이 일부 관측됩니다. 이는 연애 초기에는 뜨겁게 타오르나 시간이 지나면서 사소한 말다툼이나 오해가 깊어질 우려가 있음을 시사합니다. 상호 존중과 주기적인 대화 시간을 가지는 것이 관계의 안전망이 됩니다."
@@ -187,20 +192,31 @@ fn generate_love_report(saju: &SajuAnalysisOutput, name: &str, is_male: bool) ->
     s.push_str("향후 5년간 애정의 활력이 가장 크게 상승하는 대운/세운 흐름을 기반으로 분석한 인연 유입 타이밍입니다.\n\n");
     s.push_str("| 연도 | 세운 간지 | 십이운성 활력도 | 연애/인연운 종합 추천도 |\n");
     s.push_str("| --- | --- | --- | --- |\n");
-    
+
     // 예시용 향후 5년 가이드라인
     let years = vec![2026, 2027, 2028, 2029, 2030];
     for (i, yr) in years.into_iter().enumerate() {
         let (ganzi, stage, score) = match i {
             0 => ("丙午 (병오)", "태(胎)", "★★★☆☆ - 호기심 가득한 인연 출현"),
             1 => ("丁未 (정미)", "양(養)", "★★★★☆ - 안정감 있는 만남 지속"),
-            2 => ("戊申 (무신)", "장생(長生)", "★★★★★ - 평생의 인연이 나타나는 적기"),
-            3 => ("己酉 (기유)", "목욕(沐浴)", "★★★★☆ - 연애의 화려함과 매력 상승"),
+            2 => (
+                "戊申 (무신)",
+                "장생(長生)",
+                "★★★★★ - 평생의 인연이 나타나는 적기",
+            ),
+            3 => (
+                "己酉 (기유)",
+                "목욕(沐浴)",
+                "★★★★☆ - 연애의 화려함과 매력 상승",
+            ),
             _ => ("庚戌 (경술)", "관대(冠帶)", "★★★☆☆ - 책임감 있는 관계 정립"),
         };
-        s.push_str(&format!("| {}년 | {} | {} | {} |\n", yr, ganzi, stage, score));
+        s.push_str(&format!(
+            "| {}년 | {} | {} | {} |\n",
+            yr, ganzi, stage, score
+        ));
     }
-    s.push_str("\n");
+    s.push('\n');
 
     // Section 4: 행복 가이드
     s.push_str("### 4. 행복하고 조화로운 관계를 위한 액션 솔루션\n\n");
@@ -221,7 +237,7 @@ fn generate_health_report(saju: &SajuAnalysisOutput, name: &str) -> (String, Str
 
     // Section 1: 체질분석
     s.push_str("### 1. 오행 배분으로 보는 타고난 건강 체질\n\n");
-    
+
     let day_stem_kor = HeavenlyStem::HANGUL[day_stem.index() as usize];
 
     s.push_str(&format!(
@@ -232,11 +248,24 @@ fn generate_health_report(saju: &SajuAnalysisOutput, name: &str) -> (String, Str
     // 오행 강약 분석에 기반한 건강 조언
     let mut fire_count = 0;
     let mut water_count = 0;
-    for pillar in &[&saju.report.pillars.year, &saju.report.pillars.month, &saju.report.pillars.day, &saju.report.pillars.hour] {
-        if pillar.stem.element() == Element::Fire { fire_count += 1; }
-        if pillar.branch.element() == Element::Fire { fire_count += 1; }
-        if pillar.stem.element() == Element::Water { water_count += 1; }
-        if pillar.branch.element() == Element::Water { water_count += 1; }
+    for pillar in &[
+        &saju.report.pillars.year,
+        &saju.report.pillars.month,
+        &saju.report.pillars.day,
+        &saju.report.pillars.hour,
+    ] {
+        if pillar.stem.element() == Element::Fire {
+            fire_count += 1;
+        }
+        if pillar.branch.element() == Element::Fire {
+            fire_count += 1;
+        }
+        if pillar.stem.element() == Element::Water {
+            water_count += 1;
+        }
+        if pillar.branch.element() == Element::Water {
+            water_count += 1;
+        }
     }
 
     let health_desc = if fire_count > 3 {
@@ -252,22 +281,21 @@ fn generate_health_report(saju: &SajuAnalysisOutput, name: &str) -> (String, Str
     // Section 2: 주의해야 할 신체 부위 및 에러 Lints
     s.push_str("### 2. 신체 불균형 및 주요 경고 신호 (Destiny Lints)\n\n");
     s.push_str("EON 린터 엔진이 탐지한 체질적 잠재 취약점 정보입니다.\n\n");
-    
+
     if saju.lints.is_empty() {
         s.push_str("- **탐지된 잠재 경고**: 없음 (신체적 균형이 안정적입니다)\n\n");
     } else {
         for lint in saju.lints.iter().take(2) {
-            s.push_str(&format!(
-                "- **[{:?}]**: {}\n",
-                lint.severity, lint.message
-            ));
+            s.push_str(&format!("- **[{:?}]**: {}\n", lint.severity, lint.message));
         }
-        s.push_str("\n");
+        s.push('\n');
     }
 
     // Section 3: 마음 치유 및 에너지 관리법
     s.push_str("### 3. 마음 치유 & 웰니스 추천 가이드\n\n");
-    s.push_str("신체 건강뿐만 아니라, 스트레스 관리를 위한 마음 치유 웰니스 처방 가이드라인입니다.\n\n");
+    s.push_str(
+        "신체 건강뿐만 아니라, 스트레스 관리를 위한 마음 치유 웰니스 처방 가이드라인입니다.\n\n",
+    );
     s.push_str("- **추천 운동 요법**: 가벼운 유산소 산책과 호흡 명상 요법을 병행하여 체내 산소 순환율을 향상시키십시오.\n");
     s.push_str("- **치유 색상 테라피**: 신체 리듬을 다스리기 위하여, 침실이나 자주 사용하는 소품의 색상을 부드러운 자연의 색조(그린, 소프트 우드 계열)로 선택하는 것을 권장합니다.\n");
     s.push_str("- **스트레스 아웃 가이드**: 과다한 생각과 고민은 위장 기능을 떨어트리는 주원인이 되므로, 하루 10분 온전히 생각을 비우는 명상 훈련을 하십시오.\n");
@@ -278,7 +306,7 @@ fn generate_health_report(saju: &SajuAnalysisOutput, name: &str) -> (String, Str
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dto::{AnalysisInput, SajuAnalysisInput, BirthTimePrecision};
+    use crate::dto::{AnalysisInput, BirthTimePrecision, SajuAnalysisInput};
 
     #[test]
     fn test_themed_report_generation() {
@@ -332,4 +360,3 @@ mod tests {
         assert!(out_health.content.contains("건강"));
     }
 }
-

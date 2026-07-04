@@ -1,25 +1,121 @@
 // crates/eon-ui/src/components/tabs/western_tab.rs
-use dioxus::prelude::*;
-use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, Locale};
-use eon_service::facade;
-use eon_service::dto::WesternAnalysisInput;
 use crate::components::shared::birth_form::BirthForm;
+use crate::i18n::{t, Locale, TK};
+use crate::store::{AnalysisState, TaskStatus};
+use dioxus::prelude::*;
+use eon_service::dto::WesternAnalysisInput;
+use eon_service::facade;
 
 pub fn get_planet_emoji_and_name(name: &str, locale: Locale) -> (&'static str, String) {
     let (emoji, val) = match name {
-        "Sun" => ("☀️", match locale { Locale::Ko => "태양 (Sun)", Locale::Zh => "太阳", Locale::Ru => "Солнце", _ => "Sun" }),
-        "Moon" => ("🌙", match locale { Locale::Ko => "달 (Moon)", Locale::Zh => "月亮", Locale::Ru => "Луна", _ => "Moon" }),
-        "Mercury" => ("☿", match locale { Locale::Ko => "수성 (Mercury)", Locale::Zh => "水星", Locale::Ru => "Меркурий", _ => "Mercury" }),
-        "Venus" => ("♀", match locale { Locale::Ko => "금성 (Venus)", Locale::Zh => "金星", Locale::Ru => "Венера", _ => "Venus" }),
-        "Mars" => ("♂", match locale { Locale::Ko => "화성 (Mars)", Locale::Zh => "火星", Locale::Ru => "Марс", _ => "Mars" }),
-        "Jupiter" => ("♃", match locale { Locale::Ko => "목성 (Jupiter)", Locale::Zh => "木星", Locale::Ru => "Юпитер", _ => "Jupiter" }),
-        "Saturn" => ("♄", match locale { Locale::Ko => "토성 (Saturn)", Locale::Zh => "土星", Locale::Ru => "Сатурн", _ => "Saturn" }),
-        "Uranus" => ("♅", match locale { Locale::Ko => "천왕성 (Uranus)", Locale::Zh => "天王星", Locale::Ru => "Уран", _ => "Uranus" }),
-        "Neptune" => ("♆", match locale { Locale::Ko => "해왕성 (Neptune)", Locale::Zh => "海王星", Locale::Ru => "Нептун", _ => "Neptune" }),
-        "Pluto" => ("♇", match locale { Locale::Ko => "명왕성 (Pluto)", Locale::Zh => "冥王星", Locale::Ru => "Плутон", _ => "Pluto" }),
-        "Chiron" => ("🔑", match locale { Locale::Ko => "키론 (Chiron)", Locale::Zh => "凯龙星", Locale::Ru => "Хирон", _ => "Chiron" }),
-        "True Node" => ("☊", match locale { Locale::Ko => "북노드 (Node)", Locale::Zh => "北交点", Locale::Ru => "Северный узел", _ => "True Node" }),
+        "Sun" => (
+            "☀️",
+            match locale {
+                Locale::Ko => "태양 (Sun)",
+                Locale::Zh => "太阳",
+                Locale::Ru => "Солнце",
+                _ => "Sun",
+            },
+        ),
+        "Moon" => (
+            "🌙",
+            match locale {
+                Locale::Ko => "달 (Moon)",
+                Locale::Zh => "月亮",
+                Locale::Ru => "Луна",
+                _ => "Moon",
+            },
+        ),
+        "Mercury" => (
+            "☿",
+            match locale {
+                Locale::Ko => "수성 (Mercury)",
+                Locale::Zh => "水星",
+                Locale::Ru => "Меркурий",
+                _ => "Mercury",
+            },
+        ),
+        "Venus" => (
+            "♀",
+            match locale {
+                Locale::Ko => "금성 (Venus)",
+                Locale::Zh => "金星",
+                Locale::Ru => "Венера",
+                _ => "Venus",
+            },
+        ),
+        "Mars" => (
+            "♂",
+            match locale {
+                Locale::Ko => "화성 (Mars)",
+                Locale::Zh => "火星",
+                Locale::Ru => "Марс",
+                _ => "Mars",
+            },
+        ),
+        "Jupiter" => (
+            "♃",
+            match locale {
+                Locale::Ko => "목성 (Jupiter)",
+                Locale::Zh => "木星",
+                Locale::Ru => "Юпитер",
+                _ => "Jupiter",
+            },
+        ),
+        "Saturn" => (
+            "♄",
+            match locale {
+                Locale::Ko => "토성 (Saturn)",
+                Locale::Zh => "土星",
+                Locale::Ru => "Сатурн",
+                _ => "Saturn",
+            },
+        ),
+        "Uranus" => (
+            "♅",
+            match locale {
+                Locale::Ko => "천왕성 (Uranus)",
+                Locale::Zh => "天王星",
+                Locale::Ru => "Уран",
+                _ => "Uranus",
+            },
+        ),
+        "Neptune" => (
+            "♆",
+            match locale {
+                Locale::Ko => "해왕성 (Neptune)",
+                Locale::Zh => "海王星",
+                Locale::Ru => "Нептун",
+                _ => "Neptune",
+            },
+        ),
+        "Pluto" => (
+            "♇",
+            match locale {
+                Locale::Ko => "명왕성 (Pluto)",
+                Locale::Zh => "冥王星",
+                Locale::Ru => "Плутон",
+                _ => "Pluto",
+            },
+        ),
+        "Chiron" => (
+            "🔑",
+            match locale {
+                Locale::Ko => "키론 (Chiron)",
+                Locale::Zh => "凯龙星",
+                Locale::Ru => "Хирон",
+                _ => "Chiron",
+            },
+        ),
+        "True Node" => (
+            "☊",
+            match locale {
+                Locale::Ko => "북노드 (Node)",
+                Locale::Zh => "北交点",
+                Locale::Ru => "Северный узел",
+                _ => "True Node",
+            },
+        ),
         _ => ("🪐", name),
     };
     (emoji, val.to_string())
@@ -27,35 +123,174 @@ pub fn get_planet_emoji_and_name(name: &str, locale: Locale) -> (&'static str, S
 
 pub fn get_sign_emoji_and_name(idx: usize, locale: Locale) -> (&'static str, &'static str) {
     match idx {
-        0 => ("♈", match locale { Locale::Ko => "백양자리 (Aries)", Locale::Zh => "白羊座", Locale::Ru => "Овен", _ => "Aries" }),
-        1 => ("♉", match locale { Locale::Ko => "황소자리 (Taurus)", Locale::Zh => "金牛座", Locale::Ru => "Телец", _ => "Taurus" }),
-        2 => ("♊", match locale { Locale::Ko => "쌍둥이자리 (Gemini)", Locale::Zh => "双子座", Locale::Ru => "Близнецы", _ => "Gemini" }),
-        3 => ("♋", match locale { Locale::Ko => "게자리 (Cancer)", Locale::Zh => "巨蟹座", Locale::Ru => "Рак", _ => "Cancer" }),
-        4 => ("♌", match locale { Locale::Ko => "사자자리 (Leo)", Locale::Zh => "狮子座", Locale::Ru => "Лев", _ => "Leo" }),
-        5 => ("♍", match locale { Locale::Ko => "처녀자리 (Virgo)", Locale::Zh => "处女座", Locale::Ru => "Дева", _ => "Virgo" }),
-        6 => ("♎", match locale { Locale::Ko => "천칭자리 (Libra)", Locale::Zh => "天秤座", Locale::Ru => "Весы", _ => "Libra" }),
-        7 => ("♏", match locale { Locale::Ko => "전갈자리 (Scorpio)", Locale::Zh => "天蝎座", Locale::Ru => "Скорпион", _ => "Scorpio" }),
-        8 => ("♐", match locale { Locale::Ko => "사수자리 (Sagittarius)", Locale::Zh => "射手座", Locale::Ru => "Стрелец", _ => "Sagittarius" }),
-        9 => ("♑", match locale { Locale::Ko => "염소자리 (Capricorn)", Locale::Zh => "摩羯座", Locale::Ru => "Козерог", _ => "Capricorn" }),
-        10 => ("♒", match locale { Locale::Ko => "물병자리 (Aquarius)", Locale::Zh => "水瓶座", Locale::Ru => "Водолей", _ => "Aquarius" }),
-        11 => ("♓", match locale { Locale::Ko => "물고기자리 (Pisces)", Locale::Zh => "双鱼座", Locale::Ru => "Рыбы", _ => "Pisces" }),
+        0 => (
+            "♈",
+            match locale {
+                Locale::Ko => "백양자리 (Aries)",
+                Locale::Zh => "白羊座",
+                Locale::Ru => "Овен",
+                _ => "Aries",
+            },
+        ),
+        1 => (
+            "♉",
+            match locale {
+                Locale::Ko => "황소자리 (Taurus)",
+                Locale::Zh => "金牛座",
+                Locale::Ru => "Телец",
+                _ => "Taurus",
+            },
+        ),
+        2 => (
+            "♊",
+            match locale {
+                Locale::Ko => "쌍둥이자리 (Gemini)",
+                Locale::Zh => "双子座",
+                Locale::Ru => "Близнецы",
+                _ => "Gemini",
+            },
+        ),
+        3 => (
+            "♋",
+            match locale {
+                Locale::Ko => "게자리 (Cancer)",
+                Locale::Zh => "巨蟹座",
+                Locale::Ru => "Рак",
+                _ => "Cancer",
+            },
+        ),
+        4 => (
+            "♌",
+            match locale {
+                Locale::Ko => "사자자리 (Leo)",
+                Locale::Zh => "狮子座",
+                Locale::Ru => "Лев",
+                _ => "Leo",
+            },
+        ),
+        5 => (
+            "♍",
+            match locale {
+                Locale::Ko => "처녀자리 (Virgo)",
+                Locale::Zh => "处女座",
+                Locale::Ru => "Дева",
+                _ => "Virgo",
+            },
+        ),
+        6 => (
+            "♎",
+            match locale {
+                Locale::Ko => "천칭자리 (Libra)",
+                Locale::Zh => "天秤座",
+                Locale::Ru => "Весы",
+                _ => "Libra",
+            },
+        ),
+        7 => (
+            "♏",
+            match locale {
+                Locale::Ko => "전갈자리 (Scorpio)",
+                Locale::Zh => "天蝎座",
+                Locale::Ru => "Скорпион",
+                _ => "Scorpio",
+            },
+        ),
+        8 => (
+            "♐",
+            match locale {
+                Locale::Ko => "사수자리 (Sagittarius)",
+                Locale::Zh => "射手座",
+                Locale::Ru => "Стрелец",
+                _ => "Sagittarius",
+            },
+        ),
+        9 => (
+            "♑",
+            match locale {
+                Locale::Ko => "염소자리 (Capricorn)",
+                Locale::Zh => "摩羯座",
+                Locale::Ru => "Козерог",
+                _ => "Capricorn",
+            },
+        ),
+        10 => (
+            "♒",
+            match locale {
+                Locale::Ko => "물병자리 (Aquarius)",
+                Locale::Zh => "水瓶座",
+                Locale::Ru => "Водолей",
+                _ => "Aquarius",
+            },
+        ),
+        11 => (
+            "♓",
+            match locale {
+                Locale::Ko => "물고기자리 (Pisces)",
+                Locale::Zh => "双鱼座",
+                Locale::Ru => "Рыбы",
+                _ => "Pisces",
+            },
+        ),
         _ => ("❓", "Unknown"),
     }
 }
 
-pub fn get_aspect_emoji_and_name(aspect: eon_western::AspectType, locale: Locale) -> (&'static str, &'static str) {
+pub fn get_aspect_emoji_and_name(
+    aspect: eon_western::AspectType,
+    locale: Locale,
+) -> (&'static str, &'static str) {
     match aspect {
-        eon_western::AspectType::Conjunction => ("☌", match locale { Locale::Ko => "합 (Conjunction)", Locale::Zh => "合相", Locale::Ru => "Соединение", _ => "Conjunction" }),
-        eon_western::AspectType::Sextile => ("⚹", match locale { Locale::Ko => "육분의 (Sextile)", Locale::Zh => "六分相", Locale::Ru => "Секстиль", _ => "Sextile" }),
-        eon_western::AspectType::Square => ("□", match locale { Locale::Ko => "스퀘어 (Square)", Locale::Zh => "三分相", Locale::Ru => "Квадратура", _ => "Square" }),
-        eon_western::AspectType::Trine => ("△", match locale { Locale::Ko => "트라인 (Trine)", Locale::Zh => "三分相", Locale::Ru => "Тригон", _ => "Trine" }),
-        eon_western::AspectType::Opposition => ("☍", match locale { Locale::Ko => "대립 (Opposition)", Locale::Zh => "对分相", Locale::Ru => "Оппозиция", _ => "Opposition" }),
+        eon_western::AspectType::Conjunction => (
+            "☌",
+            match locale {
+                Locale::Ko => "합 (Conjunction)",
+                Locale::Zh => "合相",
+                Locale::Ru => "Соединение",
+                _ => "Conjunction",
+            },
+        ),
+        eon_western::AspectType::Sextile => (
+            "⚹",
+            match locale {
+                Locale::Ko => "육분의 (Sextile)",
+                Locale::Zh => "六分相",
+                Locale::Ru => "Секстиль",
+                _ => "Sextile",
+            },
+        ),
+        eon_western::AspectType::Square => (
+            "□",
+            match locale {
+                Locale::Ko => "스퀘어 (Square)",
+                Locale::Zh => "三分相",
+                Locale::Ru => "Квадратура",
+                _ => "Square",
+            },
+        ),
+        eon_western::AspectType::Trine => (
+            "△",
+            match locale {
+                Locale::Ko => "트라인 (Trine)",
+                Locale::Zh => "三分相",
+                Locale::Ru => "Тригон",
+                _ => "Trine",
+            },
+        ),
+        eon_western::AspectType::Opposition => (
+            "☍",
+            match locale {
+                Locale::Ko => "대립 (Opposition)",
+                Locale::Zh => "对分相",
+                Locale::Ru => "Оппозиция",
+                _ => "Opposition",
+            },
+        ),
     }
 }
 
 #[component]
 pub fn WesternTab() -> Element {
-    let mut state = use_context::<AnalysisState>();
+    let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
 
     // 현재 선택된 하우스 시스템 상태 (기본값: 'P' Placidus)
@@ -71,7 +306,7 @@ pub fn WesternTab() -> Element {
         let form = state_cloned.form.read().clone();
         let house_sys = selected_house_sys.read().clone();
         let _trig = *analysis_trigger.read();
-        
+
         if form.year > 0 {
             let mut state = state_cloned.clone();
             spawn(async move {
@@ -210,9 +445,9 @@ pub fn WesternTab() -> Element {
                         let (asc_emoji, asc_name) = get_sign_emoji_and_name(asc_sign_idx, locale);
                         let asc_deg = res.ascendant % 30.0;
                         let asc_deg_str = format!("{:.0}° {:.0}'", asc_deg.floor(), (asc_deg.fract() * 60.0).round());
-                        
+
                         let (_, cr_korean_name) = get_planet_emoji_and_name(&res.chart_ruler, locale);
-                        
+
                         let (el_emoji, el_name) = match res.dominant_element.as_str() {
                             "Fire" => ("🔥", match locale { Locale::Ko => "불 (Fire)", _ => "Fire" }),
                             "Earth" => ("⛰️", match locale { Locale::Ko => "흙 (Earth)", _ => "Earth" }),
@@ -235,7 +470,7 @@ pub fn WesternTab() -> Element {
                                 div { class: "bg-slate-900/60 border border-slate-800/50 rounded-2xl p-5 backdrop-blur-md relative overflow-hidden group shadow-lg",
                                     div { class: "absolute -right-4 -bottom-4 text-slate-800/30 text-7xl font-bold transition-all duration-300 group-hover:scale-110", "ASC" }
                                     p { class: "text-xs font-semibold text-slate-400 uppercase tracking-widest", "Ascendant" }
-                                    h3 { class: "text-lg font-bold text-violet-300 mt-2 flex items-center gap-1.5", 
+                                    h3 { class: "text-lg font-bold text-violet-300 mt-2 flex items-center gap-1.5",
                                         span { "{asc_emoji}" }
                                         span { "{asc_name}" }
                                     }
@@ -295,7 +530,7 @@ pub fn WesternTab() -> Element {
                                                         let (s_emoji, s_name) = get_sign_emoji_and_name(p.sign_index, locale);
                                                         let p_deg = p.degree_in_sign;
                                                         let p_deg_str = format!("{:.0}° {:.0}'", p_deg.floor(), (p_deg.fract() * 60.0).round());
-                                                        
+
                                                         rsx! {
                                                             tr { key: "{p.id}", class: "hover:bg-slate-800/20 transition-colors",
                                                                 // 행성 명칭 및 역행 배지
@@ -335,7 +570,7 @@ pub fn WesternTab() -> Element {
                                                 let (s_emoji, s_name) = get_sign_emoji_and_name(h.sign_index, locale);
                                                 let h_deg = h.degree_in_sign;
                                                 let h_deg_str = format!("{:.0}° {:.0}'", h_deg.floor(), (h_deg.fract() * 60.0).round());
-                                                
+
                                                 rsx! {
                                                     div { key: "{h.house_number}", class: "flex flex-col bg-slate-950/40 border border-slate-800/60 p-2.5 rounded-xl text-center hover:border-violet-500/40 transition-colors",
                                                         span { class: "text-[10px] text-slate-500 font-bold uppercase tracking-wider", "House {h.house_number}" }
@@ -401,7 +636,7 @@ pub fn WesternTab() -> Element {
                                                 }
                                             }
                                         }
-                                        
+
                                         // 양태(Modalities)
                                         div { class: "space-y-3 pt-3 border-t border-slate-800/60",
                                             h4 { class: "text-sm font-bold text-slate-400 uppercase tracking-widest", "{t(locale, TK::WestModalitiesTitle)}" }
@@ -451,7 +686,7 @@ pub fn WesternTab() -> Element {
                                                     let (b_a_emoji, b_a_name) = get_planet_emoji_and_name(&asp.body_a_name, locale);
                                                     let (b_b_emoji, b_b_name) = get_planet_emoji_and_name(&asp.body_b_name, locale);
                                                     let (asp_emoji, asp_name) = get_aspect_emoji_and_name(asp.aspect_type, locale);
-                                                    
+
                                                     // 아스펙트 유형에 따른 테두리 색 구분
                                                     let border_color = match asp.aspect_type {
                                                         eon_western::AspectType::Conjunction => "border-violet-500/20 hover:border-violet-500/40 bg-violet-500/5",
@@ -460,29 +695,29 @@ pub fn WesternTab() -> Element {
                                                         eon_western::AspectType::Trine => "border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/5",
                                                         eon_western::AspectType::Opposition => "border-amber-500/20 hover:border-amber-500/40 bg-amber-500/5",
                                                     };
-                                                    
+
                                                     rsx! {
                                                         div {
                                                             key: "{asp.body_a_name}-{asp.body_b_name}-{asp.aspect_type.angle()}",
                                                             class: "flex items-center justify-between p-3 rounded-xl border transition-all duration-200 {border_color}",
-                                                            
+
                                                             div { class: "flex items-center gap-2",
                                                                 // 첫번째 천체
                                                                 div { class: "flex items-center gap-1.5 text-slate-200 text-xs font-semibold",
                                                                     span { "{b_a_emoji}" }
                                                                     span { "{b_a_name}" }
                                                                 }
-                                                                
+
                                                                 // 아스펙트 결합 기호
                                                                 span { class: "text-slate-400 font-bold", "—" }
-                                                                
+
                                                                 // 두번째 천체
                                                                 div { class: "flex items-center gap-1.5 text-slate-200 text-xs font-semibold",
                                                                     span { "{b_b_emoji}" }
                                                                     span { "{b_b_name}" }
                                                                 }
                                                             }
-                                                            
+
                                                             // 아스펙트 세부 수치 (오브 및 각도 표시)
                                                             div { class: "text-right flex flex-col justify-center",
                                                                 span { class: "text-xs font-bold text-slate-300", "{asp_emoji} {asp_name}" }

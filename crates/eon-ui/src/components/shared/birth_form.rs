@@ -1,7 +1,7 @@
-use dioxus::prelude::*;
-use crate::store::AnalysisState;
-use crate::store::db::{self, UserProfile};
 use crate::i18n::{t, TK};
+use crate::store::db::{self, UserProfile};
+use crate::store::AnalysisState;
+use dioxus::prelude::*;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
@@ -20,9 +20,9 @@ pub fn BirthForm() -> Element {
 
     // Local state
     let mut profiles = use_signal(Vec::<UserProfile>::new);
-    let mut new_profile_name = use_signal(|| String::new());
-    let mut city_input = use_signal(|| String::new());
-    let mut geo_status = use_signal(|| String::new());
+    let mut new_profile_name = use_signal(String::new);
+    let mut city_input = use_signal(String::new);
+    let mut geo_status = use_signal(String::new);
     let mut search_results = use_signal(Vec::<NominatimResult>::new);
 
     // Load profiles on mount
@@ -62,7 +62,8 @@ pub fn BirthForm() -> Element {
         let lon: f64 = result.lon.parse().unwrap_or(126.9780);
         state.form.write().lat = lat;
         state.form.write().lon = lon;
-        let short_name = result.display_name
+        let short_name = result
+            .display_name
             .split(',')
             .take(2)
             .collect::<Vec<_>>()
@@ -80,7 +81,9 @@ pub fn BirthForm() -> Element {
     // 도시 검색 (Nominatim)
     let on_city_geocode = move |_| {
         let query = city_input.read().clone();
-        if query.trim().is_empty() { return; }
+        if query.trim().is_empty() {
+            return;
+        }
         geo_status.set(geo_searching_str.to_string());
         search_results.set(Vec::new());
         spawn(async move {
@@ -89,9 +92,15 @@ pub fn BirthForm() -> Element {
                 urlencoding::encode(&query),
                 MAX_SEARCH_RESULTS
             );
-            let client = reqwest::Client::builder().build()
+            let client = reqwest::Client::builder()
+                .build()
                 .unwrap_or_else(|_| reqwest::Client::new());
-            match client.get(&url).header("User-Agent", "EonAstroApp/1.0").send().await {
+            match client
+                .get(&url)
+                .header("User-Agent", "EonAstroApp/1.0")
+                .send()
+                .await
+            {
                 Ok(resp) => {
                     if let Ok(results) = resp.json::<Vec<NominatimResult>>().await {
                         if results.is_empty() {
@@ -104,7 +113,9 @@ pub fn BirthForm() -> Element {
                         geo_status.set(geo_parse_err_str.to_string());
                     }
                 }
-                Err(_) => { geo_status.set(geo_net_err_str.to_string()); }
+                Err(_) => {
+                    geo_status.set(geo_net_err_str.to_string());
+                }
             }
         });
     };
@@ -113,7 +124,9 @@ pub fn BirthForm() -> Element {
     let on_city_keydown = move |evt: Event<KeyboardData>| {
         if evt.key() == Key::Enter {
             let query = city_input.read().clone();
-            if query.trim().is_empty() { return; }
+            if query.trim().is_empty() {
+                return;
+            }
             geo_status.set(geo_searching_str.to_string());
             search_results.set(Vec::new());
             spawn(async move {
@@ -122,7 +135,12 @@ pub fn BirthForm() -> Element {
                     urlencoding::encode(&query)
                 );
                 let client = reqwest::Client::new();
-                match client.get(&url).header("User-Agent", "EonAstroApp/1.0").send().await {
+                match client
+                    .get(&url)
+                    .header("User-Agent", "EonAstroApp/1.0")
+                    .send()
+                    .await
+                {
                     Ok(resp) => {
                         if let Ok(results) = resp.json::<Vec<NominatimResult>>().await {
                             if results.is_empty() {
@@ -135,7 +153,9 @@ pub fn BirthForm() -> Element {
                             geo_status.set(geo_parse_err_str.to_string());
                         }
                     }
-                    Err(_) => { geo_status.set(geo_net_err_str.to_string()); }
+                    Err(_) => {
+                        geo_status.set(geo_net_err_str.to_string());
+                    }
                 }
             });
         }
@@ -283,7 +303,7 @@ pub fn BirthForm() -> Element {
                         }
                     }
                 }
-                
+
                 // Form Checkboxes Section
                 div { class: "flex items-center gap-4 flex-wrap pb-1 h-9",
                     // Lunar calendar checkbox

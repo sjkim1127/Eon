@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
-use crate::planets::VedicPlanet;
 use crate::core::chart::VedicPosition;
+use crate::planets::VedicPlanet;
 use chrono::{DateTime, Utc};
 use eon_astro::AstroEngine;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -107,7 +107,8 @@ impl KpAnalysis {
         };
 
         let get_planet_long = |planet: VedicPlanet, planets_list: &[KpPoint]| -> f64 {
-            planets_list.iter()
+            planets_list
+                .iter()
                 .find(|kp_p| name_to_planet(&kp_p.name) == Some(planet))
                 .map(|kp_p| kp_p.longitude)
                 .unwrap_or(0.0)
@@ -142,7 +143,8 @@ impl KpAnalysis {
             let owned_houses = owned_houses_of(p, &kp_cusps);
 
             // Find planet's star lord
-            let star_lord = kp_planets.iter()
+            let star_lord = kp_planets
+                .iter()
                 .find(|kp_p| name_to_planet(&kp_p.name) == Some(p))
                 .map(|kp_p| kp_p.star_lord)
                 .unwrap_or(VedicPlanet::Sun);
@@ -210,7 +212,7 @@ fn get_kp_house(deg: f64, cusps: &[f64]) -> u8 {
 
 fn calculate_lords(sidereal: f64) -> (u8, u8, u8, VedicPlanet, VedicPlanet, VedicPlanet) {
     let rasi = ((sidereal / 30.0).floor() as u8 % 12) + 1;
-    
+
     let nak_pos = sidereal / (360.0 / 27.0);
     let nak = (nak_pos.floor() as u8) + 1;
 
@@ -270,7 +272,7 @@ fn get_sub_lord(nakshatra: u8, deg_within_nakshatra: f64) -> VedicPlanet {
     let start_idx = ((nakshatra - 1) % 9) as usize;
     let mut current_offset = 0.0;
     let width_factor = 360.0 / 27.0; // 13.3333333
-    
+
     for i in 0..9 {
         let idx = (start_idx + i) % 9;
         let (planet, years) = sequence[idx];

@@ -2,9 +2,9 @@
 //!
 //! 문창, 문곡, 좌보, 우필, 천괴, 천월의 위치를 계산합니다.
 
-use eon_saju::core::stem::HeavenlyStem;
-use crate::types::PalaceIndex;
 use crate::palace::fix_index;
+use crate::types::PalaceIndex;
+use eon_saju::core::stem::HeavenlyStem;
 
 /// 문창(文昌)과 문곡(文曲)의 ZWDS 지지 인덱스 계산
 ///
@@ -38,7 +38,7 @@ pub fn place_tiankui_tianyue(year_stem: HeavenlyStem) -> (PalaceIndex, PalaceInd
         HeavenlyStem::Jia | HeavenlyStem::Wu | HeavenlyStem::Geng => (11, 5), // 丑, 未
         HeavenlyStem::Yi | HeavenlyStem::Ji => (10, 6),                       // 子, 申
         HeavenlyStem::Xin => (4, 0),                                          // 午, 寅
-        HeavenlyStem::Bing | HeavenlyStem::Ding => (9, 7),                     // 亥, 酉
+        HeavenlyStem::Bing | HeavenlyStem::Ding => (9, 7),                    // 亥, 酉
         HeavenlyStem::Ren | HeavenlyStem::Gui => (1, 3),                      // 卯, 巳
     }
 }

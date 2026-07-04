@@ -3,10 +3,10 @@
 //! 천간(10)과 지지(12)의 조합으로 60갑자를 구성합니다.
 //! 甲子부터 癸亥까지 60개의 조합이 순환합니다.
 
-use serde::{Deserialize, Serialize};
-use crate::core::stem::HeavenlyStem;
 use crate::core::branch::EarthlyBranch;
 use crate::core::element::{Element, Polarity};
+use crate::core::stem::HeavenlyStem;
+use serde::{Deserialize, Serialize};
 
 /// 간지(干支) - 천간과 지지의 조합
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -50,7 +50,7 @@ impl GanZi {
     }
 
     /// 서기 연도로부터 해당 연도의 세운(歲運) 간지 생성
-    /// 
+    ///
     /// 기준: 서기 4년 = 甲子년 (index 0)
     #[inline]
     pub const fn from_year(year: i32) -> Self {
@@ -58,7 +58,7 @@ impl GanZi {
     }
 
     /// 60갑자 내에서의 인덱스 반환 (0-59)
-    /// 
+    ///
     /// 간지가 60갑자 중 몇 번째인지 계산합니다.
     /// 예: 甲子=0, 乙丑=1, ..., 癸亥=59
     pub const fn index(self) -> u8 {
@@ -68,10 +68,10 @@ impl GanZi {
         // n을 찾아야 함 (중국 나머지 정리)
         let stem_idx = self.stem.index() as i32;
         let branch_idx = self.branch.index() as i32;
-        
+
         // 60갑자에서 유효한 조합인지 확인 (음양이 일치해야 함)
         // stem_idx % 2 == branch_idx % 2 이어야 유효한 간지
-        
+
         // n ≡ stem_idx (mod 10)
         // n ≡ branch_idx (mod 12)
         // 해는 n = (6 * stem_idx - 5 * branch_idx) mod 60
@@ -163,10 +163,22 @@ mod tests {
 
     #[test]
     fn test_ganzi_from_index() {
-        assert_eq!(GanZi::from_index(0), GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi));
-        assert_eq!(GanZi::from_index(59), GanZi::new(HeavenlyStem::Gui, EarthlyBranch::Hai));
-        assert_eq!(GanZi::from_index(60), GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi)); // 순환
-        assert_eq!(GanZi::from_index(-1), GanZi::new(HeavenlyStem::Gui, EarthlyBranch::Hai)); // 음수
+        assert_eq!(
+            GanZi::from_index(0),
+            GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi)
+        );
+        assert_eq!(
+            GanZi::from_index(59),
+            GanZi::new(HeavenlyStem::Gui, EarthlyBranch::Hai)
+        );
+        assert_eq!(
+            GanZi::from_index(60),
+            GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi)
+        ); // 순환
+        assert_eq!(
+            GanZi::from_index(-1),
+            GanZi::new(HeavenlyStem::Gui, EarthlyBranch::Hai)
+        ); // 음수
     }
 
     #[test]

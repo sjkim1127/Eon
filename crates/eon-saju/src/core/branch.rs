@@ -2,8 +2,8 @@
 //!
 //! 子丑寅卯辰巳午未申酉戌亥
 
-use serde::{Deserialize, Serialize};
 use crate::core::element::{Element, Polarity};
+use serde::{Deserialize, Serialize};
 
 /// 지지(地支) - 12개
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -38,23 +38,44 @@ pub enum EarthlyBranch {
 impl EarthlyBranch {
     /// 모든 지지 배열
     pub const ALL: [EarthlyBranch; 12] = [
-        Self::Zi, Self::Chou, Self::Yin, Self::Mao, Self::Chen, Self::Si,
-        Self::Wu, Self::Wei, Self::Shen, Self::You, Self::Xu, Self::Hai,
+        Self::Zi,
+        Self::Chou,
+        Self::Yin,
+        Self::Mao,
+        Self::Chen,
+        Self::Si,
+        Self::Wu,
+        Self::Wei,
+        Self::Shen,
+        Self::You,
+        Self::Xu,
+        Self::Hai,
     ];
 
     /// 한자 표기
     pub const HANJA: [&'static str; 12] = [
-        "子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"
+        "子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥",
     ];
 
     /// 한글 표기
     pub const HANGUL: [&'static str; 12] = [
-        "자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"
+        "자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해",
     ];
 
     /// 띠 동물 (한글)
     pub const ZODIAC_HANGUL: [&'static str; 12] = [
-        "쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양", "원숭이", "닭", "개", "돼지"
+        "쥐",
+        "소",
+        "호랑이",
+        "토끼",
+        "용",
+        "뱀",
+        "말",
+        "양",
+        "원숭이",
+        "닭",
+        "개",
+        "돼지",
     ];
 
     /// 인덱스 (0-11)
@@ -109,7 +130,7 @@ impl EarthlyBranch {
     }
 
     /// 시주 계산용: 시간(0-23)으로부터 지지 반환
-    /// 
+    ///
     /// 자시(子時): 23:00-00:59 → Zi
     /// 축시(丑時): 01:00-02:59 → Chou
     /// ...
@@ -121,7 +142,7 @@ impl EarthlyBranch {
     }
 
     /// 월주 계산용: 월(1-12, 음력 기준)으로부터 지지 반환
-    /// 
+    ///
     /// 인월(1월) → 寅, 묘월(2월) → 卯, ...
     #[inline]
     pub const fn from_month(month: u8) -> Self {
@@ -147,17 +168,17 @@ impl EarthlyBranch {
         use crate::core::stem::HeavenlyStem::*;
         match self {
             Self::Zi => vec![Ren, Gui],        // 壬, 癸 (여기, 정기)
-            Self::Chou => vec![Gui, Xin, Ji],   // 癸, 辛, 己 (여기, 중기, 정기)
-            Self::Yin => vec![Wu, Bing, Jia],   // 戊, 丙, 甲 (여기, 중기, 정기)
-            Self::Mao => vec![Jia, Yi],         // 甲, 乙 (여기, 정기)
-            Self::Chen => vec![Yi, Gui, Wu],    // 乙, 癸, 戊 (여기, 중기, 정기)
-            Self::Si => vec![Wu, Geng, Bing],   // 戊, 庚, 丙 (여기, 중기, 정기)
-            Self::Wu => vec![Bing, Ji, Ding],   // 丙, 己, 丁 (여기, 중기, 정기)
-            Self::Wei => vec![Ding, Yi, Ji],    // 丁, 乙, 己 (여기, 중기, 정기)
-            Self::Shen => vec![Wu, Ren, Geng],  // 戊, 壬, 庚 (여기, 중기, 정기)
-            Self::You => vec![Geng, Xin],       // 庚, Xin (여기, 정기)
-            Self::Xu => vec![Xin, Ding, Wu],    // 辛, 丁, 戊 (여기, 중기, 정기)
-            Self::Hai => vec![Wu, Jia, Ren],    // 戊, 甲, 壬 (여기, 중기, 정기)
+            Self::Chou => vec![Gui, Xin, Ji],  // 癸, 辛, 己 (여기, 중기, 정기)
+            Self::Yin => vec![Wu, Bing, Jia],  // 戊, 丙, 甲 (여기, 중기, 정기)
+            Self::Mao => vec![Jia, Yi],        // 甲, 乙 (여기, 정기)
+            Self::Chen => vec![Yi, Gui, Wu],   // 乙, 癸, 戊 (여기, 중기, 정기)
+            Self::Si => vec![Wu, Geng, Bing],  // 戊, 庚, 丙 (여기, 중기, 정기)
+            Self::Wu => vec![Bing, Ji, Ding],  // 丙, 己, 丁 (여기, 중기, 정기)
+            Self::Wei => vec![Ding, Yi, Ji],   // 丁, 乙, 己 (여기, 중기, 정기)
+            Self::Shen => vec![Wu, Ren, Geng], // 戊, 壬, 庚 (여기, 중기, 정기)
+            Self::You => vec![Geng, Xin],      // 庚, Xin (여기, 정기)
+            Self::Xu => vec![Xin, Ding, Wu],   // 辛, 丁, 戊 (여기, 중기, 정기)
+            Self::Hai => vec![Wu, Jia, Ren],   // 戊, 甲, 壬 (여기, 중기, 정기)
         }
     }
 
@@ -239,9 +260,9 @@ mod tests {
     #[test]
     fn test_branch_from_hour() {
         assert_eq!(EarthlyBranch::from_hour(23), EarthlyBranch::Zi); // 자시
-        assert_eq!(EarthlyBranch::from_hour(0), EarthlyBranch::Zi);  // 자시
+        assert_eq!(EarthlyBranch::from_hour(0), EarthlyBranch::Zi); // 자시
         assert_eq!(EarthlyBranch::from_hour(1), EarthlyBranch::Chou); // 축시
-        assert_eq!(EarthlyBranch::from_hour(12), EarthlyBranch::Wu);  // 오시
+        assert_eq!(EarthlyBranch::from_hour(12), EarthlyBranch::Wu); // 오시
     }
 
     #[test]

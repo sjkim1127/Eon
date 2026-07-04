@@ -17,7 +17,7 @@ pub struct HexagramInfo {
 
 pub fn get_hexagram_info(index: u8) -> HexagramInfo {
     let list = get_all_hexagrams();
-    if index >= 1 && index <= 64 {
+    if (1..=64).contains(&index) {
         list[(index - 1) as usize].clone()
     } else {
         list[0].clone()
@@ -60,7 +60,11 @@ pub fn get_yao_name(line_idx: u8, is_yang: bool, locale: Locale) -> String {
             }
         }
         Locale::Ru => {
-            let num = if is_yang { "Девятка" } else { "Шестерка" };
+            let num = if is_yang {
+                "Девятка"
+            } else {
+                "Шестерка"
+            };
             match line_idx {
                 1 => format!("Начальная {}", num),
                 2 => format!("Вторая {}", num),

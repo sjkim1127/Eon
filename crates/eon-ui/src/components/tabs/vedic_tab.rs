@@ -1,25 +1,46 @@
-use dioxus::prelude::*;
-use crate::store::{AnalysisState, TaskStatus};
+use crate::components::shared::birth_form::BirthForm;
 use crate::i18n::{
-    t, TK, Locale, translate_planet, translate_planet_str, rasi_name, rasi_name_short,
-    translate_avastha, nakshatra_lord_localized, rasi_lord_localized,
-    translate_koota_name, translate_koota_desc
+    nakshatra_lord_localized, rasi_lord_localized, rasi_name, rasi_name_short, t,
+    translate_avastha, translate_koota_desc, translate_koota_name, translate_planet,
+    translate_planet_str, Locale, TK,
 };
-use eon_service::dto::{VedicAnalysisInput, AnalysisInput, VedicCompatibilityInput};
+use crate::store::{AnalysisState, TaskStatus};
+use chrono_tz;
+use dioxus::prelude::*;
+use eon_service::dto::{AnalysisInput, VedicCompatibilityInput};
 use eon_service::facade;
 use eon_vedic::planets::VedicPlanet;
-use crate::components::shared::birth_form::BirthForm;
-use chrono_tz;
 
 const NAKSHATRA_NAMES: &[&str] = &[
-    "", "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira",
-    "Ardra", "Punarvasu", "Pushya", "Ashlesha", "Magha",
-    "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra",
-    "Swati", "Vishakha", "Anuradha", "Jyeshtha", "Mula",
-    "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishtha",
-    "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati",
+    "",
+    "Ashwini",
+    "Bharani",
+    "Krittika",
+    "Rohini",
+    "Mrigashira",
+    "Ardra",
+    "Punarvasu",
+    "Pushya",
+    "Ashlesha",
+    "Magha",
+    "Purva Phalguni",
+    "Uttara Phalguni",
+    "Hasta",
+    "Chitra",
+    "Swati",
+    "Vishakha",
+    "Anuradha",
+    "Jyeshtha",
+    "Mula",
+    "Purva Ashadha",
+    "Uttara Ashadha",
+    "Shravana",
+    "Dhanishtha",
+    "Shatabhisha",
+    "Purva Bhadrapada",
+    "Uttara Bhadrapada",
+    "Revati",
 ];
-
 
 fn planet_color(planet: VedicPlanet) -> &'static str {
     match planet {
@@ -35,7 +56,6 @@ fn planet_color(planet: VedicPlanet) -> &'static str {
         VedicPlanet::Ascendant => "text-white",
     }
 }
-
 
 fn planet_color_str(p_name: &str) -> &'static str {
     match p_name {
@@ -53,27 +73,29 @@ fn planet_color_str(p_name: &str) -> &'static str {
     }
 }
 
-
-
 fn nakshatra_name(n: u8) -> &'static str {
-    if n == 0 || n > 27 { return "—" }
+    if n == 0 || n > 27 {
+        return "—";
+    }
     NAKSHATRA_NAMES[n as usize]
 }
-
 
 fn lajjitadi_color(av: &eon_vedic::analysis::avasthas::LajjitadiAvastha) -> &'static str {
     use eon_vedic::analysis::avasthas::LajjitadiAvastha;
     match av {
-        LajjitadiAvastha::Garvita => "text-emerald-400 bg-emerald-950/40 border border-emerald-800/40",
+        LajjitadiAvastha::Garvita => {
+            "text-emerald-400 bg-emerald-950/40 border border-emerald-800/40"
+        }
         LajjitadiAvastha::Mudita => "text-green-400 bg-green-950/40 border border-green-800/40",
         LajjitadiAvastha::Neutral => "text-slate-400 bg-slate-950/40 border border-slate-800/40",
         LajjitadiAvastha::Lajjita => "text-amber-400 bg-amber-950/40 border border-amber-800/40",
         LajjitadiAvastha::Trishita => "text-sky-400 bg-sky-950/40 border border-sky-800/40",
-        LajjitadiAvastha::Kshobhita => "text-purple-400 bg-purple-950/40 border border-purple-800/40",
+        LajjitadiAvastha::Kshobhita => {
+            "text-purple-400 bg-purple-950/40 border border-purple-800/40"
+        }
         LajjitadiAvastha::Kshudhita => "text-red-400 bg-red-950/40 border border-red-800/40",
     }
 }
-
 
 // --- Tooltip & Interaction structures ---
 #[derive(Clone, Debug, PartialEq)]
@@ -125,7 +147,6 @@ fn planet_from_lbl(lbl: &str) -> Option<VedicPlanet> {
     }
 }
 
-
 fn get_d1_planet_tooltip(
     locale: Locale,
     lbl: &str,
@@ -140,10 +161,10 @@ fn get_d1_planet_tooltip(
         } else {
             d1_planets.iter().find(|p| p.planet == planet)?
         };
-        
+
         let nak_name = nakshatra_name(pos.nakshatra);
         let nak_lord = nakshatra_lord_localized(locale, pos.nakshatra);
-        
+
         let planet_name = translate_planet(locale, pos.planet).to_string();
         let deg_within_sign = pos.sidereal_deg % 30.0;
         let deg_floor = deg_within_sign.floor() as i32;
@@ -230,9 +251,12 @@ fn get_house_tooltip(
     let rasi_num = (lagna_rasi + house_num - 2) % 12 + 1;
     let rasi_name_str = rasi_name(locale, rasi_num).to_string();
     let rasi_lord = rasi_lord_localized(locale, rasi_num).to_string();
-    
+
     let score = bhava_strengths.and_then(|strengths| {
-        strengths.iter().find(|s| s.house == house_num).map(|s| s.total_score)
+        strengths
+            .iter()
+            .find(|s| s.house == house_num)
+            .map(|s| s.total_score)
     });
 
     Some(VedicTooltipTarget::House {
@@ -261,19 +285,19 @@ fn render_vedic_chart(
 ) -> Element {
     if style == "north" {
         let house_bounds = [
-            (0, 0, 0, 0, 0), // dummy 0-index
-            (1, 130, 75, 140, 70), // House 1
-            (2, 60, 20, 100, 45),  // House 2
-            (3, 10, 70, 50, 90),   // House 3
-            (4, 75, 130, 85, 140),  // House 4
-            (5, 10, 240, 50, 90),  // House 5
-            (6, 60, 325, 100, 45), // House 6
-            (7, 130, 245, 140, 70),// House 7
-            (8, 240, 325, 100, 45),// House 8
-            (9, 340, 240, 50, 90), // House 9
-            (10, 240, 130, 85, 140),// House 10
-            (11, 340, 70, 50, 90), // House 11
-            (12, 240, 20, 100, 45), // House 12
+            (0, 0, 0, 0, 0),         // dummy 0-index
+            (1, 130, 75, 140, 70),   // House 1
+            (2, 60, 20, 100, 45),    // House 2
+            (3, 10, 70, 50, 90),     // House 3
+            (4, 75, 130, 85, 140),   // House 4
+            (5, 10, 240, 50, 90),    // House 5
+            (6, 60, 325, 100, 45),   // House 6
+            (7, 130, 245, 140, 70),  // House 7
+            (8, 240, 325, 100, 45),  // House 8
+            (9, 340, 240, 50, 90),   // House 9
+            (10, 240, 130, 85, 140), // House 10
+            (11, 340, 70, 50, 90),   // House 11
+            (12, 240, 20, 100, 45),  // House 12
         ];
 
         let sign_coords = [
@@ -331,24 +355,24 @@ fn render_vedic_chart(
                     fill: "#cbd5e1",
                     "{chart_title}"
                 }
-                
+
                 {house_bounds.iter().map(|&(h_idx, box_x, box_y, box_w, box_h)| {
                     let sign_num = (lagna_rasi + h_idx as u8 - 2) % 12 + 1;
                     let (_, s_x, s_y) = sign_coords[h_idx];
                     let h_planets = &house_planets[h_idx];
-                    
+
                     let house_target = get_house_tooltip(locale, h_idx as u8, lagna_rasi, chart_title, bhava_strengths);
-                    
-                    let mut active_tooltip_text = active_tooltip.clone();
-                    let mut active_tooltip_fo = active_tooltip.clone();
-                    let mut selected_detail_text = selected_detail.clone();
-                    let mut selected_detail_fo = selected_detail.clone();
-                    
+
+                    let mut active_tooltip_text = active_tooltip;
+                    let mut active_tooltip_fo = active_tooltip;
+                    let mut selected_detail_text = selected_detail;
+                    let mut selected_detail_fo = selected_detail;
+
                     let house_target_hover_text = house_target.clone();
                     let house_target_hover_fo = house_target.clone();
                     let house_target_click_text = house_target.clone();
                     let house_target_click_fo = house_target.clone();
-                    
+
                     rsx! {
                         text {
                             x: "{s_x}",
@@ -417,15 +441,15 @@ fn render_vedic_chart(
                                     } else {
                                         None
                                     };
-                                    
-                                    let mut active_tooltip_clone_p = active_tooltip.clone();
-                                    let mut selected_detail_clone_p = selected_detail.clone();
+
+                                    let mut active_tooltip_clone_p = active_tooltip;
+                                    let mut selected_detail_clone_p = selected_detail;
                                     let planet_target_hover = planet_target.clone();
                                     let planet_target_click = planet_target.clone();
-                                    
+
                                     rsx! {
-                                        span { 
-                                            class: "{color_cls} text-[9px] bg-slate-950/80 border border-slate-900/60 px-1 py-0.5 rounded cursor-pointer hover:bg-slate-800 hover:border-slate-700 transition-all", 
+                                        span {
+                                            class: "{color_cls} text-[9px] bg-slate-950/80 border border-slate-900/60 px-1 py-0.5 rounded cursor-pointer hover:bg-slate-800 hover:border-slate-700 transition-all",
                                             onmouseenter: move |e| {
                                                 if let Some(target) = &planet_target_hover {
                                                     let coords = e.client_coordinates();
@@ -448,7 +472,7 @@ fn render_vedic_chart(
                                                     });
                                                 }
                                             },
-                                            "{lbl}" 
+                                            "{lbl}"
                                         }
                                     }
                                 })}
@@ -464,11 +488,11 @@ fn render_vedic_chart(
             (1, 100, 0),   // Aries
             (2, 200, 0),   // Taurus
             (3, 300, 0),   // Gemini
-            (4, 300, 100),  // Cancer
-            (5, 300, 200),  // Leo
-            (6, 300, 300),  // Virgo
-            (7, 200, 300),  // Libra
-            (8, 100, 300),  // Scorpio
+            (4, 300, 100), // Cancer
+            (5, 300, 200), // Leo
+            (6, 300, 300), // Virgo
+            (7, 200, 300), // Libra
+            (8, 100, 300), // Scorpio
             (9, 0, 300),   // Sagittarius
             (10, 0, 200),  // Capricorn
             (11, 0, 100),  // Aquarius
@@ -518,16 +542,16 @@ fn render_vedic_chart(
                     let bg_color = if is_lagna { "#131e35" } else { "#0b0f19" };
                     let border_color = if is_lagna { "#38bdf8" } else { "#1e293b" };
                     let r_planets = &rasi_planets[r_id as usize];
-                    
+
                     let house_num = (r_id as i16 - lagna_rasi as i16 + 12) % 12 + 1;
-                    
+
                     let house_target = get_house_tooltip(locale, house_num as u8, lagna_rasi, chart_title, bhava_strengths);
-                    
-                    let mut active_tooltip_clone = active_tooltip.clone();
-                    let mut selected_detail_clone = selected_detail.clone();
+
+                    let mut active_tooltip_clone = active_tooltip;
+                    let mut selected_detail_clone = selected_detail;
                     let house_target_hover = house_target.clone();
                     let house_target_click = house_target.clone();
-                    
+
                     rsx! {
                         rect {
                             x: "{cell_x}",
@@ -577,15 +601,15 @@ fn render_vedic_chart(
                                         } else {
                                             None
                                         };
-                                        
-                                        let mut active_tooltip_clone_p = active_tooltip.clone();
-                                        let mut selected_detail_clone_p = selected_detail.clone();
+
+                                        let mut active_tooltip_clone_p = active_tooltip;
+                                        let mut selected_detail_clone_p = selected_detail;
                                         let planet_target_hover = planet_target.clone();
                                         let planet_target_click = planet_target.clone();
-                                        
+
                                         rsx! {
-                                            span { 
-                                                class: "{color_cls} text-center bg-slate-950/40 border border-slate-900/30 rounded py-0.5 cursor-pointer hover:bg-slate-800 transition-all", 
+                                            span {
+                                                class: "{color_cls} text-center bg-slate-950/40 border border-slate-900/30 rounded py-0.5 cursor-pointer hover:bg-slate-800 transition-all",
                                                 onmouseenter: move |e| {
                                                     if let Some(target) = &planet_target_hover {
                                                         let coords = e.client_coordinates();
@@ -608,7 +632,7 @@ fn render_vedic_chart(
                                                         });
                                                     }
                                                 },
-                                                "{lbl}" 
+                                                "{lbl}"
                                             }
                                         }
                                     })}
@@ -622,14 +646,12 @@ fn render_vedic_chart(
     }
 }
 
-fn render_detail_card(
-    detail_opt: Signal<Option<VedicTooltipData>>,
-) -> Element {
+fn render_detail_card(detail_opt: Signal<Option<VedicTooltipData>>) -> Element {
     let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
     let detail_val = detail_opt.read().clone();
     if let Some(detail) = detail_val {
-        let mut detail_opt_clear = detail_opt.clone();
+        let mut detail_opt_clear = detail_opt;
         match detail.target {
             VedicTooltipTarget::Planet {
                 name,
@@ -649,7 +671,7 @@ fn render_detail_card(
                 rsx! {
                     div { class: "bg-slate-950/60 border border-slate-800 rounded-xl p-4 mt-3 space-y-3.5 shadow-lg animate-in slide-in-from-bottom-2 duration-200 relative overflow-hidden",
                         div { class: "absolute -right-4 -bottom-4 text-slate-800/10 text-7xl font-bold select-none", "{symbol}" }
-                        
+
                         div { class: "flex justify-between items-center border-b border-slate-900 pb-2",
                             div { class: "flex items-center gap-2",
                                 span { class: "px-2 py-0.5 rounded text-[10px] bg-blue-950/50 text-blue-400 border border-blue-900/30 font-semibold", "{varga_label}" }
@@ -661,7 +683,7 @@ fn render_detail_card(
                                 "닫기 ✕"
                             }
                         }
-                        
+
                         div { class: "grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs",
                             div { class: "space-y-0.5",
                                 span { class: "text-slate-500 text-[10px] block", "위치" }
@@ -721,7 +743,7 @@ fn render_detail_card(
                 rsx! {
                     div { class: "bg-slate-950/60 border border-slate-800 rounded-xl p-4 mt-3 space-y-3 shadow-lg animate-in slide-in-from-bottom-2 duration-200 relative overflow-hidden",
                         div { class: "absolute -right-4 -bottom-4 text-slate-800/10 text-7xl font-bold select-none", "H{house_num}" }
-                        
+
                         div { class: "flex justify-between items-center border-b border-slate-900 pb-2",
                             div { class: "flex items-center gap-2",
                                 span { class: "px-2 py-0.5 rounded text-[10px] bg-blue-950/50 text-blue-400 border border-blue-900/30 font-semibold", "{varga_label}" }
@@ -733,7 +755,7 @@ fn render_detail_card(
                                 "닫기 ✕"
                             }
                         }
-                        
+
                         div { class: "grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs",
                             div { class: "space-y-0.5",
                                 span { class: "text-slate-500 text-[10px] block", "지정 성좌 (Rasi Sign)" }
@@ -759,16 +781,14 @@ fn render_detail_card(
     }
 }
 
-fn render_floating_tooltip(
-    tooltip_opt: Signal<Option<VedicTooltipData>>,
-) -> Element {
+fn render_floating_tooltip(tooltip_opt: Signal<Option<VedicTooltipData>>) -> Element {
     let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
     let tooltip_val = tooltip_opt.read().clone();
     if let Some(tooltip) = tooltip_val {
         let x_px = tooltip.x + 15.0;
         let y_px = tooltip.y + 15.0;
-        
+
         match tooltip.target {
             VedicTooltipTarget::Planet {
                 name,
@@ -786,7 +806,7 @@ fn render_floating_tooltip(
             } => {
                 let sign_name = rasi_name(locale, rasi_num);
                 rsx! {
-                    div { 
+                    div {
                         class: "fixed z-50 bg-slate-950/95 border border-slate-800/80 backdrop-blur-md rounded-lg p-3 shadow-2xl pointer-events-none text-xs text-slate-200 w-[220px] transition-all duration-75 space-y-1.5",
                         style: "left: {x_px}px; top: {y_px}px;",
                         div { class: "flex items-center justify-between border-b border-slate-900 pb-1.5",
@@ -861,17 +881,12 @@ fn render_floating_tooltip(
 pub fn VedicTab() -> Element {
     let mut state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
-    
-    let planet_name_kr = move |planet: VedicPlanet| {
-        translate_planet(locale, planet)
-    };
-    let rasi_name = move |rasi: u8| {
-        rasi_name(locale, rasi)
-    };
-    let lajjitadi_name_kr = move |av: &eon_vedic::analysis::avasthas::LajjitadiAvastha| {
-        translate_avastha(locale, av)
-    };
-    
+
+    let planet_name_kr = move |planet: VedicPlanet| translate_planet(locale, planet);
+    let rasi_name = move |rasi: u8| rasi_name(locale, rasi);
+    let lajjitadi_name_kr =
+        move |av: &eon_vedic::analysis::avasthas::LajjitadiAvastha| translate_avastha(locale, av);
+
     // Sub-tab selection state: 0 = Basic D1, 1 = KP System, 2 = Dashas, 3 = Compatibility
     let mut active_subtab = use_signal(|| 0);
     let mut active_reduction_view = use_signal(|| 0);
@@ -892,7 +907,7 @@ pub fn VedicTab() -> Element {
     // Dasha inner selection: 0 = Vimshottari, 1 = Chara, 2 = Kala Chakra
     let mut active_dasha_type = use_signal(|| 0);
     let mut selected_varga = use_signal(|| "rasi".to_string());
-    
+
     let mut expanded_mahadasha = use_signal(|| Option::<usize>::None);
     let mut expanded_antardasha = use_signal(|| Option::<usize>::None);
     let copied_compat = use_signal(|| false);
@@ -905,12 +920,17 @@ pub fn VedicTab() -> Element {
             let input = VedicCompatibilityInput {
                 male: form.to_analysis_input(),
                 female: AnalysisInput {
-                    year: *partner_year.read(), month: *partner_month.read(), day: *partner_day.read(),
-                    hour: *partner_hour.read(), minute: *partner_minute.read(),
-                    is_lunar: false, is_leap_month: false,
-                    lat: *partner_lat.read(), lon: *partner_lon.read(),
+                    year: *partner_year.read(),
+                    month: *partner_month.read(),
+                    day: *partner_day.read(),
+                    hour: *partner_hour.read(),
+                    minute: *partner_minute.read(),
+                    is_lunar: false,
+                    is_leap_month: false,
+                    lat: *partner_lat.read(),
+                    lon: *partner_lon.read(),
                     timezone: "Asia/Seoul".to_string(),
-                }
+                },
             };
             match facade::analyze_vedic_compatibility(input) {
                 Ok(res) => {
@@ -1244,24 +1264,24 @@ pub fn VedicTab() -> Element {
                                                 };
                                                 let formatted_rahu = if let Ok(tz) = tz_res {
                                                     let (start, end) = data.chart.panchanga.rahu_kalam;
-                                                    format!("{}-{}", start.with_timezone(&tz).format("%H:%M").to_string(), end.with_timezone(&tz).format("%H:%M").to_string())
+                                                    format!("{}-{}", start.with_timezone(&tz).format("%H:%M"), end.with_timezone(&tz).format("%H:%M"))
                                                 } else {
                                                     let (start, end) = data.chart.panchanga.rahu_kalam;
-                                                    format!("{}-{}", start.format("%H:%M").to_string(), end.format("%H:%M").to_string())
+                                                    format!("{}-{}", start.format("%H:%M"), end.format("%H:%M"))
                                                 };
                                                 let formatted_yama = if let Ok(tz) = tz_res {
                                                     let (start, end) = data.chart.panchanga.yamaganda;
-                                                    format!("{}-{}", start.with_timezone(&tz).format("%H:%M").to_string(), end.with_timezone(&tz).format("%H:%M").to_string())
+                                                    format!("{}-{}", start.with_timezone(&tz).format("%H:%M"), end.with_timezone(&tz).format("%H:%M"))
                                                 } else {
                                                     let (start, end) = data.chart.panchanga.yamaganda;
-                                                    format!("{}-{}", start.format("%H:%M").to_string(), end.format("%H:%M").to_string())
+                                                    format!("{}-{}", start.format("%H:%M"), end.format("%H:%M"))
                                                 };
                                                 let formatted_guli = if let Ok(tz) = tz_res {
                                                     let (start, end) = data.chart.panchanga.gulika;
-                                                    format!("{}-{}", start.with_timezone(&tz).format("%H:%M").to_string(), end.with_timezone(&tz).format("%H:%M").to_string())
+                                                    format!("{}-{}", start.with_timezone(&tz).format("%H:%M"), end.with_timezone(&tz).format("%H:%M"))
                                                 } else {
                                                     let (start, end) = data.chart.panchanga.gulika;
-                                                    format!("{}-{}", start.format("%H:%M").to_string(), end.format("%H:%M").to_string())
+                                                    format!("{}-{}", start.format("%H:%M"), end.format("%H:%M"))
                                                 };
 
                                                 let rahu_lbl = match locale {
@@ -1954,13 +1974,13 @@ pub fn VedicTab() -> Element {
                                                                     let now = chrono::Utc::now();
                                                                     let is_current_maha = d.start_time <= now && now < d.end_time;
                                                                     let is_expanded_maha = *expanded_mahadasha.read() == Some(i);
-                                                                    
+
                                                                     let row_bg = if is_current_maha {
                                                                         "bg-blue-950/20 hover:bg-blue-950/30 font-semibold"
                                                                     } else {
                                                                         "hover:bg-slate-800/20"
                                                                     };
-                                                                    
+
                                                                     let toggle_maha = move |_| {
                                                                         *expanded_antardasha.write() = None;
                                                                         *expanded_mahadasha.write() = if is_expanded_maha {
@@ -1971,12 +1991,12 @@ pub fn VedicTab() -> Element {
                                                                     };
 
                                                                     rsx! {
-                                                                        tr { 
+                                                                        tr {
                                                                             class: "cursor-pointer transition-colors {row_bg}",
                                                                             onclick: toggle_maha,
-                                                                            td { class: "px-4 py-3.5 font-bold {color} flex items-center gap-1.5", 
+                                                                            td { class: "px-4 py-3.5 font-bold {color} flex items-center gap-1.5",
                                                                                 span { class: "text-[10px] text-slate-500", if is_expanded_maha { "▼" } else { "▶" } }
-                                                                                "{planet_name_kr(d.lord)}" 
+                                                                                "{planet_name_kr(d.lord)}"
                                                                             }
                                                                             td { class: "px-4 py-3.5 font-mono text-slate-350 text-xs", "{start_str}" }
                                                                             td { class: "px-4 py-3.5 font-mono text-slate-400 text-xs", "{end_str}" }
@@ -1987,7 +2007,7 @@ pub fn VedicTab() -> Element {
                                                                                 }
                                                                             }
                                                                         }
-                                                                        
+
                                                                         if is_expanded_maha {
                                                                             tr { class: "bg-slate-950/40",
                                                                                 td { colspan: 5, class: "p-4 border-t border-b border-slate-850",
@@ -2011,13 +2031,13 @@ pub fn VedicTab() -> Element {
                                                                                                     let sub_duration_months = (sub_duration_days as f64 / 30.436).round() as i32;
                                                                                                     let is_current_antar = sub.start_time <= now && now < sub.end_time;
                                                                                                     let is_expanded_antar = *expanded_antardasha.read() == Some(j);
-                                                                                                    
+
                                                                                                     let sub_row_bg = if is_current_antar {
                                                                                                         "bg-emerald-950/20 hover:bg-emerald-950/30 font-semibold"
                                                                                                     } else {
                                                                                                         "hover:bg-slate-800/10"
                                                                                                     };
-                                                                                                    
+
                                                                                                     let toggle_antar = move |_| {
                                                                                                         *expanded_antardasha.write() = if is_expanded_antar {
                                                                                                             None
@@ -2027,12 +2047,12 @@ pub fn VedicTab() -> Element {
                                                                                                     };
 
                                                                                                     rsx! {
-                                                                                                        tr { 
+                                                                                                        tr {
                                                                                                             class: "cursor-pointer transition-colors {sub_row_bg}",
                                                                                                             onclick: toggle_antar,
-                                                                                                            td { class: "px-4 py-2.5 font-bold {sub_color} flex items-center gap-1.5", 
+                                                                                                            td { class: "px-4 py-2.5 font-bold {sub_color} flex items-center gap-1.5",
                                                                                                                 span { class: "text-[9px] text-slate-600", if is_expanded_antar { "▼" } else { "▶" } }
-                                                                                                                "{planet_name_kr(sub.lord)}" 
+                                                                                                                "{planet_name_kr(sub.lord)}"
                                                                                                             }
                                                                                                             td { class: "px-4 py-2.5 font-mono text-slate-350", "{sub_start_str}" }
                                                                                                             td { class: "px-4 py-2.5 font-mono text-slate-400", "{sub_end_str}" }
@@ -2043,7 +2063,7 @@ pub fn VedicTab() -> Element {
                                                                                                                 }
                                                                                                             }
                                                                                                         }
-                                                                                                        
+
                                                                                                         if is_expanded_antar {
                                                                                                             tr { class: "bg-slate-900/60",
                                                                                                                 td { colspan: 5, class: "p-3 border-t border-b border-slate-800/60",
@@ -2065,7 +2085,7 @@ pub fn VedicTab() -> Element {
                                                                                                                                     let prat_end_str = prat.end_time.format("%Y-%m-%d").to_string();
                                                                                                                                     let prat_duration_days = (prat.end_time - prat.start_time).num_days();
                                                                                                                                     let is_current_prat = prat.start_time <= now && now < prat.end_time;
-                                                                                                                                    
+
                                                                                                                                     let prat_row_bg = if is_current_prat {
                                                                                                                                         "bg-amber-950/20 hover:bg-amber-950/30 font-semibold"
                                                                                                                                     } else {
@@ -2365,7 +2385,7 @@ pub fn VedicTab() -> Element {
                                                     let circumference = 2.0 * std::f64::consts::PI * radius; // ~251.327
                                                     let stroke_offset = circumference - (score_pct / 100.0) * circumference;
 
-                                                    let mut copied_compat = copied_compat.clone();
+                                                    let mut copied_compat = copied_compat;
                                                     let compat_cloned = compat.clone();
                                                     let form_cloned = state.form.read().clone();
                                                     let f_year = *partner_year.read();
@@ -2398,7 +2418,7 @@ pub fn VedicTab() -> Element {
 
                                                     rsx! {
                                                         div { class: "space-y-6 animate-in fade-in duration-500",
-                                                            
+
                                                             // --- Visual Progress / Gauge Header Component ---
                                                             div { class: "p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col sm:flex-row items-center gap-5",
                                                                 // SVG Circular Progress Gauge
@@ -2438,7 +2458,7 @@ pub fn VedicTab() -> Element {
                                                                 // Text descriptions
                                                                 div { class: "flex-1 space-y-1 text-center sm:text-left",
                                                                     h3 { class: "text-xs text-slate-500 uppercase tracking-widest font-bold", "{t(locale, TK::CompatHeaderOverall)}" }
-                                                                    p { class: "text-base font-bold text-slate-200", 
+                                                                    p { class: "text-base font-bold text-slate-200",
                                                                         "{t(locale, TK::CompatScoreLabel)}: "
                                                                         span { class: "text-purple-400 font-mono", "{total_score:.1} / 36.0 Gunas" }
                                                                     }

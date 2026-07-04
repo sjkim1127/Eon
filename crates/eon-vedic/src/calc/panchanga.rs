@@ -23,7 +23,7 @@ pub struct Panchanga {
     pub hour_lord: VedicPlanet,
     pub daily_parts: [VedicPlanet; 8], // Tribhaga lords (Day: 3, Night: 3, Total usually handled as 8 yamas or parts)
     pub is_night_birth: bool,
-    
+
     // Yogi, Avayogi, Dagdha Rashi
     pub yogi_point: f64,
     pub yogi_planet: VedicPlanet,
@@ -54,24 +54,23 @@ fn get_nakshatra_lord(nakshatra: u8) -> VedicPlanet {
 fn get_dagdha_rashis(tithi: u8) -> Vec<u8> {
     let t = if tithi > 15 { tithi - 15 } else { tithi };
     match t {
-        1 => vec![1, 7],   // Aries, Libra
-        2 => vec![2, 5],   // Taurus, Leo
-        3 => vec![3, 6],   // Gemini, Virgo
-        4 => vec![2, 11],  // Taurus, Aquarius
-        5 => vec![3, 9],   // Gemini, Sagittarius
-        6 => vec![1, 8],   // Aries, Scorpio
-        7 => vec![3, 12],  // Gemini, Pisces
-        8 => vec![3, 6],   // Gemini, Virgo
-        9 => vec![5, 8],   // Leo, Scorpio
-        10 => vec![5, 9],  // Leo, Sagittarius
-        11 => vec![9, 12], // Sagittarius, Pisces
-        12 => vec![7, 10], // Libra, Capricorn
-        13 => vec![2, 3],  // Taurus, Gemini
+        1 => vec![1, 7],        // Aries, Libra
+        2 => vec![2, 5],        // Taurus, Leo
+        3 => vec![3, 6],        // Gemini, Virgo
+        4 => vec![2, 11],       // Taurus, Aquarius
+        5 => vec![3, 9],        // Gemini, Sagittarius
+        6 => vec![1, 8],        // Aries, Scorpio
+        7 => vec![3, 12],       // Gemini, Pisces
+        8 => vec![3, 6],        // Gemini, Virgo
+        9 => vec![5, 8],        // Leo, Scorpio
+        10 => vec![5, 9],       // Leo, Sagittarius
+        11 => vec![9, 12],      // Sagittarius, Pisces
+        12 => vec![7, 10],      // Libra, Capricorn
+        13 => vec![2, 3],       // Taurus, Gemini
         14 => vec![2, 3, 6, 9], // Taurus, Gemini, Virgo, Sagittarius
         _ => vec![],
     }
 }
-
 
 pub struct PanchangaEngine;
 
@@ -89,23 +88,32 @@ impl PanchangaEngine {
         // 1. Fetch sunrise/sunset for the current LOCAL date
         let local_offset_mins = (longitude * 4.0) as i64;
         let local_time = time + chrono::Duration::minutes(local_offset_mins);
-        
-        let (mut sunrise, mut sunset) = Self::calculate_sunrise_sunset(local_time, latitude, longitude);
-        
-        // If current time is before the sunrise of its local date, 
+
+        let (mut sunrise, mut sunset) =
+            Self::calculate_sunrise_sunset(local_time, latitude, longitude);
+
+        // If current time is before the sunrise of its local date,
         // the astrological day started at yesterday's sunrise
         if time < sunrise {
-            let (prev_rise, prev_set) = Self::calculate_sunrise_sunset(local_time - chrono::Duration::days(1), latitude, longitude);
+            let (prev_rise, prev_set) = Self::calculate_sunrise_sunset(
+                local_time - chrono::Duration::days(1),
+                latitude,
+                longitude,
+            );
             sunrise = prev_rise;
             sunset = prev_set;
         }
-        
-        let (next_sunrise, _) = Self::calculate_sunrise_sunset(sunrise + chrono::Duration::days(1), latitude, longitude);
+
+        let (next_sunrise, _) = Self::calculate_sunrise_sunset(
+            sunrise + chrono::Duration::days(1),
+            latitude,
+            longitude,
+        );
 
         // 2. Vara (Weekday) - Vedic Day starts at Sunrise
         let is_day_birth = time >= sunrise && time < sunset;
         let is_night_birth = !is_day_birth;
-        
+
         // Use the actual sunrise time to determine the local weekday
         let local_offset_mins = (longitude * 4.0) as i64;
         let sunrise_local = sunrise + chrono::Duration::minutes(local_offset_mins);
@@ -118,7 +126,8 @@ impl PanchangaEngine {
             chrono::Weekday::Thu => "Thursday",
             chrono::Weekday::Fri => "Friday",
             chrono::Weekday::Sat => "Saturday",
-        }.to_string();
+        }
+        .to_string();
 
         let day_lord = match vara_date.weekday() {
             chrono::Weekday::Sun => VedicPlanet::Sun,
@@ -199,7 +208,7 @@ impl PanchangaEngine {
         let get_time_range = |part_idx: u8| -> (DateTime<Utc>, DateTime<Utc>) {
             let start_offset_ms = (part_idx - 1) as f64 * part_ms;
             let end_offset_ms = part_idx as f64 * part_ms;
-            
+
             let start_time = sunrise + chrono::Duration::milliseconds(start_offset_ms as i64);
             let end_time = sunrise + chrono::Duration::milliseconds(end_offset_ms as i64);
             (start_time, end_time)

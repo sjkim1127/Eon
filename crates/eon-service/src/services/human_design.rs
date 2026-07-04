@@ -1,11 +1,15 @@
-use crate::dto::{AnalysisMeta, HumanDesignAnalysisInput, HumanDesignAnalysisOutput, BirthTimePrecision};
-use crate::error::ServiceError;
 use crate::birth::prepare_birth_context;
+use crate::dto::{
+    AnalysisMeta, BirthTimePrecision, HumanDesignAnalysisInput, HumanDesignAnalysisOutput,
+};
+use crate::error::ServiceError;
 
 pub fn analyze(input: HumanDesignAnalysisInput) -> Result<HumanDesignAnalysisOutput, ServiceError> {
     let birth_ctx = prepare_birth_context(&input.base, None, false)?;
-    
-    let dt = birth_ctx.birth_info.to_utc()
+
+    let dt = birth_ctx
+        .birth_info
+        .to_utc()
         .map_err(|e| ServiceError::BirthInfo(e.to_string()))?;
 
     let engine = eon_astro::AstroEngine::new();

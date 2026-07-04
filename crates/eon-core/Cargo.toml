@@ -12,3 +12,6 @@ chrono.workspace = true
 chrono-tz.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+
+[lints]
+workspace = true

@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 
+use eon_service::dto::{
+    SajuAnalysisInput, SajuAnalysisOutput, VedicAnalysisInput, VedicAnalysisOutput,
+};
+use eon_service::facade;
 use gloo_worker::{HandlerId, Worker, WorkerScope};
 use serde::{Deserialize, Serialize};
-use eon_service::dto::{SajuAnalysisInput, VedicAnalysisInput, SajuAnalysisOutput, VedicAnalysisOutput};
-use eon_service::facade;
 
 #[derive(Serialize, Deserialize)]
 pub enum WorkerInput {

@@ -56,3 +56,16 @@ inherits = "dev"
 
 [profile.android-dev]
 inherits = "dev"
+
+[workspace.lints.rust]
+dead_code = "allow"
+
+[workspace.lints.clippy]
+too_many_arguments = "allow"
+manual_clamp = "allow"
+needless_range_loop = "allow"
+doc_lazy_continuation = "allow"
+unnecessary_sort_by = "allow"
+redundant_pattern_matching = "allow"
+large_enum_variant = "allow"
+field_reassign_with_default = "allow"

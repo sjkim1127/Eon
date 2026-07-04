@@ -3,14 +3,17 @@
 //! 12궁 성반 격자 시각화(4x4 Grid 테두리 배치 + 중앙 정보 영역),
 //! 대한(대운) 목록 및 상세 정보, 마크다운 내보내기 버튼을 지원합니다.
 
-use dioxus::prelude::*;
+use crate::components::shared::birth_form::BirthForm;
+use crate::components::shared::export_markdown::export_zwds_to_markdown;
+use crate::i18n::{
+    format_age_range, t, translate_five_elements, translate_zwds_palace, translate_zwds_star,
+    Locale, TK,
+};
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, Locale, translate_zwds_palace, translate_zwds_star, translate_five_elements, format_age_range};
+use dioxus::prelude::*;
 use eon_service::dto::ZwdsAnalysisInput;
 use eon_service::facade;
-use crate::components::shared::birth_form::BirthForm;
-use eon_zwds::types::{PalaceData, ZwdsStar, SiHuaType};
-use crate::components::shared::export_markdown::export_zwds_to_markdown;
+use eon_zwds::types::{PalaceData, SiHuaType, ZwdsStar};
 
 #[component]
 pub fn ZwdsTab() -> Element {
@@ -31,11 +34,7 @@ pub fn ZwdsTab() -> Element {
             let form_signal = form_signal;
             zwds_signal.write().status = TaskStatus::Loading;
             let form = form_signal.read().clone();
-            let input = ZwdsAnalysisInput::new(
-                form.to_analysis_input(),
-                form.is_male,
-                Some(year),
-            );
+            let input = ZwdsAnalysisInput::new(form.to_analysis_input(), form.is_male, Some(year));
             match facade::analyze_zwds(input) {
                 Ok(res) => {
                     zwds_signal.write().data = Some(res);
@@ -208,13 +207,25 @@ fn ZwdsGrid(
     // ZWDS 지지 인덱스: 0=寅, 1=卯, 2=辰, 3=巳, 4=午, 5=未, 6=申, 7=酉, 8=戌, 9=亥, 10=子, 11=丑
     let grid_cells = vec![
         // Row 1: 巳(3) 午(4) 未(5) 申(6)
-        Some(3), Some(4), Some(5), Some(6),
+        Some(3),
+        Some(4),
+        Some(5),
+        Some(6),
         // Row 2: 辰(2) [중앙] [중앙] 酉(7)
-        Some(2), None, None, Some(7),
+        Some(2),
+        None,
+        None,
+        Some(7),
         // Row 3: 卯(1) [중앙] [중앙] 戌(8)
-        Some(1), None, None, Some(8),
+        Some(1),
+        None,
+        None,
+        Some(8),
         // Row 4: 寅(0) 丑(11) 子(10) 亥(9)
-        Some(0), Some(11), Some(10), Some(9),
+        Some(0),
+        Some(11),
+        Some(10),
+        Some(9),
     ];
 
     let chart = &data.chart;
@@ -509,11 +520,21 @@ fn PalaceCard(
 
     let mut annual_stars = Vec::new();
     if let Some(ref ln) = current_liu_nian {
-        if palace.index == ln.liu_lu { annual_stars.push(ZwdsStar::LuCun); }
-        if palace.index == ln.liu_yang { annual_stars.push(ZwdsStar::QingYang); }
-        if palace.index == ln.liu_tuo { annual_stars.push(ZwdsStar::TuoLuo); }
-        if palace.index == ln.liu_chang { annual_stars.push(ZwdsStar::WenChang); }
-        if palace.index == ln.liu_qu { annual_stars.push(ZwdsStar::WenQu); }
+        if palace.index == ln.liu_lu {
+            annual_stars.push(ZwdsStar::LuCun);
+        }
+        if palace.index == ln.liu_yang {
+            annual_stars.push(ZwdsStar::QingYang);
+        }
+        if palace.index == ln.liu_tuo {
+            annual_stars.push(ZwdsStar::TuoLuo);
+        }
+        if palace.index == ln.liu_chang {
+            annual_stars.push(ZwdsStar::WenChang);
+        }
+        if palace.index == ln.liu_qu {
+            annual_stars.push(ZwdsStar::WenQu);
+        }
     }
 
     rsx! {
@@ -698,13 +719,41 @@ fn CenterCard(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
     };
 
     let current_daxian_formatted = if locale == Locale::Ko {
-        format!("{}{}{} ({}-{}세)", data.current_daxian.stem_hanja, data.current_daxian.branch_hanja, t(locale, TK::ZwdsDaxianSuffix), data.current_daxian.age_start, data.current_daxian.age_end)
+        format!(
+            "{}{}{} ({}-{}세)",
+            data.current_daxian.stem_hanja,
+            data.current_daxian.branch_hanja,
+            t(locale, TK::ZwdsDaxianSuffix),
+            data.current_daxian.age_start,
+            data.current_daxian.age_end
+        )
     } else if locale == Locale::Zh {
-        format!("{}{}{} ({}-{}岁)", data.current_daxian.stem_hanja, data.current_daxian.branch_hanja, t(locale, TK::ZwdsDaxianSuffix), data.current_daxian.age_start, data.current_daxian.age_end)
+        format!(
+            "{}{}{} ({}-{}岁)",
+            data.current_daxian.stem_hanja,
+            data.current_daxian.branch_hanja,
+            t(locale, TK::ZwdsDaxianSuffix),
+            data.current_daxian.age_start,
+            data.current_daxian.age_end
+        )
     } else if locale == Locale::Ru {
-        format!("{}{}{} ({}-{} лет)", data.current_daxian.stem_hanja, data.current_daxian.branch_hanja, t(locale, TK::ZwdsDaxianSuffix), data.current_daxian.age_start, data.current_daxian.age_end)
+        format!(
+            "{}{}{} ({}-{} лет)",
+            data.current_daxian.stem_hanja,
+            data.current_daxian.branch_hanja,
+            t(locale, TK::ZwdsDaxianSuffix),
+            data.current_daxian.age_start,
+            data.current_daxian.age_end
+        )
     } else {
-        format!("{}{}{} (Age {}-{})", data.current_daxian.stem_hanja, data.current_daxian.branch_hanja, t(locale, TK::ZwdsDaxianSuffix), data.current_daxian.age_start, data.current_daxian.age_end)
+        format!(
+            "{}{}{} (Age {}-{})",
+            data.current_daxian.stem_hanja,
+            data.current_daxian.branch_hanja,
+            t(locale, TK::ZwdsDaxianSuffix),
+            data.current_daxian.age_start,
+            data.current_daxian.age_end
+        )
     };
 
     rsx! {
@@ -842,7 +891,7 @@ fn DaXianSection(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
 
                         let range_str = format_age_range(locale, dx.age_start as i32, dx.age_end as i32);
                         let daxian_label = format!("{}{}{}", dx.stem_hanja, dx.branch_hanja, t(locale, TK::ZwdsDaxianSuffix));
-                        
+
                         let palace_label = if locale == Locale::Ko {
                             format!("{}번 궁", dx.palace_idx)
                         } else if locale == Locale::Zh {
@@ -912,13 +961,25 @@ fn PalaceDetailModal(
 
     let mini_grid_cells = vec![
         // Row 1: 巳(3) 午(4) 未(5) 申(6)
-        Some(3), Some(4), Some(5), Some(6),
+        Some(3),
+        Some(4),
+        Some(5),
+        Some(6),
         // Row 2: 辰(2) [중앙] [중앙] 酉(7)
-        Some(2), None, None, Some(7),
+        Some(2),
+        None,
+        None,
+        Some(7),
         // Row 3: 卯(1) [중앙] [중앙] 戌(8)
-        Some(1), None, None, Some(8),
+        Some(1),
+        None,
+        None,
+        Some(8),
         // Row 4: 寅(0) 丑(11) 子(10) 亥(9)
-        Some(0), Some(11), Some(10), Some(9),
+        Some(0),
+        Some(11),
+        Some(10),
+        Some(9),
     ];
 
     rsx! {
@@ -1020,7 +1081,7 @@ fn PalaceDetailModal(
                                                 let brightness_label = star_in_p.brightness.map(|b| {
                                                     format!(" ({})", crate::i18n::translate_zwds_brightness(locale, b))
                                                 }).unwrap_or_default();
-                                                
+
                                                 let star_desc = get_star_description(locale, star_in_p.star);
                                                 let badge_cls = if is_main {
                                                     "bg-amber-500/10 text-amber-300 border-amber-500/20"
@@ -1187,7 +1248,7 @@ fn PalaceDetailModal(
                                                 Some(p_idx) => {
                                                     let p = &chart.palaces[p_idx];
                                                     let abbr = crate::i18n::translate_zwds_palace_abbr(locale, p.name);
-                                                    
+
                                                     let cell_cls = if p_idx == palace_idx {
                                                         "bg-violet-600 border-violet-400 text-white font-black scale-105 shadow-md shadow-violet-900/20"
                                                     } else if p_idx == opposite_idx {
@@ -1368,31 +1429,65 @@ fn get_star_description(locale: Locale, star: eon_zwds::types::ZwdsStar) -> &'st
             ZwdsStar::TianJi => "기획과 지혜의 별로 계산, 분석, 총명함과 잦은 변화를 나타냅니다.",
             ZwdsStar::TaiYang => "태양처럼 빛을 퍼뜨리며 명예, 열정, 공익, 부친/남편을 상징합니다.",
             ZwdsStar::WuQu => "실질적인 재물과 결단력을 상징하는 강력한 금전의 재성(財星)입니다.",
-            ZwdsStar::TianTong => "안락함과 복덕을 상징하며, 온화하고 친화력이 풍부하지만 다소 나태할 수 있습니다.",
-            ZwdsStar::LianZhen => "감정과 규율의 별로 강한 주관, 예술성, 도화 기질, 집념을 의미합니다.",
-            ZwdsStar::TianFu => "안정적인 곳간을 의미하며 자산 보존, 보수적 성향, 포용력을 상징합니다.",
+            ZwdsStar::TianTong => {
+                "안락함과 복덕을 상징하며, 온화하고 친화력이 풍부하지만 다소 나태할 수 있습니다."
+            }
+            ZwdsStar::LianZhen => {
+                "감정과 규율의 별로 강한 주관, 예술성, 도화 기질, 집념을 의미합니다."
+            }
+            ZwdsStar::TianFu => {
+                "안정적인 곳간을 의미하며 자산 보존, 보수적 성향, 포용력을 상징합니다."
+            }
             ZwdsStar::TaiYin => "저축, 부동산, 모성애를 상징하며 부드럽고 섬세한 재성(財星)입니다.",
-            ZwdsStar::TanLang => "욕망, 사교성, 현실적인 예술 및 신비한 학문(역학)을 상징하는 도화성입니다.",
-            ZwdsStar::JuMen => "말(言), 상세한 연구, 의심, 구설수를 뜻하며 깊은 탐구력을 나타냅니다.",
-            ZwdsStar::TianXiang => "도장(인장)과 보필을 상징하며, 타인을 배려하고 품위와 조화를 유지합니다.",
-            ZwdsStar::TianLiang => "보호와 천수를 상징하며 문제를 해결하고 아랫사람을 챙겨주는 장로의 성향입니다.",
-            ZwdsStar::QiSha => "장수와 투지를 상징하며 강력한 돌파력, 추진력과 독립심, 고독을 뜻합니다.",
-            ZwdsStar::PoJun => "개척과 파괴의 별로 기존 질서를 부수고 새로운 변화를 주도하는 혁명적 기운입니다.",
-            
+            ZwdsStar::TanLang => {
+                "욕망, 사교성, 현실적인 예술 및 신비한 학문(역학)을 상징하는 도화성입니다."
+            }
+            ZwdsStar::JuMen => {
+                "말(言), 상세한 연구, 의심, 구설수를 뜻하며 깊은 탐구력을 나타냅니다."
+            }
+            ZwdsStar::TianXiang => {
+                "도장(인장)과 보필을 상징하며, 타인을 배려하고 품위와 조화를 유지합니다."
+            }
+            ZwdsStar::TianLiang => {
+                "보호와 천수를 상징하며 문제를 해결하고 아랫사람을 챙겨주는 장로의 성향입니다."
+            }
+            ZwdsStar::QiSha => {
+                "장수와 투지를 상징하며 강력한 돌파력, 추진력과 독립심, 고독을 뜻합니다."
+            }
+            ZwdsStar::PoJun => {
+                "개척과 파괴의 별로 기존 질서를 부수고 새로운 변화를 주도하는 혁명적 기운입니다."
+            }
+
             ZwdsStar::WenChang => "학문, 시험, 문서적 성취 및 이론적인 두뇌 능력을 돕습니다.",
             ZwdsStar::WenQu => "예술적 재능, 감수성, 임기응변 및 실무적인 문예 재능을 돕습니다.",
-            ZwdsStar::ZuoFu => "주변 조력자와 귀인의 도움을 보조하여 매사 순조로운 흐름을 만듭니다.",
+            ZwdsStar::ZuoFu => {
+                "주변 조력자와 귀인의 도움을 보조하여 매사 순조로운 흐름을 만듭니다."
+            }
             ZwdsStar::YouBi => "보이지 않는 귀인의 조력과 중재를 상징하며 협력을 강하게 만듭니다.",
             ZwdsStar::TianKui => "사회적인 기회와 공개적인 조력자가 등장하여 명예를 돕습니다.",
-            ZwdsStar::TianYue => "음덕과 예상치 못한 후원자, 귀인의 도움으로 위기를 돌파하게 합니다.",
-            
+            ZwdsStar::TianYue => {
+                "음덕과 예상치 못한 후원자, 귀인의 도움으로 위기를 돌파하게 합니다."
+            }
+
             ZwdsStar::LuCun => "선천적인 금전운과 녹봉을 나타내며 안정적인 현금 흐름을 보장합니다.",
-            ZwdsStar::QingYang => "강력한 경쟁심, 돌파력 및 때로는 부상이나 수술 등의 칼날을 상징합니다.",
-            ZwdsStar::TuoLuo => "지연, 정체, 끈질김을 나타내며 보이지 않는 암초나 내면의 고민을 뜻합니다.",
-            ZwdsStar::HuoXing => "빠른 행동력과 폭발성, 때로는 성급함으로 인한 손해나 화재를 뜻합니다.",
-            ZwdsStar::LingXing => "내면의 열기, 암묵적인 노력, 스트레스와 급작스러운 이탈을 나타냅니다.",
-            ZwdsStar::DiKong => "정신적인 지향, 공허함, 기존 상식을 벗어난 독창성과 물질적 상실을 상징합니다.",
-            ZwdsStar::DiJie => "재정적 낭비, 예기치 못한 도난이나 소모, 기발한 발상과 정신적 깨달음을 의미합니다.",
+            ZwdsStar::QingYang => {
+                "강력한 경쟁심, 돌파력 및 때로는 부상이나 수술 등의 칼날을 상징합니다."
+            }
+            ZwdsStar::TuoLuo => {
+                "지연, 정체, 끈질김을 나타내며 보이지 않는 암초나 내면의 고민을 뜻합니다."
+            }
+            ZwdsStar::HuoXing => {
+                "빠른 행동력과 폭발성, 때로는 성급함으로 인한 손해나 화재를 뜻합니다."
+            }
+            ZwdsStar::LingXing => {
+                "내면의 열기, 암묵적인 노력, 스트레스와 급작스러운 이탈을 나타냅니다."
+            }
+            ZwdsStar::DiKong => {
+                "정신적인 지향, 공허함, 기존 상식을 벗어난 독창성과 물질적 상실을 상징합니다."
+            }
+            ZwdsStar::DiJie => {
+                "재정적 낭비, 예기치 못한 도난이나 소모, 기발한 발상과 정신적 깨달음을 의미합니다."
+            }
             _ => "자미두수의 운명적 영향력을 지닌 잡성(雜星)입니다.",
         },
         Locale::Zh => match star {
@@ -1410,14 +1505,14 @@ fn get_star_description(locale: Locale, star: eon_zwds::types::ZwdsStar) -> &'st
             ZwdsStar::TianLiang => "象征保护、寿考与荫庇，好为人师，善于解决纠纷。",
             ZwdsStar::QiSha => "象征将军与斗志，冲劲十足，极具开拓力、独立性与孤独感。",
             ZwdsStar::PoJun => "开创与破败之星，打破旧秩序并主导新变化的革命性力量。",
-            
+
             ZwdsStar::WenChang => "辅助学术、考试、文书成就及理论脑力。",
             ZwdsStar::WenQu => "辅助艺术天分、感性思维、临机应变及实务才华。",
             ZwdsStar::ZuoFu => "辅助周围同辈的助力，令谋事更为顺遂。",
             ZwdsStar::YouBi => "象征暗中贵人相助与调解，加强人际合作关系。",
             ZwdsStar::TianKui => "带来社会机遇与公开的贵人提携，利于名声。",
             ZwdsStar::TianYue => "隐秘的福报与出乎意料的长辈帮助，化解危机。",
-            
+
             ZwdsStar::LuCun => "掌管先天禄禄与俸禄，保障稳定的现金流与福气。",
             ZwdsStar::QingYang => "象征强烈竞争心、破坏力，有时暗示受伤或手术。",
             ZwdsStar::TuoLuo => "象征拖延、停滞不前、暗礁以及内心深处的纠结。",
@@ -1428,53 +1523,93 @@ fn get_star_description(locale: Locale, star: eon_zwds::types::ZwdsStar) -> &'st
             _ => "紫微斗数中具有特定命运影响力的杂曜。",
         },
         _ => match star {
-            ZwdsStar::ZiWei => "The Emperor star, representing authority, prestige, leadership, and nobility.",
-            ZwdsStar::TianJi => "The Planner star, representing intellect, strategy, and changeability.",
-            ZwdsStar::TaiYang => "The Sun star, representing recognition, energy, public service, and male figures.",
-            ZwdsStar::WuQu => "The Soldier star, a powerful wealth star representing execution and decisiveness.",
-            ZwdsStar::TianTong => "The Harmony star, representing comfort, blessing, and emotional sensitivity.",
-            ZwdsStar::LianZhen => "The Judge star, representing emotions, discipline, magnetism, and ambition.",
-            ZwdsStar::TianFu => "The Treasury star, representing asset conservation, stability, and tolerance.",
-            ZwdsStar::TaiYin => "The Moon star, representing savings, intuition, real estate, and female figures.",
-            ZwdsStar::TanLang => "The Wolf star, representing desires, social skills, and spiritual pursuits.",
-            ZwdsStar::JuMen => "The Gate star, representing speaking, deep analysis, and potential disputes.",
-            ZwdsStar::TianXiang => "The Minister star, representing trust, contract verification, and dignity.",
-            ZwdsStar::TianLiang => "The Blessing star, representing elderly protection, benevolence, and support.",
-            ZwdsStar::QiSha => "The General star, representing combativeness, rapid breakthroughs, and loneliness.",
-            ZwdsStar::PoJun => "The Pioneer star, representing revolution, consumption, and major changes.",
-            
-            ZwdsStar::WenChang => "Supports academic success, official exams, and theoretical skills.",
+            ZwdsStar::ZiWei => {
+                "The Emperor star, representing authority, prestige, leadership, and nobility."
+            }
+            ZwdsStar::TianJi => {
+                "The Planner star, representing intellect, strategy, and changeability."
+            }
+            ZwdsStar::TaiYang => {
+                "The Sun star, representing recognition, energy, public service, and male figures."
+            }
+            ZwdsStar::WuQu => {
+                "The Soldier star, a powerful wealth star representing execution and decisiveness."
+            }
+            ZwdsStar::TianTong => {
+                "The Harmony star, representing comfort, blessing, and emotional sensitivity."
+            }
+            ZwdsStar::LianZhen => {
+                "The Judge star, representing emotions, discipline, magnetism, and ambition."
+            }
+            ZwdsStar::TianFu => {
+                "The Treasury star, representing asset conservation, stability, and tolerance."
+            }
+            ZwdsStar::TaiYin => {
+                "The Moon star, representing savings, intuition, real estate, and female figures."
+            }
+            ZwdsStar::TanLang => {
+                "The Wolf star, representing desires, social skills, and spiritual pursuits."
+            }
+            ZwdsStar::JuMen => {
+                "The Gate star, representing speaking, deep analysis, and potential disputes."
+            }
+            ZwdsStar::TianXiang => {
+                "The Minister star, representing trust, contract verification, and dignity."
+            }
+            ZwdsStar::TianLiang => {
+                "The Blessing star, representing elderly protection, benevolence, and support."
+            }
+            ZwdsStar::QiSha => {
+                "The General star, representing combativeness, rapid breakthroughs, and loneliness."
+            }
+            ZwdsStar::PoJun => {
+                "The Pioneer star, representing revolution, consumption, and major changes."
+            }
+
+            ZwdsStar::WenChang => {
+                "Supports academic success, official exams, and theoretical skills."
+            }
             ZwdsStar::WenQu => "Supports artistic talent, intuition, and communication skills.",
             ZwdsStar::ZuoFu => "Provides direct assistance and visible peer support.",
             ZwdsStar::YouBi => "Provides indirect assistance, mediation, and relationship harmony.",
             ZwdsStar::TianKui => "Brings formal opportunities and prominent mentors.",
-            ZwdsStar::TianYue => "Brings unexpected helpers, hidden fortunes, and crisis resolution.",
-            
+            ZwdsStar::TianYue => {
+                "Brings unexpected helpers, hidden fortunes, and crisis resolution."
+            }
+
             ZwdsStar::LuCun => "Governs innate wealth, salary, and steady financial flow.",
-            ZwdsStar::QingYang => "Represents intense competition, breakthrough energy, or sharp injuries.",
-            ZwdsStar::TuoLuo => "Represents delays, hidden obstacles, and persistent inner conflicts.",
+            ZwdsStar::QingYang => {
+                "Represents intense competition, breakthrough energy, or sharp injuries."
+            }
+            ZwdsStar::TuoLuo => {
+                "Represents delays, hidden obstacles, and persistent inner conflicts."
+            }
             ZwdsStar::HuoXing => "Represents rapid action, explosive passion, or sudden anger.",
             ZwdsStar::LingXing => "Represents hidden stress, quiet dedication, and sudden shifts.",
-            ZwdsStar::DiKong => "Represents spiritual inclinations, empty space, and unconventional creativity.",
-            ZwdsStar::DiJie => "Represents financial spendings, unexpected losses, and unique insights.",
+            ZwdsStar::DiKong => {
+                "Represents spiritual inclinations, empty space, and unconventional creativity."
+            }
+            ZwdsStar::DiJie => {
+                "Represents financial spendings, unexpected losses, and unique insights."
+            }
             _ => "A minor helper star in Zi Wei Dou Shu.",
-        }
+        },
     }
 }
 
 /// ZWDS 12궁위의 성반 4x4 Grid 상의 중심 좌표 (0..100 기준)
 fn get_palace_center(p_idx: usize) -> (f64, f64) {
     let (r, c) = match p_idx {
-        0 => (3, 0), // 寅
-        1 => (2, 0), // 卯
-        2 => (1, 0), // 辰
-        3 => (0, 0), // 巳
-        4 => (0, 1), // 午
-        5 => (0, 2), // 未
-        6 => (0, 3), // 申
-        7 => (1, 3), // 酉
-        8 => (2, 3), // 戌
-        9 => (3, 3), // 亥
+        0 => (3, 0),  // 寅
+        1 => (2, 0),  // 卯
+        2 => (1, 0),  // 辰
+        3 => (0, 0),  // 巳
+        4 => (0, 1),  // 午
+        5 => (0, 2),  // 未
+        6 => (0, 3),  // 申
+        7 => (1, 3),  // 酉
+        8 => (2, 3),  // 戌
+        9 => (3, 3),  // 亥
         10 => (3, 2), // 子
         11 => (3, 1), // 丑
         _ => (0, 0),

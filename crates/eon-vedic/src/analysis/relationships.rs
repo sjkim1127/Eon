@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
-use crate::planets::VedicPlanet;
 use crate::chart::VedicChart;
+use crate::planets::VedicPlanet;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RelationshipType {
@@ -19,28 +19,41 @@ impl RelationshipEngine {
     pub fn get_relationship(
         planet: VedicPlanet,
         target: VedicPlanet,
-        chart: &VedicChart
+        chart: &VedicChart,
     ) -> RelationshipType {
         let natural = Self::get_natural_relationship(planet, target);
         let temporal = Self::get_temporal_relationship(planet, target, chart);
 
         match (natural, temporal) {
-            (NaturalRelationship::Friend, TemporalRelationship::Friend) => RelationshipType::GreatFriend,
+            (NaturalRelationship::Friend, TemporalRelationship::Friend) => {
+                RelationshipType::GreatFriend
+            }
             (NaturalRelationship::Friend, TemporalRelationship::Enemy) => RelationshipType::Neutral,
-            (NaturalRelationship::Neutral, TemporalRelationship::Friend) => RelationshipType::Friend,
+            (NaturalRelationship::Neutral, TemporalRelationship::Friend) => {
+                RelationshipType::Friend
+            }
             (NaturalRelationship::Neutral, TemporalRelationship::Enemy) => RelationshipType::Enemy,
             (NaturalRelationship::Enemy, TemporalRelationship::Friend) => RelationshipType::Neutral,
-            (NaturalRelationship::Enemy, TemporalRelationship::Enemy) => RelationshipType::GreatEnemy,
+            (NaturalRelationship::Enemy, TemporalRelationship::Enemy) => {
+                RelationshipType::GreatEnemy
+            }
         }
     }
 
     /// Naisargika Maitri (Natural Relationship) based on BPHS
-    pub fn get_natural_relationship(planet: VedicPlanet, target: VedicPlanet) -> NaturalRelationship {
-        if planet == target { return NaturalRelationship::Neutral; }
+    pub fn get_natural_relationship(
+        planet: VedicPlanet,
+        target: VedicPlanet,
+    ) -> NaturalRelationship {
+        if planet == target {
+            return NaturalRelationship::Neutral;
+        }
 
         match planet {
             VedicPlanet::Sun => match target {
-                VedicPlanet::Moon | VedicPlanet::Mars | VedicPlanet::Jupiter => NaturalRelationship::Friend,
+                VedicPlanet::Moon | VedicPlanet::Mars | VedicPlanet::Jupiter => {
+                    NaturalRelationship::Friend
+                }
                 VedicPlanet::Venus | VedicPlanet::Saturn => NaturalRelationship::Enemy,
                 _ => NaturalRelationship::Neutral,
             },
@@ -49,7 +62,9 @@ impl RelationshipEngine {
                 _ => NaturalRelationship::Neutral, // Moon has no enemies
             },
             VedicPlanet::Mars => match target {
-                VedicPlanet::Sun | VedicPlanet::Moon | VedicPlanet::Jupiter => NaturalRelationship::Friend,
+                VedicPlanet::Sun | VedicPlanet::Moon | VedicPlanet::Jupiter => {
+                    NaturalRelationship::Friend
+                }
                 VedicPlanet::Mercury => NaturalRelationship::Enemy,
                 _ => NaturalRelationship::Neutral,
             },
@@ -59,7 +74,9 @@ impl RelationshipEngine {
                 _ => NaturalRelationship::Neutral,
             },
             VedicPlanet::Jupiter => match target {
-                VedicPlanet::Sun | VedicPlanet::Moon | VedicPlanet::Mars => NaturalRelationship::Friend,
+                VedicPlanet::Sun | VedicPlanet::Moon | VedicPlanet::Mars => {
+                    NaturalRelationship::Friend
+                }
                 VedicPlanet::Mercury | VedicPlanet::Venus => NaturalRelationship::Enemy,
                 _ => NaturalRelationship::Neutral,
             },
@@ -70,7 +87,9 @@ impl RelationshipEngine {
             },
             VedicPlanet::Saturn => match target {
                 VedicPlanet::Mercury | VedicPlanet::Venus => NaturalRelationship::Friend,
-                VedicPlanet::Sun | VedicPlanet::Moon | VedicPlanet::Mars => NaturalRelationship::Enemy,
+                VedicPlanet::Sun | VedicPlanet::Moon | VedicPlanet::Mars => {
+                    NaturalRelationship::Enemy
+                }
                 _ => NaturalRelationship::Neutral,
             },
             _ => NaturalRelationship::Neutral,
@@ -83,9 +102,11 @@ impl RelationshipEngine {
     pub fn get_temporal_relationship(
         planet: VedicPlanet,
         target: VedicPlanet,
-        chart: &VedicChart
+        chart: &VedicChart,
     ) -> TemporalRelationship {
-        if planet == target { return TemporalRelationship::Enemy; } // Self is not friend in temporal logic usually, but irrelevant
+        if planet == target {
+            return TemporalRelationship::Enemy;
+        } // Self is not friend in temporal logic usually, but irrelevant
 
         let p_pos = chart.planets.iter().find(|p| p.planet == planet);
         let t_pos = chart.planets.iter().find(|p| p.planet == target);
@@ -93,7 +114,9 @@ impl RelationshipEngine {
         if let (Some(p), Some(t)) = (p_pos, t_pos) {
             // Count from planet to target
             let mut diff = t.rasi as i32 - p.rasi as i32;
-            if diff < 0 { diff += 12; }
+            if diff < 0 {
+                diff += 12;
+            }
             let count = diff + 1; // 1-based count
 
             if [2, 3, 4, 10, 11, 12].contains(&count) {

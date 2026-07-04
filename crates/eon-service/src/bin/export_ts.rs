@@ -18,6 +18,3 @@ fn main() -> std::io::Result<()> {
     println!("TypeScript types exported successfully.");
     Ok(())
 }
-
-
-

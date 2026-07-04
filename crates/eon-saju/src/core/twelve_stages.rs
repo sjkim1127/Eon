@@ -17,10 +17,10 @@
 //! 11. 태(胎) - 잉태
 //! 12. 양(養) - 양육
 
-use serde::{Deserialize, Serialize};
-use crate::core::stem::HeavenlyStem;
 use crate::core::branch::EarthlyBranch;
 use crate::core::pillars::FourPillars;
+use crate::core::stem::HeavenlyStem;
+use serde::{Deserialize, Serialize};
 
 /// 12운성 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -55,9 +55,18 @@ pub enum TwelveStage {
 impl TwelveStage {
     /// 모든 12운성 배열
     pub const ALL: [TwelveStage; 12] = [
-        Self::Changsheng, Self::Muyu, Self::Guandai, Self::Jianlu,
-        Self::Diwang, Self::Shuai, Self::Bing, Self::Si,
-        Self::Mu, Self::Jue, Self::Tai, Self::Yang,
+        Self::Changsheng,
+        Self::Muyu,
+        Self::Guandai,
+        Self::Jianlu,
+        Self::Diwang,
+        Self::Shuai,
+        Self::Bing,
+        Self::Si,
+        Self::Mu,
+        Self::Jue,
+        Self::Tai,
+        Self::Yang,
     ];
 
     /// 한글 이름
@@ -115,15 +124,15 @@ impl TwelveStage {
     }
 
     /// 통근(通根) 가중치 - 득지 판정용
-    /// 
+    ///
     /// 12운성을 세 등급으로 분류하여 차등 가중치 적용:
     /// - **A급 (왕성)**: 건록, 제왕, 관대 → 1.0 (완전한 통근)
     /// - **B급 (생조)**: 장생, 목욕 → 0.5 (생조는 받지만 뿌리 약함)
     /// - **C급 (쇠약)**: 쇠, 병, 사, 묘, 절, 태, 양 → 0.0 (통근 없음)
-    /// 
+    ///
     /// # 이론적 배경
-    /// 
-    /// 장생(長生)은 지지가 일간을 '생(生)'해주는 것이지, 
+    ///
+    /// 장생(長生)은 지지가 일간을 '생(生)'해주는 것이지,
     /// 일간이 지지에 '뿌리(根)'를 내린 것과는 다릅니다.
     /// 예: 甲일간이 亥월(장생)에 태어나면, 水가 木을 생하지만
     /// 甲목의 뿌리는 亥 속 甲목 지장간이 약하여 '부목(浮木)'이 될 수 있습니다.
@@ -131,21 +140,22 @@ impl TwelveStage {
         match self {
             // A급: 완전한 통근 (건록, 제왕, 관대)
             Self::Jianlu | Self::Diwang | Self::Guandai => 1.0,
-            
+
             // B급: 생조는 받지만 뿌리 약함 (장생, 목욕)
             Self::Changsheng | Self::Muyu => 0.5,
-            
+
             // C급: 통근 없음 (나머지)
-            Self::Shuai | Self::Bing | Self::Si | 
-            Self::Mu | Self::Jue | Self::Tai | Self::Yang => 0.0,
+            Self::Shuai | Self::Bing | Self::Si | Self::Mu | Self::Jue | Self::Tai | Self::Yang => {
+                0.0
+            }
         }
     }
 
     /// 강한 12운성인지 확인 (A급 또는 B급)
     pub const fn is_strong(&self) -> bool {
-        matches!(self, 
-            Self::Jianlu | Self::Diwang | Self::Guandai | 
-            Self::Changsheng | Self::Muyu
+        matches!(
+            self,
+            Self::Jianlu | Self::Diwang | Self::Guandai | Self::Changsheng | Self::Muyu
         )
     }
 
@@ -217,21 +227,21 @@ const YIN_STEM_CHANGSHENG: [EarthlyBranch; 5] = [
 pub fn calculate_twelve_stage(day_stem: HeavenlyStem, branch: EarthlyBranch) -> TwelveStage {
     // 양간과 음간 구분
     let is_yang = day_stem.index().is_multiple_of(2);
-    
+
     // 오행별 인덱스 (甲乙=0, 丙丁=1, 戊己=2, 庚辛=3, 壬癸=4)
     let element_idx = (day_stem.index() / 2) as usize;
-    
+
     // 장생 지지
     let changsheng_branch = if is_yang {
         YANG_STEM_CHANGSHENG[element_idx]
     } else {
         YIN_STEM_CHANGSHENG[element_idx]
     };
-    
+
     // 장생 지지부터의 거리 계산
     let branch_idx = branch.index() as i32;
     let changsheng_idx = changsheng_branch.index() as i32;
-    
+
     let distance = if is_yang {
         // 양간: 순행 (시계방향)
         (branch_idx - changsheng_idx).rem_euclid(12)
@@ -239,7 +249,7 @@ pub fn calculate_twelve_stage(day_stem: HeavenlyStem, branch: EarthlyBranch) -> 
         // 음간: 역행 (반시계방향)
         (changsheng_idx - branch_idx).rem_euclid(12)
     };
-    
+
     TwelveStage::from_index(distance)
 }
 
@@ -277,25 +287,24 @@ impl TwelveStageAnalysis {
     /// 사주로부터 12운성 분석
     pub fn from_pillars(pillars: &FourPillars) -> Self {
         let day_master = pillars.day_master();
-        
+
         let year_stage = calculate_twelve_stage(day_master, pillars.year.branch);
         let month_stage = calculate_twelve_stage(day_master, pillars.month.branch);
         let day_stage = calculate_twelve_stage(day_master, pillars.day.branch);
         let hour_stage = calculate_twelve_stage(day_master, pillars.hour.branch);
-        
+
         // 자좌 12운성 (각 기둥의 천간 vs 지지)
         let year_self = calculate_twelve_stage(pillars.year.stem, pillars.year.branch);
         let month_self = calculate_twelve_stage(pillars.month.stem, pillars.month.branch);
         let day_self = calculate_twelve_stage(pillars.day.stem, pillars.day.branch);
         let hour_self = calculate_twelve_stage(pillars.hour.stem, pillars.hour.branch);
-        
-        let total_energy = (
-            year_stage.energy_level() as u32 +
-            month_stage.energy_level() as u32 +
-            day_stage.energy_level() as u32 +
-            hour_stage.energy_level() as u32
-        ) / 4;
-        
+
+        let total_energy = (year_stage.energy_level() as u32
+            + month_stage.energy_level() as u32
+            + day_stage.energy_level() as u32
+            + hour_stage.energy_level() as u32)
+            / 4;
+
         Self {
             day_master,
             year_stage,
@@ -318,8 +327,9 @@ impl TwelveStageAnalysis {
             ("일지", self.day_stage),
             ("시지", self.hour_stage),
         ];
-        
-        positions.into_iter()
+
+        positions
+            .into_iter()
             .max_by_key(|(_, stage)| stage.energy_level())
             .unwrap()
     }
@@ -332,18 +342,19 @@ impl TwelveStageAnalysis {
             ("일지", self.day_stage),
             ("시지", self.hour_stage),
         ];
-        
-        positions.into_iter()
+
+        positions
+            .into_iter()
             .min_by_key(|(_, stage)| stage.energy_level())
             .unwrap()
     }
 
     /// 특정 운성이 있는지 확인
     pub fn has_stage(&self, stage: TwelveStage) -> bool {
-        self.year_stage == stage || 
-        self.month_stage == stage || 
-        self.day_stage == stage || 
-        self.hour_stage == stage
+        self.year_stage == stage
+            || self.month_stage == stage
+            || self.day_stage == stage
+            || self.hour_stage == stage
     }
 }
 
@@ -351,37 +362,64 @@ impl std::fmt::Display for TwelveStageAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "【12운성 분석】")?;
         writeln!(f, "─────────────────────────────────")?;
-        writeln!(f, "일간: {} ({})", self.day_master.hanja(), self.day_master.hangul())?;
+        writeln!(
+            f,
+            "일간: {} ({})",
+            self.day_master.hanja(),
+            self.day_master.hangul()
+        )?;
         writeln!(f)?;
-        writeln!(f, "  년지: {} ({}) - {}", 
-            self.year_stage.hangul(), 
+        writeln!(
+            f,
+            "  년지: {} ({}) - {}",
+            self.year_stage.hangul(),
             self.year_stage.hanja(),
-            self.year_stage.description())?;
-        writeln!(f, "  월지: {} ({}) - {}", 
-            self.month_stage.hangul(), 
+            self.year_stage.description()
+        )?;
+        writeln!(
+            f,
+            "  월지: {} ({}) - {}",
+            self.month_stage.hangul(),
             self.month_stage.hanja(),
-            self.month_stage.description())?;
-        writeln!(f, "  일지: {} ({}) - {}", 
-            self.day_stage.hangul(), 
+            self.month_stage.description()
+        )?;
+        writeln!(
+            f,
+            "  일지: {} ({}) - {}",
+            self.day_stage.hangul(),
             self.day_stage.hanja(),
-            self.day_stage.description())?;
-        writeln!(f, "  시지: {} ({}) - {}", 
-            self.hour_stage.hangul(), 
+            self.day_stage.description()
+        )?;
+        writeln!(
+            f,
+            "  시지: {} ({}) - {}",
+            self.hour_stage.hangul(),
             self.hour_stage.hanja(),
-            self.hour_stage.description())?;
+            self.hour_stage.description()
+        )?;
         writeln!(f)?;
         writeln!(f, "【자좌 12운성 (각 기둥 내부 에너지)】")?;
-        writeln!(f, "  년주: {} | 월주: {} | 일주: {} | 시주: {}",
-            self.year_self.hangul(), self.month_self.hangul(), 
-            self.day_self.hangul(), self.hour_self.hangul())?;
+        writeln!(
+            f,
+            "  년주: {} | 월주: {} | 일주: {} | 시주: {}",
+            self.year_self.hangul(),
+            self.month_self.hangul(),
+            self.day_self.hangul(),
+            self.hour_self.hangul()
+        )?;
         writeln!(f)?;
         writeln!(f, "총 에너지: {}%", self.total_energy)?;
-        
+
         let (strongest_pos, strongest_stage) = self.strongest_position();
         let (weakest_pos, weakest_stage) = self.weakest_position();
-        writeln!(f, "최강 위치: {} ({})", strongest_pos, strongest_stage.hangul())?;
+        writeln!(
+            f,
+            "최강 위치: {} ({})",
+            strongest_pos,
+            strongest_stage.hangul()
+        )?;
         writeln!(f, "최약 위치: {} ({})", weakest_pos, weakest_stage.hangul())?;
-        
+
         Ok(())
     }
 }
@@ -413,17 +451,17 @@ mod tests {
         // 일간 庚(양금)
         let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
         let pillars = FourPillars::calculate(&input).unwrap();
-        
+
         let analysis = pillars.twelve_stages();
-        
+
         println!("{}", analysis);
-        
+
         // 庚의 장생은 巳
         // 庚 → 巳(장생), 午(목욕), 未(관대), 申(건록), 酉(제왕), 戌(쇠)...
-        
+
         // 년지 申 = 건록
         assert_eq!(analysis.year_stage, TwelveStage::Jianlu);
-        
+
         // 일지 戌 = 쇠
         assert_eq!(analysis.day_stage, TwelveStage::Shuai);
     }
@@ -435,13 +473,13 @@ mod tests {
             calculate_twelve_stage(HeavenlyStem::Jia, EarthlyBranch::Hai),
             TwelveStage::Changsheng
         );
-        
+
         // 甲 → 子 = 목욕
         assert_eq!(
             calculate_twelve_stage(HeavenlyStem::Jia, EarthlyBranch::Zi),
             TwelveStage::Muyu
         );
-        
+
         // 甲 → 寅 = 건록
         assert_eq!(
             calculate_twelve_stage(HeavenlyStem::Jia, EarthlyBranch::Yin),
@@ -456,13 +494,13 @@ mod tests {
             calculate_twelve_stage(HeavenlyStem::Geng, EarthlyBranch::Si),
             TwelveStage::Changsheng
         );
-        
+
         // 庚 → 申 = 건록
         assert_eq!(
             calculate_twelve_stage(HeavenlyStem::Geng, EarthlyBranch::Shen),
             TwelveStage::Jianlu
         );
-        
+
         // 庚 → 戌 = 쇠
         assert_eq!(
             calculate_twelve_stage(HeavenlyStem::Geng, EarthlyBranch::Xu),
@@ -477,7 +515,7 @@ mod tests {
             calculate_twelve_stage(HeavenlyStem::Yi, EarthlyBranch::Wu),
             TwelveStage::Changsheng
         );
-        
+
         // 乙 → 卯 = 건록
         assert_eq!(
             calculate_twelve_stage(HeavenlyStem::Yi, EarthlyBranch::Mao),

@@ -16,8 +16,8 @@
 //! These baselines ensure that future architectural changes do not regress core calculations.
 
 use crate::common::*;
-use eon_vedic::planets::VedicPlanet;
 use eon_vedic::config::AyanamsaSystem;
+use eon_vedic::planets::VedicPlanet;
 
 pub const FIXTURES: &[VedicTestFixture] = &[
     VedicTestFixture {
@@ -51,7 +51,10 @@ pub const FIXTURES: &[VedicTestFixture] = &[
             high_harsha_bala: &[VedicPlanet::Moon],
         }),
         avastha: Some(ExpectedAvastha {
-            deeptaadi: &[(VedicPlanet::Jupiter, "Mudita"), (VedicPlanet::Venus, "Kopita")],
+            deeptaadi: &[
+                (VedicPlanet::Jupiter, "Mudita"),
+                (VedicPlanet::Venus, "Kopita"),
+            ],
         }),
     },
     VedicTestFixture {
@@ -85,7 +88,10 @@ pub const FIXTURES: &[VedicTestFixture] = &[
             high_harsha_bala: &[],
         }),
         avastha: Some(ExpectedAvastha {
-            deeptaadi: &[(VedicPlanet::Jupiter, "Deepta"), (VedicPlanet::Mercury, "Kopita")],
+            deeptaadi: &[
+                (VedicPlanet::Jupiter, "Deepta"),
+                (VedicPlanet::Mercury, "Kopita"),
+            ],
         }),
     },
     VedicTestFixture {
@@ -343,5 +349,5 @@ pub const FIXTURES: &[VedicTestFixture] = &[
             high_harsha_bala: &[],
         }),
         avastha: None,
-    }
+    },
 ];

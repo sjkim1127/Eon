@@ -3,8 +3,8 @@
 //! String 힙 할당을 최소화하기 위해 태그를 Enum으로 정의합니다.
 //! 최종 리포트 생성 시에만 문자열로 변환됩니다.
 
-use serde::{Deserialize, Serialize};
 use crate::core::element::Element;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 
 /// 분석 태그 - 문자열 대신 구조화된 Enum 사용
@@ -26,9 +26,15 @@ pub enum TraceTag {
     /// 육합
     SixCombination { combo_type: String },
     /// 삼합 완성
-    TripleCombination { element: Element, is_beneficial: bool },
+    TripleCombination {
+        element: Element,
+        is_beneficial: bool,
+    },
     /// 방합 완성
-    SeasonalCombination { element: Element, is_beneficial: bool },
+    SeasonalCombination {
+        element: Element,
+        is_beneficial: bool,
+    },
     /// 합화 (오행 변화)
     Transformation { from: Element, to: Element },
 
@@ -54,15 +60,28 @@ pub enum TraceTag {
 
     // === 신살 태그 ===
     /// 12신살
-    TwelveShinsal { name: ShinsalName, period: LuckPeriod },
+    TwelveShinsal {
+        name: ShinsalName,
+        period: LuckPeriod,
+    },
     /// 길신 (천을귀인, 문창귀인 등)
-    AuspiciousSpirit { name: AuspiciousSpiritName, period: LuckPeriod },
+    AuspiciousSpirit {
+        name: AuspiciousSpiritName,
+        period: LuckPeriod,
+    },
     /// 흉살 (원진, 귀문 등)
-    InauspiciousSpirit { name: InauspiciousSpiritName, position: PillarPosition, period: LuckPeriod },
+    InauspiciousSpirit {
+        name: InauspiciousSpiritName,
+        position: PillarPosition,
+        period: LuckPeriod,
+    },
 
     // === 12운성 태그 ===
     /// 12운성 (장생, 건록, 제왕 등)
-    LifeStage { stage: LifeStageName, period: LuckPeriod },
+    LifeStage {
+        stage: LifeStageName,
+        period: LuckPeriod,
+    },
 
     // === 십신 패턴 태그 ===
     /// 상관견관 (상관 운 + 원국 정관)
@@ -84,7 +103,10 @@ pub enum TraceTag {
 
     // === 인터럽트 태그 ===
     /// 하드웨어 인터럽트 (백호살, 괴강살 등)
-    Interrupt { irq_type: InterruptType, marker: String },
+    Interrupt {
+        irq_type: InterruptType,
+        marker: String,
+    },
 
     // === 기타 ===
     /// 커스텀 태그 (레거시 호환용)
@@ -304,35 +326,41 @@ impl fmt::Display for TraceTag {
             TraceTag::CoreLuck { period } => write!(f, "{}핵심운", period.hangul()),
             TraceTag::GoodLuck { period } => write!(f, "{}길운", period.hangul()),
             TraceTag::BadLuck { period } => write!(f, "{}기신운", period.hangul()),
-            
+
             // 합충 태그
             TraceTag::BranchClash { clash_type } => write!(f, "{}", clash_type),
             TraceTag::StemClash { clash_type } => write!(f, "천간충:{}", clash_type),
             TraceTag::SixCombination { combo_type } => write!(f, "육합:{}", combo_type),
-            TraceTag::TripleCombination { element, is_beneficial } => {
+            TraceTag::TripleCombination {
+                element,
+                is_beneficial,
+            } => {
                 let suffix = if *is_beneficial { "吉" } else { "凶" };
                 write!(f, "삼합완성({}-{})", element.hangul(), suffix)
             }
-            TraceTag::SeasonalCombination { element, is_beneficial } => {
+            TraceTag::SeasonalCombination {
+                element,
+                is_beneficial,
+            } => {
                 let suffix = if *is_beneficial { "吉" } else { "凶" };
                 write!(f, "방합완성({}-{})", element.hangul(), suffix)
             }
             TraceTag::Transformation { from, to } => {
                 write!(f, "합화:{}→{}", from.hangul(), to.hangul())
             }
-            
+
             // 지지 관계
             TraceTag::Punishment { punishment_type } => write!(f, "{}", punishment_type),
             TraceTag::Harm { harm_type } => write!(f, "{}", harm_type),
             TraceTag::Destruction { destruction_type } => write!(f, "{}", destruction_type),
-            
+
             // 공망
             TraceTag::VoidLuck { period } => write!(f, "운성공망:{}", period.hangul()),
             TraceTag::EscapedVoidClash { period } => write!(f, "탈공:충({})", period.hangul()),
             TraceTag::EscapedVoidSixCombo { period } => write!(f, "탈공:육합({})", period.hangul()),
             TraceTag::EscapedVoidTriple { period } => write!(f, "탈공:삼합({})", period.hangul()),
             TraceTag::EscapedVoidSeasonal { period } => write!(f, "탈공:방합({})", period.hangul()),
-            
+
             // 신살
             TraceTag::TwelveShinsal { name, period } => {
                 write!(f, "신살:{}({})", name.hangul(), period.hangul())
@@ -340,15 +368,25 @@ impl fmt::Display for TraceTag {
             TraceTag::AuspiciousSpirit { name, period } => {
                 write!(f, "길신:{}({})", name.hangul(), period.hangul())
             }
-            TraceTag::InauspiciousSpirit { name, position, period } => {
-                write!(f, "흉살:{}({}-{})", name.hangul(), position.hangul(), period.hangul())
+            TraceTag::InauspiciousSpirit {
+                name,
+                position,
+                period,
+            } => {
+                write!(
+                    f,
+                    "흉살:{}({}-{})",
+                    name.hangul(),
+                    position.hangul(),
+                    period.hangul()
+                )
             }
-            
+
             // 12운성
             TraceTag::LifeStage { stage, period } => {
                 write!(f, "운성:{}({})", stage.hangul(), period.hangul())
             }
-            
+
             // 십신 패턴
             TraceTag::HurtingOfficerMeetsOfficer { period } => {
                 write!(f, "패턴:상관견관({})", period.hangul())
@@ -356,19 +394,19 @@ impl fmt::Display for TraceTag {
             TraceTag::EatingGodProducesWealth { period } => {
                 write!(f, "패턴:식신생재({})", period.hangul())
             }
-            
+
             // 신강/신약
             TraceTag::StrengthType { strength } => write!(f, "신강약:{}", strength.hangul()),
             TraceTag::DeukRyeong => write!(f, "득령"),
             TraceTag::DeukJi => write!(f, "득지"),
             TraceTag::DeukSi => write!(f, "득시"),
             TraceTag::DeukSe => write!(f, "득세"),
-            
+
             // 인터럽트
             TraceTag::Interrupt { irq_type, marker } => {
                 write!(f, "{}:{}", irq_type.code(), marker)
             }
-            
+
             // 커스텀
             TraceTag::Custom(s) => write!(f, "{}", s),
         }
@@ -389,7 +427,10 @@ pub fn tags_to_strings(tags: &[TraceTag]) -> Vec<String> {
 
 /// Vec<String>에서 TraceTag 컬렉션으로 변환 (레거시 호환용)
 pub fn strings_to_tags(strings: &[String]) -> Vec<TraceTag> {
-    strings.iter().map(|s| TraceTag::Custom(s.clone())).collect()
+    strings
+        .iter()
+        .map(|s| TraceTag::Custom(s.clone()))
+        .collect()
 }
 
 #[cfg(test)]
@@ -398,12 +439,14 @@ mod tests {
 
     #[test]
     fn test_tag_display() {
-        let tag = TraceTag::CoreLuck { period: LuckPeriod::Major };
+        let tag = TraceTag::CoreLuck {
+            period: LuckPeriod::Major,
+        };
         assert_eq!(tag.to_string(), "대운핵심운");
 
-        let tag = TraceTag::TripleCombination { 
-            element: Element::Wood, 
-            is_beneficial: true 
+        let tag = TraceTag::TripleCombination {
+            element: Element::Wood,
+            is_beneficial: true,
         };
         assert_eq!(tag.to_string(), "삼합완성(목-吉)");
     }
@@ -413,7 +456,9 @@ mod tests {
         let tags = vec![
             TraceTag::DeukRyeong,
             TraceTag::DeukJi,
-            TraceTag::StrengthType { strength: StrengthTypeName::Strong },
+            TraceTag::StrengthType {
+                strength: StrengthTypeName::Strong,
+            },
         ];
         let strings = tags_to_strings(&tags);
         assert_eq!(strings, vec!["득령", "득지", "신강약:신강"]);

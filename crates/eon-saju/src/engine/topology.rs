@@ -1,20 +1,20 @@
-use serde::{Deserialize, Serialize};
 use crate::core::element::Element;
 use crate::core::pillars::FourPillars;
+use serde::{Deserialize, Serialize};
 
 /// 에너지 노드 상태
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QiNode {
     pub element: Element,
-    pub capacity: f32,    // 노드가 수용 가능한 에너지량 (원국의 글자 수 기반)
-    pub output: f32,      // 실제로 다음 노드로 흘려보내는 에너지량
+    pub capacity: f32, // 노드가 수용 가능한 에너지량 (원국의 글자 수 기반)
+    pub output: f32,   // 실제로 다음 노드로 흘려보내는 에너지량
 }
 
 /// 에너지 흐름 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TopologyAnalysis {
     pub nodes: Vec<QiNode>,
-    pub throughput: f32,           // 시스템 전체 에너지 유동 효율 (0.0 ~ 1.0)
+    pub throughput: f32,             // 시스템 전체 에너지 유동 효율 (0.0 ~ 1.0)
     pub bottleneck: Option<Element>, // 가장 흐름이 정체되는 구간
 }
 
@@ -24,11 +24,15 @@ impl QiTopology {
     pub fn analyze(pillars: &FourPillars) -> TopologyAnalysis {
         let counts = pillars.element_counts();
         let mut nodes = Vec::new();
-        
+
         // 1. 각 노드(오행)의 Capacity 계산
         for i in 0..5 {
             let el = Element::from_index(i);
-            let count = counts.iter().find(|(e, _)| *e == el).map(|(_, c)| *c).unwrap_or(0);
+            let count = counts
+                .iter()
+                .find(|(e, _)| *e == el)
+                .map(|(_, c)| *c)
+                .unwrap_or(0);
             nodes.push(QiNode {
                 element: el,
                 capacity: count as f32 * 10.0, // 한 글자당 10의 대역폭
@@ -45,7 +49,7 @@ impl QiTopology {
         for i in 0..5 {
             let current_idx = i;
             let next_idx = (i + 1) % 5;
-            
+
             let cap_current = nodes[current_idx].capacity;
             let cap_next = nodes[next_idx].capacity;
 
@@ -80,7 +84,7 @@ impl QiTopology {
             let controller = el.controlled_by();
             let controller_idx = controller.index() as usize;
             let resistance = nodes[controller_idx].capacity * 0.15; // 상극 노드의 크기만큼 저항 발생
-            
+
             nodes[i].output = (nodes[i].output - resistance).max(0.0);
         }
 
@@ -97,17 +101,31 @@ impl QiTopology {
 impl std::fmt::Display for TopologyAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "【Qi Flow Network Topology】")?;
-        writeln!(f, "Throughput: {:.1}% (System Efficiency)", self.throughput * 100.0)?;
-        
+        writeln!(
+            f,
+            "Throughput: {:.1}% (System Efficiency)",
+            self.throughput * 100.0
+        )?;
+
         if let Some(bn) = self.bottleneck {
-            writeln!(f, "Bottleneck: {} Node (Bandwidth Limitation Detected)", bn.hangul())?;
+            writeln!(
+                f,
+                "Bottleneck: {} Node (Bandwidth Limitation Detected)",
+                bn.hangul()
+            )?;
         }
 
         writeln!(f, "Node Traffic Status:")?;
         for node in &self.nodes {
             let bar_len = (node.output / 2.0) as usize;
             let bar = "⚡".repeat(bar_len);
-            writeln!(f, "  {:<4}: {:<15} (Output: {:.1})", node.element.hangul(), bar, node.output)?;
+            writeln!(
+                f,
+                "  {:<4}: {:<15} (Output: {:.1})",
+                node.element.hangul(),
+                bar,
+                node.output
+            )?;
         }
         Ok(())
     }

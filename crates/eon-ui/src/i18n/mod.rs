@@ -3,15 +3,15 @@
 // Locale persisted in global Signal<Locale> + localStorage.
 
 pub mod en;
+pub mod iching_db;
 pub mod ko;
 pub mod ru;
 pub mod zh;
 pub mod zwds_interpret;
-pub mod iching_db;
 
-use serde::{Deserialize, Serialize};
-use eon_vedic::planets::VedicPlanet;
 use eon_vedic::analysis::avasthas::LajjitadiAvastha;
+use eon_vedic::planets::VedicPlanet;
+use serde::{Deserialize, Serialize};
 
 /// Supported UI locales.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -857,7 +857,9 @@ pub fn translate_avastha(locale: Locale, av: &LajjitadiAvastha) -> &'static str 
 }
 
 pub fn nakshatra_lord(nakshatra_idx: u8) -> Option<VedicPlanet> {
-    if nakshatra_idx == 0 || nakshatra_idx > 27 { return None; }
+    if nakshatra_idx == 0 || nakshatra_idx > 27 {
+        return None;
+    }
     match (nakshatra_idx - 1) % 9 {
         0 => Some(VedicPlanet::Ketu),
         1 => Some(VedicPlanet::Venus),
@@ -868,7 +870,7 @@ pub fn nakshatra_lord(nakshatra_idx: u8) -> Option<VedicPlanet> {
         6 => Some(VedicPlanet::Jupiter),
         7 => Some(VedicPlanet::Saturn),
         8 => Some(VedicPlanet::Mercury),
-        _ => None
+        _ => None,
     }
 }
 
@@ -886,7 +888,7 @@ pub fn rasi_lord(rasi_idx: u8) -> Option<VedicPlanet> {
         10 => Some(VedicPlanet::Saturn),
         11 => Some(VedicPlanet::Saturn),
         12 => Some(VedicPlanet::Jupiter),
-        _ => None
+        _ => None,
     }
 }
 
@@ -905,7 +907,6 @@ pub fn rasi_lord_localized(locale: Locale, rasi_idx: u8) -> &'static str {
         "—"
     }
 }
-
 
 pub fn format_age(locale: Locale, age: i32) -> String {
     match locale {
@@ -1147,7 +1148,10 @@ pub fn translate_zwds_star(locale: Locale, star: eon_zwds::types::ZwdsStar) -> &
     }
 }
 
-pub fn translate_five_elements(locale: Locale, class: eon_zwds::types::FiveElementsClass) -> &'static str {
+pub fn translate_five_elements(
+    locale: Locale,
+    class: eon_zwds::types::FiveElementsClass,
+) -> &'static str {
     match locale {
         Locale::Ko => class.korean(),
         Locale::En => match class {
@@ -1174,48 +1178,54 @@ pub fn translate_five_elements(locale: Locale, class: eon_zwds::types::FiveEleme
     }
 }
 
-pub fn translate_zwds_brightness(locale: Locale, brightness: eon_zwds::types::ZwdsBrightness) -> &'static str {
+pub fn translate_zwds_brightness(
+    locale: Locale,
+    brightness: eon_zwds::types::ZwdsBrightness,
+) -> &'static str {
     match locale {
         Locale::Ko => match brightness {
             eon_zwds::types::ZwdsBrightness::Miao => "廟",
             eon_zwds::types::ZwdsBrightness::Wang => "旺",
-            eon_zwds::types::ZwdsBrightness::De   => "得",
-            eon_zwds::types::ZwdsBrightness::Li   => "利",
+            eon_zwds::types::ZwdsBrightness::De => "得",
+            eon_zwds::types::ZwdsBrightness::Li => "利",
             eon_zwds::types::ZwdsBrightness::Ping => "平",
-            eon_zwds::types::ZwdsBrightness::Bu   => "不",
+            eon_zwds::types::ZwdsBrightness::Bu => "不",
             eon_zwds::types::ZwdsBrightness::Xian => "陷",
         },
         Locale::Zh => match brightness {
             eon_zwds::types::ZwdsBrightness::Miao => "庙",
             eon_zwds::types::ZwdsBrightness::Wang => "旺",
-            eon_zwds::types::ZwdsBrightness::De   => "得",
-            eon_zwds::types::ZwdsBrightness::Li   => "利",
+            eon_zwds::types::ZwdsBrightness::De => "得",
+            eon_zwds::types::ZwdsBrightness::Li => "利",
             eon_zwds::types::ZwdsBrightness::Ping => "平",
-            eon_zwds::types::ZwdsBrightness::Bu   => "不",
+            eon_zwds::types::ZwdsBrightness::Bu => "不",
             eon_zwds::types::ZwdsBrightness::Xian => "陷",
         },
         Locale::En => match brightness {
             eon_zwds::types::ZwdsBrightness::Miao => "T",
             eon_zwds::types::ZwdsBrightness::Wang => "B",
-            eon_zwds::types::ZwdsBrightness::De   => "G",
-            eon_zwds::types::ZwdsBrightness::Li   => "b",
+            eon_zwds::types::ZwdsBrightness::De => "G",
+            eon_zwds::types::ZwdsBrightness::Li => "b",
             eon_zwds::types::ZwdsBrightness::Ping => "P",
-            eon_zwds::types::ZwdsBrightness::Bu   => "n",
+            eon_zwds::types::ZwdsBrightness::Bu => "n",
             eon_zwds::types::ZwdsBrightness::Xian => "F",
         },
         Locale::Ru => match brightness {
             eon_zwds::types::ZwdsBrightness::Miao => "Х",
             eon_zwds::types::ZwdsBrightness::Wang => "А",
-            eon_zwds::types::ZwdsBrightness::De   => "П",
-            eon_zwds::types::ZwdsBrightness::Li   => "В",
+            eon_zwds::types::ZwdsBrightness::De => "П",
+            eon_zwds::types::ZwdsBrightness::Li => "В",
             eon_zwds::types::ZwdsBrightness::Ping => "С",
-            eon_zwds::types::ZwdsBrightness::Bu   => "Н",
+            eon_zwds::types::ZwdsBrightness::Bu => "Н",
             eon_zwds::types::ZwdsBrightness::Xian => "П",
         },
     }
 }
 
-pub fn translate_zwds_palace_abbr(locale: Locale, name: eon_zwds::types::PalaceName) -> &'static str {
+pub fn translate_zwds_palace_abbr(
+    locale: Locale,
+    name: eon_zwds::types::PalaceName,
+) -> &'static str {
     match locale {
         Locale::Ko => match name {
             eon_zwds::types::PalaceName::Ming => "명",
@@ -1276,7 +1286,10 @@ pub fn translate_zwds_palace_abbr(locale: Locale, name: eon_zwds::types::PalaceN
     }
 }
 
-pub fn translate_saju_twelve_stage(locale: Locale, stage: eon_saju::core::twelve_stages::TwelveStage) -> &'static str {
+pub fn translate_saju_twelve_stage(
+    locale: Locale,
+    stage: eon_saju::core::twelve_stages::TwelveStage,
+) -> &'static str {
     match locale {
         Locale::Ko => stage.hangul(),
         Locale::Zh => stage.hanja(),
@@ -1345,7 +1358,8 @@ pub fn translate_saju_nayin(locale: Locale, nayin: eon_saju::core::nayin::NayinT
             eon_saju::core::nayin::NayinType::SunFire => "天上火",
             eon_saju::core::nayin::NayinType::PomegranateWood => "石榴木",
             eon_saju::core::nayin::NayinType::OceanWater => "大海水",
-        }.to_string(),
+        }
+        .to_string(),
         Locale::En => nayin.english().to_string(),
         Locale::Ru => match nayin {
             eon_saju::core::nayin::NayinType::SeaGold => "Металл на дне моря",
@@ -1378,11 +1392,15 @@ pub fn translate_saju_nayin(locale: Locale, nayin: eon_saju::core::nayin::NayinT
             eon_saju::core::nayin::NayinType::SunFire => "Небесный огонь (Солнце)",
             eon_saju::core::nayin::NayinType::PomegranateWood => "Дерево граната",
             eon_saju::core::nayin::NayinType::OceanWater => "Вода великого океана",
-        }.to_string(),
+        }
+        .to_string(),
     }
 }
 
-pub fn translate_saju_stem(locale: Locale, stem: eon_saju::core::stem::HeavenlyStem) -> &'static str {
+pub fn translate_saju_stem(
+    locale: Locale,
+    stem: eon_saju::core::stem::HeavenlyStem,
+) -> &'static str {
     match locale {
         Locale::Ko => stem.hangul(),
         Locale::Zh => stem.hanja(),
@@ -1413,7 +1431,10 @@ pub fn translate_saju_stem(locale: Locale, stem: eon_saju::core::stem::HeavenlyS
     }
 }
 
-pub fn translate_saju_branch(locale: Locale, branch: eon_saju::core::branch::EarthlyBranch) -> &'static str {
+pub fn translate_saju_branch(
+    locale: Locale,
+    branch: eon_saju::core::branch::EarthlyBranch,
+) -> &'static str {
     match locale {
         Locale::Ko => branch.hangul(),
         Locale::Zh => branch.hanja(),
@@ -1448,7 +1469,10 @@ pub fn translate_saju_branch(locale: Locale, branch: eon_saju::core::branch::Ear
     }
 }
 
-pub fn translate_saju_element(locale: Locale, element: eon_saju::core::element::Element) -> &'static str {
+pub fn translate_saju_element(
+    locale: Locale,
+    element: eon_saju::core::element::Element,
+) -> &'static str {
     match locale {
         Locale::Ko => element.hangul(),
         Locale::Zh => match element {
@@ -1475,7 +1499,10 @@ pub fn translate_saju_element(locale: Locale, element: eon_saju::core::element::
     }
 }
 
-pub fn translate_saju_ten_god(locale: Locale, god: eon_saju::core::ten_gods::TenGod) -> &'static str {
+pub fn translate_saju_ten_god(
+    locale: Locale,
+    god: eon_saju::core::ten_gods::TenGod,
+) -> &'static str {
     match locale {
         Locale::Ko => god.hangul(),
         Locale::Zh => god.hanja(),
@@ -1506,7 +1533,10 @@ pub fn translate_saju_ten_god(locale: Locale, god: eon_saju::core::ten_gods::Ten
     }
 }
 
-pub fn translate_saju_spirit_marker_name(locale: Locale, marker: eon_saju::analysis::spirit_markers::SpiritMarker) -> &'static str {
+pub fn translate_saju_spirit_marker_name(
+    locale: Locale,
+    marker: eon_saju::analysis::spirit_markers::SpiritMarker,
+) -> &'static str {
     match locale {
         Locale::Ko => marker.hangul(),
         Locale::Zh => match marker {
@@ -1582,11 +1612,17 @@ pub fn translate_saju_spirit_marker_name(locale: Locale, marker: eon_saju::analy
             eon_saju::analysis::spirit_markers::SpiritMarker::Jimang => "Earthly Net",
         },
         Locale::Ru => match marker {
-            eon_saju::analysis::spirit_markers::SpiritMarker::Tianyi => "Благородный Небесной Единицы",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Tianyi => {
+                "Благородный Небесной Единицы"
+            }
             eon_saju::analysis::spirit_markers::SpiritMarker::Wenchang => "Звезда Академика",
             eon_saju::analysis::spirit_markers::SpiritMarker::Taiji => "Благородный Тайцзи",
-            eon_saju::analysis::spirit_markers::SpiritMarker::Yuede => "Благородный Месячной Добродетели",
-            eon_saju::analysis::spirit_markers::SpiritMarker::Tiande => "Благородный Небесной Добродетели",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Yuede => {
+                "Благородный Месячной Добродетели"
+            }
+            eon_saju::analysis::spirit_markers::SpiritMarker::Tiande => {
+                "Благородный Небесной Добродетели"
+            }
             eon_saju::analysis::spirit_markers::SpiritMarker::Zhenglu => "Вознаграждение (Лу)",
             eon_saju::analysis::spirit_markers::SpiritMarker::Jinyu => "Золотая Карета",
             eon_saju::analysis::spirit_markers::SpiritMarker::Anlu => "Скрытое Вознаграждение",
@@ -1624,7 +1660,9 @@ pub fn translate_aux_shinsal(locale: Locale, name: &str) -> String {
     let marker = match name {
         "천을귀인" => Some(eon_saju::analysis::spirit_markers::SpiritMarker::Tianyi),
         "지살" => Some(eon_saju::analysis::spirit_markers::SpiritMarker::Jisha),
-        "년살" | "년살(도화)" | "도화살" => Some(eon_saju::analysis::spirit_markers::SpiritMarker::Nyeonsha),
+        "년살" | "년살(도화)" | "도화살" => {
+            Some(eon_saju::analysis::spirit_markers::SpiritMarker::Nyeonsha)
+        }
         "월살" => Some(eon_saju::analysis::spirit_markers::SpiritMarker::Wolsha),
         "망신살" => Some(eon_saju::analysis::spirit_markers::SpiritMarker::Wangshen),
         "장성살" => Some(eon_saju::analysis::spirit_markers::SpiritMarker::Jangseong),
@@ -1645,7 +1683,10 @@ pub fn translate_aux_shinsal(locale: Locale, name: &str) -> String {
     }
 }
 
-pub fn translate_saju_spirit_marker_desc(locale: Locale, marker: eon_saju::analysis::spirit_markers::SpiritMarker) -> &'static str {
+pub fn translate_saju_spirit_marker_desc(
+    locale: Locale,
+    marker: eon_saju::analysis::spirit_markers::SpiritMarker,
+) -> &'static str {
     match locale {
         Locale::Ko => marker.description(),
         Locale::Zh => match marker {
@@ -1759,7 +1800,10 @@ pub fn translate_saju_spirit_marker_desc(locale: Locale, marker: eon_saju::analy
     }
 }
 
-pub fn translate_saju_structure(locale: Locale, st: eon_saju::analysis::structure::StructureType) -> &'static str {
+pub fn translate_saju_structure(
+    locale: Locale,
+    st: eon_saju::analysis::structure::StructureType,
+) -> &'static str {
     match locale {
         Locale::Ko => st.hangul(),
         Locale::Zh => st.hanja(),
@@ -1772,7 +1816,9 @@ pub fn translate_saju_structure(locale: Locale, st: eon_saju::analysis::structur
             eon_saju::analysis::structure::StructureType::ZhengGuan => "Direct Officer Structure",
             eon_saju::analysis::structure::StructureType::PianYin => "Indirect Resource Structure",
             eon_saju::analysis::structure::StructureType::ZhengYin => "Direct Resource Structure",
-            eon_saju::analysis::structure::StructureType::JianLu => "Built Lu Structure (Prosperity)",
+            eon_saju::analysis::structure::StructureType::JianLu => {
+                "Built Lu Structure (Prosperity)"
+            }
             eon_saju::analysis::structure::StructureType::YangIn => "Yang Blade Structure",
             eon_saju::analysis::structure::StructureType::Special => "Companion Structure",
             eon_saju::analysis::structure::StructureType::JongAh => "Follow Child Structure",
@@ -1781,27 +1827,43 @@ pub fn translate_saju_structure(locale: Locale, st: eon_saju::analysis::structur
             eon_saju::analysis::structure::StructureType::JongGang => "Follow Strength Structure",
             eon_saju::analysis::structure::StructureType::JongWang => "Follow Dominance Structure",
             eon_saju::analysis::structure::StructureType::Follower => "Follower Structure",
-            eon_saju::analysis::structure::StructureType::SpecialTransformation => "Dominant One-Element Structure",
+            eon_saju::analysis::structure::StructureType::SpecialTransformation => {
+                "Dominant One-Element Structure"
+            }
         },
         Locale::Ru => match st {
             eon_saju::analysis::structure::StructureType::ShiShen => "Структура Духа Пищи",
             eon_saju::analysis::structure::StructureType::ShangGuan => "Структура Вызова Власти",
-            eon_saju::analysis::structure::StructureType::PianCai => "Структура Косвенного Богатства",
+            eon_saju::analysis::structure::StructureType::PianCai => {
+                "Структура Косвенного Богатства"
+            }
             eon_saju::analysis::structure::StructureType::ZhengCai => "Структура Прямого Богатства",
             eon_saju::analysis::structure::StructureType::PianGuan => "Структура Семи Убийц",
-            eon_saju::analysis::structure::StructureType::ZhengGuan => "Структура Прямого Чиновника",
+            eon_saju::analysis::structure::StructureType::ZhengGuan => {
+                "Структура Прямого Чиновника"
+            }
             eon_saju::analysis::structure::StructureType::PianYin => "Структура Косвенного Ресурса",
             eon_saju::analysis::structure::StructureType::ZhengYin => "Структура Прямого Ресурса",
             eon_saju::analysis::structure::StructureType::JianLu => "Структура Службы (Лу)",
             eon_saju::analysis::structure::StructureType::YangIn => "Структура Овечьего Ножа",
             eon_saju::analysis::structure::StructureType::Special => "Структура Равного Плеча",
             eon_saju::analysis::structure::StructureType::JongAh => "Структура Следования за Дитя",
-            eon_saju::analysis::structure::StructureType::JongJae => "Структура Следования за Богатством",
-            eon_saju::analysis::structure::StructureType::JongSal => "Структура Следования за Властью",
-            eon_saju::analysis::structure::StructureType::JongGang => "Структура Следования за Силой",
-            eon_saju::analysis::structure::StructureType::JongWang => "Структура Следования за Пиком",
+            eon_saju::analysis::structure::StructureType::JongJae => {
+                "Структура Следования за Богатством"
+            }
+            eon_saju::analysis::structure::StructureType::JongSal => {
+                "Структура Следования за Властью"
+            }
+            eon_saju::analysis::structure::StructureType::JongGang => {
+                "Структура Следования за Силой"
+            }
+            eon_saju::analysis::structure::StructureType::JongWang => {
+                "Структура Следования за Пиком"
+            }
             eon_saju::analysis::structure::StructureType::Follower => "Структура Следования",
-            eon_saju::analysis::structure::StructureType::SpecialTransformation => "Специальная Структура Трансформации",
+            eon_saju::analysis::structure::StructureType::SpecialTransformation => {
+                "Специальная Структура Трансформации"
+            }
         },
     }
 }
@@ -1819,13 +1881,7 @@ pub fn translate_saju_structure_summary(
             } else if st == eon_saju::analysis::structure::StructureType::YangIn {
                 "가장 강렬한 기운을 품은 양인격".to_string()
             } else if let Some(p) = path {
-                let p_ko = match p {
-                    "시간" => "시간",
-                    "일간" => "일간",
-                    "월간" => "월간",
-                    "연간" => "연간",
-                    _ => p,
-                };
+                let p_ko = p;
                 format!("지장간의 기운이 {}에 투출된 {}", p_ko, name)
             } else {
                 format!("월지의 본기를 격으로 삼은 {}", name)
@@ -1970,7 +2026,10 @@ pub fn translate_saju_void_desc(locale: Locale, position: &str) -> &'static str 
     }
 }
 
-pub fn translate_saju_yongshin_type(locale: Locale, yt: eon_saju::analysis::yongshin::YongshinType) -> &'static str {
+pub fn translate_saju_yongshin_type(
+    locale: Locale,
+    yt: eon_saju::analysis::yongshin::YongshinType,
+) -> &'static str {
     match locale {
         Locale::Ko => yt.hangul(),
         Locale::Zh => match yt {
@@ -1994,7 +2053,10 @@ pub fn translate_saju_yongshin_type(locale: Locale, yt: eon_saju::analysis::yong
     }
 }
 
-pub fn translate_saju_strength_type(locale: Locale, st: eon_saju::analysis::strength::StrengthType) -> &'static str {
+pub fn translate_saju_strength_type(
+    locale: Locale,
+    st: eon_saju::analysis::strength::StrengthType,
+) -> &'static str {
     match locale {
         Locale::Ko => match st {
             eon_saju::analysis::strength::StrengthType::Strong => "신강 (Strong)",
@@ -2019,7 +2081,10 @@ pub fn translate_saju_strength_type(locale: Locale, st: eon_saju::analysis::stre
     }
 }
 
-pub fn translate_saju_stem_combination(locale: Locale, comb: eon_saju::analysis::relationships::StemCombination) -> &'static str {
+pub fn translate_saju_stem_combination(
+    locale: Locale,
+    comb: eon_saju::analysis::relationships::StemCombination,
+) -> &'static str {
     match locale {
         Locale::Ko => comb.hangul(),
         Locale::Zh => comb.hanja(),
@@ -2041,7 +2106,11 @@ pub fn translate_saju_stem_combination(locale: Locale, comb: eon_saju::analysis:
 }
 
 pub fn translate_saju_ganzi(locale: Locale, gz: &eon_saju::core::ganzi::GanZi) -> String {
-    format!("{}{}", translate_saju_stem(locale, gz.stem), translate_saju_branch(locale, gz.branch))
+    format!(
+        "{}{}",
+        translate_saju_stem(locale, gz.stem),
+        translate_saju_branch(locale, gz.branch)
+    )
 }
 
 pub fn translate_saju_twelve_stage_str(locale: Locale, stage: &str) -> &str {
@@ -2068,32 +2137,38 @@ pub fn translate_saju_twelve_stage_str(locale: Locale, stage: &str) -> &str {
 }
 
 pub fn translate_saju_relation_str(locale: Locale, s: &str) -> String {
-    if s.is_empty() { return s.to_string(); }
-    
+    if s.is_empty() {
+        return s.to_string();
+    }
+
     match s {
-        "천간합" => return match locale {
-            Locale::Ko => "천간합".to_string(),
-            Locale::En => "Stem Harmony".to_string(),
-            Locale::Zh => "天干合".to_string(),
-            Locale::Ru => "Слияние Небесных Стволов".to_string(),
-        },
-        "지합" | "지지합" => return match locale {
-            Locale::Ko => "지합".to_string(),
-            Locale::En => "Branch Harmony".to_string(),
-            Locale::Zh => "地支合".to_string(),
-            Locale::Ru => "Слияние Земных Ветвей".to_string(),
-        },
+        "천간합" => {
+            return match locale {
+                Locale::Ko => "천간합".to_string(),
+                Locale::En => "Stem Harmony".to_string(),
+                Locale::Zh => "天干合".to_string(),
+                Locale::Ru => "Слияние Небесных Стволов".to_string(),
+            }
+        }
+        "지합" | "지지합" => {
+            return match locale {
+                Locale::Ko => "지합".to_string(),
+                Locale::En => "Branch Harmony".to_string(),
+                Locale::Zh => "地支合".to_string(),
+                Locale::Ru => "Слияние Земных Ветвей".to_string(),
+            }
+        }
         _ => {}
     }
 
     let mut stems_or_branches = Vec::new();
     let mut relation_type = "";
-    
+
     let chars: Vec<char> = s.chars().collect();
     let mut i = 0;
     while i < chars.len() {
         let c = chars[i];
-        
+
         let stem = match c {
             '갑' => Some(eon_saju::core::stem::HeavenlyStem::Jia),
             '을' => Some(eon_saju::core::stem::HeavenlyStem::Yi),
@@ -2102,13 +2177,15 @@ pub fn translate_saju_relation_str(locale: Locale, s: &str) -> String {
             '무' => Some(eon_saju::core::stem::HeavenlyStem::Wu),
             '기' => Some(eon_saju::core::stem::HeavenlyStem::Ji),
             '경' => Some(eon_saju::core::stem::HeavenlyStem::Geng),
-            '신' if i + 1 < chars.len() && (chars[i+1] == '살' || chars[i+1] == '구') => None,
+            '신' if i + 1 < chars.len() && (chars[i + 1] == '살' || chars[i + 1] == '구') => {
+                None
+            }
             '신' => Some(eon_saju::core::stem::HeavenlyStem::Xin),
             '임' => Some(eon_saju::core::stem::HeavenlyStem::Ren),
             '계' => Some(eon_saju::core::stem::HeavenlyStem::Gui),
             _ => None,
         };
-        
+
         if let Some(st) = stem {
             stems_or_branches.push(translate_saju_stem(locale, st));
             i += 1;
@@ -2116,7 +2193,7 @@ pub fn translate_saju_relation_str(locale: Locale, s: &str) -> String {
         }
 
         let branch = match c {
-            '자' if i + 1 < chars.len() && chars[i+1] == '형' => None,
+            '자' if i + 1 < chars.len() && chars[i + 1] == '형' => None,
             '자' => Some(eon_saju::core::branch::EarthlyBranch::Zi),
             '축' => Some(eon_saju::core::branch::EarthlyBranch::Chou),
             '인' => Some(eon_saju::core::branch::EarthlyBranch::Yin),
@@ -2208,7 +2285,7 @@ pub fn translate_saju_relation_str(locale: Locale, s: &str) -> String {
                 _ => "",
             };
             format!("{}{}", stems_or_branches.join(""), suffix)
-        },
+        }
         Locale::En => {
             let suffix = match relation_type {
                 "삼합" => " Triple Harmony",
@@ -2227,7 +2304,7 @@ pub fn translate_saju_relation_str(locale: Locale, s: &str) -> String {
                 _ => "",
             };
             format!("{}{}", joined_elements, suffix)
-        },
+        }
         Locale::Ru => {
             let prefix = match relation_type {
                 "삼합" => "Тройное Слияние",
@@ -2255,221 +2332,325 @@ pub fn translate_saju_relation_str(locale: Locale, s: &str) -> String {
 }
 
 pub fn translate_saju_tag_str(locale: Locale, tag: &str) -> String {
-    if locale == Locale::Ko { return tag.to_string(); }
+    if locale == Locale::Ko {
+        return tag.to_string();
+    }
 
     let mut t = tag.to_string();
 
-    t = t.replace("대운", match locale {
-        Locale::En => "Major ",
-        Locale::Zh => "大运",
-        Locale::Ru => "Б.удачи ",
-        _ => "Major ",
-    });
-    t = t.replace("세운", match locale {
-        Locale::En => "Yearly ",
-        Locale::Zh => "流年",
-        Locale::Ru => "Г.удачи ",
-        _ => "Yearly ",
-    });
-    t = t.replace("월운", match locale {
-        Locale::En => "Monthly ",
-        Locale::Zh => "月运",
-        Locale::Ru => "М.удачи ",
-        _ => "Monthly ",
-    });
-    t = t.replace("일운", match locale {
-        Locale::En => "Daily ",
-        Locale::Zh => "日运",
-        Locale::Ru => "Д.удачи ",
-        _ => "Daily ",
-    });
+    t = t.replace(
+        "대운",
+        match locale {
+            Locale::En => "Major ",
+            Locale::Zh => "大运",
+            Locale::Ru => "Б.удачи ",
+            _ => "Major ",
+        },
+    );
+    t = t.replace(
+        "세운",
+        match locale {
+            Locale::En => "Yearly ",
+            Locale::Zh => "流年",
+            Locale::Ru => "Г.удачи ",
+            _ => "Yearly ",
+        },
+    );
+    t = t.replace(
+        "월운",
+        match locale {
+            Locale::En => "Monthly ",
+            Locale::Zh => "月运",
+            Locale::Ru => "М.удачи ",
+            _ => "Monthly ",
+        },
+    );
+    t = t.replace(
+        "일운",
+        match locale {
+            Locale::En => "Daily ",
+            Locale::Zh => "日运",
+            Locale::Ru => "Д.удачи ",
+            _ => "Daily ",
+        },
+    );
 
-    t = t.replace("핵심운", match locale {
-        Locale::En => "Core Luck",
-        Locale::Zh => "核心运",
-        Locale::Ru => "Ключевая удача",
-        _ => "Core Luck",
-    });
-    t = t.replace("길운", match locale {
-        Locale::En => "Good Luck",
-        Locale::Zh => "吉运",
-        Locale::Ru => "Благоприятная удача",
-        _ => "Good Luck",
-    });
-    t = t.replace("기신운", match locale {
-        Locale::En => "Bad Luck",
-        Locale::Zh => "忌神运",
-        Locale::Ru => "Неблагоприятная удача",
-        _ => "Bad Luck",
-    });
+    t = t.replace(
+        "핵심운",
+        match locale {
+            Locale::En => "Core Luck",
+            Locale::Zh => "核心运",
+            Locale::Ru => "Ключевая удача",
+            _ => "Core Luck",
+        },
+    );
+    t = t.replace(
+        "길운",
+        match locale {
+            Locale::En => "Good Luck",
+            Locale::Zh => "吉运",
+            Locale::Ru => "Благоприятная удача",
+            _ => "Good Luck",
+        },
+    );
+    t = t.replace(
+        "기신운",
+        match locale {
+            Locale::En => "Bad Luck",
+            Locale::Zh => "忌神运",
+            Locale::Ru => "Неблагоприятная удача",
+            _ => "Bad Luck",
+        },
+    );
 
-    t = t.replace("천간충:", match locale {
-        Locale::En => "Stem Clash: ",
-        Locale::Zh => "天干冲: ",
-        Locale::Ru => "Столкновение Стволов: ",
-        _ => "Stem Clash: ",
-    });
-    t = t.replace("육합:", match locale {
-        Locale::En => "Six Combo: ",
-        Locale::Zh => "六合: ",
-        Locale::Ru => "Парное Слияние: ",
-        _ => "Six Combo: ",
-    });
-    t = t.replace("삼합완성", match locale {
-        Locale::En => "Triple Combo Complete",
-        Locale::Zh => "三合完成",
-        Locale::Ru => "Тройное Слияние",
-        _ => "Triple Combo Complete",
-    });
-    t = t.replace("방합완성", match locale {
-        Locale::En => "Seasonal Combo Complete",
-        Locale::Zh => "方合完成",
-        Locale::Ru => "Сезонное Слияние",
-        _ => "Seasonal Combo Complete",
-    });
-    t = t.replace("합화:", match locale {
-        Locale::En => "Transformation: ",
-        Locale::Zh => "合化: ",
-        Locale::Ru => "Превращение: ",
-        _ => "Transformation: ",
-    });
+    t = t.replace(
+        "천간충:",
+        match locale {
+            Locale::En => "Stem Clash: ",
+            Locale::Zh => "天干冲: ",
+            Locale::Ru => "Столкновение Стволов: ",
+            _ => "Stem Clash: ",
+        },
+    );
+    t = t.replace(
+        "육합:",
+        match locale {
+            Locale::En => "Six Combo: ",
+            Locale::Zh => "六合: ",
+            Locale::Ru => "Парное Слияние: ",
+            _ => "Six Combo: ",
+        },
+    );
+    t = t.replace(
+        "삼합완성",
+        match locale {
+            Locale::En => "Triple Combo Complete",
+            Locale::Zh => "三合完成",
+            Locale::Ru => "Тройное Слияние",
+            _ => "Triple Combo Complete",
+        },
+    );
+    t = t.replace(
+        "방합완성",
+        match locale {
+            Locale::En => "Seasonal Combo Complete",
+            Locale::Zh => "方合完成",
+            Locale::Ru => "Сезонное Слияние",
+            _ => "Seasonal Combo Complete",
+        },
+    );
+    t = t.replace(
+        "합화:",
+        match locale {
+            Locale::En => "Transformation: ",
+            Locale::Zh => "合化: ",
+            Locale::Ru => "Превращение: ",
+            _ => "Transformation: ",
+        },
+    );
 
-    t = t.replace("운성공망:", match locale {
-        Locale::En => "Void Luck: ",
-        Locale::Zh => "运星空亡: ",
-        Locale::Ru => "Пустота Удачи: ",
-        _ => "Void Luck: ",
-    });
-    t = t.replace("탈공:충", match locale {
-        Locale::En => "Void Escaped: Clash",
-        Locale::Zh => "脱空:冲",
-        Locale::Ru => "Выход из Пустоты: Столкновение",
-        _ => "Void Escaped: Clash",
-    });
-    t = t.replace("탈공:육합", match locale {
-        Locale::En => "Void Escaped: Six Combo",
-        Locale::Zh => "脱空:六合",
-        Locale::Ru => "Выход из Пустоты: Слияние",
-        _ => "Void Escaped: Six Combo",
-    });
-    t = t.replace("탈공:삼합", match locale {
-        Locale::En => "Void Escaped: Triple Combo",
-        Locale::Zh => "脱空:三合",
-        Locale::Ru => "Выход из Пустоты: Тройное Слияние",
-        _ => "Void Escaped: Triple Combo",
-    });
-    t = t.replace("탈공:방합", match locale {
-        Locale::En => "Void Escaped: Seasonal Combo",
-        Locale::Zh => "脱空:方合",
-        Locale::Ru => "Выход из Пустоты: Сезонное Слияние",
-        _ => "Void Escaped: Seasonal Combo",
-    });
+    t = t.replace(
+        "운성공망:",
+        match locale {
+            Locale::En => "Void Luck: ",
+            Locale::Zh => "运星空亡: ",
+            Locale::Ru => "Пустота Удачи: ",
+            _ => "Void Luck: ",
+        },
+    );
+    t = t.replace(
+        "탈공:충",
+        match locale {
+            Locale::En => "Void Escaped: Clash",
+            Locale::Zh => "脱空:冲",
+            Locale::Ru => "Выход из Пустоты: Столкновение",
+            _ => "Void Escaped: Clash",
+        },
+    );
+    t = t.replace(
+        "탈공:육합",
+        match locale {
+            Locale::En => "Void Escaped: Six Combo",
+            Locale::Zh => "脱空:六合",
+            Locale::Ru => "Выход из Пустоты: Слияние",
+            _ => "Void Escaped: Six Combo",
+        },
+    );
+    t = t.replace(
+        "탈공:삼합",
+        match locale {
+            Locale::En => "Void Escaped: Triple Combo",
+            Locale::Zh => "脱空:三合",
+            Locale::Ru => "Выход из Пустоты: Тройное Слияние",
+            _ => "Void Escaped: Triple Combo",
+        },
+    );
+    t = t.replace(
+        "탈공:방합",
+        match locale {
+            Locale::En => "Void Escaped: Seasonal Combo",
+            Locale::Zh => "脱空:方合",
+            Locale::Ru => "Выход из Пустоты: Сезонное Слияние",
+            _ => "Void Escaped: Seasonal Combo",
+        },
+    );
 
-    t = t.replace("신살:", match locale {
-        Locale::En => "Shen Sha: ",
-        Locale::Zh => "神煞: ",
-        Locale::Ru => "Символическая Звезда: ",
-        _ => "Shen Sha: ",
-    });
-    t = t.replace("길신:", match locale {
-        Locale::En => "Auspicious Spirit: ",
-        Locale::Zh => "吉神: ",
-        Locale::Ru => "Благородный: ",
-        _ => "Auspicious Spirit: ",
-    });
-    t = t.replace("흉살:", match locale {
-        Locale::En => "Evil Spirit: ",
-        Locale::Zh => "凶煞: ",
-        Locale::Ru => "Демон: ",
-        _ => "Evil Spirit: ",
-    });
-    t = t.replace("운성:", match locale {
-        Locale::En => "Life Stage: ",
-        Locale::Zh => "运星: ",
-        Locale::Ru => "Стадия Судьбы: ",
-        _ => "Life Stage: ",
-    });
+    t = t.replace(
+        "신살:",
+        match locale {
+            Locale::En => "Shen Sha: ",
+            Locale::Zh => "神煞: ",
+            Locale::Ru => "Символическая Звезда: ",
+            _ => "Shen Sha: ",
+        },
+    );
+    t = t.replace(
+        "길신:",
+        match locale {
+            Locale::En => "Auspicious Spirit: ",
+            Locale::Zh => "吉神: ",
+            Locale::Ru => "Благородный: ",
+            _ => "Auspicious Spirit: ",
+        },
+    );
+    t = t.replace(
+        "흉살:",
+        match locale {
+            Locale::En => "Evil Spirit: ",
+            Locale::Zh => "凶煞: ",
+            Locale::Ru => "Демон: ",
+            _ => "Evil Spirit: ",
+        },
+    );
+    t = t.replace(
+        "운성:",
+        match locale {
+            Locale::En => "Life Stage: ",
+            Locale::Zh => "运星: ",
+            Locale::Ru => "Стадия Судьбы: ",
+            _ => "Life Stage: ",
+        },
+    );
 
-    t = t.replace("패턴:상관견관", match locale {
-        Locale::En => "Pattern: Hurting Officer Meets Officer",
-        Locale::Zh => "格局:伤官见官",
-        Locale::Ru => "Паттерн: Вызов Власти встречает Чиновника",
-        _ => "Pattern: Hurting Officer Meets Officer",
-    });
-    t = t.replace("패턴:식신생재", match locale {
-        Locale::En => "Pattern: Eating God Produces Wealth",
-        Locale::Zh => "格局:食神生财",
-        Locale::Ru => "Паттерн: Дух Пищи порождает Богатство",
-        _ => "Pattern: Eating God Produces Wealth",
-    });
+    t = t.replace(
+        "패턴:상관견관",
+        match locale {
+            Locale::En => "Pattern: Hurting Officer Meets Officer",
+            Locale::Zh => "格局:伤官见官",
+            Locale::Ru => "Паттерн: Вызов Власти встречает Чиновника",
+            _ => "Pattern: Hurting Officer Meets Officer",
+        },
+    );
+    t = t.replace(
+        "패턴:식신생재",
+        match locale {
+            Locale::En => "Pattern: Eating God Produces Wealth",
+            Locale::Zh => "格局:食神生财",
+            Locale::Ru => "Паттерн: Дух Пищи порождает Богатство",
+            _ => "Pattern: Eating God Produces Wealth",
+        },
+    );
 
-    t = t.replace("신강약:신강", match locale {
-        Locale::En => "Strength: Strong",
-        Locale::Zh => "身强弱:身强",
-        Locale::Ru => "Сила: Сильный",
-        _ => "Strength: Strong",
-    });
-    t = t.replace("신강약:신약", match locale {
-        Locale::En => "Strength: Weak",
-        Locale::Zh => "身强弱:身弱",
-        Locale::Ru => "Сила: Слабый",
-        _ => "Strength: Weak",
-    });
-    t = t.replace("신강약:중화", match locale {
-        Locale::En => "Strength: Balanced",
-        Locale::Zh => "身强弱:中和",
-        Locale::Ru => "Сила: Нейтральный",
-        _ => "Strength: Balanced",
-    });
-    t = t.replace("득령", match locale {
-        Locale::En => "Deuk-Ryeong",
-        Locale::Zh => "得令",
-        Locale::Ru => "Дэ-Рён",
-        _ => "Deuk-Ryeong",
-    });
-    t = t.replace("득지", match locale {
-        Locale::En => "Deuk-Ji",
-        Locale::Zh => "得地",
-        Locale::Ru => "Дэ-Джи",
-        _ => "Deuk-Ji",
-    });
-    t = t.replace("득시", match locale {
-        Locale::En => "Deuk-Si",
-        Locale::Zh => "得时",
-        Locale::Ru => "Дэ-Ши",
-        _ => "Deuk-Si",
-    });
-    t = t.replace("득세", match locale {
-        Locale::En => "Deuk-Se",
-        Locale::Zh => "得势",
-        Locale::Ru => "Дэ-Сэ",
-        _ => "Deuk-Se",
-    });
+    t = t.replace(
+        "신강약:신강",
+        match locale {
+            Locale::En => "Strength: Strong",
+            Locale::Zh => "身强弱:身强",
+            Locale::Ru => "Сила: Сильный",
+            _ => "Strength: Strong",
+        },
+    );
+    t = t.replace(
+        "신강약:신약",
+        match locale {
+            Locale::En => "Strength: Weak",
+            Locale::Zh => "身强弱:身弱",
+            Locale::Ru => "Сила: Слабый",
+            _ => "Strength: Weak",
+        },
+    );
+    t = t.replace(
+        "신강약:중화",
+        match locale {
+            Locale::En => "Strength: Balanced",
+            Locale::Zh => "身强弱:中和",
+            Locale::Ru => "Сила: Нейтральный",
+            _ => "Strength: Balanced",
+        },
+    );
+    t = t.replace(
+        "득령",
+        match locale {
+            Locale::En => "Deuk-Ryeong",
+            Locale::Zh => "得令",
+            Locale::Ru => "Дэ-Рён",
+            _ => "Deuk-Ryeong",
+        },
+    );
+    t = t.replace(
+        "득지",
+        match locale {
+            Locale::En => "Deuk-Ji",
+            Locale::Zh => "得地",
+            Locale::Ru => "Дэ-Джи",
+            _ => "Deuk-Ji",
+        },
+    );
+    t = t.replace(
+        "득시",
+        match locale {
+            Locale::En => "Deuk-Si",
+            Locale::Zh => "得时",
+            Locale::Ru => "Дэ-Ши",
+            _ => "Deuk-Si",
+        },
+    );
+    t = t.replace(
+        "득세",
+        match locale {
+            Locale::En => "Deuk-Se",
+            Locale::Zh => "得势",
+            Locale::Ru => "Дэ-Сэ",
+            _ => "Deuk-Se",
+        },
+    );
 
-    t = t.replace("년지", match locale {
-        Locale::En => "Year Branch",
-        Locale::Zh => "年支",
-        Locale::Ru => "Ветвь Года",
-        _ => "Year Branch",
-    });
-    t = t.replace("월지", match locale {
-        Locale::En => "Month Branch",
-        Locale::Zh => "月支",
-        Locale::Ru => "Ветвь Месяца",
-        _ => "Month Branch",
-    });
-    t = t.replace("일지", match locale {
-        Locale::En => "Day Branch",
-        Locale::Zh => "日支",
-        Locale::Ru => "Ветвь Дня",
-        _ => "Day Branch",
-    });
-    t = t.replace("시지", match locale {
-        Locale::En => "Hour Branch",
-        Locale::Zh => "时支",
-        Locale::Ru => "Ветвь Часа",
-        _ => "Hour Branch",
-    });
+    t = t.replace(
+        "년지",
+        match locale {
+            Locale::En => "Year Branch",
+            Locale::Zh => "年支",
+            Locale::Ru => "Ветвь Года",
+            _ => "Year Branch",
+        },
+    );
+    t = t.replace(
+        "월지",
+        match locale {
+            Locale::En => "Month Branch",
+            Locale::Zh => "月支",
+            Locale::Ru => "Ветвь Месяца",
+            _ => "Month Branch",
+        },
+    );
+    t = t.replace(
+        "일지",
+        match locale {
+            Locale::En => "Day Branch",
+            Locale::Zh => "日支",
+            Locale::Ru => "Ветвь Дня",
+            _ => "Day Branch",
+        },
+    );
+    t = t.replace(
+        "시지",
+        match locale {
+            Locale::En => "Hour Branch",
+            Locale::Zh => "时支",
+            Locale::Ru => "Ветвь Часа",
+            _ => "Hour Branch",
+        },
+    );
 
     t = t.replace("장생", translate_saju_twelve_stage_str(locale, "장생"));
     t = t.replace("목욕", translate_saju_twelve_stage_str(locale, "목욕"));
@@ -2484,76 +2665,179 @@ pub fn translate_saju_tag_str(locale: Locale, tag: &str) -> String {
     t = t.replace("태", translate_saju_twelve_stage_str(locale, "태"));
     t = t.replace("양", translate_saju_twelve_stage_str(locale, "양"));
 
-    t = t.replace("吉", match locale {
-        Locale::Zh => "吉",
-        _ => "Auspicious",
-    });
-    t = t.replace("凶", match locale {
-        Locale::Zh => "凶",
-        _ => "Caution",
-    });
+    t = t.replace(
+        "吉",
+        match locale {
+            Locale::Zh => "吉",
+            _ => "Auspicious",
+        },
+    );
+    t = t.replace(
+        "凶",
+        match locale {
+            Locale::Zh => "凶",
+            _ => "Caution",
+        },
+    );
 
-    t = t.replace("목", translate_saju_element(locale, eon_saju::core::element::Element::Wood));
-    t = t.replace("화", translate_saju_element(locale, eon_saju::core::element::Element::Fire));
-    t = t.replace("토", translate_saju_element(locale, eon_saju::core::element::Element::Earth));
-    t = t.replace("금", translate_saju_element(locale, eon_saju::core::element::Element::Metal));
-    t = t.replace("수", translate_saju_element(locale, eon_saju::core::element::Element::Water));
+    t = t.replace(
+        "목",
+        translate_saju_element(locale, eon_saju::core::element::Element::Wood),
+    );
+    t = t.replace(
+        "화",
+        translate_saju_element(locale, eon_saju::core::element::Element::Fire),
+    );
+    t = t.replace(
+        "토",
+        translate_saju_element(locale, eon_saju::core::element::Element::Earth),
+    );
+    t = t.replace(
+        "금",
+        translate_saju_element(locale, eon_saju::core::element::Element::Metal),
+    );
+    t = t.replace(
+        "수",
+        translate_saju_element(locale, eon_saju::core::element::Element::Water),
+    );
 
-    t = t.replace("갑", translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Jia));
-    t = t.replace("을", translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Yi));
-    t = t.replace("병", translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Bing));
-    t = t.replace("정", translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Ding));
-    t = t.replace("무", translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Wu));
-    t = t.replace("기", translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Ji));
-    t = t.replace("경", translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Geng));
-    t = t.replace("신", translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Xin));
-    t = t.replace("임", translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Ren));
-    t = t.replace("계", translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Gui));
+    t = t.replace(
+        "갑",
+        translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Jia),
+    );
+    t = t.replace(
+        "을",
+        translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Yi),
+    );
+    t = t.replace(
+        "병",
+        translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Bing),
+    );
+    t = t.replace(
+        "정",
+        translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Ding),
+    );
+    t = t.replace(
+        "무",
+        translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Wu),
+    );
+    t = t.replace(
+        "기",
+        translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Ji),
+    );
+    t = t.replace(
+        "경",
+        translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Geng),
+    );
+    t = t.replace(
+        "신",
+        translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Xin),
+    );
+    t = t.replace(
+        "임",
+        translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Ren),
+    );
+    t = t.replace(
+        "계",
+        translate_saju_stem(locale, eon_saju::core::stem::HeavenlyStem::Gui),
+    );
 
-    t = t.replace("자", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Zi));
-    t = t.replace("축", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Chou));
-    t = t.replace("인", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Yin));
-    t = t.replace("묘", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Mao));
-    t = t.replace("진", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Chen));
-    t = t.replace("사", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Si));
-    t = t.replace("오", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Wu));
-    t = t.replace("미", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Wei));
-    t = t.replace("신", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Shen));
-    t = t.replace("유", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::You));
-    t = t.replace("술", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Xu));
-    t = t.replace("해", translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Hai));
+    t = t.replace(
+        "자",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Zi),
+    );
+    t = t.replace(
+        "축",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Chou),
+    );
+    t = t.replace(
+        "인",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Yin),
+    );
+    t = t.replace(
+        "묘",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Mao),
+    );
+    t = t.replace(
+        "진",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Chen),
+    );
+    t = t.replace(
+        "사",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Si),
+    );
+    t = t.replace(
+        "오",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Wu),
+    );
+    t = t.replace(
+        "미",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Wei),
+    );
+    t = t.replace(
+        "신",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Shen),
+    );
+    t = t.replace(
+        "유",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::You),
+    );
+    t = t.replace(
+        "술",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Xu),
+    );
+    t = t.replace(
+        "해",
+        translate_saju_branch(locale, eon_saju::core::branch::EarthlyBranch::Hai),
+    );
 
-    t = t.replace("Critical_Yongshin_Clash (용신 파괴)", match locale {
-        Locale::En => "Critical Yongshin Clash",
-        Locale::Zh => "用神破损 (临界冲克)",
-        Locale::Ru => "Критическое столкновение Полезного Божества",
-        _ => "Critical Yongshin Clash",
-    });
-    t = t.replace("Elemental_Overflow (기신 과다)", match locale {
-        Locale::En => "Elemental Overflow (Harmful Deity)",
-        Locale::Zh => "忌神过旺 (五行失衡)",
-        Locale::Ru => "Избыток неблагоприятных элементов",
-        _ => "Elemental Overflow",
-    });
-    t = t.replace("Structural_Instability (구조적 불안정)", match locale {
-        Locale::En => "Structural Instability",
-        Locale::Zh => "结构不稳定 (地支冲克)",
-        Locale::Ru => "Структурная нестабильность",
-        _ => "Structural Instability",
-    });
-    t = t.replace("Low_Energy_State (에너지 저하)", match locale {
-        Locale::En => "Low Energy State",
-        Locale::Zh => "能量低下状态",
-        Locale::Ru => "Низкий энергетический уровень",
-        _ => "Low Energy State",
-    });
+    t = t.replace(
+        "Critical_Yongshin_Clash (용신 파괴)",
+        match locale {
+            Locale::En => "Critical Yongshin Clash",
+            Locale::Zh => "用神破损 (临界冲克)",
+            Locale::Ru => "Критическое столкновение Полезного Божества",
+            _ => "Critical Yongshin Clash",
+        },
+    );
+    t = t.replace(
+        "Elemental_Overflow (기신 과다)",
+        match locale {
+            Locale::En => "Elemental Overflow (Harmful Deity)",
+            Locale::Zh => "忌神过旺 (五行失衡)",
+            Locale::Ru => "Избыток неблагоприятных элементов",
+            _ => "Elemental Overflow",
+        },
+    );
+    t = t.replace(
+        "Structural_Instability (구조적 불안정)",
+        match locale {
+            Locale::En => "Structural Instability",
+            Locale::Zh => "结构不稳定 (地支冲克)",
+            Locale::Ru => "Структурная нестабильность",
+            _ => "Structural Instability",
+        },
+    );
+    t = t.replace(
+        "Low_Energy_State (에너지 저하)",
+        match locale {
+            Locale::En => "Low Energy State",
+            Locale::Zh => "能量低下状态",
+            Locale::Ru => "Низкий энергетический уровень",
+            _ => "Low Energy State",
+        },
+    );
 
     t = translate_aux_shinsal(locale, &t);
 
     t
 }
 
-pub fn translate_saju_load_balancer(locale: Locale, reason: &str, strategy: &str) -> (String, String) {
+pub fn translate_saju_load_balancer(
+    locale: Locale,
+    reason: &str,
+    strategy: &str,
+) -> (String, String) {
     if locale == Locale::Ko {
         return (reason.to_string(), strategy.to_string());
     }
@@ -2599,7 +2883,10 @@ pub fn translate_saju_load_balancer(locale: Locale, reason: &str, strategy: &str
     } else if reason.starts_with("평온한 안정 구간") {
         let score = extract_num(reason);
         match locale {
-            Locale::En => format!("Peaceful stability period (Maintaining around {} pts)", score),
+            Locale::En => format!(
+                "Peaceful stability period (Maintaining around {} pts)",
+                score
+            ),
             Locale::Zh => format!("平稳安定时期 (维持在{}分左右)", score),
             Locale::Ru => format!("Период стабильности (Поддержание около {} б.)", score),
             _ => reason.to_string(),
@@ -2607,9 +2894,15 @@ pub fn translate_saju_load_balancer(locale: Locale, reason: &str, strategy: &str
     } else if reason.starts_with("장기 침체 구간") {
         let age = extract_num(reason);
         match locale {
-            Locale::En => format!("Long-term stagnation period (Lasting for 3+ years starting from age {})", age),
+            Locale::En => format!(
+                "Long-term stagnation period (Lasting for 3+ years starting from age {})",
+                age
+            ),
             Locale::Zh => format!("长期低迷时期 (从{}岁起持续3年以上)", age),
-            Locale::Ru => format!("Период длительного застоя (Длится 3+ лет с возраста {} лет)", age),
+            Locale::Ru => format!(
+                "Период длительного застоя (Длится 3+ лет с возраста {} лет)",
+                age
+            ),
             _ => reason.to_string(),
         }
     } else if reason.starts_with("황금기 지속") {
@@ -2777,10 +3070,13 @@ pub fn translate_saju_reason(locale: Locale, reason: &str) -> String {
             r = r.replace("오행: 수", "Element: Water");
             r = r.replace("용/희신 적용", "Yong/Hee-shin applied");
             r = r.replace("기신/한신 영향", "Geeshin/Hanshin influence");
-            r = r.replace("일간 기준 최고의 길신", "Best auspicious star based on Day Master");
+            r = r.replace(
+                "일간 기준 최고의 길신",
+                "Best auspicious star based on Day Master",
+            );
             r = r.replace("우두머리 별의 기운", "Energy of the leader star");
             r = r.replace(" -> ", " → ");
-            
+
             // Replace Korean stems/branches/elements in reasons if any
             r = r.replace("갑", "Jia");
             r = r.replace("을", "Yi");
@@ -2792,7 +3088,7 @@ pub fn translate_saju_reason(locale: Locale, reason: &str) -> String {
             r = r.replace("신", "Xin");
             r = r.replace("임", "Ren");
             r = r.replace("계", "Gui");
-            
+
             r = r.replace("자", "Zi");
             r = r.replace("축", "Chou");
             r = r.replace("인", "Yin");
@@ -2806,7 +3102,7 @@ pub fn translate_saju_reason(locale: Locale, reason: &str) -> String {
             r = r.replace("술", "Xu");
             r = r.replace("해", "Hai");
             r
-        },
+        }
         Locale::Zh => {
             r = r.replace("연지", "年支");
             r = r.replace("월지", "月支");
@@ -2832,7 +3128,7 @@ pub fn translate_saju_reason(locale: Locale, reason: &str) -> String {
             r = r.replace("우두머리 별의 기운", "领袖之星气场");
             r = r.replace(" -> ", " → ");
             r
-        },
+        }
         Locale::Ru => {
             r = r.replace("연지", "Ветвь Года");
             r = r.replace("월지", "Ветвь Месяца");
@@ -2854,10 +3150,13 @@ pub fn translate_saju_reason(locale: Locale, reason: &str) -> String {
             r = r.replace("오행: 수", "Стихия: Вода");
             r = r.replace("용/희신 적용", "Юнсин/Хисин применимо");
             r = r.replace("기신/한신 영향", "Влияние Гисин/Хансин");
-            r = r.replace("일간 기준 최고의 길신", "Лучшая благоприятная звезда по Дневному Стволу");
+            r = r.replace(
+                "일간 기준 최고의 길신",
+                "Лучшая благоприятная звезда по Дневному Стволу",
+            );
             r = r.replace("우두머리 별의 기운", "Энергия звезды-лидера");
             r = r.replace(" -> ", " → ");
-            
+
             r = r.replace("갑", "Цзя");
             r = r.replace("을", "И");
             r = r.replace("병", "Бин");
@@ -2868,7 +3167,7 @@ pub fn translate_saju_reason(locale: Locale, reason: &str) -> String {
             r = r.replace("신", "Синь");
             r = r.replace("임", "Жэнь");
             r = r.replace("계", "Гуй");
-            
+
             r = r.replace("자", "Цзы");
             r = r.replace("축", "Чоу");
             r = r.replace("인", "Инь");
@@ -2922,9 +3221,10 @@ pub fn translate_spirit_desc(
             Locale::Ru => "Проявляется в сферах, представляющих детей, старость и тайную внутреннюю жизнь.",
         },
     };
-    
+
     let mut suffix = "";
-    if raw_desc.contains("용신/희신에 해당하여 그 작용력이 더욱 강력하고 순수") {
+    if raw_desc.contains("용신/희신에 해당하여 그 작용력이 더욱 강력하고 순수")
+    {
         suffix = match locale {
             Locale::En => " (Its influence is more powerful and pure because it corresponds to Yongshin/Heeshin.)",
             Locale::Zh => " (由于属于用神/喜神，其作用力表现得更加强大与纯粹。)",
@@ -2938,7 +3238,8 @@ pub fn translate_spirit_desc(
             Locale::Ru => " (Хотя это неблагоприятная звезда, она находится под влиянием энергии Юнсин/Хисин, поэтому ее негатив сильно подавлен или даже возведен в движущую силу.)",
             _ => "",
         };
-    } else if raw_desc.contains("길한 신살이지만, 기운이 비협조적이라 실제 체감") {
+    } else if raw_desc.contains("길한 신살이지만, 기운이 비협조적이라 실제 체감")
+    {
         suffix = match locale {
             Locale::En => " (Although it is an auspicious star, the energy is uncooperative, so the actual perceived help may be somewhat limited.)",
             Locale::Zh => " (虽是吉神，但因气运不协调，实际感受到的帮助可能会有所限制。)",
@@ -2946,11 +3247,16 @@ pub fn translate_spirit_desc(
             _ => "",
         };
     }
-    
+
     format!("{}{}\n\n* {}", base_desc, suffix, pos_context)
 }
 
-pub fn translate_aux_shinsal_tuple(locale: Locale, name: &str, basis: &str, result: &str) -> (String, String, String) {
+pub fn translate_aux_shinsal_tuple(
+    locale: Locale,
+    name: &str,
+    basis: &str,
+    result: &str,
+) -> (String, String, String) {
     let name_t = match name {
         "태원" => match locale {
             Locale::Ko => "태원",
@@ -2971,7 +3277,8 @@ pub fn translate_aux_shinsal_tuple(locale: Locale, name: &str, basis: &str, resu
             Locale::Ru => "Шингун",
         },
         _ => name,
-    }.to_string();
+    }
+    .to_string();
 
     let basis_t = match basis {
         "일지기준" => match locale {
@@ -2993,7 +3300,8 @@ pub fn translate_aux_shinsal_tuple(locale: Locale, name: &str, basis: &str, resu
             Locale::Ru => "По Дневному Доминанту",
         },
         _ => basis,
-    }.to_string();
+    }
+    .to_string();
 
     let result_t = translate_aux_shinsal(locale, result);
 
@@ -3097,6 +3405,3 @@ pub fn translate_hd_authority(locale: Locale, auth: &str) -> String {
         _ => auth.to_string(),
     }
 }
-
-
-

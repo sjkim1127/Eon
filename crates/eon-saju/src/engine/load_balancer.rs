@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::engine::vm::LifeFrame;
+use serde::{Deserialize, Serialize};
 
 /// 운의 부하 상태
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -30,7 +30,7 @@ impl KarmaLoadBalancer {
             let prev = &frames[i - 1];
             let curr = &frames[i];
             let score_diff = curr.score - prev.score;
-            let abs_diff   = score_diff.abs();
+            let abs_diff = score_diff.abs();
 
             // 1-a. 운세 급등 구간
             if score_diff >= 15.0 {
@@ -38,7 +38,9 @@ impl KarmaLoadBalancer {
                     age: curr.age,
                     status: TrafficStatus::Overloaded,
                     reason: format!("운세 급등 구간 (상승폭 {:.0}점)", abs_diff),
-                    strategy: "상승 에너지가 큰 시기입니다. 기회를 놓치지 않되, 과잉 확장은 주의하세요.".to_string(),
+                    strategy:
+                        "상승 에너지가 큰 시기입니다. 기회를 놓치지 않되, 과잉 확장은 주의하세요."
+                            .to_string(),
                 });
             // 1-b. 운세 급락 구간
             } else if score_diff <= -15.0 {
@@ -64,7 +66,8 @@ impl KarmaLoadBalancer {
                     age: curr.age,
                     status: TrafficStatus::Overloaded,
                     reason: "좋은 기운이 강하게 몰리는 최고점 시기입니다.".to_string(),
-                    strategy: "성취욕이 높아지는 시기이지만 과욕을 경계하고 안정을 함께 챙기세요.".to_string(),
+                    strategy: "성취욕이 높아지는 시기이지만 과욕을 경계하고 안정을 함께 챙기세요."
+                        .to_string(),
                 });
             // 1-e. 저점 도달
             } else if curr.score < 25.0 {
@@ -91,8 +94,11 @@ impl KarmaLoadBalancer {
                 diagnostics.push(LoadBalanceDiagnostic {
                     age: curr.age,
                     status: TrafficStatus::Normal,
-                    reason: "운세 반등 구간 — 어두운 시기가 지나고 회복 흐름이 시작됩니다.".to_string(),
-                    strategy: "새로운 시작을 위한 기회가 열리는 시기입니다. 망설임 없이 도전해 보세요.".to_string(),
+                    reason: "운세 반등 구간 — 어두운 시기가 지나고 회복 흐름이 시작됩니다."
+                        .to_string(),
+                    strategy:
+                        "새로운 시작을 위한 기회가 열리는 시기입니다. 망설임 없이 도전해 보세요."
+                            .to_string(),
                 });
             }
 
@@ -124,7 +130,9 @@ impl KarmaLoadBalancer {
             for frame in frames.iter() {
                 // 장기 침체 스트릭 (연속 3년 이상 40점 미만)
                 if frame.score < 40.0 {
-                    if low_streak == 0 { low_start_age = frame.age; }
+                    if low_streak == 0 {
+                        low_start_age = frame.age;
+                    }
                     low_streak += 1;
                     if low_streak == 3 {
                         diagnostics.push(LoadBalanceDiagnostic {
@@ -140,7 +148,9 @@ impl KarmaLoadBalancer {
 
                 // 황금기 스트릭 (연속 3년 이상 70점 초과)
                 if frame.score > 70.0 {
-                    if high_streak == 0 { high_start_age = frame.age; }
+                    if high_streak == 0 {
+                        high_start_age = frame.age;
+                    }
                     high_streak += 1;
                     if high_streak == 3 {
                         diagnostics.push(LoadBalanceDiagnostic {
@@ -163,10 +173,10 @@ impl KarmaLoadBalancer {
             if a.age == b.age {
                 // SystemDown > Overloaded > Normal > Idle 우선순위
                 let priority = |s: &TrafficStatus| match s {
-                    TrafficStatus::SystemDown  => 3,
-                    TrafficStatus::Overloaded  => 2,
-                    TrafficStatus::Normal      => 1,
-                    TrafficStatus::Idle        => 0,
+                    TrafficStatus::SystemDown => 3,
+                    TrafficStatus::Overloaded => 2,
+                    TrafficStatus::Normal => 1,
+                    TrafficStatus::Idle => 0,
                 };
                 priority(&a.status) <= priority(&b.status)
             } else {

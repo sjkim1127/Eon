@@ -22,13 +22,35 @@ fn test_varga_nakshatra_report_d1_ansan() {
 
     // reports map should contain all 22 vargas
     let expected_keys: [&str; 22] = [
-        "rasi", "hora", "drekkana", "chaturthamsha", "panchamsa", "saptamsa", "ashtamsa",
-        "navamsa", "dasamsa", "rudramsa", "dwadasamsa", "shodashamsa", "vimsamsa",
-        "chaturvimshamsa", "saptavimsamsa", "trimsamsa", "khavedamsa", "akshavedamsa",
-        "shashtyamsa", "navanavamsa", "ashtottaramsa", "dwadasdwadasamsa",
+        "rasi",
+        "hora",
+        "drekkana",
+        "chaturthamsha",
+        "panchamsa",
+        "saptamsa",
+        "ashtamsa",
+        "navamsa",
+        "dasamsa",
+        "rudramsa",
+        "dwadasamsa",
+        "shodashamsa",
+        "vimsamsa",
+        "chaturvimshamsa",
+        "saptavimsamsa",
+        "trimsamsa",
+        "khavedamsa",
+        "akshavedamsa",
+        "shashtyamsa",
+        "navanavamsa",
+        "ashtottaramsa",
+        "dwadasdwadasamsa",
     ];
     for key in &expected_keys {
-        assert!(reports.reports.contains_key(*key), "reports should contain key: {}", key);
+        assert!(
+            reports.reports.contains_key(*key),
+            "reports should contain key: {}",
+            key
+        );
     }
 
     let d1 = &reports.reports["rasi"];
