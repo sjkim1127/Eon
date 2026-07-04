@@ -14,14 +14,14 @@
 <a href=#14 id=14 data-nosnippet>14</a><span class="kw">fn </span>main() {
 <a href=#15 id=15 data-nosnippet>15</a>    wasm_logger::init(wasm_logger::Config::default());
 <a href=#16 id=16 data-nosnippet>16</a>    <span class="macro">log::info!</span>(<span class="string">"Starting Eon Dioxus UI..."</span>);
-<a href=#17 id=17 data-nosnippet>17</a>    
+<a href=#17 id=17 data-nosnippet>17</a>
 <a href=#18 id=18 data-nosnippet>18</a>    dioxus::launch(App);
 <a href=#19 id=19 data-nosnippet>19</a>}
 <a href=#20 id=20 data-nosnippet>20</a>
 <a href=#21 id=21 data-nosnippet>21</a><span class="attr">#[component]
 <a href=#22 id=22 data-nosnippet>22</a></span><span class="kw">fn </span>App() -&gt; Element {
 <a href=#23 id=23 data-nosnippet>23</a>    <span class="comment">// Initialize global state here using Dioxus signals Context
-<a href=#24 id=24 data-nosnippet>24</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>state = use_context_provider(|| store::AnalysisState::new());
+<a href=#24 id=24 data-nosnippet>24</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>state = use_context_provider(store::AnalysisState::new);
 <a href=#25 id=25 data-nosnippet>25</a>
 <a href=#26 id=26 data-nosnippet>26</a>    <span class="comment">// Restore locale from localStorage on first render
 <a href=#27 id=27 data-nosnippet>27</a>    </span>use_effect(<span class="kw">move </span>|| {

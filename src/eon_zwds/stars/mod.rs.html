@@ -2,13 +2,13 @@
 <a href=#2 id=2 data-nosnippet>2</a>//!
 <a href=#3 id=3 data-nosnippet>3</a>//! 모든 종류의 별들(주성, 보조성, 잡성)의 포국 위치를 종합적으로 계산하여 맵으로 반환합니다.
 <a href=#4 id=4 data-nosnippet>4</a>
-<a href=#5 id=5 data-nosnippet>5</a></span><span class="kw">pub mod </span>major;
-<a href=#6 id=6 data-nosnippet>6</a><span class="kw">pub mod </span>assistant;
-<a href=#7 id=7 data-nosnippet>7</a><span class="kw">pub mod </span>location;
+<a href=#5 id=5 data-nosnippet>5</a></span><span class="kw">pub mod </span>assistant;
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">pub mod </span>location;
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">pub mod </span>major;
 <a href=#8 id=8 data-nosnippet>8</a>
-<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>std::collections::HashMap;
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span><span class="kw">crate</span>::types::{LunarBirthInfo, PalaceIndex, ZwdsStar};
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>eon_saju::core::stem::HeavenlyStem;
-<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span><span class="kw">crate</span>::types::{PalaceIndex, ZwdsStar, LunarBirthInfo};
+<a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>std::collections::HashMap;
 <a href=#12 id=12 data-nosnippet>12</a>
 <a href=#13 id=13 data-nosnippet>13</a><span class="doccomment">/// 모든 자미두수 별들의 위치를 계산하여 맵으로 반환합니다.
 <a href=#14 id=14 data-nosnippet>14</a>///
@@ -56,40 +56,43 @@
 <a href=#56 id=56 data-nosnippet>56</a>    stars.insert(ZwdsStar::TianMa, tianma);
 <a href=#57 id=57 data-nosnippet>57</a>
 <a href=#58 id=58 data-nosnippet>58</a>    <span class="comment">// 5. 화성, 영성 배치
-<a href=#59 id=59 data-nosnippet>59</a>    </span><span class="kw">let </span>(huoxing, lingxing) = location::place_huoxing_lingxing(lunar.year_branch_idx, lunar.time_branch_idx);
-<a href=#60 id=60 data-nosnippet>60</a>    stars.insert(ZwdsStar::HuoXing, huoxing);
-<a href=#61 id=61 data-nosnippet>61</a>    stars.insert(ZwdsStar::LingXing, lingxing);
-<a href=#62 id=62 data-nosnippet>62</a>
-<a href=#63 id=63 data-nosnippet>63</a>    <span class="comment">// 6. 지겁, 지공 배치
-<a href=#64 id=64 data-nosnippet>64</a>    </span><span class="kw">let </span>(dijie, dikong) = location::place_dijie_dikong(lunar.time_branch_idx);
-<a href=#65 id=65 data-nosnippet>65</a>    stars.insert(ZwdsStar::DiJie, dijie);
-<a href=#66 id=66 data-nosnippet>66</a>    stars.insert(ZwdsStar::DiKong, dikong);
-<a href=#67 id=67 data-nosnippet>67</a>
-<a href=#68 id=68 data-nosnippet>68</a>    <span class="comment">// 7. 음력 월 기준 잡성
-<a href=#69 id=69 data-nosnippet>69</a>    </span><span class="kw">for </span>(star, idx) <span class="kw">in </span>location::place_month_stars(lunar.month) {
-<a href=#70 id=70 data-nosnippet>70</a>        stars.insert(star, idx);
-<a href=#71 id=71 data-nosnippet>71</a>    }
-<a href=#72 id=72 data-nosnippet>72</a>
-<a href=#73 id=73 data-nosnippet>73</a>    <span class="comment">// 8. 출생시 기준 잡성
-<a href=#74 id=74 data-nosnippet>74</a>    </span><span class="kw">for </span>(star, idx) <span class="kw">in </span>location::place_hour_stars(lunar.time_branch_idx) {
-<a href=#75 id=75 data-nosnippet>75</a>        stars.insert(star, idx);
-<a href=#76 id=76 data-nosnippet>76</a>    }
-<a href=#77 id=77 data-nosnippet>77</a>
-<a href=#78 id=78 data-nosnippet>78</a>    <span class="comment">// 9. 음력 일 기준 잡성
-<a href=#79 id=79 data-nosnippet>79</a>    </span><span class="kw">for </span>(star, idx) <span class="kw">in </span>location::place_day_stars(lunar.day, zuofu, youbi, wenchang, wenqu) {
-<a href=#80 id=80 data-nosnippet>80</a>        stars.insert(star, idx);
-<a href=#81 id=81 data-nosnippet>81</a>    }
-<a href=#82 id=82 data-nosnippet>82</a>
-<a href=#83 id=83 data-nosnippet>83</a>    <span class="comment">// 10. 출생년 지지 기준 잡성
-<a href=#84 id=84 data-nosnippet>84</a>    </span><span class="kw">for </span>(star, idx) <span class="kw">in </span>location::place_year_branch_stars(lunar.year_branch_idx) {
-<a href=#85 id=85 data-nosnippet>85</a>        stars.insert(star, idx);
-<a href=#86 id=86 data-nosnippet>86</a>    }
-<a href=#87 id=87 data-nosnippet>87</a>
-<a href=#88 id=88 data-nosnippet>88</a>    <span class="comment">// 11. 출생년 천간 기준 잡성
-<a href=#89 id=89 data-nosnippet>89</a>    </span><span class="kw">for </span>(star, idx) <span class="kw">in </span>location::place_year_stem_stars(year_stem, lunar.year_branch_idx, soul_idx, body_idx) {
-<a href=#90 id=90 data-nosnippet>90</a>        stars.insert(star, idx);
-<a href=#91 id=91 data-nosnippet>91</a>    }
-<a href=#92 id=92 data-nosnippet>92</a>
-<a href=#93 id=93 data-nosnippet>93</a>    stars
-<a href=#94 id=94 data-nosnippet>94</a>}
+<a href=#59 id=59 data-nosnippet>59</a>    </span><span class="kw">let </span>(huoxing, lingxing) =
+<a href=#60 id=60 data-nosnippet>60</a>        location::place_huoxing_lingxing(lunar.year_branch_idx, lunar.time_branch_idx);
+<a href=#61 id=61 data-nosnippet>61</a>    stars.insert(ZwdsStar::HuoXing, huoxing);
+<a href=#62 id=62 data-nosnippet>62</a>    stars.insert(ZwdsStar::LingXing, lingxing);
+<a href=#63 id=63 data-nosnippet>63</a>
+<a href=#64 id=64 data-nosnippet>64</a>    <span class="comment">// 6. 지겁, 지공 배치
+<a href=#65 id=65 data-nosnippet>65</a>    </span><span class="kw">let </span>(dijie, dikong) = location::place_dijie_dikong(lunar.time_branch_idx);
+<a href=#66 id=66 data-nosnippet>66</a>    stars.insert(ZwdsStar::DiJie, dijie);
+<a href=#67 id=67 data-nosnippet>67</a>    stars.insert(ZwdsStar::DiKong, dikong);
+<a href=#68 id=68 data-nosnippet>68</a>
+<a href=#69 id=69 data-nosnippet>69</a>    <span class="comment">// 7. 음력 월 기준 잡성
+<a href=#70 id=70 data-nosnippet>70</a>    </span><span class="kw">for </span>(star, idx) <span class="kw">in </span>location::place_month_stars(lunar.month) {
+<a href=#71 id=71 data-nosnippet>71</a>        stars.insert(star, idx);
+<a href=#72 id=72 data-nosnippet>72</a>    }
+<a href=#73 id=73 data-nosnippet>73</a>
+<a href=#74 id=74 data-nosnippet>74</a>    <span class="comment">// 8. 출생시 기준 잡성
+<a href=#75 id=75 data-nosnippet>75</a>    </span><span class="kw">for </span>(star, idx) <span class="kw">in </span>location::place_hour_stars(lunar.time_branch_idx) {
+<a href=#76 id=76 data-nosnippet>76</a>        stars.insert(star, idx);
+<a href=#77 id=77 data-nosnippet>77</a>    }
+<a href=#78 id=78 data-nosnippet>78</a>
+<a href=#79 id=79 data-nosnippet>79</a>    <span class="comment">// 9. 음력 일 기준 잡성
+<a href=#80 id=80 data-nosnippet>80</a>    </span><span class="kw">for </span>(star, idx) <span class="kw">in </span>location::place_day_stars(lunar.day, zuofu, youbi, wenchang, wenqu) {
+<a href=#81 id=81 data-nosnippet>81</a>        stars.insert(star, idx);
+<a href=#82 id=82 data-nosnippet>82</a>    }
+<a href=#83 id=83 data-nosnippet>83</a>
+<a href=#84 id=84 data-nosnippet>84</a>    <span class="comment">// 10. 출생년 지지 기준 잡성
+<a href=#85 id=85 data-nosnippet>85</a>    </span><span class="kw">for </span>(star, idx) <span class="kw">in </span>location::place_year_branch_stars(lunar.year_branch_idx) {
+<a href=#86 id=86 data-nosnippet>86</a>        stars.insert(star, idx);
+<a href=#87 id=87 data-nosnippet>87</a>    }
+<a href=#88 id=88 data-nosnippet>88</a>
+<a href=#89 id=89 data-nosnippet>89</a>    <span class="comment">// 11. 출생년 천간 기준 잡성
+<a href=#90 id=90 data-nosnippet>90</a>    </span><span class="kw">for </span>(star, idx) <span class="kw">in
+<a href=#91 id=91 data-nosnippet>91</a>        </span>location::place_year_stem_stars(year_stem, lunar.year_branch_idx, soul_idx, body_idx)
+<a href=#92 id=92 data-nosnippet>92</a>    {
+<a href=#93 id=93 data-nosnippet>93</a>        stars.insert(star, idx);
+<a href=#94 id=94 data-nosnippet>94</a>    }
+<a href=#95 id=95 data-nosnippet>95</a>
+<a href=#96 id=96 data-nosnippet>96</a>    stars
+<a href=#97 id=97 data-nosnippet>97</a>}
 </code></pre></div></section></main></body></html>

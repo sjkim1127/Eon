@@ -2,9 +2,9 @@
 <a href=#2 id=2 data-nosnippet>2</a>//!
 <a href=#3 id=3 data-nosnippet>3</a>//! 문창, 문곡, 좌보, 우필, 천괴, 천월의 위치를 계산합니다.
 <a href=#4 id=4 data-nosnippet>4</a>
-<a href=#5 id=5 data-nosnippet>5</a></span><span class="kw">use </span>eon_saju::core::stem::HeavenlyStem;
+<a href=#5 id=5 data-nosnippet>5</a></span><span class="kw">use </span><span class="kw">crate</span>::palace::fix_index;
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span><span class="kw">crate</span>::types::PalaceIndex;
-<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::palace::fix_index;
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>eon_saju::core::stem::HeavenlyStem;
 <a href=#8 id=8 data-nosnippet>8</a>
 <a href=#9 id=9 data-nosnippet>9</a><span class="doccomment">/// 문창(文昌)과 문곡(文曲)의 ZWDS 지지 인덱스 계산
 <a href=#10 id=10 data-nosnippet>10</a>///
@@ -38,7 +38,7 @@
 <a href=#38 id=38 data-nosnippet>38</a>        HeavenlyStem::Jia | HeavenlyStem::Wu | HeavenlyStem::Geng =&gt; (<span class="number">11</span>, <span class="number">5</span>), <span class="comment">// 丑, 未
 <a href=#39 id=39 data-nosnippet>39</a>        </span>HeavenlyStem::Yi | HeavenlyStem::Ji =&gt; (<span class="number">10</span>, <span class="number">6</span>),                       <span class="comment">// 子, 申
 <a href=#40 id=40 data-nosnippet>40</a>        </span>HeavenlyStem::Xin =&gt; (<span class="number">4</span>, <span class="number">0</span>),                                          <span class="comment">// 午, 寅
-<a href=#41 id=41 data-nosnippet>41</a>        </span>HeavenlyStem::Bing | HeavenlyStem::Ding =&gt; (<span class="number">9</span>, <span class="number">7</span>),                     <span class="comment">// 亥, 酉
+<a href=#41 id=41 data-nosnippet>41</a>        </span>HeavenlyStem::Bing | HeavenlyStem::Ding =&gt; (<span class="number">9</span>, <span class="number">7</span>),                    <span class="comment">// 亥, 酉
 <a href=#42 id=42 data-nosnippet>42</a>        </span>HeavenlyStem::Ren | HeavenlyStem::Gui =&gt; (<span class="number">1</span>, <span class="number">3</span>),                      <span class="comment">// 卯, 巳
 <a href=#43 id=43 data-nosnippet>43</a>    </span>}
 <a href=#44 id=44 data-nosnippet>44</a>}

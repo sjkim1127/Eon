@@ -250,45 +250,44 @@
 <a href=#250 id=250 data-nosnippet>250</a>        (<span class="string">"Sankata"</span>, VedicPlanet::Rahu, <span class="number">8.0</span>),
 <a href=#251 id=251 data-nosnippet>251</a>    ];
 <a href=#252 id=252 data-nosnippet>252</a>
-<a href=#253 id=253 data-nosnippet>253</a>    <span class="kw">pub fn </span>calculate_timeline(
-<a href=#254 id=254 data-nosnippet>254</a>        birth_time: DateTime&lt;Utc&gt;,
-<a href=#255 id=255 data-nosnippet>255</a>        moon_long: f64,
-<a href=#256 id=256 data-nosnippet>256</a>    ) -&gt; Vec&lt;DashaPeriod&gt; {
-<a href=#257 id=257 data-nosnippet>257</a>        <span class="kw">let </span>nak_duration = <span class="number">360.0 </span>/ <span class="number">27.0</span>;
-<a href=#258 id=258 data-nosnippet>258</a>        <span class="kw">let </span>nak_index_1 = (moon_long / nak_duration).floor() <span class="kw">as </span>usize + <span class="number">1</span>;
-<a href=#259 id=259 data-nosnippet>259</a>        <span class="kw">let </span><span class="kw-2">mut </span>start_idx = (nak_index_1 + <span class="number">3</span>) % <span class="number">8</span>;
-<a href=#260 id=260 data-nosnippet>260</a>        <span class="kw">if </span>start_idx == <span class="number">0 </span>{ start_idx = <span class="number">8</span>; }
-<a href=#261 id=261 data-nosnippet>261</a>        <span class="kw">let </span>start_idx_0 = start_idx - <span class="number">1</span>;
-<a href=#262 id=262 data-nosnippet>262</a>
-<a href=#263 id=263 data-nosnippet>263</a>        <span class="kw">let </span>elapsed_in_nak = moon_long % nak_duration;
-<a href=#264 id=264 data-nosnippet>264</a>        <span class="kw">let </span>remaining_in_nak = nak_duration - elapsed_in_nak;
-<a href=#265 id=265 data-nosnippet>265</a>        <span class="kw">let </span>portion_remaining = remaining_in_nak / nak_duration;
-<a href=#266 id=266 data-nosnippet>266</a>
-<a href=#267 id=267 data-nosnippet>267</a>        <span class="kw">let </span><span class="kw-2">mut </span>timeline = Vec::new();
-<a href=#268 id=268 data-nosnippet>268</a>        <span class="kw">let </span><span class="kw-2">mut </span>current_start = birth_time;
-<a href=#269 id=269 data-nosnippet>269</a>        <span class="kw">let </span>years_to_secs = |y: f64| (y * <span class="number">365.2425 </span>* <span class="number">24.0 </span>* <span class="number">60.0 </span>* <span class="number">60.0</span>) <span class="kw">as </span>i64;
-<a href=#270 id=270 data-nosnippet>270</a>
-<a href=#271 id=271 data-nosnippet>271</a>        <span class="kw">for </span>cycle_num <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
-<a href=#272 id=272 data-nosnippet>272</a>            <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">8 </span>{
-<a href=#273 id=273 data-nosnippet>273</a>                <span class="kw">let </span>idx = (start_idx_0 + i) % <span class="number">8</span>;
-<a href=#274 id=274 data-nosnippet>274</a>                <span class="kw">let </span>(name, lord, full_years) = <span class="self">Self</span>::CYCLE[idx];
-<a href=#275 id=275 data-nosnippet>275</a>                <span class="kw">let </span>actual_years = <span class="kw">if </span>cycle_num == <span class="number">0 </span>&amp;&amp; i == <span class="number">0 </span>{
-<a href=#276 id=276 data-nosnippet>276</a>                    full_years * portion_remaining
-<a href=#277 id=277 data-nosnippet>277</a>                } <span class="kw">else </span>{
-<a href=#278 id=278 data-nosnippet>278</a>                    full_years
-<a href=#279 id=279 data-nosnippet>279</a>                };
-<a href=#280 id=280 data-nosnippet>280</a>                <span class="kw">let </span>end_time = current_start + Duration::seconds(years_to_secs(actual_years));
-<a href=#281 id=281 data-nosnippet>281</a>                timeline.push(DashaPeriod {
-<a href=#282 id=282 data-nosnippet>282</a>                    lord,
-<a href=#283 id=283 data-nosnippet>283</a>                    start_time: current_start,
-<a href=#284 id=284 data-nosnippet>284</a>                    end_time,
-<a href=#285 id=285 data-nosnippet>285</a>                    sub_dashas: Vec::new(),
-<a href=#286 id=286 data-nosnippet>286</a>                    name: <span class="prelude-val">Some</span>(name.to_string()),
-<a href=#287 id=287 data-nosnippet>287</a>                });
-<a href=#288 id=288 data-nosnippet>288</a>                current_start = end_time;
-<a href=#289 id=289 data-nosnippet>289</a>            }
-<a href=#290 id=290 data-nosnippet>290</a>        }
-<a href=#291 id=291 data-nosnippet>291</a>        timeline
-<a href=#292 id=292 data-nosnippet>292</a>    }
-<a href=#293 id=293 data-nosnippet>293</a>}
+<a href=#253 id=253 data-nosnippet>253</a>    <span class="kw">pub fn </span>calculate_timeline(birth_time: DateTime&lt;Utc&gt;, moon_long: f64) -&gt; Vec&lt;DashaPeriod&gt; {
+<a href=#254 id=254 data-nosnippet>254</a>        <span class="kw">let </span>nak_duration = <span class="number">360.0 </span>/ <span class="number">27.0</span>;
+<a href=#255 id=255 data-nosnippet>255</a>        <span class="kw">let </span>nak_index_1 = (moon_long / nak_duration).floor() <span class="kw">as </span>usize + <span class="number">1</span>;
+<a href=#256 id=256 data-nosnippet>256</a>        <span class="kw">let </span><span class="kw-2">mut </span>start_idx = (nak_index_1 + <span class="number">3</span>) % <span class="number">8</span>;
+<a href=#257 id=257 data-nosnippet>257</a>        <span class="kw">if </span>start_idx == <span class="number">0 </span>{
+<a href=#258 id=258 data-nosnippet>258</a>            start_idx = <span class="number">8</span>;
+<a href=#259 id=259 data-nosnippet>259</a>        }
+<a href=#260 id=260 data-nosnippet>260</a>        <span class="kw">let </span>start_idx_0 = start_idx - <span class="number">1</span>;
+<a href=#261 id=261 data-nosnippet>261</a>
+<a href=#262 id=262 data-nosnippet>262</a>        <span class="kw">let </span>elapsed_in_nak = moon_long % nak_duration;
+<a href=#263 id=263 data-nosnippet>263</a>        <span class="kw">let </span>remaining_in_nak = nak_duration - elapsed_in_nak;
+<a href=#264 id=264 data-nosnippet>264</a>        <span class="kw">let </span>portion_remaining = remaining_in_nak / nak_duration;
+<a href=#265 id=265 data-nosnippet>265</a>
+<a href=#266 id=266 data-nosnippet>266</a>        <span class="kw">let </span><span class="kw-2">mut </span>timeline = Vec::new();
+<a href=#267 id=267 data-nosnippet>267</a>        <span class="kw">let </span><span class="kw-2">mut </span>current_start = birth_time;
+<a href=#268 id=268 data-nosnippet>268</a>        <span class="kw">let </span>years_to_secs = |y: f64| (y * <span class="number">365.2425 </span>* <span class="number">24.0 </span>* <span class="number">60.0 </span>* <span class="number">60.0</span>) <span class="kw">as </span>i64;
+<a href=#269 id=269 data-nosnippet>269</a>
+<a href=#270 id=270 data-nosnippet>270</a>        <span class="kw">for </span>cycle_num <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
+<a href=#271 id=271 data-nosnippet>271</a>            <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">8 </span>{
+<a href=#272 id=272 data-nosnippet>272</a>                <span class="kw">let </span>idx = (start_idx_0 + i) % <span class="number">8</span>;
+<a href=#273 id=273 data-nosnippet>273</a>                <span class="kw">let </span>(name, lord, full_years) = <span class="self">Self</span>::CYCLE[idx];
+<a href=#274 id=274 data-nosnippet>274</a>                <span class="kw">let </span>actual_years = <span class="kw">if </span>cycle_num == <span class="number">0 </span>&amp;&amp; i == <span class="number">0 </span>{
+<a href=#275 id=275 data-nosnippet>275</a>                    full_years * portion_remaining
+<a href=#276 id=276 data-nosnippet>276</a>                } <span class="kw">else </span>{
+<a href=#277 id=277 data-nosnippet>277</a>                    full_years
+<a href=#278 id=278 data-nosnippet>278</a>                };
+<a href=#279 id=279 data-nosnippet>279</a>                <span class="kw">let </span>end_time = current_start + Duration::seconds(years_to_secs(actual_years));
+<a href=#280 id=280 data-nosnippet>280</a>                timeline.push(DashaPeriod {
+<a href=#281 id=281 data-nosnippet>281</a>                    lord,
+<a href=#282 id=282 data-nosnippet>282</a>                    start_time: current_start,
+<a href=#283 id=283 data-nosnippet>283</a>                    end_time,
+<a href=#284 id=284 data-nosnippet>284</a>                    sub_dashas: Vec::new(),
+<a href=#285 id=285 data-nosnippet>285</a>                    name: <span class="prelude-val">Some</span>(name.to_string()),
+<a href=#286 id=286 data-nosnippet>286</a>                });
+<a href=#287 id=287 data-nosnippet>287</a>                current_start = end_time;
+<a href=#288 id=288 data-nosnippet>288</a>            }
+<a href=#289 id=289 data-nosnippet>289</a>        }
+<a href=#290 id=290 data-nosnippet>290</a>        timeline
+<a href=#291 id=291 data-nosnippet>291</a>    }
+<a href=#292 id=292 data-nosnippet>292</a>}
 </code></pre></div></section></main></body></html>

@@ -3,9 +3,9 @@
 <a href=#3 id=3 data-nosnippet>3</a>//! `eon-saju`의 `LunarCalendar::from_solar()`를 재사용하여
 <a href=#4 id=4 data-nosnippet>4</a>//! 자미두수 계산에 필요한 음력 데이터를 추출합니다.
 <a href=#5 id=5 data-nosnippet>5</a>
-<a href=#6 id=6 data-nosnippet>6</a></span><span class="kw">use </span>chrono::NaiveDate;
-<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::error::ZwdsError;
-<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span><span class="kw">crate</span>::types::LunarBirthInfo;
+<a href=#6 id=6 data-nosnippet>6</a></span><span class="kw">use </span><span class="kw">crate</span>::error::ZwdsError;
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::types::LunarBirthInfo;
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>chrono::NaiveDate;
 <a href=#9 id=9 data-nosnippet>9</a>
 <a href=#10 id=10 data-nosnippet>10</a><span class="comment">// eon-data의 만세력 모듈 재사용
 <a href=#11 id=11 data-nosnippet>11</a></span><span class="kw">use </span>eon_data::LunarCalendar;
@@ -38,8 +38,8 @@
 <a href=#38 id=38 data-nosnippet>38</a>    <span class="kw">let </span>date = NaiveDate::from_ymd_opt(year, month, day)
 <a href=#39 id=39 data-nosnippet>39</a>        .ok_or_else(|| ZwdsError::InvalidBirthDate(<span class="macro">format!</span>(<span class="string">"{}-{}-{}"</span>, year, month, day)))<span class="question-mark">?</span>;
 <a href=#40 id=40 data-nosnippet>40</a>
-<a href=#41 id=41 data-nosnippet>41</a>    <span class="kw">let </span>(lunar_year, lunar_month, lunar_day, is_leap) = LunarCalendar::from_solar(date)
-<a href=#42 id=42 data-nosnippet>42</a>        .map_err(|e| ZwdsError::LunarConversion(e.to_string()))<span class="question-mark">?</span>;
+<a href=#41 id=41 data-nosnippet>41</a>    <span class="kw">let </span>(lunar_year, lunar_month, lunar_day, is_leap) =
+<a href=#42 id=42 data-nosnippet>42</a>        LunarCalendar::from_solar(date).map_err(|e| ZwdsError::LunarConversion(e.to_string()))<span class="question-mark">?</span>;
 <a href=#43 id=43 data-nosnippet>43</a>
 <a href=#44 id=44 data-nosnippet>44</a>    <span class="comment">// 연간 계산: 60갑자 기반
 <a href=#45 id=45 data-nosnippet>45</a>    // 갑자년(甲子): 4, 즉 (year - 4) % 10 으로 천간 인덱스 산출

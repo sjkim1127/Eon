@@ -2,11 +2,11 @@
 <a href=#2 id=2 data-nosnippet>2</a>//!
 <a href=#3 id=3 data-nosnippet>3</a>//! 성별과 생년 천간의 음양에 따라 순행/역행 방향을 정하고, 12개 궁에 대한의 나이 범위와 대간(大干)을 설정합니다.
 <a href=#4 id=4 data-nosnippet>4</a>
-<a href=#5 id=5 data-nosnippet>5</a></span><span class="kw">use </span>eon_core::birth::Gender;
-<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>eon_saju::core::stem::HeavenlyStem;
-<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>eon_saju::core::branch::EarthlyBranch;
-<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span><span class="kw">crate</span>::types::{PalaceIndex, FiveElementsClass, DaXian};
-<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span><span class="kw">crate</span>::palace::{fix_index, get_palace_stem, zwds_idx_to_std_idx};
+<a href=#5 id=5 data-nosnippet>5</a></span><span class="kw">use </span><span class="kw">crate</span>::palace::{fix_index, get_palace_stem, zwds_idx_to_std_idx};
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span><span class="kw">crate</span>::types::{DaXian, FiveElementsClass, PalaceIndex};
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>eon_core::birth::Gender;
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>eon_saju::core::branch::EarthlyBranch;
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>eon_saju::core::stem::HeavenlyStem;
 <a href=#10 id=10 data-nosnippet>10</a>
 <a href=#11 id=11 data-nosnippet>11</a><span class="doccomment">/// 대한 목록을 생성하여 반환합니다.
 <a href=#12 id=12 data-nosnippet>12</a>///
@@ -26,7 +26,7 @@
 <a href=#26 id=26 data-nosnippet>26</a>    // 양남음녀(陽男陰女) -&gt; 순행, 음남양녀(陰男陽女) -&gt; 역행
 <a href=#27 id=27 data-nosnippet>27</a>    // 양천간: 甲, 丙, 戊, 庚, 壬 (index % 2 == 0)
 <a href=#28 id=28 data-nosnippet>28</a>    // 음천간: 乙, 丁, 己, 辛, 癸 (index % 2 == 1)
-<a href=#29 id=29 data-nosnippet>29</a>    </span><span class="kw">let </span>is_yang_stem = year_stem.index() % <span class="number">2 </span>== <span class="number">0</span>;
+<a href=#29 id=29 data-nosnippet>29</a>    </span><span class="kw">let </span>is_yang_stem = year_stem.index().is_multiple_of(<span class="number">2</span>);
 <a href=#30 id=30 data-nosnippet>30</a>    <span class="kw">let </span>is_male = <span class="macro">matches!</span>(gender, Gender::Male);
 <a href=#31 id=31 data-nosnippet>31</a>
 <a href=#32 id=32 data-nosnippet>32</a>    <span class="kw">let </span>is_forward = <span class="kw">if </span>is_male {

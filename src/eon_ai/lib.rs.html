@@ -1,45 +1,45 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-ai/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="eon_ai" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_ai/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>serde::{Deserialize, Serialize};
-<a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>eon_saju::{
-<a href=#3 id=3 data-nosnippet>3</a>    DestinyEntropy, QiTopology, KarmaLoadBalancer, 
-<a href=#4 id=4 data-nosnippet>4</a>    DestinyComplexity, DestinyDebugger, DestinyFuzzer,
-<a href=#5 id=5 data-nosnippet>5</a>    LifePathReport
-<a href=#6 id=6 data-nosnippet>6</a>};
-<a href=#7 id=7 data-nosnippet>7</a>
-<a href=#8 id=8 data-nosnippet>8</a><span class="kw">pub mod </span>error;
-<a href=#9 id=9 data-nosnippet>9</a><span class="kw">pub mod </span>tools;
-<a href=#10 id=10 data-nosnippet>10</a><span class="kw">pub use </span>error::AiError;
-<a href=#11 id=11 data-nosnippet>11</a><span class="kw">pub use </span>tools::EonToolbox;
-<a href=#12 id=12 data-nosnippet>12</a>
-<a href=#13 id=13 data-nosnippet>13</a><span class="doccomment">/// AI 기반 운명 보안 감사 리포트 구조
-<a href=#14 id=14 data-nosnippet>14</a></span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
-<a href=#15 id=15 data-nosnippet>15</a></span><span class="kw">pub struct </span>AIAuditReport {
-<a href=#16 id=16 data-nosnippet>16</a>    <span class="kw">pub </span>system_id: String,
-<a href=#17 id=17 data-nosnippet>17</a>    <span class="kw">pub </span>timestamp: String,
-<a href=#18 id=18 data-nosnippet>18</a>    <span class="kw">pub </span>security_score: f32,
-<a href=#19 id=19 data-nosnippet>19</a>    <span class="kw">pub </span>technical_summary: String,
-<a href=#20 id=20 data-nosnippet>20</a>    <span class="kw">pub </span>auditing_log: Vec&lt;String&gt;,
-<a href=#21 id=21 data-nosnippet>21</a>    <span class="kw">pub </span>recommended_patches: Vec&lt;String&gt;,
-<a href=#22 id=22 data-nosnippet>22</a>}
-<a href=#23 id=23 data-nosnippet>23</a>
-<a href=#24 id=24 data-nosnippet>24</a><span class="kw">pub struct </span>DestinyAIAuditor;
-<a href=#25 id=25 data-nosnippet>25</a>
-<a href=#26 id=26 data-nosnippet>26</a><span class="kw">impl </span>DestinyAIAuditor {
-<a href=#27 id=27 data-nosnippet>27</a>    <span class="doccomment">/// 모든 CS 엔진의 출력을 수집하여 LLM용 컨텍스트 데이터 생성
-<a href=#28 id=28 data-nosnippet>28</a>    </span><span class="kw">pub fn </span>generate_context(
-<a href=#29 id=29 data-nosnippet>29</a>        pillars: <span class="kw-2">&amp;</span>eon_saju::FourPillars, 
-<a href=#30 id=30 data-nosnippet>30</a>        life_report: <span class="kw-2">&amp;</span>LifePathReport,
-<a href=#31 id=31 data-nosnippet>31</a>    ) -&gt; String {
-<a href=#32 id=32 data-nosnippet>32</a>        <span class="kw">let </span>entropy = DestinyEntropy::analyze(pillars);
-<a href=#33 id=33 data-nosnippet>33</a>        <span class="kw">let </span>topology = QiTopology::analyze(pillars);
-<a href=#34 id=34 data-nosnippet>34</a>        <span class="kw">let </span>load_diagnostics = KarmaLoadBalancer::diagnose(<span class="kw-2">&amp;</span>life_report.frames);
-<a href=#35 id=35 data-nosnippet>35</a>        <span class="kw">let </span>load_status = load_diagnostics.first()
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-ai/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="eon_ai" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_ai/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>eon_saju::{
+<a href=#2 id=2 data-nosnippet>2</a>    DestinyComplexity, DestinyDebugger, DestinyEntropy, DestinyFuzzer, KarmaLoadBalancer,
+<a href=#3 id=3 data-nosnippet>3</a>    LifePathReport, QiTopology,
+<a href=#4 id=4 data-nosnippet>4</a>};
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>serde::{Deserialize, Serialize};
+<a href=#6 id=6 data-nosnippet>6</a>
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">pub mod </span>error;
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">pub mod </span>tools;
+<a href=#9 id=9 data-nosnippet>9</a><span class="kw">pub use </span>error::AiError;
+<a href=#10 id=10 data-nosnippet>10</a><span class="kw">pub use </span>tools::EonToolbox;
+<a href=#11 id=11 data-nosnippet>11</a>
+<a href=#12 id=12 data-nosnippet>12</a><span class="doccomment">/// AI 기반 운명 보안 감사 리포트 구조
+<a href=#13 id=13 data-nosnippet>13</a></span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
+<a href=#14 id=14 data-nosnippet>14</a></span><span class="kw">pub struct </span>AIAuditReport {
+<a href=#15 id=15 data-nosnippet>15</a>    <span class="kw">pub </span>system_id: String,
+<a href=#16 id=16 data-nosnippet>16</a>    <span class="kw">pub </span>timestamp: String,
+<a href=#17 id=17 data-nosnippet>17</a>    <span class="kw">pub </span>security_score: f32,
+<a href=#18 id=18 data-nosnippet>18</a>    <span class="kw">pub </span>technical_summary: String,
+<a href=#19 id=19 data-nosnippet>19</a>    <span class="kw">pub </span>auditing_log: Vec&lt;String&gt;,
+<a href=#20 id=20 data-nosnippet>20</a>    <span class="kw">pub </span>recommended_patches: Vec&lt;String&gt;,
+<a href=#21 id=21 data-nosnippet>21</a>}
+<a href=#22 id=22 data-nosnippet>22</a>
+<a href=#23 id=23 data-nosnippet>23</a><span class="kw">pub struct </span>DestinyAIAuditor;
+<a href=#24 id=24 data-nosnippet>24</a>
+<a href=#25 id=25 data-nosnippet>25</a><span class="kw">impl </span>DestinyAIAuditor {
+<a href=#26 id=26 data-nosnippet>26</a>    <span class="doccomment">/// 모든 CS 엔진의 출력을 수집하여 LLM용 컨텍스트 데이터 생성
+<a href=#27 id=27 data-nosnippet>27</a>    </span><span class="kw">pub fn </span>generate_context(
+<a href=#28 id=28 data-nosnippet>28</a>        pillars: <span class="kw-2">&amp;</span>eon_saju::FourPillars,
+<a href=#29 id=29 data-nosnippet>29</a>        life_report: <span class="kw-2">&amp;</span>LifePathReport,
+<a href=#30 id=30 data-nosnippet>30</a>    ) -&gt; String {
+<a href=#31 id=31 data-nosnippet>31</a>        <span class="kw">let </span>entropy = DestinyEntropy::analyze(pillars);
+<a href=#32 id=32 data-nosnippet>32</a>        <span class="kw">let </span>topology = QiTopology::analyze(pillars);
+<a href=#33 id=33 data-nosnippet>33</a>        <span class="kw">let </span>load_diagnostics = KarmaLoadBalancer::diagnose(<span class="kw-2">&amp;</span>life_report.frames);
+<a href=#34 id=34 data-nosnippet>34</a>        <span class="kw">let </span>load_status = load_diagnostics
+<a href=#35 id=35 data-nosnippet>35</a>            .first()
 <a href=#36 id=36 data-nosnippet>36</a>            .map(|d| d.status.clone())
 <a href=#37 id=37 data-nosnippet>37</a>            .unwrap_or(eon_saju::TrafficStatus::Normal);
 <a href=#38 id=38 data-nosnippet>38</a>        <span class="kw">let </span>complexity = DestinyComplexity::analyze(<span class="kw-2">&amp;</span>life_report.frames);
-<a href=#39 id=39 data-nosnippet>39</a>        
+<a href=#39 id=39 data-nosnippet>39</a>
 <a href=#40 id=40 data-nosnippet>40</a>        <span class="kw">let </span>vm = eon_saju::SajuVM::new(pillars.clone());
 <a href=#41 id=41 data-nosnippet>41</a>        <span class="kw">let </span>fuzzer = DestinyFuzzer::new(vm);
-<a href=#42 id=42 data-nosnippet>42</a>        
+<a href=#42 id=42 data-nosnippet>42</a>
 <a href=#43 id=43 data-nosnippet>43</a>        <span class="comment">// 현재 원국의 월주를 기준으로 기본 정적 감사 수행 (대운 컨텍스트 없이 세운만 60개 퍼징)
 <a href=#44 id=44 data-nosnippet>44</a>        </span><span class="kw">let </span>fuzz_report = fuzzer.audit(pillars.month);
 <a href=#45 id=45 data-nosnippet>45</a>
@@ -50,39 +50,56 @@
 <a href=#50 id=50 data-nosnippet>50</a>        <span class="kw">let </span><span class="kw-2">mut </span>context = String::new();
 <a href=#51 id=51 data-nosnippet>51</a>        context.push_str(<span class="string">"=== [DESTINY SYSTEM CORE DUMP] ===\n"</span>);
 <a href=#52 id=52 data-nosnippet>52</a>        context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"* Entropy/DIE Level: {:?}\n"</span>, entropy.level));
-<a href=#53 id=53 data-nosnippet>53</a>        context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"* Topology Trace: {:?}\n"</span>, topology.nodes.iter().map(|n| (n.element.hangul(), n.output)).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()));
-<a href=#54 id=54 data-nosnippet>54</a>        context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"* Current Load Status: {:?}\n"</span>, load_status));
-<a href=#55 id=55 data-nosnippet>55</a>        context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"* Cyclomatic Complexity (M): {}\n"</span>, complexity.cyclomatic_complexity));
-<a href=#56 id=56 data-nosnippet>56</a>        context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"* Stability Grade: {}\n"</span>, complexity.stability_grade));
-<a href=#57 id=57 data-nosnippet>57</a>        context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"* Fuzzing Audit: Found {} vulnerabilities in static scan\n"</span>, fuzz_report.total_crashes));
-<a href=#58 id=58 data-nosnippet>58</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(rc) = root_cause {
-<a href=#59 id=59 data-nosnippet>59</a>            context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"* TTD Backtrace Log: {}\n"</span>, rc.reason));
-<a href=#60 id=60 data-nosnippet>60</a>        }
-<a href=#61 id=61 data-nosnippet>61</a>        
-<a href=#62 id=62 data-nosnippet>62</a>        context
-<a href=#63 id=63 data-nosnippet>63</a>    }
-<a href=#64 id=64 data-nosnippet>64</a>
-<a href=#65 id=65 data-nosnippet>65</a>    <span class="doccomment">/// LLM에게 전달할 최종 프롬프트 생성 (Tool-Calling / Agentic Style)
-<a href=#66 id=66 data-nosnippet>66</a>    </span><span class="kw">pub fn </span>build_agent_prompt(pillars: <span class="kw-2">&amp;</span>eon_saju::FourPillars) -&gt; <span class="prelude-ty">Result</span>&lt;String, AiError&gt; {
-<a href=#67 id=67 data-nosnippet>67</a>        <span class="kw">let </span>manifest = EonToolbox::get_manifest();
-<a href=#68 id=68 data-nosnippet>68</a>        <span class="kw">let </span>manifest_json = serde_json::to_string_pretty(<span class="kw-2">&amp;</span>manifest)<span class="question-mark">?</span>;
-<a href=#69 id=69 data-nosnippet>69</a>
-<a href=#70 id=70 data-nosnippet>70</a>        <span class="kw">let </span><span class="kw-2">mut </span>prompt = String::new();
-<a href=#71 id=71 data-nosnippet>71</a>        prompt.push_str(<span class="string">"당신은 'Eon Destiny Security Agency'의 수석 에이전트 분석관입니다.\n"</span>);
-<a href=#72 id=72 data-nosnippet>72</a>        prompt.push_str(<span class="string">"분석 대상 시스템의 기본 정보는 다음과 같습니다:\n"</span>);
-<a href=#73 id=73 data-nosnippet>73</a>        prompt.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"* Target System GanZi: {}\n\n"</span>, pillars.hangul()));
-<a href=#74 id=74 data-nosnippet>74</a>        
-<a href=#75 id=75 data-nosnippet>75</a>        prompt.push_str(<span class="string">"당신은 다음 도구들을 호출하여 시스템의 상세 데이터를 조사할 수 있습니다:\n"</span>);
-<a href=#76 id=76 data-nosnippet>76</a>        prompt.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}\n\n"</span>, manifest_json));
+<a href=#53 id=53 data-nosnippet>53</a>        context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#54 id=54 data-nosnippet>54</a>            <span class="string">"* Topology Trace: {:?}\n"</span>,
+<a href=#55 id=55 data-nosnippet>55</a>            topology
+<a href=#56 id=56 data-nosnippet>56</a>                .nodes
+<a href=#57 id=57 data-nosnippet>57</a>                .iter()
+<a href=#58 id=58 data-nosnippet>58</a>                .map(|n| (n.element.hangul(), n.output))
+<a href=#59 id=59 data-nosnippet>59</a>                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+<a href=#60 id=60 data-nosnippet>60</a>        ));
+<a href=#61 id=61 data-nosnippet>61</a>        context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"* Current Load Status: {:?}\n"</span>, load_status));
+<a href=#62 id=62 data-nosnippet>62</a>        context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#63 id=63 data-nosnippet>63</a>            <span class="string">"* Cyclomatic Complexity (M): {}\n"</span>,
+<a href=#64 id=64 data-nosnippet>64</a>            complexity.cyclomatic_complexity
+<a href=#65 id=65 data-nosnippet>65</a>        ));
+<a href=#66 id=66 data-nosnippet>66</a>        context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#67 id=67 data-nosnippet>67</a>            <span class="string">"* Stability Grade: {}\n"</span>,
+<a href=#68 id=68 data-nosnippet>68</a>            complexity.stability_grade
+<a href=#69 id=69 data-nosnippet>69</a>        ));
+<a href=#70 id=70 data-nosnippet>70</a>        context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#71 id=71 data-nosnippet>71</a>            <span class="string">"* Fuzzing Audit: Found {} vulnerabilities in static scan\n"</span>,
+<a href=#72 id=72 data-nosnippet>72</a>            fuzz_report.total_crashes
+<a href=#73 id=73 data-nosnippet>73</a>        ));
+<a href=#74 id=74 data-nosnippet>74</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(rc) = root_cause {
+<a href=#75 id=75 data-nosnippet>75</a>            context.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"* TTD Backtrace Log: {}\n"</span>, rc.reason));
+<a href=#76 id=76 data-nosnippet>76</a>        }
 <a href=#77 id=77 data-nosnippet>77</a>
-<a href=#78 id=78 data-nosnippet>78</a>        prompt.push_str(<span class="string">"[지침]\n"</span>);
-<a href=#79 id=79 data-nosnippet>79</a>        prompt.push_str(<span class="string">"1. 먼저 필요한 도구를 호출하여 시스템 상태를 파악하십시오.\n"</span>);
-<a href=#80 id=80 data-nosnippet>80</a>        prompt.push_str(<span class="string">"2. 수집된 데이터를 바탕으로 '시스템 보안 감사 보고서(Security Audit Report)'를 작성하십시오.\n"</span>);
-<a href=#81 id=81 data-nosnippet>81</a>        prompt.push_str(<span class="string">"3. 보고서에는 취약점, 병목 구간, 유지보수 복잡도, 해결책(Patch)을 기술 전문 용어로 포함하십시오.\n\n"</span>);
-<a href=#82 id=82 data-nosnippet>82</a>        
-<a href=#83 id=83 data-nosnippet>83</a>        prompt.push_str(<span class="string">"분석을 시작하기 위해 첫 번째 도구 호출을 수행하거나 계획을 세우십시오."</span>);
-<a href=#84 id=84 data-nosnippet>84</a>
-<a href=#85 id=85 data-nosnippet>85</a>        <span class="prelude-val">Ok</span>(prompt)
-<a href=#86 id=86 data-nosnippet>86</a>    }
-<a href=#87 id=87 data-nosnippet>87</a>}
+<a href=#78 id=78 data-nosnippet>78</a>        context
+<a href=#79 id=79 data-nosnippet>79</a>    }
+<a href=#80 id=80 data-nosnippet>80</a>
+<a href=#81 id=81 data-nosnippet>81</a>    <span class="doccomment">/// LLM에게 전달할 최종 프롬프트 생성 (Tool-Calling / Agentic Style)
+<a href=#82 id=82 data-nosnippet>82</a>    </span><span class="kw">pub fn </span>build_agent_prompt(pillars: <span class="kw-2">&amp;</span>eon_saju::FourPillars) -&gt; <span class="prelude-ty">Result</span>&lt;String, AiError&gt; {
+<a href=#83 id=83 data-nosnippet>83</a>        <span class="kw">let </span>manifest = EonToolbox::get_manifest();
+<a href=#84 id=84 data-nosnippet>84</a>        <span class="kw">let </span>manifest_json = serde_json::to_string_pretty(<span class="kw-2">&amp;</span>manifest)<span class="question-mark">?</span>;
+<a href=#85 id=85 data-nosnippet>85</a>
+<a href=#86 id=86 data-nosnippet>86</a>        <span class="kw">let </span><span class="kw-2">mut </span>prompt = String::new();
+<a href=#87 id=87 data-nosnippet>87</a>        prompt.push_str(<span class="string">"당신은 'Eon Destiny Security Agency'의 수석 에이전트 분석관입니다.\n"</span>);
+<a href=#88 id=88 data-nosnippet>88</a>        prompt.push_str(<span class="string">"분석 대상 시스템의 기본 정보는 다음과 같습니다:\n"</span>);
+<a href=#89 id=89 data-nosnippet>89</a>        prompt.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"* Target System GanZi: {}\n\n"</span>, pillars.hangul()));
+<a href=#90 id=90 data-nosnippet>90</a>
+<a href=#91 id=91 data-nosnippet>91</a>        prompt
+<a href=#92 id=92 data-nosnippet>92</a>            .push_str(<span class="string">"당신은 다음 도구들을 호출하여 시스템의 상세 데이터를 조사할 수 있습니다:\n"</span>);
+<a href=#93 id=93 data-nosnippet>93</a>        prompt.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}\n\n"</span>, manifest_json));
+<a href=#94 id=94 data-nosnippet>94</a>
+<a href=#95 id=95 data-nosnippet>95</a>        prompt.push_str(<span class="string">"[지침]\n"</span>);
+<a href=#96 id=96 data-nosnippet>96</a>        prompt.push_str(<span class="string">"1. 먼저 필요한 도구를 호출하여 시스템 상태를 파악하십시오.\n"</span>);
+<a href=#97 id=97 data-nosnippet>97</a>        prompt.push_str(<span class="string">"2. 수집된 데이터를 바탕으로 '시스템 보안 감사 보고서(Security Audit Report)'를 작성하십시오.\n"</span>);
+<a href=#98 id=98 data-nosnippet>98</a>        prompt.push_str(<span class="string">"3. 보고서에는 취약점, 병목 구간, 유지보수 복잡도, 해결책(Patch)을 기술 전문 용어로 포함하십시오.\n\n"</span>);
+<a href=#99 id=99 data-nosnippet>99</a>
+<a href=#100 id=100 data-nosnippet>100</a>        prompt.push_str(<span class="string">"분석을 시작하기 위해 첫 번째 도구 호출을 수행하거나 계획을 세우십시오."</span>);
+<a href=#101 id=101 data-nosnippet>101</a>
+<a href=#102 id=102 data-nosnippet>102</a>        <span class="prelude-val">Ok</span>(prompt)
+<a href=#103 id=103 data-nosnippet>103</a>    }
+<a href=#104 id=104 data-nosnippet>104</a>}
 </code></pre></div></section></main></body></html>
