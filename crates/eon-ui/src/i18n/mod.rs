@@ -1541,6 +1541,9 @@ pub fn translate_saju_spirit_marker_name(locale: Locale, marker: eon_saju::analy
             eon_saju::analysis::spirit_markers::SpiritMarker::Jangseong => "将星",
             eon_saju::analysis::spirit_markers::SpiritMarker::Banan => "潘鞍煞",
             eon_saju::analysis::spirit_markers::SpiritMarker::Yukhae => "六害煞",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Yangin => "羊刃煞",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Tianluo => "天罗煞",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Jimang => "地网煞",
         },
         Locale::En => match marker {
             eon_saju::analysis::spirit_markers::SpiritMarker::Tianyi => "Heavenly Noble",
@@ -1574,6 +1577,9 @@ pub fn translate_saju_spirit_marker_name(locale: Locale, marker: eon_saju::analy
             eon_saju::analysis::spirit_markers::SpiritMarker::Jangseong => "General Star",
             eon_saju::analysis::spirit_markers::SpiritMarker::Banan => "Saddle Star",
             eon_saju::analysis::spirit_markers::SpiritMarker::Yukhae => "Six Harms Sha",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Yangin => "Sheep Blade",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Tianluo => "Heavenly Net",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Jimang => "Earthly Net",
         },
         Locale::Ru => match marker {
             eon_saju::analysis::spirit_markers::SpiritMarker::Tianyi => "Благородный Небесной Единицы",
@@ -1607,6 +1613,9 @@ pub fn translate_saju_spirit_marker_name(locale: Locale, marker: eon_saju::analy
             eon_saju::analysis::spirit_markers::SpiritMarker::Jangseong => "Звезда Генерала",
             eon_saju::analysis::spirit_markers::SpiritMarker::Banan => "Золотая Седловина",
             eon_saju::analysis::spirit_markers::SpiritMarker::Yukhae => "Ша Шести Вредов",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Yangin => "Овечий Нож (Янгин)",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Tianluo => "Небесная Сеть (Тяньло)",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Jimang => "Земная Сеть (Цзиман)",
         },
     }
 }
@@ -1668,9 +1677,12 @@ pub fn translate_saju_spirit_marker_desc(locale: Locale, marker: eon_saju::analy
             eon_saju::analysis::spirit_markers::SpiritMarker::Jisha => "地理位置的变动、出差或活动领域扩展",
             eon_saju::analysis::spirit_markers::SpiritMarker::Nyeonsha => "充满大众魅力与时尚美感，受瞩目",
             eon_saju::analysis::spirit_markers::SpiritMarker::Wolsha => "在艰苦环境或危机中突然获得意外收获",
-            eon_saju::analysis::spirit_markers::SpiritMarker::Jangseong => "在行业或团队中登上顶峰의 领袖气质",
-            eon_saju::analysis::spirit_markers::SpiritMarker::Banan => "工作生活安稳，获得体面的名誉와 回报",
-            eon_saju::analysis::spirit_markers::SpiritMarker::Yukhae => "身体微恙，但处理危机极其민첩快速",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Jangseong => "在行业或团队中登上顶峰的领袖气质",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Banan => "工作生活安稳，获得体面的名誉与回报",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Yukhae => "身体微恙，但处理危机极其敏捷快速",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Yangin => "性格极端顽强，易遭剧烈起伏或意外血光伤害，但能成就宏图大业",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Tianluo => "利于沉沉反思、学术研究或修行；建议避免强求名利财富",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Jimang => "需谨慎行事、保守退守的时期；利于深耕专业技术领域",
         },
         Locale::En => match marker {
             eon_saju::analysis::spirit_markers::SpiritMarker::Tianyi => "Overcoming difficulties and finding luck with help from benefactors.",
@@ -1704,6 +1716,9 @@ pub fn translate_saju_spirit_marker_desc(locale: Locale, marker: eon_saju::analy
             eon_saju::analysis::spirit_markers::SpiritMarker::Jangseong => "Leadership qualities that elevate you to the top of your domain.",
             eon_saju::analysis::spirit_markers::SpiritMarker::Banan => "Comfortable social status, honorable achievements, and stable rewards.",
             eon_saju::analysis::spirit_markers::SpiritMarker::Yukhae => "Minor illnesses, but endows you with extremely quick crisis response.",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Yangin => "Extreme stubbornness and determination, leading to dramatic success or sudden loss/injuries.",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Tianluo => "Favorable for reflection, academic study, or spiritual practice; avoidance of aggressive pursuit of wealth is recommended.",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Jimang => "A period requiring caution and conservative actions; highly beneficial for focusing deeply on specialized professional fields.",
         },
         Locale::Ru => match marker {
             eon_saju::analysis::spirit_markers::SpiritMarker::Tianyi => "Преодоление трудностей и обретение удачи с помощью благородных покровителей.",
@@ -1737,6 +1752,9 @@ pub fn translate_saju_spirit_marker_desc(locale: Locale, marker: eon_saju::analy
             eon_saju::analysis::spirit_markers::SpiritMarker::Jangseong => "Лидерские качества, возвышающие вас на вершину вашей сферы.",
             eon_saju::analysis::spirit_markers::SpiritMarker::Banan => "Комфортный социальный статус, почетные награды и стабильный доход.",
             eon_saju::analysis::spirit_markers::SpiritMarker::Yukhae => "Ша Шести Вредов, легкие недомогания, но дает молниеносную реакцию.",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Yangin => "Крайнее упрямство и решимость, приводящие к колоссальному успеху или внезапным травмам.",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Tianluo => "Благоприятно для самоанализа, учебы и духовных практик; рекомендуется избегать агрессивной погони за славой.",
+            eon_saju::analysis::spirit_markers::SpiritMarker::Jimang => "Период, требующий осторожности и консервативных действий; полезен для глубокой специализации.",
         },
     }
 }
