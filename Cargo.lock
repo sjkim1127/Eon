@@ -806,7 +806,7 @@ dependencies = [
  "log",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
  "toml",
 ]
 
@@ -818,7 +818,7 @@ dependencies = [
  "eon-core",
  "serde",
  "swiss-eph",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -828,7 +828,7 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "serde",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -841,7 +841,7 @@ dependencies = [
  "eon-core",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -852,7 +852,7 @@ dependencies = [
  "eon-astro",
  "eon-core",
  "serde",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -866,7 +866,7 @@ dependencies = [
  "rand",
  "rayon",
  "serde",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -886,7 +886,7 @@ dependencies = [
  "eon-zwds",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
  "ts-rs",
 ]
 
@@ -928,7 +928,7 @@ dependencies = [
  "eon-astro",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -939,7 +939,7 @@ dependencies = [
  "eon-astro",
  "eon-core",
  "serde",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -952,7 +952,7 @@ dependencies = [
  "eon-data",
  "eon-saju",
  "serde",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
