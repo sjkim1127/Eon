@@ -78,7 +78,6 @@ pub enum TK {
     NavTransit,
     NavSimulation,
     NavTier,
-    NavAi,
     NavZwds,
     NavIChing,
     NavWestern,
@@ -182,7 +181,6 @@ pub enum TK {
     SectionTransit,
     SectionSimulation,
     SectionTier,
-    SectionAi,
     SectionDasha,
     SectionYoga,
     SectionAshtakavarga,
@@ -275,14 +273,6 @@ pub enum TK {
     TooltipHouseLord,
     TooltipHouseScore,
     TooltipClickDetail,
-
-    // ── AI Tab ───────────────────────────────────────────────────────────
-    AiStartAudit,
-    AiChatPlaceholderReady,
-    AiChatPlaceholderWait,
-    AiDisclaimer,
-    AiApiKeyHint,
-    AiWelcome,
 
     // ── Global / Common ──────────────────────────────────────────────────
     LabelAge,

@@ -10,7 +10,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::NavTransit => "Transit Forecast",
         TK::NavSimulation => "Life Simulator",
         TK::NavTier => "Destiny Tier",
-        TK::NavAi => "AI Analyst",
         TK::NavZwds => "Zi Wei Dou Shu",
         // Form
         TK::FormYear => "Year",
@@ -58,7 +57,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::SectionTransit => "Planetary Transits",
         TK::SectionSimulation => "Life Simulation",
         TK::SectionTier => "Destiny Tier",
-        TK::SectionAi => "AI Analysis",
         TK::SectionDasha => "Dasha System",
         TK::SectionYoga => "Yoga Analysis",
         TK::SectionAshtakavarga => "Ashtakavarga",
@@ -146,13 +144,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::TooltipHouseLord => "House Lord",
         TK::TooltipHouseScore => "House Score",
         TK::TooltipClickDetail => "Click for details",
-        // AI Tab
-        TK::AiStartAudit => "Start Deep Audit",
-        TK::AiChatPlaceholderReady => "Type your question...",
-        TK::AiChatPlaceholderWait => "Please run 'Start Deep Audit' first.",
-        TK::AiDisclaimer => "AI can make mistakes. Consult a professional for important decisions.",
-        TK::AiApiKeyHint => "Please enter your Groq API Key first.",
-        TK::AiWelcome => "Hello! I'm Eon AI.",
 
         // Global / Common
         TK::LabelAge => "Age",

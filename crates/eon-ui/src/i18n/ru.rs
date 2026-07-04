@@ -10,7 +10,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::NavTransit => "Транзиты",
         TK::NavSimulation => "Симуляция жизни",
         TK::NavTier => "Уровень судьбы",
-        TK::NavAi => "ИИ аналитик",
         TK::NavZwds => "Цзы Вэй Доу Шу",
         // Form
         TK::FormYear => "Год",
@@ -58,7 +57,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::SectionTransit => "Планетарные транзиты",
         TK::SectionSimulation => "Симуляция жизни",
         TK::SectionTier => "Уровень судьбы",
-        TK::SectionAi => "ИИ анализ",
         TK::SectionDasha => "Система Даша",
         TK::SectionYoga => "Анализ Йоги",
         TK::SectionAshtakavarga => "Аштакаварга",
@@ -146,13 +144,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::TooltipHouseLord => "Управитель дома",
         TK::TooltipHouseScore => "Очки дома",
         TK::TooltipClickDetail => "Нажмите для деталей",
-        // AI Tab
-        TK::AiStartAudit => "Начать глубокий аудит",
-        TK::AiChatPlaceholderReady => "Введите ваш вопрос...",
-        TK::AiChatPlaceholderWait => "Сначала запустите 'Начать глубокий аудит'.",
-        TK::AiDisclaimer => "ИИ может ошибаться. Для важных решений консультируйтесь со специалистом.",
-        TK::AiApiKeyHint => "Сначала введите Groq API Key.",
-        TK::AiWelcome => "Здравствуйте! Я Eon AI.",
 
         // Global / Common
         TK::LabelAge => "Возраст",

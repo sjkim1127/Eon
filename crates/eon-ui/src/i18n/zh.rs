@@ -10,7 +10,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::NavTransit => "行星运势",
         TK::NavSimulation => "人生模拟",
         TK::NavTier => "命运等级",
-        TK::NavAi => "AI 分析",
         TK::NavZwds => "紫微斗数",
         // Form
         TK::FormYear => "年",
@@ -58,7 +57,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::SectionTransit => "行星运行",
         TK::SectionSimulation => "人生模拟",
         TK::SectionTier => "命运等级",
-        TK::SectionAi => "AI 分析",
         TK::SectionDasha => "达萨系统",
         TK::SectionYoga => "瑜伽分析",
         TK::SectionAshtakavarga => "八吠陀分析",
@@ -146,13 +144,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::TooltipHouseLord => "宫主星",
         TK::TooltipHouseScore => "宫位分数",
         TK::TooltipClickDetail => "点击查看详情",
-        // AI Tab
-        TK::AiStartAudit => "开始深度审计",
-        TK::AiChatPlaceholderReady => "请输入您的问题...",
-        TK::AiChatPlaceholderWait => "请先运行\"开始深度审计\"。",
-        TK::AiDisclaimer => "AI可能会出错，重要决策请咨询专业人士。",
-        TK::AiApiKeyHint => "请先输入Groq API Key。",
-        TK::AiWelcome => "您好！我是Eon AI。",
 
         // Global / Common
         TK::LabelAge => "年龄",
