@@ -144,7 +144,10 @@ impl YongshinAnalysis {
 
             // 조후(調候) 판단 (종격에서는 조후보다 격국이 우선임)
             let thermal_index = calculate_thermal_index(pillars, config);
-            if let Some(mut johu) = get_johu_analysis(pillars, thermal_index, config) {
+            let humidity_index = calculate_humidity_index(pillars, config);
+            if let Some(mut johu) =
+                get_johu_analysis(pillars, thermal_index, humidity_index, config)
+            {
                 johu.description = format!(
                     "{} 단, 종격 사주이므로 조후보다 격국의 기세를 따르는 것이 안전함",
                     johu.description
@@ -154,7 +157,8 @@ impl YongshinAnalysis {
         } else {
             // 일반적인 경우 조후가 급하면 조후 우선
             let thermal_index = calculate_thermal_index(pillars, config);
-            if let Some(johu) = get_johu_analysis(pillars, thermal_index, config) {
+            let humidity_index = calculate_humidity_index(pillars, config);
+            if let Some(johu) = get_johu_analysis(pillars, thermal_index, humidity_index, config) {
                 recommendations.push(johu);
             }
 
@@ -182,8 +186,12 @@ impl YongshinAnalysis {
         // 제1용신 결정 로직
         // 조후가 극단적이거나(절기 영향) 억부 균형보다 시급할 때 조후 우선
         let thermal_index_for_primary = calculate_thermal_index(pillars, config);
+        let humidity_index_for_primary = calculate_humidity_index(pillars, config);
         let is_extreme_thermal = thermal_index_for_primary.abs() >= config.thermal.extreme
+            || humidity_index_for_primary.abs() >= config.thermal.extreme
             || (thermal_index_for_primary.abs() >= config.thermal.moderate
+                && strength.strength_score.abs() < 10.0)
+            || (humidity_index_for_primary.abs() >= config.thermal.moderate
                 && strength.strength_score.abs() < 10.0);
         let primary = if is_extreme_thermal
             && recommendations
@@ -224,20 +232,36 @@ impl YongshinAnalysis {
     }
 }
 
-/// 조후 지수 계산 (-100 ~ 100)
-/// - 음수: 춥고 습함 (Water, Metal, Yin-Earth)
-/// - 양수: 덥고 건조함 (Fire, Wood, Yang-Earth)
+/// 조후 지수(한난) 계산 (-100 ~ 100)
+/// - 음수: 춥다 (Water, Metal, Yin-Earth)
+/// - 양수: 덥다 (Fire, Wood, Yang-Earth)
 pub fn calculate_thermal_index(pillars: &FourPillars, _config: &AnalysisConfig) -> i32 {
     let mut score = 0;
 
-    // 월지의 영향력이 가장 큼 (40%)
-    match pillars.month.branch {
-        EarthlyBranch::Hai | EarthlyBranch::Zi | EarthlyBranch::Chou => score -= 40,
-        EarthlyBranch::Si | EarthlyBranch::Wu | EarthlyBranch::Wei => score += 40,
-        _ => {}
+    // 사령(당령) 분석을 통한 동적 스케일링
+    if let Ok(saryeong) = crate::core::branch_days::SaryeongAnalysis::from_pillars(pillars) {
+        let base_weight = match pillars.month.branch {
+            EarthlyBranch::Hai | EarthlyBranch::Zi | EarthlyBranch::Chou => -40,
+            EarthlyBranch::Si | EarthlyBranch::Wu | EarthlyBranch::Wei => 40,
+            EarthlyBranch::Yin | EarthlyBranch::Mao | EarthlyBranch::Chen => 10,
+            EarthlyBranch::Shen | EarthlyBranch::You | EarthlyBranch::Xu => -10,
+        };
+        let multiplier = if saryeong.part == "정기(正氣)" {
+            1.2
+        } else if saryeong.part == "중기(中氣)" {
+            1.0
+        } else {
+            0.8
+        };
+        score += (base_weight as f64 * multiplier) as i32;
+    } else {
+        match pillars.month.branch {
+            EarthlyBranch::Hai | EarthlyBranch::Zi | EarthlyBranch::Chou => score -= 40,
+            EarthlyBranch::Si | EarthlyBranch::Wu | EarthlyBranch::Wei => score += 40,
+            _ => {}
+        }
     }
 
-    // 전체 오행 분포 확인
     let stems = [
         pillars.year.stem,
         pillars.month.stem,
@@ -279,56 +303,169 @@ pub fn calculate_thermal_index(pillars: &FourPillars, _config: &AnalysisConfig) 
     score.clamp(-100, 100)
 }
 
-/// 조후 분석
+/// 조습 지수 계산 (-100 ~ 100)
+/// - 음수: 습하다 (Water, Wet-Earth, Wood)
+/// - 양수: 건조하다 (Fire, Dry-Earth, Metal)
+pub fn calculate_humidity_index(pillars: &FourPillars, _config: &AnalysisConfig) -> i32 {
+    let mut score = 0;
+
+    if let Ok(saryeong) = crate::core::branch_days::SaryeongAnalysis::from_pillars(pillars) {
+        let base_weight = match pillars.month.branch {
+            EarthlyBranch::Hai | EarthlyBranch::Zi | EarthlyBranch::Chou | EarthlyBranch::Chen => {
+                -40
+            }
+            EarthlyBranch::Si | EarthlyBranch::Wu | EarthlyBranch::Wei | EarthlyBranch::Xu => 40,
+            EarthlyBranch::Yin | EarthlyBranch::Mao => -10, // 목은 생명체라 기본적으로 습기를 머금음
+            EarthlyBranch::Shen | EarthlyBranch::You => 10, // 금은 건조함
+        };
+        let multiplier = if saryeong.part == "정기(正氣)" {
+            1.2
+        } else if saryeong.part == "중기(中氣)" {
+            1.0
+        } else {
+            0.8
+        };
+        score += (base_weight as f64 * multiplier) as i32;
+    } else {
+        match pillars.month.branch {
+            EarthlyBranch::Hai | EarthlyBranch::Zi | EarthlyBranch::Chou | EarthlyBranch::Chen => {
+                score -= 40
+            }
+            EarthlyBranch::Si | EarthlyBranch::Wu | EarthlyBranch::Wei | EarthlyBranch::Xu => {
+                score += 40
+            }
+            _ => {}
+        }
+    }
+
+    let stems = [
+        pillars.year.stem,
+        pillars.month.stem,
+        pillars.day.stem,
+        pillars.hour.stem,
+    ];
+    let branches = [
+        pillars.year.branch,
+        pillars.month.branch,
+        pillars.day.branch,
+        pillars.hour.branch,
+    ];
+
+    for s in stems {
+        use crate::core::stem::HeavenlyStem as S;
+        match s {
+            S::Bing | S::Ding => score += 15,
+            S::Geng | S::Xin => score += 10, // 금도 건조함에 기여
+            S::Ren | S::Gui => score -= 15,
+            S::Jia | S::Yi => score -= 5,
+            S::Wu => score += 10, // 무토는 조토
+            S::Ji => score -= 10, // 기토는 습토
+        }
+    }
+
+    for b in branches {
+        use EarthlyBranch as EB;
+        match b {
+            EB::Si | EB::Wu => score += 15,
+            EB::Wei | EB::Xu => score += 15, // 마른 흙
+            EB::Shen | EB::You => score += 10,
+            EB::Hai | EB::Zi => score -= 15,
+            EB::Chou | EB::Chen => score -= 15, // 습한 흙
+            EB::Yin | EB::Mao => score -= 5,
+        }
+    }
+
+    score.clamp(-100, 100)
+}
+
+/// 조후 분석 (한난 & 조습 2D 매트릭스)
 fn get_johu_analysis(
-    pillars: &FourPillars,
-    index: i32,
+    _pillars: &FourPillars,
+    thermal: i32,
+    humidity: i32,
     _config: &AnalysisConfig,
 ) -> Option<RecommendedYongshin> {
-    let month = pillars.month.branch;
+    let is_cold = thermal <= -30;
+    let is_hot = thermal >= 30;
+    let is_wet = humidity <= -30;
+    let is_dry = humidity >= 30;
 
-    if index <= -30
-        || matches!(
-            month,
-            EarthlyBranch::Hai | EarthlyBranch::Zi | EarthlyBranch::Chou
-        )
-    {
-        let mut reasons = vec![format!("조후 지수: {}", index)];
-        if matches!(
-            month,
-            EarthlyBranch::Hai | EarthlyBranch::Zi | EarthlyBranch::Chou
-        ) {
-            reasons.push(format!("동절기({}) 출생", month.hangul()));
-        }
+    let reasons = vec![
+        format!("한난 지수: {}", thermal),
+        format!("조습 지수: {}", humidity),
+    ];
+
+    if is_cold && is_wet {
+        Some(RecommendedYongshin {
+            yongshin_type: YongshinType::Johu,
+            element: Element::Fire,
+            summary: "한습(寒濕)한 사주를 덥히고 말리는 火 용신".to_string(),
+            description: "사주가 매우 차갑고 습하므로, 불(火)과 마른 흙(燥土)의 기운이 절실합니다."
+                .to_string(),
+            reasons,
+        })
+    } else if is_hot && is_dry {
+        Some(RecommendedYongshin {
+            yongshin_type: YongshinType::Johu,
+            element: Element::Water,
+            summary: "조열(燥熱)한 사주를 식히고 적시는 水 용신".to_string(),
+            description:
+                "사주가 매우 뜨겁고 건조하므로, 물(水)과 습한 흙(濕土)의 기운이 절실합니다."
+                    .to_string(),
+            reasons,
+        })
+    } else if is_hot && is_wet {
+        Some(RecommendedYongshin {
+            yongshin_type: YongshinType::Johu,
+            element: Element::Metal, // 금이나 수
+            summary: "습열(濕熱)한 사주를 씻어내리는 金 용신".to_string(),
+            description: "사주가 뜨겁고 습하여 불쾌지수가 높으므로, 금(金)이나 수(水)의 기운으로 씻어내려야 합니다.".to_string(),
+            reasons,
+        })
+    } else if is_cold && is_dry {
+        Some(RecommendedYongshin {
+            yongshin_type: YongshinType::Johu,
+            element: Element::Wood, // 목이나 화
+            summary: "한조(寒燥)한 사주에 생기를 부여하는 木 용신".to_string(),
+            description:
+                "사주가 춥고 메말라 있으므로, 생기를 돋우는 목(木)이나 화(火)의 기운이 필요합니다."
+                    .to_string(),
+            reasons,
+        })
+    } else if is_cold {
         Some(RecommendedYongshin {
             yongshin_type: YongshinType::Johu,
             element: Element::Fire,
             summary: "한랭한 사주를 따뜻하게 하는 火 용신".to_string(),
-            description:
-                "사주의 기운이 차갑고 습하므로 불(火)의 기운으로 온도를 조절해야 발복합니다."
-                    .to_string(),
+            description: "사주의 기운이 차가우므로 불(火)의 기운으로 온도를 조절해야 발복합니다."
+                .to_string(),
             reasons,
         })
-    } else if index >= 30
-        || matches!(
-            month,
-            EarthlyBranch::Si | EarthlyBranch::Wu | EarthlyBranch::Wei
-        )
-    {
-        let mut reasons = vec![format!("조후 지수: {}", index)];
-        if matches!(
-            month,
-            EarthlyBranch::Si | EarthlyBranch::Wu | EarthlyBranch::Wei
-        ) {
-            reasons.push(format!("하절기({}) 출생", month.hangul()));
-        }
+    } else if is_hot {
         Some(RecommendedYongshin {
             yongshin_type: YongshinType::Johu,
             element: Element::Water,
             summary: "조열한 사주를 시원하게 하는 水 용신".to_string(),
+            description: "사주의 기운이 뜨거우므로 물(水)의 기운으로 온도를 낮추어야 발복합니다."
+                .to_string(),
+            reasons,
+        })
+    } else if is_wet {
+        Some(RecommendedYongshin {
+            yongshin_type: YongshinType::Johu,
+            element: Element::Fire, // 습하면 마르게
+            summary: "습한 사주를 뽀송하게 말리는 火 용신".to_string(),
             description:
-                "사주의 기운이 뜨겁고 건조하므로 물(水)의 기운으로 온도를 낮추어야 발복합니다."
+                "사주에 습기가 과다하므로 이를 말려주는 볕이나 마른 흙(燥土)이 필요합니다."
                     .to_string(),
+            reasons,
+        })
+    } else if is_dry {
+        Some(RecommendedYongshin {
+            yongshin_type: YongshinType::Johu,
+            element: Element::Water, // 건조하면 적시게
+            summary: "건조한 사주를 촉촉하게 적시는 水 용신".to_string(),
+            description: "사주가 메말라 있으므로 물기를 공급해주어야 생기가 돕니다.".to_string(),
             reasons,
         })
     } else {
@@ -563,5 +700,28 @@ fn get_eokbu_explainability(
                 reasons
             )
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::pillars::SajuInput;
+
+    #[test]
+    fn test_johu_thermal_and_humidity() {
+        let input = SajuInput::new_solar(2024, 1, 1, 12, 0); // 한겨울 한낮
+        let pillars = FourPillars::calculate(&input).unwrap();
+        let thermal = calculate_thermal_index(&pillars, &AnalysisConfig::default());
+        let humidity = calculate_humidity_index(&pillars, &AnalysisConfig::default());
+
+        // 겨울 자월이므로 춥고, 수는 기본적으로 습함.
+        assert!(thermal < 0);
+        assert!(humidity < 0);
+
+        let johu = get_johu_analysis(&pillars, thermal, humidity, &AnalysisConfig::default());
+        assert!(johu.is_some());
+        let johu = johu.unwrap();
+        assert_eq!(johu.element, Element::Fire);
     }
 }
