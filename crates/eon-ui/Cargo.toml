@@ -21,7 +21,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = { workspace = true }
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.13", features = ["json"] }
 wasm-logger = "0.2"
 log = "0.4"
 getrandom = { version = "0.2", features = ["js"] }
