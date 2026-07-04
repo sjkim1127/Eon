@@ -897,28 +897,6 @@ pub fn VedicTab() -> Element {
     let mut expanded_antardasha = use_signal(|| Option::<usize>::None);
     let copied_compat = use_signal(|| false);
 
-
-    let run_analysis = move |_| {
-        spawn(async move {
-            state.vedic.write().status = TaskStatus::Loading;
-            let form = state.form.read().clone();
-            let input = VedicAnalysisInput::new(
-                form.to_analysis_input(),
-                Some(false), None,
-            );
-            match facade::analyze_vedic(input) {
-                Ok(res) => {
-                    state.vedic.write().data = Some(res);
-                    state.vedic.write().status = TaskStatus::Success;
-                }
-                Err(e) => {
-                    state.vedic.write().error = Some(e.to_string());
-                    state.vedic.write().status = TaskStatus::Error(e.to_string());
-                }
-            }
-        });
-    };
-
     let run_compatibility = move |_| {
         spawn(async move {
             state.compat.write().status = TaskStatus::Loading;
@@ -954,11 +932,6 @@ pub fn VedicTab() -> Element {
             div { class: "flex justify-between items-center",
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-blue-200 to-indigo-400 bg-clip-text text-transparent",
                     "{t(locale, TK::SectionVedicChart)}"
-                }
-                button {
-                    class: "px-5 py-2.5 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 rounded-xl font-semibold text-white shadow-lg shadow-blue-900/30 transition-all duration-200 active:scale-95",
-                    onclick: run_analysis,
-                    "{t(locale, TK::BtnCalculate)} 🔭"
                 }
             }
 

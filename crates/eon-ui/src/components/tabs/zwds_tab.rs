@@ -58,6 +58,15 @@ pub fn ZwdsTab() -> Element {
         }
     };
 
+    // Auto-run analysis when form or target_year changes
+    use_effect(move || {
+        let form = state.form.read().clone();
+        let year = *target_year.read();
+        if form.year > 0 {
+            run_analysis_with_year(year);
+        }
+    });
+
     let zwds_status = state.zwds.read().status.clone();
     let zwds_data = state.zwds.read().data.clone();
 
@@ -67,57 +76,63 @@ pub fn ZwdsTab() -> Element {
             BirthForm {}
 
             // 2. 타이틀 및 분석 버튼
-            div { class: "flex justify-between items-center border-b border-slate-800/40 pb-4 flex-wrap gap-4",
-                h2 { class: "text-2xl font-bold bg-gradient-to-r from-violet-300 to-indigo-400 bg-clip-text text-transparent",
-                    "{t(locale, TK::ZwdsReportTitle)}"
+            div { class: "flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-slate-900/40 border border-slate-800/60 rounded-3xl backdrop-blur-md",
+                div { class: "space-y-1.5",
+                    h2 { class: "text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-300",
+                        "{t(locale, TK::ZwdsReportTitle)}"
+                    }
+                    p { class: "text-sm text-slate-400 font-medium",
+                        match locale {
+                            Locale::Ko => "자미두수 성반을 분석하고 대한 및 유년 운세를 도출합니다.",
+                            Locale::Zh => "分析紫微斗数命盘，推算大限及流年运势。",
+                            Locale::En => "Analyze ZWDS chart, deduce Da-Xian and Liu-Nian fortunes.",
+                            Locale::Ru => "Анализ карты Цзы Вэй Доу Шу, расчет периодов Да-Сянь и Лю-Нянь.",
+                        }
+                    }
                 }
-                div { class: "flex items-center gap-4 flex-wrap",
-                    // 연도 조절기 (Year Controller)
-                    div { class: "flex items-center gap-2.5 bg-slate-900/60 border border-slate-800/60 px-3.5 py-1.5 rounded-2xl shadow-inner",
+
+                // 컨트롤바: 대상 연도 조절 및 새로고침 버튼
+                div { class: "flex items-center gap-3",
+                    div { class: "flex items-center bg-slate-950/80 border border-slate-800/80 px-3 py-1.5 rounded-xl gap-2",
+                        span { class: "text-xs font-bold text-slate-400 uppercase tracking-wider",
+                            match locale {
+                                Locale::Ko => "대상 연도",
+                                Locale::Zh => "目标年份",
+                                Locale::En => "Target Year",
+                                Locale::Ru => "Целевой год",
+                            }
+                        }
                         button {
                             class: "text-slate-400 hover:text-white transition-colors cursor-pointer text-xs font-bold px-1.5 py-0.5 hover:bg-slate-800 rounded-md",
                             onclick: move |_| update_year(*target_year.read() - 1),
                             "◀"
                         }
-                        input {
-                            class: "w-14 bg-transparent text-center text-slate-200 font-bold text-sm border-none focus:outline-none focus:ring-0 p-0",
-                            r#type: "number",
-                            value: "{target_year}",
-                            oninput: move |e| {
-                                if let Ok(y) = e.value().parse::<i32>() {
-                                    update_year(y);
-                                }
-                            }
-                        }
-                        span { class: "text-xs text-slate-500 -ml-1.5 font-medium",
-                            match locale {
-                                Locale::Ko => "년",
-                                Locale::Zh => "年",
-                                Locale::En => "",
-                                Locale::Ru => "г.",
-                            }
+                        span { class: "text-sm font-bold text-violet-400 font-mono min-w-[3.5rem] text-center",
+                            "{target_year}년"
                         }
                         button {
                             class: "text-slate-400 hover:text-white transition-colors cursor-pointer text-xs font-bold px-1.5 py-0.5 hover:bg-slate-800 rounded-md",
                             onclick: move |_| update_year(*target_year.read() + 1),
                             "▶"
                         }
-                        button {
-                            class: "px-2 py-0.5 bg-slate-850 hover:bg-slate-800 rounded-md text-[10px] font-bold text-slate-300 transition-colors cursor-pointer border border-slate-700/50 ml-1 active:scale-95",
-                            onclick: move |_| update_year(2026),
-                            match locale {
-                                Locale::Ko => "올해",
-                                Locale::Zh => "今年",
-                                Locale::En => "Today",
-                                Locale::Ru => "Сегодня",
-                            }
-                        }
                     }
 
                     button {
-                        class: "px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl font-semibold text-white shadow-lg shadow-violet-900/30 transition-all duration-200 active:scale-95 cursor-pointer",
+                        class: "p-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center active:scale-95",
                         onclick: move |_| run_analysis_with_year(*target_year.read()),
-                        "{t(locale, TK::ZwdsAnalyzeBtn)}"
+                        title: "{t(locale, TK::ZwdsAnalyzeBtn)}",
+                        svg {
+                            class: "w-5 h-5",
+                            fill: "none",
+                            stroke: "currentColor",
+                            view_box: "0 0 24 24",
+                            path {
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "2",
+                                d: "M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M21 3v5h-5"
+                            }
+                        }
                     }
                 }
             }

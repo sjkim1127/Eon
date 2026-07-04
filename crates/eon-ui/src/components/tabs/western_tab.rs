@@ -62,31 +62,36 @@ pub fn WesternTab() -> Element {
     let mut selected_house_sys = use_signal(|| "P".to_string());
     let mut copied_feedback = use_signal(|| false);
 
-    // 분석 실행 함수
-    let run_analysis = move |house_sys: String| {
-        spawn(async move {
-            state.western.write().status = TaskStatus::Loading;
-            let form = state.form.read().clone();
+    // Reactive trigger for manual analysis runs
+    let mut analysis_trigger = use_signal(|| 0);
 
-            let base_input = form.to_analysis_input();
+    // Auto-run or manually triggered analysis when form, house system, or trigger changes
+    let state_cloned = state.clone();
+    use_effect(move || {
+        let form = state_cloned.form.read().clone();
+        let house_sys = selected_house_sys.read().clone();
+        let _trig = *analysis_trigger.read();
+        
+        if form.year > 0 {
+            let mut state = state_cloned.clone();
+            spawn(async move {
+                state.western.write().status = TaskStatus::Loading;
+                let base_input = form.to_analysis_input();
+                let west_input = WesternAnalysisInput::new(base_input, house_sys);
 
-            let west_input = WesternAnalysisInput {
-                base: base_input,
-                house_system: house_sys,
-            };
-
-            match facade::analyze_western(west_input) {
-                Ok(res) => {
-                    state.western.write().data = Some(res);
-                    state.western.write().status = TaskStatus::Success;
+                match facade::analyze_western(west_input) {
+                    Ok(res) => {
+                        state.western.write().data = Some(res);
+                        state.western.write().status = TaskStatus::Success;
+                    }
+                    Err(e) => {
+                        state.western.write().error = Some(e.to_string());
+                        state.western.write().status = TaskStatus::Error(e.to_string());
+                    }
                 }
-                Err(e) => {
-                    state.western.write().error = Some(e.to_string());
-                    state.western.write().status = TaskStatus::Error(e.to_string());
-                }
-            }
-        });
-    };
+            });
+        }
+    });
 
     rsx! {
         div { class: "space-y-6 animate-in fade-in duration-700",
@@ -110,7 +115,8 @@ pub fn WesternTab() -> Element {
                                 selected_house_sys.set(val.clone());
                                 // 데이터가 이미 로드된 적이 있는 경우 자동 재조회
                                 if let TaskStatus::Success = &state.western.read().status {
-                                    run_analysis(val);
+                                    let current = *analysis_trigger.peek();
+                                    analysis_trigger.set(current + 1);
                                 }
                             },
                             option { value: "P", "{t(locale, TK::WestPlacidus)}" }
@@ -155,9 +161,24 @@ pub fn WesternTab() -> Element {
                     }
 
                     button {
-                        class: "px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl font-semibold text-white shadow-lg shadow-purple-900/30 transition-all duration-200 active:scale-95 cursor-pointer text-sm",
-                        onclick: move |_| run_analysis(selected_house_sys.read().clone()),
-                        "🔮 {t(locale, TK::FormAnalyzeBtn)}"
+                        class: "p-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center active:scale-95",
+                        onclick: move |_| {
+                            let current = *analysis_trigger.peek();
+                            analysis_trigger.set(current + 1);
+                        },
+                        title: "{t(locale, TK::FormAnalyzeBtn)}",
+                        svg {
+                            class: "w-5 h-5",
+                            fill: "none",
+                            stroke: "currentColor",
+                            view_box: "0 0 24 24",
+                            path {
+                                stroke_linecap: "round",
+                                stroke_linejoin: "round",
+                                stroke_width: "2",
+                                d: "M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M21 3v5h-5"
+                            }
+                        }
                     }
                 }
             }

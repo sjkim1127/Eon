@@ -1,10 +1,183 @@
 use dioxus::prelude::*;
 use crate::router::Route;
-use crate::store::AnalysisState;
+use crate::store::{AnalysisState, TaskStatus};
 use crate::i18n::{t, Locale, TK};
+use eon_service::facade;
 
 #[component]
 pub fn AppLayout() -> Element {
+    let mut state = use_context::<AnalysisState>();
+
+    // state.form 이 변경되면 모든 분석 실시간 자동 비동기 수행
+    use_effect(move || {
+        let form = state.form.read().clone();
+
+        // 1. Saju (Simulation 포함)
+        spawn({
+            let mut state = state.clone();
+            let form = form.clone();
+            async move {
+                state.saju.write().status = TaskStatus::Loading;
+                let saju_input = eon_service::dto::SajuAnalysisInput::new(
+                    form.to_analysis_input(),
+                    form.is_male,
+                    form.use_night_rat_hour,
+                    Some(false),
+                );
+                match facade::analyze_saju(saju_input) {
+                    Ok(res) => {
+                        state.saju.write().data = Some(res.clone());
+                        state.saju.write().status = TaskStatus::Success;
+                        check_and_run_tier(state.clone(), Some(res), None);
+                    }
+                    Err(e) => {
+                        state.saju.write().error = Some(e.to_string());
+                        state.saju.write().status = TaskStatus::Error(e.to_string());
+                    }
+                }
+            }
+        });
+
+        // 2. Vedic
+        spawn({
+            let mut state = state.clone();
+            let form = form.clone();
+            async move {
+                state.vedic.write().status = TaskStatus::Loading;
+                let vedic_input = eon_service::dto::VedicAnalysisInput::new(
+                    form.to_analysis_input(),
+                    Some(false),
+                    None,
+                );
+                match facade::analyze_vedic(vedic_input) {
+                    Ok(res) => {
+                        state.vedic.write().data = Some(res.clone());
+                        state.vedic.write().status = TaskStatus::Success;
+                        check_and_run_tier(state.clone(), None, Some(res));
+                    }
+                    Err(e) => {
+                        state.vedic.write().error = Some(e.to_string());
+                        state.vedic.write().status = TaskStatus::Error(e.to_string());
+                    }
+                }
+            }
+        });
+
+        // 3. Transit
+        spawn({
+            let mut state = state.clone();
+            let form = form.clone();
+            async move {
+                state.transit.write().status = TaskStatus::Loading;
+                let saju_input = eon_service::dto::SajuAnalysisInput::new(
+                    form.to_analysis_input(),
+                    form.is_male,
+                    form.use_night_rat_hour,
+                    Some(false),
+                );
+                let transit_input = eon_service::dto::TransitAnalysisInput::new(saju_input, None);
+                match facade::analyze_transit(transit_input) {
+                    Ok(res) => {
+                        state.transit.write().data = Some(res);
+                        state.transit.write().status = TaskStatus::Success;
+                    }
+                    Err(e) => {
+                        state.transit.write().error = Some(e.to_string());
+                        state.transit.write().status = TaskStatus::Error(e.to_string());
+                    }
+                }
+            }
+        });
+
+        // 4. ZWDS
+        spawn({
+            let mut state = state.clone();
+            let form = form.clone();
+            async move {
+                state.zwds.write().status = TaskStatus::Loading;
+                let base = form.to_analysis_input();
+                let zwds_input = eon_service::dto::ZwdsAnalysisInput::new(base, form.is_male, None);
+                match facade::analyze_zwds(zwds_input) {
+                    Ok(res) => {
+                        state.zwds.write().data = Some(res);
+                        state.zwds.write().status = TaskStatus::Success;
+                    }
+                    Err(e) => {
+                        state.zwds.write().error = Some(e.to_string());
+                        state.zwds.write().status = TaskStatus::Error(e.to_string());
+                    }
+                }
+            }
+        });
+
+        // 5. IChing (주역 하락수)
+        spawn({
+            let mut state = state.clone();
+            let form = form.clone();
+            async move {
+                state.iching.write().status = TaskStatus::Loading;
+                let saju_input = eon_service::dto::SajuAnalysisInput::new(
+                    form.to_analysis_input(),
+                    form.is_male,
+                    form.use_night_rat_hour,
+                    Some(false),
+                );
+                match facade::analyze_iching(saju_input) {
+                    Ok(res) => {
+                        state.iching.write().data = Some(res);
+                        state.iching.write().status = TaskStatus::Success;
+                    }
+                    Err(e) => {
+                        state.iching.write().error = Some(e.to_string());
+                        state.iching.write().status = TaskStatus::Error(e.to_string());
+                    }
+                }
+            }
+        });
+
+        // 6. Western (서양 점성학)
+        spawn({
+            let mut state = state.clone();
+            let form = form.clone();
+            async move {
+                state.western.write().status = TaskStatus::Loading;
+                let base = form.to_analysis_input();
+                let western_input = eon_service::dto::WesternAnalysisInput::new(base, "Placidus".to_string());
+                match facade::analyze_western(western_input) {
+                    Ok(res) => {
+                        state.western.write().data = Some(res);
+                        state.western.write().status = TaskStatus::Success;
+                    }
+                    Err(e) => {
+                        state.western.write().error = Some(e.to_string());
+                        state.western.write().status = TaskStatus::Error(e.to_string());
+                    }
+                }
+            }
+        });
+
+        // 7. Human Design
+        spawn({
+            let mut state = state.clone();
+            let form = form.clone();
+            async move {
+                state.human_design.write().status = TaskStatus::Loading;
+                let base = form.to_analysis_input();
+                let hd_input = eon_service::dto::HumanDesignAnalysisInput::new(base);
+                match facade::analyze_human_design(hd_input) {
+                    Ok(res) => {
+                        state.human_design.write().data = Some(res);
+                        state.human_design.write().status = TaskStatus::Success;
+                    }
+                    Err(e) => {
+                        state.human_design.write().error = Some(e.to_string());
+                        state.human_design.write().status = TaskStatus::Error(e.to_string());
+                    }
+                }
+            }
+        });
+    });
+
     rsx! {
         div { class: "flex h-screen w-full bg-brand-950 text-slate-100 relative overflow-hidden",
             // Celestial background nebula glows
@@ -16,6 +189,43 @@ pub fn AppLayout() -> Element {
                 div { class: "p-6 w-full max-w-6xl mx-auto space-y-6 flex-1",
                     Outlet::<Route> {}
                 }
+            }
+        }
+    }
+}
+
+/// 사주와 베딕 데이터가 둘 다 성공 상태일 때 통합 운명 티어 분석을 연쇄 수행합니다.
+fn check_and_run_tier(
+    mut state: AnalysisState,
+    saju_res_opt: Option<eon_service::dto::SajuAnalysisOutput>,
+    vedic_res_opt: Option<eon_service::dto::VedicAnalysisOutput>,
+) {
+    let saju_res = saju_res_opt.or_else(|| {
+        if matches!(state.saju.read().status, TaskStatus::Success) {
+            state.saju.read().data.clone()
+        } else {
+            None
+        }
+    });
+
+    let vedic_res = vedic_res_opt.or_else(|| {
+        if matches!(state.vedic.read().status, TaskStatus::Success) {
+            state.vedic.read().data.clone()
+        } else {
+            None
+        }
+    });
+
+    if let (Some(s), Some(v)) = (saju_res, vedic_res) {
+        state.tier.write().status = TaskStatus::Loading;
+        match facade::analyze_destiny_tier(s, v, None) {
+            Ok(res) => {
+                state.tier.write().data = Some(res);
+                state.tier.write().status = TaskStatus::Success;
+            }
+            Err(e) => {
+                state.tier.write().error = Some(e.to_string());
+                state.tier.write().status = TaskStatus::Error(e.to_string());
             }
         }
     }

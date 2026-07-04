@@ -32,36 +32,45 @@ pub fn StrengthTab() -> Element {
     let mut state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
 
-    let run_analysis = move |_| {
-        spawn(async move {
-            state.saju.write().status = TaskStatus::Loading;
-            state.vedic.write().status = TaskStatus::Loading;
+    // Reactive trigger for manual analysis runs
+    let mut analysis_trigger = use_signal(|| 0);
 
-            let form = state.form.read().clone();
-            let base = form.to_analysis_input();
+    // Auto-run or manually triggered analysis when form or trigger changes
+    let state_cloned = state.clone();
+    use_effect(move || {
+        let form = state_cloned.form.read().clone();
+        let _trig = *analysis_trigger.read();
 
-            // 병렬 계산 (사주 먼저, 베딕 이후)
-            match facade::analyze_saju(SajuAnalysisInput::new(base.clone(), form.is_male, form.use_night_rat_hour, Some(false))) {
-                Ok(res) => {
-                    state.saju.write().data = Some(res);
-                    state.saju.write().status = TaskStatus::Success;
-                }
-                Err(e) => {
-                    state.saju.write().status = TaskStatus::Error(e.to_string());
-                }
-            }
+        if form.year > 0 {
+            let mut state = state_cloned.clone();
+            spawn(async move {
+                state.saju.write().status = TaskStatus::Loading;
+                state.vedic.write().status = TaskStatus::Loading;
+                let base = form.to_analysis_input();
 
-            match facade::analyze_vedic(VedicAnalysisInput::new(base, Some(false), None)) {
-                Ok(res) => {
-                    state.vedic.write().data = Some(res);
-                    state.vedic.write().status = TaskStatus::Success;
+                // 병렬 계산 (사주 먼저, 베딕 이후)
+                match facade::analyze_saju(SajuAnalysisInput::new(base.clone(), form.is_male, form.use_night_rat_hour, Some(false))) {
+                    Ok(res) => {
+                        state.saju.write().data = Some(res);
+                        state.saju.write().status = TaskStatus::Success;
+                    }
+                    Err(e) => {
+                        state.saju.write().status = TaskStatus::Error(e.to_string());
+                    }
                 }
-                Err(e) => {
-                    state.vedic.write().status = TaskStatus::Error(e.to_string());
+
+                match facade::analyze_vedic(VedicAnalysisInput::new(base, Some(false), None)) {
+                    Ok(res) => {
+                        state.vedic.write().data = Some(res);
+                        state.vedic.write().status = TaskStatus::Success;
+                    }
+                    Err(e) => {
+                        state.vedic.write().status = TaskStatus::Error(e.to_string());
+                    }
                 }
-            }
-        });
-    };
+            });
+        }
+    });
 
     let is_loading = matches!(state.saju.read().status, TaskStatus::Loading)
         || matches!(state.vedic.read().status, TaskStatus::Loading);
@@ -77,10 +86,25 @@ pub fn StrengthTab() -> Element {
                     "{t(locale, TK::SectionStrength)}"
                 }
                 button {
-                    class: "px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-green-700 hover:from-emerald-600 hover:to-green-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-200 active:scale-95 disabled:opacity-50",
-                    onclick: run_analysis,
+                    class: "p-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center active:scale-95 disabled:opacity-50",
+                    onclick: move |_| {
+                        let current = *analysis_trigger.peek();
+                        analysis_trigger.set(current + 1);
+                    },
                     disabled: is_loading,
-                    if is_loading { "{t(locale, TK::StatusLoading)}" } else { "{t(locale, TK::BtnAnalyze)} 💪" }
+                    title: "{t(locale, TK::BtnAnalyze)}",
+                    svg {
+                        class: "w-5 h-5",
+                        fill: "none",
+                        stroke: "currentColor",
+                        view_box: "0 0 24 24",
+                        path {
+                            stroke_linecap: "round",
+                            stroke_linejoin: "round",
+                            stroke_width: "2",
+                            d: "M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M21 3v5h-5"
+                        }
+                    }
                 }
             }
 
