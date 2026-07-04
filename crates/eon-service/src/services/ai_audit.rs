@@ -1,6 +1,6 @@
+use crate::birth::prepare_birth_context;
 use crate::dto::{AiAuditOutput, AnalysisMeta, SajuAnalysisInput};
 use crate::error::ServiceError;
-use crate::birth::prepare_birth_context;
 use eon_ai::DestinyAIAuditor;
 use eon_core::Gender;
 use eon_saju::core::pillars::{FourPillars, SajuInput};

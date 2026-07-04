@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
-use crate::engine::vm::LifeFrame;
 use crate::engine::emulator::LifePathReport;
+use crate::engine::vm::LifeFrame;
+use serde::{Deserialize, Serialize};
 
 /// TTD 분석 결과: 근본 원인 (Root Cause)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,14 +25,24 @@ impl DestinyDebugger {
     /// Destiny Backtrace: 특정 시점의 태그/상태의 근본 원인을 역방향 탐색
     pub fn backtrace(report: &LifePathReport, age: u32, target_tag: &str) -> Option<RootCause> {
         let frames = &report.frames;
-        if age as usize >= frames.len() { return None; }
+        if age as usize >= frames.len() {
+            return None;
+        }
 
         // 현재 시점에 해당 태그가 없으면 분석 불가
         let current_frame = &frames[age as usize];
-        let exists = current_frame.tags.iter().any(|t| t.contains_pattern(target_tag)) || 
-                     current_frame.signatures.iter().any(|s| s.name.contains(target_tag) || s.id.contains(target_tag));
-        
-        if !exists { return None; }
+        let exists = current_frame
+            .tags
+            .iter()
+            .any(|t| t.contains_pattern(target_tag))
+            || current_frame
+                .signatures
+                .iter()
+                .any(|s| s.name.contains(target_tag) || s.id.contains(target_tag));
+
+        if !exists {
+            return None;
+        }
 
         let mut root_cause_age = age;
         let mut current_age = age as i32;
@@ -40,9 +50,12 @@ impl DestinyDebugger {
         // 역방향으로 탐색하며 해당 태그가 처음 나타난 시점(Entry Point)을 찾음
         while current_age >= 0 {
             let frame = &frames[current_age as usize];
-            let has_tag = frame.tags.iter().any(|t| t.contains_pattern(target_tag)) || 
-                          frame.signatures.iter().any(|s| s.name.contains(target_tag) || s.id.contains(target_tag));
-            
+            let has_tag = frame.tags.iter().any(|t| t.contains_pattern(target_tag))
+                || frame
+                    .signatures
+                    .iter()
+                    .any(|s| s.name.contains(target_tag) || s.id.contains(target_tag));
+
             if has_tag {
                 root_cause_age = current_age as u32;
             } else {
@@ -84,7 +97,7 @@ impl DestinyDebugger {
             let fb = &report_b.frames[i];
 
             let score_delta = fb.score - fa.score;
-            
+
             let mut added_tags = Vec::new();
             for tag in &fb.tags {
                 if !fa.tags.iter().any(|t| t == tag) {
@@ -115,8 +128,12 @@ impl DestinyDebugger {
 
     /// Time-Travel Breakpoints: 특정 조건을 만족하는 시점들 탐색
     pub fn find_breakpoints<F>(report: &LifePathReport, condition: F) -> Vec<u32>
-    where F: Fn(&LifeFrame) -> bool {
-        report.frames.iter()
+    where
+        F: Fn(&LifeFrame) -> bool,
+    {
+        report
+            .frames
+            .iter()
             .filter(|f| condition(f))
             .map(|f| f.age)
             .collect()

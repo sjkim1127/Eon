@@ -1,7 +1,7 @@
-use crate::dto::{AnalysisMeta, LifeFrameDto, TransitAnalysisInput, TransitAnalysisOutput};
-use crate::error::ServiceError;
 use crate::birth::prepare_birth_context;
 use crate::context::{calculate_current_age, resolve_analysis_local_datetime};
+use crate::dto::{AnalysisMeta, LifeFrameDto, TransitAnalysisInput, TransitAnalysisOutput};
+use crate::error::ServiceError;
 use eon_core::Gender;
 use eon_saju::analysis::periodic_luck::{MonthlyLuck, YearlyLuck};
 use eon_saju::core::pillars::{FourPillars, SajuInput};
@@ -42,7 +42,8 @@ pub fn analyze(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, Ser
 
     // 일운/시운 계산
     let daily_luck = eon_saju::analysis::periodic_luck::DailyLuck::calculate(cy, cm, cd, &pillars);
-    let hourly_luck = eon_saju::analysis::periodic_luck::HourlyLuck::calculate(cy, cm, cd, ch, &pillars);
+    let hourly_luck =
+        eon_saju::analysis::periodic_luck::HourlyLuck::calculate(cy, cm, cd, ch, &pillars);
 
     // 나이 계산
     let current_age = calculate_current_age(

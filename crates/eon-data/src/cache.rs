@@ -1,6 +1,6 @@
-use serde::{Serialize, Deserialize};
+use chrono::{DateTime, Datelike, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use chrono::{DateTime, Utc, Datelike};
 use std::sync::OnceLock;
 
 /// 절기 시각 테이블 (1년치)
@@ -33,14 +33,16 @@ pub struct ManseryukCache {
 impl ManseryukCache {
     /// 바이너리 데이터로부터 캐시 로드
     pub fn from_binary(bytes: &[u8]) -> Result<Self, crate::error::DataError> {
-        bincode::deserialize(bytes).map_err(|e| crate::error::DataError::Deserialization(e.to_string()))
+        bincode::deserialize(bytes)
+            .map_err(|e| crate::error::DataError::Deserialization(e.to_string()))
     }
 
     /// 특정 연도/절기의 시각 조회
     pub fn get_solar_term(&self, year: i32, term_idx: u8) -> Option<DateTime<Utc>> {
         self.years.get(&year).and_then(|table| {
             // Terms are stored in sorted order by index; use binary search for O(log n) lookup.
-            table.terms
+            table
+                .terms
                 .binary_search_by_key(&term_idx, |(idx, _)| *idx)
                 .ok()
                 .map(|i| table.terms[i].1)
@@ -54,7 +56,9 @@ impl ManseryukCache {
 
         // Terms are in chronological order; find the latest term that started at or before `time`
         // using binary search via partition_point (O(log n) instead of O(n)).
-        let pos = table.terms.partition_point(|(_, term_time)| *term_time <= time);
+        let pos = table
+            .terms
+            .partition_point(|(_, term_time)| *term_time <= time);
         if pos == 0 {
             // `time` is before all solar terms of this year. This edge case is rare in practice;
             // match the original behavior of returning index 0 (or the first term's index if stored
@@ -69,8 +73,16 @@ impl ManseryukCache {
     pub fn get_lunar_date(&self, solar_date: chrono::NaiveDate) -> Option<(i32, u32, u32, bool)> {
         let year = solar_date.year();
         // Current year and previous year data (lunar month 1 often starts in February).
-        let prev_months = self.lunar_months.get(&(year - 1)).map(|v| v.as_slice()).unwrap_or(&[]);
-        let curr_months = self.lunar_months.get(&year).map(|v| v.as_slice()).unwrap_or(&[]);
+        let prev_months = self
+            .lunar_months
+            .get(&(year - 1))
+            .map(|v| v.as_slice())
+            .unwrap_or(&[]);
+        let curr_months = self
+            .lunar_months
+            .get(&year)
+            .map(|v| v.as_slice())
+            .unwrap_or(&[]);
 
         // Each slice is sorted by new_moon_date; use binary search (partition_point) to find the
         // latest record whose new_moon_date <= solar_date in each slice, then pick the most recent.
@@ -78,11 +90,25 @@ impl ManseryukCache {
         let prev_pos = prev_months.partition_point(|r| r.new_moon_date <= solar_date);
         let curr_pos = curr_months.partition_point(|r| r.new_moon_date <= solar_date);
 
-        let prev_best = if prev_pos > 0 { Some(&prev_months[prev_pos - 1]) } else { None };
-        let curr_best = if curr_pos > 0 { Some(&curr_months[curr_pos - 1]) } else { None };
+        let prev_best = if prev_pos > 0 {
+            Some(&prev_months[prev_pos - 1])
+        } else {
+            None
+        };
+        let curr_best = if curr_pos > 0 {
+            Some(&curr_months[curr_pos - 1])
+        } else {
+            None
+        };
 
         let record = match (prev_best, curr_best) {
-            (Some(a), Some(b)) => if b.new_moon_date >= a.new_moon_date { b } else { a },
+            (Some(a), Some(b)) => {
+                if b.new_moon_date >= a.new_moon_date {
+                    b
+                } else {
+                    a
+                }
+            }
             (Some(a), None) => a,
             (None, Some(b)) => b,
             (None, None) => return None,

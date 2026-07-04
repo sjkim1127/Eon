@@ -1,6 +1,6 @@
-use dioxus::prelude::*;
+use crate::i18n::{format_weight_score, t, TK};
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, format_weight_score};
+use dioxus::prelude::*;
 use eon_service::dto::{SajuAnalysisInput, VedicAnalysisInput};
 use eon_service::facade;
 
@@ -8,7 +8,7 @@ use crate::components::shared::birth_form::BirthForm;
 
 #[component]
 pub fn TierTab() -> Element {
-    let mut state = use_context::<AnalysisState>();
+    let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
 
     // Reactive trigger for manual analysis runs
@@ -28,12 +28,17 @@ pub fn TierTab() -> Element {
             let mut state = state_cloned.clone();
             spawn(async move {
                 state.tier.write().status = TaskStatus::Loading;
-                
+
                 let base_input = form.to_analysis_input();
 
-                let saju_input = SajuAnalysisInput::new(base_input.clone(), form.is_male, form.use_night_rat_hour, Some(false));
+                let saju_input = SajuAnalysisInput::new(
+                    base_input.clone(),
+                    form.is_male,
+                    form.use_night_rat_hour,
+                    Some(false),
+                );
                 let vedic_input = VedicAnalysisInput::new(base_input.clone(), Some(false), None);
-                
+
                 // 병렬이 좋지만 간소화를 위해 순차 실행
                 let saju_res = match facade::analyze_saju(saju_input) {
                     Ok(r) => r,
@@ -43,7 +48,7 @@ pub fn TierTab() -> Element {
                         return;
                     }
                 };
-                
+
                 let vedic_res = match facade::analyze_vedic(vedic_input) {
                     Ok(r) => r,
                     Err(e) => {
@@ -52,7 +57,7 @@ pub fn TierTab() -> Element {
                         return;
                     }
                 };
-                
+
                 match facade::analyze_destiny_tier(saju_res, vedic_res, None) {
                     Ok(res) => {
                         state.tier.write().data = Some(res);
@@ -93,7 +98,7 @@ pub fn TierTab() -> Element {
                     }
                 }
             }
-            
+
             match &state.tier.read().status {
                 TaskStatus::Idle => rsx! {
                     div { class: "flex flex-col items-center justify-center py-20 gap-3 text-slate-500",
@@ -117,21 +122,21 @@ pub fn TierTab() -> Element {
                             div { class: "relative p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 border border-amber-500/30 overflow-hidden shadow-2xl shadow-amber-900/20 flex flex-col items-center text-center",
                                 div { class: "absolute -top-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" }
                                 div { class: "absolute -bottom-20 -left-20 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" }
-                                
+
                                 h3 { class: "text-sm font-bold text-amber-400/80 tracking-widest uppercase mb-2", "{t(locale, TK::TierPotentialTitle)}" }
                                 div { class: "text-8xl font-black bg-gradient-to-br from-yellow-200 via-amber-400 to-orange-500 text-transparent bg-clip-text drop-shadow-[0_0_40px_rgba(251,191,36,0.3)] mb-4 leading-tight",
                                     "{data.destiny_tier.grade}"
                                 }
                                 div { class: "text-2xl text-amber-100 font-bold mb-2 tracking-wide", "{data.destiny_tier.label}" }
                                 p { class: "text-slate-400 text-sm max-w-lg", "{data.destiny_tier.desc}" }
-                                
+
                                 div { class: "w-full max-w-md mt-8",
                                     div { class: "flex justify-between text-xs text-slate-400 font-bold mb-2",
                                         span { "{t(locale, TK::TierDestinyPowerScore)}" }
                                         span { class: "text-amber-400", "{data.destiny_score:.1} / 100" }
                                     }
                                     div { class: "h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50",
-                                        div { 
+                                        div {
                                             class: "h-full bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-400 rounded-full transition-all duration-1000 relative",
                                             style: "width: {data.destiny_score}%",
                                             div { class: "absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite]" }

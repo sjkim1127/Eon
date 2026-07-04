@@ -1,6 +1,5 @@
-use eon_service::dto::{SajuAnalysisInput, AnalysisInput};
+use eon_service::dto::{AnalysisInput, SajuAnalysisInput};
 use eon_service::facade;
-use std::time::Instant;
 
 fn main() {
     let base = AnalysisInput {
@@ -15,16 +14,16 @@ fn main() {
         lon: 126.9780,
         timezone: "Asia/Seoul".to_string(),
     };
-    
+
     let input = SajuAnalysisInput::new(
         base,
-        true,   // is_male
-        false,  // use_night_rat_hour
+        true,        // is_male
+        false,       // use_night_rat_hour
         Some(false), // unknown_time
     );
-    
+
     let result = facade::analyze_saju(input).expect("Failed to analyze saju");
-    
+
     println!("=== Saju Chart (May 15, 1990, 10:00 AM Seoul) ===");
     println!("Year: {:?}", result.report.pillars.year);
     println!("Month: {:?}", result.report.pillars.month);

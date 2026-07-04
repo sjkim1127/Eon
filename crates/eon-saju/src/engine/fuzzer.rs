@@ -85,7 +85,11 @@ impl DestinyFuzzer {
         }
 
         // 점수가 낮은 순으로 정렬
-        vulnerabilities.sort_by(|a, b| a.crash_score.partial_cmp(&b.crash_score).unwrap_or(std::cmp::Ordering::Equal));
+        vulnerabilities.sort_by(|a, b| {
+            a.crash_score
+                .partial_cmp(&b.crash_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         VulnerabilityReport {
             total_crashes: vulnerabilities.len(),
@@ -125,7 +129,11 @@ impl DestinyFuzzer {
             }
         }
 
-        vulnerabilities.sort_by(|a, b| a.crash_score.partial_cmp(&b.crash_score).unwrap_or(std::cmp::Ordering::Equal));
+        vulnerabilities.sort_by(|a, b| {
+            a.crash_score
+                .partial_cmp(&b.crash_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         vulnerabilities.dedup_by(|a, b| {
             a.vector.major == b.vector.major && a.vector.yearly == b.vector.yearly
         });
@@ -197,7 +205,11 @@ impl DestinyFuzzer {
             }
         }
 
-        vulnerabilities.sort_by(|a, b| a.crash_score.partial_cmp(&b.crash_score).unwrap_or(std::cmp::Ordering::Equal));
+        vulnerabilities.sort_by(|a, b| {
+            a.crash_score
+                .partial_cmp(&b.crash_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         VulnerabilityReport {
             total_crashes: vulnerabilities.len(),

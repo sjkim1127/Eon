@@ -20,7 +20,12 @@ pub struct Location {
 
 impl Location {
     /// 새 위치 생성
-    pub fn new(name: impl Into<String>, latitude: f64, longitude: f64, standard_longitude: f64) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        latitude: f64,
+        longitude: f64,
+        standard_longitude: f64,
+    ) -> Self {
         Self {
             name: name.into(),
             latitude,
@@ -40,14 +45,14 @@ impl Location {
     }
 
     /// 지역시 보정값 계산 (분 단위)
-    /// 
+    ///
     /// 표준시와 진태양시의 차이를 계산합니다.
     /// 양수: 표준시보다 빠름 (동쪽)
     /// 음수: 표준시보다 느림 (서쪽)
-    /// 
+    ///
     /// # 공식
     /// 보정값(분) = (실제경도 - 표준경도) × 4분/도
-    /// 
+    ///
     /// # 예시
     /// - 서울(126.98°): (126.98 - 135) × 4 = -32분
     /// - 안산(126.83°): (126.83 - 135) × 4 = -33분
@@ -120,7 +125,11 @@ impl Location {
 
 impl std::fmt::Display for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} ({:.2}°N, {:.2}°E)", self.name, self.latitude, self.longitude)
+        write!(
+            f,
+            "{} ({:.2}°N, {:.2}°E)",
+            self.name, self.latitude, self.longitude
+        )
     }
 }
 

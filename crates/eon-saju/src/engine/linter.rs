@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
-use crate::core::pillars::FourPillars;
-use crate::core::element::Element;
-use crate::analysis::yongshin::YongshinAnalysis;
 use crate::analysis::strength::StrengthType;
+use crate::analysis::yongshin::YongshinAnalysis;
+use crate::core::element::Element;
+use crate::core::pillars::FourPillars;
+use serde::{Deserialize, Serialize};
 
 /// 린터 진단 레벨
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -46,9 +46,17 @@ impl DestinyLinter {
         diagnostics
     }
 
-    fn check_missing_dependency(counts: &[(Element, u32); 5], yongshin: &YongshinAnalysis, lints: &mut Vec<SajuLint>) {
-        let primary_count = counts.iter().find(|(el, _)| *el == yongshin.primary).map(|(_, c)| *c).unwrap_or(0);
-        
+    fn check_missing_dependency(
+        counts: &[(Element, u32); 5],
+        yongshin: &YongshinAnalysis,
+        lints: &mut Vec<SajuLint>,
+    ) {
+        let primary_count = counts
+            .iter()
+            .find(|(el, _)| *el == yongshin.primary)
+            .map(|(_, c)| *c)
+            .unwrap_or(0);
+
         if primary_count == 0 {
             lints.push(SajuLint {
                 code: "E404".to_string(),
@@ -71,7 +79,11 @@ impl DestinyLinter {
     }
 
     fn check_missing_elements(counts: &[(Element, u32); 5], lints: &mut Vec<SajuLint>) {
-        let missing: Vec<_> = counts.iter().filter(|(_, c)| *c == 0).map(|(el, _)| el.hangul()).collect();
+        let missing: Vec<_> = counts
+            .iter()
+            .filter(|(_, c)| *c == 0)
+            .map(|(el, _)| el.hangul())
+            .collect();
         if missing.len() >= 2 {
             lints.push(SajuLint {
                 code: "W203".to_string(),
@@ -86,8 +98,12 @@ impl DestinyLinter {
         for (el, count) in counts.iter() {
             if *count > 0 {
                 let controller = el.controlled_by();
-                let controller_count = counts.iter().find(|(e, _)| *e == controller).map(|(_, c)| *c).unwrap_or(0);
-                
+                let controller_count = counts
+                    .iter()
+                    .find(|(e, _)| *e == controller)
+                    .map(|(_, c)| *c)
+                    .unwrap_or(0);
+
                 if controller_count >= 3 {
                     lints.push(SajuLint {
                         code: "W105".to_string(),
@@ -123,8 +139,12 @@ impl DestinyLinter {
             lints.push(SajuLint {
                 code: "I303".to_string(),
                 severity: LintSeverity::Info,
-                message: "백호(白虎) 신살: 현대에는 강한 추진력과 전문직 카리스마로 발현될 수 있습니다.".to_string(),
-                advice: "전통적 흉신 해석보다는 전문 역량을 강화하는 방향으로 활용하면 긍정적입니다.".to_string(),
+                message:
+                    "백호(白虎) 신살: 현대에는 강한 추진력과 전문직 카리스마로 발현될 수 있습니다."
+                        .to_string(),
+                advice:
+                    "전통적 흉신 해석보다는 전문 역량을 강화하는 방향으로 활용하면 긍정적입니다."
+                        .to_string(),
             });
         }
 
@@ -169,7 +189,9 @@ impl DestinyLinter {
         }
 
         // W204: 고신살·과숙살 — 고독
-        let has_lonely = markers.iter().any(|m| m.marker == SpiritMarker::Guchen || m.marker == SpiritMarker::Guasu);
+        let has_lonely = markers
+            .iter()
+            .any(|m| m.marker == SpiritMarker::Guchen || m.marker == SpiritMarker::Guasu);
         if has_lonely {
             lints.push(SajuLint {
                 code: "W204".to_string(),
@@ -204,8 +226,10 @@ impl DestinyLinter {
             lints.push(SajuLint {
                 code: "W207".to_string(),
                 severity: LintSeverity::Warning,
-                message: "망신살(亡身煞): 실수나 노출로 인해 명예가 손상될 수 있는 기운입니다.".to_string(),
-                advice: "언행에 신중을 기하고, 사생활이나 금전 관련 정보는 함부로 노출하지 마세요.".to_string(),
+                message: "망신살(亡身煞): 실수나 노출로 인해 명예가 손상될 수 있는 기운입니다."
+                    .to_string(),
+                advice: "언행에 신중을 기하고, 사생활이나 금전 관련 정보는 함부로 노출하지 마세요."
+                    .to_string(),
             });
         }
     }

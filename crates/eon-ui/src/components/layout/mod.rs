@@ -1,12 +1,12 @@
-use dioxus::prelude::*;
+use crate::i18n::{t, Locale, TK};
 use crate::router::Route;
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, Locale, TK};
+use dioxus::prelude::*;
 use eon_service::facade;
 
 #[component]
 pub fn AppLayout() -> Element {
-    let mut state = use_context::<AnalysisState>();
+    let state = use_context::<AnalysisState>();
 
     // state.form 이 변경되면 모든 분석 실시간 자동 비동기 수행
     use_effect(move || {
@@ -142,7 +142,8 @@ pub fn AppLayout() -> Element {
             async move {
                 state.western.write().status = TaskStatus::Loading;
                 let base = form.to_analysis_input();
-                let western_input = eon_service::dto::WesternAnalysisInput::new(base, "Placidus".to_string());
+                let western_input =
+                    eon_service::dto::WesternAnalysisInput::new(base, "Placidus".to_string());
                 match facade::analyze_western(western_input) {
                     Ok(res) => {
                         state.western.write().data = Some(res);
@@ -183,7 +184,7 @@ pub fn AppLayout() -> Element {
             // Celestial background nebula glows
             div { class: "absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.15)_0%,transparent_50%)] pointer-events-none" }
             div { class: "absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(6,182,212,0.12)_0%,transparent_50%)] pointer-events-none" }
-            
+
             Sidebar {}
             main { class: "flex-1 overflow-auto bg-transparent relative flex flex-col z-10",
                 div { class: "p-6 w-full max-w-6xl mx-auto space-y-6 flex-1",

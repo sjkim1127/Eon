@@ -1,7 +1,10 @@
 pub mod db;
-use dioxus::prelude::*;
-use eon_service::dto::{AnalysisInput, SajuAnalysisOutput, VedicAnalysisOutput, TransitAnalysisOutput, TierResult, ZwdsAnalysisOutput, IChingAnalysisOutput, WesternAnalysisOutput, HumanDesignAnalysisOutput};
 use crate::i18n::Locale;
+use dioxus::prelude::*;
+use eon_service::dto::{
+    AnalysisInput, HumanDesignAnalysisOutput, IChingAnalysisOutput, SajuAnalysisOutput, TierResult,
+    TransitAnalysisOutput, VedicAnalysisOutput, WesternAnalysisOutput, ZwdsAnalysisOutput,
+};
 
 #[derive(Clone, PartialEq, Default)]
 pub enum TaskStatus {

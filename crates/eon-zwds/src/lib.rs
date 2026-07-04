@@ -1,3 +1,4 @@
+#![allow(clippy::vec_init_then_push)]
 //! # eon-zwds — 자미두수 (紫微斗數) 엔진
 //!
 //! 중국 전통 성반 명리학 자미두수를 Rust로 구현한 엔진입니다.
@@ -10,18 +11,18 @@
 //! - 대한(大限, 10년 운) / 유년(流年, 1년 운)
 //! - 명주(命主) / 신주(身主)
 
-pub mod error;
-pub mod types;
+pub mod annual;
+pub mod brightness;
 pub mod calendar;
+pub mod chart;
+pub mod decadal;
+pub mod destiny_patterns;
+pub mod error;
 pub mod palace;
 pub mod stars;
 pub mod transformations;
-pub mod decadal;
-pub mod annual;
-pub mod brightness;
-pub mod chart;
-pub mod destiny_patterns;
+pub mod types;
 
+pub use chart::build_chart;
 pub use error::ZwdsError;
 pub use types::*;
-pub use chart::build_chart;

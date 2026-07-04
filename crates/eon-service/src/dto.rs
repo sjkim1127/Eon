@@ -1,8 +1,8 @@
+use crate::error::ServiceError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use ts_rs::TS;
-use crate::error::ServiceError;
 use std::str::FromStr;
+use ts_rs::TS;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -60,10 +60,7 @@ pub struct TransitAnalysisInput {
 }
 
 impl TransitAnalysisInput {
-    pub fn new(
-        base: SajuAnalysisInput,
-        now_utc: Option<DateTime<Utc>>,
-    ) -> Self {
+    pub fn new(base: SajuAnalysisInput, now_utc: Option<DateTime<Utc>>) -> Self {
         let analysis_timezone = base.base.timezone.clone();
 
         Self {
@@ -123,11 +120,7 @@ pub struct ZwdsAnalysisInput {
 }
 
 impl ZwdsAnalysisInput {
-    pub fn new(
-        base: AnalysisInput,
-        is_male: bool,
-        target_year: Option<i32>,
-    ) -> Self {
+    pub fn new(base: AnalysisInput, is_male: bool, target_year: Option<i32>) -> Self {
         Self {
             base,
             is_male,
@@ -135,9 +128,6 @@ impl ZwdsAnalysisInput {
         }
     }
 }
-
-
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -189,8 +179,7 @@ pub struct VedicAnalysisOutput {
     pub chart: eon_vedic::core::chart::VedicChart,
     pub annual_chart: Option<eon_vedic::core::chart::VedicChart>,
     pub gochara: eon_vedic::analysis::gochara::GocharaSummary,
-    pub varga_nakshatra_reports:
-        eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReports,
+    pub varga_nakshatra_reports: eon_vedic::analysis::varga_nakshatra_report::VargaNakshatraReports,
     pub kp_analysis: Option<eon_vedic::analysis::kp::KpAnalysis>,
 }
 
@@ -220,10 +209,7 @@ pub struct WesternAnalysisInput {
 
 impl WesternAnalysisInput {
     pub fn new(base: AnalysisInput, house_system: String) -> Self {
-        Self {
-            base,
-            house_system,
-        }
+        Self { base, house_system }
     }
 }
 
@@ -243,9 +229,7 @@ pub struct HumanDesignAnalysisInput {
 
 impl HumanDesignAnalysisInput {
     pub fn new(base: AnalysisInput) -> Self {
-        Self {
-            base,
-        }
+        Self { base }
     }
 }
 
@@ -255,7 +239,6 @@ pub struct HumanDesignAnalysisOutput {
     pub meta: AnalysisMeta,
     pub result: eon_human_design::HumanDesignResult,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -270,8 +253,6 @@ pub struct VedicCompatibilityOutput {
     pub meta: AnalysisMeta,
     pub report: eon_vedic::analysis::matching::CompatibilityReport,
 }
-
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -307,7 +288,6 @@ pub struct AiAuditOutput {
     pub peak_age: u32,
     pub valley_age: u32,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -554,4 +534,3 @@ pub struct ThemedReportOutput {
     pub title: String,
     pub content: String,
 }
-

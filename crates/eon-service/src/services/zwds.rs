@@ -2,12 +2,12 @@
 //!
 //! 입력된 데이터를 바탕으로 생년월일시 보정을 수행하고, 자미두수 엔진을 호출해 성반과 대한/유년을 연산합니다.
 
-use crate::dto::{AnalysisMeta, ZwdsAnalysisInput, ZwdsAnalysisOutput, BirthTimePrecision};
-use crate::error::ServiceError;
 use crate::birth::prepare_birth_context;
+use crate::dto::{AnalysisMeta, BirthTimePrecision, ZwdsAnalysisInput, ZwdsAnalysisOutput};
+use crate::error::ServiceError;
 use eon_core::Gender;
-use eon_zwds::build_chart;
 use eon_zwds::annual::calculate_liunian;
+use eon_zwds::build_chart;
 
 /// 자미두수 분석을 수행합니다.
 pub fn analyze(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceError> {
@@ -42,7 +42,9 @@ pub fn analyze(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceEr
     // 여기서는 간단하게 경과 연도(target_year - birth_year + 1)를 나이로 보고 현재 대한을 매핑합니다.
     let age = (target_year - birth_ctx.birth_info.year).max(0) as u32 + 1; // 세는 나이 기준
 
-    let current_daxian = chart.daxian.iter()
+    let current_daxian = chart
+        .daxian
+        .iter()
         .find(|d| age >= d.age_start && age <= d.age_end)
         .cloned()
         .unwrap_or_else(|| {

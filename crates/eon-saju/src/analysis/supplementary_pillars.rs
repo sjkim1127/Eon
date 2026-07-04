@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
+use crate::core::branch::EarthlyBranch;
 use crate::core::ganzi::GanZi;
 use crate::core::pillars::FourPillars;
 use crate::core::stem::HeavenlyStem;
-use crate::core::branch::EarthlyBranch;
+use serde::{Deserialize, Serialize};
 
 /// 태원·명궁·신궁 등 보조 기둥 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -34,9 +34,9 @@ pub struct SupplementaryInterpretation {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum InterpretationLevel {
-    Auspicious,   // 길조
-    Caution,      // 주의
-    Neutral,      // 보통
+    Auspicious, // 길조
+    Caution,    // 주의
+    Neutral,    // 보통
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -86,16 +86,25 @@ impl SupplementaryPillars {
                 .filter(|(p_name, _, _)| p_name == key)
                 .collect();
 
-            let has_noble = pillar_shinsals.iter().any(|(_, _, name)| name == "천을귀인");
-            let has_wonjin = pillar_shinsals.iter().any(|(_, _, name)| name == "원진살" || name == "귀문관살");
-            let reasons: Vec<String> = pillar_shinsals.iter().map(|(_, crit, name)| format!("{}({})", name, crit)).collect();
+            let has_noble = pillar_shinsals
+                .iter()
+                .any(|(_, _, name)| name == "천을귀인");
+            let has_wonjin = pillar_shinsals
+                .iter()
+                .any(|(_, _, name)| name == "원진살" || name == "귀문관살");
+            let reasons: Vec<String> = pillar_shinsals
+                .iter()
+                .map(|(_, crit, name)| format!("{}({})", name, crit))
+                .collect();
 
             if has_noble {
                 results.push(SupplementaryInterpretation {
                     pillar_name: display_name.to_string(),
                     level: InterpretationLevel::Auspicious,
                     summary: "✨ 길조(吉兆)".to_string(),
-                    description: "축복받은 기운이 함께하며 위기 상황에서 뜻밖의 도움을 얻게 됩니다.".to_string(),
+                    description:
+                        "축복받은 기운이 함께하며 위기 상황에서 뜻밖의 도움을 얻게 됩니다."
+                            .to_string(),
                     reasons,
                 });
             } else if has_wonjin {
@@ -111,7 +120,8 @@ impl SupplementaryPillars {
                     pillar_name: display_name.to_string(),
                     level: InterpretationLevel::Neutral,
                     summary: "• 평이(平易)".to_string(),
-                    description: "기운이 무난하게 흐르고 있어 일상적인 운의 흐름을 따릅니다.".to_string(),
+                    description: "기운이 무난하게 흐르고 있어 일상적인 운의 흐름을 따릅니다."
+                        .to_string(),
                     reasons,
                 });
             }
@@ -153,10 +163,7 @@ impl SupplementaryPillars {
         let start_stem_idx = (year_stem.index() as i32 % 5) * 2 + 2;
         let mg_stem_idx = (start_stem_idx + (mg_branch_idx - 2).rem_euclid(12)) % 10;
 
-        GanZi::new(
-            HeavenlyStem::from_index(mg_stem_idx),
-            branch,
-        )
+        GanZi::new(HeavenlyStem::from_index(mg_stem_idx), branch)
     }
 
     /// 신궁(身宮) 계산
@@ -165,7 +172,7 @@ impl SupplementaryPillars {
         let h_idx = hour.branch.index() as i32;
 
         let sg_branch_idx = match (m_idx, h_idx) {
-            (11, 11) => 5,  // Case 1: Si
+            (11, 11) => 5, // Case 1: Si
             (5, 5) => 5,   // Case 2: Si
             (2, 1) => 11,  // Case 3: Hai
             (0, 8) => 2,   // Case 4: Yin
@@ -181,10 +188,7 @@ impl SupplementaryPillars {
         let start_stem_idx = (year_stem.index() as i32 % 5) * 2 + 2;
         let sg_stem_idx = (start_stem_idx + (sg_branch_idx - 2).rem_euclid(12)) % 10;
 
-        GanZi::new(
-            HeavenlyStem::from_index(sg_stem_idx),
-            branch,
-        )
+        GanZi::new(HeavenlyStem::from_index(sg_stem_idx), branch)
     }
 }
 
@@ -207,9 +211,9 @@ impl Default for SupplementaryPillars {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::stem::HeavenlyStem::{self as S};
     use crate::core::branch::EarthlyBranch::{self as B};
     use crate::core::pillars::SajuInput;
+    use crate::core::stem::HeavenlyStem::{self as S};
     use chrono::Utc;
 
     fn create_mock_pillars(y: (S, B), m: (S, B), d: (S, B), h: (S, B)) -> FourPillars {
@@ -217,7 +221,7 @@ mod tests {
         let month_pillar = GanZi::new(m.0, m.1);
         let day_pillar = GanZi::new(d.0, d.1);
         let hour_pillar = GanZi::new(h.0, h.1);
-        
+
         FourPillars {
             year: year_pillar,
             month: month_pillar,
@@ -226,7 +230,12 @@ mod tests {
             birth_time: Utc::now(),
             gender: eon_core::Gender::Male,
             raw_input: SajuInput::new_solar(2000, 1, 1, 12, 0),
-            supplementary_pillars: SupplementaryPillars::calculate_partial(&year_pillar, &month_pillar, &day_pillar, &hour_pillar),
+            supplementary_pillars: SupplementaryPillars::calculate_partial(
+                &year_pillar,
+                &month_pillar,
+                &day_pillar,
+                &hour_pillar,
+            ),
         }
     }
 
@@ -238,10 +247,10 @@ mod tests {
         // 명궁: 14 - (9+9)%12 = 14-6 = 8 -> 戌 (명궁지)
         // 신궁: (9+9-2)%12 = 4 -> 巳 (신궁지)
         let p1 = create_mock_pillars(
-            (S::Jia, B::Shen), 
-            (S::Yi, B::Hai), 
-            (S::Geng, B::Xu), 
-            (S::Ding, B::Hai)
+            (S::Jia, B::Shen),
+            (S::Yi, B::Hai),
+            (S::Geng, B::Xu),
+            (S::Ding, B::Hai),
         );
         let res1 = &p1.supplementary_pillars;
         assert_eq!(res1.taewon.stem, S::Bing);
@@ -258,7 +267,7 @@ mod tests {
             (S::Wu, B::Chen),
             (S::Ding, B::Si),
             (S::Geng, B::Wu),
-            (S::Xin, B::Si)
+            (S::Xin, B::Si),
         );
         let res2 = &p2.supplementary_pillars;
         assert_eq!(res2.taewon.branch, B::Shen);
@@ -273,7 +282,7 @@ mod tests {
             (S::Jia, B::Chen),
             (S::Bing, B::Yin),
             (S::Jia, B::Chen),
-            (S::Yi, B::Chou)
+            (S::Yi, B::Chou),
         );
         let res3 = &p3.supplementary_pillars;
         assert_eq!(res3.myeonggung.branch, B::Si);
@@ -287,7 +296,7 @@ mod tests {
             (S::Yi, B::Hai),
             (S::Wu, B::Zi),
             (S::Xin, B::Hai),
-            (S::Bing, B::Shen)
+            (S::Bing, B::Shen),
         );
         let res4 = &p4.supplementary_pillars;
         assert_eq!(res4.myeonggung.branch, B::Zi);
@@ -301,7 +310,7 @@ mod tests {
             (S::Ji, B::You),
             (S::Bing, B::Zi),
             (S::Ren, B::Zi),
-            (S::Geng, B::Zi)
+            (S::Geng, B::Zi),
         );
         let res5 = &p5.supplementary_pillars;
         assert_eq!(res5.myeonggung.branch, B::Shen);
@@ -315,7 +324,7 @@ mod tests {
             (S::Geng, B::Yin),
             (S::Jia, B::Shen),
             (S::Ding, B::Wei),
-            (S::Ding, B::Wei)
+            (S::Ding, B::Wei),
         );
         let res6 = &p6.supplementary_pillars;
         assert_eq!(res6.myeonggung.branch, B::Si);
@@ -329,7 +338,7 @@ mod tests {
             (S::Ji, B::Mao),
             (S::Ding, B::Mao),
             (S::Bing, B::Wu),
-            (S::Gui, B::Si)
+            (S::Gui, B::Si),
         );
         let res7 = &p7.supplementary_pillars;
         assert_eq!(res7.myeonggung.branch, B::Zi);
@@ -343,7 +352,7 @@ mod tests {
             (S::Yi, B::Si),
             (S::Xin, B::Si),
             (S::Ji, B::Chou),
-            (S::Gui, B::You)
+            (S::Gui, B::You),
         );
         let res8 = &p8.supplementary_pillars;
         assert_eq!(res8.myeonggung.branch, B::Si);

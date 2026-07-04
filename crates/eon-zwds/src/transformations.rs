@@ -2,8 +2,8 @@
 //!
 //! 출생년 천간에 따른 사화 배열을 조회하고, 별들에 사화를 부여하는 역할을 합니다.
 
+use crate::types::{SiHuaType, ZwdsStar};
 use eon_saju::core::stem::HeavenlyStem;
-use crate::types::{ZwdsStar, SiHuaType};
 
 /// 출생년 천간에 따른 [化祿, 化權, 化科, 化忌] 대상 별들을 조회합니다.
 pub fn get_sihua_stars(year_stem: HeavenlyStem) -> [ZwdsStar; 4] {

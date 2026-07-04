@@ -277,7 +277,9 @@ pub fn translate(key: TK) -> &'static str {
         TK::CompatTableColEarned => "获得分数",
         TK::CompatTableColDesc => "详细描述",
         TK::CompatExplanationGood => "整体非常和谐契合，值得推荐。",
-        TK::CompatExplanationWarning => "虽然得分较高，但受到关键煞气（Nadi/Bhakoot Dosha）影响，建议保持谨慎。",
+        TK::CompatExplanationWarning => {
+            "虽然得分较高，但受到关键煞气（Nadi/Bhakoot Dosha）影响，建议保持谨慎。"
+        }
         TK::CompatExplanationBad => "性格和观念差异较大，需要双方深度的磨合与理解。",
         TK::CompatExplanationSummary => "共获得 {} 分（满分 36 分）。",
 
@@ -340,7 +342,9 @@ pub fn translate(key: TK) -> &'static str {
         // --- Saju Jijanggan ---
         TK::SajuHiddenStemsTitle => "地支藏干 (Jijanggan)",
         TK::SajuProjectionTitle => "地支藏干透出分析 (Projection)",
-        TK::SajuProjectionDesc => "分析地支中隐藏的五行能量显现（透出）于天干的状态，代表其在外部环境的强力显现。",
+        TK::SajuProjectionDesc => {
+            "分析地支中隐藏的五行能量显现（透出）于天干的状态，代表其在外部环境的强力显现。"
+        }
         TK::SajuProjLevelMain => "格局透出 (Main)",
         TK::SajuProjLevelSub => "一般透出 (Sub)",
         TK::SajuJijangganYeogi => "余气 (Yeogi)",

@@ -2,9 +2,9 @@
 //!
 //! 자미성과 천부성의 위치를 계산하고, 이를 기준으로 14주성을 각 궁에 배치합니다.
 
-use std::collections::HashMap;
-use crate::types::{PalaceIndex, ZwdsStar};
 use crate::palace::fix_index;
+use crate::types::{PalaceIndex, ZwdsStar};
+use std::collections::HashMap;
 
 /// 자미성(紫微星)의 ZWDS 지지 인덱스 (0=寅) 계산
 ///
@@ -38,28 +38,31 @@ pub fn get_tianfu_index(ziwei_idx: PalaceIndex) -> PalaceIndex {
 }
 
 /// 자미성과 천부성을 기준으로 14주성의 위치를 맵으로 리턴
-pub fn place_14_main_stars(ziwei_idx: PalaceIndex, tianfu_idx: PalaceIndex) -> HashMap<ZwdsStar, PalaceIndex> {
+pub fn place_14_main_stars(
+    ziwei_idx: PalaceIndex,
+    tianfu_idx: PalaceIndex,
+) -> HashMap<ZwdsStar, PalaceIndex> {
     let mut stars = HashMap::new();
 
     // 1. 자미성계 (역행: 시계 반대 방향, 인덱스 감소)
     let z = ziwei_idx as i32;
-    stars.insert(ZwdsStar::ZiWei,    fix_index(z));
-    stars.insert(ZwdsStar::TianJi,   fix_index(z - 1));
-    stars.insert(ZwdsStar::TaiYang,  fix_index(z - 3));
-    stars.insert(ZwdsStar::WuQu,     fix_index(z - 4));
+    stars.insert(ZwdsStar::ZiWei, fix_index(z));
+    stars.insert(ZwdsStar::TianJi, fix_index(z - 1));
+    stars.insert(ZwdsStar::TaiYang, fix_index(z - 3));
+    stars.insert(ZwdsStar::WuQu, fix_index(z - 4));
     stars.insert(ZwdsStar::TianTong, fix_index(z - 5));
     stars.insert(ZwdsStar::LianZhen, fix_index(z - 8));
 
     // 2. 천부성계 (순행: 시계 방향, 인덱스 증가)
     let f = tianfu_idx as i32;
-    stars.insert(ZwdsStar::TianFu,    fix_index(f));
-    stars.insert(ZwdsStar::TaiYin,    fix_index(f + 1));
-    stars.insert(ZwdsStar::TanLang,   fix_index(f + 2));
-    stars.insert(ZwdsStar::JuMen,    fix_index(f + 3));
+    stars.insert(ZwdsStar::TianFu, fix_index(f));
+    stars.insert(ZwdsStar::TaiYin, fix_index(f + 1));
+    stars.insert(ZwdsStar::TanLang, fix_index(f + 2));
+    stars.insert(ZwdsStar::JuMen, fix_index(f + 3));
     stars.insert(ZwdsStar::TianXiang, fix_index(f + 4));
     stars.insert(ZwdsStar::TianLiang, fix_index(f + 5));
-    stars.insert(ZwdsStar::QiSha,     fix_index(f + 6));
-    stars.insert(ZwdsStar::PoJun,     fix_index(f + 10));
+    stars.insert(ZwdsStar::QiSha, fix_index(f + 6));
+    stars.insert(ZwdsStar::PoJun, fix_index(f + 10));
 
     stars
 }

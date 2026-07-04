@@ -24,3 +24,6 @@ eon-ai = { workspace = true }
 eon-astro = { workspace = true }
 eon-data = { workspace = true }
 ts-rs = { version = "10", features = ["chrono-impl"] }
+
+[lints]
+workspace = true

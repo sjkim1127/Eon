@@ -44,42 +44,51 @@ pub enum PalaceName {
 
 impl PalaceName {
     pub const ALL: [PalaceName; 12] = [
-        Self::Ming, Self::Xiongdi, Self::Fuqi, Self::Zinv,
-        Self::Caibo, Self::Jie, Self::Qianyi, Self::Nupao,
-        Self::Guanlu, Self::Tianzhai, Self::Fude, Self::Fumu,
+        Self::Ming,
+        Self::Xiongdi,
+        Self::Fuqi,
+        Self::Zinv,
+        Self::Caibo,
+        Self::Jie,
+        Self::Qianyi,
+        Self::Nupao,
+        Self::Guanlu,
+        Self::Tianzhai,
+        Self::Fude,
+        Self::Fumu,
     ];
 
     pub fn hanja(&self) -> &'static str {
         match self {
-            Self::Ming     => "命宮",
-            Self::Xiongdi  => "兄弟宮",
-            Self::Fuqi     => "夫妻宮",
-            Self::Zinv     => "子女宮",
-            Self::Caibo    => "財帛宮",
-            Self::Jie      => "疾厄宮",
-            Self::Qianyi   => "遷移宮",
-            Self::Nupao    => "奴僕宮",
-            Self::Guanlu   => "官祿宮",
+            Self::Ming => "命宮",
+            Self::Xiongdi => "兄弟宮",
+            Self::Fuqi => "夫妻宮",
+            Self::Zinv => "子女宮",
+            Self::Caibo => "財帛宮",
+            Self::Jie => "疾厄宮",
+            Self::Qianyi => "遷移宮",
+            Self::Nupao => "奴僕宮",
+            Self::Guanlu => "官祿宮",
             Self::Tianzhai => "田宅宮",
-            Self::Fude     => "福德宮",
-            Self::Fumu     => "父母宮",
+            Self::Fude => "福德宮",
+            Self::Fumu => "父母宮",
         }
     }
 
     pub fn korean(&self) -> &'static str {
         match self {
-            Self::Ming     => "명궁",
-            Self::Xiongdi  => "형제궁",
-            Self::Fuqi     => "부처궁",
-            Self::Zinv     => "자녀궁",
-            Self::Caibo    => "재백궁",
-            Self::Jie      => "질액궁",
-            Self::Qianyi   => "천이궁",
-            Self::Nupao    => "노복궁",
-            Self::Guanlu   => "관록궁",
+            Self::Ming => "명궁",
+            Self::Xiongdi => "형제궁",
+            Self::Fuqi => "부처궁",
+            Self::Zinv => "자녀궁",
+            Self::Caibo => "재백궁",
+            Self::Jie => "질액궁",
+            Self::Qianyi => "천이궁",
+            Self::Nupao => "노복궁",
+            Self::Guanlu => "관록궁",
             Self::Tianzhai => "전택궁",
-            Self::Fude     => "복덕궁",
-            Self::Fumu     => "부모궁",
+            Self::Fude => "복덕궁",
+            Self::Fumu => "부모궁",
         }
     }
 }
@@ -222,136 +231,147 @@ impl ZwdsStar {
     /// 한자 표기
     pub fn hanja(&self) -> &'static str {
         match self {
-            Self::ZiWei    => "紫微",
-            Self::TianJi   => "天機",
-            Self::TaiYang  => "太陽",
-            Self::WuQu     => "武曲",
+            Self::ZiWei => "紫微",
+            Self::TianJi => "天機",
+            Self::TaiYang => "太陽",
+            Self::WuQu => "武曲",
             Self::TianTong => "天同",
             Self::LianZhen => "廉貞",
-            Self::TianFu   => "天府",
-            Self::TaiYin   => "太陰",
-            Self::TanLang  => "貪狼",
-            Self::JuMen    => "巨門",
+            Self::TianFu => "天府",
+            Self::TaiYin => "太陰",
+            Self::TanLang => "貪狼",
+            Self::JuMen => "巨門",
             Self::TianXiang => "天相",
             Self::TianLiang => "天梁",
-            Self::QiSha    => "七殺",
-            Self::PoJun    => "破軍",
+            Self::QiSha => "七殺",
+            Self::PoJun => "破軍",
             Self::WenChang => "文昌",
-            Self::WenQu    => "文曲",
-            Self::ZuoFu    => "左輔",
-            Self::YouBi    => "右弼",
-            Self::TianKui  => "天魁",
-            Self::TianYue  => "天鉞",
-            Self::LuCun    => "禄存",
+            Self::WenQu => "文曲",
+            Self::ZuoFu => "左輔",
+            Self::YouBi => "右弼",
+            Self::TianKui => "天魁",
+            Self::TianYue => "天鉞",
+            Self::LuCun => "禄存",
             Self::QingYang => "擎羊",
-            Self::TuoLuo   => "陀羅",
-            Self::TianMa   => "天馬",
-            Self::HuoXing  => "火星",
+            Self::TuoLuo => "陀羅",
+            Self::TianMa => "天馬",
+            Self::HuoXing => "火星",
             Self::LingXing => "鈴星",
-            Self::DiJie    => "地劫",
-            Self::DiKong   => "地空",
+            Self::DiJie => "地劫",
+            Self::DiKong => "地空",
             Self::HongLuan => "紅鸞",
-            Self::TianXi   => "天喜",
+            Self::TianXi => "天喜",
             Self::TianXing => "天刑",
-            Self::TianYao  => "天姚",
-            Self::JieShen  => "解神",
-            Self::TianWu   => "天巫",
+            Self::TianYao => "天姚",
+            Self::JieShen => "解神",
+            Self::TianWu => "天巫",
             Self::TianYueStar => "天月",
-            Self::YinSha   => "陰煞",
-            Self::TaiFu    => "台輔",
-            Self::FengGao  => "封誥",
-            Self::SanTai   => "三台",
-            Self::BaZuo    => "八座",
-            Self::EnGuang  => "恩光",
-            Self::TianGui  => "天貴",
-            Self::TianCai  => "天才",
+            Self::YinSha => "陰煞",
+            Self::TaiFu => "台輔",
+            Self::FengGao => "封誥",
+            Self::SanTai => "三台",
+            Self::BaZuo => "八座",
+            Self::EnGuang => "恩光",
+            Self::TianGui => "天貴",
+            Self::TianCai => "天才",
             Self::TianShou => "天壽",
-            Self::LongChi  => "龍池",
-            Self::FengGe   => "鳳閣",
-            Self::TianKu   => "天哭",
-            Self::TianXu   => "天虛",
-            Self::HuaGai   => "華蓋",
-            Self::XianChi  => "咸池",
-            Self::GuChen   => "孤辰",
-            Self::GuaSu    => "寡宿",
+            Self::LongChi => "龍池",
+            Self::FengGe => "鳳閣",
+            Self::TianKu => "天哭",
+            Self::TianXu => "天虛",
+            Self::HuaGai => "華蓋",
+            Self::XianChi => "咸池",
+            Self::GuChen => "孤辰",
+            Self::GuaSu => "寡宿",
             Self::TianKong => "天空",
-            Self::JieSha   => "劫殺",
-            Self::TianChu  => "天廚",
+            Self::JieSha => "劫殺",
+            Self::TianChu => "天廚",
             Self::TianGuan => "天官",
-            Self::TianFu2  => "天福",
+            Self::TianFu2 => "天福",
         }
     }
 
     /// 한글 표기
     pub fn korean(&self) -> &'static str {
         match self {
-            Self::ZiWei    => "자미",
-            Self::TianJi   => "천기",
-            Self::TaiYang  => "태양",
-            Self::WuQu     => "무곡",
+            Self::ZiWei => "자미",
+            Self::TianJi => "천기",
+            Self::TaiYang => "태양",
+            Self::WuQu => "무곡",
             Self::TianTong => "천동",
             Self::LianZhen => "렴정",
-            Self::TianFu   => "천부",
-            Self::TaiYin   => "태음",
-            Self::TanLang  => "탐랑",
-            Self::JuMen    => "거문",
+            Self::TianFu => "천부",
+            Self::TaiYin => "태음",
+            Self::TanLang => "탐랑",
+            Self::JuMen => "거문",
             Self::TianXiang => "천상",
             Self::TianLiang => "천량",
-            Self::QiSha    => "칠살",
-            Self::PoJun    => "파군",
+            Self::QiSha => "칠살",
+            Self::PoJun => "파군",
             Self::WenChang => "문창",
-            Self::WenQu    => "문곡",
-            Self::ZuoFu    => "좌보",
-            Self::YouBi    => "우필",
-            Self::TianKui  => "천괴",
-            Self::TianYue  => "천월",
-            Self::LuCun    => "록존",
+            Self::WenQu => "문곡",
+            Self::ZuoFu => "좌보",
+            Self::YouBi => "우필",
+            Self::TianKui => "천괴",
+            Self::TianYue => "천월",
+            Self::LuCun => "록존",
             Self::QingYang => "경양",
-            Self::TuoLuo   => "타라",
-            Self::TianMa   => "천마",
-            Self::HuoXing  => "화성",
+            Self::TuoLuo => "타라",
+            Self::TianMa => "천마",
+            Self::HuoXing => "화성",
             Self::LingXing => "영성",
-            Self::DiJie    => "지겁",
-            Self::DiKong   => "지공",
+            Self::DiJie => "지겁",
+            Self::DiKong => "지공",
             Self::HongLuan => "홍란",
-            Self::TianXi   => "천희",
+            Self::TianXi => "천희",
             Self::TianXing => "천형",
-            Self::TianYao  => "천요",
-            Self::JieShen  => "해신",
-            Self::TianWu   => "천무",
+            Self::TianYao => "천요",
+            Self::JieShen => "해신",
+            Self::TianWu => "천무",
             Self::TianYueStar => "천월성",
-            Self::YinSha   => "음살",
-            Self::TaiFu    => "대보",
-            Self::FengGao  => "봉고",
-            Self::SanTai   => "삼태",
-            Self::BaZuo    => "팔좌",
-            Self::EnGuang  => "은광",
-            Self::TianGui  => "천귀",
-            Self::TianCai  => "천재",
+            Self::YinSha => "음살",
+            Self::TaiFu => "대보",
+            Self::FengGao => "봉고",
+            Self::SanTai => "삼태",
+            Self::BaZuo => "팔좌",
+            Self::EnGuang => "은광",
+            Self::TianGui => "천귀",
+            Self::TianCai => "천재",
             Self::TianShou => "천수",
-            Self::LongChi  => "용지",
-            Self::FengGe   => "봉각",
-            Self::TianKu   => "천곡",
-            Self::TianXu   => "천허",
-            Self::HuaGai   => "화개",
-            Self::XianChi  => "함지",
-            Self::GuChen   => "고신",
-            Self::GuaSu    => "과숙",
+            Self::LongChi => "용지",
+            Self::FengGe => "봉각",
+            Self::TianKu => "천곡",
+            Self::TianXu => "천허",
+            Self::HuaGai => "화개",
+            Self::XianChi => "함지",
+            Self::GuChen => "고신",
+            Self::GuaSu => "과숙",
             Self::TianKong => "천공",
-            Self::JieSha   => "겁살",
-            Self::TianChu  => "천주",
+            Self::JieSha => "겁살",
+            Self::TianChu => "천주",
             Self::TianGuan => "천관",
-            Self::TianFu2  => "천복",
+            Self::TianFu2 => "천복",
         }
     }
 
     /// 주성 여부
     pub fn is_main_star(&self) -> bool {
-        matches!(self,
-            Self::ZiWei | Self::TianJi | Self::TaiYang | Self::WuQu |
-            Self::TianTong | Self::LianZhen | Self::TianFu | Self::TaiYin |
-            Self::TanLang | Self::JuMen | Self::TianXiang | Self::TianLiang |
-            Self::QiSha | Self::PoJun
+        matches!(
+            self,
+            Self::ZiWei
+                | Self::TianJi
+                | Self::TaiYang
+                | Self::WuQu
+                | Self::TianTong
+                | Self::LianZhen
+                | Self::TianFu
+                | Self::TaiYin
+                | Self::TanLang
+                | Self::JuMen
+                | Self::TianXiang
+                | Self::TianLiang
+                | Self::QiSha
+                | Self::PoJun
         )
     }
 }
@@ -379,10 +399,10 @@ impl FiveElementsClass {
     pub fn starting_age(&self) -> u8 {
         match self {
             Self::Water2 => 2,
-            Self::Wood3  => 3,
+            Self::Wood3 => 3,
             Self::Metal4 => 4,
             Self::Earth5 => 5,
-            Self::Fire6  => 6,
+            Self::Fire6 => 6,
         }
     }
 
@@ -390,20 +410,20 @@ impl FiveElementsClass {
     pub fn value(&self) -> u32 {
         match self {
             Self::Water2 => 2,
-            Self::Wood3  => 3,
+            Self::Wood3 => 3,
             Self::Metal4 => 4,
             Self::Earth5 => 5,
-            Self::Fire6  => 6,
+            Self::Fire6 => 6,
         }
     }
 
     pub fn korean(&self) -> &'static str {
         match self {
             Self::Water2 => "수이국(水二局)",
-            Self::Wood3  => "목삼국(木三局)",
+            Self::Wood3 => "목삼국(木三局)",
             Self::Metal4 => "금사국(金四局)",
             Self::Earth5 => "토오국(土五局)",
-            Self::Fire6  => "화육국(火六局)",
+            Self::Fire6 => "화육국(火六局)",
         }
     }
 }
@@ -427,18 +447,18 @@ pub enum SiHuaType {
 impl SiHuaType {
     pub fn korean(&self) -> &'static str {
         match self {
-            Self::HuaLu   => "화록(化祿)",
+            Self::HuaLu => "화록(化祿)",
             Self::HuaQuan => "화권(化權)",
-            Self::HuaKe   => "화과(化科)",
-            Self::HuaJi   => "화기(化忌)",
+            Self::HuaKe => "화과(化科)",
+            Self::HuaJi => "화기(化忌)",
         }
     }
     pub fn emoji(&self) -> &'static str {
         match self {
-            Self::HuaLu   => "祿",
+            Self::HuaLu => "祿",
             Self::HuaQuan => "權",
-            Self::HuaKe   => "科",
-            Self::HuaJi   => "忌",
+            Self::HuaKe => "科",
+            Self::HuaJi => "忌",
         }
     }
 }
@@ -568,4 +588,3 @@ pub struct ZwdsChart {
     pub destiny_patterns: Vec<DestinyPattern>,
     pub flying_sihua: Vec<FlyingSiHua>,
 }
-

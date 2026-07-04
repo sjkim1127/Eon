@@ -1,14 +1,14 @@
 //! 격국(格局, Structure/Pattern) 분석
-//! 
+//!
 //! 월지(月支)의 지장간이 천간에 투출한 상태를 분석하여 사주의 격을 결정합니다.
 
-use serde::{Deserialize, Serialize};
-use crate::core::stem::HeavenlyStem;
+use crate::analysis::Analyzable;
+use crate::core::config::AnalysisConfig;
 use crate::core::element::Polarity;
 use crate::core::pillars::FourPillars;
+use crate::core::stem::HeavenlyStem;
 use crate::core::ten_gods::TenGod;
-use crate::core::config::AnalysisConfig;
-use crate::analysis::Analyzable;
+use serde::{Deserialize, Serialize};
 
 /// 격국의 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -36,7 +36,7 @@ pub enum StructureType {
     YangIn,
     /// 비견/겁재 (정격 외)
     Special,
-    
+
     // --- 종격 (從格) ---
     /// 종아격 (從兒格) - 식상으로 종함
     JongAh,
@@ -48,7 +48,7 @@ pub enum StructureType {
     JongGang,
     /// 종왕격 (從旺格) - 비겁으로 종함
     JongWang,
-    
+
     /// 종격 (기타/일반)
     Follower,
     /// 전왕격 (專旺格) - 자신의 기운이 극도로 강함
@@ -145,7 +145,7 @@ impl StructureAnalysis {
         let dm = pillars.day_master();
         let month_branch = pillars.month.branch;
         let hidden_stems = month_branch.hidden_stems();
-        
+
         let other_stems = [
             ("년간", pillars.year.stem),
             ("월간", pillars.month.stem),
@@ -154,18 +154,27 @@ impl StructureAnalysis {
 
         // 0. 특수 격국(종격/전왕격) 우선 판정
         let strength = pillars.strength_with_config(config);
-        let is_polarized = strength.deuk_se.support_ratio >= config.strength.polarized_high || strength.deuk_se.support_ratio <= config.strength.polarized_low;
-        
+        let is_polarized = strength.deuk_se.support_ratio >= config.strength.polarized_high
+            || strength.deuk_se.support_ratio <= config.strength.polarized_low;
+
         if is_polarized {
             if strength.deuk_se.support_ratio >= config.strength.polarized_high {
                 // 비겁 vs 인성 비중 확인
                 let yinxing = strength.deuk_se.yinxing_count;
                 let bijie = strength.deuk_se.bijie_count;
-                
+
                 let (structure, name, desc) = if bijie >= yinxing {
-                    (StructureType::JongWang, "종왕격(從旺格)", "자신의 기운이 극도로 강하여 그 기세를 유지해야 하는 격국입니다.")
+                    (
+                        StructureType::JongWang,
+                        "종왕격(從旺格)",
+                        "자신의 기운이 극도로 강하여 그 기세를 유지해야 하는 격국입니다.",
+                    )
                 } else {
-                    (StructureType::JongGang, "종강격(從强格)", "자신을 돕는 인성의 기운이 극도로 강하여 그 기세를 따르는 격국입니다.")
+                    (
+                        StructureType::JongGang,
+                        "종강격(從强格)",
+                        "자신을 돕는 인성의 기운이 극도로 강하여 그 기세를 따르는 격국입니다.",
+                    )
                 };
 
                 return Self {
@@ -186,11 +195,23 @@ impl StructureAnalysis {
                 let guan = strength.deuk_se.guanxing_count;
 
                 let (structure, name, desc) = if shishang >= cai && shishang >= guan {
-                    (StructureType::JongAh, "종아격(從兒格)", "일간보다 자식(식상)의 세력을 따르는 격국입니다.")
+                    (
+                        StructureType::JongAh,
+                        "종아격(從兒格)",
+                        "일간보다 자식(식상)의 세력을 따르는 격국입니다.",
+                    )
                 } else if cai >= shishang && cai >= guan {
-                    (StructureType::JongJae, "종재격(從財格)", "일간보다 재물의 세력을 따르는 격국입니다.")
+                    (
+                        StructureType::JongJae,
+                        "종재격(從財格)",
+                        "일간보다 재물의 세력을 따르는 격국입니다.",
+                    )
                 } else {
-                    (StructureType::JongSal, "종살격(從殺格)", "일간보다 관성의 세력을 따르는 격국입니다.")
+                    (
+                        StructureType::JongSal,
+                        "종살격(從殺格)",
+                        "일간보다 관성의 세력을 따르는 격국입니다.",
+                    )
                 };
 
                 return Self {
@@ -219,14 +240,22 @@ impl StructureAnalysis {
                 reasons: vec![format!("일간 {}가 월지 {}에서 12운성 건록(建祿)임", dm.hanja(), month_branch.hanja())],
             };
         }
-        if stage == crate::core::twelve_stages::TwelveStage::Diwang && dm.polarity() == Polarity::Yang {
+        if stage == crate::core::twelve_stages::TwelveStage::Diwang
+            && dm.polarity() == Polarity::Yang
+        {
             return Self {
                 structure: StructureType::YangIn,
                 projected_stem: None,
                 projection_path: None,
                 summary: "가장 강렬한 기운을 품은 양인격".to_string(),
-                description: "기운이 너무 강하여 칼을 든 것과 같으니, 이를 잘 다스리면 큰 권위를 얻습니다.".to_string(),
-                reasons: vec![format!("양간 {}가 월지 {}에서 12운성 제왕(帝旺)임", dm.hanja(), month_branch.hanja())],
+                description:
+                    "기운이 너무 강하여 칼을 든 것과 같으니, 이를 잘 다스리면 큰 권위를 얻습니다."
+                        .to_string(),
+                reasons: vec![format!(
+                    "양간 {}가 월지 {}에서 12운성 제왕(帝旺)임",
+                    dm.hanja(),
+                    month_branch.hanja()
+                )],
             };
         }
 
@@ -254,14 +283,19 @@ impl StructureAnalysis {
         let primary_stem = month_branch.primary_stem();
         let god = TenGod::from_stems(dm, primary_stem);
         let structure = StructureType::from_ten_god(god).unwrap_or(StructureType::Special);
-        
+
         Self {
             structure,
             projected_stem: None,
             projection_path: None,
             summary: format!("월지의 본기를 격으로 삼은 {}", structure.hangul()),
-            description: "천간에 드러난 기운은 없으나 태어난 계절의 기운이 가장 강력한 성격을 형성합니다.".to_string(),
-            reasons: vec![format!("투출된 기운이 없어 월지 본기 {}를 기준으로 판정함", primary_stem.hanja())],
+            description:
+                "천간에 드러난 기운은 없으나 태어난 계절의 기운이 가장 강력한 성격을 형성합니다."
+                    .to_string(),
+            reasons: vec![format!(
+                "투출된 기운이 없어 월지 본기 {}를 기준으로 판정함",
+                primary_stem.hanja()
+            )],
         }
     }
 }
@@ -270,7 +304,12 @@ impl std::fmt::Display for StructureAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "【격국(格局) 분석】")?;
         writeln!(f, "─────────────────────────────────")?;
-        writeln!(f, "▶ {} ({})", self.structure.hangul(), self.structure.hanja())?;
+        writeln!(
+            f,
+            "▶ {} ({})",
+            self.structure.hangul(),
+            self.structure.hanja()
+        )?;
         writeln!(f, "  요약: {}", self.summary)?;
         writeln!(f, "  설명: {}", self.description)?;
         if !self.reasons.is_empty() {

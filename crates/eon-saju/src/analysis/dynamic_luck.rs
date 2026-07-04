@@ -1,14 +1,16 @@
 //! 동적 운세 분석 (Dynamic Luck Analysis)
-//! 
+//!
 //! 원국(Four Pillars)과 대운, 세운의 상호작용을 분석합니다.
 //! 특히 대운/세운이 들어오면서 완성되는 합충(合沖)을 포착합니다.
 
-use serde::{Deserialize, Serialize};
+use crate::analysis::relationships::{
+    RelationshipAnalysis, SeasonalCombination, TripleCombination,
+};
+use crate::core::branch::EarthlyBranch;
 use crate::core::ganzi::GanZi;
 use crate::core::pillars::FourPillars;
-use crate::analysis::relationships::{RelationshipAnalysis, TripleCombination, SeasonalCombination};
-use crate::core::branch::EarthlyBranch;
 use crate::core::stem::HeavenlyStem;
+use serde::{Deserialize, Serialize};
 
 /// 동적 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,7 +50,7 @@ impl DynamicLuckAnalysis {
         hourly: Option<GanZi>,
     ) -> Self {
         let natal_relations = RelationshipAnalysis::from_pillars(natal);
-        
+
         // 종합 분석을 위한 확장된 구성 요소들
         let mut stems = vec![
             ("년간", natal.year.stem),
@@ -128,9 +130,8 @@ impl DynamicLuckAnalysis {
 
         // 모든 쌍에 대한 분석 로직 호출
         use crate::analysis::relationships::{
-            StemCombination, StemClash, SemiCombination, SixCombination, 
-            BranchClash, BranchPunishment, BranchHarm, BranchDestruction,
-            Amhap, MyungAmHap
+            Amhap, BranchClash, BranchDestruction, BranchHarm, BranchPunishment, MyungAmHap,
+            SemiCombination, SixCombination, StemClash, StemCombination,
         };
 
         // 천간 분석
@@ -139,10 +140,14 @@ impl DynamicLuckAnalysis {
                 let (p1, s1) = stems[i];
                 let (p2, s2) = stems[j];
                 if let Some(c) = StemCombination::check(s1, s2) {
-                    analysis.stem_combinations.push((c, p1.to_string(), p2.to_string()));
+                    analysis
+                        .stem_combinations
+                        .push((c, p1.to_string(), p2.to_string()));
                 }
                 if let Some(c) = StemClash::check(s1, s2) {
-                    analysis.stem_clashes.push((c, p1.to_string(), p2.to_string()));
+                    analysis
+                        .stem_clashes
+                        .push((c, p1.to_string(), p2.to_string()));
                 }
             }
         }
@@ -154,31 +159,54 @@ impl DynamicLuckAnalysis {
                 let (p2, b2) = branches[j];
                 if let Some(s) = SemiCombination::check(b1, b2) {
                     if s.is_dominant() {
-                        analysis.dominant_semi_combinations.push((s, p1.to_string(), p2.to_string()));
+                        analysis.dominant_semi_combinations.push((
+                            s,
+                            p1.to_string(),
+                            p2.to_string(),
+                        ));
                     } else {
-                        analysis.weak_semi_combinations.push((s, p1.to_string(), p2.to_string()));
+                        analysis
+                            .weak_semi_combinations
+                            .push((s, p1.to_string(), p2.to_string()));
                     }
                 }
                 if let Some(s) = SixCombination::check(b1, b2) {
-                    analysis.six_combinations.push((s, p1.to_string(), p2.to_string()));
+                    analysis
+                        .six_combinations
+                        .push((s, p1.to_string(), p2.to_string()));
                 }
                 if let Some(c) = BranchClash::check(b1, b2) {
-                    analysis.branch_clashes.push((c, p1.to_string(), p2.to_string()));
+                    analysis
+                        .branch_clashes
+                        .push((c, p1.to_string(), p2.to_string()));
                 }
                 if let Some(h) = BranchHarm::check(b1, b2) {
-                    analysis.branch_harms.push((h, p1.to_string(), p2.to_string()));
+                    analysis
+                        .branch_harms
+                        .push((h, p1.to_string(), p2.to_string()));
                 }
                 if let Some(d) = BranchDestruction::check(b1, b2) {
-                    analysis.branch_destructions.push((d, p1.to_string(), p2.to_string()));
+                    analysis
+                        .branch_destructions
+                        .push((d, p1.to_string(), p2.to_string()));
                 }
                 if let Some(p) = BranchPunishment::check_self(b1, b2) {
-                    analysis.branch_punishments.push((p, p1.to_string(), p2.to_string()));
+                    analysis
+                        .branch_punishments
+                        .push((p, p1.to_string(), p2.to_string()));
                 }
-                
+
                 // 암합
                 let ams = RelationshipAnalysis::check_am_combinations(b1, b2);
                 for am in ams {
-                    analysis.am_combinations.push((Amhap { branches: (b1, b2), combination: am }, p1.to_string(), p2.to_string()));
+                    analysis.am_combinations.push((
+                        Amhap {
+                            branches: (b1, b2),
+                            combination: am,
+                        },
+                        p1.to_string(),
+                        p2.to_string(),
+                    ));
                 }
             }
         }
@@ -188,7 +216,15 @@ impl DynamicLuckAnalysis {
             for (bp, b) in branches {
                 let mas = RelationshipAnalysis::check_myung_am_combinations(*s, *b);
                 for ma in mas {
-                    analysis.myung_am_combinations.push((MyungAmHap { stem: *s, branch: *b, combination: ma }, sp.to_string(), bp.to_string()));
+                    analysis.myung_am_combinations.push((
+                        MyungAmHap {
+                            stem: *s,
+                            branch: *b,
+                            combination: ma,
+                        },
+                        sp.to_string(),
+                        bp.to_string(),
+                    ));
                 }
             }
         }
@@ -198,46 +234,67 @@ impl DynamicLuckAnalysis {
         analysis.triple_combinations = TripleCombination::check(&all_b);
         analysis.seasonal_combinations = SeasonalCombination::check(&all_b);
 
-        let is_luck = |p: &str| p == "대운" || p == "세운" || p == "월운" || p == "일운" || p == "시운";
+        let is_luck =
+            |p: &str| p == "대운" || p == "세운" || p == "월운" || p == "일운" || p == "시운";
 
         let mut mapped = Vec::new();
-        let make_detail = |rel_type: &str, name: &str, p1: &str, p2: &str| crate::analysis::relationships::RelationshipDetail {
-            relation_type: rel_type.to_string(),
-            name: name.to_string(),
-            positions: vec![p1.to_string(), p2.to_string()],
-            level: crate::analysis::supplementary_pillars::InterpretationLevel::Neutral,
-            summary: format!("{}과 {}의 {}", p1, p2, name),
-            description: "".to_string(),
-            reasons: vec![],
-            transformed_element: None,
+        let make_detail = |rel_type: &str, name: &str, p1: &str, p2: &str| {
+            crate::analysis::relationships::RelationshipDetail {
+                relation_type: rel_type.to_string(),
+                name: name.to_string(),
+                positions: vec![p1.to_string(), p2.to_string()],
+                level: crate::analysis::supplementary_pillars::InterpretationLevel::Neutral,
+                summary: format!("{}과 {}의 {}", p1, p2, name),
+                description: "".to_string(),
+                reasons: vec![],
+                transformed_element: None,
+            }
         };
 
         for (_, p1, p2) in &analysis.stem_combinations {
-            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("합", "천간합", p1, p2)); }
+            if is_luck(p1) && is_luck(p2) {
+                mapped.push(make_detail("합", "천간합", p1, p2));
+            }
         }
         for (_, p1, p2) in &analysis.stem_clashes {
-            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("충", "천간충", p1, p2)); }
+            if is_luck(p1) && is_luck(p2) {
+                mapped.push(make_detail("충", "천간충", p1, p2));
+            }
         }
         for (_, p1, p2) in &analysis.dominant_semi_combinations {
-            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("합", "반합(주도)", p1, p2)); }
+            if is_luck(p1) && is_luck(p2) {
+                mapped.push(make_detail("합", "반합(주도)", p1, p2));
+            }
         }
         for (_, p1, p2) in &analysis.weak_semi_combinations {
-            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("합", "반합(보조)", p1, p2)); }
+            if is_luck(p1) && is_luck(p2) {
+                mapped.push(make_detail("합", "반합(보조)", p1, p2));
+            }
         }
         for (_, p1, p2) in &analysis.six_combinations {
-            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("합", "육합", p1, p2)); }
+            if is_luck(p1) && is_luck(p2) {
+                mapped.push(make_detail("합", "육합", p1, p2));
+            }
         }
         for (_, p1, p2) in &analysis.branch_clashes {
-            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("충", "지지충", p1, p2)); }
+            if is_luck(p1) && is_luck(p2) {
+                mapped.push(make_detail("충", "지지충", p1, p2));
+            }
         }
         for (_, p1, p2) in &analysis.branch_punishments {
-            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("형", "형", p1, p2)); }
+            if is_luck(p1) && is_luck(p2) {
+                mapped.push(make_detail("형", "형", p1, p2));
+            }
         }
         for (_, p1, p2) in &analysis.branch_harms {
-            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("해", "해", p1, p2)); }
+            if is_luck(p1) && is_luck(p2) {
+                mapped.push(make_detail("해", "해", p1, p2));
+            }
         }
         for (_, p1, p2) in &analysis.branch_destructions {
-            if is_luck(p1) && is_luck(p2) { mapped.push(make_detail("파", "파", p1, p2)); }
+            if is_luck(p1) && is_luck(p2) {
+                mapped.push(make_detail("파", "파", p1, p2));
+            }
         }
 
         analysis.mapped_relationships = mapped;
@@ -248,11 +305,21 @@ impl DynamicLuckAnalysis {
     pub fn get_influence(luck: GanZi, label: &str, natal: &FourPillars) -> LuckInfluence {
         let mut relations = Vec::new();
         // 원국과의 관계 정리
-        let n_stems = [natal.year.stem, natal.month.stem, natal.day.stem, natal.hour.stem];
-        let n_branches = [natal.year.branch, natal.month.branch, natal.day.branch, natal.hour.branch];
-        
+        let n_stems = [
+            natal.year.stem,
+            natal.month.stem,
+            natal.day.stem,
+            natal.hour.stem,
+        ];
+        let n_branches = [
+            natal.year.branch,
+            natal.month.branch,
+            natal.day.branch,
+            natal.hour.branch,
+        ];
+
         use crate::analysis::relationships::*;
-        
+
         // 1. 천간 관계
         for s in &n_stems {
             if let Some(_c) = StemCombination::check(luck.stem, *s) {
@@ -262,7 +329,7 @@ impl DynamicLuckAnalysis {
                 relations.push(format!("천간충: {} - {}", luck.stem.hanja(), s.hanja()));
             }
         }
-        
+
         // 2. 지지 관계
         for b in &n_branches {
             // 육합
@@ -271,7 +338,12 @@ impl DynamicLuckAnalysis {
             }
             // 반합
             if let Some(semi) = SemiCombination::check(luck.branch, *b) {
-                relations.push(format!("반합: {} ({}-{})", semi.hangul(), luck.branch.hanja(), b.hanja()));
+                relations.push(format!(
+                    "반합: {} ({}-{})",
+                    semi.hangul(),
+                    luck.branch.hanja(),
+                    b.hanja()
+                ));
             }
             // 충
             if let Some(_c) = BranchClash::check(luck.branch, *b) {
@@ -303,17 +375,27 @@ impl std::fmt::Display for DynamicLuckAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "【동적 종합 분석 (원국 + 대운 + 세운)】")?;
         writeln!(f, "─────────────────────────────────")?;
-        
+
         if let Some(infl) = &self.major_influence {
-            writeln!(f, "▶ 대운 영향 ({}): {}", infl.ganzi, infl.relations_with_natal.join(", "))?;
+            writeln!(
+                f,
+                "▶ 대운 영향 ({}): {}",
+                infl.ganzi,
+                infl.relations_with_natal.join(", ")
+            )?;
         }
         if let Some(infl) = &self.yearly_influence {
-            writeln!(f, "▶ 세운 영향 ({}): {}", infl.ganzi, infl.relations_with_natal.join(", "))?;
+            writeln!(
+                f,
+                "▶ 세운 영향 ({}): {}",
+                infl.ganzi,
+                infl.relations_with_natal.join(", ")
+            )?;
         }
-        
+
         writeln!(f, "\n[종합 합충 결과]")?;
         write!(f, "{}", self.combined_relations)?;
-        
+
         Ok(())
     }
 }

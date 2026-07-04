@@ -4,8 +4,8 @@
 //! Placidus, Koch, Whole Sign, Equal House 등의 Cusp 좌표, 아스펙트를 산출하고 성향 지표를 분석합니다.
 
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use eon_astro::{AstroEngine, AstroError};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, thiserror::Error)]
 pub enum WesternError {
@@ -103,24 +103,34 @@ pub struct WesternResult {
 }
 
 pub const SIGN_NAMES: [&str; 12] = [
-    "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+    "Aries",
+    "Taurus",
+    "Gemini",
+    "Cancer",
+    "Leo",
+    "Virgo",
+    "Libra",
+    "Scorpio",
+    "Sagittarius",
+    "Capricorn",
+    "Aquarius",
+    "Pisces",
 ];
 
 pub fn get_sign_ruler(sign_idx: usize) -> &'static str {
     match sign_idx {
-        0 => "Mars",        // Aries
-        1 => "Venus",       // Taurus
-        2 => "Mercury",     // Gemini
-        3 => "Moon",        // Cancer
-        4 => "Sun",         // Leo
-        5 => "Mercury",     // Virgo
-        6 => "Venus",       // Libra
-        7 => "Pluto",       // Scorpio
-        8 => "Jupiter",     // Sagittarius
-        9 => "Saturn",      // Capricorn
-        10 => "Uranus",     // Aquarius
-        11 => "Neptune",    // Pisces
+        0 => "Mars",     // Aries
+        1 => "Venus",    // Taurus
+        2 => "Mercury",  // Gemini
+        3 => "Moon",     // Cancer
+        4 => "Sun",      // Leo
+        5 => "Mercury",  // Virgo
+        6 => "Venus",    // Libra
+        7 => "Pluto",    // Scorpio
+        8 => "Jupiter",  // Sagittarius
+        9 => "Saturn",   // Capricorn
+        10 => "Uranus",  // Aquarius
+        11 => "Neptune", // Pisces
         _ => "Mars",
     }
 }
@@ -144,7 +154,7 @@ pub fn calculate_western(
     // Swiss Ephemeris에 맞춤: 'W' (Whole Sign)이나 'E' (Equal)는 자체 보정 또는 char 전달
     let house_sys_byte = house_system_char as i32;
     let (mut cusps, ascmc) = engine.get_houses(datetime, latitude, longitude, house_sys_byte)?;
-    
+
     let asc = ascmc[0];
     let mc = ascmc[1];
 
@@ -244,7 +254,8 @@ pub fn calculate_western(
     ];
 
     // 아스펙트 비교 대상에 ASC, MC 추가
-    let mut aspect_bodies = planets.iter()
+    let mut aspect_bodies = planets
+        .iter()
         .map(|p| (p.name.clone(), p.longitude))
         .collect::<Vec<_>>();
     aspect_bodies.push(("ASC".to_string(), asc));
@@ -277,7 +288,7 @@ pub fn calculate_western(
     // 5. 성향 지표 점수 가중치 산출 (Fire, Earth, Air, Water 및 Cardinal, Fixed, Mutable)
     let mut elements = ElementDistribution::default();
     let mut modalities = ModalityDistribution::default();
-    
+
     // 가중치 매핑: Sun, Moon (3점), Mercury, Venus, Mars (2점), ASC, MC (2점), Jupiter, Saturn, Uranus, Neptune, Pluto (1점)
     let weight_mapping = |name: &str| -> f64 {
         match name {
@@ -311,23 +322,24 @@ pub fn calculate_western(
     }
 
     // ASC, MC 분포 점수 가중치 추가
-    let add_point = |long: f64, name: &str, el: &mut ElementDistribution, mo: &mut ModalityDistribution| {
-        let w = weight_mapping(name);
-        let s_idx = (long / 30.0).floor() as usize;
-        match s_idx {
-            0 | 4 | 8 => el.fire += w,
-            1 | 5 | 9 => el.earth += w,
-            2 | 6 | 10 => el.air += w,
-            3 | 7 | 11 => el.water += w,
-            _ => {}
-        }
-        match s_idx {
-            0 | 3 | 6 | 9 => mo.cardinal += w,
-            1 | 4 | 7 | 10 => mo.fixed += w,
-            2 | 5 | 8 | 11 => mo.mutable += w,
-            _ => {}
-        }
-    };
+    let add_point =
+        |long: f64, name: &str, el: &mut ElementDistribution, mo: &mut ModalityDistribution| {
+            let w = weight_mapping(name);
+            let s_idx = (long / 30.0).floor() as usize;
+            match s_idx {
+                0 | 4 | 8 => el.fire += w,
+                1 | 5 | 9 => el.earth += w,
+                2 | 6 | 10 => el.air += w,
+                3 | 7 | 11 => el.water += w,
+                _ => {}
+            }
+            match s_idx {
+                0 | 3 | 6 | 9 => mo.cardinal += w,
+                1 | 4 | 7 | 10 => mo.fixed += w,
+                2 | 5 | 8 | 11 => mo.mutable += w,
+                _ => {}
+            }
+        };
     add_point(asc, "ASC", &mut elements, &mut modalities);
     add_point(mc, "MC", &mut elements, &mut modalities);
 
@@ -339,7 +351,7 @@ pub fn calculate_western(
         elements.air = (elements.air / el_total) * 100.0;
         elements.water = (elements.water / el_total) * 100.0;
     }
-    
+
     let mo_total = modalities.cardinal + modalities.fixed + modalities.mutable;
     if mo_total > 0.0 {
         modalities.cardinal = (modalities.cardinal / mo_total) * 100.0;
@@ -348,20 +360,16 @@ pub fn calculate_western(
     }
 
     // 우세 원소/모달리티 문자열 도출
-    let mut el_vec = vec![
-        ("Fire", elements.fire),
+    let mut el_vec = [("Fire", elements.fire),
         ("Earth", elements.earth),
         ("Air", elements.air),
-        ("Water", elements.water),
-    ];
+        ("Water", elements.water)];
     el_vec.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
     let dominant_element = el_vec[0].0.to_string();
 
-    let mut mo_vec = vec![
-        ("Cardinal", modalities.cardinal),
+    let mut mo_vec = [("Cardinal", modalities.cardinal),
         ("Fixed", modalities.fixed),
-        ("Mutable", modalities.mutable),
-    ];
+        ("Mutable", modalities.mutable)];
     mo_vec.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
     let dominant_modality = mo_vec[0].0.to_string();
 
@@ -401,15 +409,15 @@ mod tests {
         // Seoul coordinates
         let lat = 37.5665;
         let lon = 126.9780;
-        
+
         let res = calculate_western(utc_birth, lat, lon, 'P');
         assert!(res.is_ok());
         let result = res.unwrap();
-        
+
         // Check standard outputs
         assert_eq!(result.planets.len(), 12);
         assert_eq!(result.houses.len(), 12);
-        
+
         // Assert Ascendant and Midheaven coordinates are valid
         assert!(result.ascendant >= 0.0 && result.ascendant < 360.0);
         assert!(result.midheaven >= 0.0 && result.midheaven < 360.0);

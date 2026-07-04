@@ -33,17 +33,17 @@ pub enum YogaType {
     Sakata,    // Moon in 6, 8, 12 from Jupiter
     // ── Nabhasa Yogas (BPHS) ────────────────────────────────
     // Sankhya (분산 개수 기반) — 9행성이 점유한 라시 수로 판별
-    NabhasaGola,    // 9행성 → 1 rasi: 극단적 집중, 매우 희귀
-    NabhasaYuga,    // 9행성 → 2 rasi: 극단적 이원성, 도전적 삶
-    NabhasaShoola,  // 9행성 → 3 rasi: 삼위일체 균형, 고난과 강인함
-    NabhasaKedara,  // 9행성 → 4 rasi: 근면, 농업적 성향, 인내
-    NabhasaPasha,   // 9행성 → 5 rasi: 결속력, 집중, 집착
-    NabhasaDaama,   // 9행성 → 6 rasi: 관대함, 통솔력
-    NabhasaVeena,   // 9행성 → 7 rasi: 음악/예술/조화의 재능
+    NabhasaGola,   // 9행성 → 1 rasi: 극단적 집중, 매우 희귀
+    NabhasaYuga,   // 9행성 → 2 rasi: 극단적 이원성, 도전적 삶
+    NabhasaShoola, // 9행성 → 3 rasi: 삼위일체 균형, 고난과 강인함
+    NabhasaKedara, // 9행성 → 4 rasi: 근면, 농업적 성향, 인내
+    NabhasaPasha,  // 9행성 → 5 rasi: 결속력, 집중, 집착
+    NabhasaDaama,  // 9행성 → 6 rasi: 관대함, 통솔력
+    NabhasaVeena,  // 9행성 → 7 rasi: 음악/예술/조화의 재능
     // Akriti (사인 성질 기반) — 모든 행성이 같은 성질의 사인에만 위치
-    NabhasaAshrita,      // Chara 사인만 (Aries/Cancer/Libra/Cap): 유동성, 적응력
-    NabhasaSthira,       // Sthira 사인만 (Taurus/Leo/Scorpio/Aqu): 안정, 고집
-    NabhasaDvisvabhava,  // Dvisvabhava 사인만 (Gem/Vir/Sag/Pis): 유연, 이중성
+    NabhasaAshrita,     // Chara 사인만 (Aries/Cancer/Libra/Cap): 유동성, 적응력
+    NabhasaSthira,      // Sthira 사인만 (Taurus/Leo/Scorpio/Aqu): 안정, 고집
+    NabhasaDvisvabhava, // Dvisvabhava 사인만 (Gem/Vir/Sag/Pis): 유연, 이중성
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -172,7 +172,7 @@ impl YogaEngine {
                         ));
                     }
                 }
-                
+
                 if rule.yoga_type == YogaType::PanchaMahapurusha {
                     let avg_shadbala = planets
                         .iter()
@@ -204,7 +204,9 @@ impl YogaEngine {
                         }
                     }
                     if !has_kendra_exaltation {
-                        quality = YogaQuality::Weak("고양성/지배성이 켄드라에 위치하지 않아 약한 니차방가".to_string());
+                        quality = YogaQuality::Weak(
+                            "고양성/지배성이 켄드라에 위치하지 않아 약한 니차방가".to_string(),
+                        );
                     } else {
                         quality = YogaQuality::VeryHigh; // 확실한 역전
                     }
@@ -1119,7 +1121,9 @@ impl YogaEngine {
     /// Sthira (Fixed):    Taurus(2), Leo(5), Scorpio(8), Aquarius(11)   → (rasi-1) % 3 == 1
     /// Dvísva (Mutable):  Gemini(3), Virgo(6), Sagittarius(9), Pisces(12)→ (rasi-1) % 3 == 2
     fn all_planets_in_sign_quality(chart: &VedicChart, quality: u8) -> bool {
-        chart.planets.iter()
+        chart
+            .planets
+            .iter()
             .filter(|p| p.planet != VedicPlanet::Ascendant)
             .all(|p| (p.rasi - 1) % 3 == quality)
     }
@@ -1333,16 +1337,28 @@ mod tests {
                 avayogi_planet: VedicPlanet::Saturn,
                 dagdha_rashis: vec![],
                 rahu_kalam: (
-                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc),
-                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc)
+                    chrono::DateTime::from_timestamp(21600, 0)
+                        .unwrap()
+                        .with_timezone(&chrono::Utc),
+                    chrono::DateTime::from_timestamp(21600, 0)
+                        .unwrap()
+                        .with_timezone(&chrono::Utc),
                 ),
                 yamaganda: (
-                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc),
-                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc)
+                    chrono::DateTime::from_timestamp(21600, 0)
+                        .unwrap()
+                        .with_timezone(&chrono::Utc),
+                    chrono::DateTime::from_timestamp(21600, 0)
+                        .unwrap()
+                        .with_timezone(&chrono::Utc),
                 ),
                 gulika: (
-                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc),
-                    chrono::DateTime::from_timestamp(21600, 0).unwrap().with_timezone(&chrono::Utc)
+                    chrono::DateTime::from_timestamp(21600, 0)
+                        .unwrap()
+                        .with_timezone(&chrono::Utc),
+                    chrono::DateTime::from_timestamp(21600, 0)
+                        .unwrap()
+                        .with_timezone(&chrono::Utc),
                 ),
             },
             ayanamsa: 23.0,
@@ -1436,15 +1452,15 @@ mod tests {
     fn test_nabhasa_veena_yoga_seven_rasi() {
         // 9 planets spread across 7 distinct rasis → Veena Yoga
         let planets = vec![
-            mock_pos(VedicPlanet::Sun,     1,  1),
-            mock_pos(VedicPlanet::Moon,    2,  2),
-            mock_pos(VedicPlanet::Mars,    3,  3),
-            mock_pos(VedicPlanet::Mercury, 4,  4),
-            mock_pos(VedicPlanet::Jupiter, 5,  5),
-            mock_pos(VedicPlanet::Venus,   6,  6),
-            mock_pos(VedicPlanet::Saturn,  7,  7),
-            mock_pos(VedicPlanet::Rahu,    7,  7), // same rasi as Saturn
-            mock_pos(VedicPlanet::Ketu,    1,  1), // same rasi as Sun
+            mock_pos(VedicPlanet::Sun, 1, 1),
+            mock_pos(VedicPlanet::Moon, 2, 2),
+            mock_pos(VedicPlanet::Mars, 3, 3),
+            mock_pos(VedicPlanet::Mercury, 4, 4),
+            mock_pos(VedicPlanet::Jupiter, 5, 5),
+            mock_pos(VedicPlanet::Venus, 6, 6),
+            mock_pos(VedicPlanet::Saturn, 7, 7),
+            mock_pos(VedicPlanet::Rahu, 7, 7), // same rasi as Saturn
+            mock_pos(VedicPlanet::Ketu, 1, 1), // same rasi as Sun
         ];
         // Occupied rasis: {1,2,3,4,5,6,7} = 7 → Veena
         let chart = mock_chart(planets);
@@ -1459,15 +1475,15 @@ mod tests {
     fn test_nabhasa_gola_yoga_one_rasi() {
         // All 9 planets in rasi 5 (Leo) → Gola Yoga
         let planets = vec![
-            mock_pos(VedicPlanet::Sun,     5, 5),
-            mock_pos(VedicPlanet::Moon,    5, 5),
-            mock_pos(VedicPlanet::Mars,    5, 5),
+            mock_pos(VedicPlanet::Sun, 5, 5),
+            mock_pos(VedicPlanet::Moon, 5, 5),
+            mock_pos(VedicPlanet::Mars, 5, 5),
             mock_pos(VedicPlanet::Mercury, 5, 5),
             mock_pos(VedicPlanet::Jupiter, 5, 5),
-            mock_pos(VedicPlanet::Venus,   5, 5),
-            mock_pos(VedicPlanet::Saturn,  5, 5),
-            mock_pos(VedicPlanet::Rahu,    5, 5),
-            mock_pos(VedicPlanet::Ketu,    5, 5),
+            mock_pos(VedicPlanet::Venus, 5, 5),
+            mock_pos(VedicPlanet::Saturn, 5, 5),
+            mock_pos(VedicPlanet::Rahu, 5, 5),
+            mock_pos(VedicPlanet::Ketu, 5, 5),
         ];
         let chart = mock_chart(planets);
         let yogas = YogaEngine::check_yogas(&chart);
@@ -1482,20 +1498,22 @@ mod tests {
         // All planets in Chara (Cardinal) signs: Aries(1), Cancer(4), Libra(7), Capricorn(10)
         // (rasi - 1) % 3 == 0 for all
         let planets = vec![
-            mock_pos(VedicPlanet::Sun,     1,  1),  // Aries
-            mock_pos(VedicPlanet::Moon,    4,  4),  // Cancer
-            mock_pos(VedicPlanet::Mars,    7,  7),  // Libra
+            mock_pos(VedicPlanet::Sun, 1, 1),       // Aries
+            mock_pos(VedicPlanet::Moon, 4, 4),      // Cancer
+            mock_pos(VedicPlanet::Mars, 7, 7),      // Libra
             mock_pos(VedicPlanet::Mercury, 10, 10), // Capricorn
-            mock_pos(VedicPlanet::Jupiter, 1,  1),
-            mock_pos(VedicPlanet::Venus,   4,  4),
-            mock_pos(VedicPlanet::Saturn,  7,  7),
-            mock_pos(VedicPlanet::Rahu,    10, 10),
-            mock_pos(VedicPlanet::Ketu,    1,  1),
+            mock_pos(VedicPlanet::Jupiter, 1, 1),
+            mock_pos(VedicPlanet::Venus, 4, 4),
+            mock_pos(VedicPlanet::Saturn, 7, 7),
+            mock_pos(VedicPlanet::Rahu, 10, 10),
+            mock_pos(VedicPlanet::Ketu, 1, 1),
         ];
         let chart = mock_chart(planets);
         let yogas = YogaEngine::check_yogas(&chart);
         assert!(
-            yogas.iter().any(|y| y.yoga_type == YogaType::NabhasaAshrita),
+            yogas
+                .iter()
+                .any(|y| y.yoga_type == YogaType::NabhasaAshrita),
             "Ashrita Yoga should be detected when all planets are in Chara signs"
         );
     }
@@ -1504,30 +1522,44 @@ mod tests {
     fn test_nabhasa_none_if_mixed_signs() {
         // Planets in both Chara and Sthira signs → no Akriti Yoga
         let planets = vec![
-            mock_pos(VedicPlanet::Sun,     1, 1), // Aries (Chara)
-            mock_pos(VedicPlanet::Moon,    2, 2), // Taurus (Sthira)
-            mock_pos(VedicPlanet::Mars,    3, 3), // Gemini (Dvisvabhava)
+            mock_pos(VedicPlanet::Sun, 1, 1),  // Aries (Chara)
+            mock_pos(VedicPlanet::Moon, 2, 2), // Taurus (Sthira)
+            mock_pos(VedicPlanet::Mars, 3, 3), // Gemini (Dvisvabhava)
             mock_pos(VedicPlanet::Mercury, 4, 4),
             mock_pos(VedicPlanet::Jupiter, 5, 5),
-            mock_pos(VedicPlanet::Venus,   6, 6),
-            mock_pos(VedicPlanet::Saturn,  7, 7),
-            mock_pos(VedicPlanet::Rahu,    8, 8),
-            mock_pos(VedicPlanet::Ketu,    9, 9),
+            mock_pos(VedicPlanet::Venus, 6, 6),
+            mock_pos(VedicPlanet::Saturn, 7, 7),
+            mock_pos(VedicPlanet::Rahu, 8, 8),
+            mock_pos(VedicPlanet::Ketu, 9, 9),
         ];
         let chart = mock_chart(planets);
         let yogas = YogaEngine::check_yogas(&chart);
-        let has_akriti = yogas.iter().any(|y| matches!(
-            y.yoga_type,
-            YogaType::NabhasaAshrita | YogaType::NabhasaSthira | YogaType::NabhasaDvisvabhava
-        ));
-        assert!(!has_akriti, "No Akriti Yoga when planets span mixed sign qualities");
+        let has_akriti = yogas.iter().any(|y| {
+            matches!(
+                y.yoga_type,
+                YogaType::NabhasaAshrita | YogaType::NabhasaSthira | YogaType::NabhasaDvisvabhava
+            )
+        });
+        assert!(
+            !has_akriti,
+            "No Akriti Yoga when planets span mixed sign qualities"
+        );
         // But Sankhya (9 rasis) should produce no Sankhya yoga (only 1-7 generate one)
-        let has_sankhya = yogas.iter().any(|y| matches!(
-            y.yoga_type,
-            YogaType::NabhasaGola | YogaType::NabhasaYuga | YogaType::NabhasaShoola |
-            YogaType::NabhasaKedara | YogaType::NabhasaPasha | YogaType::NabhasaDaama |
-            YogaType::NabhasaVeena
-        ));
-        assert!(!has_sankhya, "No Sankhya Yoga when planets are spread across all 9 rasis");
+        let has_sankhya = yogas.iter().any(|y| {
+            matches!(
+                y.yoga_type,
+                YogaType::NabhasaGola
+                    | YogaType::NabhasaYuga
+                    | YogaType::NabhasaShoola
+                    | YogaType::NabhasaKedara
+                    | YogaType::NabhasaPasha
+                    | YogaType::NabhasaDaama
+                    | YogaType::NabhasaVeena
+            )
+        });
+        assert!(
+            !has_sankhya,
+            "No Sankhya Yoga when planets are spread across all 9 rasis"
+        );
     }
 }

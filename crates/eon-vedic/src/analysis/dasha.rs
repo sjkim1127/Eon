@@ -250,14 +250,13 @@ impl YoginiDasha {
         ("Sankata", VedicPlanet::Rahu, 8.0),
     ];
 
-    pub fn calculate_timeline(
-        birth_time: DateTime<Utc>,
-        moon_long: f64,
-    ) -> Vec<DashaPeriod> {
+    pub fn calculate_timeline(birth_time: DateTime<Utc>, moon_long: f64) -> Vec<DashaPeriod> {
         let nak_duration = 360.0 / 27.0;
         let nak_index_1 = (moon_long / nak_duration).floor() as usize + 1;
         let mut start_idx = (nak_index_1 + 3) % 8;
-        if start_idx == 0 { start_idx = 8; }
+        if start_idx == 0 {
+            start_idx = 8;
+        }
         let start_idx_0 = start_idx - 1;
 
         let elapsed_in_nak = moon_long % nak_duration;

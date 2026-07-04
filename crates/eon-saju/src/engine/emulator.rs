@@ -94,7 +94,11 @@ impl LifePathEmulator {
             // (guaranteed by MajorLuckAnalysis::calculate_astro). Using partition_point gives
             // O(log n) lookup and lets us borrow cycles instead of cloning them.
             let cycle_pos = major_luck.cycles.partition_point(|c| c.start_age <= age);
-            let current_major_cycle = if cycle_pos > 0 { Some(&major_luck.cycles[cycle_pos - 1]) } else { None };
+            let current_major_cycle = if cycle_pos > 0 {
+                Some(&major_luck.cycles[cycle_pos - 1])
+            } else {
+                None
+            };
             let start_age_of_major = current_major_cycle.map_or(0, |c| c.start_age);
             let major_ganzi = current_major_cycle
                 .map(|c| c.ganzi)

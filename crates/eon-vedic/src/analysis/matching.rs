@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
-use crate::planets::VedicPlanet;
 use crate::core::chart::VedicChart;
+use crate::planets::VedicPlanet;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -15,7 +15,7 @@ pub struct KootaScore {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CompatibilityReport {
-    pub total_score: f64, // out of 36
+    pub total_score: f64,    // out of 36
     pub is_compatible: bool, // total >= 18 and no critical Nadi/Bhakoot dosha
     pub kootas: Vec<KootaScore>,
     pub male_mangal_dosha: bool,
@@ -27,16 +27,23 @@ pub struct CompatibilityReport {
 pub struct MatchingEngine;
 
 impl MatchingEngine {
-    pub fn calculate_compatibility(
-        male: &VedicChart,
-        female: &VedicChart,
-    ) -> CompatibilityReport {
-        let male_moon = male.planets.iter().find(|p| p.planet == VedicPlanet::Moon).cloned().unwrap();
-        let female_moon = female.planets.iter().find(|p| p.planet == VedicPlanet::Moon).cloned().unwrap();
+    pub fn calculate_compatibility(male: &VedicChart, female: &VedicChart) -> CompatibilityReport {
+        let male_moon = male
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Moon)
+            .cloned()
+            .unwrap();
+        let female_moon = female
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Moon)
+            .cloned()
+            .unwrap();
 
         // 1. Varna (1 Guna)
         let varna_score = calculate_varna(male_moon.rasi, female_moon.rasi);
-        
+
         // 2. Vashya (2 Gunas)
         let vashya_score = calculate_vashya(male_moon.rasi, female_moon.rasi);
 
@@ -58,7 +65,14 @@ impl MatchingEngine {
         // 8. Nadi (8 Gunas)
         let nadi_score = calculate_nadi(male_moon.nakshatra, female_moon.nakshatra);
 
-        let total = varna_score + vashya_score + tara_score + yoni_score + graha_maitri_score + gana_score + bhakoot_score + nadi_score;
+        let total = varna_score
+            + vashya_score
+            + tara_score
+            + yoni_score
+            + graha_maitri_score
+            + gana_score
+            + bhakoot_score
+            + nadi_score;
 
         let kootas = vec![
             KootaScore {
@@ -66,7 +80,11 @@ impl MatchingEngine {
                 name: "Varna (Caste/Vocation)".to_string(),
                 max_points: 1.0,
                 earned_points: varna_score,
-                description: if varna_score == 1.0 { "Good work-profile alignment.".to_string() } else { "Differing natural vocations.".to_string() },
+                description: if varna_score == 1.0 {
+                    "Good work-profile alignment.".to_string()
+                } else {
+                    "Differing natural vocations.".to_string()
+                },
             },
             KootaScore {
                 id: "vashya".to_string(),
@@ -80,7 +98,13 @@ impl MatchingEngine {
                 name: "Tara (Destiny/Health)".to_string(),
                 max_points: 3.0,
                 earned_points: tara_score,
-                description: if tara_score == 3.0 { "Excellent destiny and longevity alignment.".to_string() } else if tara_score == 1.5 { "Moderate health compatibility.".to_string() } else { "Challenging health compatibility (Tara Dosha).".to_string() },
+                description: if tara_score == 3.0 {
+                    "Excellent destiny and longevity alignment.".to_string()
+                } else if tara_score == 1.5 {
+                    "Moderate health compatibility.".to_string()
+                } else {
+                    "Challenging health compatibility (Tara Dosha).".to_string()
+                },
             },
             KootaScore {
                 id: "yoni".to_string(),
@@ -94,28 +118,49 @@ impl MatchingEngine {
                 name: "Graha Maitri (Friendship)".to_string(),
                 max_points: 5.0,
                 earned_points: graha_maitri_score,
-                description: if graha_maitri_score >= 4.0 { "High mental harmony and friendship.".to_string() } else if graha_maitri_score >= 2.0 { "Average mental harmony.".to_string() } else { "Potential communication gaps.".to_string() },
+                description: if graha_maitri_score >= 4.0 {
+                    "High mental harmony and friendship.".to_string()
+                } else if graha_maitri_score >= 2.0 {
+                    "Average mental harmony.".to_string()
+                } else {
+                    "Potential communication gaps.".to_string()
+                },
             },
             KootaScore {
                 id: "gana".to_string(),
                 name: "Gana (Temperament)".to_string(),
                 max_points: 6.0,
                 earned_points: gana_score,
-                description: if gana_score >= 5.0 { "Compatible temperaments.".to_string() } else if gana_score >= 3.0 { "Moderate temperament gaps.".to_string() } else { "High temperamental friction (Gana Dosha).".to_string() },
+                description: if gana_score >= 5.0 {
+                    "Compatible temperaments.".to_string()
+                } else if gana_score >= 3.0 {
+                    "Moderate temperament gaps.".to_string()
+                } else {
+                    "High temperamental friction (Gana Dosha).".to_string()
+                },
             },
             KootaScore {
                 id: "bhakoot".to_string(),
                 name: "Bhakoot (Emotional Node)".to_string(),
                 max_points: 7.0,
                 earned_points: bhakoot_score,
-                description: if bhakoot_score == 7.0 { "Stable emotional bond.".to_string() } else { "Challenging emotional/financial cycles (Bhakoot Dosha).".to_string() },
+                description: if bhakoot_score == 7.0 {
+                    "Stable emotional bond.".to_string()
+                } else {
+                    "Challenging emotional/financial cycles (Bhakoot Dosha).".to_string()
+                },
             },
             KootaScore {
                 id: "nadi".to_string(),
                 name: "Nadi (Health/Genetics)".to_string(),
                 max_points: 8.0,
                 earned_points: nadi_score,
-                description: if nadi_score == 8.0 { "Good genetic health & lineage compatibility.".to_string() } else { "Excessive similar energy (Nadi Dosha). Possible genetic mismatches.".to_string() },
+                description: if nadi_score == 8.0 {
+                    "Good genetic health & lineage compatibility.".to_string()
+                } else {
+                    "Excessive similar energy (Nadi Dosha). Possible genetic mismatches."
+                        .to_string()
+                },
             },
         ];
 
@@ -177,7 +222,7 @@ fn calculate_varna(male_rasi: u8, female_rasi: u8) -> f64 {
 fn get_vashya_type(rasi: u8) -> &'static str {
     match rasi {
         1 | 2 => "Chatushpada",
-        9 => "Manushya", // 1st half Manushya, simplified
+        9 => "Manushya",   // 1st half Manushya, simplified
         10 => "Jalachara", // 2nd half Jalachara, simplified
         3 | 6 | 7 | 11 => "Manushya",
         4 | 12 => "Jalachara",
@@ -219,7 +264,20 @@ fn calculate_tara(male_nak: u8, female_nak: u8) -> f64 {
 }
 
 enum YoniAnimal {
-    Horse, Elephant, Sheep, Serpent, Dog, Cat, Rat, Cow, Buffalo, Tiger, Deer, Monkey, Lion, Mongoose
+    Horse,
+    Elephant,
+    Sheep,
+    Serpent,
+    Dog,
+    Cat,
+    Rat,
+    Cow,
+    Buffalo,
+    Tiger,
+    Deer,
+    Monkey,
+    Lion,
+    Mongoose,
 }
 
 fn get_nak_yoni(nak: u8) -> YoniAnimal {
@@ -266,7 +324,7 @@ fn calculate_yoni(male_nak: u8, female_nak: u8) -> f64 {
     let f_val = f_yoni as u8;
     if m_val == f_val {
         4.0
-    } else if (m_val + f_val) % 2 == 0 {
+    } else if (m_val + f_val).is_multiple_of(2) {
         3.0 // Friendly
     } else {
         2.0 // Neutral
@@ -275,7 +333,7 @@ fn calculate_yoni(male_nak: u8, female_nak: u8) -> f64 {
 
 fn calculate_graha_maitri(male_rasi: u8, female_rasi: u8) -> f64 {
     use crate::analysis::relationships::RelationshipEngine;
-    
+
     let m_lord = get_sign_lord(male_rasi);
     let f_lord = get_sign_lord(female_rasi);
 
@@ -310,7 +368,11 @@ fn get_sign_lord(rasi: u8) -> VedicPlanet {
     }
 }
 
-enum GanaType { Deva, Manushya, Rakshasa }
+enum GanaType {
+    Deva,
+    Manushya,
+    Rakshasa,
+}
 
 fn get_nak_gana(nak: u8) -> GanaType {
     match nak {
@@ -347,7 +409,11 @@ fn calculate_bhakoot(male_rasi: u8, female_rasi: u8) -> f64 {
     }
 }
 
-enum NadiType { Adi, Madhya, Antya }
+enum NadiType {
+    Adi,
+    Madhya,
+    Antya,
+}
 
 fn get_nak_nadi(nak: u8) -> NadiType {
     match nak {
@@ -378,11 +444,17 @@ fn check_mangal_dosha(chart: &VedicChart) -> bool {
     if let Some(m) = mars {
         // From Lagna (house_index)
         let is_mangal_lagna = [1, 2, 4, 7, 8, 12].contains(&m.house_index);
-        
+
         // From Moon
-        let moon = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon).unwrap();
+        let moon = chart
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Moon)
+            .unwrap();
         let mut diff = m.rasi as i16 - moon.rasi as i16;
-        if diff < 0 { diff += 12; }
+        if diff < 0 {
+            diff += 12;
+        }
         let house_from_moon = (diff + 1) as u8;
         let is_mangal_moon = [1, 2, 4, 7, 8, 12].contains(&house_from_moon);
 

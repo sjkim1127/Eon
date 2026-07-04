@@ -22,3 +22,6 @@ default = []
 embedded-ephe = ["eon-astro/embedded-ephe"]
 swiss-eph-data = ["eon-astro/swiss-eph-data"]
 
+
+[lints]
+workspace = true

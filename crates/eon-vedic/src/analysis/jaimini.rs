@@ -27,8 +27,8 @@ pub struct KarakaAssignment {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ArudhaPada {
-    pub house: u8, // 1~12
-    pub rasi: u8,  // 1~12
+    pub house: u8,    // 1~12
+    pub rasi: u8,     // 1~12
     pub name: String, // e.g., "Arudha Lagna (AL)", "Dhanapada (A2)"
 }
 
@@ -123,25 +123,34 @@ impl JaiminiEngine {
         let lagna_rasi = chart.ascendant.rasi;
 
         let names = [
-            "Arudha Lagna (AL)", "Dhanapada (A2)", "Vikramapada (A3)", "Matrupada (A4)",
-            "Putrapada (A5)", "Shatrupada (A6)", "Darapada (A7)", "Mrityupada (A8)",
-            "Bhagyapada (A9)", "Rajyapada (A10)", "Labhapada (A11)", "Upapada Lagna (UL/A12)"
+            "Arudha Lagna (AL)",
+            "Dhanapada (A2)",
+            "Vikramapada (A3)",
+            "Matrupada (A4)",
+            "Putrapada (A5)",
+            "Shatrupada (A6)",
+            "Darapada (A7)",
+            "Mrityupada (A8)",
+            "Bhagyapada (A9)",
+            "Rajyapada (A10)",
+            "Labhapada (A11)",
+            "Upapada Lagna (UL/A12)",
         ];
 
         for house in 1..=12 {
             let house_rasi = ((lagna_rasi as i16 + house as i16 - 2) % 12 + 1) as u8;
             let lord = VedicPlanet::get_ruler_of(house_rasi);
-            
+
             // Find lord's position in D1
             if let Some(lord_pos) = chart.planets.iter().find(|p| p.planet == lord) {
                 let lord_rasi = lord_pos.rasi;
-                
+
                 // Distance from house to lord
                 let dist = (lord_rasi as i16 - house_rasi as i16 + 12) % 12;
-                
+
                 // Arudha = Lord + Distance
                 let mut arudha_rasi = ((lord_rasi as i16 + dist - 1) % 12 + 1) as u8;
-                
+
                 if arudha_rasi == house_rasi {
                     // If Arudha is in the house itself, final Arudha is 10th from house
                     arudha_rasi = ((house_rasi as i16 + 10 - 2) % 12 + 1) as u8;
@@ -164,12 +173,12 @@ impl JaiminiEngine {
     /// Calculate Special Lagnas from BPHS
     pub fn calculate_special_lagnas(chart: &VedicChart) -> Vec<SpecialLagna> {
         let mut results = Vec::new();
-        
+
         let sun_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Sun);
         if let (Some(sun), sunrise) = (sun_pos, chart.panchanga.sunrise) {
             let birth_time = chart.panchanga.current_time;
             let diff_mins = birth_time.signed_duration_since(sunrise).num_minutes() as f64;
-            
+
             // Bhava Lagna (BL): 1 Rasi (30 deg) per 24 mins (1 Ghati)
             let bl_long = (sun.sidereal_deg + diff_mins * (30.0 / 24.0)) % 360.0;
             results.push(SpecialLagna {
@@ -196,22 +205,22 @@ impl JaiminiEngine {
                 rasi: (gl_long / 30.0).floor() as u8 + 1,
             });
         }
-        
+
         results
     }
 
     /// Calculate Chara Dasha (True KN Rao method)
-    /// 
+    ///
     /// Sequence (KN Rao):
     /// - Forward: Ar, Le, Vi, Li, Aq, Pi (1, 5, 6, 7, 11, 12)
     /// - Backward: Ta, Ge, Cn, Sc, Sg, Cp (2, 3, 4, 8, 9, 10)
     pub fn calculate_chara_dasha(chart: &VedicChart) -> Vec<SignDashaPeriod> {
         let lagna_rasi = chart.ascendant.rasi;
         let birth_time = chart.panchanga.current_time;
-        
+
         let forward_signs = [1, 5, 6, 7, 11, 12];
         let is_forward_seq = forward_signs.contains(&lagna_rasi);
-        
+
         let mut sequence = Vec::new();
         for i in 0..12 {
             let rasi = if is_forward_seq {
@@ -228,14 +237,15 @@ impl JaiminiEngine {
         for rasi in sequence {
             let years = Self::calculate_chara_dasha_years(chart, rasi);
 
-            let end_time = current_start + Duration::seconds((years as f64 * 365.2425 * 24.0 * 60.0 * 60.0) as i64);
-            
+            let end_time = current_start
+                + Duration::seconds((years as f64 * 365.2425 * 24.0 * 60.0 * 60.0) as i64);
+
             timeline.push(SignDashaPeriod {
                 rasi,
                 start_time: current_start,
                 end_time,
             });
-            
+
             current_start = end_time;
         }
 
@@ -249,10 +259,17 @@ impl JaiminiEngine {
 
         let lord_rasi = match rasi {
             8 => Self::evaluate_co_ruler_strength(chart, 8, VedicPlanet::Mars, VedicPlanet::Ketu),
-            11 => Self::evaluate_co_ruler_strength(chart, 11, VedicPlanet::Saturn, VedicPlanet::Rahu),
+            11 => {
+                Self::evaluate_co_ruler_strength(chart, 11, VedicPlanet::Saturn, VedicPlanet::Rahu)
+            }
             _ => {
                 let lord = VedicPlanet::get_ruler_of(rasi);
-                chart.planets.iter().find(|p| p.planet == lord).map(|p| p.rasi).unwrap_or(rasi)
+                chart
+                    .planets
+                    .iter()
+                    .find(|p| p.planet == lord)
+                    .map(|p| p.rasi)
+                    .unwrap_or(rasi)
             }
         };
 
@@ -262,14 +279,23 @@ impl JaiminiEngine {
             (rasi as i16 - lord_rasi as i16 + 12) % 12
         };
 
-        if dist == 0 { 12 } else { dist as u32 }
+        if dist == 0 {
+            12
+        } else {
+            dist as u32
+        }
     }
 
     /// Selection rules for Scorpio/Aquarius co-rulers (Jaimini / KN Rao)
     /// 1. Sign with more planets (excluding the sign itself) wins.
     /// 2. If equal, the node/planet that is stronger wins (Exaltation > Own Sign > Others).
     /// 3. If still equal, the one with more degrees in the sign wins (Jaimini logic).
-    fn evaluate_co_ruler_strength(chart: &VedicChart, rasi: u8, p1: VedicPlanet, p2: VedicPlanet) -> u8 {
+    fn evaluate_co_ruler_strength(
+        chart: &VedicChart,
+        rasi: u8,
+        p1: VedicPlanet,
+        p2: VedicPlanet,
+    ) -> u8 {
         let pos1 = match chart.planets.iter().find(|p| p.planet == p1) {
             Some(p) => p,
             None => return 1,
@@ -281,7 +307,9 @@ impl JaiminiEngine {
 
         // Count conjunctions in the rasi where the lord is placed (excluding the lord itself)
         let count_conj = |p_rasi: u8, planet: VedicPlanet| {
-            chart.planets.iter()
+            chart
+                .planets
+                .iter()
                 .filter(|p| p.rasi == p_rasi && p.planet != planet)
                 .count()
         };
@@ -289,28 +317,48 @@ impl JaiminiEngine {
         let c1 = count_conj(pos1.rasi, p1);
         let c2 = count_conj(pos2.rasi, p2);
 
-        if c1 > c2 { return pos1.rasi; }
-        if c2 > c1 { return pos2.rasi; }
+        if c1 > c2 {
+            return pos1.rasi;
+        }
+        if c2 > c1 {
+            return pos2.rasi;
+        }
 
         // If conjunctions are equal, check if one is in their own sign/exalted
         let is_stronger = |p: VedicPlanet, prasi: u8| {
-            if prasi == rasi { 2 } // Own sign
-            else if prasi == p.exaltation_rasi() { 3 } // Exalted
-            else { 1 }
+            if prasi == rasi {
+                2
+            }
+            // Own sign
+            else if prasi == p.exaltation_rasi() {
+                3
+            }
+            // Exalted
+            else {
+                1
+            }
         };
 
         let s1 = is_stronger(p1, pos1.rasi);
         let s2 = is_stronger(p2, pos2.rasi);
 
-        if s1 > s2 { return pos1.rasi; }
-        if s2 > s1 { return pos2.rasi; }
+        if s1 > s2 {
+            return pos1.rasi;
+        }
+        if s2 > s1 {
+            return pos2.rasi;
+        }
 
         // Last resort: Higher degree in the rasi
-        if pos1.sidereal_deg % 30.0 > pos2.sidereal_deg % 30.0 { pos1.rasi } else { pos2.rasi }
+        if pos1.sidereal_deg % 30.0 > pos2.sidereal_deg % 30.0 {
+            pos1.rasi
+        } else {
+            pos2.rasi
+        }
     }
 
     /// Jaimini Rashi Drishti (Sign Aspects)
-    /// Rule: 
+    /// Rule:
     /// - Movable (Ar, Cn, Li, Cp) aspects all Fixed (Ta, Le, Sc, Aq) except the adjacent one.
     /// - Fixed aspects all Movable except the adjacent one.
     /// - Dual (Ge, Vi, Sg, Pi) aspects all other Dual signs.
@@ -335,7 +383,7 @@ impl JaiminiEngine {
     /// Calculate Argala (Intervention) for a sign/planet position
     pub fn get_argala(rasi: u8) -> Vec<(u8, String)> {
         let mut results = Vec::new();
-        
+
         // Primary Argala: 2, 4, 11
         // Obstruction (Virodhargala): 12, 10, 3
         let primary = [(2, "Wealth/Speech"), (4, "Happiness/Home"), (11, "Gains")];
@@ -357,8 +405,8 @@ impl JaiminiEngine {
 mod tests {
     use super::*;
     use crate::core::chart::VedicChart;
-    use crate::core::planets::VedicPlanet;
     use crate::core::chart::VedicPosition;
+    use crate::core::planets::VedicPlanet;
     use chrono::{TimeZone, Utc};
 
     fn mock_position(planet: VedicPlanet, rasi: u8, deg: f64) -> VedicPosition {
@@ -426,17 +474,15 @@ mod tests {
     #[test]
     fn test_chara_dasha_years_basic() {
         // Aries (1) lord Mars in Gemini (3)
-        // 1 is forward sign. Dist: (3 - 1) = 2. Years: 2 - 1 = 1 year? 
-        // Wait, my impl says (dist == 0 ? 12 : dist). 
-        // 3-1 = 2. dist = 2. 
-        let planets = vec![
-            mock_position(VedicPlanet::Mars, 3, 5.0),
-        ];
+        // 1 is forward sign. Dist: (3 - 1) = 2. Years: 2 - 1 = 1 year?
+        // Wait, my impl says (dist == 0 ? 12 : dist).
+        // 3-1 = 2. dist = 2.
+        let planets = vec![mock_position(VedicPlanet::Mars, 3, 5.0)];
         let chart = mock_chart(planets, 1);
         let years = JaiminiEngine::calculate_chara_dasha_years(&chart, 1);
-        assert_eq!(years, 2); // 1st to 3rd is 3 signs, but Rao uses diff. 
-        // Actually dist is sign index difference. 1 to 3 is 2. 
-        // If dist=2, years=2. 
+        assert_eq!(years, 2); // 1st to 3rd is 3 signs, but Rao uses diff.
+                              // Actually dist is sign index difference. 1 to 3 is 2.
+                              // If dist=2, years=2.
     }
 
     #[test]
@@ -450,18 +496,21 @@ mod tests {
             mock_position(VedicPlanet::Sun, 12, 20.0),
         ];
         let chart = mock_chart(planets, 1);
-        let lord_rasi = JaiminiEngine::evaluate_co_ruler_strength(&chart, 8, VedicPlanet::Mars, VedicPlanet::Ketu);
+        let lord_rasi = JaiminiEngine::evaluate_co_ruler_strength(
+            &chart,
+            8,
+            VedicPlanet::Mars,
+            VedicPlanet::Ketu,
+        );
         assert_eq!(lord_rasi, 12);
     }
 
     #[test]
     fn test_arudha_pada_7th_exception() {
-        // Lagna (1) lord Mars in 4. 
-        // 4 is 4th from 1. 4th from 4 is 7. 
+        // Lagna (1) lord Mars in 4.
+        // 4 is 4th from 1. 4th from 4 is 7.
         // This is the 7th house exception. Should move 4 houses from 7 -> 10.
-        let planets = vec![
-            mock_position(VedicPlanet::Mars, 4, 10.0),
-        ];
+        let planets = vec![mock_position(VedicPlanet::Mars, 4, 10.0)];
         let chart = mock_chart(planets, 1);
         let padas = JaiminiEngine::calculate_arudha_padas(&chart);
         let l1_arudha = padas.iter().find(|p| p.house == 1).unwrap();

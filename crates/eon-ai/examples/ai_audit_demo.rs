@@ -1,11 +1,11 @@
-use eon_saju::{FourPillars, SajuInput, LifePathEmulator};
 use eon_ai::DestinyAIAuditor;
+use eon_saju::{FourPillars, LifePathEmulator, SajuInput};
 
 fn main() {
     // 1. 샘플 입력 (김성주님 사주)
     let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
     let pillars = FourPillars::calculate(&input).unwrap();
-    
+
     // 2. 100년 시뮬레이션 데이터 생성 (김성주님: 남자, 2004년생)
     let emulator = LifePathEmulator::new(pillars.clone(), eon_core::Gender::Male, 2004);
     let _life_report = emulator.emulate();
@@ -26,12 +26,24 @@ fn main() {
 
     // 4. 실제 도구 호출 시뮬레이션 (LLM이 'analyze_entropy'를 호출했다고 가정)
     println!("[AI CALL]: analyze_entropy()");
-    let result = eon_ai::EonToolbox::call(&pillars, "analyze_entropy", serde_json::json!({})).unwrap();
-    println!("[SYSTEM RESULT]: {}\n", serde_json::to_string_pretty(&result).unwrap());
+    let result =
+        eon_ai::EonToolbox::call(&pillars, "analyze_entropy", serde_json::json!({})).unwrap();
+    println!(
+        "[SYSTEM RESULT]: {}\n",
+        serde_json::to_string_pretty(&result).unwrap()
+    );
 
     println!("[AI CALL]: fuzz_luck_vulnerabilities(major_ganzi_index: 10)");
-    let result = eon_ai::EonToolbox::call(&pillars, "fuzz_luck_vulnerabilities", serde_json::json!({"major_ganzi_index": 10})).unwrap();
-    println!("[SYSTEM RESULT]: (총 {}개의 크래시 발견)\n", result["total_crashes"]);
+    let result = eon_ai::EonToolbox::call(
+        &pillars,
+        "fuzz_luck_vulnerabilities",
+        serde_json::json!({"major_ganzi_index": 10}),
+    )
+    .unwrap();
+    println!(
+        "[SYSTEM RESULT]: (총 {}개의 크래시 발견)\n",
+        result["total_crashes"]
+    );
 
     println!("----------------------------------------------------");
     println!("AI 에이전트는 위 도구들을 자유롭게 호출하며");

@@ -1,14 +1,14 @@
 // crates/eon-ui/src/components/tabs/human_design_tab.rs
-use dioxus::prelude::*;
-use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, Locale, translate_hd_center, translate_hd_type, translate_hd_authority};
-use eon_service::facade;
-use eon_service::dto::HumanDesignAnalysisInput;
 use crate::components::shared::birth_form::BirthForm;
+use crate::i18n::{t, translate_hd_authority, translate_hd_center, translate_hd_type, Locale, TK};
+use crate::store::{AnalysisState, TaskStatus};
+use dioxus::prelude::*;
+use eon_service::dto::HumanDesignAnalysisInput;
+use eon_service::facade;
 
 #[component]
 pub fn HumanDesignTab() -> Element {
-    let mut state = use_context::<AnalysisState>();
+    let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
     let mut copied_feedback = use_signal(|| false);
 
@@ -20,7 +20,7 @@ pub fn HumanDesignTab() -> Element {
     use_effect(move || {
         let form = state_cloned.form.read().clone();
         let _trig = *analysis_trigger.read();
-        
+
         if form.year > 0 {
             let mut state = state_cloned.clone();
             spawn(async move {
@@ -211,8 +211,8 @@ pub fn HumanDesignTab() -> Element {
                                         div { class: "divide-y divide-slate-800/40 text-xs",
                                             {
                                                 let planets_ordered = vec![
-                                                    "Sun", "Earth", "Moon", "NorthNode", "SouthNode", 
-                                                    "Mercury", "Venus", "Mars", "Jupiter", "Saturn", 
+                                                    "Sun", "Earth", "Moon", "NorthNode", "SouthNode",
+                                                    "Mercury", "Venus", "Mars", "Jupiter", "Saturn",
                                                     "Uranus", "Neptune", "Pluto"
                                                 ];
                                                 planets_ordered.into_iter().map(|p| {
@@ -257,8 +257,8 @@ pub fn HumanDesignTab() -> Element {
                                         div { class: "divide-y divide-slate-800/40 text-xs",
                                             {
                                                 let planets_ordered = vec![
-                                                    "Sun", "Earth", "Moon", "NorthNode", "SouthNode", 
-                                                    "Mercury", "Venus", "Mars", "Jupiter", "Saturn", 
+                                                    "Sun", "Earth", "Moon", "NorthNode", "SouthNode",
+                                                    "Mercury", "Venus", "Mars", "Jupiter", "Saturn",
                                                     "Uranus", "Neptune", "Pluto"
                                                 ];
                                                 planets_ordered.into_iter().map(|p| {

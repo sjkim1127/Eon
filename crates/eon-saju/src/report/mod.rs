@@ -10,9 +10,9 @@ use crate::analysis::{
     spirit_markers::SpiritMarkerAnalysis,
     strength::StrengthAnalysis,
     structure::StructureAnalysis,
+    supplementary_pillars::SupplementaryPillars,
     void::VoidAnalysis,
     yongshin::YongshinAnalysis,
-    supplementary_pillars::SupplementaryPillars,
 };
 use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGodAnalysis;
@@ -114,12 +114,24 @@ impl SajuReport {
         md.push('\n');
         md.push_str(&self.pillars.hangul());
         md.push_str("\n```\n\n");
-        
+
         md.push_str("### 1.1 Auxiliary Pillars\n");
-        md.push_str(&format!("- **Taewon (Pregnancy)**: {} ({})\n", self.supplementary_pillars.taewon.hanja(), self.supplementary_pillars.taewon.hangul()));
-        md.push_str(&format!("- **Myeonggung (Destiny)**: {} ({})\n", self.supplementary_pillars.myeonggung.hanja(), self.supplementary_pillars.myeonggung.hangul()));
-        md.push_str(&format!("- **Shingung (Body)**: {} ({})\n", self.supplementary_pillars.shingung.hanja(), self.supplementary_pillars.shingung.hangul()));
-        
+        md.push_str(&format!(
+            "- **Taewon (Pregnancy)**: {} ({})\n",
+            self.supplementary_pillars.taewon.hanja(),
+            self.supplementary_pillars.taewon.hangul()
+        ));
+        md.push_str(&format!(
+            "- **Myeonggung (Destiny)**: {} ({})\n",
+            self.supplementary_pillars.myeonggung.hanja(),
+            self.supplementary_pillars.myeonggung.hangul()
+        ));
+        md.push_str(&format!(
+            "- **Shingung (Body)**: {} ({})\n",
+            self.supplementary_pillars.shingung.hanja(),
+            self.supplementary_pillars.shingung.hangul()
+        ));
+
         if !self.supplementary_pillars.interpretations.is_empty() {
             md.push_str("\n#### Interpretations\n");
             for interp in &self.supplementary_pillars.interpretations {
@@ -128,7 +140,10 @@ impl SajuReport {
                     crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "⚠️",
                     crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "•",
                 };
-                md.push_str(&format!("- **{} {}**: {}\n", emoji, interp.pillar_name, interp.description));
+                md.push_str(&format!(
+                    "- **{} {}**: {}\n",
+                    emoji, interp.pillar_name, interp.description
+                ));
             }
         }
         md.push('\n');
@@ -190,9 +205,15 @@ impl SajuReport {
             self.structure.structure.hanja()
         ));
         md.push_str(&format!("- **Summary**: {}\n", self.structure.summary));
-        md.push_str(&format!("- **Description**: {}\n", self.structure.description));
+        md.push_str(&format!(
+            "- **Description**: {}\n",
+            self.structure.description
+        ));
         if !self.structure.reasons.is_empty() {
-            md.push_str(&format!("- **Reasons**: {}\n", self.structure.reasons.join(", ")));
+            md.push_str(&format!(
+                "- **Reasons**: {}\n",
+                self.structure.reasons.join(", ")
+            ));
         }
 
         md.push_str("\n## 4. Spirit Markers (Shensha)\n");
@@ -207,7 +228,9 @@ impl SajuReport {
                 };
                 md.push_str(&format!(
                     "### {} {} ({})\n",
-                    emoji, m.marker.hangul(), m.position.hangul()
+                    emoji,
+                    m.marker.hangul(),
+                    m.position.hangul()
                 ));
                 md.push_str(&format!("- **Summary**: {}\n", m.summary));
                 md.push_str(&format!("- **Description**: {}\n", m.description));
@@ -230,7 +253,9 @@ impl SajuReport {
                 };
                 md.push_str(&format!(
                     "### {} {} ({})\n",
-                    emoji, rel.name, rel.positions.join(", ")
+                    emoji,
+                    rel.name,
+                    rel.positions.join(", ")
                 ));
                 md.push_str(&format!("- **Summary**: {}\n", rel.summary));
                 md.push_str(&format!("- **Description**: {}\n", rel.description));
@@ -299,7 +324,11 @@ impl SajuReport {
             md.push_str("\n### 8.2 Key Life Events (ESIL Trace Summary)\n");
             // 큰 변화가 있거나 상위 5개 프레임 추출
             let mut key_frames: Vec<_> = self.simulation_frames.iter().collect();
-            key_frames.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+            key_frames.sort_by(|a, b| {
+                b.score
+                    .partial_cmp(&a.score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
 
             for frame in key_frames.iter().take(5) {
                 if !frame.tags.is_empty() {

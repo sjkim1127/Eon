@@ -1,12 +1,12 @@
-use dioxus::prelude::*;
+use crate::components::shared::birth_form::BirthForm;
+use crate::i18n::{t, translate_planet, Locale, TK};
 use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, Locale, translate_planet};
+use dioxus::prelude::*;
+use eon_saju::analysis::strength::StrengthType;
 use eon_service::dto::{SajuAnalysisInput, VedicAnalysisInput};
 use eon_service::facade;
 use eon_vedic::analysis::strength::StrengthEngine;
 use eon_vedic::planets::VedicPlanet;
-use eon_saju::analysis::strength::StrengthType;
-use crate::components::shared::birth_form::BirthForm;
 
 // 세력 분석은 사주+베딕 두 결과를 모두 필요로 합니다.
 // 전역 상태에서 이미 계산된 saju, vedic 데이터를 활용하거나
@@ -29,7 +29,7 @@ fn planet_bar_color(p: VedicPlanet) -> &'static str {
 
 #[component]
 pub fn StrengthTab() -> Element {
-    let mut state = use_context::<AnalysisState>();
+    let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
 
     // Reactive trigger for manual analysis runs
@@ -49,7 +49,12 @@ pub fn StrengthTab() -> Element {
                 let base = form.to_analysis_input();
 
                 // 병렬 계산 (사주 먼저, 베딕 이후)
-                match facade::analyze_saju(SajuAnalysisInput::new(base.clone(), form.is_male, form.use_night_rat_hour, Some(false))) {
+                match facade::analyze_saju(SajuAnalysisInput::new(
+                    base.clone(),
+                    form.is_male,
+                    form.use_night_rat_hour,
+                    Some(false),
+                )) {
                     Ok(res) => {
                         state.saju.write().data = Some(res);
                         state.saju.write().status = TaskStatus::Success;
@@ -167,13 +172,11 @@ pub fn StrengthTab() -> Element {
                                 let total = (se.bijie_count + se.yinxing_count + se.shishang_count + se.caisheng_count + se.guanxing_count).max(1) as f32;
                                 let dm_el = saju.report.strength.day_master.element();
 
-                                let bars = vec![
-                                    ("비겁(比劫)", dm_el.hangul(), dm_el.hanja(), se.bijie_count, "bg-violet-500"),
+                                let bars = [("비겁(比劫)", dm_el.hangul(), dm_el.hanja(), se.bijie_count, "bg-violet-500"),
                                     ("인성(印星)", dm_el.generated_by().hangul(), dm_el.generated_by().hanja(), se.yinxing_count, "bg-blue-500"),
                                     ("식상(食傷)", dm_el.generates().hangul(), dm_el.generates().hanja(), se.shishang_count, "bg-emerald-500"),
                                     ("재성(財星)", dm_el.controls().hangul(), dm_el.controls().hanja(), se.caisheng_count, "bg-amber-500"),
-                                    ("관성(官星)", dm_el.controlled_by().hangul(), dm_el.controlled_by().hanja(), se.guanxing_count, "bg-red-500"),
-                                ];
+                                    ("관성(官星)", dm_el.controlled_by().hangul(), dm_el.controlled_by().hanja(), se.guanxing_count, "bg-red-500")];
 
                                 rsx! {
                                     {bars.iter().map(|(ten_god, el_name, el_hanja, count, color)| {
@@ -269,7 +272,7 @@ pub fn StrengthTab() -> Element {
                             }
                             span { class: "text-xs text-slate-500 font-mono", "1 Rupa = 60 Shashtiamsa" }
                         }
-                        
+
                         div { class: "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6",
                             {
                                 // 7대 행성만 필터링하여 Shadbala 계산
@@ -278,7 +281,7 @@ pub fn StrengthTab() -> Element {
                                     VedicPlanet::Mercury, VedicPlanet::Jupiter, VedicPlanet::Venus,
                                     VedicPlanet::Saturn
                                 ];
-                                
+
                                 let strengths: Vec<_> = vedic.chart.planets.iter()
                                     .filter(|p| target_planets.contains(&p.planet))
                                     .map(|p| (p.planet, StrengthEngine::calculate(p, &vedic.chart)))
@@ -299,29 +302,27 @@ pub fn StrengthTab() -> Element {
                                         let req_score = rupa_req * 60.0;
                                         let sat_ratio = (s.total_score / req_score * 100.0) as u32;
                                         let is_satisfied = s.total_score >= req_score;
-                                        
+
                                         let badge_class = if is_satisfied {
                                             "bg-emerald-950/40 text-emerald-400 border-emerald-900/50"
                                         } else {
                                             "bg-rose-950/40 text-rose-400 border-rose-900/50"
                                         };
-                                        
+
                                         let badge_lbl = if is_satisfied {
                                             t(locale, TK::ShadbalaSatisfied)
                                         } else {
                                             t(locale, TK::ShadbalaUnsatisfied)
                                         };
-                                        
+
                                         let bar_color = planet_bar_color(*planet);
-                                        
-                                        let factors = vec![
-                                            (t(locale, TK::ShadbalaSthanaBala), s.sthana_bala, "bg-blue-500"),
+
+                                        let factors = [(t(locale, TK::ShadbalaSthanaBala), s.sthana_bala, "bg-blue-500"),
                                             (t(locale, TK::ShadbalaDigBala), s.dig_bala, "bg-green-500"),
                                             (t(locale, TK::ShadbalaKalaBala), s.kala_bala, "bg-purple-500"),
                                             (t(locale, TK::ShadbalaChestaBala), s.chesta_bala, "bg-cyan-500"),
                                             (t(locale, TK::ShadbalaNaisargikaBala), s.naisargika_bala, "bg-amber-500"),
-                                            (t(locale, TK::ShadbalaDrikBala), s.drik_bala, "bg-red-500"),
-                                        ];
+                                            (t(locale, TK::ShadbalaDrikBala), s.drik_bala, "bg-red-500")];
 
                                         rsx! {
                                             div { class: "bg-slate-950/40 border border-slate-800/80 rounded-xl p-4 space-y-4 hover:border-slate-700/60 transition-all duration-300 shadow-md",
@@ -335,7 +336,7 @@ pub fn StrengthTab() -> Element {
                                                         "{badge_lbl} ({sat_ratio}%)"
                                                     }
                                                 }
-                                                
+
                                                 // 총점 요약
                                                 div { class: "bg-slate-900/50 border border-slate-900 rounded-lg p-2.5 flex justify-between items-center text-xs font-mono",
                                                     div { class: "space-y-0.5",
@@ -347,7 +348,7 @@ pub fn StrengthTab() -> Element {
                                                         p { class: "text-indigo-400 font-bold", "{s.total_score / 60.0:.2} / {rupa_req:.1} R" }
                                                     }
                                                 }
-                                                
+
                                                 // 6대 강도 요인 리스트
                                                 div { class: "space-y-2 pt-1",
                                                     {factors.iter().map(|(label, val, f_color)| {
@@ -384,7 +385,10 @@ pub fn StrengthTab() -> Element {
 #[component]
 fn DeukDetail(label: &'static str, acquired: bool, desc: String) -> Element {
     let (bg, icon_color) = if acquired {
-        ("bg-emerald-900/20 border-emerald-700/40", "text-emerald-400")
+        (
+            "bg-emerald-900/20 border-emerald-700/40",
+            "text-emerald-400",
+        )
     } else {
         ("bg-slate-800/40 border-slate-700/40", "text-slate-500")
     };

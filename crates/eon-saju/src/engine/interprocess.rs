@@ -1,10 +1,10 @@
 //! Inter-Process Compatibility (IPC) Audit Module
-//! 
+//!
 //! 두 개의 사주 시스템(SajuVM)이 상호작용할 때 발생하는
 //! 에너지 간섭, 자원 경합(상극), 시너지(합)를 분석합니다.
 
-use serde::{Deserialize, Serialize};
 use crate::engine::vm::SajuVM;
+use serde::{Deserialize, Serialize};
 
 /// IPC 분석 결과 리포트
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -30,7 +30,7 @@ impl CompatibilityAuditor {
         let mut conflicts = Vec::new();
         let mut deadlocks = Vec::new();
         let mut merged_trace = String::new();
-        
+
         // 1. 천간 교차 결합 분석 (Interface Mapping)
         let a_stems = [
             ("A_년간", system_a.natal.year.stem),
@@ -66,7 +66,12 @@ impl CompatibilityAuditor {
         for (p1, s1) in &a_stems {
             for (p2, s2) in &b_stems {
                 if let Some(c) = StemCombination::check(*s1, *s2) {
-                    synergies.push(format!("천간합: {} <-> {} ({})", p1, p2, c.transformed_element().hangul()));
+                    synergies.push(format!(
+                        "천간합: {} <-> {} ({})",
+                        p1,
+                        p2,
+                        c.transformed_element().hangul()
+                    ));
                     sync_score += 5.0;
                     merged_trace.push_str(&format!("ipc_joint:{}-{}_hap; ", p1, p2));
                 }

@@ -13,3 +13,6 @@ eon-astro = { workspace = true }
 chrono = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
+
+[lints]
+workspace = true

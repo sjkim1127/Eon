@@ -2,8 +2,8 @@
 //!
 //! 甲乙丙丁戊己庚辛壬癸
 
-use serde::{Deserialize, Serialize};
 use crate::core::element::{Element, Polarity};
+use serde::{Deserialize, Serialize};
 
 /// 천간(天干) - 10개
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -34,19 +34,25 @@ pub enum HeavenlyStem {
 impl HeavenlyStem {
     /// 모든 천간 배열
     pub const ALL: [HeavenlyStem; 10] = [
-        Self::Jia, Self::Yi, Self::Bing, Self::Ding, Self::Wu,
-        Self::Ji, Self::Geng, Self::Xin, Self::Ren, Self::Gui,
+        Self::Jia,
+        Self::Yi,
+        Self::Bing,
+        Self::Ding,
+        Self::Wu,
+        Self::Ji,
+        Self::Geng,
+        Self::Xin,
+        Self::Ren,
+        Self::Gui,
     ];
 
     /// 한자 표기
-    pub const HANJA: [&'static str; 10] = [
-        "甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"
-    ];
+    pub const HANJA: [&'static str; 10] =
+        ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
 
     /// 한글 표기
-    pub const HANGUL: [&'static str; 10] = [
-        "갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"
-    ];
+    pub const HANGUL: [&'static str; 10] =
+        ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
 
     /// 인덱스 (0-9)
     #[inline]

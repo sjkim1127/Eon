@@ -1,22 +1,22 @@
 // crates/eon-ui/src/components/tabs/iching_tab.rs
-use dioxus::prelude::*;
-use crate::store::{AnalysisState, TaskStatus};
-use crate::i18n::{t, TK, Locale};
-use crate::i18n::iching_db::{get_hexagram_info, get_yao_name, get_yao_description};
-use eon_service::facade;
-use eon_service::dto::SajuAnalysisInput;
 use crate::components::shared::birth_form::BirthForm;
+use crate::i18n::iching_db::{get_hexagram_info, get_yao_description, get_yao_name};
+use crate::i18n::{t, Locale, TK};
+use crate::store::{AnalysisState, TaskStatus};
+use dioxus::prelude::*;
 use eon_saju::core::element::ElementRelation;
+use eon_service::dto::SajuAnalysisInput;
+use eon_service::facade;
 
 #[component]
 pub fn IChingTab() -> Element {
-    let mut state = use_context::<AnalysisState>();
+    let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
 
     // 로컬 상호작용 상태 (선택된 효와 마우스 호버 중인 효)
     let mut selected_yao = use_signal(|| None::<(bool, u8)>);
     let mut hovered_yao = use_signal(|| None::<(bool, u8)>);
-    
+
     // 유년괘 선택용 나이 상태 (기본값 30세)
     let mut selected_age = use_signal(|| 30u32);
     // 복사 피드백 상태
@@ -48,7 +48,7 @@ pub fn IChingTab() -> Element {
                         if let Some(iching_data) = &state.iching.read().data {
                             let yd = iching_data.result.yuan_dang_yao;
                             selected_yao.set(Some((true, yd)));
-                            
+
                             // 현재 만나이 계산하여 초기 나이 설정
                             let current_age = (2026 - form.year).max(1) as u32;
                             selected_age.set(current_age.min(100));
@@ -223,9 +223,9 @@ pub fn IChingTab() -> Element {
                                         div { class: "space-y-1.5",
                                             span { class: "text-xs font-bold text-violet-400 tracking-wider uppercase", "{t(locale, TK::IChingYuanQi)}" }
                                             h4 { class: "text-xl font-black text-slate-100 flex items-center gap-2",
-                                                if res.yuan_qi { 
+                                                if res.yuan_qi {
                                                     span { class: "text-emerald-400", "得元氣 (득원기)" }
-                                                } else { 
+                                                } else {
                                                     span { class: "text-slate-400", "失元氣 (실원기)" }
                                                 }
                                             }
@@ -247,9 +247,9 @@ pub fn IChingTab() -> Element {
                                         div { class: "space-y-1.5",
                                             span { class: "text-xs font-bold text-indigo-400 tracking-wider uppercase", "{t(locale, TK::IChingHuaGong)}" }
                                             h4 { class: "text-xl font-black text-slate-100 flex items-center gap-2",
-                                                if res.hua_gong { 
+                                                if res.hua_gong {
                                                     span { class: "text-emerald-400", "得化工 (득화공)" }
-                                                } else { 
+                                                } else {
                                                     span { class: "text-slate-400", "失化工 (실화공)" }
                                                 }
                                             }
@@ -282,7 +282,7 @@ pub fn IChingTab() -> Element {
                                                     "본괘 {res.pre_natal_hexagram}"
                                                 }
                                             }
-                                            
+
                                             // 선천괘 효 렌더링
                                             div { class: "flex flex-col gap-3 py-2",
                                                 {(1..=6).rev().map(|line_num| {
@@ -297,7 +297,7 @@ pub fn IChingTab() -> Element {
                                                     let is_ying = line_num == res.ying_yao;
                                                     let is_sel = *selected_yao.read() == Some((is_pre_natal, line_num));
                                                     let is_hov = *hovered_yao.read() == Some((is_pre_natal, line_num));
-                                                    
+
                                                     let state_class = if is_sel || is_hov {
                                                         "scale-[1.03] ring-2 ring-violet-500 shadow-lg shadow-violet-900/30"
                                                     } else if is_yd {
@@ -307,13 +307,13 @@ pub fn IChingTab() -> Element {
                                                     };
 
                                                     rsx! {
-                                                        div { 
+                                                        div {
                                                             key: "pre-{line_num}",
                                                             class: "relative transition-all duration-300 cursor-pointer {state_class}",
                                                             onclick: move |_| selected_yao.set(Some((is_pre_natal, line_num))),
                                                             onmouseenter: move |_| hovered_yao.set(Some((is_pre_natal, line_num))),
                                                             onmouseleave: move |_| hovered_yao.set(None),
-                                                            
+
                                                             {if line_is_yang {
                                                                 rsx! {
                                                                     div { class: "h-6 rounded-md bg-gradient-to-r from-violet-600 via-indigo-500 to-violet-700 flex items-center justify-center text-[10px] text-white/50 font-bold" }
@@ -362,7 +362,7 @@ pub fn IChingTab() -> Element {
                                                     "본괘 {res.post_natal_hexagram}"
                                                 }
                                             }
-                                            
+
                                             // 후천괘 효 렌더링
                                             div { class: "flex flex-col gap-3 py-2",
                                                 {(1..=6).rev().map(|line_num| {
@@ -374,7 +374,7 @@ pub fn IChingTab() -> Element {
 
                                                     let is_sel = *selected_yao.read() == Some((is_pre_natal, line_num));
                                                     let is_hov = *hovered_yao.read() == Some((is_pre_natal, line_num));
-                                                    
+
                                                     let state_class = if is_sel || is_hov {
                                                         "scale-[1.03] ring-2 ring-indigo-500 shadow-lg shadow-indigo-900/30"
                                                     } else {
@@ -382,13 +382,13 @@ pub fn IChingTab() -> Element {
                                                     };
 
                                                     rsx! {
-                                                        div { 
+                                                        div {
                                                             key: "post-{line_num}",
                                                             class: "relative transition-all duration-300 cursor-pointer {state_class}",
                                                             onclick: move |_| selected_yao.set(Some((is_pre_natal, line_num))),
                                                             onmouseenter: move |_| hovered_yao.set(Some((is_pre_natal, line_num))),
                                                             onmouseleave: move |_| hovered_yao.set(None),
-                                                            
+
                                                             {if line_is_yang {
                                                                 rsx! {
                                                                     div { class: "h-6 rounded-md bg-gradient-to-r from-indigo-600 via-blue-500 to-indigo-700 flex items-center justify-center text-[10px] text-white/50 font-bold" }
@@ -416,7 +416,7 @@ pub fn IChingTab() -> Element {
                                         // 1. 선택된 괘 & 효 상세 해석 카드
                                         div { class: "p-6 rounded-3xl bg-gradient-to-br from-slate-900 to-slate-850 border border-slate-800 shadow-2xl relative overflow-hidden space-y-6",
                                             div { class: "absolute -top-24 -right-24 w-48 h-48 bg-violet-600/10 rounded-full blur-3xl pointer-events-none" }
-                                            
+
                                             // 괘 타이틀 정보
                                             div { class: "space-y-1",
                                                 div { class: "flex items-center gap-2",
@@ -466,7 +466,7 @@ pub fn IChingTab() -> Element {
                                                         "{active_age_range}"
                                                     }
                                                 }
-                                                
+
                                                 // 납갑 & 신살 정보 바 렌더링
                                                 div { class: "flex flex-wrap gap-2 text-[10px] pb-2 border-b border-slate-800/50",
                                                     span { class: "px-2 py-0.5 rounded bg-slate-850 text-slate-300 font-bold",
@@ -493,12 +493,12 @@ pub fn IChingTab() -> Element {
                                                         }
                                                     }
                                                 }
-                                                
+
                                                 p { class: "text-slate-300 text-sm leading-relaxed whitespace-pre-line",
                                                     "{yao_desc}"
                                                 }
                                             }
-                                            
+
                                             p { class: "text-[11px] text-slate-500 text-center italic",
                                                 "{t(locale, TK::IChingSelectYaoHint)}"
                                             }
@@ -510,7 +510,7 @@ pub fn IChingTab() -> Element {
                                                 span { "📅" }
                                                 "{t(locale, TK::IChingTimelineTitle)}"
                                             }
-                                            
+
                                             div { class: "space-y-3 max-h-[300px] overflow-y-auto pr-1",
                                                 {res.lifetime_cycles.iter().map(|cycle| {
                                                     let is_active_cycle = current_age >= cycle.start_age && current_age <= cycle.end_age;
@@ -521,7 +521,7 @@ pub fn IChingTab() -> Element {
                                                         Locale::Zh => c_hex.name_zh,
                                                         Locale::Ru => c_hex.name_ru,
                                                     };
-                                                    
+
                                                     let cycle_is_yang = (cycle.end_age - cycle.start_age + 1) == 9;
                                                     let line_name = get_yao_name(cycle.line_index, cycle_is_yang, locale);
                                                     let cycle_is_pre = cycle.is_pre_natal;
@@ -534,7 +534,7 @@ pub fn IChingTab() -> Element {
                                                     };
 
                                                     rsx! {
-                                                        div { 
+                                                        div {
                                                             key: "{cycle.start_age}-{cycle.is_pre_natal}",
                                                             class: "p-3.5 rounded-xl border flex items-center justify-between gap-4 transition-all duration-200 cursor-pointer {active_cls}",
                                                             onclick: move |_| {
@@ -582,7 +582,7 @@ pub fn IChingTab() -> Element {
                                         Locale::Zh => yh_hex.name_zh,
                                         Locale::Ru => yh_hex.name_ru,
                                     };
-                                    
+
                                     let yh_upper_trigram = get_trigram_lines(get_trigram_num_from_hex(yh.hexagram_index, true));
                                     let yh_lower_trigram = get_trigram_lines(get_trigram_num_from_hex(yh.hexagram_index, false));
                                     let mut yh_lines = [false; 6];
@@ -631,7 +631,7 @@ pub fn IChingTab() -> Element {
                                                         }
                                                     }
                                                 }
-                                                
+
                                                 // 슬라이더 바
                                                 input {
                                                     type: "range",
@@ -686,7 +686,7 @@ pub fn IChingTab() -> Element {
                                                             }
                                                         })}
                                                     }
-                                                    
+
                                                     // 유년괘 정보 출력
                                                     div { class: "space-y-1.5 text-center md:text-left flex-1",
                                                         div { class: "flex items-center justify-center md:justify-start gap-1 text-[10px] font-bold text-violet-400",
@@ -713,7 +713,7 @@ pub fn IChingTab() -> Element {
                                                         }
                                                         span { class: "text-[10px] text-slate-500", "정월(1월) = 유년괘 변효 {yh.yearly_line}효 기점" }
                                                     }
-                                                    
+
                                                     // 12개월의 유월괘 그리드 렌더링
                                                     div { class: "grid grid-cols-4 sm:grid-cols-6 gap-3",
                                                         {yh.monthly_hexagrams.iter().enumerate().map(|(idx, &m_hex_idx)| {
@@ -725,7 +725,7 @@ pub fn IChingTab() -> Element {
                                                                 Locale::Ru => m_hex.name_ru,
                                                             };
                                                             rsx! {
-                                                                div { 
+                                                                div {
                                                                     key: "m-{idx}",
                                                                     class: "p-2 rounded-lg bg-slate-900 border border-slate-850 text-center hover:border-violet-500/20 hover:bg-slate-850/50 transition-colors flex flex-col items-center justify-center gap-1",
                                                                     span { class: "text-[10px] font-black text-slate-500", "{idx + 1}월" }
@@ -824,7 +824,11 @@ fn get_trigram_num_from_hex(hexagram_index: u8, is_upper: bool) -> u8 {
         64 => (9, 1), // 未濟
         _ => (6, 6),
     };
-    if is_upper { upper } else { lower }
+    if is_upper {
+        upper
+    } else {
+        lower
+    }
 }
 
 fn get_trigram_lines(num: u8) -> [bool; 3] {

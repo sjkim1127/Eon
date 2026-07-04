@@ -1,7 +1,7 @@
-use eon_saju::core::pillars::SajuInput;
-use eon_saju::core::pillars::FourPillars;
-use eon_saju::engine::emulator::LifePathEmulator;
 use eon_core::Gender;
+use eon_saju::core::pillars::FourPillars;
+use eon_saju::core::pillars::SajuInput;
+use eon_saju::engine::emulator::LifePathEmulator;
 
 fn main() {
     let input = SajuInput::new_solar(1990, 5, 10, 12, 0).with_gender(Gender::Male);

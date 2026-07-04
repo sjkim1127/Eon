@@ -229,7 +229,10 @@ impl AstroEngine {
     }
 
     /// 특정 시점 이전 혹은 포함된 가장 가까운 합삭(New Moon) 시각을 찾습니다.
-    pub fn find_new_moon_before(&self, datetime: DateTime<Utc>) -> Result<DateTime<Utc>, AstroError> {
+    pub fn find_new_moon_before(
+        &self,
+        datetime: DateTime<Utc>,
+    ) -> Result<DateTime<Utc>, AstroError> {
         self.find_relative_conjunction_backward(datetime, 0.0)
     }
 

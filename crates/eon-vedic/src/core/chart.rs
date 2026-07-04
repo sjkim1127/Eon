@@ -1,7 +1,7 @@
 use crate::core::config::{NodeCalculation, VedicConfig};
 use crate::core::error::VedicError;
 use crate::planets::VedicPlanet;
-use chrono::{DateTime, Utc, TimeZone, Datelike, Timelike};
+use chrono::{DateTime, Datelike, TimeZone, Timelike, Utc};
 use eon_astro::AstroEngine;
 use serde::{Deserialize, Serialize};
 
@@ -139,17 +139,21 @@ impl VedicChartCalculator {
         }
     }
 
-    pub fn calculate(&self, time: DateTime<Utc>, latitude: f64, longitude: f64) -> Result<VedicChart, VedicError> {
-        let ayanamsa = crate::calc::ayanamsa::get_ayanamsa(&self.engine, time, self.config.ayanamsa);
+    pub fn calculate(
+        &self,
+        time: DateTime<Utc>,
+        latitude: f64,
+        longitude: f64,
+    ) -> Result<VedicChart, VedicError> {
+        let ayanamsa =
+            crate::calc::ayanamsa::get_ayanamsa(&self.engine, time, self.config.ayanamsa);
 
         let hsys = match self.config.house_system {
             crate::core::config::HouseSystem::WholeSign => b'W' as i32,
             crate::core::config::HouseSystem::Sripati => b'S' as i32,
         };
 
-        let (cusps, ascmc) = self
-            .engine
-            .get_houses(time, latitude, longitude, hsys)?;
+        let (cusps, ascmc) = self.engine.get_houses(time, latitude, longitude, hsys)?;
 
         let sidereal_cusps: Vec<f64> = cusps
             .iter()
@@ -310,12 +314,8 @@ impl VedicChartCalculator {
                 p.se_id()
             };
             let flag = 256 | 2;
-            let (trop, speed) = self
-                .engine
-                .get_planet_full(time, se_id, flag)?;
-            let (_, dec) = self
-                .engine
-                .get_planet_equatorial(time, se_id)?;
+            let (trop, speed) = self.engine.get_planet_full(time, se_id, flag)?;
+            let (_, dec) = self.engine.get_planet_equatorial(time, se_id)?;
             let sidereal = (trop - ayanamsa + 360.0) % 360.0;
             planets.push(create_position(
                 *p,
@@ -376,7 +376,7 @@ impl VedicChartCalculator {
 
         chart.aspects = crate::analysis::aspects::AspectEngine::calculate_aspects(&chart);
         chart.sav = crate::analysis::ashtakavarga::AshtakavargaEngine::calculate_sav(&chart);
-        
+
         let bav_planets = [
             VedicPlanet::Sun,
             VedicPlanet::Moon,
@@ -390,12 +390,14 @@ impl VedicChartCalculator {
             .iter()
             .map(|&p| crate::analysis::ashtakavarga::AshtakavargaEngine::calculate_bav(p, &chart))
             .collect();
-            
+
         chart.karakas = crate::analysis::jaimini::JaiminiEngine::calculate_karakas(&chart, true);
-        chart.arudha_padas = crate::analysis::jaimini::JaiminiEngine::calculate_arudha_padas(&chart);
-        chart.special_lagnas = crate::analysis::jaimini::JaiminiEngine::calculate_special_lagnas(&chart);
+        chart.arudha_padas =
+            crate::analysis::jaimini::JaiminiEngine::calculate_arudha_padas(&chart);
+        chart.special_lagnas =
+            crate::analysis::jaimini::JaiminiEngine::calculate_special_lagnas(&chart);
         chart.bhava_strengths = crate::analysis::bhava::BhavaEngine::calculate_all(&chart);
-        
+
         chart.avasthas = chart
             .planets
             .iter()
@@ -412,7 +414,9 @@ impl VedicChartCalculator {
         chart.vimshopaka_scores = v_scores;
 
         chart.analysis_report = Some(crate::analysis::report::VedicAnalysisReport::generate(
-            &chart, time, chart.ascendant.rasi
+            &chart,
+            time,
+            chart.ascendant.rasi,
         ));
 
         Ok(chart)
@@ -438,44 +442,49 @@ impl VedicChartCalculator {
         // 2. Find time when Sun returns to this sidereal longitude in the target year
         // Handle Feb 29 leap year birthday for non-leap years
         let (m, d) = if birth_time.month() == 2 && birth_time.day() == 29 {
-            let is_leap = (target_year % 4 == 0 && target_year % 100 != 0) || (target_year % 400 == 0);
-            if is_leap { (2, 29) } else { (3, 1) }
+            let is_leap =
+                (target_year % 4 == 0 && target_year % 100 != 0) || (target_year % 400 == 0);
+            if is_leap {
+                (2, 29)
+            } else {
+                (3, 1)
+            }
         } else {
             (birth_time.month(), birth_time.day())
         };
 
         let approx_time = Utc
-            .with_ymd_and_hms(
-                target_year,
-                m,
-                d,
-                birth_time.hour(),
-                birth_time.minute(),
-                0,
-            )
+            .with_ymd_and_hms(target_year, m, d, birth_time.hour(), birth_time.minute(), 0)
             .single()
             .ok_or_else(|| VedicError::CalculationError("Invalid approx time".to_string()))?;
 
         let mut current_guess = approx_time;
         for _ in 0..3 {
-            let ayanamsa = crate::calc::ayanamsa::get_ayanamsa(&self.engine, current_guess, self.config.ayanamsa);
-            let target_tropical = (birth_sun_sidereal + ayanamsa) % 360.0;
-            if let Ok(exact_time) = self.engine.find_time_for_longitude(
+            let ayanamsa = crate::calc::ayanamsa::get_ayanamsa(
+                &self.engine,
                 current_guess,
-                target_tropical,
-            ) {
+                self.config.ayanamsa,
+            );
+            let target_tropical = (birth_sun_sidereal + ayanamsa) % 360.0;
+            if let Ok(exact_time) = self
+                .engine
+                .find_time_for_longitude(current_guess, target_tropical)
+            {
                 current_guess = exact_time;
             }
         }
 
         // 3. Calculate full chart for the exact return time
         let mut annual_chart = self.calculate(current_guess, latitude, longitude)?;
-        
+
         // Overwrite report with correct birth lagna context and correct return time
-        annual_chart.analysis_report = Some(crate::analysis::report::VedicAnalysisReport::generate(
-            &annual_chart, current_guess, birth_chart.ascendant.rasi
-        ));
-        
+        annual_chart.analysis_report =
+            Some(crate::analysis::report::VedicAnalysisReport::generate(
+                &annual_chart,
+                current_guess,
+                birth_chart.ascendant.rasi,
+            ));
+
         Ok(annual_chart)
     }
 }

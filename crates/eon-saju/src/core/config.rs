@@ -5,8 +5,7 @@
 use serde::{Deserialize, Serialize};
 
 /// 전역 분석 설정
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AnalysisConfig {
     pub weights: WeightsConfig,
     pub strength: StrengthConfig,
@@ -14,7 +13,6 @@ pub struct AnalysisConfig {
     pub thermal: ThermalConfig,
     pub vm: VmConfig,
 }
-
 
 /// 위치별 가중치 (110점법)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -134,7 +132,7 @@ impl Default for ThermalConfig {
 pub struct VmConfig {
     /// 시뮬레이션 시작 점수 (0-100 범위의 중앙값)
     pub base_score: f32,
-    
+
     /// 희신/용신 충돌 시 감점 (음수)
     pub clash_bad: f32,
     /// 기신/구신 충돌 시 가점 (양수, 개고 효과)

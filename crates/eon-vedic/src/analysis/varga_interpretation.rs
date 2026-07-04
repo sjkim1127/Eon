@@ -24,11 +24,11 @@ pub struct VargaInterpretationEngine;
 impl VargaInterpretationEngine {
     pub fn interpret_planet(chart: &VedicChart, planet: VedicPlanet) -> VargaInterpretation {
         let p_pos = chart.planets.iter().find(|p| p.planet == planet);
-        
+
         if let Some(p) = p_pos {
             let is_vargottama = p.rasi == p.navamsa_rasi;
             let is_pushkar_navamsa = Self::is_pushkar_navamsa(p.rasi, p.sidereal_deg % 30.0);
-            
+
             VargaInterpretation {
                 planet,
                 is_vargottama,
@@ -36,12 +36,20 @@ impl VargaInterpretationEngine {
                 d9_rasi: p.navamsa_rasi,
                 d10_rasi: p.dasamsa_rasi,
                 d60_rasi: p.shashtyamsa_rasi,
-                summary: if is_vargottama { "Stable and Strong".to_string() } else { "Standard".to_string() },
+                summary: if is_vargottama {
+                    "Stable and Strong".to_string()
+                } else {
+                    "Standard".to_string()
+                },
                 description: format!("{:?} occupies the same sign in D1 and D9 charts.", planet),
                 reasons: {
                     let mut r = Vec::new();
-                    if is_vargottama { r.push("Vargottama (Sign-identical)".to_string()); }
-                    if is_pushkar_navamsa { r.push("Pushkar Navamsa (Spiritual Strength)".to_string()); }
+                    if is_vargottama {
+                        r.push("Vargottama (Sign-identical)".to_string());
+                    }
+                    if is_pushkar_navamsa {
+                        r.push("Pushkar Navamsa (Spiritual Strength)".to_string());
+                    }
                     r
                 },
             }
@@ -78,8 +86,11 @@ impl VargaInterpretationEngine {
         let d9_lagna = chart.ascendant.navamsa_rasi;
         let d9_7th = (d9_lagna + 5) % 12 + 1;
         let d9_7th_lord = VedicPlanet::get_ruler_of(d9_7th);
-        
-        format!("D9 Lagna: {}, 7th House Lord in D9: {:?}", d9_lagna, d9_7th_lord)
+
+        format!(
+            "D9 Lagna: {}, 7th House Lord in D9: {:?}",
+            d9_lagna, d9_7th_lord
+        )
     }
 
     /// Analyze Career (D10)
@@ -87,7 +98,10 @@ impl VargaInterpretationEngine {
         let d10_lagna = chart.ascendant.dasamsa_rasi;
         let d10_10th = (d10_lagna + 8) % 12 + 1;
         let d10_10th_lord = VedicPlanet::get_ruler_of(d10_10th);
-        
-        format!("D10 Lagna: {}, 10th House Lord in D10: {:?}", d10_lagna, d10_10th_lord)
+
+        format!(
+            "D10 Lagna: {}, 10th House Lord in D10: {:?}",
+            d10_lagna, d10_10th_lord
+        )
     }
 }

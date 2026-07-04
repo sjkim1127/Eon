@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord, Default)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord, Default,
+)]
 pub enum VedicPlanet {
     #[default]
-    Sun = 0,         // Surya
+    Sun = 0, // Surya
     Moon = 1,        // Chandra
     Mars = 4,        // Mangala
     Mercury = 2,     // Budha

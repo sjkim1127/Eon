@@ -1,5 +1,5 @@
-use thiserror::Error;
 use serde::Serialize;
+use thiserror::Error;
 use ts_rs::TS;
 
 #[derive(Debug, Error, Serialize, TS)]

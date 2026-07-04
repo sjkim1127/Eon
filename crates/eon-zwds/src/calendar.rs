@@ -3,9 +3,9 @@
 //! `eon-saju`의 `LunarCalendar::from_solar()`를 재사용하여
 //! 자미두수 계산에 필요한 음력 데이터를 추출합니다.
 
-use chrono::NaiveDate;
 use crate::error::ZwdsError;
 use crate::types::LunarBirthInfo;
+use chrono::NaiveDate;
 
 // eon-data의 만세력 모듈 재사용
 use eon_data::LunarCalendar;
@@ -38,8 +38,8 @@ pub fn solar_to_lunar_birth(
     let date = NaiveDate::from_ymd_opt(year, month, day)
         .ok_or_else(|| ZwdsError::InvalidBirthDate(format!("{}-{}-{}", year, month, day)))?;
 
-    let (lunar_year, lunar_month, lunar_day, is_leap) = LunarCalendar::from_solar(date)
-        .map_err(|e| ZwdsError::LunarConversion(e.to_string()))?;
+    let (lunar_year, lunar_month, lunar_day, is_leap) =
+        LunarCalendar::from_solar(date).map_err(|e| ZwdsError::LunarConversion(e.to_string()))?;
 
     // 연간 계산: 60갑자 기반
     // 갑자년(甲子): 4, 즉 (year - 4) % 10 으로 천간 인덱스 산출

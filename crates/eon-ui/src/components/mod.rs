@@ -1,3 +1,3 @@
 pub mod layout;
-pub mod tabs;
 pub mod shared;
+pub mod tabs;

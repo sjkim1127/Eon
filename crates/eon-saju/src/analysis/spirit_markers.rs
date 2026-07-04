@@ -10,13 +10,13 @@
 //! ### 흉살 (凶煞)
 //! - 역마살, 화개살, 괴강살, 도화살, 고신살 등
 
-use serde::{Deserialize, Serialize};
-use crate::core::stem::HeavenlyStem;
+use crate::analysis::shinsal::{EvilSpirit, Gilsin, TwelveShinsal};
+use crate::analysis::supplementary_pillars::InterpretationLevel;
 use crate::core::branch::EarthlyBranch;
 use crate::core::ganzi::GanZi;
 use crate::core::pillars::FourPillars;
-use crate::analysis::shinsal::{TwelveShinsal, Gilsin, EvilSpirit};
-use crate::analysis::supplementary_pillars::InterpretationLevel;
+use crate::core::stem::HeavenlyStem;
+use serde::{Deserialize, Serialize};
 
 /// 신살 종류
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -45,7 +45,7 @@ pub enum SpiritMarker {
     TianyiMedical,
     /// 천문성(天文星) - 학문, 예술
     Tianwen,
-    
+
     // === 흉살 (凶煞) ===
     /// 역마살(驛馬煞) - 이동, 변화
     Yima,
@@ -77,7 +77,7 @@ pub enum SpiritMarker {
     Tianluo,
     /// 지망살(地網煞) - 땅의 그물
     Jimang,
-    
+
     // === 12신살 (추가분) ===
     /// 재살(災煞) - 수옥살, 재난
     Jaesha,
@@ -180,10 +180,19 @@ impl SpiritMarker {
 
     /// 길신 여부
     pub const fn is_auspicious(&self) -> bool {
-        matches!(self,
-            Self::Tianyi | Self::Wenchang | Self::Taiji | Self::Yuede |
-            Self::Tiande | Self::Zhenglu | Self::Jinyu | Self::Anlu |
-            Self::Xuetang | Self::TianyiMedical | Self::Tianwen
+        matches!(
+            self,
+            Self::Tianyi
+                | Self::Wenchang
+                | Self::Taiji
+                | Self::Yuede
+                | Self::Tiande
+                | Self::Zhenglu
+                | Self::Jinyu
+                | Self::Anlu
+                | Self::Xuetang
+                | Self::TianyiMedical
+                | Self::Tianwen
         )
     }
 
@@ -304,7 +313,7 @@ impl SpiritMarkerAnalysis {
     /// 사주에서 신살 분석
     pub fn from_pillars(pillars: &FourPillars) -> Self {
         let mut markers = Vec::new();
-        
+
         let branches = [
             (pillars.year.branch, PillarPosition::Year),
             (pillars.month.branch, PillarPosition::Month),
@@ -356,7 +365,10 @@ impl SpiritMarkerAnalysis {
             for (curr_branch, pos) in &branches {
                 if *curr_branch == target_branch {
                     // 년지 기준과 중복되지 않는 경우에만 추가 (또는 중복 허용 정책에 따라)
-                    if !markers.iter().any(|m| m.marker == marker && m.position == *pos) {
+                    if !markers
+                        .iter()
+                        .any(|m| m.marker == marker && m.position == *pos)
+                    {
                         markers.push(FoundMarker {
                             marker,
                             position: *pos,
@@ -369,7 +381,10 @@ impl SpiritMarkerAnalysis {
 
         // === 괴강살 (魁罡煞) ===
         // 일주 기준이 기본이나 년주에 있어도 작용함
-        for (ganzi, pos) in &[(pillars.year, PillarPosition::Year), (pillars.day, PillarPosition::Day)] {
+        for (ganzi, pos) in &[
+            (pillars.year, PillarPosition::Year),
+            (pillars.day, PillarPosition::Day),
+        ] {
             if Self::is_kuigang(*ganzi) {
                 markers.push(FoundMarker {
                     marker: SpiritMarker::Kuigang,
@@ -378,7 +393,6 @@ impl SpiritMarkerAnalysis {
                 });
             }
         }
-
 
         // === 문창귀인 (文昌貴人) ===
         let wenchang_branch = Self::get_wenchang_branch(day_stem);
@@ -658,14 +672,16 @@ impl SpiritMarkerAnalysis {
         }
 
         // 길신/흉살 분류 (중복 제거)
-        let mut auspicious: Vec<_> = markers.iter()
+        let mut auspicious: Vec<_> = markers
+            .iter()
             .filter(|m| m.marker.is_auspicious())
             .map(|m| m.marker)
             .collect();
         auspicious.sort_by_key(|m| m.hangul());
         auspicious.dedup();
-        
-        let mut inauspicious: Vec<_> = markers.iter()
+
+        let mut inauspicious: Vec<_> = markers
+            .iter()
             .filter(|m| !m.marker.is_auspicious())
             .map(|m| m.marker)
             .collect();
@@ -687,9 +703,9 @@ impl SpiritMarkerAnalysis {
                     PillarPosition::Hour => pillars.hour,
                 };
                 let element = if m.is_stem { pillar_ganzi.stem.element() } else { pillar_ganzi.branch.element() };
-                
+
                 let is_yong_hee = element == primary_el || element == assistant_el;
-                
+
                 let mut level = if m.marker.is_auspicious() {
                     if is_yong_hee { InterpretationLevel::Auspicious } else { InterpretationLevel::Neutral }
                 } else {
@@ -698,7 +714,7 @@ impl SpiritMarkerAnalysis {
 
                 let mut reasons = vec![format!("{} {}", m.position.hangul(), if m.is_stem { "천간" } else { "지지" })];
                 reasons.push(format!("오행: {}", element.hangul()));
-                
+
                 if is_yong_hee {
                     reasons.push("용/희신 적용".to_string());
                 } else {
@@ -713,7 +729,7 @@ impl SpiritMarkerAnalysis {
                 }
 
                 let mut description = m.marker.description().to_string();
-                
+
                 // 상황별 문구 보정
                 if m.marker.is_auspicious() && is_yong_hee {
                     description = format!("{} (용신/희신에 해당하여 그 작용력이 더욱 강력하고 순수하게 나타납니다.)", description);
@@ -759,21 +775,37 @@ impl SpiritMarkerAnalysis {
         for (name, aux_gz) in &aux_pillars {
             // 1. 일지 기준 12신살
             let marker_day = TwelveShinsal::calculate(day_branch, aux_gz.branch);
-            aux_shinsals.push((name.to_string(), "일지기준".to_string(), marker_day.hangul().to_string()));
+            aux_shinsals.push((
+                name.to_string(),
+                "일지기준".to_string(),
+                marker_day.hangul().to_string(),
+            ));
 
             // 2. 년지 기준 12신살
             let marker_year = TwelveShinsal::calculate(year_branch, aux_gz.branch);
-            aux_shinsals.push((name.to_string(), "년지기준".to_string(), marker_year.hangul().to_string()));
+            aux_shinsals.push((
+                name.to_string(),
+                "년지기준".to_string(),
+                marker_year.hangul().to_string(),
+            ));
 
             // 3. 천을귀인 체크
             let cheoneul = Gilsin::cheoneul_branches(day_stem);
             if cheoneul.contains(&aux_gz.branch) {
-                aux_shinsals.push((name.to_string(), "일간기준".to_string(), "천을귀인".to_string()));
+                aux_shinsals.push((
+                    name.to_string(),
+                    "일간기준".to_string(),
+                    "천을귀인".to_string(),
+                ));
             }
 
             // 4. 원진/귀문 체크 (일지 기준)
             if let Some(w) = EvilSpirit::check_wonjin(day_branch, aux_gz.branch) {
-                aux_shinsals.push((name.to_string(), "일지기준".to_string(), w.hangul().to_string()));
+                aux_shinsals.push((
+                    name.to_string(),
+                    "일지기준".to_string(),
+                    w.hangul().to_string(),
+                ));
             }
         }
 
@@ -809,10 +841,10 @@ impl SpiritMarkerAnalysis {
     pub fn is_kuigang(day: GanZi) -> bool {
         matches!(
             (day.stem, day.branch),
-            (HeavenlyStem::Geng, EarthlyBranch::Chen) |
-            (HeavenlyStem::Geng, EarthlyBranch::Xu) |
-            (HeavenlyStem::Ren, EarthlyBranch::Chen) |
-            (HeavenlyStem::Wu, EarthlyBranch::Xu)
+            (HeavenlyStem::Geng, EarthlyBranch::Chen)
+                | (HeavenlyStem::Geng, EarthlyBranch::Xu)
+                | (HeavenlyStem::Ren, EarthlyBranch::Chen)
+                | (HeavenlyStem::Wu, EarthlyBranch::Xu)
         )
     }
 
@@ -918,8 +950,8 @@ impl SpiritMarkerAnalysis {
         };
 
         let sindal_order = [
-            Jiesha, Jaesha, Cheonsha, Jisha, Nyeonsha, Wolsha,
-            Wangshen, Jangseong, Banan, Yima, Yukhae, Huagai
+            Jiesha, Jaesha, Cheonsha, Jisha, Nyeonsha, Wolsha, Wangshen, Jangseong, Banan, Yima,
+            Yukhae, Huagai,
         ];
 
         let mut results = Vec::new();
@@ -994,20 +1026,23 @@ impl SpiritMarkerAnalysis {
 
     /// 현침살 (懸針煞) - 卯, 午, 申
     fn is_xuanzhen_branch(branch: EarthlyBranch) -> bool {
-        matches!(branch, EarthlyBranch::Mao | EarthlyBranch::Wu | EarthlyBranch::Shen)
+        matches!(
+            branch,
+            EarthlyBranch::Mao | EarthlyBranch::Wu | EarthlyBranch::Shen
+        )
     }
 
     /// 백호살 (白虎煞) - 甲辰, 乙未, 丙戌, 丁丑, 戊辰, 壬戌, 癸丑
     pub fn is_baihu(ganzi: GanZi) -> bool {
         matches!(
             (ganzi.stem, ganzi.branch),
-            (HeavenlyStem::Jia, EarthlyBranch::Chen) |
-            (HeavenlyStem::Yi, EarthlyBranch::Wei) |
-            (HeavenlyStem::Bing, EarthlyBranch::Xu) |
-            (HeavenlyStem::Ding, EarthlyBranch::Chou) |
-            (HeavenlyStem::Wu, EarthlyBranch::Chen) |
-            (HeavenlyStem::Ren, EarthlyBranch::Xu) |
-            (HeavenlyStem::Gui, EarthlyBranch::Chou)
+            (HeavenlyStem::Jia, EarthlyBranch::Chen)
+                | (HeavenlyStem::Yi, EarthlyBranch::Wei)
+                | (HeavenlyStem::Bing, EarthlyBranch::Xu)
+                | (HeavenlyStem::Ding, EarthlyBranch::Chou)
+                | (HeavenlyStem::Wu, EarthlyBranch::Chen)
+                | (HeavenlyStem::Ren, EarthlyBranch::Xu)
+                | (HeavenlyStem::Gui, EarthlyBranch::Chou)
         )
     }
 
@@ -1064,12 +1099,18 @@ impl SpiritMarkerAnalysis {
         use EarthlyBranch::*;
         matches!(
             (b1, b2),
-            (Zi, Wei) | (Wei, Zi) |
-            (Chou, Wu) | (Wu, Chou) |
-            (Yin, You) | (You, Yin) |
-            (Mao, Shen) | (Shen, Mao) |
-            (Chen, Hai) | (Hai, Chen) |
-            (Si, Xu) | (Xu, Si)
+            (Zi, Wei)
+                | (Wei, Zi)
+                | (Chou, Wu)
+                | (Wu, Chou)
+                | (Yin, You)
+                | (You, Yin)
+                | (Mao, Shen)
+                | (Shen, Mao)
+                | (Chen, Hai)
+                | (Hai, Chen)
+                | (Si, Xu)
+                | (Xu, Si)
         )
     }
 
@@ -1092,20 +1133,24 @@ impl std::fmt::Display for SpiritMarkerAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "【신살 분석】")?;
         writeln!(f, "─────────────────────────────────")?;
-        
+
         if !self.auspicious.is_empty() {
             write!(f, "길신: ")?;
             for (i, marker) in self.auspicious.iter().enumerate() {
-                if i > 0 { write!(f, ", ")?; }
+                if i > 0 {
+                    write!(f, ", ")?;
+                }
                 write!(f, "{}", marker.hangul())?;
             }
             writeln!(f)?;
         }
-        
+
         if !self.inauspicious.is_empty() {
             write!(f, "흉살: ")?;
             for (i, marker) in self.inauspicious.iter().enumerate() {
-                if i > 0 { write!(f, ", ")?; }
+                if i > 0 {
+                    write!(f, ", ")?;
+                }
                 write!(f, "{}", marker.hangul())?;
             }
             writeln!(f)?;
@@ -1115,7 +1160,7 @@ impl std::fmt::Display for SpiritMarkerAnalysis {
         for marker in &self.markers {
             writeln!(f, "  • {}", marker)?;
         }
-        
+
         Ok(())
     }
 }
@@ -1141,13 +1186,16 @@ mod tests {
         // 김성주님 사주: 甲申年 乙亥月 庚戌日 丁亥時
         let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
         let pillars = FourPillars::calculate(&input).unwrap();
-        
+
         let analysis = pillars.spirit_markers();
-        
+
         println!("{}", analysis);
-        
+
         // 괴강살 확인 (庚戌日)
-        assert!(analysis.markers.iter().any(|m| m.marker == SpiritMarker::Kuigang));
+        assert!(analysis
+            .markers
+            .iter()
+            .any(|m| m.marker == SpiritMarker::Kuigang));
     }
 
     #[test]
@@ -1199,22 +1247,52 @@ mod tests {
 
         // 천라살 검증: 庚戌일 丁亥시 사주 (戌, 亥 존재)
         let pillars = make_mock_pillars(
-            GanZi { stem: HeavenlyStem::Jia, branch: EarthlyBranch::Shen },
-            GanZi { stem: HeavenlyStem::Yi, branch: EarthlyBranch::Hai },
-            GanZi { stem: HeavenlyStem::Geng, branch: EarthlyBranch::Xu },
-            GanZi { stem: HeavenlyStem::Ding, branch: EarthlyBranch::Hai },
+            GanZi {
+                stem: HeavenlyStem::Jia,
+                branch: EarthlyBranch::Shen,
+            },
+            GanZi {
+                stem: HeavenlyStem::Yi,
+                branch: EarthlyBranch::Hai,
+            },
+            GanZi {
+                stem: HeavenlyStem::Geng,
+                branch: EarthlyBranch::Xu,
+            },
+            GanZi {
+                stem: HeavenlyStem::Ding,
+                branch: EarthlyBranch::Hai,
+            },
         );
         let analysis = SpiritMarkerAnalysis::from_pillars(&pillars);
-        assert!(analysis.markers.iter().any(|m| m.marker == SpiritMarker::Tianluo));
+        assert!(analysis
+            .markers
+            .iter()
+            .any(|m| m.marker == SpiritMarker::Tianluo));
 
         // 지망살 검증: 辰, 巳 존재 사주
         let pillars_jimang = make_mock_pillars(
-            GanZi { stem: HeavenlyStem::Jia, branch: EarthlyBranch::Chen },
-            GanZi { stem: HeavenlyStem::Yi, branch: EarthlyBranch::Si },
-            GanZi { stem: HeavenlyStem::Geng, branch: EarthlyBranch::Wu },
-            GanZi { stem: HeavenlyStem::Ding, branch: EarthlyBranch::Hai },
+            GanZi {
+                stem: HeavenlyStem::Jia,
+                branch: EarthlyBranch::Chen,
+            },
+            GanZi {
+                stem: HeavenlyStem::Yi,
+                branch: EarthlyBranch::Si,
+            },
+            GanZi {
+                stem: HeavenlyStem::Geng,
+                branch: EarthlyBranch::Wu,
+            },
+            GanZi {
+                stem: HeavenlyStem::Ding,
+                branch: EarthlyBranch::Hai,
+            },
         );
         let analysis_jimang = SpiritMarkerAnalysis::from_pillars(&pillars_jimang);
-        assert!(analysis_jimang.markers.iter().any(|m| m.marker == SpiritMarker::Jimang));
+        assert!(analysis_jimang
+            .markers
+            .iter()
+            .any(|m| m.marker == SpiritMarker::Jimang));
     }
 }

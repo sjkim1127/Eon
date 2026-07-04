@@ -2,13 +2,13 @@
 //!
 //! 모든 종류의 별들(주성, 보조성, 잡성)의 포국 위치를 종합적으로 계산하여 맵으로 반환합니다.
 
-pub mod major;
 pub mod assistant;
 pub mod location;
+pub mod major;
 
-use std::collections::HashMap;
+use crate::types::{LunarBirthInfo, PalaceIndex, ZwdsStar};
 use eon_saju::core::stem::HeavenlyStem;
-use crate::types::{PalaceIndex, ZwdsStar, LunarBirthInfo};
+use std::collections::HashMap;
 
 /// 모든 자미두수 별들의 위치를 계산하여 맵으로 반환합니다.
 ///
@@ -56,7 +56,8 @@ pub fn place_all_stars(
     stars.insert(ZwdsStar::TianMa, tianma);
 
     // 5. 화성, 영성 배치
-    let (huoxing, lingxing) = location::place_huoxing_lingxing(lunar.year_branch_idx, lunar.time_branch_idx);
+    let (huoxing, lingxing) =
+        location::place_huoxing_lingxing(lunar.year_branch_idx, lunar.time_branch_idx);
     stars.insert(ZwdsStar::HuoXing, huoxing);
     stars.insert(ZwdsStar::LingXing, lingxing);
 
@@ -86,7 +87,9 @@ pub fn place_all_stars(
     }
 
     // 11. 출생년 천간 기준 잡성
-    for (star, idx) in location::place_year_stem_stars(year_stem, lunar.year_branch_idx, soul_idx, body_idx) {
+    for (star, idx) in
+        location::place_year_stem_stars(year_stem, lunar.year_branch_idx, soul_idx, body_idx)
+    {
         stars.insert(star, idx);
     }
 

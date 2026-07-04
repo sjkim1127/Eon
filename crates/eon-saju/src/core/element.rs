@@ -46,7 +46,11 @@ pub enum ElementRelation {
 impl Element {
     /// 모든 오행 배열
     pub const ALL: [Element; 5] = [
-        Self::Wood, Self::Fire, Self::Earth, Self::Metal, Self::Water
+        Self::Wood,
+        Self::Fire,
+        Self::Earth,
+        Self::Metal,
+        Self::Water,
     ];
 
     /// 한자 표기
@@ -74,7 +78,7 @@ impl Element {
     }
 
     /// 상생(相生): 내가 생해주는 오행
-    /// 
+    ///
     /// 木→火→土→金→水→木
     #[inline]
     pub const fn generates(self) -> Element {
@@ -100,7 +104,7 @@ impl Element {
     }
 
     /// 상극(相克): 내가 극하는 오행
-    /// 
+    ///
     /// 木→土→水→火→金→木
     #[inline]
     pub const fn controls(self) -> Element {
@@ -219,11 +223,26 @@ mod tests {
 
     #[test]
     fn test_element_relation() {
-        assert_eq!(Element::Wood.relation_to(Element::Wood), ElementRelation::Same);
-        assert_eq!(Element::Wood.relation_to(Element::Fire), ElementRelation::Generates);
-        assert_eq!(Element::Wood.relation_to(Element::Water), ElementRelation::GeneratedBy);
-        assert_eq!(Element::Wood.relation_to(Element::Earth), ElementRelation::Controls);
-        assert_eq!(Element::Wood.relation_to(Element::Metal), ElementRelation::ControlledBy);
+        assert_eq!(
+            Element::Wood.relation_to(Element::Wood),
+            ElementRelation::Same
+        );
+        assert_eq!(
+            Element::Wood.relation_to(Element::Fire),
+            ElementRelation::Generates
+        );
+        assert_eq!(
+            Element::Wood.relation_to(Element::Water),
+            ElementRelation::GeneratedBy
+        );
+        assert_eq!(
+            Element::Wood.relation_to(Element::Earth),
+            ElementRelation::Controls
+        );
+        assert_eq!(
+            Element::Wood.relation_to(Element::Metal),
+            ElementRelation::ControlledBy
+        );
     }
 
     #[test]

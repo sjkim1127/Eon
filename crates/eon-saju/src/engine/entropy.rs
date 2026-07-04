@@ -1,24 +1,24 @@
-use serde::{Deserialize, Serialize};
 use crate::core::element::Element;
 use crate::core::pillars::FourPillars;
+use serde::{Deserialize, Serialize};
 
 /// 인생 복잡도 등급
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ObfuscationLevel {
     #[serde(rename = "단순형")]
-    Plaintext,     // 오행이 한곳에 집중, 인생 경로가 선명함
+    Plaintext, // 오행이 한곳에 집중, 인생 경로가 선명함
     #[serde(rename = "보통형")]
-    Standard,      // 고르게 분산된 균형 있는 사주
+    Standard, // 고르게 분산된 균형 있는 사주
     #[serde(rename = "복합형")]
-    Packed,        // 다양한 기운이 얽혀 있어 복잡한 흐름
+    Packed, // 다양한 기운이 얽혀 있어 복잡한 흐름
     #[serde(rename = "복잡형")]
-    Encrypted,     // 오행이 고도로 복잡하게 얽혀 있어 전문 분석 필요
+    Encrypted, // 오행이 고도로 복잡하게 얽혀 있어 전문 분석 필요
 }
 
 /// 엔트로피 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropyAnalysis {
-    pub score: f32,                // Shannon Entropy Score (0.0 ~ 2.322)
+    pub score: f32, // Shannon Entropy Score (0.0 ~ 2.322)
     pub level: ObfuscationLevel,
     pub description: String,
     pub unpacker_element: Option<Element>, // 복잡성을 해소해줄 '언패커' 오행
@@ -40,7 +40,12 @@ impl DestinyEntropy {
 
         // 지장간(Hidden Stems) 데이터 추가 반영하여 엔트로피 정밀도 향상
         // 지장간은 내부 로직(난독화 데이터)으로 간주
-        for branch in [&pillars.year.branch, &pillars.month.branch, &pillars.day.branch, &pillars.hour.branch] {
+        for branch in [
+            &pillars.year.branch,
+            &pillars.month.branch,
+            &pillars.day.branch,
+            &pillars.hour.branch,
+        ] {
             for stem in branch.jijanggan() {
                 element_counts[stem.element().index() as usize] += 0.3;
                 total_elements += 0.3;
@@ -61,9 +66,15 @@ impl DestinyEntropy {
         let (level, description) = if entropy < 1.0 {
             (ObfuscationLevel::Plaintext, "오행이 한곳에 집중되어 인생 경로가 매우 명확합니다. 목표가 뚜렷하지만 유연성이 부족할 수 있습니다.".to_string())
         } else if entropy < 1.8 {
-            (ObfuscationLevel::Standard, "오행이 고르게 분포되어 균형 잡힌 삶의 흐름을 가집니다.".to_string())
+            (
+                ObfuscationLevel::Standard,
+                "오행이 고르게 분포되어 균형 잡힌 삶의 흐름을 가집니다.".to_string(),
+            )
         } else if entropy < 2.1 {
-            (ObfuscationLevel::Packed, "여러 기운이 복잡하게 얽혀 있어 특정 시점에 진정한 모습이 드러납니다.".to_string())
+            (
+                ObfuscationLevel::Packed,
+                "여러 기운이 복잡하게 얽혀 있어 특정 시점에 진정한 모습이 드러납니다.".to_string(),
+            )
         } else {
             (ObfuscationLevel::Encrypted, "오행이 매우 복잡하게 얽혀 있어 삶의 흐름을 파악하기 어렵습니다. 전문적인 분석이 도움이 됩니다.".to_string())
         };
@@ -85,7 +96,7 @@ impl std::fmt::Display for EntropyAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "【Destiny Entropy & Obfuscation Analysis】")?;
         writeln!(f, "Entropy Score : {:.3} (DIE Standard)", self.score)?;
-        
+
         let level_str = match self.level {
             ObfuscationLevel::Plaintext => "🟢 Plaintext (해석 용이)",
             ObfuscationLevel::Standard => "🔵 Standard (일반)",
@@ -94,9 +105,13 @@ impl std::fmt::Display for EntropyAnalysis {
         };
         writeln!(f, "Analysis Level: {}", level_str)?;
         writeln!(f, "Description   : {}", self.description)?;
-        
+
         if let Some(up) = self.unpacker_element {
-            writeln!(f, "Unpacker Hint : '{}' 에너지가 유입될 때 인생의 압축이 해제(Unpacking)됩니다.", up.hangul())?;
+            writeln!(
+                f,
+                "Unpacker Hint : '{}' 에너지가 유입될 때 인생의 압축이 해제(Unpacking)됩니다.",
+                up.hangul()
+            )?;
         }
         Ok(())
     }

@@ -128,33 +128,9 @@ impl NakshatraEngine {
 
     /// Purushartha (Purpose) for each nakshatra: Dharma, Artha, Kama, Moksha
     pub const NAKSHATRA_PURPOSES: [&'static str; 27] = [
-        "Dharma",
-        "Artha",
-        "Kama",
-        "Moksha",
-        "Moksha",
-        "Kama",
-        "Artha",
-        "Dharma",
-        "Dharma",
-        "Artha",
-        "Kama",
-        "Moksha",
-        "Moksha",
-        "Kama",
-        "Artha",
-        "Dharma",
-        "Dharma",
-        "Artha",
-        "Kama",
-        "Moksha",
-        "Moksha",
-        "Kama",
-        "Dharma",
-        "Dharma",
-        "Artha",
-        "Artha",
-        "Kama",
+        "Dharma", "Artha", "Kama", "Moksha", "Moksha", "Kama", "Artha", "Dharma", "Dharma",
+        "Artha", "Kama", "Moksha", "Moksha", "Kama", "Artha", "Dharma", "Dharma", "Artha", "Kama",
+        "Moksha", "Moksha", "Kama", "Dharma", "Dharma", "Artha", "Artha", "Kama",
     ];
 
     pub fn get_deity(index_1: u8) -> &'static str {
