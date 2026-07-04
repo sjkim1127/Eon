@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["TwelveStage"],"fn":["calculate_twelve_stage"],"struct":["TwelveStageAnalysis"]};

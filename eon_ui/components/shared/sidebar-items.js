@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["birth_form","export_markdown"]};

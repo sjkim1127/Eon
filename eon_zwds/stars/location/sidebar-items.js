@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["place_day_stars","place_dijie_dikong","place_hour_stars","place_huoxing_lingxing","place_lucun_qingyang_tuoluo","place_month_stars","place_tianma","place_year_branch_stars","place_year_stem_stars"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_sihua_for_star","get_sihua_stars"]};

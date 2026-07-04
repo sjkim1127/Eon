@@ -1,0 +1,344 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-ui/src/i18n/zwds_interpret.rs`."><title>zwds_interpret.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eon_ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_ui/i18n/</div>zwds_interpret.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>eon_zwds::types::{PalaceName, StarInPalace, ZwdsStar, SiHuaType, DestinyPattern};
+<a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::i18n::Locale;
+<a href=#3 id=3 data-nosnippet>3</a>
+<a href=#4 id=4 data-nosnippet>4</a><span class="doccomment">/// 자미두수 특정 궁위의 고급 종합 리딩 텍스트를 생성합니다.
+<a href=#5 id=5 data-nosnippet>5</a></span><span class="kw">pub fn </span>get_advanced_palace_interpretation(
+<a href=#6 id=6 data-nosnippet>6</a>    locale: Locale,
+<a href=#7 id=7 data-nosnippet>7</a>    palace_name: PalaceName,
+<a href=#8 id=8 data-nosnippet>8</a>    stars: <span class="kw-2">&amp;</span>[StarInPalace],
+<a href=#9 id=9 data-nosnippet>9</a>    destiny_patterns: <span class="kw-2">&amp;</span>[DestinyPattern],
+<a href=#10 id=10 data-nosnippet>10</a>) -&gt; String {
+<a href=#11 id=11 data-nosnippet>11</a>    <span class="kw">let </span><span class="kw-2">mut </span>paragraphs = Vec::new();
+<a href=#12 id=12 data-nosnippet>12</a>
+<a href=#13 id=13 data-nosnippet>13</a>    <span class="comment">// 1. 궁위의 기본 역할 정보 추가
+<a href=#14 id=14 data-nosnippet>14</a>    </span><span class="kw">let </span>base_desc = <span class="kw">match </span>locale {
+<a href=#15 id=15 data-nosnippet>15</a>        Locale::Ko =&gt; <span class="kw">match </span>palace_name {
+<a href=#16 id=16 data-nosnippet>16</a>            PalaceName::Ming =&gt; <span class="string">"명궁은 자아, 성격, 평생의 운명적 지향점과 선천적인 복덕을 상징합니다. 인생 전반의 방향성을 좌우하는 가장 중요한 궁입니다."</span>,
+<a href=#17 id=17 data-nosnippet>17</a>            PalaceName::Xiongdi =&gt; <span class="string">"형제궁은 형제자매, 동료와의 관계, 협력 관계 및 재정적 동반자를 의미합니다."</span>,
+<a href=#18 id=18 data-nosnippet>18</a>            PalaceName::Fuqi =&gt; <span class="string">"부처궁은 배우자와의 관계, 이상적인 배우자 상, 결혼 생활의 길흉을 의미합니다."</span>,
+<a href=#19 id=19 data-nosnippet>19</a>            PalaceName::Zinv =&gt; <span class="string">"자녀궁은 자녀와의 유대감, 자손의 번창 여부, 창작 및 투자 기운을 나타냅니다."</span>,
+<a href=#20 id=20 data-nosnippet>20</a>            PalaceName::Caibo =&gt; <span class="string">"재백궁은 재물을 버는 방식, 수입의 원천, 재정적 능력 및 소비 성향을 상징합니다."</span>,
+<a href=#21 id=21 data-nosnippet>21</a>            PalaceName::Jie =&gt; <span class="string">"질액궁은 선천적인 건강 상태, 체질, 주의해야 할 질병 및 재난을 의미합니다."</span>,
+<a href=#22 id=22 data-nosnippet>22</a>            PalaceName::Qianyi =&gt; <span class="string">"천이궁은 사회 활동, 타향/해외 이동, 대인관계에서의 외적인 모습과 여행 운을 나타냅니다."</span>,
+<a href=#23 id=23 data-nosnippet>23</a>            PalaceName::Nupao =&gt; <span class="string">"노복궁은 부하 직원, 친구, 지인, 사회적 인맥과의 관계 및 인복을 의미합니다."</span>,
+<a href=#24 id=24 data-nosnippet>24</a>            PalaceName::Guanlu =&gt; <span class="string">"관록궁은 직업적인 성취, 학업, 승진, 적합한 직업 분야 및 사회적 위상을 상징합니다."</span>,
+<a href=#25 id=25 data-nosnippet>25</a>            PalaceName::Tianzhai =&gt; <span class="string">"전택궁은 부동산, 주거 환경, 가정의 평화 및 자산 축적 형태를 의미합니다."</span>,
+<a href=#26 id=26 data-nosnippet>26</a>            PalaceName::Fude =&gt; <span class="string">"복덕궁은 정신세계, 취미, 영적인 성향, 내면의 행복감 및 노후의 편안함을 상징합니다."</span>,
+<a href=#27 id=27 data-nosnippet>27</a>            PalaceName::Fumu =&gt; <span class="string">"부모궁은 부모님과의 관계, 윗사람이나 국가 기관의 덕, 학문 및 문서를 상징합니다."</span>,
+<a href=#28 id=28 data-nosnippet>28</a>        },
+<a href=#29 id=29 data-nosnippet>29</a>        Locale::Zh =&gt; <span class="kw">match </span>palace_name {
+<a href=#30 id=30 data-nosnippet>30</a>            PalaceName::Ming =&gt; <span class="string">"命宫代表自我、性格、一生的命运走向和先天福德。是决定人生大方向的最核心宫位。"</span>,
+<a href=#31 id=31 data-nosnippet>31</a>            PalaceName::Xiongdi =&gt; <span class="string">"兄弟宫代表与兄弟姐妹、亲密同事的关系，以及财务上的合作伙伴。"</span>,
+<a href=#32 id=32 data-nosnippet>32</a>            PalaceName::Fuqi =&gt; <span class="string">"夫妻宫掌管婚姻、恋爱风格、理想伴侣的特征以及婚姻生活的吉凶。"</span>,
+<a href=#33 id=33 data-nosnippet>33</a>            PalaceName::Zinv =&gt; <span class="string">"子女宫代表与子女的缘分、子嗣昌盛与否、创造力以及小额投资运气。"</span>,
+<a href=#34 id=34 data-nosnippet>34</a>            PalaceName::Caibo =&gt; <span class="string">"财帛宫描述赚钱能力、收入来源、财务理财方式和消费倾向。"</span>,
+<a href=#35 id=35 data-nosnippet>35</a>            PalaceName::Jie =&gt; <span class="string">"疾厄宫代表先天健康状况、体质、容易罹患的疾病和人生灾难。"</span>,
+<a href=#36 id=36 data-nosnippet>36</a>            PalaceName::Qianyi =&gt; <span class="string">"迁移宫掌管社会活动、出外及海外发展、人际关系中的外在形象和旅行运势。"</span>,
+<a href=#37 id=37 data-nosnippet>37</a>            PalaceName::Nupao =&gt; <span class="string">"奴仆宫代表与下属、朋友、人脉圈的关系以及社交福气。"</span>,
+<a href=#38 id=38 data-nosnippet>38</a>            PalaceName::Guanlu =&gt; <span class="string">"官禄宫代表职业成就、学业运势、升迁、适合 the 行业及社会地位。"</span>,
+<a href=#39 id=39 data-nosnippet>39</a>            PalaceName::Tianzhai =&gt; <span class="string">"田宅宫代表不动产运势、居住环境、家业继承、家庭和谐度以及资产累积形态。"</span>,
+<a href=#40 id=40 data-nosnippet>40</a>            PalaceName::Fude =&gt; <span class="string">"福德宫代表精神世界、兴趣爱好、潜意识、内心幸福感以及晚年享福运。"</span>,
+<a href=#41 id=41 data-nosnippet>41</a>            PalaceName::Fumu =&gt; <span class="string">"父母宫代表与父母的关系、长辈及上司的提携、学业证书和法律契约。"</span>,
+<a href=#42 id=42 data-nosnippet>42</a>        },
+<a href=#43 id=43 data-nosnippet>43</a>        Locale::Ru =&gt; <span class="kw">match </span>palace_name {
+<a href=#44 id=44 data-nosnippet>44</a>            PalaceName::Ming =&gt; <span class="string">"Дворец Жизни представляет собой эго, личность, жизненный путь и врожденную карму. Самый важный дворец."</span>,
+<a href=#45 id=45 data-nosnippet>45</a>            PalaceName::Xiongdi =&gt; <span class="string">"Дворец Братьев представляет отношения с братьями и сестрами, близкими коллегами и партнерами."</span>,
+<a href=#46 id=46 data-nosnippet>46</a>            PalaceName::Fuqi =&gt; <span class="string">"Дворец Супружества управляет браком, стилем отношений и чертами вашего идеального партнера."</span>,
+<a href=#47 id=47 data-nosnippet>47</a>            PalaceName::Zinv =&gt; <span class="string">"Дворец Детей представляет отношения с детьми, продолжение рода, творчество и мелкие инвестиции."</span>,
+<a href=#48 id=48 data-nosnippet>48</a>            PalaceName::Caibo =&gt; <span class="string">"Дворец Богатства описывает вашу способность зарабатывать, источники дохода и стиль трат."</span>,
+<a href=#49 id=49 data-nosnippet>49</a>            PalaceName::Jie =&gt; <span class="string">"Дворец Здоровья указывает на врожденную конституцию тела, возможные болезни и самочувствие."</span>,
+<a href=#50 id=50 data-nosnippet>50</a>            PalaceName::Qianyi =&gt; <span class="string">"Дворец Перемещений представляет социальную активность, переезды, поездки и внешний имидж."</span>,
+<a href=#51 id=51 data-nosnippet>51</a>            PalaceName::Nupao =&gt; <span class="string">"Дворец Друзей управляет отношениями с подчиненными, друзьями, коллегами и связями."</span>,
+<a href=#52 id=52 data-nosnippet>52</a>            PalaceName::Guanlu =&gt; <span class="string">"Дворец Карьеры представляет профессиональные достижения, учебу, пригодность к работе и статус."</span>,
+<a href=#53 id=53 data-nosnippet>53</a>            PalaceName::Tianzhai =&gt; <span class="string">"Дворец Имущества управляет недвижимостью, домом, семейным наследием и накоплениями."</span>,
+<a href=#54 id=54 data-nosnippet>54</a>            PalaceName::Fude =&gt; <span class="string">"Дворец Кармы (Счастья) представляет духовный мир, хобби, счастье и комфорт в старости."</span>,
+<a href=#55 id=55 data-nosnippet>55</a>            PalaceName::Fumu =&gt; <span class="string">"Дворец Родителей представляет отношения с родителями, покровителями, учебу и документы."</span>,
+<a href=#56 id=56 data-nosnippet>56</a>        },
+<a href=#57 id=57 data-nosnippet>57</a>        Locale::En =&gt; <span class="kw">match </span>palace_name {
+<a href=#58 id=58 data-nosnippet>58</a>            PalaceName::Ming =&gt; <span class="string">"The Life Palace represents the self, personality, lifelong destiny, and innate fortune. It is the most critical palace governing your life."</span>,
+<a href=#59 id=59 data-nosnippet>59</a>            PalaceName::Xiongdi =&gt; <span class="string">"The Siblings Palace represents relationships with siblings, close colleagues, and financial partners."</span>,
+<a href=#60 id=60 data-nosnippet>60</a>            PalaceName::Fuqi =&gt; <span class="string">"The Spouse Palace governs marriage, relationship style, and the traits of your ideal partner."</span>,
+<a href=#61 id=61 data-nosnippet>61</a>            PalaceName::Zinv =&gt; <span class="string">"The Children Palace represents relationships with children, descendant luck, creativity, and minor investments."</span>,
+<a href=#62 id=62 data-nosnippet>62</a>            PalaceName::Caibo =&gt; <span class="string">"The Wealth Palace describes your earning capacity, income sources, and financial management style."</span>,
+<a href=#63 id=63 data-nosnippet>63</a>            PalaceName::Jie =&gt; <span class="string">"The Health Palace indicates physical constitution, potential diseases, and general physical well-being."</span>,
+<a href=#64 id=64 data-nosnippet>64</a>            PalaceName::Qianyi =&gt; <span class="string">"The Travel Palace represents social relations, relocation, travel fortunes, and how you appear to the public."</span>,
+<a href=#65 id=65 data-nosnippet>65</a>            PalaceName::Nupao =&gt; <span class="string">"The Friends Palace governs relationships with subordinates, friends, social circles, and general networking luck."</span>,
+<a href=#66 id=66 data-nosnippet>66</a>            PalaceName::Guanlu =&gt; <span class="string">"The Career Palace represents professional achievements, academic success, job suitability, and public status."</span>,
+<a href=#67 id=67 data-nosnippet>67</a>            PalaceName::Tianzhai =&gt; <span class="string">"The Property Palace governs real estate, home environment, family inheritance, and long-term asset accumulation."</span>,
+<a href=#68 id=68 data-nosnippet>68</a>            PalaceName::Fude =&gt; <span class="string">"The Karma Palace represents your inner mind, spiritual affinity, hobbies, happiness, and comfort in late life."</span>,
+<a href=#69 id=69 data-nosnippet>69</a>            PalaceName::Fumu =&gt; <span class="string">"The Parents Palace represents relations with mentors or government, education, and legal documents."</span>,
+<a href=#70 id=70 data-nosnippet>70</a>        }
+<a href=#71 id=71 data-nosnippet>71</a>    };
+<a href=#72 id=72 data-nosnippet>72</a>    paragraphs.push(base_desc.to_string());
+<a href=#73 id=73 data-nosnippet>73</a>
+<a href=#74 id=74 data-nosnippet>74</a>    <span class="comment">// 2. 주요 동궁(Dual-star) 조합 감지 및 해석 추가
+<a href=#75 id=75 data-nosnippet>75</a>    </span><span class="kw">let </span>has_star = |target: ZwdsStar| stars.iter().any(|s| s.star == target);
+<a href=#76 id=76 data-nosnippet>76</a>
+<a href=#77 id=77 data-nosnippet>77</a>    <span class="kw">let </span>comb_desc = <span class="kw">match </span>locale {
+<a href=#78 id=78 data-nosnippet>78</a>        Locale::Ko =&gt; {
+<a href=#79 id=79 data-nosnippet>79</a>            <span class="kw">if </span>has_star(ZwdsStar::ZiWei) &amp;&amp; has_star(ZwdsStar::TianFu) {
+<a href=#80 id=80 data-nosnippet>80</a>                <span class="prelude-val">Some</span>(<span class="string">"★ 자부동궁(紫府同宮): 자미와 천부가 함께 자리하여 자산 보존력과 권위가 극대화됩니다. 곳간이 든든한 황제처럼 매사 안정적이고 주도적인 흐름을 만들어 냅니다."</span>)
+<a href=#81 id=81 data-nosnippet>81</a>            } <span class="kw">else if </span>has_star(ZwdsStar::LianZhen) &amp;&amp; has_star(ZwdsStar::TanLang) {
+<a href=#82 id=82 data-nosnippet>82</a>                <span class="prelude-val">Some</span>(<span class="string">"★ 염탐동궁(廉貪同宮): 감성과 욕망의 별들이 만나 강렬한 사교성과 예술적 매력, 도화 기운이 발현됩니다. 대인관계에서 인기가 많으나 감정 조절에 유의하십시오."</span>)
+<a href=#83 id=83 data-nosnippet>83</a>            } <span class="kw">else if </span>has_star(ZwdsStar::WuQu) &amp;&amp; has_star(ZwdsStar::TanLang) {
+<a href=#84 id=84 data-nosnippet>84</a>                <span class="prelude-val">Some</span>(<span class="string">"★ 무탐격(武貪格): 무곡과 탐랑이 동궁하여 젊은 날의 고생 끝에 중년 이후 급격한 금전적 자수성가를 이룩하는 대기만성형 흐름을 유발합니다."</span>)
+<a href=#85 id=85 data-nosnippet>85</a>            } <span class="kw">else if </span>has_star(ZwdsStar::ZiWei) &amp;&amp; has_star(ZwdsStar::QiSha) {
+<a href=#86 id=86 data-nosnippet>86</a>                <span class="prelude-val">Some</span>(<span class="string">"★ 자살동궁(紫殺同宮): 제왕의 지위와 장수의 권위가 결합되어 강한 추진력과 창조적 파괴를 의미합니다. 기존 질서를 혁신하고 선구자가 될 수 있습니다."</span>)
+<a href=#87 id=87 data-nosnippet>87</a>            } <span class="kw">else if </span>has_star(ZwdsStar::WuQu) &amp;&amp; has_star(ZwdsStar::QiSha) {
+<a href=#88 id=88 data-nosnippet>88</a>                <span class="prelude-val">Some</span>(<span class="string">"★ 무살동궁(武殺同宮): 결단력과 과감한 기술적 추진력이 결합됩니다. 이공계, 기술직군, 혹은 과감한 결단이 요구되는 무역/금융업에 매우 강한 성향을 보입니다."</span>)
+<a href=#89 id=89 data-nosnippet>89</a>            } <span class="kw">else </span>{
+<a href=#90 id=90 data-nosnippet>90</a>                <span class="prelude-val">None
+<a href=#91 id=91 data-nosnippet>91</a>            </span>}
+<a href=#92 id=92 data-nosnippet>92</a>        }
+<a href=#93 id=93 data-nosnippet>93</a>        Locale::Zh =&gt; {
+<a href=#94 id=94 data-nosnippet>94</a>            <span class="kw">if </span>has_star(ZwdsStar::ZiWei) &amp;&amp; has_star(ZwdsStar::TianFu) {
+<a href=#95 id=95 data-nosnippet>95</a>                <span class="prelude-val">Some</span>(<span class="string">"★ 紫府同宫：紫微与天府同守此宫，财富蓄积力与权威极大化。如同府库充裕的帝王，万事稳定且掌管主动权。"</span>)
+<a href=#96 id=96 data-nosnippet>96</a>            } <span class="kw">else if </span>has_star(ZwdsStar::LianZhen) &amp;&amp; has_star(ZwdsStar::TanLang) {
+<a href=#97 id=97 data-nosnippet>97</a>                <span class="prelude-val">Some</span>(<span class="string">"★ 廉贪同宫：情感与欲望之星相遇，展现强烈的社交与艺术魅力，桃花极旺。人缘极佳，但需注意情绪自控。"</span>)
+<a href=#98 id=98 data-nosnippet>98</a>            } <span class="kw">else if </span>has_star(ZwdsStar::WuQu) &amp;&amp; has_star(ZwdsStar::TanLang) {
+<a href=#99 id=99 data-nosnippet>99</a>                <span class="prelude-val">Some</span>(<span class="string">"★ 武贪格：武曲与贪狼同守，主青壮年历经磨练，中年（30岁后）一举白手起家，为大器晚成之财气爆发组合。"</span>)
+<a href=#100 id=100 data-nosnippet>100</a>            } <span class="kw">else if </span>has_star(ZwdsStar::ZiWei) &amp;&amp; has_star(ZwdsStar::QiSha) {
+<a href=#101 id=101 data-nosnippet>101</a>                <span class="prelude-val">Some</span>(<span class="string">"★ 紫杀同宫：帝星与将星联手，主强大执行力与创造性突破。敢于打破陈规，担当行业领头羊。"</span>)
+<a href=#102 id=102 data-nosnippet>102</a>            } <span class="kw">else if </span>has_star(ZwdsStar::WuQu) &amp;&amp; has_star(ZwdsStar::QiSha) {
+<a href=#103 id=103 data-nosnippet>103</a>                <span class="prelude-val">Some</span>(<span class="string">"★ 武杀同宫：决断力与刚毅的技术冲劲交织。适合理工、技术、军警，或需要杀伐决断的商贸金融行业。"</span>)
+<a href=#104 id=104 data-nosnippet>104</a>            } <span class="kw">else </span>{
+<a href=#105 id=105 data-nosnippet>105</a>                <span class="prelude-val">None
+<a href=#106 id=106 data-nosnippet>106</a>            </span>}
+<a href=#107 id=107 data-nosnippet>107</a>        }
+<a href=#108 id=108 data-nosnippet>108</a>        Locale::Ru =&gt; {
+<a href=#109 id=109 data-nosnippet>109</a>            <span class="kw">if </span>has_star(ZwdsStar::ZiWei) &amp;&amp; has_star(ZwdsStar::TianFu) {
+<a href=#110 id=110 data-nosnippet>110</a>                <span class="prelude-val">Some</span>(<span class="string">"★ Цзы-Фу: Совместное нахождение Цзы Вэй и Тянь Фу объединяет авторитет и финансовую стабильность. Подобно богатому императору, вы держите бразды правления."</span>)
+<a href=#111 id=111 data-nosnippet>111</a>            } <span class="kw">else if </span>has_star(ZwdsStar::LianZhen) &amp;&amp; has_star(ZwdsStar::TanLang) {
+<a href=#112 id=112 data-nosnippet>112</a>                <span class="prelude-val">Some</span>(<span class="string">"★ Лянь-Тань: Встреча чувственности и страсти дает высокое обаяние, популярность и склонность к искусству. Остерегайтесь искушений."</span>)
+<a href=#113 id=113 data-nosnippet>113</a>            } <span class="kw">else if </span>has_star(ZwdsStar::WuQu) &amp;&amp; has_star(ZwdsStar::TanLang) {
+<a href=#114 id=114 data-nosnippet>114</a>                <span class="prelude-val">Some</span>(<span class="string">"★ У-Тань: Соединение У Цюй и Тань Лан. Трудная молодость окупается ошеломительным богатством и успехом в зрелые годы."</span>)
+<a href=#115 id=115 data-nosnippet>115</a>            } <span class="kw">else if </span>has_star(ZwdsStar::ZiWei) &amp;&amp; has_star(ZwdsStar::QiSha) {
+<a href=#116 id=116 data-nosnippet>116</a>                <span class="prelude-val">Some</span>(<span class="string">"★ Цзы-Ша: Союз Императора и Генерала. Ведет к решительным прорывам, независимости и реформированию старых порядков."</span>)
+<a href=#117 id=117 data-nosnippet>117</a>            } <span class="kw">else if </span>has_star(ZwdsStar::WuQu) &amp;&amp; has_star(ZwdsStar::QiSha) {
+<a href=#118 id=118 data-nosnippet>118</a>                <span class="prelude-val">Some</span>(<span class="string">"★ У-Ша: Высокая техническая хватка и сила воли. Подходит для инженерии, финансов и сфер, требующих быстрых решений."</span>)
+<a href=#119 id=119 data-nosnippet>119</a>            } <span class="kw">else </span>{
+<a href=#120 id=120 data-nosnippet>120</a>                <span class="prelude-val">None
+<a href=#121 id=121 data-nosnippet>121</a>            </span>}
+<a href=#122 id=122 data-nosnippet>122</a>        }
+<a href=#123 id=123 data-nosnippet>123</a>        Locale::En =&gt; {
+<a href=#124 id=124 data-nosnippet>124</a>            <span class="kw">if </span>has_star(ZwdsStar::ZiWei) &amp;&amp; has_star(ZwdsStar::TianFu) {
+<a href=#125 id=125 data-nosnippet>125</a>                <span class="prelude-val">Some</span>(<span class="string">"★ Zi-Fu Combination: Zi Wei and Tian Fu reside together, maximizing authority and financial storage. Like an Emperor with a full treasury, you govern stably."</span>)
+<a href=#126 id=126 data-nosnippet>126</a>            } <span class="kw">else if </span>has_star(ZwdsStar::LianZhen) &amp;&amp; has_star(ZwdsStar::TanLang) {
+<a href=#127 id=127 data-nosnippet>127</a>                <span class="prelude-val">Some</span>(<span class="string">"★ Lian-Tan Combination: Emotions and desires meet, bringing high social magnetics, artistic charms, and romance. Watch out for emotional tempests."</span>)
+<a href=#128 id=128 data-nosnippet>128</a>            } <span class="kw">else if </span>has_star(ZwdsStar::WuQu) &amp;&amp; has_star(ZwdsStar::TanLang) {
+<a href=#129 id=129 data-nosnippet>129</a>                <span class="prelude-val">Some</span>(<span class="string">"★ Wu-Tan Pattern: Wu Qu and Tan Lang meet. Although early years may bring hardship, you are a self-made winner achieving great fortune after midlife."</span>)
+<a href=#130 id=130 data-nosnippet>130</a>            } <span class="kw">else if </span>has_star(ZwdsStar::ZiWei) &amp;&amp; has_star(ZwdsStar::QiSha) {
+<a href=#131 id=131 data-nosnippet>131</a>                <span class="prelude-val">Some</span>(<span class="string">"★ Zi-Sha Combination: Emperor and General join forces, representing intense drive and creative destruction. You are born to reform and lead."</span>)
+<a href=#132 id=132 data-nosnippet>132</a>            } <span class="kw">else if </span>has_star(ZwdsStar::WuQu) &amp;&amp; has_star(ZwdsStar::QiSha) {
+<a href=#133 id=133 data-nosnippet>133</a>                <span class="prelude-val">Some</span>(<span class="string">"★ Wu-Sha Combination: Decisiveness and hard technical drive meet. Excellent for engineering, finance, or fields demanding swift judgments."</span>)
+<a href=#134 id=134 data-nosnippet>134</a>            } <span class="kw">else </span>{
+<a href=#135 id=135 data-nosnippet>135</a>                <span class="prelude-val">None
+<a href=#136 id=136 data-nosnippet>136</a>            </span>}
+<a href=#137 id=137 data-nosnippet>137</a>        }
+<a href=#138 id=138 data-nosnippet>138</a>    };
+<a href=#139 id=139 data-nosnippet>139</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(desc) = comb_desc {
+<a href=#140 id=140 data-nosnippet>140</a>        paragraphs.push(desc.to_string());
+<a href=#141 id=141 data-nosnippet>141</a>    }
+<a href=#142 id=142 data-nosnippet>142</a>
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="comment">// 3. 주요 단독 주성별 배치 상세 분석 (가장 핵심적인 궁위 매칭)
+<a href=#144 id=144 data-nosnippet>144</a>    </span><span class="kw">for </span>star_in_p <span class="kw">in </span>stars {
+<a href=#145 id=145 data-nosnippet>145</a>        <span class="kw">let </span>star = star_in_p.star;
+<a href=#146 id=146 data-nosnippet>146</a>        <span class="kw">let </span>star_desc = <span class="kw">match </span>locale {
+<a href=#147 id=147 data-nosnippet>147</a>            Locale::Ko =&gt; <span class="kw">match </span>(star, palace_name) {
+<a href=#148 id=148 data-nosnippet>148</a>                (ZwdsStar::ZiWei, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 자미(명궁): 제왕의 풍모를 지녀 리더십과 자존심이 매우 강합니다. 품위와 체면을 귀하게 여기며, 귀인의 인덕을 입으나 때로 홀로 고고하여 느끼는 고독감을 관리하는 것이 중요합니다."</span>),
+<a href=#149 id=149 data-nosnippet>149</a>                (ZwdsStar::ZiWei, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 자미(재백궁): 규모가 크고 지위 높은 곳에서 발생하는 고귀한 재물을 취합니다. 주로 명예와 리더십을 활용해 부를 쌓으나, 품위 유지를 위한 씀씀이를 경계해야 합니다."</span>),
+<a href=#150 id=150 data-nosnippet>150</a>                (ZwdsStar::ZiWei, PalaceName::Fuqi) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 자미(부처궁): 배우자가 자존심이 세고 높은 자의식을 지닌 경우가 많습니다. 리더십이 있는 동반자이나 서로 주도권 다툼을 조심해야 가정이 평안합니다."</span>),
+<a href=#151 id=151 data-nosnippet>151</a>                (ZwdsStar::ZiWei, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 자미(관록궁): 리더가 될 직업적 운명을 지닙니다. 기관이나 기업에서 관리직, 독립적인 사업가, 혹은 높은 사회적 명예를 획득하는 직군에 잘 맞습니다."</span>),
+<a href=#152 id=152 data-nosnippet>152</a>                
+<a href=#153 id=153 data-nosnippet>153</a>                (ZwdsStar::TianJi, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 천기(명궁): 총명하고 지혜로우며 분석력과 기획력이 매우 뛰어납니다. 새로운 지식 습득이 빠르나 과도한 근심과 생각으로 예민해지기 쉬우니 마인드 컨트롤이 요망됩니다."</span>),
+<a href=#154 id=154 data-nosnippet>154</a>                (ZwdsStar::TianJi, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 천기(재백궁): 번뜩이는 기획력, 계산, 지적 재산 또는 유통과 변화가 잦은 업종을 통해 재물을 법니다. 고정적이고 지루한 재정 운용보다는 머리를 활용한 동적 재무에 유리합니다."</span>),
+<a href=#155 id=155 data-nosnippet>155</a>                (ZwdsStar::TianJi, PalaceName::Fuqi) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 천기(부처궁): 영리하고 말재주 있는 배우자와 인연이 깊습니다. 때로 부부 사이에 잦은 이동이나 의견 불일치로 인한 감정 변동을 유의하십시오."</span>),
+<a href=#156 id=156 data-nosnippet>156</a>                (ZwdsStar::TianJi, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 천기(관록궁): 설계, IT, 연구, 분석, 기획 등 머리와 전문 기술을 요하는 업무에 대단히 우수합니다. 프리랜서나 잦은 이동이 따르는 직군에 적합합니다."</span>),
+<a href=#157 id=157 data-nosnippet>157</a>
+<a href=#158 id=158 data-nosnippet>158</a>                (ZwdsStar::TaiYang, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 태양(명궁): 열정적이고 외향적이며 공익과 타인을 돕는 일에 헌신합니다. 사회적 명예를 중시하지만, 주변을 챙기느라 정작 자신은 고달파지기 쉽습니다."</span>),
+<a href=#159 id=159 data-nosnippet>159</a>                (ZwdsStar::TaiYang, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 태양(재백궁): 널리 밝히는 기질로 인해 명예를 통해 재물을 창출합니다. 사적인 욕심보다 공적인 가치나 대중 서비스적인 성격의 비즈니스에서 정당한 대가를 얻습니다."</span>),
+<a href=#160 id=160 data-nosnippet>160</a>
+<a href=#161 id=161 data-nosnippet>161</a>                (ZwdsStar::WuQu, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 무곡(재백궁): 최고의 재성(財星)이 제자리에 위치했습니다. 추진력과 단호한 실행력으로 실질적인 자산을 틀어쥐며, 금융이나 기술적 제조 등 실재하는 수단을 통해 확실히 부를 다집니다."</span>),
+<a href=#162 id=162 data-nosnippet>162</a>                (ZwdsStar::WuQu, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 무곡(명궁): 성격이 곧고 결단력이 강하며 실리적입니다. 다소 차가운 느낌을 주거나 고독한 성향이 있을 수 있으니 인간관계의 유연성을 기르면 매사 길합니다."</span>),
+<a href=#163 id=163 data-nosnippet>163</a>
+<a href=#164 id=164 data-nosnippet>164</a>                (ZwdsStar::TianTong, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 천동(명궁): 온화하고 순박하며 감성적입니다. 주변 사람들에게 편안함과 조화를 주며 일생 의식의 곤란이 적은 복성이나, 의지력 부족이나 게으름에 빠지지 않도록 정진해야 합니다."</span>),
+<a href=#165 id=165 data-nosnippet>165</a>                
+<a href=#166 id=166 data-nosnippet>166</a>                (ZwdsStar::LianZhen, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 염정(명궁): 주관이 아주 뚜렷하고 예술성이나 직관력이 뛰어납니다. 내면의 집념과 고집이 대단하며, 사교적인 도화 기운이 잘 조화될 때 큰 사회적 성공을 이룹니다."</span>),
+<a href=#167 id=167 data-nosnippet>167</a>
+<a href=#168 id=168 data-nosnippet>168</a>                (ZwdsStar::TianFu, PalaceName::Tianzhai) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 천부(전택궁): 하늘의 곳간이 전택궁에 놓여 부동산 복과 가정의 안전성이 확립됩니다. 저축과 실질적 건물 확보를 통해 자산을 가장 견고하게 지켜내는 흐름입니다."</span>),
+<a href=#169 id=169 data-nosnippet>169</a>
+<a href=#170 id=170 data-nosnippet>170</a>                (ZwdsStar::TaiYin, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 태음(재백궁): 조용히 흐르는 강물처럼 지속적인 수입과 계획적인 자산 축적에 최적화됩니다. 부동산이나 계획적인 금융 저축을 통해 대단히 영리하게 돈을 모읍니다."</span>),
+<a href=#171 id=171 data-nosnippet>171</a>
+<a href=#172 id=172 data-nosnippet>172</a>                (ZwdsStar::TanLang, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 탐랑(명궁): 다재다능하고 호기심이 많으며 욕망과 사교성을 대변합니다. 도화 기운으로 인간관계의 주역이 되기 쉬우며 신비한 학문(명리, 종교)에 관심이 깊습니다."</span>),
+<a href=#173 id=173 data-nosnippet>173</a>
+<a href=#174 id=174 data-nosnippet>174</a>                (ZwdsStar::JuMen, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 거문(명궁): 탐구력과 분석력이 타의 추종을 불허하며 논리적인 언변을 구사합니다. 다만 불필요한 구설이나 타인과의 불신을 피하도록 차분하고 진솔한 소통 태도가 중요합니다."</span>),
+<a href=#175 id=175 data-nosnippet>175</a>
+<a href=#176 id=176 data-nosnippet>176</a>                (ZwdsStar::QiSha, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 칠살(명궁): 독립심과 결단력이 돋보이는 장군의 기질입니다. 강력한 돌파력으로 모험을 두려워하지 않으나, 독단으로 인한 외로움과 고독을 잘 다스려야 합니다."</span>),
+<a href=#177 id=177 data-nosnippet>177</a>
+<a href=#178 id=178 data-nosnippet>178</a>                (ZwdsStar::PoJun, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 파군(관록궁): 개척과 변화의 별이 놓여 기존의 관행을 뒤엎고 새 구조를 세우는 업무에 어울립니다. 직무에 주기적 갱신이나 독립적 창업 등이 따릅니다."</span>),
+<a href=#179 id=179 data-nosnippet>179</a>                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#180 id=180 data-nosnippet>180</a>            },
+<a href=#181 id=181 data-nosnippet>181</a>            Locale::Zh =&gt; <span class="kw">match </span>(star, palace_name) {
+<a href=#182 id=182 data-nosnippet>182</a>                (ZwdsStar::ZiWei, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 紫微(命宫)：具帝王风范，领导力与自尊心极强。极重尊严与体面，得贵人相助，但需注意高处不胜寒的孤立感。"</span>),
+<a href=#183 id=183 data-nosnippet>183</a>                (ZwdsStar::ZiWei, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 紫微(财帛)：主求财于大型或高尚机构，善用名誉与地位积聚财富。消费上需控制财力流出。"</span>),
+<a href=#184 id=184 data-nosnippet>184</a>                (ZwdsStar::ZiWei, PalaceName::Fuqi) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 紫微(夫妻)：配偶自尊心强，具自我主张。虽有担当，但日常需防范双方争夺主导权以致争执。"</span>),
+<a href=#185 id=185 data-nosnippet>185</a>                (ZwdsStar::ZiWei, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 紫微(官禄)：事业上有做领导的潜质。适合大企业管理岗位、独立创业，或追求高社会荣誉的行业。"</span>),
+<a href=#186 id=186 data-nosnippet>186</a>                
+<a href=#187 id=187 data-nosnippet>187</a>                (ZwdsStar::TianJi, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 天机(命宫)：聪慧过人，极擅分析与企划。吸纳新知快，但易思虑过度导致精神紧绷，宜多放松。"</span>),
+<a href=#188 id=188 data-nosnippet>188</a>                (ZwdsStar::TianJi, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 天机(财帛)：凭借企划、计算、智商或流动性行业赚取财富。利于动中求财，不适呆板理财。"</span>),
+<a href=#189 id=189 data-nosnippet>189</a>                (ZwdsStar::TianJi, PalaceName::Fuqi) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 天机(夫妻)：易结识伶俐、善辩的伴侣。注意因时常沟通不畅或经常在外奔波引发的感情波动。"</span>),
+<a href=#190 id=190 data-nosnippet>190</a>                (ZwdsStar::TianJi, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 天机(官禄)：极其适合设计、IT、研究、分析策划等需要高心智与脑力的专业技能岗位。"</span>),
+<a href=#191 id=191 data-nosnippet>191</a>
+<a href=#192 id=192 data-nosnippet>192</a>                (ZwdsStar::TaiYang, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 太阳(命宫)：充满活力与奉献心，重公益而轻私利。虽有名声，但易落得“为他人 welfare 奔波”的劳碌境地。"</span>),
+<a href=#193 id=193 data-nosnippet>193</a>                (ZwdsStar::TaiYang, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 太阳(财帛)：求财多与名声相关。适合公共事务、公众服务或名誉积累后带来正当财富回报。"</span>),
+<a href=#194 id=194 data-nosnippet>194</a>
+<a href=#195 id=195 data-nosnippet>195</a>                (ZwdsStar::WuQu, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 武曲(财帛)：正财星归位。主坚决的财富进取心，执行力强，利于金融、技术开发或实业运作敛财。"</span>),
+<a href=#196 id=196 data-nosnippet>196</a>                (ZwdsStar::WuQu, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 武曲(命宫)：刚直果决，求真务实。人际交往中可能略显冷漠或孤僻，宜以和为贵，放宽心态。"</span>),
+<a href=#197 id=197 data-nosnippet>197</a>
+<a href=#198 id=198 data-nosnippet>198</a>                (ZwdsStar::TianTong, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 天同(命宫)：温和纯真，多愁善感。主一生福报深厚，衣食不缺，但需防沉溺于安逸而丧失进取意志。"</span>),
+<a href=#199 id=199 data-nosnippet>199</a>                
+<a href=#200 id=200 data-nosnippet>200</a>                (ZwdsStar::LianZhen, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 廉贞(命宫)：主见极强，艺术感官敏锐。心高气傲，遇吉则才华横溢，遇煞则固执任性，属于高可塑性之星。"</span>),
+<a href=#201 id=201 data-nosnippet>201</a>
+<a href=#202 id=202 data-nosnippet>202</a>                (ZwdsStar::TianFu, PalaceName::Tianzhai) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 天府(田宅)：天库落入不动产宫。主家业稳固，买房置产顺利，通过理财与房产持有最稳健储蓄财富。"</span>),
+<a href=#203 id=203 data-nosnippet>203</a>
+<a href=#204 id=204 data-nosnippet>204</a>                (ZwdsStar::TaiYin, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 太阴(财帛)：财星入财位，求财稳健如细水长流。善于通过房地产或稳当储蓄，非常聪明地让钱生钱。"</span>),
+<a href=#205 id=205 data-nosnippet>205</a>
+<a href=#206 id=206 data-nosnippet>206</a>                (ZwdsStar::TanLang, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 贪狼(命宫)：多才多艺，欲望强烈，交游广泛。具桃花魅力，极利人际拓展，且极易对玄学宗教产生兴趣。"</span>),
+<a href=#207 id=207 data-nosnippet>207</a>
+<a href=#208 id=208 data-nosnippet>208</a>                (ZwdsStar::JuMen, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 巨门(命宫)：分析思辨能力极高，辞锋锐利。但在言语上需十分谨慎，避免言多必失，方能化口舌为学术。"</span>),
+<a href=#209 id=209 data-nosnippet>209</a>
+<a href=#210 id=210 data-nosnippet>210</a>                (ZwdsStar::QiSha, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 七杀(命宫)：具冲锋陷阵的将军风骨。独立坚强，做事果敢，但需小心因独断行事带来的落寞与阻力。"</span>),
+<a href=#211 id=211 data-nosnippet>211</a>
+<a href=#212 id=212 data-nosnippet>212</a>                (ZwdsStar::PoJun, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• 破军(官禄)：开创之星居官禄，适合推陈出新、改革企业结构的工作。事业常多震荡，或适合做独立开创者。"</span>),
+<a href=#213 id=213 data-nosnippet>213</a>                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#214 id=214 data-nosnippet>214</a>            },
+<a href=#215 id=215 data-nosnippet>215</a>            Locale::Ru =&gt; <span class="kw">match </span>(star, palace_name) {
+<a href=#216 id=216 data-nosnippet>216</a>                (ZwdsStar::ZiWei, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Цзы Вэй (Жизнь): Обладает качествами императора, лидерством и достоинством. Избегайте высокомерия."</span>),
+<a href=#217 id=217 data-nosnippet>217</a>                (ZwdsStar::ZiWei, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Цзы Вэй (Богатство): Накопление богатства через высокий статус или управление крупными делами."</span>),
+<a href=#218 id=218 data-nosnippet>218</a>                (ZwdsStar::ZiWei, PalaceName::Fuqi) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Цзы Вэй (Супружество): Гордый и независимый партнер. Контролируйте стремление к доминированию."</span>),
+<a href=#219 id=219 data-nosnippet>219</a>                (ZwdsStar::ZiWei, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Цзы Вэй (Карьера): Судьба лидера. Подходит для руководящих постов и престижных профессий."</span>),
+<a href=#220 id=220 data-nosnippet>220</a>                
+<a href=#221 id=221 data-nosnippet>221</a>                (ZwdsStar::TianJi, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Тянь Цзи (Жизнь): Исключительный интеллект и планирование. Склонность к тревожности из-за лишних мыслей."</span>),
+<a href=#222 id=222 data-nosnippet>222</a>                (ZwdsStar::TianJi, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Тянь Цзи (Богатство): Заработок умом, анализом или в динамичной сфере торговли."</span>),
+<a href=#223 id=223 data-nosnippet>223</a>                (ZwdsStar::TianJi, PalaceName::Fuqi) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Тянь Цзи (Супружество): Умный и разговорчивый партнер. Возможны колебания из-за частых перемен."</span>),
+<a href=#224 id=224 data-nosnippet>224</a>                (ZwdsStar::TianJi, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Тянь Цзи (Карьера): Отлично подходит для IT, исследований, анализа и проектирования."</span>),
+<a href=#225 id=225 data-nosnippet>225</a>
+<a href=#226 id=226 data-nosnippet>226</a>                (ZwdsStar::TaiYang, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Тай Ян (Жизнь): Страстность, щедрость и стремление к чести. Склонность отдавать все силы другим."</span>),
+<a href=#227 id=227 data-nosnippet>227</a>                (ZwdsStar::TaiYang, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Тай Ян (Богатство): Прибыль через известность, признание или государственную службу."</span>),
+<a href=#228 id=228 data-nosnippet>228</a>
+<a href=#229 id=229 data-nosnippet>229</a>                (ZwdsStar::WuQu, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• У Цюй (Богатство): Главная финансовая звезда на своем месте. Жесткий прагматизм и надежный доход."</span>),
+<a href=#230 id=230 data-nosnippet>230</a>                (ZwdsStar::WuQu, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• У Цюй (Жизнь): Решительность, честность и холодный прагматизм. Учитесь гибкости в отношениях."</span>),
+<a href=#231 id=231 data-nosnippet>231</a>
+<a href=#232 id=232 data-nosnippet>232</a>                (ZwdsStar::TianTong, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Тянь Тон (Жизнь): Мягкий характер, стремление к уюту и гармонии. Опасайтесь лени."</span>),
+<a href=#233 id=233 data-nosnippet>233</a>                
+<a href=#234 id=234 data-nosnippet>234</a>                (ZwdsStar::LianZhen, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Лянь Чжэнь (Жизнь): Сильный стержень, обостренная интуиция и харизма. Упорство в достижении целей."</span>),
+<a href=#235 id=235 data-nosnippet>235</a>
+<a href=#236 id=236 data-nosnippet>236</a>                (ZwdsStar::TianFu, PalaceName::Tianzhai) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Тянь Фу (Имущество): Укрепление семейного очага и успешное вложение в недвижимость."</span>),
+<a href=#237 id=237 data-nosnippet>237</a>
+<a href=#238 id=238 data-nosnippet>238</a>                (ZwdsStar::TaiYin, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Тай Инь (Богатство): Постепенное накопление средств. Удачно для инвестиций и сбережения капитала."</span>),
+<a href=#239 id=239 data-nosnippet>239</a>
+<a href=#240 id=240 data-nosnippet>240</a>                (ZwdsStar::TanLang, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Тань Лан (Жизнь): Разносторонность, обаяние и тяга к эзотерике. Умение заводить связи."</span>),
+<a href=#241 id=241 data-nosnippet>241</a>
+<a href=#242 id=242 data-nosnippet>242</a>                (ZwdsStar::JuMen, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Джу Мень (Жизнь): Острый ум, аналитика и сила слова. Избегайте споров и недопонимания."</span>),
+<a href=#243 id=243 data-nosnippet>243</a>
+<a href=#244 id=244 data-nosnippet>244</a>                (ZwdsStar::QiSha, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Ци Ша (Жизнь): Характер полководца. Независимость и смелость, но вероятны периоды одиночества."</span>),
+<a href=#245 id=245 data-nosnippet>245</a>
+<a href=#246 id=246 data-nosnippet>246</a>                (ZwdsStar::PoJun, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• По Цзюнь (Карьера): Способность реформировать и начинать с нуля. Подходит для независимого бизнеса."</span>),
+<a href=#247 id=247 data-nosnippet>247</a>                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#248 id=248 data-nosnippet>248</a>            },
+<a href=#249 id=249 data-nosnippet>249</a>            Locale::En =&gt; <span class="kw">match </span>(star, palace_name) {
+<a href=#250 id=250 data-nosnippet>250</a>                (ZwdsStar::ZiWei, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Zi Wei (Life): Possesses emperor-like qualities with high self-esteem. Dignified and supported by helpers, but should mitigate inner loneliness."</span>),
+<a href=#251 id=251 data-nosnippet>251</a>                (ZwdsStar::ZiWei, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Zi Wei (Wealth): Acquires wealth from high-status environments. Watch out for luxury spending to maintain vanity."</span>),
+<a href=#252 id=252 data-nosnippet>252</a>                (ZwdsStar::ZiWei, PalaceName::Fuqi) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Zi Wei (Spouse): Partner has strong self-awareness. Guard against power struggles to keep marriage peaceful."</span>),
+<a href=#253 id=253 data-nosnippet>253</a>                (ZwdsStar::ZiWei, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Zi Wei (Career): Destiny of a leader. Suited for management, independent entrepreneurship, or high-prestige roles."</span>),
+<a href=#254 id=254 data-nosnippet>254</a>                
+<a href=#255 id=255 data-nosnippet>255</a>                (ZwdsStar::TianJi, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Tian Ji (Life): Quick-witted, analytical, and brilliant planner. Knowledge-seeker but prone to anxiety. Keep a peaceful mind."</span>),
+<a href=#256 id=256 data-nosnippet>256</a>                (ZwdsStar::TianJi, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Tian Ji (Wealth): Generates wealth through smart planning, calculations, or rapid circulation. Avoid static financial styles."</span>),
+<a href=#257 id=257 data-nosnippet>257</a>                (ZwdsStar::TianJi, PalaceName::Fuqi) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Tian Ji (Spouse): Deep affinity with a smart, communicative partner. Mind potential instability due to frequent relocations."</span>),
+<a href=#258 id=258 data-nosnippet>258</a>                (ZwdsStar::TianJi, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Tian Ji (Career): Highly suited for IT, engineering, research, strategy, and roles demanding intellect."</span>),
+<a href=#259 id=259 data-nosnippet>259</a>
+<a href=#260 id=260 data-nosnippet>260</a>                (ZwdsStar::TaiYang, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Tai Yang (Life): Warm, public-spirited, and honor-driven. While dedicating yourself to others, take care not to burn out."</span>),
+<a href=#261 id=261 data-nosnippet>261</a>                (ZwdsStar::TaiYang, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Tai Yang (Wealth): Earns wealth through public honor or media representation. Excellent for public-service business."</span>),
+<a href=#262 id=262 data-nosnippet>262</a>
+<a href=#263 id=263 data-nosnippet>263</a>                (ZwdsStar::WuQu, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Wu Qu (Wealth): The true wealth star in its place. Controls cash flow and accumulates solid assets through technical execution."</span>),
+<a href=#264 id=264 data-nosnippet>264</a>                (ZwdsStar::WuQu, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Wu Qu (Life): Straightforward, decisive, and pragmatic. Cultivate warmth to prevent interpersonal coldness."</span>),
+<a href=#265 id=265 data-nosnippet>265</a>
+<a href=#266 id=266 data-nosnippet>266</a>                (ZwdsStar::TianTong, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Tian Tong (Life): Gentle, artistic, and peaceful. Blessed with comfort, but needs self-drive to avoid procrastination."</span>),
+<a href=#267 id=267 data-nosnippet>267</a>                
+<a href=#268 id=268 data-nosnippet>268</a>                (ZwdsStar::LianZhen, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Lian Zhen (Life): Highly independent with great artistic sense. Possesses intense ambition and magnetism."</span>),
+<a href=#269 id=269 data-nosnippet>269</a>
+<a href=#270 id=270 data-nosnippet>270</a>                (ZwdsStar::TianFu, PalaceName::Tianzhai) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Tian Fu (Property): The treasury star guards real estate. Highly favorable for purchasing land and accumulating house assets."</span>),
+<a href=#271 id=271 data-nosnippet>271</a>
+<a href=#272 id=272 data-nosnippet>272</a>                (ZwdsStar::TaiYin, PalaceName::Caibo) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Tai Yin (Wealth): Like a steady river, builds fortune gradually through smart savings and real estate passive income."</span>),
+<a href=#273 id=273 data-nosnippet>273</a>
+<a href=#274 id=274 data-nosnippet>274</a>                (ZwdsStar::TanLang, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Tan Lang (Life): Versatile, magnetic, and social. Attracts relationships and holds deep curiosity about mysterious studies."</span>),
+<a href=#275 id=275 data-nosnippet>275</a>
+<a href=#276 id=276 data-nosnippet>276</a>                (ZwdsStar::JuMen, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Ju Men (Life): Exceptional analytical power and critical speech. Communicate sincerely to avoid unnecessary disputes."</span>),
+<a href=#277 id=277 data-nosnippet>277</a>
+<a href=#278 id=278 data-nosnippet>278</a>                (ZwdsStar::QiSha, PalaceName::Ming) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Qi Sha (Life): Spirit of a general. Strong breakthrough power and independence. Learn to manage loneliness."</span>),
+<a href=#279 id=279 data-nosnippet>279</a>
+<a href=#280 id=280 data-nosnippet>280</a>                (ZwdsStar::PoJun, PalaceName::Guanlu) =&gt; <span class="prelude-val">Some</span>(<span class="string">"• Po Jun (Career): The pioneer star disrupts conventions. Suited for structural reforms or independent startups."</span>),
+<a href=#281 id=281 data-nosnippet>281</a>                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#282 id=282 data-nosnippet>282</a>            }
+<a href=#283 id=283 data-nosnippet>283</a>        };
+<a href=#284 id=284 data-nosnippet>284</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(desc) = star_desc {
+<a href=#285 id=285 data-nosnippet>285</a>            paragraphs.push(desc.to_string());
+<a href=#286 id=286 data-nosnippet>286</a>        }
+<a href=#287 id=287 data-nosnippet>287</a>    }
+<a href=#288 id=288 data-nosnippet>288</a>
+<a href=#289 id=289 data-nosnippet>289</a>    <span class="comment">// 4. 사화(SiHua) 결합에 따른 해석
+<a href=#290 id=290 data-nosnippet>290</a>    </span><span class="kw">for </span>star_in_p <span class="kw">in </span>stars {
+<a href=#291 id=291 data-nosnippet>291</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(sihua) = star_in_p.si_hua {
+<a href=#292 id=292 data-nosnippet>292</a>            <span class="kw">let </span>sihua_desc = <span class="kw">match </span>locale {
+<a href=#293 id=293 data-nosnippet>293</a>                Locale::Ko =&gt; <span class="kw">match </span>sihua {
+<a href=#294 id=294 data-nosnippet>294</a>                    SiHuaType::HuaLu =&gt; <span class="string">"✚ 화록(化祿) 결합: 선천적인 복덕과 긍정적인 행운의 통로가 결합되어 이 궁위의 가치가 더욱 유연하고 순조롭게 번창합니다."</span>,
+<a href=#295 id=295 data-nosnippet>295</a>                    SiHuaType::HuaQuan =&gt; <span class="string">"✚ 화권(化權) 결합: 강력한 성취 욕구와 투지, 지배력이 주어집니다. 돌파해 내는 추진력이 배가되지만 충돌을 조심해야 합니다."</span>,
+<a href=#296 id=296 data-nosnippet>296</a>                    SiHuaType::HuaKe =&gt; <span class="string">"✚ 화과(化科) 결합: 학업적 평판, 귀인의 도움, 혹은 위기관리 능력을 의미하며 안정적이고 조화로운 마무리를 이끕니다."</span>,
+<a href=#297 id=297 data-nosnippet>297</a>                    SiHuaType::HuaJi =&gt; <span class="string">"✚ 화기(化忌) 결합: 에너지가 응축 및 정체되어 집착이나 집요한 성격, 지연 장애, 혹은 심적 부채감이 동반되니 차분한 수양이 필요합니다."</span>,
+<a href=#298 id=298 data-nosnippet>298</a>                },
+<a href=#299 id=299 data-nosnippet>299</a>                Locale::Zh =&gt; <span class="kw">match </span>sihua {
+<a href=#300 id=300 data-nosnippet>300</a>                    SiHuaType::HuaLu =&gt; <span class="string">"✚ 化禄交会：带来先天福泽与顺畅财源，使得此宫位的资源更加宽裕与滋润。"</span>,
+<a href=#301 id=301 data-nosnippet>301</a>                    SiHuaType::HuaQuan =&gt; <span class="string">"✚ 化权交会：赋予强烈的掌控欲、斗志与执行力。冲劲倍增，但需注意摩擦冲突。"</span>,
+<a href=#302 id=302 data-nosnippet>302</a>                    SiHuaType::HuaKe =&gt; <span class="string">"✚ 化科交会：主名誉声望、贵人暗助，或在危机中获得解脱，引导事务平稳收尾。"</span>,
+<a href=#303 id=303 data-nosnippet>303</a>                    SiHuaType::HuaJi =&gt; <span class="string">"✚ 化忌交会：能量收缩与阻碍，主执念、延迟、精神负累或波折，需保持平常心以自修。"</span>,
+<a href=#304 id=304 data-nosnippet>304</a>                },
+<a href=#305 id=305 data-nosnippet>305</a>                Locale::Ru =&gt; <span class="kw">match </span>sihua {
+<a href=#306 id=306 data-nosnippet>306</a>                    SiHuaType::HuaLu =&gt; <span class="string">"✚ Соединение Хуа Лу: Привносит удачу, изобилие и плавное развитие ресурсов в дела этого дворца."</span>,
+<a href=#307 id=307 data-nosnippet>307</a>                    SiHuaType::HuaQuan =&gt; <span class="string">"✚ Соединение Хуа Цюань: Дарует стремление к контролю, силу воли и пробивной характер. Остерегайтесь ссор."</span>,
+<a href=#308 id=308 data-nosnippet>308</a>                    SiHuaType::HuaKe =&gt; <span class="string">"✚ Соединение Хуа Кэ: Означает репутацию, славу, академические успехи и помощь покровителей в кризисе."</span>,
+<a href=#309 id=309 data-nosnippet>309</a>                    SiHuaType::HuaJi =&gt; <span class="string">"✚ Соединение Хуа Цзи: Сжатие энергии, препятствия, задержки или психологическое напряжение. Требуется терпение."</span>,
+<a href=#310 id=310 data-nosnippet>310</a>                },
+<a href=#311 id=311 data-nosnippet>311</a>                Locale::En =&gt; <span class="kw">match </span>sihua {
+<a href=#312 id=312 data-nosnippet>312</a>                    SiHuaType::HuaLu =&gt; <span class="string">"✚ Hua Lu Effect: Attracts fortune, smooth flow of resources, and flexible prosperity to this palace."</span>,
+<a href=#313 id=313 data-nosnippet>313</a>                    SiHuaType::HuaQuan =&gt; <span class="string">"✚ Hua Quan Effect: Grants intense willpower, execution drive, and authority. Boosts breakthroughs but cautions against friction."</span>,
+<a href=#314 id=314 data-nosnippet>314</a>                    SiHuaType::HuaKe =&gt; <span class="string">"✚ Hua Ke Effect: Brings reputation, helpful mentors, and crisis resolution, leading to a smooth outcome."</span>,
+<a href=#315 id=315 data-nosnippet>315</a>                    SiHuaType::HuaJi =&gt; <span class="string">"✚ Hua Ji Effect: Represents condensed energy, delays, attachments, or mental debts. Demands calm reflection and patience."</span>,
+<a href=#316 id=316 data-nosnippet>316</a>                },
+<a href=#317 id=317 data-nosnippet>317</a>            };
+<a href=#318 id=318 data-nosnippet>318</a>            paragraphs.push(sihua_desc.to_string());
+<a href=#319 id=319 data-nosnippet>319</a>        }
+<a href=#320 id=320 data-nosnippet>320</a>    }
+<a href=#321 id=321 data-nosnippet>321</a>
+<a href=#322 id=322 data-nosnippet>322</a>    <span class="comment">// 5. 격국(Patterns) 영향성 추가 (명궁에서만 출력)
+<a href=#323 id=323 data-nosnippet>323</a>    </span><span class="kw">if </span>palace_name == PalaceName::Ming &amp;&amp; !destiny_patterns.is_empty() {
+<a href=#324 id=324 data-nosnippet>324</a>        <span class="kw">let </span>pattern_header = <span class="kw">match </span>locale {
+<a href=#325 id=325 data-nosnippet>325</a>            Locale::Ko =&gt; <span class="string">"◈ 성립된 격국(格局) 해석:"</span>,
+<a href=#326 id=326 data-nosnippet>326</a>            Locale::Zh =&gt; <span class="string">"◈ 已成格局解析："</span>,
+<a href=#327 id=327 data-nosnippet>327</a>            Locale::Ru =&gt; <span class="string">"◈ Толкование сформированных структур (격국):"</span>,
+<a href=#328 id=328 data-nosnippet>328</a>            Locale::En =&gt; <span class="string">"◈ Established Destiny Patterns:"</span>,
+<a href=#329 id=329 data-nosnippet>329</a>        };
+<a href=#330 id=330 data-nosnippet>330</a>        paragraphs.push(pattern_header.to_string());
+<a href=#331 id=331 data-nosnippet>331</a>        <span class="kw">for </span>p <span class="kw">in </span>destiny_patterns {
+<a href=#332 id=332 data-nosnippet>332</a>            <span class="kw">let </span>p_desc = <span class="kw">match </span>locale {
+<a href=#333 id=333 data-nosnippet>333</a>                Locale::Ko =&gt; <span class="macro">format!</span>(<span class="string">"• **{}**: {}"</span>, p.name_korean, p.description_korean),
+<a href=#334 id=334 data-nosnippet>334</a>                Locale::Zh =&gt; <span class="macro">format!</span>(<span class="string">"• **{}**: {}"</span>, p.name_hanja, p.description_korean),
+<a href=#335 id=335 data-nosnippet>335</a>                Locale::Ru =&gt; <span class="macro">format!</span>(<span class="string">"• **{}**: {}"</span>, p.name_korean, p.description_english),
+<a href=#336 id=336 data-nosnippet>336</a>                <span class="kw">_ </span>=&gt; <span class="macro">format!</span>(<span class="string">"• **{}**: {}"</span>, p.name_korean, p.description_english),
+<a href=#337 id=337 data-nosnippet>337</a>            };
+<a href=#338 id=338 data-nosnippet>338</a>            paragraphs.push(p_desc);
+<a href=#339 id=339 data-nosnippet>339</a>        }
+<a href=#340 id=340 data-nosnippet>340</a>    }
+<a href=#341 id=341 data-nosnippet>341</a>
+<a href=#342 id=342 data-nosnippet>342</a>    paragraphs.join(<span class="string">"\n\n"</span>)
+<a href=#343 id=343 data-nosnippet>343</a>}
+</code></pre></div></section></main></body></html>

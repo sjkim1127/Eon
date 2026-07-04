@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AyanamsaSystem","HouseSystem","NodeCalculation","VedicYearType"],"struct":["VedicConfig"]};

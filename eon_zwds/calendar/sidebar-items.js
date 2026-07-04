@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["branch_to_zwds_idx","hour_to_time_branch_idx","lunar_to_birth_info","solar_to_lunar_birth"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["LuckDirection"],"struct":["MajorLuck","MajorLuckAnalysis"]};

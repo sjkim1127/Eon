@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["calculate_all_ganzi_from_datetime","calculate_day_ganzi","calculate_day_ganzi_jdn","calculate_hour_ganzi","calculate_month_ganzi"]};

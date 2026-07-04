@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["branch","branch_days","calendar","config","element","ganzi","ganzi_utils","nayin","pillars","stem","ten_gods","twelve_stages"]};

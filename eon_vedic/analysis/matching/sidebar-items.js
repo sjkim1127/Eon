@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["CompatibilityReport","KootaScore","MatchingEngine"]};

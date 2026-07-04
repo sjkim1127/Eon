@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-saju/src/engine/interprocess.rs`."><title>interprocess.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eon_saju" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_saju/engine/</div>interprocess.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Inter-Process Compatibility (IPC) Audit Module
+<a href=#2 id=2 data-nosnippet>2</a>//! 
+<a href=#3 id=3 data-nosnippet>3</a>//! 두 개의 사주 시스템(SajuVM)이 상호작용할 때 발생하는
+<a href=#4 id=4 data-nosnippet>4</a>//! 에너지 간섭, 자원 경합(상극), 시너지(합)를 분석합니다.
+<a href=#5 id=5 data-nosnippet>5</a>
+<a href=#6 id=6 data-nosnippet>6</a></span><span class="kw">use </span>serde::{Deserialize, Serialize};
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::engine::vm::SajuVM;
+<a href=#8 id=8 data-nosnippet>8</a>
+<a href=#9 id=9 data-nosnippet>9</a><span class="doccomment">/// IPC 분석 결과 리포트
+<a href=#10 id=10 data-nosnippet>10</a></span><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
+<a href=#11 id=11 data-nosnippet>11</a></span><span class="kw">pub struct </span>CompatibilityAudit {
+<a href=#12 id=12 data-nosnippet>12</a>    <span class="doccomment">/// 종합 상호작용 점수 (0~100)
+<a href=#13 id=13 data-nosnippet>13</a>    </span><span class="kw">pub </span>sync_score: f32,
+<a href=#14 id=14 data-nosnippet>14</a>    <span class="doccomment">/// 시스템 간 합(Synergy)
+<a href=#15 id=15 data-nosnippet>15</a>    </span><span class="kw">pub </span>synergies: Vec&lt;String&gt;,
+<a href=#16 id=16 data-nosnippet>16</a>    <span class="doccomment">/// 시스템 간 충돌(Race Conditions/Conflicts)
+<a href=#17 id=17 data-nosnippet>17</a>    </span><span class="kw">pub </span>conflicts: Vec&lt;String&gt;,
+<a href=#18 id=18 data-nosnippet>18</a>    <span class="doccomment">/// 자원 잠금 현상 (Deadlocks)
+<a href=#19 id=19 data-nosnippet>19</a>    </span><span class="kw">pub </span>deadlocks: Vec&lt;String&gt;,
+<a href=#20 id=20 data-nosnippet>20</a>    <span class="doccomment">/// 두 시스템 결합 시의 ESIL 트레이스 요약
+<a href=#21 id=21 data-nosnippet>21</a>    </span><span class="kw">pub </span>merged_esil_trace: String,
+<a href=#22 id=22 data-nosnippet>22</a>}
+<a href=#23 id=23 data-nosnippet>23</a>
+<a href=#24 id=24 data-nosnippet>24</a><span class="kw">pub struct </span>CompatibilityAuditor;
+<a href=#25 id=25 data-nosnippet>25</a>
+<a href=#26 id=26 data-nosnippet>26</a><span class="kw">impl </span>CompatibilityAuditor {
+<a href=#27 id=27 data-nosnippet>27</a>    <span class="doccomment">/// 두 사주 시스템 간의 상호작용을 감사(Audit)합니다.
+<a href=#28 id=28 data-nosnippet>28</a>    </span><span class="kw">pub fn </span>audit(system_a: <span class="kw-2">&amp;</span>SajuVM, system_b: <span class="kw-2">&amp;</span>SajuVM) -&gt; CompatibilityAudit {
+<a href=#29 id=29 data-nosnippet>29</a>        <span class="kw">let </span><span class="kw-2">mut </span>synergies = Vec::new();
+<a href=#30 id=30 data-nosnippet>30</a>        <span class="kw">let </span><span class="kw-2">mut </span>conflicts = Vec::new();
+<a href=#31 id=31 data-nosnippet>31</a>        <span class="kw">let </span><span class="kw-2">mut </span>deadlocks = Vec::new();
+<a href=#32 id=32 data-nosnippet>32</a>        <span class="kw">let </span><span class="kw-2">mut </span>merged_trace = String::new();
+<a href=#33 id=33 data-nosnippet>33</a>        
+<a href=#34 id=34 data-nosnippet>34</a>        <span class="comment">// 1. 천간 교차 결합 분석 (Interface Mapping)
+<a href=#35 id=35 data-nosnippet>35</a>        </span><span class="kw">let </span>a_stems = [
+<a href=#36 id=36 data-nosnippet>36</a>            (<span class="string">"A_년간"</span>, system_a.natal.year.stem),
+<a href=#37 id=37 data-nosnippet>37</a>            (<span class="string">"A_월간"</span>, system_a.natal.month.stem),
+<a href=#38 id=38 data-nosnippet>38</a>            (<span class="string">"A_일간"</span>, system_a.natal.day.stem),
+<a href=#39 id=39 data-nosnippet>39</a>            (<span class="string">"A_시간"</span>, system_a.natal.hour.stem),
+<a href=#40 id=40 data-nosnippet>40</a>        ];
+<a href=#41 id=41 data-nosnippet>41</a>        <span class="kw">let </span>b_stems = [
+<a href=#42 id=42 data-nosnippet>42</a>            (<span class="string">"B_년간"</span>, system_b.natal.year.stem),
+<a href=#43 id=43 data-nosnippet>43</a>            (<span class="string">"B_월간"</span>, system_b.natal.month.stem),
+<a href=#44 id=44 data-nosnippet>44</a>            (<span class="string">"B_일간"</span>, system_b.natal.day.stem),
+<a href=#45 id=45 data-nosnippet>45</a>            (<span class="string">"B_시간"</span>, system_b.natal.hour.stem),
+<a href=#46 id=46 data-nosnippet>46</a>        ];
+<a href=#47 id=47 data-nosnippet>47</a>
+<a href=#48 id=48 data-nosnippet>48</a>        <span class="comment">// 2. 지지 교차 결합 분석 (Resource Contention)
+<a href=#49 id=49 data-nosnippet>49</a>        </span><span class="kw">let </span>a_branches = [
+<a href=#50 id=50 data-nosnippet>50</a>            (<span class="string">"A_년지"</span>, system_a.natal.year.branch),
+<a href=#51 id=51 data-nosnippet>51</a>            (<span class="string">"A_월지"</span>, system_a.natal.month.branch),
+<a href=#52 id=52 data-nosnippet>52</a>            (<span class="string">"A_일지"</span>, system_a.natal.day.branch),
+<a href=#53 id=53 data-nosnippet>53</a>            (<span class="string">"A_시지"</span>, system_a.natal.hour.branch),
+<a href=#54 id=54 data-nosnippet>54</a>        ];
+<a href=#55 id=55 data-nosnippet>55</a>        <span class="kw">let </span>b_branches = [
+<a href=#56 id=56 data-nosnippet>56</a>            (<span class="string">"B_년지"</span>, system_b.natal.year.branch),
+<a href=#57 id=57 data-nosnippet>57</a>            (<span class="string">"B_월지"</span>, system_b.natal.month.branch),
+<a href=#58 id=58 data-nosnippet>58</a>            (<span class="string">"B_일지"</span>, system_b.natal.day.branch),
+<a href=#59 id=59 data-nosnippet>59</a>            (<span class="string">"B_시지"</span>, system_b.natal.hour.branch),
+<a href=#60 id=60 data-nosnippet>60</a>        ];
+<a href=#61 id=61 data-nosnippet>61</a>
+<a href=#62 id=62 data-nosnippet>62</a>        <span class="comment">// 3. 교차 합충 스캔
+<a href=#63 id=63 data-nosnippet>63</a>        </span><span class="kw">use </span><span class="kw">crate</span>::analysis::relationships::<span class="kw-2">*</span>;
+<a href=#64 id=64 data-nosnippet>64</a>        <span class="kw">let </span><span class="kw-2">mut </span>sync_score: f32 = <span class="number">50.0</span>;
+<a href=#65 id=65 data-nosnippet>65</a>
+<a href=#66 id=66 data-nosnippet>66</a>        <span class="kw">for </span>(p1, s1) <span class="kw">in </span><span class="kw-2">&amp;</span>a_stems {
+<a href=#67 id=67 data-nosnippet>67</a>            <span class="kw">for </span>(p2, s2) <span class="kw">in </span><span class="kw-2">&amp;</span>b_stems {
+<a href=#68 id=68 data-nosnippet>68</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(c) = StemCombination::check(<span class="kw-2">*</span>s1, <span class="kw-2">*</span>s2) {
+<a href=#69 id=69 data-nosnippet>69</a>                    synergies.push(<span class="macro">format!</span>(<span class="string">"천간합: {} &lt;-&gt; {} ({})"</span>, p1, p2, c.transformed_element().hangul()));
+<a href=#70 id=70 data-nosnippet>70</a>                    sync_score += <span class="number">5.0</span>;
+<a href=#71 id=71 data-nosnippet>71</a>                    merged_trace.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"ipc_joint:{}-{}_hap; "</span>, p1, p2));
+<a href=#72 id=72 data-nosnippet>72</a>                }
+<a href=#73 id=73 data-nosnippet>73</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(_c) = StemClash::check(<span class="kw-2">*</span>s1, <span class="kw-2">*</span>s2) {
+<a href=#74 id=74 data-nosnippet>74</a>                    conflicts.push(<span class="macro">format!</span>(<span class="string">"천간충: {} &lt;-&gt; {}"</span>, p1, p2));
+<a href=#75 id=75 data-nosnippet>75</a>                    sync_score -= <span class="number">3.0</span>;
+<a href=#76 id=76 data-nosnippet>76</a>                    merged_trace.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"ipc_collision:{}-{}_clash; "</span>, p1, p2));
+<a href=#77 id=77 data-nosnippet>77</a>                }
+<a href=#78 id=78 data-nosnippet>78</a>            }
+<a href=#79 id=79 data-nosnippet>79</a>        }
+<a href=#80 id=80 data-nosnippet>80</a>
+<a href=#81 id=81 data-nosnippet>81</a>        <span class="kw">for </span>(p1, b1) <span class="kw">in </span><span class="kw-2">&amp;</span>a_branches {
+<a href=#82 id=82 data-nosnippet>82</a>            <span class="kw">for </span>(p2, b2) <span class="kw">in </span><span class="kw-2">&amp;</span>b_branches {
+<a href=#83 id=83 data-nosnippet>83</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(_c) = BranchClash::check(<span class="kw-2">*</span>b1, <span class="kw-2">*</span>b2) {
+<a href=#84 id=84 data-nosnippet>84</a>                    deadlocks.push(<span class="macro">format!</span>(<span class="string">"지지충: {} &lt;-&gt; {}"</span>, p1, p2));
+<a href=#85 id=85 data-nosnippet>85</a>                    sync_score -= <span class="number">5.0</span>;
+<a href=#86 id=86 data-nosnippet>86</a>                    merged_trace.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"resource_lock:{}-{}_deadlock; "</span>, p1, p2));
+<a href=#87 id=87 data-nosnippet>87</a>                }
+<a href=#88 id=88 data-nosnippet>88</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(_s) = SixCombination::check(<span class="kw-2">*</span>b1, <span class="kw-2">*</span>b2) {
+<a href=#89 id=89 data-nosnippet>89</a>                    synergies.push(<span class="macro">format!</span>(<span class="string">"육합: {} &lt;-&gt; {}"</span>, p1, p2));
+<a href=#90 id=90 data-nosnippet>90</a>                    sync_score += <span class="number">4.0</span>;
+<a href=#91 id=91 data-nosnippet>91</a>                    merged_trace.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"memory_bridge:{}-{}_shared; "</span>, p1, p2));
+<a href=#92 id=92 data-nosnippet>92</a>                }
+<a href=#93 id=93 data-nosnippet>93</a>            }
+<a href=#94 id=94 data-nosnippet>94</a>        }
+<a href=#95 id=95 data-nosnippet>95</a>
+<a href=#96 id=96 data-nosnippet>96</a>        CompatibilityAudit {
+<a href=#97 id=97 data-nosnippet>97</a>            sync_score: sync_score.clamp(<span class="number">0.0</span>, <span class="number">100.0</span>),
+<a href=#98 id=98 data-nosnippet>98</a>            synergies,
+<a href=#99 id=99 data-nosnippet>99</a>            conflicts,
+<a href=#100 id=100 data-nosnippet>100</a>            deadlocks,
+<a href=#101 id=101 data-nosnippet>101</a>            merged_esil_trace: merged_trace,
+<a href=#102 id=102 data-nosnippet>102</a>        }
+<a href=#103 id=103 data-nosnippet>103</a>    }
+<a href=#104 id=104 data-nosnippet>104</a>}
+</code></pre></div></section></main></body></html>

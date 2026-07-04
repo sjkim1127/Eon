@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["SIGN_NAMES"],"enum":["AspectType","WesternError"],"fn":["calculate_western","get_sign_ruler","is_angle_between"],"struct":["ElementDistribution","ModalityDistribution","WesternAspectData","WesternHouseData","WesternPlanetData","WesternResult"]};

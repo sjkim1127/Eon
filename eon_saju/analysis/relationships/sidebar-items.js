@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BranchClash","BranchDestruction","BranchHarm","BranchPunishment","ClashType","SeasonalCombination","SemiCombination","SixCombination","StemClash","StemCombination","TripleCombination"],"struct":["Amhap","FoundRelation","MyungAmHap","RelationshipAnalysis","RelationshipDetail"]};

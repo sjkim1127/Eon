@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AuspiciousSpiritName","InauspiciousSpiritName","InterruptType","LifeStageName","LuckPeriod","PillarPosition","ShinsalName","StrengthTypeName","TraceTag"],"fn":["strings_to_tags","tags_to_strings"]};

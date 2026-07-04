@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["build_varga_nakshatra_reports"],"struct":["VargaNakshatraReport","VargaNakshatraReportRow","VargaNakshatraReports"]};

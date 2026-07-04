@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["DailyLuck","HourlyLuck","LuckAnalysis","MonthlyLuck","YearlyLuck"]};

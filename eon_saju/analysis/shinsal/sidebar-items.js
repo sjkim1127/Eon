@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EvilSpirit","Gilsin","TwelveShinsal"],"struct":["ShinsalAnalysis"]};

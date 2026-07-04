@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["fix_index","get_five_elements","get_palace_name","get_palace_stem","get_soul_and_body_index","std_idx_to_zwds_idx","zwds_idx_to_std_idx"]};

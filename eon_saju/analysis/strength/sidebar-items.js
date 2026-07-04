@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["StrengthType"],"struct":["DeukJi","DeukRyeong","DeukSe","DeukSi","StrengthAnalysis"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["YongshinType"],"fn":["calculate_thermal_index"],"struct":["RecommendedYongshin","YongshinAnalysis"]};

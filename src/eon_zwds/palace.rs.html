@@ -1,0 +1,153 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-zwds/src/palace.rs`."><title>palace.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="eon_zwds" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_zwds/</div>palace.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! 자미두수 궁(Palace) 연산 모듈
+<a href=#2 id=2 data-nosnippet>2</a>//!
+<a href=#3 id=3 data-nosnippet>3</a>//! 명궁(命宮)과 신궁(身宮) 계산, 오행국(五行局) 결정, 12궁명 매핑을 처리합니다.
+<a href=#4 id=4 data-nosnippet>4</a>
+<a href=#5 id=5 data-nosnippet>5</a></span><span class="kw">use </span><span class="kw">crate</span>::types::{PalaceIndex, PalaceName, FiveElementsClass};
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>eon_saju::core::stem::HeavenlyStem;
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>eon_saju::core::branch::EarthlyBranch;
+<a href=#8 id=8 data-nosnippet>8</a>
+<a href=#9 id=9 data-nosnippet>9</a><span class="doccomment">/// 인덱스 보정 (0~11 범위)
+<a href=#10 id=10 data-nosnippet>10</a></span><span class="kw">pub fn </span>fix_index(i: i32) -&gt; usize {
+<a href=#11 id=11 data-nosnippet>11</a>    <span class="kw">let </span>r = i % <span class="number">12</span>;
+<a href=#12 id=12 data-nosnippet>12</a>    <span class="kw">if </span>r &lt; <span class="number">0 </span>{
+<a href=#13 id=13 data-nosnippet>13</a>        (r + <span class="number">12</span>) <span class="kw">as </span>usize
+<a href=#14 id=14 data-nosnippet>14</a>    } <span class="kw">else </span>{
+<a href=#15 id=15 data-nosnippet>15</a>        r <span class="kw">as </span>usize
+<a href=#16 id=16 data-nosnippet>16</a>    }
+<a href=#17 id=17 data-nosnippet>17</a>}
+<a href=#18 id=18 data-nosnippet>18</a>
+<a href=#19 id=19 data-nosnippet>19</a><span class="doccomment">/// ZWDS 지지 인덱스 (0=寅) -&gt; 표준 지지 인덱스 (0=子)
+<a href=#20 id=20 data-nosnippet>20</a></span><span class="kw">pub fn </span>zwds_idx_to_std_idx(zwds_idx: usize) -&gt; usize {
+<a href=#21 id=21 data-nosnippet>21</a>    (zwds_idx + <span class="number">2</span>) % <span class="number">12
+<a href=#22 id=22 data-nosnippet>22</a></span>}
+<a href=#23 id=23 data-nosnippet>23</a>
+<a href=#24 id=24 data-nosnippet>24</a><span class="doccomment">/// 표준 지지 인덱스 (0=子) -&gt; ZWDS 지지 인덱스 (0=寅)
+<a href=#25 id=25 data-nosnippet>25</a></span><span class="kw">pub fn </span>std_idx_to_zwds_idx(std_idx: usize) -&gt; usize {
+<a href=#26 id=26 data-nosnippet>26</a>    (std_idx + <span class="number">10</span>) % <span class="number">12
+<a href=#27 id=27 data-nosnippet>27</a></span>}
+<a href=#28 id=28 data-nosnippet>28</a>
+<a href=#29 id=29 data-nosnippet>29</a><span class="doccomment">/// 명궁 및 신궁 인덱스 계산 (ZWDS 인덱스 반환)
+<a href=#30 id=30 data-nosnippet>30</a>///
+<a href=#31 id=31 data-nosnippet>31</a>/// * `lunar_month` - 음력 월 (1~12)
+<a href=#32 id=32 data-nosnippet>32</a>/// * `time_branch_std_idx` - 태어난 시의 표준 지지 인덱스 (0=子)
+<a href=#33 id=33 data-nosnippet>33</a></span><span class="kw">pub fn </span>get_soul_and_body_index(lunar_month: u32, time_branch_std_idx: usize) -&gt; (PalaceIndex, PalaceIndex) {
+<a href=#34 id=34 data-nosnippet>34</a>    <span class="kw">let </span>month_idx = (lunar_month - <span class="number">1</span>) <span class="kw">as </span>i32;
+<a href=#35 id=35 data-nosnippet>35</a>    <span class="kw">let </span>time_idx = time_branch_std_idx <span class="kw">as </span>i32;
+<a href=#36 id=36 data-nosnippet>36</a>
+<a href=#37 id=37 data-nosnippet>37</a>    <span class="kw">let </span>soul = fix_index(month_idx - time_idx);
+<a href=#38 id=38 data-nosnippet>38</a>    <span class="kw">let </span>body = fix_index(month_idx + time_idx);
+<a href=#39 id=39 data-nosnippet>39</a>
+<a href=#40 id=40 data-nosnippet>40</a>    (soul, body)
+<a href=#41 id=41 data-nosnippet>41</a>}
+<a href=#42 id=42 data-nosnippet>42</a>
+<a href=#43 id=43 data-nosnippet>43</a><span class="doccomment">/// 각 궁의 천간 계산 (五虎遁年起月법 적용)
+<a href=#44 id=44 data-nosnippet>44</a>///
+<a href=#45 id=45 data-nosnippet>45</a>/// * `year_stem` - 출생년도의 천간
+<a href=#46 id=46 data-nosnippet>46</a>/// * `palace_zwds_idx` - ZWDS 지지 인덱스 (0=寅, 1=卯...)
+<a href=#47 id=47 data-nosnippet>47</a></span><span class="kw">pub fn </span>get_palace_stem(year_stem: HeavenlyStem, palace_zwds_idx: PalaceIndex) -&gt; HeavenlyStem {
+<a href=#48 id=48 data-nosnippet>48</a>    <span class="kw">let </span>start_stem_idx = <span class="kw">match </span>year_stem {
+<a href=#49 id=49 data-nosnippet>49</a>        HeavenlyStem::Jia | HeavenlyStem::Ji =&gt; <span class="number">2</span>,   <span class="comment">// 丙
+<a href=#50 id=50 data-nosnippet>50</a>        </span>HeavenlyStem::Yi | HeavenlyStem::Geng =&gt; <span class="number">4</span>,  <span class="comment">// 戊
+<a href=#51 id=51 data-nosnippet>51</a>        </span>HeavenlyStem::Bing | HeavenlyStem::Xin =&gt; <span class="number">6</span>, <span class="comment">// 庚
+<a href=#52 id=52 data-nosnippet>52</a>        </span>HeavenlyStem::Ding | HeavenlyStem::Ren =&gt; <span class="number">8</span>, <span class="comment">// 壬
+<a href=#53 id=53 data-nosnippet>53</a>        </span>HeavenlyStem::Wu | HeavenlyStem::Gui =&gt; <span class="number">0</span>,   <span class="comment">// 甲
+<a href=#54 id=54 data-nosnippet>54</a>    </span>};
+<a href=#55 id=55 data-nosnippet>55</a>    <span class="kw">let </span>stem_idx = (start_stem_idx + palace_zwds_idx) % <span class="number">10</span>;
+<a href=#56 id=56 data-nosnippet>56</a>    HeavenlyStem::from_index(stem_idx <span class="kw">as </span>i32)
+<a href=#57 id=57 data-nosnippet>57</a>}
+<a href=#58 id=58 data-nosnippet>58</a>
+<a href=#59 id=59 data-nosnippet>59</a><span class="doccomment">/// 오행국(Five Elements Class) 결정
+<a href=#60 id=60 data-nosnippet>60</a>///
+<a href=#61 id=61 data-nosnippet>61</a>/// * `soul_stem` - 명궁의 천간
+<a href=#62 id=62 data-nosnippet>62</a>/// * `soul_zwds_idx` - 명궁의 ZWDS 지지 인덱스
+<a href=#63 id=63 data-nosnippet>63</a></span><span class="kw">pub fn </span>get_five_elements(soul_stem: HeavenlyStem, soul_zwds_idx: PalaceIndex) -&gt; FiveElementsClass {
+<a href=#64 id=64 data-nosnippet>64</a>    <span class="kw">let </span>stem_num = <span class="kw">match </span>soul_stem {
+<a href=#65 id=65 data-nosnippet>65</a>        HeavenlyStem::Jia | HeavenlyStem::Yi =&gt; <span class="number">1</span>,
+<a href=#66 id=66 data-nosnippet>66</a>        HeavenlyStem::Bing | HeavenlyStem::Ding =&gt; <span class="number">2</span>,
+<a href=#67 id=67 data-nosnippet>67</a>        HeavenlyStem::Wu | HeavenlyStem::Ji =&gt; <span class="number">3</span>,
+<a href=#68 id=68 data-nosnippet>68</a>        HeavenlyStem::Geng | HeavenlyStem::Xin =&gt; <span class="number">4</span>,
+<a href=#69 id=69 data-nosnippet>69</a>        HeavenlyStem::Ren | HeavenlyStem::Gui =&gt; <span class="number">5</span>,
+<a href=#70 id=70 data-nosnippet>70</a>    };
+<a href=#71 id=71 data-nosnippet>71</a>
+<a href=#72 id=72 data-nosnippet>72</a>    <span class="kw">let </span>soul_branch_std_idx = zwds_idx_to_std_idx(soul_zwds_idx);
+<a href=#73 id=73 data-nosnippet>73</a>    <span class="kw">let </span>branch = EarthlyBranch::from_index(soul_branch_std_idx <span class="kw">as </span>i32);
+<a href=#74 id=74 data-nosnippet>74</a>
+<a href=#75 id=75 data-nosnippet>75</a>    <span class="kw">let </span>branch_num = <span class="kw">match </span>branch {
+<a href=#76 id=76 data-nosnippet>76</a>        EarthlyBranch::Zi | EarthlyBranch::Wu | EarthlyBranch::Chou | EarthlyBranch::Wei =&gt; <span class="number">1</span>,
+<a href=#77 id=77 data-nosnippet>77</a>        EarthlyBranch::Yin | EarthlyBranch::Shen | EarthlyBranch::Mao | EarthlyBranch::You =&gt; <span class="number">2</span>,
+<a href=#78 id=78 data-nosnippet>78</a>        EarthlyBranch::Chen | EarthlyBranch::Xu | EarthlyBranch::Si | EarthlyBranch::Hai =&gt; <span class="number">3</span>,
+<a href=#79 id=79 data-nosnippet>79</a>    };
+<a href=#80 id=80 data-nosnippet>80</a>
+<a href=#81 id=81 data-nosnippet>81</a>    <span class="kw">let </span>sum = stem_num + branch_num;
+<a href=#82 id=82 data-nosnippet>82</a>    <span class="kw">let </span>rem = sum % <span class="number">5</span>;
+<a href=#83 id=83 data-nosnippet>83</a>
+<a href=#84 id=84 data-nosnippet>84</a>    <span class="kw">match </span>rem {
+<a href=#85 id=85 data-nosnippet>85</a>        <span class="number">1 </span>=&gt; FiveElementsClass::Wood3,
+<a href=#86 id=86 data-nosnippet>86</a>        <span class="number">2 </span>=&gt; FiveElementsClass::Metal4,
+<a href=#87 id=87 data-nosnippet>87</a>        <span class="number">3 </span>=&gt; FiveElementsClass::Water2,
+<a href=#88 id=88 data-nosnippet>88</a>        <span class="number">4 </span>=&gt; FiveElementsClass::Fire6,
+<a href=#89 id=89 data-nosnippet>89</a>        <span class="number">0 </span>=&gt; FiveElementsClass::Earth5,
+<a href=#90 id=90 data-nosnippet>90</a>        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+<a href=#91 id=91 data-nosnippet>91</a>    }
+<a href=#92 id=92 data-nosnippet>92</a>}
+<a href=#93 id=93 data-nosnippet>93</a>
+<a href=#94 id=94 data-nosnippet>94</a><span class="doccomment">/// 각 ZWDS 인덱스의 궁명(PalaceName) 결정
+<a href=#95 id=95 data-nosnippet>95</a>///
+<a href=#96 id=96 data-nosnippet>96</a>/// * `soul_zwds_idx` - 명궁의 ZWDS 지지 인덱스
+<a href=#97 id=97 data-nosnippet>97</a>/// * `palace_zwds_idx` - 현재 궁의 ZWDS 지지 인덱스
+<a href=#98 id=98 data-nosnippet>98</a></span><span class="kw">pub fn </span>get_palace_name(soul_zwds_idx: PalaceIndex, palace_zwds_idx: PalaceIndex) -&gt; PalaceName {
+<a href=#99 id=99 data-nosnippet>99</a>    <span class="kw">let </span>offset = fix_index(palace_zwds_idx <span class="kw">as </span>i32 - soul_zwds_idx <span class="kw">as </span>i32);
+<a href=#100 id=100 data-nosnippet>100</a>    PalaceName::ALL[offset]
+<a href=#101 id=101 data-nosnippet>101</a>}
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a><span class="attr">#[cfg(test)]
+<a href=#104 id=104 data-nosnippet>104</a></span><span class="kw">mod </span>tests {
+<a href=#105 id=105 data-nosnippet>105</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#106 id=106 data-nosnippet>106</a>
+<a href=#107 id=107 data-nosnippet>107</a>    <span class="attr">#[test]
+<a href=#108 id=108 data-nosnippet>108</a>    </span><span class="kw">fn </span>test_soul_body_calc() {
+<a href=#109 id=109 data-nosnippet>109</a>        <span class="comment">// 음력 10월, 亥시생 (lunar_month = 10, time_branch_std_idx = 11)
+<a href=#110 id=110 data-nosnippet>110</a>        </span><span class="kw">let </span>(soul, body) = get_soul_and_body_index(<span class="number">10</span>, <span class="number">11</span>);
+<a href=#111 id=111 data-nosnippet>111</a>        <span class="comment">// soul = 9 - 11 = -2 -&gt; 10 (子궁)
+<a href=#112 id=112 data-nosnippet>112</a>        // body = 9 + 11 = 20 -&gt; 8 (戌궁)
+<a href=#113 id=113 data-nosnippet>113</a>        </span><span class="macro">assert_eq!</span>(soul, <span class="number">10</span>);
+<a href=#114 id=114 data-nosnippet>114</a>        <span class="macro">assert_eq!</span>(body, <span class="number">8</span>);
+<a href=#115 id=115 data-nosnippet>115</a>    }
+<a href=#116 id=116 data-nosnippet>116</a>
+<a href=#117 id=117 data-nosnippet>117</a>    <span class="attr">#[test]
+<a href=#118 id=118 data-nosnippet>118</a>    </span><span class="kw">fn </span>test_palace_stem() {
+<a href=#119 id=119 data-nosnippet>119</a>        <span class="comment">// 甲년, ZWDS 0(寅)의 천간 -&gt; 丙
+<a href=#120 id=120 data-nosnippet>120</a>        </span><span class="macro">assert_eq!</span>(get_palace_stem(HeavenlyStem::Jia, <span class="number">0</span>), HeavenlyStem::Bing);
+<a href=#121 id=121 data-nosnippet>121</a>        <span class="comment">// 甲년, ZWDS 10(子)의 천간 -&gt; 甲 (start 2 + 10 = 12 % 10 = 2 -&gt; 丙인데? 아! 10 % 10 = 0 -&gt; 丙 + 10 = 丙(2) + 10 = 12 -&gt; 丙?)
+<a href=#122 id=122 data-nosnippet>122</a>        // 잠시, 공식이 맞는지 검증해보자.
+<a href=#123 id=123 data-nosnippet>123</a>        // start_stem_idx:
+<a href=#124 id=124 data-nosnippet>124</a>        // 甲/己年 -&gt; 寅궁(0) 천간 = 丙 (2)
+<a href=#125 id=125 data-nosnippet>125</a>        // 卯궁(1) 천간 = 丁 (3)
+<a href=#126 id=126 data-nosnippet>126</a>        // 辰궁(2) 천간 = 戊 (4)
+<a href=#127 id=127 data-nosnippet>127</a>        // 巳궁(3) 천간 = 己 (5)
+<a href=#128 id=128 data-nosnippet>128</a>        // 午궁(4) 천간 = 庚 (6)
+<a href=#129 id=129 data-nosnippet>129</a>        // 未궁(5) 천간 = 辛 (7)
+<a href=#130 id=130 data-nosnippet>130</a>        // 申궁(6) 천간 = 壬 (8)
+<a href=#131 id=131 data-nosnippet>131</a>        // 酉궁(7) 천간 = 癸 (9)
+<a href=#132 id=132 data-nosnippet>132</a>        // 戌궁(8) 천간 = 甲 (0)
+<a href=#133 id=133 data-nosnippet>133</a>        // 亥궁(9) 천간 = 乙 (1)
+<a href=#134 id=134 data-nosnippet>134</a>        // 子궁(10) 천간 = 丙 (2)
+<a href=#135 id=135 data-nosnippet>135</a>        // 丑궁(11) 천간 = 丁 (3)
+<a href=#136 id=136 data-nosnippet>136</a>        // 공식: (start_stem_idx + palace_zwds_idx) % 10
+<a href=#137 id=137 data-nosnippet>137</a>        // (2 + 0) % 10 = 2 -&gt; 丙. 맞음.
+<a href=#138 id=138 data-nosnippet>138</a>        // (2 + 10) % 10 = 2 -&gt; 丙. 맞음! (子궁의 천간은 丙이다. 五虎遁법에 의하면 甲己년의 자궁 천간은 丙이 맞음).
+<a href=#139 id=139 data-nosnippet>139</a>        // (2 + 8) % 10 = 0 -&gt; 甲. 戌궁의 천간은 甲. 맞음!
+<a href=#140 id=140 data-nosnippet>140</a>        </span><span class="macro">assert_eq!</span>(get_palace_stem(HeavenlyStem::Jia, <span class="number">10</span>), HeavenlyStem::Bing);
+<a href=#141 id=141 data-nosnippet>141</a>    }
+<a href=#142 id=142 data-nosnippet>142</a>
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="attr">#[test]
+<a href=#144 id=144 data-nosnippet>144</a>    </span><span class="kw">fn </span>test_five_elements() {
+<a href=#145 id=145 data-nosnippet>145</a>        <span class="comment">// 명궁 천간: 丙, 명궁 ZWDS: 10(子)
+<a href=#146 id=146 data-nosnippet>146</a>        // stem_num = 丙(2)
+<a href=#147 id=147 data-nosnippet>147</a>        // ZWDS 10 -&gt; 표준 0(子) -&gt; branch_num = 1
+<a href=#148 id=148 data-nosnippet>148</a>        // sum = 3 -&gt; rem = 3 -&gt; Water2 (수이국)
+<a href=#149 id=149 data-nosnippet>149</a>        </span><span class="kw">let </span>class = get_five_elements(HeavenlyStem::Bing, <span class="number">10</span>);
+<a href=#150 id=150 data-nosnippet>150</a>        <span class="macro">assert_eq!</span>(class, FiveElementsClass::Water2);
+<a href=#151 id=151 data-nosnippet>151</a>    }
+<a href=#152 id=152 data-nosnippet>152</a>}
+</code></pre></div></section></main></body></html>

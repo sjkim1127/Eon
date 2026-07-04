@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["birth","context","dto","error","facade","fixtures","services","tests"]};

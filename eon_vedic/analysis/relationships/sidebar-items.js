@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["NaturalRelationship","RelationshipType","TemporalRelationship"],"struct":["RelationshipEngine"]};

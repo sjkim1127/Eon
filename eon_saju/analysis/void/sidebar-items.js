@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["calculate_void_branches"],"struct":["VoidAnalysis","VoidDetail"]};

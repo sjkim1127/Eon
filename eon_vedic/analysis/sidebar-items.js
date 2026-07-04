@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["ashtakavarga","aspects","avasthas","bhava","dasha","gochara","jaimini","kp","matching","nakshatra","nature","relationships","report","strength","tajika","varga_interpretation","varga_nakshatra_report","vimshopaka","yogas"]};

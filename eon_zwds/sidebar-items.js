@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["annual","brightness","calendar","chart","decadal","destiny_patterns","error","palace","stars","transformations","types"]};

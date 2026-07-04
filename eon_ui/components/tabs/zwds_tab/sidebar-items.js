@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["CenterCard","DaXianSection","PalaceCard","PalaceDetailModal","ZwdsGrid","ZwdsTab","get_palace_center","get_palace_description","get_star_description"],"struct":["CenterCardProps","DaXianSectionProps","PalaceCardProps","PalaceDetailModalProps","ZwdsGridProps"]};

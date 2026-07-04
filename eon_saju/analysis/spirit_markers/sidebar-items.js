@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PillarPosition","SpiritMarker"],"struct":["FoundMarker","SpiritMarkerAnalysis","SpiritMarkerDetail"]};

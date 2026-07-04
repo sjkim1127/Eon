@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MurtiType","SadeSatiPhase"],"struct":["GocharaEngine","GocharaSummary","TransitPosition"]};

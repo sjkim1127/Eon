@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_nakshatra_name","get_rasi_name"]};

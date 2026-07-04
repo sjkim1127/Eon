@@ -1,0 +1,2 @@
+window.ALL_CRATES = ["eon_ai","eon_astro","eon_core","eon_data","eon_human_design","eon_saju","eon_service","eon_ui","eon_vedic","eon_western","eon_zwds","export_ts"];
+//{"start":21,"fragment_lengths":[8,12,11,11,19,11,14,9,12,14,11,12]}

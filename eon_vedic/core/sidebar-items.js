@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["chart","config","constants","error","names","planets"]};

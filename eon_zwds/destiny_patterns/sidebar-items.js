@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["analyze_destiny_patterns"]};

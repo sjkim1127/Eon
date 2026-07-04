@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DB_NAME","STORE_NAME"],"fn":["delete_profile","init_db","load_all_profiles","save_profile"],"struct":["UserProfile"]};

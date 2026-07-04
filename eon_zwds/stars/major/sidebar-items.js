@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_tianfu_index","get_ziwei_index","place_14_main_stars"]};

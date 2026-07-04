@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["place_all_stars"],"mod":["assistant","location","major"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Route"],"fn":["PageNotFound"],"struct":["PageNotFoundProps"]};

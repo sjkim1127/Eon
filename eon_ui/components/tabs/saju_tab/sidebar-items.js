@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["DeukBadge","MetaRow","PillarCard","SajuTab","element_card_style","element_style","get_branch_from_hanja","get_jijanggan_items"],"struct":["DeukBadgeProps","JijangganDisplayItem","JijangganItem","MetaRowProps","PillarCardProps"]};
