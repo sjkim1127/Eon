@@ -29,7 +29,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
 swiss-eph = "0.2"
-bincode = "3.0"
+bincode = "1.3.3"
 eon-core = { path = "crates/eon-core", version = "0.1.0" }
 eon-data = { path = "crates/eon-data", version = "0.1.0" }
 eon-astro = { path = "crates/eon-astro", version = "0.1.0" }
