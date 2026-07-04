@@ -5,7 +5,7 @@
 모든 연산은 순수 Rust로 구현되며, `eon-service` 크레이트 하나로 전체 엔진에 접근할 수 있습니다.
 프론트엔드(`eon-ui`)는 Dioxus Web 기반 SPA로 WebAssembly로 컴파일되어 Vercel에 정적 호스팅됩니다.
 
-**Live Demo:** [eon-sage.vercel.app](https://eon-sage.vercel.app)
+**Live Demo:** [eon-one.vercel.app](https://eon-one.vercel.app)
 
 ---
 

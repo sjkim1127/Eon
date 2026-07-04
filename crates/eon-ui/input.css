@@ -62,3 +62,34 @@ body {
   transform: translate(-100%, 0);
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), transparent);
 }
+
+/* Premium Glassmorphism */
+.glass-premium {
+  background: rgba(15, 17, 35, 0.45); /* 딥 인디고-네이비 베이스 투명도 */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-glow-hover {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.glass-glow-hover:hover {
+  border-color: rgba(99, 102, 241, 0.35); /* celestial-purple */
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.15);
+  background: rgba(20, 22, 45, 0.55);
+}
+
+/* Focus highlight aura */
+.focus-glow {
+  transition: all 0.2s ease-in-out;
+}
+.focus-glow:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+  background: rgba(10, 11, 25, 0.7) !important;
+}
+
