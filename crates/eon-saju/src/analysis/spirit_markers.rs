@@ -291,6 +291,8 @@ pub struct SpiritMarkerDetail {
     pub summary: String,
     pub description: String,
     pub reasons: Vec<String>,
+    pub is_clashed: bool,
+    pub is_combined: bool,
 }
 
 /// 신살 분석 결과
@@ -693,6 +695,9 @@ impl SpiritMarkerAnalysis {
         let primary_el = yongshin.primary;
         let assistant_el = yongshin.assistant;
 
+        // 관계(형충파해) 분석 (신살의 변질 판별용)
+        let rel_analysis = crate::analysis::relationships::RelationshipAnalysis::from_pillars(pillars);
+
         // === 상세 설명 모델(mapped_markers) 생성 ===
         let mapped_markers = markers.iter()
             .map(|m| {
@@ -703,8 +708,40 @@ impl SpiritMarkerAnalysis {
                     PillarPosition::Hour => pillars.hour,
                 };
                 let element = if m.is_stem { pillar_ganzi.stem.element() } else { pillar_ganzi.branch.element() };
-
                 let is_yong_hee = element == primary_el || element == assistant_el;
+
+                let mut is_clashed = false;
+                let mut is_combined = false;
+
+                if !m.is_stem {
+                    let pos_str = m.position.hangul();
+                    for (_, p1, p2) in &rel_analysis.branch_clashes {
+                        if p1 == &pos_str || p2 == &pos_str { is_clashed = true; }
+                    }
+                    for (_, p1, p2) in &rel_analysis.branch_punishments {
+                        if p1 == &pos_str || p2 == &pos_str { is_clashed = true; } // 형(刑)도 파탈/발동 요인
+                    }
+                    for (_, p1, p2) in &rel_analysis.six_combinations {
+                        if p1 == &pos_str || p2 == &pos_str { is_combined = true; }
+                    }
+                    for (_, p1, p2) in &rel_analysis.dominant_semi_combinations {
+                        if p1 == &pos_str || p2 == &pos_str { is_combined = true; }
+                    }
+                    
+                    let branch = pillar_ganzi.branch;
+                    
+                    for triple in &rel_analysis.triple_combinations {
+                        use crate::core::branch::EarthlyBranch::*;
+                        use crate::analysis::relationships::TripleCombination::*;
+                        match triple {
+                            YinWuXu if branch == Yin || branch == Wu || branch == Xu => is_combined = true,
+                            ShenZiChen if branch == Shen || branch == Zi || branch == Chen => is_combined = true,
+                            SiYouChou if branch == Si || branch == You || branch == Chou => is_combined = true,
+                            HaiMaoWei if branch == Hai || branch == Mao || branch == Wei => is_combined = true,
+                            _ => {}
+                        }
+                    }
+                }
 
                 let mut level = if m.marker.is_auspicious() {
                     if is_yong_hee { InterpretationLevel::Auspicious } else { InterpretationLevel::Neutral }
@@ -729,15 +766,40 @@ impl SpiritMarkerAnalysis {
                 }
 
                 let mut description = m.marker.description().to_string();
+                let mut summary = m.marker.hangul().to_string();
 
-                // 상황별 문구 보정
-                if m.marker.is_auspicious() && is_yong_hee {
-                    description = format!("{} (용신/희신에 해당하여 그 작용력이 더욱 강력하고 순수하게 나타납니다.)", description);
-                } else if !m.marker.is_auspicious() && is_yong_hee {
-                    description = format!("{} (불리한 살성이나, 용신/희신의 기운 위에 있어 그 흉함이 크게 억제되거나 오히려 추진력으로 승화됩니다.)", description);
-                    level = InterpretationLevel::Neutral; // 흉살이라도 용신이면 중립으로 승격
-                } else if m.marker.is_auspicious() && !is_yong_hee {
-                    description = format!("{} (길한 신살이지만, 기운이 비협조적이라 실제 체감되는 도움은 다소 제한적일 수 있습니다.)", description);
+                // 형충파해에 따른 신살 변질(파탈/발동) 적용
+                if m.marker.is_auspicious() {
+                    if is_clashed {
+                        level = InterpretationLevel::Neutral; // 길신 파탈로 레벨 하향
+                        summary.push_str(" (파극됨)");
+                        description = format!("{} (길신이나 지지가 충(沖)이나 형(刑)을 만나 귀인파탈(貴人破脫)되어 그 효력이 크게 반감되었습니다.)", description);
+                        reasons.push("지지의 형/충으로 인한 길신 작용력 상실".to_string());
+                    } else if is_combined {
+                        level = InterpretationLevel::Auspicious;
+                        summary.push_str(" (합 증폭)");
+                        description = format!("{} (지지가 합(合)을 이루어 길신의 긍정적 기운이 더욱 안정적이고 강하게 증폭됩니다.)", description);
+                        reasons.push("지지 합(合)으로 인한 작용력 강화".to_string());
+                    } else if is_yong_hee {
+                        description = format!("{} (용신/희신에 해당하여 그 작용력이 더욱 강력하고 순수하게 나타납니다.)", description);
+                    } else if !is_yong_hee {
+                        description = format!("{} (길한 신살이지만, 기운이 비협조적이라 체감되는 도움은 다소 제한적일 수 있습니다.)", description);
+                    }
+                } else {
+                    if is_clashed {
+                        level = InterpretationLevel::Danger; // 흉살 발동으로 레벨 상승
+                        summary.push_str(" (발동됨)");
+                        description = format!("{} (흉살이 지지의 충(沖)이나 형(刑)을 만나 기운이 폭발적으로 발동(發動)할 우려가 있으니 각별한 주의가 필요합니다.)", description);
+                        reasons.push("지지의 형/충으로 인한 흉살(凶煞)의 맹렬한 발동".to_string());
+                    } else if is_combined {
+                        level = InterpretationLevel::Neutral; // 흉살 기반으로 레벨 하향
+                        summary.push_str(" (묶임)");
+                        description = format!("{} (흉살이나 지지가 합(合)으로 묶여(기반) 그 흉폭한 기운이 억제되고 안정을 찾았습니다.)", description);
+                        reasons.push("지지 합(合)으로 인한 흉살 기운 억제(기반)".to_string());
+                    } else if is_yong_hee {
+                        description = format!("{} (불리한 살성이나, 용신/희신의 기운 위에 있어 흉함이 크게 억제되거나 오히려 추진력으로 승화됩니다.)", description);
+                        level = InterpretationLevel::Neutral; 
+                    }
                 }
 
                 // 위치별 뉘앙스 추가
@@ -747,16 +809,20 @@ impl SpiritMarkerAnalysis {
                     PillarPosition::Day => "나의 내면적인 기질이나 배우자와의 관계에 깊이 관여합니다.",
                     PillarPosition::Hour => "자식운이나 노년의 삶, 비밀스러운 내실을 상징하는 영역에서 나타납니다.",
                 };
-                description = format!("{} \n\n* {}", description, pos_context);
+                description = format!("{} 
+
+* {}", description, pos_context);
 
                 SpiritMarkerDetail {
                     marker: m.marker,
                     position: m.position,
                     is_stem: m.is_stem,
                     level,
-                    summary: m.marker.hangul().to_string(),
+                    summary,
                     description,
                     reasons,
+                    is_clashed,
+                    is_combined,
                 }
             })
             .collect();

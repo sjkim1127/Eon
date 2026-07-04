@@ -36,6 +36,7 @@ pub struct SupplementaryInterpretation {
 pub enum InterpretationLevel {
     Auspicious, // 길조
     Caution,    // 주의
+    Danger,     // 경고 (강한 흉살 발동 등)
     Neutral,    // 보통
 }
 

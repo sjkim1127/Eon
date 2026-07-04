@@ -138,6 +138,7 @@ impl SajuReport {
                 let emoji = match interp.level {
                     crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "✨",
                     crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "⚠️",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Danger => "🚨",
                     crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "•",
                 };
                 md.push_str(&format!(
@@ -224,6 +225,7 @@ impl SajuReport {
                 let emoji = match m.level {
                     crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "✨",
                     crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "⚠️",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Danger => "🚨",
                     crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "•",
                 };
                 md.push_str(&format!(
@@ -249,6 +251,7 @@ impl SajuReport {
                 let emoji = match rel.level {
                     crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "🤝",
                     crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "⚡",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Danger => "🚨",
                     crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "•",
                 };
                 md.push_str(&format!(
