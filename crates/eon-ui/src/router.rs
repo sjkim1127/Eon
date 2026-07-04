@@ -8,7 +8,6 @@ use crate::components::tabs::{
     transit_tab::TransitTab,
     simulation_tab::SimulationTab,
     tier_tab::TierTab,
-    ai_tab::AiTab,
     zwds_tab::ZwdsTab,
     iching_tab::IChingTab,
     western_tab::WesternTab,
@@ -35,9 +34,6 @@ pub enum Route {
         
         #[route("/destiny_tier")]
         TierTab {},
-        
-        #[route("/ai_audit")]
-        AiTab {},
 
         #[route("/zwds")]
         ZwdsTab {},

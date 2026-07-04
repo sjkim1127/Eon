@@ -10,7 +10,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::NavTransit => "운세 흐름",
         TK::NavSimulation => "생애 시뮬레이터",
         TK::NavTier => "데스티니 티어",
-        TK::NavAi => "AI 분석관",
         TK::NavZwds => "자미두수",
         // Form
         TK::FormYear => "연 (Year)",
@@ -58,7 +57,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::SectionTransit => "행성 운행",
         TK::SectionSimulation => "생애 시뮬레이션",
         TK::SectionTier => "데스티니 티어",
-        TK::SectionAi => "AI 분석",
         TK::SectionDasha => "다샤 (Dasha)",
         TK::SectionYoga => "요가 (Yoga)",
         TK::SectionAshtakavarga => "아슈타카바르가",
@@ -146,13 +144,6 @@ pub fn translate(key: TK) -> &'static str {
         TK::TooltipHouseLord => "하우스 지배성",
         TK::TooltipHouseScore => "하우스 점수",
         TK::TooltipClickDetail => "클릭하여 상세 정보 보기",
-        // AI Tab
-        TK::AiStartAudit => "심층 감사 시작",
-        TK::AiChatPlaceholderReady => "질문을 입력하세요...",
-        TK::AiChatPlaceholderWait => "상단의 '심층 감사 시작'을 먼저 실행해주세요.",
-        TK::AiDisclaimer => "AI는 실수를 할 수 있습니다. 중요한 결정은 전문가와 상의하세요.",
-        TK::AiApiKeyHint => "Groq API Key를 먼저 입력해주세요.",
-        TK::AiWelcome => "안녕하세요! Eon AI입니다.",
 
         // Global / Common
         TK::LabelAge => "나이",
