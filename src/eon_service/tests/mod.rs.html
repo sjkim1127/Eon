@@ -104,8 +104,8 @@
 <a href=#104 id=104 data-nosnippet>104</a>                use_night_rat_hour: <span class="bool-val">false</span>, <span class="comment">// Default for oracle
 <a href=#105 id=105 data-nosnippet>105</a>                </span>precision: BirthTimePrecision::Exact,
 <a href=#106 id=106 data-nosnippet>106</a>            };
-<a href=#107 id=107 data-nosnippet>107</a>            <span class="kw">let </span>saju_res =
-<a href=#108 id=108 data-nosnippet>108</a>                facade::analyze_saju(saju_input).unwrap_or_else(|<span class="kw">_</span>| <span class="macro">panic!</span>(<span class="string">"Saju failed for {}"</span>, f.id));
+<a href=#107 id=107 data-nosnippet>107</a>            <span class="kw">let </span>saju_res = facade::analyze_saju(saju_input)
+<a href=#108 id=108 data-nosnippet>108</a>                .unwrap_or_else(|<span class="kw">_</span>| <span class="macro">panic!</span>(<span class="string">"Saju failed for {}"</span>, f.id));
 <a href=#109 id=109 data-nosnippet>109</a>
 <a href=#110 id=110 data-nosnippet>110</a>            <span class="comment">// 2. Vedic Verification
 <a href=#111 id=111 data-nosnippet>111</a>            </span><span class="kw">let </span>vedic_input = VedicAnalysisInput {
@@ -117,8 +117,8 @@
 <a href=#117 id=117 data-nosnippet>117</a>                },
 <a href=#118 id=118 data-nosnippet>118</a>                target_year: <span class="prelude-val">None</span>,
 <a href=#119 id=119 data-nosnippet>119</a>            };
-<a href=#120 id=120 data-nosnippet>120</a>            <span class="kw">let </span>vedic_res =
-<a href=#121 id=121 data-nosnippet>121</a>                facade::analyze_vedic(vedic_input).unwrap_or_else(|<span class="kw">_</span>| <span class="macro">panic!</span>(<span class="string">"Vedic failed for {}"</span>, f.id));
+<a href=#120 id=120 data-nosnippet>120</a>            <span class="kw">let </span>vedic_res = facade::analyze_vedic(vedic_input)
+<a href=#121 id=121 data-nosnippet>121</a>                .unwrap_or_else(|<span class="kw">_</span>| <span class="macro">panic!</span>(<span class="string">"Vedic failed for {}"</span>, f.id));
 <a href=#122 id=122 data-nosnippet>122</a>
 <a href=#123 id=123 data-nosnippet>123</a>            <span class="kw">if </span>f.id == <span class="string">"lunar-edge-case" </span>{
 <a href=#124 id=124 data-nosnippet>124</a>                <span class="macro">println!</span>(<span class="string">"SAJU: {:#?}"</span>, saju_res.report.pillars);

@@ -360,72 +360,76 @@
 <a href=#360 id=360 data-nosnippet>360</a>    }
 <a href=#361 id=361 data-nosnippet>361</a>
 <a href=#362 id=362 data-nosnippet>362</a>    <span class="comment">// 우세 원소/모달리티 문자열 도출
-<a href=#363 id=363 data-nosnippet>363</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>el_vec = [(<span class="string">"Fire"</span>, elements.fire),
-<a href=#364 id=364 data-nosnippet>364</a>        (<span class="string">"Earth"</span>, elements.earth),
-<a href=#365 id=365 data-nosnippet>365</a>        (<span class="string">"Air"</span>, elements.air),
-<a href=#366 id=366 data-nosnippet>366</a>        (<span class="string">"Water"</span>, elements.water)];
-<a href=#367 id=367 data-nosnippet>367</a>    el_vec.sort_by(|a, b| b.<span class="number">1</span>.partial_cmp(<span class="kw-2">&amp;</span>a.<span class="number">1</span>).unwrap());
-<a href=#368 id=368 data-nosnippet>368</a>    <span class="kw">let </span>dominant_element = el_vec[<span class="number">0</span>].<span class="number">0</span>.to_string();
-<a href=#369 id=369 data-nosnippet>369</a>
-<a href=#370 id=370 data-nosnippet>370</a>    <span class="kw">let </span><span class="kw-2">mut </span>mo_vec = [(<span class="string">"Cardinal"</span>, modalities.cardinal),
-<a href=#371 id=371 data-nosnippet>371</a>        (<span class="string">"Fixed"</span>, modalities.fixed),
-<a href=#372 id=372 data-nosnippet>372</a>        (<span class="string">"Mutable"</span>, modalities.mutable)];
-<a href=#373 id=373 data-nosnippet>373</a>    mo_vec.sort_by(|a, b| b.<span class="number">1</span>.partial_cmp(<span class="kw-2">&amp;</span>a.<span class="number">1</span>).unwrap());
-<a href=#374 id=374 data-nosnippet>374</a>    <span class="kw">let </span>dominant_modality = mo_vec[<span class="number">0</span>].<span class="number">0</span>.to_string();
-<a href=#375 id=375 data-nosnippet>375</a>
-<a href=#376 id=376 data-nosnippet>376</a>    <span class="comment">// Chart Ruler 구하기 (ASC 사인의 Ruler)
-<a href=#377 id=377 data-nosnippet>377</a>    </span><span class="kw">let </span>asc_sign = (asc / <span class="number">30.0</span>).floor() <span class="kw">as </span>usize;
-<a href=#378 id=378 data-nosnippet>378</a>    <span class="kw">let </span>chart_ruler = get_sign_ruler(asc_sign).to_string();
+<a href=#363 id=363 data-nosnippet>363</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>el_vec = [
+<a href=#364 id=364 data-nosnippet>364</a>        (<span class="string">"Fire"</span>, elements.fire),
+<a href=#365 id=365 data-nosnippet>365</a>        (<span class="string">"Earth"</span>, elements.earth),
+<a href=#366 id=366 data-nosnippet>366</a>        (<span class="string">"Air"</span>, elements.air),
+<a href=#367 id=367 data-nosnippet>367</a>        (<span class="string">"Water"</span>, elements.water),
+<a href=#368 id=368 data-nosnippet>368</a>    ];
+<a href=#369 id=369 data-nosnippet>369</a>    el_vec.sort_by(|a, b| b.<span class="number">1</span>.partial_cmp(<span class="kw-2">&amp;</span>a.<span class="number">1</span>).unwrap());
+<a href=#370 id=370 data-nosnippet>370</a>    <span class="kw">let </span>dominant_element = el_vec[<span class="number">0</span>].<span class="number">0</span>.to_string();
+<a href=#371 id=371 data-nosnippet>371</a>
+<a href=#372 id=372 data-nosnippet>372</a>    <span class="kw">let </span><span class="kw-2">mut </span>mo_vec = [
+<a href=#373 id=373 data-nosnippet>373</a>        (<span class="string">"Cardinal"</span>, modalities.cardinal),
+<a href=#374 id=374 data-nosnippet>374</a>        (<span class="string">"Fixed"</span>, modalities.fixed),
+<a href=#375 id=375 data-nosnippet>375</a>        (<span class="string">"Mutable"</span>, modalities.mutable),
+<a href=#376 id=376 data-nosnippet>376</a>    ];
+<a href=#377 id=377 data-nosnippet>377</a>    mo_vec.sort_by(|a, b| b.<span class="number">1</span>.partial_cmp(<span class="kw-2">&amp;</span>a.<span class="number">1</span>).unwrap());
+<a href=#378 id=378 data-nosnippet>378</a>    <span class="kw">let </span>dominant_modality = mo_vec[<span class="number">0</span>].<span class="number">0</span>.to_string();
 <a href=#379 id=379 data-nosnippet>379</a>
-<a href=#380 id=380 data-nosnippet>380</a>    <span class="prelude-val">Ok</span>(WesternResult {
-<a href=#381 id=381 data-nosnippet>381</a>        planets,
-<a href=#382 id=382 data-nosnippet>382</a>        houses,
-<a href=#383 id=383 data-nosnippet>383</a>        aspects,
-<a href=#384 id=384 data-nosnippet>384</a>        elements,
-<a href=#385 id=385 data-nosnippet>385</a>        modalities,
-<a href=#386 id=386 data-nosnippet>386</a>        ascendant: asc,
-<a href=#387 id=387 data-nosnippet>387</a>        midheaven: mc,
-<a href=#388 id=388 data-nosnippet>388</a>        chart_ruler,
-<a href=#389 id=389 data-nosnippet>389</a>        dominant_element,
-<a href=#390 id=390 data-nosnippet>390</a>        dominant_modality,
-<a href=#391 id=391 data-nosnippet>391</a>    })
-<a href=#392 id=392 data-nosnippet>392</a>}
-<a href=#393 id=393 data-nosnippet>393</a>
-<a href=#394 id=394 data-nosnippet>394</a><span class="attr">#[cfg(test)]
-<a href=#395 id=395 data-nosnippet>395</a></span><span class="kw">mod </span>tests {
-<a href=#396 id=396 data-nosnippet>396</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#380 id=380 data-nosnippet>380</a>    <span class="comment">// Chart Ruler 구하기 (ASC 사인의 Ruler)
+<a href=#381 id=381 data-nosnippet>381</a>    </span><span class="kw">let </span>asc_sign = (asc / <span class="number">30.0</span>).floor() <span class="kw">as </span>usize;
+<a href=#382 id=382 data-nosnippet>382</a>    <span class="kw">let </span>chart_ruler = get_sign_ruler(asc_sign).to_string();
+<a href=#383 id=383 data-nosnippet>383</a>
+<a href=#384 id=384 data-nosnippet>384</a>    <span class="prelude-val">Ok</span>(WesternResult {
+<a href=#385 id=385 data-nosnippet>385</a>        planets,
+<a href=#386 id=386 data-nosnippet>386</a>        houses,
+<a href=#387 id=387 data-nosnippet>387</a>        aspects,
+<a href=#388 id=388 data-nosnippet>388</a>        elements,
+<a href=#389 id=389 data-nosnippet>389</a>        modalities,
+<a href=#390 id=390 data-nosnippet>390</a>        ascendant: asc,
+<a href=#391 id=391 data-nosnippet>391</a>        midheaven: mc,
+<a href=#392 id=392 data-nosnippet>392</a>        chart_ruler,
+<a href=#393 id=393 data-nosnippet>393</a>        dominant_element,
+<a href=#394 id=394 data-nosnippet>394</a>        dominant_modality,
+<a href=#395 id=395 data-nosnippet>395</a>    })
+<a href=#396 id=396 data-nosnippet>396</a>}
 <a href=#397 id=397 data-nosnippet>397</a>
-<a href=#398 id=398 data-nosnippet>398</a>    <span class="attr">#[test]
-<a href=#399 id=399 data-nosnippet>399</a>    </span><span class="kw">fn </span>test_angle_between() {
-<a href=#400 id=400 data-nosnippet>400</a>        <span class="macro">assert!</span>(is_angle_between(<span class="number">15.0</span>, <span class="number">0.0</span>, <span class="number">30.0</span>));
-<a href=#401 id=401 data-nosnippet>401</a>        <span class="macro">assert!</span>(is_angle_between(<span class="number">350.0</span>, <span class="number">340.0</span>, <span class="number">10.0</span>));
-<a href=#402 id=402 data-nosnippet>402</a>        <span class="macro">assert!</span>(!is_angle_between(<span class="number">20.0</span>, <span class="number">30.0</span>, <span class="number">10.0</span>));
-<a href=#403 id=403 data-nosnippet>403</a>    }
-<a href=#404 id=404 data-nosnippet>404</a>
-<a href=#405 id=405 data-nosnippet>405</a>    <span class="attr">#[test]
-<a href=#406 id=406 data-nosnippet>406</a>    </span><span class="kw">fn </span>test_calculate_western_basic() {
-<a href=#407 id=407 data-nosnippet>407</a>        <span class="comment">// May 15, 1990 at 10:00 AM UTC (approx KST 19:00 or standard UTC)
-<a href=#408 id=408 data-nosnippet>408</a>        </span><span class="kw">let </span>utc_birth = <span class="string">"1990-05-15T10:00:00Z"</span>.parse::&lt;DateTime&lt;Utc&gt;&gt;().unwrap();
-<a href=#409 id=409 data-nosnippet>409</a>        <span class="comment">// Seoul coordinates
-<a href=#410 id=410 data-nosnippet>410</a>        </span><span class="kw">let </span>lat = <span class="number">37.5665</span>;
-<a href=#411 id=411 data-nosnippet>411</a>        <span class="kw">let </span>lon = <span class="number">126.9780</span>;
-<a href=#412 id=412 data-nosnippet>412</a>
-<a href=#413 id=413 data-nosnippet>413</a>        <span class="kw">let </span>res = calculate_western(utc_birth, lat, lon, <span class="string">'P'</span>);
-<a href=#414 id=414 data-nosnippet>414</a>        <span class="macro">assert!</span>(res.is_ok());
-<a href=#415 id=415 data-nosnippet>415</a>        <span class="kw">let </span>result = res.unwrap();
+<a href=#398 id=398 data-nosnippet>398</a><span class="attr">#[cfg(test)]
+<a href=#399 id=399 data-nosnippet>399</a></span><span class="kw">mod </span>tests {
+<a href=#400 id=400 data-nosnippet>400</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
+<a href=#401 id=401 data-nosnippet>401</a>
+<a href=#402 id=402 data-nosnippet>402</a>    <span class="attr">#[test]
+<a href=#403 id=403 data-nosnippet>403</a>    </span><span class="kw">fn </span>test_angle_between() {
+<a href=#404 id=404 data-nosnippet>404</a>        <span class="macro">assert!</span>(is_angle_between(<span class="number">15.0</span>, <span class="number">0.0</span>, <span class="number">30.0</span>));
+<a href=#405 id=405 data-nosnippet>405</a>        <span class="macro">assert!</span>(is_angle_between(<span class="number">350.0</span>, <span class="number">340.0</span>, <span class="number">10.0</span>));
+<a href=#406 id=406 data-nosnippet>406</a>        <span class="macro">assert!</span>(!is_angle_between(<span class="number">20.0</span>, <span class="number">30.0</span>, <span class="number">10.0</span>));
+<a href=#407 id=407 data-nosnippet>407</a>    }
+<a href=#408 id=408 data-nosnippet>408</a>
+<a href=#409 id=409 data-nosnippet>409</a>    <span class="attr">#[test]
+<a href=#410 id=410 data-nosnippet>410</a>    </span><span class="kw">fn </span>test_calculate_western_basic() {
+<a href=#411 id=411 data-nosnippet>411</a>        <span class="comment">// May 15, 1990 at 10:00 AM UTC (approx KST 19:00 or standard UTC)
+<a href=#412 id=412 data-nosnippet>412</a>        </span><span class="kw">let </span>utc_birth = <span class="string">"1990-05-15T10:00:00Z"</span>.parse::&lt;DateTime&lt;Utc&gt;&gt;().unwrap();
+<a href=#413 id=413 data-nosnippet>413</a>        <span class="comment">// Seoul coordinates
+<a href=#414 id=414 data-nosnippet>414</a>        </span><span class="kw">let </span>lat = <span class="number">37.5665</span>;
+<a href=#415 id=415 data-nosnippet>415</a>        <span class="kw">let </span>lon = <span class="number">126.9780</span>;
 <a href=#416 id=416 data-nosnippet>416</a>
-<a href=#417 id=417 data-nosnippet>417</a>        <span class="comment">// Check standard outputs
-<a href=#418 id=418 data-nosnippet>418</a>        </span><span class="macro">assert_eq!</span>(result.planets.len(), <span class="number">12</span>);
-<a href=#419 id=419 data-nosnippet>419</a>        <span class="macro">assert_eq!</span>(result.houses.len(), <span class="number">12</span>);
+<a href=#417 id=417 data-nosnippet>417</a>        <span class="kw">let </span>res = calculate_western(utc_birth, lat, lon, <span class="string">'P'</span>);
+<a href=#418 id=418 data-nosnippet>418</a>        <span class="macro">assert!</span>(res.is_ok());
+<a href=#419 id=419 data-nosnippet>419</a>        <span class="kw">let </span>result = res.unwrap();
 <a href=#420 id=420 data-nosnippet>420</a>
-<a href=#421 id=421 data-nosnippet>421</a>        <span class="comment">// Assert Ascendant and Midheaven coordinates are valid
-<a href=#422 id=422 data-nosnippet>422</a>        </span><span class="macro">assert!</span>(result.ascendant &gt;= <span class="number">0.0 </span>&amp;&amp; result.ascendant &lt; <span class="number">360.0</span>);
-<a href=#423 id=423 data-nosnippet>423</a>        <span class="macro">assert!</span>(result.midheaven &gt;= <span class="number">0.0 </span>&amp;&amp; result.midheaven &lt; <span class="number">360.0</span>);
+<a href=#421 id=421 data-nosnippet>421</a>        <span class="comment">// Check standard outputs
+<a href=#422 id=422 data-nosnippet>422</a>        </span><span class="macro">assert_eq!</span>(result.planets.len(), <span class="number">12</span>);
+<a href=#423 id=423 data-nosnippet>423</a>        <span class="macro">assert_eq!</span>(result.houses.len(), <span class="number">12</span>);
 <a href=#424 id=424 data-nosnippet>424</a>
-<a href=#425 id=425 data-nosnippet>425</a>        <span class="comment">// Placidus house check: planet should belong to valid house range (1..=12)
-<a href=#426 id=426 data-nosnippet>426</a>        </span><span class="kw">for </span>p <span class="kw">in </span><span class="kw-2">&amp;</span>result.planets {
-<a href=#427 id=427 data-nosnippet>427</a>            <span class="macro">assert!</span>(p.house_number &gt;= <span class="number">1 </span>&amp;&amp; p.house_number &lt;= <span class="number">12</span>);
-<a href=#428 id=428 data-nosnippet>428</a>        }
-<a href=#429 id=429 data-nosnippet>429</a>    }
-<a href=#430 id=430 data-nosnippet>430</a>}
+<a href=#425 id=425 data-nosnippet>425</a>        <span class="comment">// Assert Ascendant and Midheaven coordinates are valid
+<a href=#426 id=426 data-nosnippet>426</a>        </span><span class="macro">assert!</span>(result.ascendant &gt;= <span class="number">0.0 </span>&amp;&amp; result.ascendant &lt; <span class="number">360.0</span>);
+<a href=#427 id=427 data-nosnippet>427</a>        <span class="macro">assert!</span>(result.midheaven &gt;= <span class="number">0.0 </span>&amp;&amp; result.midheaven &lt; <span class="number">360.0</span>);
+<a href=#428 id=428 data-nosnippet>428</a>
+<a href=#429 id=429 data-nosnippet>429</a>        <span class="comment">// Placidus house check: planet should belong to valid house range (1..=12)
+<a href=#430 id=430 data-nosnippet>430</a>        </span><span class="kw">for </span>p <span class="kw">in </span><span class="kw-2">&amp;</span>result.planets {
+<a href=#431 id=431 data-nosnippet>431</a>            <span class="macro">assert!</span>(p.house_number &gt;= <span class="number">1 </span>&amp;&amp; p.house_number &lt;= <span class="number">12</span>);
+<a href=#432 id=432 data-nosnippet>432</a>        }
+<a href=#433 id=433 data-nosnippet>433</a>    }
+<a href=#434 id=434 data-nosnippet>434</a>}
 </code></pre></div></section></main></body></html>
