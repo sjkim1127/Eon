@@ -1,0 +1,208 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write   # GitHub Release 생성 권한
+
+jobs:
+  # ── 1단계: 전체 워크스페이스 테스트 ──────────────────────────────────────────
+  test:
+    name: Test (workspace)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run all tests
+        run: cargo test --workspace --locked
+
+  # ── 2단계: crates.io 배포 (의존 순서대로 직렬) ──────────────────────────────
+  publish-crates:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: test
+    environment: crates-io
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      # workspace.package.version 을 태그 버전으로 맞춤
+      - name: Sync workspace version from tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"          # e.g. v0.2.0
+          VERSION="${TAG#v}"                # e.g. 0.2.0
+          sed -i "s/^version = \"[^\"]*\"/version = \"${VERSION}\"/" Cargo.toml
+          echo "Publishing version ${VERSION}"
+
+      # 의존 계층 순서대로 배포 (실패 시 중단)
+      - name: Publish eon-core
+        run: cargo publish -p eon-core --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
+        continue-on-error: false
+
+      - name: Wait for crates.io index
+        run: sleep 20
+
+      - name: Publish eon-data
+        run: cargo publish -p eon-data --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
+
+      - name: Wait for crates.io index
+        run: sleep 20
+
+      - name: Publish eon-astro
+        run: cargo publish -p eon-astro --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
+
+      - name: Wait for crates.io index
+        run: sleep 20
+
+      - name: Publish eon-saju
+        run: cargo publish -p eon-saju --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
+
+      - name: Publish eon-vedic
+        run: cargo publish -p eon-vedic --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
+
+      - name: Publish eon-zwds
+        run: cargo publish -p eon-zwds --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
+
+      - name: Publish eon-western
+        run: cargo publish -p eon-western --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
+
+      - name: Publish eon-human-design
+        run: cargo publish -p eon-human-design --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
+
+      - name: Wait for crates.io index (service depends on all)
+        run: sleep 30
+
+      - name: Publish eon-service
+        run: cargo publish -p eon-service --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
+
+  # ── 3단계: Vercel 릴리즈 배포 ──────────────────────────────────────────────
+  deploy-vercel:
+    name: Deploy to Vercel (Production)
+    runs-on: ubuntu-latest
+    needs: test    # 테스트만 통과하면 crates.io와 병렬로 진행
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Rust (stable + wasm target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Dioxus CLI
+        run: cargo binstall dioxus-cli@0.6.1 -y
+
+      - name: Install WASI SDK
+        run: |
+          wget -q https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz
+          sudo tar xf wasi-sdk-24.0-x86_64-linux.tar.gz -C /opt
+          sudo ln -sf /opt/wasi-sdk-24.0-x86_64-linux /opt/wasi-sdk
+
+      - name: Build Wasm (pre-check)
+        working-directory: ./crates/eon-ui
+        env:
+          CARGO_BUILD_JOBS: 1
+          CC_wasm32_unknown_unknown: clang
+          AR_wasm32_unknown_unknown: llvm-ar
+          WASI_SDK_PATH: /opt/wasi-sdk
+        run: cargo build --target wasm32-unknown-unknown --release
+
+      - name: Build Dioxus Web App
+        working-directory: ./crates/eon-ui
+        env:
+          CARGO_BUILD_JOBS: 1
+        run: dx build --release --trace
+
+      - name: Inject assets (post-build)
+        working-directory: ./crates/eon-ui
+        run: |
+          cp ./public/vercel.json ../../target/dx/eon-ui/release/web/public/
+          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64
+          chmod +x tailwindcss-linux-x64
+          ./tailwindcss-linux-x64 -i ./input.css -o ../../target/dx/eon-ui/release/web/public/tailwind.css --minify
+          rm tailwindcss-linux-x64
+
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./target/dx/eon-ui/release/web/public
+          vercel-args: '--prod'
+
+  # ── 4단계: GitHub Release 노트 자동 생성 ─────────────────────────────────────
+  github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [publish-crates, deploy-vercel]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 전체 git history (git log 범위 산출용)
+
+      - name: Generate release notes from git log
+        id: notes
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${TAG}$" | head -n1)
+
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          echo "## What's Changed" > release_notes.md
+          echo "" >> release_notes.md
+
+          # Conventional Commits 기반 섹션 분류
+          FEATURES=$(git log $RANGE --oneline --no-merges | grep "^[a-f0-9]* feat" || true)
+          FIXES=$(git log $RANGE --oneline --no-merges | grep "^[a-f0-9]* fix" || true)
+          PERF=$(git log $RANGE --oneline --no-merges | grep "^[a-f0-9]* perf" || true)
+          REFACTOR=$(git log $RANGE --oneline --no-merges | grep "^[a-f0-9]* refactor" || true)
+          DOCS=$(git log $RANGE --oneline --no-merges | grep "^[a-f0-9]* docs" || true)
+          OTHERS=$(git log $RANGE --oneline --no-merges | grep -vE "^[a-f0-9]* (feat|fix|perf|refactor|docs|chore|ci)" || true)
+
+          [ -n "$FEATURES" ] && echo "### ✨ Features" >> release_notes.md && echo "$FEATURES" | while read line; do echo "- $line"; done >> release_notes.md && echo "" >> release_notes.md
+          [ -n "$FIXES" ]    && echo "### 🐛 Bug Fixes" >> release_notes.md && echo "$FIXES" | while read line; do echo "- $line"; done >> release_notes.md && echo "" >> release_notes.md
+          [ -n "$PERF" ]     && echo "### ⚡ Performance" >> release_notes.md && echo "$PERF" | while read line; do echo "- $line"; done >> release_notes.md && echo "" >> release_notes.md
+          [ -n "$REFACTOR" ] && echo "### ♻️ Refactor" >> release_notes.md && echo "$REFACTOR" | while read line; do echo "- $line"; done >> release_notes.md && echo "" >> release_notes.md
+          [ -n "$DOCS" ]     && echo "### 📝 Docs" >> release_notes.md && echo "$DOCS" | while read line; do echo "- $line"; done >> release_notes.md && echo "" >> release_notes.md
+          [ -n "$OTHERS" ]   && echo "### 🔧 Other Changes" >> release_notes.md && echo "$OTHERS" | while read line; do echo "- $line"; done >> release_notes.md && echo "" >> release_notes.md
+
+          echo "" >> release_notes.md
+          echo "---" >> release_notes.md
+          echo "**Full changelog**: https://github.com/sjkim1127/Eon/compare/${PREV_TAG}...${TAG}" >> release_notes.md
+
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Eon ${{ github.ref_name }}"
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -5,6 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 description = "High-precision astronomical engine for Eon"
+repository.workspace = true
 
 [dependencies]
 eon-core = { workspace = true }
