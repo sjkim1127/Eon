@@ -72,11 +72,10 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
-
       - name: Install Dioxus CLI
-        run: cargo binstall dioxus-cli@0.6.1 -y
+        uses: taiki-e/install-action@v2
+        with:
+          tool: dioxus-cli@0.6.1
 
       - name: Install WASI SDK
         run: |
