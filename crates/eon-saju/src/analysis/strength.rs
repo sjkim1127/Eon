@@ -398,87 +398,38 @@ impl DeukSe {
         apply_transform: bool,
         config: &AnalysisConfig,
     ) -> Self {
-        let day_master = pillars.day_master();
-        let dm_element = day_master.element();
-        let eff_map = if apply_transform {
-            Some(pillars.effective_elements())
-        } else {
-            None
+        use crate::analysis::power::{AnalysisOptions, IntegratedAnalysis};
+        let options = AnalysisOptions {
+            apply_transform,
+            apply_correction: true,
         };
+        let integrated = IntegratedAnalysis::calculate(pillars, options, config);
 
-        let mut total_support_score = 0.0f32;
-        let mut bijie_count = 0u8;
-        let mut yinxing_count = 0u8;
-        let mut shishang_count = 0u8;
-        let mut caisheng_count = 0u8;
-        let mut guanxing_count = 0u8;
+        let mut bijie_count = 0;
+        let mut yinxing_count = 0;
+        let mut shishang_count = 0;
+        let mut caisheng_count = 0;
+        let mut guanxing_count = 0;
 
-        // 일간 자신 점수 가산
-        total_support_score += config.weights.stem;
+        let mut support_ratio = 0.0;
 
-        // 1. 천간 분석 (일간 제외)
-        let stems = [
-            (pillars.year.stem, 0),
-            (pillars.month.stem, 1),
-            (pillars.hour.stem, 3),
-        ];
-
-        for (stem, idx) in &stems {
-            let element = if let Some(map) = eff_map {
-                map[*idx].1
-            } else {
-                stem.element()
-            };
-            let weight = config.weights.stem;
-
-            // 내 편(Input: 인성+비겁) 점수 합산
-            if element == dm_element || element == dm_element.generated_by() {
-                total_support_score += weight;
-            }
-
-            // 십성 통계 (기존 로직 유지)
-            let god = TenGod::from_stems(day_master, *stem); // 통계는 원국 기준
-            match god {
-                TenGod::Bijian | TenGod::Jiecai => bijie_count += 1,
-                TenGod::Zhengyin | TenGod::Pianyin => yinxing_count += 1,
+        for (ten_god, percentage, _) in integrated.ten_god_scores {
+            match ten_god {
+                TenGod::Bijian | TenGod::Jiecai => {
+                    bijie_count += 1;
+                    support_ratio += percentage;
+                }
+                TenGod::Zhengyin | TenGod::Pianyin => {
+                    yinxing_count += 1;
+                    support_ratio += percentage;
+                }
                 TenGod::Shishen | TenGod::Shangguan => shishang_count += 1,
                 TenGod::Zhengcai | TenGod::Piancai => caisheng_count += 1,
                 TenGod::Zhengguan | TenGod::Pianguan => guanxing_count += 1,
             }
         }
 
-        // 2. 지지 분석
-        let branch_indices = [
-            (pillars.year.branch, config.weights.other_branch, 4),
-            (pillars.month.branch, config.weights.month_branch, 5),
-            (pillars.day.branch, config.weights.day_branch, 6),
-            (pillars.hour.branch, config.weights.other_branch, 7),
-        ];
-
-        for (branch, weight, idx) in &branch_indices {
-            let element = if let Some(map) = eff_map {
-                map[*idx].1
-            } else {
-                branch.element()
-            };
-
-            // 내 편 점수 합산
-            if element == dm_element || element == dm_element.generated_by() {
-                total_support_score += *weight;
-            }
-
-            let god = TenGod::from_stem_and_branch(day_master, *branch);
-            match god {
-                TenGod::Bijian | TenGod::Jiecai => bijie_count += 1,
-                TenGod::Zhengyin | TenGod::Pianyin => yinxing_count += 1,
-                TenGod::Shishen | TenGod::Shangguan => shishang_count += 1,
-                TenGod::Zhengcai | TenGod::Piancai => caisheng_count += 1,
-                TenGod::Zhengguan | TenGod::Pianguan => guanxing_count += 1,
-            }
-        }
-
-        let support_ratio = (total_support_score / config.weights.total_weight) * 100.0;
-        let acquired = total_support_score >= config.strength.deuk_se_threshold;
+        let acquired = support_ratio >= 50.0;
 
         Self {
             acquired,

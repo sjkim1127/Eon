@@ -76,7 +76,7 @@ impl IntegratedAnalysis {
         // 기존 110점법 호환을 위해, 만약 stem=1.0이면 10.0으로 취급하고 싶을 경우를 고려할 수 있으나
         // 여기서는 config에 정의된 대로 사용함. (보통 stem 1.0, month 3.5 등)
 
-        let total_weight: f32 = weights.iter().sum();
+        let mut total_weight: f32 = 0.0;
 
         // 2. 각 위치별 실질 오행 및 십성 결정
         let mut el_scores = [0.0f32; 5];
@@ -113,12 +113,37 @@ impl IntegratedAnalysis {
             pillars.day.stem,
             pillars.hour.stem,
         ];
+        let branches = [
+            pillars.year.branch,
+            pillars.month.branch,
+            pillars.day.branch,
+            pillars.hour.branch,
+        ];
+
         for i in 0..4 {
             let stem = stems[i];
             let (_, effective_el) = eff_map[i];
-            let weight = weights[i];
+            let mut weight = weights[i];
+
+            if options.apply_correction {
+                let mut multiplier = 1.0;
+                // 연, 월, 일, 시에 대한 추가 가중치: 1.05배, 1.5배, 1.2배, 1.1배 -> 0.05, 0.5, 0.2, 0.1 누적
+                let branch_bonus_factors = [0.05, 0.5, 0.2, 0.1];
+                for j in 0..4 {
+                    let branch = branches[j];
+                    let has_root = branch
+                        .hidden_stems()
+                        .iter()
+                        .any(|&hs| hs.element() == stem.element());
+                    if has_root {
+                        multiplier += branch_bonus_factors[j];
+                    }
+                }
+                weight *= multiplier;
+            }
 
             el_scores[effective_el.index() as usize] += weight;
+            total_weight += weight;
 
             // 십성 계산
             let god = if effective_el != stem.element() {
@@ -149,6 +174,7 @@ impl IntegratedAnalysis {
             }
 
             el_scores[effective_el.index() as usize] += weight;
+            total_weight += weight;
 
             // 지지 십성
             let god = if effective_el != branch.element() {
