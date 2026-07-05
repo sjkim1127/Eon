@@ -161,8 +161,12 @@ impl VedicAnalysisReport {
                 m.sidereal_deg,
                 3, // Maha + Antar + Pratyantar
             );
-            let focus = if let Some(d) = timeline.first() {
-                format!("Current Major Period: {:?}", d.lord)
+            let current_time = chrono::Utc::now();
+            let focus = if let Some(current_dasha) = timeline
+                .iter()
+                .find(|d| d.start_time <= current_time && d.end_time > current_time)
+            {
+                format!("Current Major Period: {:?}", current_dasha.lord)
             } else {
                 "Dasha info unavailable".to_string()
             };
