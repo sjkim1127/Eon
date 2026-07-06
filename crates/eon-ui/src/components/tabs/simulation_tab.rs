@@ -96,16 +96,16 @@ pub fn SimulationTab() -> Element {
                         let c = saju.complexity.as_ref();
                         let bottleneck_lbl = saju.qi_topology.bottleneck.map(|e| {
                             match locale {
-                                Locale::Ko => format!("병목: {}({})", e.hangul(), e.hanja()),
-                                Locale::En => format!("Bottleneck: {}", e.hangul()),
-                                Locale::Zh => format!("瓶颈: {}", e.hangul()),
-                                Locale::Ru => format!("Узкое место: {}", e.hangul()),
+                                Locale::Ko => format!("{}: {}({})", t(locale, TK::SimBottleneck), e.hangul(), e.hanja()),
+                                Locale::En => format!("Bottleneck: {}({})", e.hangul(), e.hanja()),
+                                Locale::Zh => format!("瓶颈: {}({})", e.hangul(), e.hanja()),
+                                Locale::Ru => format!("Узкое место: {}({})", e.hangul(), e.hanja()),
                             }
                         }).unwrap_or_else(|| t(locale, TK::LabelNone).to_string());
 
                         let cc_sub = if let Some(comp) = c {
                             match locale {
-                                Locale::Ko => format!("안정도: {}", comp.stability_grade),
+                                Locale::Ko => format!("{}: {}", t(locale, TK::SimStability), comp.stability_grade),
                                 Locale::En => format!("Stability: {}", comp.stability_grade),
                                 Locale::Zh => format!("稳定性: {}", comp.stability_grade),
                                 Locale::Ru => format!("Стабильность: {}", comp.stability_grade),

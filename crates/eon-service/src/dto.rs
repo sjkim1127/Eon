@@ -131,6 +131,20 @@ impl ZwdsAnalysisInput {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct QimenAnalysisInput {
+    #[serde(flatten)]
+    pub base: AnalysisInput,
+    pub is_male: bool,
+}
+
+impl QimenAnalysisInput {
+    pub fn new(base: AnalysisInput, is_male: bool) -> Self {
+        Self { base, is_male }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CurrentContext {
     pub now_utc: DateTime<Utc>,
     pub analysis_timezone: String,
@@ -252,6 +266,13 @@ pub struct VedicCompatibilityInput {
 pub struct VedicCompatibilityOutput {
     pub meta: AnalysisMeta,
     pub report: eon_vedic::analysis::matching::CompatibilityReport,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QimenAnalysisOutput {
+    pub meta: AnalysisMeta,
+    pub report: eon_qimen::analysis::report::QimenAnalysisReport,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -384,6 +405,16 @@ pub struct SajuAnalysisRequest {
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
+pub struct QimenAnalysisRequest {
+    #[serde(flatten)]
+    #[ts(flatten)]
+    pub base: AnalysisRequest,
+    pub is_male: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct VedicAnalysisRequest {
     #[serde(flatten)]
     #[ts(flatten)]
@@ -440,6 +471,28 @@ impl TryFrom<SajuAnalysisRequest> for SajuAnalysisInput {
             is_male: req.is_male,
             use_night_rat_hour: req.use_night_rat_hour.unwrap_or(false),
             precision,
+        })
+    }
+}
+
+impl TryFrom<QimenAnalysisRequest> for QimenAnalysisInput {
+    type Error = ServiceError;
+
+    fn try_from(req: QimenAnalysisRequest) -> Result<Self, Self::Error> {
+        Ok(Self {
+            base: AnalysisInput {
+                year: req.base.year,
+                month: req.base.month,
+                day: req.base.day,
+                hour: req.base.hour,
+                minute: req.base.minute,
+                is_lunar: req.base.is_lunar,
+                is_leap_month: req.base.is_leap_month,
+                lat: req.base.lat,
+                lon: req.base.lon,
+                timezone: req.base.timezone,
+            },
+            is_male: req.is_male,
         })
     }
 }

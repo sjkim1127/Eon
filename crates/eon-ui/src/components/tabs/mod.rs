@@ -8,3 +8,4 @@ pub mod transit_tab;
 pub mod vedic_tab;
 pub mod western_tab;
 pub mod zwds_tab;
+pub mod qimen_tab;

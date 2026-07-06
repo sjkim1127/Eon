@@ -54,7 +54,7 @@ pub fn AiTab() -> Element {
             messages.write().push(Message {
                 id,
                 role: Role::System,
-                content: "Groq API Key를 먼저 입력해주세요.".to_string(),
+                content: "{t(locale, TK::AiGroqKeyRequired)}".to_string(),
             });
             return;
         }
@@ -64,7 +64,7 @@ pub fn AiTab() -> Element {
         messages.write().push(Message {
             id,
             role: Role::User,
-            content: "시스템 심층 보안 감사를 요청합니다.".to_string(),
+            content: "{t(locale, TK::AiSystemSecurityAudit)}".to_string(),
         });
 
         let form = state.form.read().clone();
@@ -75,7 +75,7 @@ pub fn AiTab() -> Element {
             "day": form.day,
             "hour": form.hour,
             "isMale": form.is_male,
-            "birthName": "분석 대상"
+            "birthName": "{t(locale, TK::AiAnalysisTarget)}"
         });
 
         spawn(async move {
@@ -109,7 +109,7 @@ pub fn AiTab() -> Element {
                             messages.write().push(Message {
                                 id,
                                 role: Role::System,
-                                content: format!("오류: {}", data.error.unwrap_or_default()),
+                                content: format!("{t(locale, TK::AiError)}: {}", data.error.unwrap_or_default()),
                             });
                         }
                     } else {
@@ -117,7 +117,7 @@ pub fn AiTab() -> Element {
                         messages.write().push(Message {
                             id,
                             role: Role::System,
-                            content: "응답을 파싱하는 중 오류가 발생했습니다.".to_string(),
+                            content: "{t(locale, TK::AiParseError)}".to_string(),
                         });
                     }
                 }
@@ -126,7 +126,7 @@ pub fn AiTab() -> Element {
                     messages.write().push(Message {
                         id,
                         role: Role::System,
-                        content: format!("통신 오류: {}", e),
+                        content: format!("{t(locale, TK::AiCommError)}: {}", e),
                     });
                 }
             }
@@ -205,7 +205,7 @@ pub fn AiTab() -> Element {
                             messages.write().push(Message {
                                 id,
                                 role: Role::System,
-                                content: format!("오류: {}", data.error.unwrap_or_default()),
+                                content: format!("{t(locale, TK::AiError)}: {}", data.error.unwrap_or_default()),
                             });
                         }
                     } else {
@@ -213,7 +213,7 @@ pub fn AiTab() -> Element {
                         messages.write().push(Message {
                             id,
                             role: Role::System,
-                            content: "응답을 파싱하는 중 오류가 발생했습니다.".to_string(),
+                            content: "{t(locale, TK::AiParseError)}".to_string(),
                         });
                     }
                 }
@@ -222,7 +222,7 @@ pub fn AiTab() -> Element {
                     messages.write().push(Message {
                         id,
                         role: Role::System,
-                        content: format!("통신 오류: {}", e),
+                        content: format!("{t(locale, TK::AiCommError)}: {}", e),
                     });
                 }
             }
@@ -237,7 +237,7 @@ pub fn AiTab() -> Element {
                     span { class: "text-2xl", "✨" }
                     div {
                         h3 { class: "font-semibold text-slate-200", "Eon AI Assistant" }
-                        p { class: "text-xs text-emerald-400", "Llama 3 (Groq) 연동 활성화" }
+                        p { class: "text-xs text-emerald-400", "{t(locale, TK::AiGroqIntegration)}" }
                     }
                 }
                 div { class: "flex items-center gap-2",

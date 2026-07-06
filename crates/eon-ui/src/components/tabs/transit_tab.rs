@@ -198,12 +198,7 @@ pub fn TransitTab() -> Element {
                             if let Some(saju) = &state.saju.read().data {
                                 if let Some(ml) = &saju.report.major_luck {
                                     {
-                                        let major_luck_title = match locale {
-                                            Locale::Ko => "대운 (大運) 타임라인",
-                                            Locale::En => "Major Luck Timeline",
-                                            Locale::Zh => "大运时间线",
-                                            Locale::Ru => "Хронология периодов Да Вун",
-                                        };
+                                        let major_luck_title = t(locale, TK::SajuMajorLuckTimeline);
                                         let major_luck_sub = match locale {
                                             Locale::Ko => format!("만 {}세 교운 | {}", ml.start_age, ml.direction),
                                             Locale::En => format!("Shift age {} | {}", ml.start_age, if ml.direction == LuckDirection::Forward { "Direct" } else { "Reverse" }),

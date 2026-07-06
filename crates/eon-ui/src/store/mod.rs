@@ -2,7 +2,7 @@ pub mod db;
 use crate::i18n::Locale;
 use dioxus::prelude::*;
 use eon_service::dto::{
-    AnalysisInput, HumanDesignAnalysisOutput, IChingAnalysisOutput, SajuAnalysisOutput, TierResult,
+    AnalysisInput, HumanDesignAnalysisOutput, IChingAnalysisOutput, QimenAnalysisOutput, SajuAnalysisOutput, TierResult,
     TransitAnalysisOutput, VedicAnalysisOutput, WesternAnalysisOutput, ZwdsAnalysisOutput,
 };
 
@@ -96,6 +96,7 @@ pub struct AnalysisState {
     pub iching: Signal<AnalysisTaskState<IChingAnalysisOutput>>,
     pub western: Signal<AnalysisTaskState<WesternAnalysisOutput>>,
     pub human_design: Signal<AnalysisTaskState<HumanDesignAnalysisOutput>>,
+    pub qimen: Signal<AnalysisTaskState<QimenAnalysisOutput>>,
     pub locale: Signal<Locale>,
 }
 
@@ -112,6 +113,7 @@ impl AnalysisState {
             iching: Signal::new(AnalysisTaskState::default()),
             western: Signal::new(AnalysisTaskState::default()),
             human_design: Signal::new(AnalysisTaskState::default()),
+            qimen: Signal::new(AnalysisTaskState::default()),
             locale: Signal::new(Locale::Ko),
         }
     }

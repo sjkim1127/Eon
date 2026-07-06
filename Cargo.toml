@@ -10,7 +10,7 @@ members = [
     "crates/eon-western",
     "crates/eon-human-design",
     "crates/eon-service",
-    "crates/eon-ui",
+    "crates/eon-ui", "crates/eon-qimen",
 ]
 
 [workspace.package]

@@ -148,7 +148,7 @@ pub fn SajuTab() -> Element {
 
                         let major_luck_info = data.report.major_luck.as_ref().map(|ml| {
                             let dir_str = match locale {
-                                Locale::Ko => if ml.direction == eon_saju::LuckDirection::Forward { "순행" } else { "역행" },
+                                Locale::Ko => if ml.direction == eon_saju::LuckDirection::Forward { t(locale, TK::SajuDirectionForward) } else { t(locale, TK::SajuDirectionReverse) },
                                 Locale::En => if ml.direction == eon_saju::LuckDirection::Forward { "Direct" } else { "Reverse" },
                                 Locale::Zh => if ml.direction == eon_saju::LuckDirection::Forward { "顺行" } else { "逆行" },
                                 Locale::Ru => if ml.direction == eon_saju::LuckDirection::Forward { "Прямо" } else { "Обратно" },
@@ -191,33 +191,31 @@ pub fn SajuTab() -> Element {
                         let mut projected_instances = Vec::new();
 
                         let branch_positions = vec![
-                            (data.report.pillars.hour.branch, false, "시지", TK::SajuHourPillar),
-                            (data.report.pillars.day.branch, false, "일지", TK::SajuDayPillar),
-                            (data.report.pillars.month.branch, true, "월지", TK::SajuMonthPillar),
-                            (data.report.pillars.year.branch, false, "연지", TK::SajuYearPillar),
+                            (data.report.pillars.hour.branch, false, TK::SajuHourBranch, TK::SajuHourPillar),
+                            (data.report.pillars.day.branch, false, TK::SajuDayBranch, TK::SajuDayPillar),
+                            (data.report.pillars.month.branch, true, TK::SajuMonthBranch, TK::SajuMonthPillar),
+                            (data.report.pillars.year.branch, false, TK::SajuYearBranch, TK::SajuYearPillar),
                         ];
 
                         let target_stems = vec![
-                            (data.report.pillars.hour.stem, "시간", TK::SajuHourPillar),
-                            (data.report.pillars.day.stem, "일간", TK::SajuDayPillar),
-                            (data.report.pillars.month.stem, "월간", TK::SajuMonthPillar),
-                            (data.report.pillars.year.stem, "연간", TK::SajuYearPillar),
+                            (data.report.pillars.hour.stem, TK::SajuHourStem, TK::SajuHourPillar),
+                            (data.report.pillars.day.stem, TK::SajuDayStem, TK::SajuDayPillar),
+                            (data.report.pillars.month.stem, TK::SajuMonthStem, TK::SajuMonthPillar),
+                            (data.report.pillars.year.stem, TK::SajuYearStem, TK::SajuYearPillar),
                         ];
 
-                        for &(branch, is_month, b_pos_lbl, b_pos_tk) in &branch_positions {
+                        for &(branch, is_month, b_pos_tk, b_pillar_tk) in &branch_positions {
                             for j_item in get_jijanggan_items(branch) {
-                                for &(t_stem, t_pos_lbl, t_pos_tk) in &target_stems {
+                                for &(t_stem, t_pos_tk, _t_pillar_tk) in &target_stems {
                                     if j_item.stem == t_stem {
                                         let ten_god = TenGod::from_stems(day_master, j_item.stem);
                                         projected_instances.push((
-                                            b_pos_lbl,
                                             b_pos_tk,
                                             branch,
                                             j_item.stem,
                                             j_item.ratio,
                                             j_item.type_key,
                                             ten_god,
-                                            t_pos_lbl,
                                             t_pos_tk,
                                             is_month,
                                         ));
@@ -227,7 +225,7 @@ pub fn SajuTab() -> Element {
                         }
 
                         let no_proj_msg = match locale {
-                            Locale::Ko => "천간으로 투출된 지장간이 없습니다.",
+                            Locale::Ko => {t(locale, TK::SajuNoProjectedJijanggan)},
                             Locale::En => "No hidden stems are projected to the heavenly stems.",
                             Locale::Zh => "无地支藏干透出至天干。",
                             Locale::Ru => "Нет скрытых небесных стволов, проецирующихся на небесные стволы.",
@@ -365,7 +363,7 @@ pub fn SajuTab() -> Element {
                                     p { class: "text-slate-500 text-xs py-4 text-center", "{no_proj_msg}" }
                                 } else {
                                     div { class: "grid grid-cols-1 md:grid-cols-2 gap-3.5",
-                                        {projected_instances.iter().map(|&(b_pos_lbl, _b_pos_tk, _branch, stem, ratio, _type_key, ten_god, t_pos_lbl, _t_pos_tk, is_main)| {
+                                        {projected_instances.iter().map(|&(b_pos_tk, _branch, stem, ratio, _type_key, ten_god, t_pos_tk, is_main)| {
                                             let (el_color, _el_bg, el_icon) = element_card_style(stem.element().hangul());
                                             let proj_type_lbl = if is_main { t(locale, TK::SajuProjLevelMain) } else { t(locale, TK::SajuProjLevelSub) };
                                             let badge_cls = if is_main {
@@ -373,72 +371,9 @@ pub fn SajuTab() -> Element {
                                             } else {
                                                 "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
                                             };
-                                            let (pos_branch_name, pos_stem_name) = match locale {
-                                                Locale::Ko => (
-                                                    match b_pos_lbl {
-                                                        "시지" => "시지(時支)",
-                                                        "일지" => "일지(日支)",
-                                                        "월지" => "월지(月支)",
-                                                        "연지" => "연지(年支)",
-                                                        _ => b_pos_lbl,
-                                                    },
-                                                    match t_pos_lbl {
-                                                        "시간" => "시간(時干)",
-                                                        "일간" => "일간(日干)",
-                                                        "월간" => "월간(月干)",
-                                                        "연간" => "연간(年干)",
-                                                        _ => t_pos_lbl,
-                                                    }
-                                                ),
-                                                Locale::En => (
-                                                    match b_pos_lbl {
-                                                        "시지" => "Hour Branch",
-                                                        "일지" => "Day Branch",
-                                                        "월지" => "Month Branch",
-                                                        "연지" => "Year Branch",
-                                                        _ => b_pos_lbl,
-                                                    },
-                                                    match t_pos_lbl {
-                                                        "시간" => "Hour Stem",
-                                                        "일간" => "Day Stem",
-                                                        "월간" => "Month Stem",
-                                                        "연간" => "Year Stem",
-                                                        _ => t_pos_lbl,
-                                                    }
-                                                ),
-                                                Locale::Zh => (
-                                                    match b_pos_lbl {
-                                                        "시지" => "时支",
-                                                        "일지" => "日支",
-                                                        "월지" => "月支",
-                                                        "연지" => "年支",
-                                                        _ => b_pos_lbl,
-                                                    },
-                                                    match t_pos_lbl {
-                                                        "시간" => "时干",
-                                                        "일간" => "日干",
-                                                        "월간" => "月干",
-                                                        "연간" => "年干",
-                                                        _ => t_pos_lbl,
-                                                    }
-                                                ),
-                                                Locale::Ru => (
-                                                    match b_pos_lbl {
-                                                        "시지" => "Земная ветвь часа",
-                                                        "일지" => "Земная ветвь дня",
-                                                        "월지" => "Земная ветвь месяца",
-                                                        "연지" => "Земная ветвь года",
-                                                        _ => b_pos_lbl,
-                                                    },
-                                                    match t_pos_lbl {
-                                                        "시간" => "Небесный ствол часа",
-                                                        "일간" => "Небесный ствол дня",
-                                                        "월간" => "Небесный ствол месяца",
-                                                        "연간" => "Небесный ствол года",
-                                                        _ => t_pos_lbl,
-                                                    }
-                                                ),
-                                            };
+                                            let pos_branch_name = t(locale, b_pos_tk);
+                                            let pos_stem_name = t(locale, t_pos_tk);
+                                            
                                             let stem_trans = translate_saju_stem(locale, stem);
                                             let ten_god_trans = translate_saju_ten_god(locale, ten_god);
                                             let stage_desc = match locale {
@@ -515,7 +450,7 @@ pub fn SajuTab() -> Element {
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-3",
                                     h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest",
                                         {match locale {
-                                            Locale::Ko => "신강/신약",
+                                            Locale::Ko => {t(locale, TK::SajuStrengthTitle)},
                                             Locale::Zh => "身强/身弱",
                                             Locale::En => "Strength (Strong/Weak)",
                                             Locale::Ru => "Сила карты (Сильная/Слабая)",
@@ -657,7 +592,7 @@ pub fn SajuTab() -> Element {
                                     div { class: "flex justify-between items-center",
                                         h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest",
                                             {match locale {
-                                                Locale::Ko => "오행 상세 세기 (Weighted Five Elements)",
+                                                Locale::Ko => {t(locale, TK::SajuFiveElementsPower)},
                                                 Locale::Zh => "五行详细强度 (Weighted Five Elements)",
                                                 Locale::En => "Weighted Five Elements Analysis",
                                                 Locale::Ru => "Взвешенный анализ пяти стихий",
@@ -720,7 +655,7 @@ pub fn SajuTab() -> Element {
                                     div { class: "flex justify-between items-center",
                                         h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest",
                                             {match locale {
-                                                Locale::Ko => "십성 세기 (Ten Gods Power)",
+                                                Locale::Ko => {t(locale, TK::SajuTenGodsPower)},
                                                 Locale::Zh => "十神强度 (Ten Gods Power)",
                                                 Locale::En => "Ten Gods Power Analysis",
                                                 Locale::Ru => "Анализ силы Десяти Божеств",
@@ -1009,7 +944,7 @@ pub fn SajuTab() -> Element {
                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4",
                                     h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest",
                                         {match locale {
-                                            Locale::Ko => "합충형해 분석 (Harmony & Clashes)",
+                                            Locale::Ko => {t(locale, TK::SajuHarmonyClashTitle)},
                                             Locale::Zh => "合冲刑害分析 (Harmony & Clashes)",
                                             Locale::En => "Harmony & Clashes Analysis",
                                             Locale::Ru => "Анализ отношений (Harmony & Clashes)",
@@ -1211,7 +1146,7 @@ pub fn SajuTab() -> Element {
                             div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
                                 h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest",
                                     {match locale {
-                                        Locale::Ko => "시스템 공학 진단 (System Engineering & Topology)",
+                                        Locale::Ko => {t(locale, TK::SajuSystemEngTitle)},
                                         Locale::Zh => "系统工程诊断 (System Engineering & Topology)",
                                         Locale::En => "System Engineering Diagnostics & Topology",
                                         Locale::Ru => "Системная инженерная диагностика и топология",

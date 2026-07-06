@@ -1,0 +1,18 @@
+[package]
+name = "eon-qimen"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Qimen Dunjia Engine for Eon"
+
+[dependencies]
+eon-core = { path = "../eon-core" }
+eon-saju = { path = "../eon-saju" }
+serde = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }
+
+[lints]
+workspace = true

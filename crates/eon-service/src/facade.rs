@@ -19,6 +19,10 @@ pub fn analyze_zwds(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, Serv
     crate::services::zwds::analyze(input)
 }
 
+pub fn analyze_qimen(input: QimenAnalysisInput) -> Result<QimenAnalysisOutput, ServiceError> {
+    crate::services::qimen::analyze_qimen(input)
+}
+
 pub fn analyze_transit(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, ServiceError> {
     crate::services::transit::analyze(input)
 }

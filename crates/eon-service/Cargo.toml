@@ -20,6 +20,7 @@ eon-vedic = { workspace = true }
 eon-zwds = { workspace = true }
 eon-western = { workspace = true }
 eon-human-design = { workspace = true }
+eon-qimen = { path = "../eon-qimen" }
 eon-ai = { workspace = true }
 eon-astro = { workspace = true }
 eon-data = { workspace = true }

@@ -258,6 +258,7 @@ fn Sidebar() -> Element {
                 SidebarLink { to: Route::IChingTab {}, icon: "☯️", label: t(locale, TK::NavIChing) }
                 SidebarLink { to: Route::WesternTab {}, icon: "🪐", label: t(locale, TK::NavWestern) }
                 SidebarLink { to: Route::HumanDesignTab {}, icon: "🧬", label: t(locale, TK::NavHumanDesign) }
+                SidebarLink { to: Route::QimenTab {}, icon: "🧭", label: t(locale, TK::NavQimen) }
             }
 
             // ── Export Results ────────────────────────────────────────────────

@@ -1069,7 +1069,7 @@ pub fn VedicTab() -> Element {
                                         // ── 베딕 운명 프로필 요약 (Vedic Destiny Profile Summary) ─────────
                                         div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3.5 shadow-xl",
                                             div { class: "flex justify-between items-center border-b border-slate-800/60 pb-2.5 flex-wrap gap-2",
-                                                h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "베딕 운명 지표 요약 (Vedic Destiny Overview)" }
+                                                h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "{t(locale, TK::VedicDestinyOverview)}" }
                                                 span { class: "text-xs font-bold text-indigo-400 bg-indigo-950/20 px-3 py-1 rounded border border-indigo-900/30",
                                                     "종합 활성도 점수 (Overall Strength): {data.report.overall_strength_score:.1}점"
                                                 }
@@ -1167,7 +1167,7 @@ pub fn VedicTab() -> Element {
                                                 div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl animate-in fade-in duration-500",
                                                     div { class: "flex justify-between items-center border-b border-slate-800/60 pb-3 flex-wrap gap-2",
                                                         div { class: "space-y-0.5",
-                                                            h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "베딕 천도 배치도 (Vedic Birth Chart)" }
+                                                            h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "{t(locale, TK::VedicBirthChart)}" }
                                                             p { class: "text-xs text-slate-500", "라시 차트(D1)의 각 행성 및 라그나 배치도 시각화" }
                                                         }
                                                         div { class: "flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-850",
@@ -1343,7 +1343,7 @@ pub fn VedicTab() -> Element {
                                         div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
                                             div { class: "flex items-center gap-2 border-b border-slate-800/60 pb-2.5",
                                                 span { class: "text-xl", "🪞" }
-                                                h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "12대 아루다 파다 (Arudha Padas — 사회적 평판 및 거울)" }
+                                                h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "{t(locale, TK::VedicArudhaPadas)}" }
                                                 span { class: "text-xs text-slate-500", "현실 세계에 투영되는 나의 평판과 인생 영역별 실체" }
                                             }
                                             div { class: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
@@ -1512,7 +1512,7 @@ pub fn VedicTab() -> Element {
                                                     div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5 flex items-center justify-between",
                                                         div { class: "flex items-center gap-2",
                                                             span { class: "text-lg", "🔮" }
-                                                            h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-widest", "Vedic Yoga 분석" }
+                                                            h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-widest", "{t(locale, TK::VedicYogaAnalysisTitle)}" }
                                                         }
                                                         span { class: "text-xs text-indigo-400 font-semibold bg-indigo-950/40 border border-indigo-800/40 rounded-full px-2.5 py-0.5",
                                                             "{yoga_count}개 감지됨"
@@ -2859,7 +2859,7 @@ pub fn VedicTab() -> Element {
                                         // Selector Card
                                         div { class: "p-5 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between shadow-xl",
                                             div { class: "space-y-1",
-                                                h3 { class: "text-lg font-bold text-slate-200", "베딕 분할차트 상세 분석 (D1~D144 Vargas)" }
+                                                h3 { class: "text-lg font-bold text-slate-200", "{t(locale, TK::VedicVargasDetail)}" }
                                                 p { class: "text-xs text-slate-500", "라시(D1)부터 세분화된 세부 분할차트(Varga)의 행성 위치와 지배자, 신화적 수호신(Deity), 우주적 목적(Purpose)을 조회합니다." }
                                             }
                                             div { class: "flex items-center gap-2.5",
@@ -3103,7 +3103,7 @@ pub fn VedicTab() -> Element {
                                         // Varga Planet Interpretations List
                                         div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl",
                                             div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5",
-                                                h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-widest", "분할차트 통합 행성 강약 분석 (Varga Interpretations)" }
+                                                h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-widest", "{t(locale, TK::VargaInterpretations)}" }
                                             }
                                             div { class: "p-5 space-y-4",
                                                 {data.report.varga_interpretations.iter().map(|vi| {
@@ -3161,7 +3161,7 @@ pub fn VedicTab() -> Element {
                                             div { class: "flex items-center gap-2 border-b border-slate-800/60 pb-2.5",
                                                 span { class: "text-xl", "📊" }
                                                 h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "사르바쉬타카바르가 (SAV — 종합 에너지 총합)" }
-                                                span { class: "text-xs text-slate-500", "12개 하우스의 전반적인 에너지 총량 (평균 28점)" }
+                                                span { class: "text-xs text-slate-500", "{t(locale, TK::VedicHouseEnergy)}" }
                                             }
                                             div { class: "grid grid-cols-3 sm:grid-cols-6 md:grid-cols-12 gap-3",
                                                 {data.chart.sav.points.iter().enumerate().map(|(idx, &pts)| {
@@ -3198,7 +3198,7 @@ pub fn VedicTab() -> Element {
                                             div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3.5 flex flex-wrap justify-between items-center gap-4",
                                                 div { class: "space-y-0.5",
                                                     h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-wider", "빈나 아쉬타카바르가 (BAV - 행성별 세부 강도)" }
-                                                    p { class: "text-[10px] text-slate-500", "7대 행성의 각 하우스별 길흉 점수와 감쇄 분석 및 최종 소디아 핀다" }
+                                                    p { class: "text-[10px] text-slate-500", "{t(locale, TK::VedicPlanetScore)}" }
                                                 }
                                                 // Reduction View Selector Buttons
                                                 div { class: "flex bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-xs font-semibold text-slate-400",
