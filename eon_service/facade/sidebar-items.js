@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["analyze_ai_audit","analyze_destiny_tier","analyze_human_design","analyze_iching","analyze_saju","analyze_transit","analyze_vedic","analyze_vedic_compatibility","analyze_western","analyze_zwds","generate_themed_report"]};
+window.SIDEBAR_ITEMS = {"fn":["analyze_ai_audit","analyze_destiny_tier","analyze_human_design","analyze_iching","analyze_qimen","analyze_saju","analyze_transit","analyze_vedic","analyze_vedic_compatibility","analyze_western","analyze_zwds","generate_themed_report"]};

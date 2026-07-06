@@ -2,7 +2,7 @@
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::i18n::Locale;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>dioxus::prelude::<span class="kw-2">*</span>;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>eon_service::dto::{
-<a href=#5 id=5 data-nosnippet>5</a>    AnalysisInput, HumanDesignAnalysisOutput, IChingAnalysisOutput, SajuAnalysisOutput, TierResult,
+<a href=#5 id=5 data-nosnippet>5</a>    AnalysisInput, HumanDesignAnalysisOutput, IChingAnalysisOutput, QimenAnalysisOutput, SajuAnalysisOutput, TierResult,
 <a href=#6 id=6 data-nosnippet>6</a>    TransitAnalysisOutput, VedicAnalysisOutput, WesternAnalysisOutput, ZwdsAnalysisOutput,
 <a href=#7 id=7 data-nosnippet>7</a>};
 <a href=#8 id=8 data-nosnippet>8</a>
@@ -96,24 +96,26 @@
 <a href=#96 id=96 data-nosnippet>96</a>    <span class="kw">pub </span>iching: Signal&lt;AnalysisTaskState&lt;IChingAnalysisOutput&gt;&gt;,
 <a href=#97 id=97 data-nosnippet>97</a>    <span class="kw">pub </span>western: Signal&lt;AnalysisTaskState&lt;WesternAnalysisOutput&gt;&gt;,
 <a href=#98 id=98 data-nosnippet>98</a>    <span class="kw">pub </span>human_design: Signal&lt;AnalysisTaskState&lt;HumanDesignAnalysisOutput&gt;&gt;,
-<a href=#99 id=99 data-nosnippet>99</a>    <span class="kw">pub </span>locale: Signal&lt;Locale&gt;,
-<a href=#100 id=100 data-nosnippet>100</a>}
-<a href=#101 id=101 data-nosnippet>101</a>
-<a href=#102 id=102 data-nosnippet>102</a><span class="kw">impl </span>AnalysisState {
-<a href=#103 id=103 data-nosnippet>103</a>    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-<a href=#104 id=104 data-nosnippet>104</a>        <span class="self">Self </span>{
-<a href=#105 id=105 data-nosnippet>105</a>            form: Signal::new(FormState::default()),
-<a href=#106 id=106 data-nosnippet>106</a>            saju: Signal::new(AnalysisTaskState::default()),
-<a href=#107 id=107 data-nosnippet>107</a>            vedic: Signal::new(AnalysisTaskState::default()),
-<a href=#108 id=108 data-nosnippet>108</a>            transit: Signal::new(AnalysisTaskState::default()),
-<a href=#109 id=109 data-nosnippet>109</a>            tier: Signal::new(AnalysisTaskState::default()),
-<a href=#110 id=110 data-nosnippet>110</a>            compat: Signal::new(AnalysisTaskState::default()),
-<a href=#111 id=111 data-nosnippet>111</a>            zwds: Signal::new(AnalysisTaskState::default()),
-<a href=#112 id=112 data-nosnippet>112</a>            iching: Signal::new(AnalysisTaskState::default()),
-<a href=#113 id=113 data-nosnippet>113</a>            western: Signal::new(AnalysisTaskState::default()),
-<a href=#114 id=114 data-nosnippet>114</a>            human_design: Signal::new(AnalysisTaskState::default()),
-<a href=#115 id=115 data-nosnippet>115</a>            locale: Signal::new(Locale::Ko),
-<a href=#116 id=116 data-nosnippet>116</a>        }
-<a href=#117 id=117 data-nosnippet>117</a>    }
-<a href=#118 id=118 data-nosnippet>118</a>}
+<a href=#99 id=99 data-nosnippet>99</a>    <span class="kw">pub </span>qimen: Signal&lt;AnalysisTaskState&lt;QimenAnalysisOutput&gt;&gt;,
+<a href=#100 id=100 data-nosnippet>100</a>    <span class="kw">pub </span>locale: Signal&lt;Locale&gt;,
+<a href=#101 id=101 data-nosnippet>101</a>}
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a><span class="kw">impl </span>AnalysisState {
+<a href=#104 id=104 data-nosnippet>104</a>    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+<a href=#105 id=105 data-nosnippet>105</a>        <span class="self">Self </span>{
+<a href=#106 id=106 data-nosnippet>106</a>            form: Signal::new(FormState::default()),
+<a href=#107 id=107 data-nosnippet>107</a>            saju: Signal::new(AnalysisTaskState::default()),
+<a href=#108 id=108 data-nosnippet>108</a>            vedic: Signal::new(AnalysisTaskState::default()),
+<a href=#109 id=109 data-nosnippet>109</a>            transit: Signal::new(AnalysisTaskState::default()),
+<a href=#110 id=110 data-nosnippet>110</a>            tier: Signal::new(AnalysisTaskState::default()),
+<a href=#111 id=111 data-nosnippet>111</a>            compat: Signal::new(AnalysisTaskState::default()),
+<a href=#112 id=112 data-nosnippet>112</a>            zwds: Signal::new(AnalysisTaskState::default()),
+<a href=#113 id=113 data-nosnippet>113</a>            iching: Signal::new(AnalysisTaskState::default()),
+<a href=#114 id=114 data-nosnippet>114</a>            western: Signal::new(AnalysisTaskState::default()),
+<a href=#115 id=115 data-nosnippet>115</a>            human_design: Signal::new(AnalysisTaskState::default()),
+<a href=#116 id=116 data-nosnippet>116</a>            qimen: Signal::new(AnalysisTaskState::default()),
+<a href=#117 id=117 data-nosnippet>117</a>            locale: Signal::new(Locale::Ko),
+<a href=#118 id=118 data-nosnippet>118</a>        }
+<a href=#119 id=119 data-nosnippet>119</a>    }
+<a href=#120 id=120 data-nosnippet>120</a>}
 </code></pre></div></section></main></body></html>

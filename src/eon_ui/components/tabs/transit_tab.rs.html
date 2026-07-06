@@ -198,166 +198,161 @@
 <a href=#198 id=198 data-nosnippet>198</a>                            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(saju) = <span class="kw-2">&amp;</span>state.saju.read().data {
 <a href=#199 id=199 data-nosnippet>199</a>                                <span class="kw">if let </span><span class="prelude-val">Some</span>(ml) = <span class="kw-2">&amp;</span>saju.report.major_luck {
 <a href=#200 id=200 data-nosnippet>200</a>                                    {
-<a href=#201 id=201 data-nosnippet>201</a>                                        <span class="kw">let </span>major_luck_title = <span class="kw">match </span>locale {
-<a href=#202 id=202 data-nosnippet>202</a>                                            Locale::Ko =&gt; <span class="string">"대운 (大運) 타임라인"</span>,
-<a href=#203 id=203 data-nosnippet>203</a>                                            Locale::En =&gt; <span class="string">"Major Luck Timeline"</span>,
-<a href=#204 id=204 data-nosnippet>204</a>                                            Locale::Zh =&gt; <span class="string">"大运时间线"</span>,
-<a href=#205 id=205 data-nosnippet>205</a>                                            Locale::Ru =&gt; <span class="string">"Хронология периодов Да Вун"</span>,
-<a href=#206 id=206 data-nosnippet>206</a>                                        };
-<a href=#207 id=207 data-nosnippet>207</a>                                        <span class="kw">let </span>major_luck_sub = <span class="kw">match </span>locale {
-<a href=#208 id=208 data-nosnippet>208</a>                                            Locale::Ko =&gt; <span class="macro">format!</span>(<span class="string">"만 {}세 교운 | {}"</span>, ml.start_age, ml.direction),
-<a href=#209 id=209 data-nosnippet>209</a>                                            Locale::En =&gt; <span class="macro">format!</span>(<span class="string">"Shift age {} | {}"</span>, ml.start_age, <span class="kw">if </span>ml.direction == LuckDirection::Forward { <span class="string">"Direct" </span>} <span class="kw">else </span>{ <span class="string">"Reverse" </span>}),
-<a href=#210 id=210 data-nosnippet>210</a>                                            Locale::Zh =&gt; <span class="macro">format!</span>(<span class="string">"{}岁交运 | {}"</span>, ml.start_age, <span class="kw">if </span>ml.direction == LuckDirection::Forward { <span class="string">"顺行" </span>} <span class="kw">else </span>{ <span class="string">"逆行" </span>}),
-<a href=#211 id=211 data-nosnippet>211</a>                                            Locale::Ru =&gt; <span class="macro">format!</span>(<span class="string">"Смена в {} лет | {}"</span>, ml.start_age, <span class="kw">if </span>ml.direction == LuckDirection::Forward { <span class="string">"Прямо" </span>} <span class="kw">else </span>{ <span class="string">"Обратно" </span>}),
-<a href=#212 id=212 data-nosnippet>212</a>                                        };
-<a href=#213 id=213 data-nosnippet>213</a>                                        <span class="kw">let </span>th_age = <span class="kw">match </span>locale {
-<a href=#214 id=214 data-nosnippet>214</a>                                            Locale::Ko =&gt; <span class="string">"나이"</span>, Locale::En =&gt; <span class="string">"Age"</span>, Locale::Zh =&gt; <span class="string">"年龄"</span>, Locale::Ru =&gt; <span class="string">"Возраст"</span>,
-<a href=#215 id=215 data-nosnippet>215</a>                                        };
-<a href=#216 id=216 data-nosnippet>216</a>                                        <span class="kw">let </span>th_pillar = <span class="kw">match </span>locale {
-<a href=#217 id=217 data-nosnippet>217</a>                                            Locale::Ko =&gt; <span class="string">"간지"</span>, Locale::En =&gt; <span class="string">"Pillar"</span>, Locale::Zh =&gt; <span class="string">"干支"</span>, Locale::Ru =&gt; <span class="string">"Столп"</span>,
-<a href=#218 id=218 data-nosnippet>218</a>                                        };
-<a href=#219 id=219 data-nosnippet>219</a>                                        <span class="kw">let </span>th_stem_god = <span class="kw">match </span>locale {
-<a href=#220 id=220 data-nosnippet>220</a>                                            Locale::Ko =&gt; <span class="string">"천간 십성"</span>, Locale::En =&gt; <span class="string">"Stem Ten God"</span>, Locale::Zh =&gt; <span class="string">"天干十神"</span>, Locale::Ru =&gt; <span class="string">"Божество НС"</span>,
-<a href=#221 id=221 data-nosnippet>221</a>                                        };
-<a href=#222 id=222 data-nosnippet>222</a>                                        <span class="kw">let </span>th_branch_god = <span class="kw">match </span>locale {
-<a href=#223 id=223 data-nosnippet>223</a>                                            Locale::Ko =&gt; <span class="string">"지지 십성"</span>, Locale::En =&gt; <span class="string">"Branch Ten God"</span>, Locale::Zh =&gt; <span class="string">"地支十神"</span>, Locale::Ru =&gt; <span class="string">"Божество ЗВ"</span>,
-<a href=#224 id=224 data-nosnippet>224</a>                                        };
-<a href=#225 id=225 data-nosnippet>225</a>                                        <span class="kw">let </span>th_status = <span class="kw">match </span>locale {
-<a href=#226 id=226 data-nosnippet>226</a>                                            Locale::Ko =&gt; <span class="string">"상태"</span>, Locale::En =&gt; <span class="string">"Status"</span>, Locale::Zh =&gt; <span class="string">"状态"</span>, Locale::Ru =&gt; <span class="string">"Статус"</span>,
-<a href=#227 id=227 data-nosnippet>227</a>                                        };
-<a href=#228 id=228 data-nosnippet>228</a>                                        <span class="kw">let </span>current_lbl = <span class="kw">match </span>locale {
-<a href=#229 id=229 data-nosnippet>229</a>                                            Locale::Ko =&gt; <span class="string">"⬤ 현재"</span>, Locale::En =&gt; <span class="string">"⬤ Current"</span>, Locale::Zh =&gt; <span class="string">"⬤ 当前"</span>, Locale::Ru =&gt; <span class="string">"⬤ Текущий"</span>,
-<a href=#230 id=230 data-nosnippet>230</a>                                        };
-<a href=#231 id=231 data-nosnippet>231</a>
-<a href=#232 id=232 data-nosnippet>232</a>                                        <span class="macro">rsx!</span> {
-<a href=#233 id=233 data-nosnippet>233</a>                                            div { class: <span class="string">"bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden"</span>,
-<a href=#234 id=234 data-nosnippet>234</a>                                                div { class: <span class="string">"bg-slate-800/50 border-b border-slate-800 px-5 py-3 flex items-center justify-between"</span>,
-<a href=#235 id=235 data-nosnippet>235</a>                                                    h3 { class: <span class="string">"font-semibold text-slate-200"</span>, <span class="string">"{major_luck_title}" </span>}
-<a href=#236 id=236 data-nosnippet>236</a>                                                    span { class: <span class="string">"text-xs text-slate-400"</span>, <span class="string">"{major_luck_sub}" </span>}
-<a href=#237 id=237 data-nosnippet>237</a>                                                }
-<a href=#238 id=238 data-nosnippet>238</a>                                                div { class: <span class="string">"overflow-x-auto"</span>,
-<a href=#239 id=239 data-nosnippet>239</a>                                                    table { class: <span class="string">"w-full text-sm"</span>,
-<a href=#240 id=240 data-nosnippet>240</a>                                                        thead {
-<a href=#241 id=241 data-nosnippet>241</a>                                                            tr { class: <span class="string">"bg-slate-800/30 text-xs text-slate-400 uppercase"</span>,
-<a href=#242 id=242 data-nosnippet>242</a>                                                                th { class: <span class="string">"px-4 py-3 text-left font-medium"</span>, <span class="string">"{th_age}" </span>}
-<a href=#243 id=243 data-nosnippet>243</a>                                                                th { class: <span class="string">"px-4 py-3 text-left font-medium"</span>, <span class="string">"{th_pillar}" </span>}
-<a href=#244 id=244 data-nosnippet>244</a>                                                                th { class: <span class="string">"px-4 py-3 text-left font-medium"</span>, <span class="string">"{th_stem_god}" </span>}
-<a href=#245 id=245 data-nosnippet>245</a>                                                                th { class: <span class="string">"px-4 py-3 text-left font-medium"</span>, <span class="string">"{th_branch_god}" </span>}
-<a href=#246 id=246 data-nosnippet>246</a>                                                                th { class: <span class="string">"px-4 py-3 text-left font-medium"</span>, <span class="string">"{th_status}" </span>}
-<a href=#247 id=247 data-nosnippet>247</a>                                                            }
-<a href=#248 id=248 data-nosnippet>248</a>                                                        }
-<a href=#249 id=249 data-nosnippet>249</a>                                                        tbody { class: <span class="string">"divide-y divide-slate-800"</span>,
-<a href=#250 id=250 data-nosnippet>250</a>                                                            {ml.cycles.iter().map(|cycle| {
-<a href=#251 id=251 data-nosnippet>251</a>                                                                <span class="kw">let </span>is_current = cycle.start_age &lt;= transit.current_age &amp;&amp; transit.current_age &lt;= cycle.end_age;
-<a href=#252 id=252 data-nosnippet>252</a>                                                                <span class="kw">let </span>row_class = <span class="kw">if </span>is_current {
-<a href=#253 id=253 data-nosnippet>253</a>                                                                    <span class="string">"bg-amber-900/20 hover:bg-amber-900/30"
-<a href=#254 id=254 data-nosnippet>254</a>                                                                </span>} <span class="kw">else </span>{
-<a href=#255 id=255 data-nosnippet>255</a>                                                                    <span class="string">"hover:bg-slate-800/20"
-<a href=#256 id=256 data-nosnippet>256</a>                                                                </span>};
-<a href=#257 id=257 data-nosnippet>257</a>                                                                <span class="kw">let </span>age_range_str = <span class="kw">match </span>locale {
-<a href=#258 id=258 data-nosnippet>258</a>                                                                    Locale::Ko =&gt; <span class="macro">format!</span>(<span class="string">"만 {}~{}세"</span>, cycle.start_age, cycle.end_age),
-<a href=#259 id=259 data-nosnippet>259</a>                                                                    Locale::En =&gt; <span class="macro">format!</span>(<span class="string">"Age {}~{}"</span>, cycle.start_age, cycle.end_age),
-<a href=#260 id=260 data-nosnippet>260</a>                                                                    Locale::Zh =&gt; <span class="macro">format!</span>(<span class="string">"{}~{}岁"</span>, cycle.start_age, cycle.end_age),
-<a href=#261 id=261 data-nosnippet>261</a>                                                                    Locale::Ru =&gt; <span class="macro">format!</span>(<span class="string">"{}~{} лет"</span>, cycle.start_age, cycle.end_age),
-<a href=#262 id=262 data-nosnippet>262</a>                                                                };
-<a href=#263 id=263 data-nosnippet>263</a>                                                                <span class="macro">rsx!</span> {
-<a href=#264 id=264 data-nosnippet>264</a>                                                                    tr { class: <span class="string">"{row_class} transition-colors"</span>,
-<a href=#265 id=265 data-nosnippet>265</a>                                                                        td { class: <span class="string">"px-4 py-3 font-mono text-slate-300 text-xs"</span>, <span class="string">"{age_range_str}" </span>}
-<a href=#266 id=266 data-nosnippet>266</a>                                                                        td { class: <span class="string">"px-4 py-3 font-bold text-amber-300 font-serif"</span>, <span class="string">"{cycle.ganzi.hanja()} ({cycle.ganzi.hangul()})" </span>}
-<a href=#267 id=267 data-nosnippet>267</a>                                                                        td { class: <span class="string">"px-4 py-3 text-slate-300"</span>, <span class="string">"{cycle.stem_god.hangul()}" </span>}
-<a href=#268 id=268 data-nosnippet>268</a>                                                                        td { class: <span class="string">"px-4 py-3 text-slate-300"</span>, <span class="string">"{cycle.branch_god.hangul()}" </span>}
-<a href=#269 id=269 data-nosnippet>269</a>                                                                        td { class: <span class="string">"px-4 py-3"</span>,
-<a href=#270 id=270 data-nosnippet>270</a>                                                                            <span class="kw">if </span>is_current {
-<a href=#271 id=271 data-nosnippet>271</a>                                                                                span { class: <span class="string">"px-2 py-0.5 rounded-full text-xs bg-amber-600/40 text-amber-200 border border-amber-500/40 font-semibold animate-pulse"</span>, <span class="string">"{current_lbl}" </span>}
-<a href=#272 id=272 data-nosnippet>272</a>                                                                            }
-<a href=#273 id=273 data-nosnippet>273</a>                                                                        }
-<a href=#274 id=274 data-nosnippet>274</a>                                                                    }
-<a href=#275 id=275 data-nosnippet>275</a>                                                                }
-<a href=#276 id=276 data-nosnippet>276</a>                                                            })}
-<a href=#277 id=277 data-nosnippet>277</a>                                                        }
-<a href=#278 id=278 data-nosnippet>278</a>                                                    }
-<a href=#279 id=279 data-nosnippet>279</a>                                                }
-<a href=#280 id=280 data-nosnippet>280</a>                                            }
-<a href=#281 id=281 data-nosnippet>281</a>                                        }
-<a href=#282 id=282 data-nosnippet>282</a>                                    }
-<a href=#283 id=283 data-nosnippet>283</a>                                }
-<a href=#284 id=284 data-nosnippet>284</a>                            }
-<a href=#285 id=285 data-nosnippet>285</a>
-<a href=#286 id=286 data-nosnippet>286</a>                            <span class="comment">// ── 12개월 운세 카드 ───────────────────────────────
-<a href=#287 id=287 data-nosnippet>287</a>                            </span>div { class: <span class="string">"bg-slate-900 border border-slate-800 rounded-2xl p-5"</span>,
-<a href=#288 id=288 data-nosnippet>288</a>                                h3 { class: <span class="string">"font-semibold text-slate-200 mb-4"</span>, <span class="string">"12개월 월운 (月運)" </span>}
-<a href=#289 id=289 data-nosnippet>289</a>                                div { class: <span class="string">"grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3"</span>,
-<a href=#290 id=290 data-nosnippet>290</a>                                    {transit.monthly_lucks.iter().map(|ml| {
-<a href=#291 id=291 data-nosnippet>291</a>                                        <span class="kw">let </span>is_current = ml.month == transit.monthly_luck.month &amp;&amp; ml.year == transit.monthly_luck.year;
-<a href=#292 id=292 data-nosnippet>292</a>                                        <span class="kw">let </span>card_class = <span class="kw">if </span>is_current {
-<a href=#293 id=293 data-nosnippet>293</a>                                            <span class="string">"bg-blue-900/30 border-blue-600/50"
-<a href=#294 id=294 data-nosnippet>294</a>                                        </span>} <span class="kw">else </span>{
-<a href=#295 id=295 data-nosnippet>295</a>                                            <span class="string">"bg-slate-800/40 border-slate-700/40 hover:border-slate-600/60"
-<a href=#296 id=296 data-nosnippet>296</a>                                        </span>};
-<a href=#297 id=297 data-nosnippet>297</a>                                        <span class="macro">rsx!</span> {
-<a href=#298 id=298 data-nosnippet>298</a>                                            div { class: <span class="string">"p-3 rounded-xl border {card_class} flex flex-col items-center gap-1 transition-colors"</span>,
-<a href=#299 id=299 data-nosnippet>299</a>                                                p { class: <span class="string">"text-xs text-slate-400"</span>, <span class="string">"{ml.month}월" </span>}
-<a href=#300 id=300 data-nosnippet>300</a>                                                p { class: <span class="string">"text-xl font-serif text-amber-300 font-bold"</span>, <span class="string">"{ml.ganzi.hanja()}" </span>}
-<a href=#301 id=301 data-nosnippet>301</a>                                                p { class: <span class="string">"text-xs text-slate-400"</span>, <span class="string">"{ml.ganzi.hangul()}" </span>}
-<a href=#302 id=302 data-nosnippet>302</a>                                                div { class: <span class="string">"flex gap-1 flex-wrap justify-center"</span>,
-<a href=#303 id=303 data-nosnippet>303</a>                                                    span { class: <span class="string">"text-xs text-amber-400"</span>, <span class="string">"{ml.stem_god.hangul()}" </span>}
-<a href=#304 id=304 data-nosnippet>304</a>                                                    span { class: <span class="string">"text-xs text-slate-500"</span>, <span class="string">"/" </span>}
-<a href=#305 id=305 data-nosnippet>305</a>                                                    span { class: <span class="string">"text-xs text-blue-400"</span>, <span class="string">"{ml.branch_god.hangul()}" </span>}
-<a href=#306 id=306 data-nosnippet>306</a>                                                }
-<a href=#307 id=307 data-nosnippet>307</a>                                                <span class="kw">if </span>is_current {
-<a href=#308 id=308 data-nosnippet>308</a>                                                    span { class: <span class="string">"text-xs text-blue-300 font-semibold"</span>, <span class="string">"◉" </span>}
-<a href=#309 id=309 data-nosnippet>309</a>                                                }
-<a href=#310 id=310 data-nosnippet>310</a>                                            }
-<a href=#311 id=311 data-nosnippet>311</a>                                        }
-<a href=#312 id=312 data-nosnippet>312</a>                                    })}
-<a href=#313 id=313 data-nosnippet>313</a>                                }
-<a href=#314 id=314 data-nosnippet>314</a>                            }
-<a href=#315 id=315 data-nosnippet>315</a>
-<a href=#316 id=316 data-nosnippet>316</a>                            <span class="comment">// ── 시운 ──────────────────────────────────────────
-<a href=#317 id=317 data-nosnippet>317</a>                            </span>div { class: <span class="string">"p-5 bg-slate-900 border border-slate-800 rounded-2xl"</span>,
-<a href=#318 id=318 data-nosnippet>318</a>                                h3 { class: <span class="string">"font-semibold text-slate-200 mb-3"</span>, <span class="string">"시운 (時運) — 현재 시간대" </span>}
-<a href=#319 id=319 data-nosnippet>319</a>                                div { class: <span class="string">"flex items-center gap-4"</span>,
-<a href=#320 id=320 data-nosnippet>320</a>                                    div { class: <span class="string">"text-4xl font-serif text-emerald-300 font-bold"</span>, <span class="string">"{transit.hourly_luck.ganzi.hanja()}" </span>}
-<a href=#321 id=321 data-nosnippet>321</a>                                    div {
-<a href=#322 id=322 data-nosnippet>322</a>                                        p { class: <span class="string">"text-lg text-slate-300 font-medium"</span>, <span class="string">"{transit.hourly_luck.ganzi.hangul()}" </span>}
-<a href=#323 id=323 data-nosnippet>323</a>                                        p { class: <span class="string">"text-sm text-slate-400"</span>,
-<a href=#324 id=324 data-nosnippet>324</a>                                            <span class="string">"{transit.hourly_luck.stem_god.hangul()} / {transit.hourly_luck.branch_god.hangul()}"
-<a href=#325 id=325 data-nosnippet>325</a>                                        </span>}
-<a href=#326 id=326 data-nosnippet>326</a>                                        <span class="kw">if let </span><span class="prelude-val">Some</span>(ts) = <span class="kw-2">&amp;</span>transit.hourly_luck.twelve_stage {
-<a href=#327 id=327 data-nosnippet>327</a>                                            p { class: <span class="string">"text-xs text-slate-500"</span>, <span class="string">"12운성: {ts}" </span>}
-<a href=#328 id=328 data-nosnippet>328</a>                                        }
-<a href=#329 id=329 data-nosnippet>329</a>                                    }
-<a href=#330 id=330 data-nosnippet>330</a>                                }
-<a href=#331 id=331 data-nosnippet>331</a>                            }
-<a href=#332 id=332 data-nosnippet>332</a>                        }
-<a href=#333 id=333 data-nosnippet>333</a>                    } <span class="kw">else </span>{
-<a href=#334 id=334 data-nosnippet>334</a>                        <span class="macro">rsx!</span> { div {} }
-<a href=#335 id=335 data-nosnippet>335</a>                    }
-<a href=#336 id=336 data-nosnippet>336</a>                }
-<a href=#337 id=337 data-nosnippet>337</a>            }
-<a href=#338 id=338 data-nosnippet>338</a>        }
-<a href=#339 id=339 data-nosnippet>339</a>    }
-<a href=#340 id=340 data-nosnippet>340</a>}
-<a href=#341 id=341 data-nosnippet>341</a>
-<a href=#342 id=342 data-nosnippet>342</a><span class="attr">#[component]
-<a href=#343 id=343 data-nosnippet>343</a></span><span class="kw">fn </span>LuckCard(
-<a href=#344 id=344 data-nosnippet>344</a>    title: String,
-<a href=#345 id=345 data-nosnippet>345</a>    value: String,
-<a href=#346 id=346 data-nosnippet>346</a>    sub: String,
-<a href=#347 id=347 data-nosnippet>347</a>    color: String,
-<a href=#348 id=348 data-nosnippet>348</a>    icon: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
-<a href=#349 id=349 data-nosnippet>349</a>) -&gt; Element {
-<a href=#350 id=350 data-nosnippet>350</a>    <span class="macro">rsx!</span> {
-<a href=#351 id=351 data-nosnippet>351</a>        div { class: <span class="string">"p-4 rounded-2xl bg-gradient-to-b {color} border flex flex-col gap-2"</span>,
-<a href=#352 id=352 data-nosnippet>352</a>            div { class: <span class="string">"flex items-center gap-2"</span>,
-<a href=#353 id=353 data-nosnippet>353</a>                span { class: <span class="string">"text-xl"</span>, <span class="string">"{icon}" </span>}
-<a href=#354 id=354 data-nosnippet>354</a>                span { class: <span class="string">"text-xs text-slate-400 font-medium"</span>, <span class="string">"{title}" </span>}
-<a href=#355 id=355 data-nosnippet>355</a>            }
-<a href=#356 id=356 data-nosnippet>356</a>            p { class: <span class="string">"text-xl font-bold text-slate-100 font-serif"</span>, <span class="string">"{value}" </span>}
-<a href=#357 id=357 data-nosnippet>357</a>            <span class="kw">if </span>!sub.is_empty() {
-<a href=#358 id=358 data-nosnippet>358</a>                p { class: <span class="string">"text-sm text-slate-400"</span>, <span class="string">"{sub}" </span>}
-<a href=#359 id=359 data-nosnippet>359</a>            }
-<a href=#360 id=360 data-nosnippet>360</a>        }
-<a href=#361 id=361 data-nosnippet>361</a>    }
-<a href=#362 id=362 data-nosnippet>362</a>}
+<a href=#201 id=201 data-nosnippet>201</a>                                        <span class="kw">let </span>major_luck_title = t(locale, TK::SajuMajorLuckTimeline);
+<a href=#202 id=202 data-nosnippet>202</a>                                        <span class="kw">let </span>major_luck_sub = <span class="kw">match </span>locale {
+<a href=#203 id=203 data-nosnippet>203</a>                                            Locale::Ko =&gt; <span class="macro">format!</span>(<span class="string">"만 {}세 교운 | {}"</span>, ml.start_age, ml.direction),
+<a href=#204 id=204 data-nosnippet>204</a>                                            Locale::En =&gt; <span class="macro">format!</span>(<span class="string">"Shift age {} | {}"</span>, ml.start_age, <span class="kw">if </span>ml.direction == LuckDirection::Forward { <span class="string">"Direct" </span>} <span class="kw">else </span>{ <span class="string">"Reverse" </span>}),
+<a href=#205 id=205 data-nosnippet>205</a>                                            Locale::Zh =&gt; <span class="macro">format!</span>(<span class="string">"{}岁交运 | {}"</span>, ml.start_age, <span class="kw">if </span>ml.direction == LuckDirection::Forward { <span class="string">"顺行" </span>} <span class="kw">else </span>{ <span class="string">"逆行" </span>}),
+<a href=#206 id=206 data-nosnippet>206</a>                                            Locale::Ru =&gt; <span class="macro">format!</span>(<span class="string">"Смена в {} лет | {}"</span>, ml.start_age, <span class="kw">if </span>ml.direction == LuckDirection::Forward { <span class="string">"Прямо" </span>} <span class="kw">else </span>{ <span class="string">"Обратно" </span>}),
+<a href=#207 id=207 data-nosnippet>207</a>                                        };
+<a href=#208 id=208 data-nosnippet>208</a>                                        <span class="kw">let </span>th_age = <span class="kw">match </span>locale {
+<a href=#209 id=209 data-nosnippet>209</a>                                            Locale::Ko =&gt; <span class="string">"나이"</span>, Locale::En =&gt; <span class="string">"Age"</span>, Locale::Zh =&gt; <span class="string">"年龄"</span>, Locale::Ru =&gt; <span class="string">"Возраст"</span>,
+<a href=#210 id=210 data-nosnippet>210</a>                                        };
+<a href=#211 id=211 data-nosnippet>211</a>                                        <span class="kw">let </span>th_pillar = <span class="kw">match </span>locale {
+<a href=#212 id=212 data-nosnippet>212</a>                                            Locale::Ko =&gt; <span class="string">"간지"</span>, Locale::En =&gt; <span class="string">"Pillar"</span>, Locale::Zh =&gt; <span class="string">"干支"</span>, Locale::Ru =&gt; <span class="string">"Столп"</span>,
+<a href=#213 id=213 data-nosnippet>213</a>                                        };
+<a href=#214 id=214 data-nosnippet>214</a>                                        <span class="kw">let </span>th_stem_god = <span class="kw">match </span>locale {
+<a href=#215 id=215 data-nosnippet>215</a>                                            Locale::Ko =&gt; <span class="string">"천간 십성"</span>, Locale::En =&gt; <span class="string">"Stem Ten God"</span>, Locale::Zh =&gt; <span class="string">"天干十神"</span>, Locale::Ru =&gt; <span class="string">"Божество НС"</span>,
+<a href=#216 id=216 data-nosnippet>216</a>                                        };
+<a href=#217 id=217 data-nosnippet>217</a>                                        <span class="kw">let </span>th_branch_god = <span class="kw">match </span>locale {
+<a href=#218 id=218 data-nosnippet>218</a>                                            Locale::Ko =&gt; <span class="string">"지지 십성"</span>, Locale::En =&gt; <span class="string">"Branch Ten God"</span>, Locale::Zh =&gt; <span class="string">"地支十神"</span>, Locale::Ru =&gt; <span class="string">"Божество ЗВ"</span>,
+<a href=#219 id=219 data-nosnippet>219</a>                                        };
+<a href=#220 id=220 data-nosnippet>220</a>                                        <span class="kw">let </span>th_status = <span class="kw">match </span>locale {
+<a href=#221 id=221 data-nosnippet>221</a>                                            Locale::Ko =&gt; <span class="string">"상태"</span>, Locale::En =&gt; <span class="string">"Status"</span>, Locale::Zh =&gt; <span class="string">"状态"</span>, Locale::Ru =&gt; <span class="string">"Статус"</span>,
+<a href=#222 id=222 data-nosnippet>222</a>                                        };
+<a href=#223 id=223 data-nosnippet>223</a>                                        <span class="kw">let </span>current_lbl = <span class="kw">match </span>locale {
+<a href=#224 id=224 data-nosnippet>224</a>                                            Locale::Ko =&gt; <span class="string">"⬤ 현재"</span>, Locale::En =&gt; <span class="string">"⬤ Current"</span>, Locale::Zh =&gt; <span class="string">"⬤ 当前"</span>, Locale::Ru =&gt; <span class="string">"⬤ Текущий"</span>,
+<a href=#225 id=225 data-nosnippet>225</a>                                        };
+<a href=#226 id=226 data-nosnippet>226</a>
+<a href=#227 id=227 data-nosnippet>227</a>                                        <span class="macro">rsx!</span> {
+<a href=#228 id=228 data-nosnippet>228</a>                                            div { class: <span class="string">"bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden"</span>,
+<a href=#229 id=229 data-nosnippet>229</a>                                                div { class: <span class="string">"bg-slate-800/50 border-b border-slate-800 px-5 py-3 flex items-center justify-between"</span>,
+<a href=#230 id=230 data-nosnippet>230</a>                                                    h3 { class: <span class="string">"font-semibold text-slate-200"</span>, <span class="string">"{major_luck_title}" </span>}
+<a href=#231 id=231 data-nosnippet>231</a>                                                    span { class: <span class="string">"text-xs text-slate-400"</span>, <span class="string">"{major_luck_sub}" </span>}
+<a href=#232 id=232 data-nosnippet>232</a>                                                }
+<a href=#233 id=233 data-nosnippet>233</a>                                                div { class: <span class="string">"overflow-x-auto"</span>,
+<a href=#234 id=234 data-nosnippet>234</a>                                                    table { class: <span class="string">"w-full text-sm"</span>,
+<a href=#235 id=235 data-nosnippet>235</a>                                                        thead {
+<a href=#236 id=236 data-nosnippet>236</a>                                                            tr { class: <span class="string">"bg-slate-800/30 text-xs text-slate-400 uppercase"</span>,
+<a href=#237 id=237 data-nosnippet>237</a>                                                                th { class: <span class="string">"px-4 py-3 text-left font-medium"</span>, <span class="string">"{th_age}" </span>}
+<a href=#238 id=238 data-nosnippet>238</a>                                                                th { class: <span class="string">"px-4 py-3 text-left font-medium"</span>, <span class="string">"{th_pillar}" </span>}
+<a href=#239 id=239 data-nosnippet>239</a>                                                                th { class: <span class="string">"px-4 py-3 text-left font-medium"</span>, <span class="string">"{th_stem_god}" </span>}
+<a href=#240 id=240 data-nosnippet>240</a>                                                                th { class: <span class="string">"px-4 py-3 text-left font-medium"</span>, <span class="string">"{th_branch_god}" </span>}
+<a href=#241 id=241 data-nosnippet>241</a>                                                                th { class: <span class="string">"px-4 py-3 text-left font-medium"</span>, <span class="string">"{th_status}" </span>}
+<a href=#242 id=242 data-nosnippet>242</a>                                                            }
+<a href=#243 id=243 data-nosnippet>243</a>                                                        }
+<a href=#244 id=244 data-nosnippet>244</a>                                                        tbody { class: <span class="string">"divide-y divide-slate-800"</span>,
+<a href=#245 id=245 data-nosnippet>245</a>                                                            {ml.cycles.iter().map(|cycle| {
+<a href=#246 id=246 data-nosnippet>246</a>                                                                <span class="kw">let </span>is_current = cycle.start_age &lt;= transit.current_age &amp;&amp; transit.current_age &lt;= cycle.end_age;
+<a href=#247 id=247 data-nosnippet>247</a>                                                                <span class="kw">let </span>row_class = <span class="kw">if </span>is_current {
+<a href=#248 id=248 data-nosnippet>248</a>                                                                    <span class="string">"bg-amber-900/20 hover:bg-amber-900/30"
+<a href=#249 id=249 data-nosnippet>249</a>                                                                </span>} <span class="kw">else </span>{
+<a href=#250 id=250 data-nosnippet>250</a>                                                                    <span class="string">"hover:bg-slate-800/20"
+<a href=#251 id=251 data-nosnippet>251</a>                                                                </span>};
+<a href=#252 id=252 data-nosnippet>252</a>                                                                <span class="kw">let </span>age_range_str = <span class="kw">match </span>locale {
+<a href=#253 id=253 data-nosnippet>253</a>                                                                    Locale::Ko =&gt; <span class="macro">format!</span>(<span class="string">"만 {}~{}세"</span>, cycle.start_age, cycle.end_age),
+<a href=#254 id=254 data-nosnippet>254</a>                                                                    Locale::En =&gt; <span class="macro">format!</span>(<span class="string">"Age {}~{}"</span>, cycle.start_age, cycle.end_age),
+<a href=#255 id=255 data-nosnippet>255</a>                                                                    Locale::Zh =&gt; <span class="macro">format!</span>(<span class="string">"{}~{}岁"</span>, cycle.start_age, cycle.end_age),
+<a href=#256 id=256 data-nosnippet>256</a>                                                                    Locale::Ru =&gt; <span class="macro">format!</span>(<span class="string">"{}~{} лет"</span>, cycle.start_age, cycle.end_age),
+<a href=#257 id=257 data-nosnippet>257</a>                                                                };
+<a href=#258 id=258 data-nosnippet>258</a>                                                                <span class="macro">rsx!</span> {
+<a href=#259 id=259 data-nosnippet>259</a>                                                                    tr { class: <span class="string">"{row_class} transition-colors"</span>,
+<a href=#260 id=260 data-nosnippet>260</a>                                                                        td { class: <span class="string">"px-4 py-3 font-mono text-slate-300 text-xs"</span>, <span class="string">"{age_range_str}" </span>}
+<a href=#261 id=261 data-nosnippet>261</a>                                                                        td { class: <span class="string">"px-4 py-3 font-bold text-amber-300 font-serif"</span>, <span class="string">"{cycle.ganzi.hanja()} ({cycle.ganzi.hangul()})" </span>}
+<a href=#262 id=262 data-nosnippet>262</a>                                                                        td { class: <span class="string">"px-4 py-3 text-slate-300"</span>, <span class="string">"{cycle.stem_god.hangul()}" </span>}
+<a href=#263 id=263 data-nosnippet>263</a>                                                                        td { class: <span class="string">"px-4 py-3 text-slate-300"</span>, <span class="string">"{cycle.branch_god.hangul()}" </span>}
+<a href=#264 id=264 data-nosnippet>264</a>                                                                        td { class: <span class="string">"px-4 py-3"</span>,
+<a href=#265 id=265 data-nosnippet>265</a>                                                                            <span class="kw">if </span>is_current {
+<a href=#266 id=266 data-nosnippet>266</a>                                                                                span { class: <span class="string">"px-2 py-0.5 rounded-full text-xs bg-amber-600/40 text-amber-200 border border-amber-500/40 font-semibold animate-pulse"</span>, <span class="string">"{current_lbl}" </span>}
+<a href=#267 id=267 data-nosnippet>267</a>                                                                            }
+<a href=#268 id=268 data-nosnippet>268</a>                                                                        }
+<a href=#269 id=269 data-nosnippet>269</a>                                                                    }
+<a href=#270 id=270 data-nosnippet>270</a>                                                                }
+<a href=#271 id=271 data-nosnippet>271</a>                                                            })}
+<a href=#272 id=272 data-nosnippet>272</a>                                                        }
+<a href=#273 id=273 data-nosnippet>273</a>                                                    }
+<a href=#274 id=274 data-nosnippet>274</a>                                                }
+<a href=#275 id=275 data-nosnippet>275</a>                                            }
+<a href=#276 id=276 data-nosnippet>276</a>                                        }
+<a href=#277 id=277 data-nosnippet>277</a>                                    }
+<a href=#278 id=278 data-nosnippet>278</a>                                }
+<a href=#279 id=279 data-nosnippet>279</a>                            }
+<a href=#280 id=280 data-nosnippet>280</a>
+<a href=#281 id=281 data-nosnippet>281</a>                            <span class="comment">// ── 12개월 운세 카드 ───────────────────────────────
+<a href=#282 id=282 data-nosnippet>282</a>                            </span>div { class: <span class="string">"bg-slate-900 border border-slate-800 rounded-2xl p-5"</span>,
+<a href=#283 id=283 data-nosnippet>283</a>                                h3 { class: <span class="string">"font-semibold text-slate-200 mb-4"</span>, <span class="string">"12개월 월운 (月運)" </span>}
+<a href=#284 id=284 data-nosnippet>284</a>                                div { class: <span class="string">"grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3"</span>,
+<a href=#285 id=285 data-nosnippet>285</a>                                    {transit.monthly_lucks.iter().map(|ml| {
+<a href=#286 id=286 data-nosnippet>286</a>                                        <span class="kw">let </span>is_current = ml.month == transit.monthly_luck.month &amp;&amp; ml.year == transit.monthly_luck.year;
+<a href=#287 id=287 data-nosnippet>287</a>                                        <span class="kw">let </span>card_class = <span class="kw">if </span>is_current {
+<a href=#288 id=288 data-nosnippet>288</a>                                            <span class="string">"bg-blue-900/30 border-blue-600/50"
+<a href=#289 id=289 data-nosnippet>289</a>                                        </span>} <span class="kw">else </span>{
+<a href=#290 id=290 data-nosnippet>290</a>                                            <span class="string">"bg-slate-800/40 border-slate-700/40 hover:border-slate-600/60"
+<a href=#291 id=291 data-nosnippet>291</a>                                        </span>};
+<a href=#292 id=292 data-nosnippet>292</a>                                        <span class="macro">rsx!</span> {
+<a href=#293 id=293 data-nosnippet>293</a>                                            div { class: <span class="string">"p-3 rounded-xl border {card_class} flex flex-col items-center gap-1 transition-colors"</span>,
+<a href=#294 id=294 data-nosnippet>294</a>                                                p { class: <span class="string">"text-xs text-slate-400"</span>, <span class="string">"{ml.month}월" </span>}
+<a href=#295 id=295 data-nosnippet>295</a>                                                p { class: <span class="string">"text-xl font-serif text-amber-300 font-bold"</span>, <span class="string">"{ml.ganzi.hanja()}" </span>}
+<a href=#296 id=296 data-nosnippet>296</a>                                                p { class: <span class="string">"text-xs text-slate-400"</span>, <span class="string">"{ml.ganzi.hangul()}" </span>}
+<a href=#297 id=297 data-nosnippet>297</a>                                                div { class: <span class="string">"flex gap-1 flex-wrap justify-center"</span>,
+<a href=#298 id=298 data-nosnippet>298</a>                                                    span { class: <span class="string">"text-xs text-amber-400"</span>, <span class="string">"{ml.stem_god.hangul()}" </span>}
+<a href=#299 id=299 data-nosnippet>299</a>                                                    span { class: <span class="string">"text-xs text-slate-500"</span>, <span class="string">"/" </span>}
+<a href=#300 id=300 data-nosnippet>300</a>                                                    span { class: <span class="string">"text-xs text-blue-400"</span>, <span class="string">"{ml.branch_god.hangul()}" </span>}
+<a href=#301 id=301 data-nosnippet>301</a>                                                }
+<a href=#302 id=302 data-nosnippet>302</a>                                                <span class="kw">if </span>is_current {
+<a href=#303 id=303 data-nosnippet>303</a>                                                    span { class: <span class="string">"text-xs text-blue-300 font-semibold"</span>, <span class="string">"◉" </span>}
+<a href=#304 id=304 data-nosnippet>304</a>                                                }
+<a href=#305 id=305 data-nosnippet>305</a>                                            }
+<a href=#306 id=306 data-nosnippet>306</a>                                        }
+<a href=#307 id=307 data-nosnippet>307</a>                                    })}
+<a href=#308 id=308 data-nosnippet>308</a>                                }
+<a href=#309 id=309 data-nosnippet>309</a>                            }
+<a href=#310 id=310 data-nosnippet>310</a>
+<a href=#311 id=311 data-nosnippet>311</a>                            <span class="comment">// ── 시운 ──────────────────────────────────────────
+<a href=#312 id=312 data-nosnippet>312</a>                            </span>div { class: <span class="string">"p-5 bg-slate-900 border border-slate-800 rounded-2xl"</span>,
+<a href=#313 id=313 data-nosnippet>313</a>                                h3 { class: <span class="string">"font-semibold text-slate-200 mb-3"</span>, <span class="string">"시운 (時運) — 현재 시간대" </span>}
+<a href=#314 id=314 data-nosnippet>314</a>                                div { class: <span class="string">"flex items-center gap-4"</span>,
+<a href=#315 id=315 data-nosnippet>315</a>                                    div { class: <span class="string">"text-4xl font-serif text-emerald-300 font-bold"</span>, <span class="string">"{transit.hourly_luck.ganzi.hanja()}" </span>}
+<a href=#316 id=316 data-nosnippet>316</a>                                    div {
+<a href=#317 id=317 data-nosnippet>317</a>                                        p { class: <span class="string">"text-lg text-slate-300 font-medium"</span>, <span class="string">"{transit.hourly_luck.ganzi.hangul()}" </span>}
+<a href=#318 id=318 data-nosnippet>318</a>                                        p { class: <span class="string">"text-sm text-slate-400"</span>,
+<a href=#319 id=319 data-nosnippet>319</a>                                            <span class="string">"{transit.hourly_luck.stem_god.hangul()} / {transit.hourly_luck.branch_god.hangul()}"
+<a href=#320 id=320 data-nosnippet>320</a>                                        </span>}
+<a href=#321 id=321 data-nosnippet>321</a>                                        <span class="kw">if let </span><span class="prelude-val">Some</span>(ts) = <span class="kw-2">&amp;</span>transit.hourly_luck.twelve_stage {
+<a href=#322 id=322 data-nosnippet>322</a>                                            p { class: <span class="string">"text-xs text-slate-500"</span>, <span class="string">"12운성: {ts}" </span>}
+<a href=#323 id=323 data-nosnippet>323</a>                                        }
+<a href=#324 id=324 data-nosnippet>324</a>                                    }
+<a href=#325 id=325 data-nosnippet>325</a>                                }
+<a href=#326 id=326 data-nosnippet>326</a>                            }
+<a href=#327 id=327 data-nosnippet>327</a>                        }
+<a href=#328 id=328 data-nosnippet>328</a>                    } <span class="kw">else </span>{
+<a href=#329 id=329 data-nosnippet>329</a>                        <span class="macro">rsx!</span> { div {} }
+<a href=#330 id=330 data-nosnippet>330</a>                    }
+<a href=#331 id=331 data-nosnippet>331</a>                }
+<a href=#332 id=332 data-nosnippet>332</a>            }
+<a href=#333 id=333 data-nosnippet>333</a>        }
+<a href=#334 id=334 data-nosnippet>334</a>    }
+<a href=#335 id=335 data-nosnippet>335</a>}
+<a href=#336 id=336 data-nosnippet>336</a>
+<a href=#337 id=337 data-nosnippet>337</a><span class="attr">#[component]
+<a href=#338 id=338 data-nosnippet>338</a></span><span class="kw">fn </span>LuckCard(
+<a href=#339 id=339 data-nosnippet>339</a>    title: String,
+<a href=#340 id=340 data-nosnippet>340</a>    value: String,
+<a href=#341 id=341 data-nosnippet>341</a>    sub: String,
+<a href=#342 id=342 data-nosnippet>342</a>    color: String,
+<a href=#343 id=343 data-nosnippet>343</a>    icon: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
+<a href=#344 id=344 data-nosnippet>344</a>) -&gt; Element {
+<a href=#345 id=345 data-nosnippet>345</a>    <span class="macro">rsx!</span> {
+<a href=#346 id=346 data-nosnippet>346</a>        div { class: <span class="string">"p-4 rounded-2xl bg-gradient-to-b {color} border flex flex-col gap-2"</span>,
+<a href=#347 id=347 data-nosnippet>347</a>            div { class: <span class="string">"flex items-center gap-2"</span>,
+<a href=#348 id=348 data-nosnippet>348</a>                span { class: <span class="string">"text-xl"</span>, <span class="string">"{icon}" </span>}
+<a href=#349 id=349 data-nosnippet>349</a>                span { class: <span class="string">"text-xs text-slate-400 font-medium"</span>, <span class="string">"{title}" </span>}
+<a href=#350 id=350 data-nosnippet>350</a>            }
+<a href=#351 id=351 data-nosnippet>351</a>            p { class: <span class="string">"text-xl font-bold text-slate-100 font-serif"</span>, <span class="string">"{value}" </span>}
+<a href=#352 id=352 data-nosnippet>352</a>            <span class="kw">if </span>!sub.is_empty() {
+<a href=#353 id=353 data-nosnippet>353</a>                p { class: <span class="string">"text-sm text-slate-400"</span>, <span class="string">"{sub}" </span>}
+<a href=#354 id=354 data-nosnippet>354</a>            }
+<a href=#355 id=355 data-nosnippet>355</a>        }
+<a href=#356 id=356 data-nosnippet>356</a>    }
+<a href=#357 id=357 data-nosnippet>357</a>}
 </code></pre></div></section></main></body></html>

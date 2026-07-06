@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["ai_audit","human_design","report","saju","tier","transit","vedic","western","zwds"]};
+window.SIDEBAR_ITEMS = {"mod":["ai_audit","human_design","qimen","report","saju","tier","transit","vedic","western","zwds"]};

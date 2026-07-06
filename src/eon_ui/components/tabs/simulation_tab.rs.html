@@ -96,16 +96,16 @@
 <a href=#96 id=96 data-nosnippet>96</a>                        <span class="kw">let </span>c = saju.complexity.as_ref();
 <a href=#97 id=97 data-nosnippet>97</a>                        <span class="kw">let </span>bottleneck_lbl = saju.qi_topology.bottleneck.map(|e| {
 <a href=#98 id=98 data-nosnippet>98</a>                            <span class="kw">match </span>locale {
-<a href=#99 id=99 data-nosnippet>99</a>                                Locale::Ko =&gt; <span class="macro">format!</span>(<span class="string">"병목: {}({})"</span>, e.hangul(), e.hanja()),
-<a href=#100 id=100 data-nosnippet>100</a>                                Locale::En =&gt; <span class="macro">format!</span>(<span class="string">"Bottleneck: {}"</span>, e.hangul()),
-<a href=#101 id=101 data-nosnippet>101</a>                                Locale::Zh =&gt; <span class="macro">format!</span>(<span class="string">"瓶颈: {}"</span>, e.hangul()),
-<a href=#102 id=102 data-nosnippet>102</a>                                Locale::Ru =&gt; <span class="macro">format!</span>(<span class="string">"Узкое место: {}"</span>, e.hangul()),
+<a href=#99 id=99 data-nosnippet>99</a>                                Locale::Ko =&gt; <span class="macro">format!</span>(<span class="string">"{}: {}({})"</span>, t(locale, TK::SimBottleneck), e.hangul(), e.hanja()),
+<a href=#100 id=100 data-nosnippet>100</a>                                Locale::En =&gt; <span class="macro">format!</span>(<span class="string">"Bottleneck: {}({})"</span>, e.hangul(), e.hanja()),
+<a href=#101 id=101 data-nosnippet>101</a>                                Locale::Zh =&gt; <span class="macro">format!</span>(<span class="string">"瓶颈: {}({})"</span>, e.hangul(), e.hanja()),
+<a href=#102 id=102 data-nosnippet>102</a>                                Locale::Ru =&gt; <span class="macro">format!</span>(<span class="string">"Узкое место: {}({})"</span>, e.hangul(), e.hanja()),
 <a href=#103 id=103 data-nosnippet>103</a>                            }
 <a href=#104 id=104 data-nosnippet>104</a>                        }).unwrap_or_else(|| t(locale, TK::LabelNone).to_string());
 <a href=#105 id=105 data-nosnippet>105</a>
 <a href=#106 id=106 data-nosnippet>106</a>                        <span class="kw">let </span>cc_sub = <span class="kw">if let </span><span class="prelude-val">Some</span>(comp) = c {
 <a href=#107 id=107 data-nosnippet>107</a>                            <span class="kw">match </span>locale {
-<a href=#108 id=108 data-nosnippet>108</a>                                Locale::Ko =&gt; <span class="macro">format!</span>(<span class="string">"안정도: {}"</span>, comp.stability_grade),
+<a href=#108 id=108 data-nosnippet>108</a>                                Locale::Ko =&gt; <span class="macro">format!</span>(<span class="string">"{}: {}"</span>, t(locale, TK::SimStability), comp.stability_grade),
 <a href=#109 id=109 data-nosnippet>109</a>                                Locale::En =&gt; <span class="macro">format!</span>(<span class="string">"Stability: {}"</span>, comp.stability_grade),
 <a href=#110 id=110 data-nosnippet>110</a>                                Locale::Zh =&gt; <span class="macro">format!</span>(<span class="string">"稳定性: {}"</span>, comp.stability_grade),
 <a href=#111 id=111 data-nosnippet>111</a>                                Locale::Ru =&gt; <span class="macro">format!</span>(<span class="string">"Стабильность: {}"</span>, comp.stability_grade),
