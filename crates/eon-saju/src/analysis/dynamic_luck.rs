@@ -315,7 +315,7 @@ impl DynamicLuckAnalysis {
     pub fn get_influence(luck: GanZi, label: &str, natal: &FourPillars) -> LuckInfluence {
         let mut relations = Vec::new();
         let mut impacts = Vec::new();
-        
+
         let n_stems = [
             ("년간", natal.year.stem),
             ("월간", natal.month.stem),
@@ -331,7 +331,7 @@ impl DynamicLuckAnalysis {
 
         use crate::analysis::relationships::*;
         use crate::core::ten_gods::TenGod;
-        
+
         let dm = natal.day_master();
 
         // 1. 천간 관계
@@ -379,7 +379,12 @@ impl DynamicLuckAnalysis {
             }
             // 반합
             if let Some(semi) = SemiCombination::check(luck.branch, *b) {
-                relations.push(format!("반합: {} ({}-{})", semi.hangul(), luck.branch.hanja(), b.hanja()));
+                relations.push(format!(
+                    "반합: {} ({}-{})",
+                    semi.hangul(),
+                    luck.branch.hanja(),
+                    b.hanja()
+                ));
                 add_impact("반합", true);
             }
             // 충
@@ -412,7 +417,11 @@ impl DynamicLuckAnalysis {
         }
     }
 
-    fn get_stem_impact_description(pos: &str, tg: crate::core::ten_gods::TenGod, is_positive: bool) -> String {
+    fn get_stem_impact_description(
+        pos: &str,
+        tg: crate::core::ten_gods::TenGod,
+        is_positive: bool,
+    ) -> String {
         let pos_desc = match pos {
             "년간" => "국가/사회적 환경이나 윗사람과의 관계",
             "월간" => "사회생활, 직장, 외부로 드러난 명예",
@@ -420,14 +429,21 @@ impl DynamicLuckAnalysis {
             "시간" => "개인적 사생활이나 말년의 목표",
             _ => "해당 궁성",
         };
-        
-        let tg_desc = match tg {
-            crate::core::ten_gods::TenGod::Bijian | crate::core::ten_gods::TenGod::Jiecai => "동료, 대인관계, 주체성",
-            crate::core::ten_gods::TenGod::Shishen | crate::core::ten_gods::TenGod::Shangguan => "활동력, 진로, 표현력",
-            crate::core::ten_gods::TenGod::Zhengcai | crate::core::ten_gods::TenGod::Piancai => "재물운, 성과, 결과물",
-            crate::core::ten_gods::TenGod::Zhengguan | crate::core::ten_gods::TenGod::Pianguan => "직장, 명예, 책임감",
-            crate::core::ten_gods::TenGod::Zhengyin | crate::core::ten_gods::TenGod::Pianyin => "학업, 문서운, 자격/계약",
-        };
+
+        let tg_desc =
+            match tg {
+                crate::core::ten_gods::TenGod::Bijian | crate::core::ten_gods::TenGod::Jiecai => {
+                    "동료, 대인관계, 주체성"
+                }
+                crate::core::ten_gods::TenGod::Shishen
+                | crate::core::ten_gods::TenGod::Shangguan => "활동력, 진로, 표현력",
+                crate::core::ten_gods::TenGod::Zhengcai
+                | crate::core::ten_gods::TenGod::Piancai => "재물운, 성과, 결과물",
+                crate::core::ten_gods::TenGod::Zhengguan
+                | crate::core::ten_gods::TenGod::Pianguan => "직장, 명예, 책임감",
+                crate::core::ten_gods::TenGod::Zhengyin
+                | crate::core::ten_gods::TenGod::Pianyin => "학업, 문서운, 자격/계약",
+            };
 
         if is_positive {
             format!("{}에서 긍정적 결속이나 안정(합)이 발생하여, {}이/가 유리하게 작용하거나 새로운 기회가 열립니다.", pos_desc, tg_desc)
@@ -436,7 +452,11 @@ impl DynamicLuckAnalysis {
         }
     }
 
-    fn get_branch_impact_description(pos: &str, tg: crate::core::ten_gods::TenGod, is_positive: bool) -> String {
+    fn get_branch_impact_description(
+        pos: &str,
+        tg: crate::core::ten_gods::TenGod,
+        is_positive: bool,
+    ) -> String {
         let pos_desc = match pos {
             "년지" => "조상, 태생적 기반, 큰 스케일의 환경",
             "월지" => "직장, 부모궁, 사회적 무대와 주거 환경",
@@ -445,13 +465,20 @@ impl DynamicLuckAnalysis {
             _ => "해당 궁성",
         };
 
-        let tg_desc = match tg {
-            crate::core::ten_gods::TenGod::Bijian | crate::core::ten_gods::TenGod::Jiecai => "경쟁구도 및 주체적 결단",
-            crate::core::ten_gods::TenGod::Shishen | crate::core::ten_gods::TenGod::Shangguan => "투자, 사업적 활동, 진로 개척",
-            crate::core::ten_gods::TenGod::Zhengcai | crate::core::ten_gods::TenGod::Piancai => "현실적 수익원 및 재물 관리",
-            crate::core::ten_gods::TenGod::Zhengguan | crate::core::ten_gods::TenGod::Pianguan => "직장 내 변동 및 책임/명예",
-            crate::core::ten_gods::TenGod::Zhengyin | crate::core::ten_gods::TenGod::Pianyin => "부동산, 문서 계약 및 수용성",
-        };
+        let tg_desc =
+            match tg {
+                crate::core::ten_gods::TenGod::Bijian | crate::core::ten_gods::TenGod::Jiecai => {
+                    "경쟁구도 및 주체적 결단"
+                }
+                crate::core::ten_gods::TenGod::Shishen
+                | crate::core::ten_gods::TenGod::Shangguan => "투자, 사업적 활동, 진로 개척",
+                crate::core::ten_gods::TenGod::Zhengcai
+                | crate::core::ten_gods::TenGod::Piancai => "현실적 수익원 및 재물 관리",
+                crate::core::ten_gods::TenGod::Zhengguan
+                | crate::core::ten_gods::TenGod::Pianguan => "직장 내 변동 및 책임/명예",
+                crate::core::ten_gods::TenGod::Zhengyin
+                | crate::core::ten_gods::TenGod::Pianyin => "부동산, 문서 계약 및 수용성",
+            };
 
         if is_positive {
             format!("{}이/가 합으로 묶여 안정을 찾으며, {} 측면에서 원활한 흐름과 조력이 따를 가능성이 높습니다.", pos_desc, tg_desc)
@@ -466,7 +493,9 @@ impl std::fmt::Display for DynamicLuckAnalysis {
         writeln!(f, "【동적 종합 분석 (원국 + 대운 + 세운)】")?;
         writeln!(f, "─────────────────────────────────")?;
 
-        let print_influence = |f: &mut std::fmt::Formatter<'_>, infl: &LuckInfluence| -> std::fmt::Result {
+        let print_influence = |f: &mut std::fmt::Formatter<'_>,
+                               infl: &LuckInfluence|
+         -> std::fmt::Result {
             writeln!(
                 f,
                 "▶ {} 영향 ({}): {}",
@@ -475,7 +504,11 @@ impl std::fmt::Display for DynamicLuckAnalysis {
                 infl.relations_with_natal.join(", ")
             )?;
             for impact in &infl.domain_impacts {
-                writeln!(f, "   - [{}({}) {}]: {}", impact.target_position, impact.ten_god, impact.interaction, impact.description)?;
+                writeln!(
+                    f,
+                    "   - [{}({}) {}]: {}",
+                    impact.target_position, impact.ten_god, impact.interaction, impact.description
+                )?;
             }
             Ok(())
         };
@@ -496,8 +529,11 @@ impl std::fmt::Display for DynamicLuckAnalysis {
             print_influence(f, infl)?;
         }
 
-        writeln!(f, "
-[종합 합충 결과]")?;
+        writeln!(
+            f,
+            "
+[종합 합충 결과]"
+        )?;
         write!(f, "{}", self.combined_relations)?;
 
         Ok(())

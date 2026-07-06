@@ -696,7 +696,8 @@ impl SpiritMarkerAnalysis {
         let assistant_el = yongshin.assistant;
 
         // 관계(형충파해) 분석 (신살의 변질 판별용)
-        let rel_analysis = crate::analysis::relationships::RelationshipAnalysis::from_pillars(pillars);
+        let rel_analysis =
+            crate::analysis::relationships::RelationshipAnalysis::from_pillars(pillars);
 
         // === 상세 설명 모델(mapped_markers) 생성 ===
         let mapped_markers = markers.iter()
@@ -727,9 +728,9 @@ impl SpiritMarkerAnalysis {
                     for (_, p1, p2) in &rel_analysis.dominant_semi_combinations {
                         if p1 == &pos_str || p2 == &pos_str { is_combined = true; }
                     }
-                    
+
                     let branch = pillar_ganzi.branch;
-                    
+
                     for triple in &rel_analysis.triple_combinations {
                         use crate::core::branch::EarthlyBranch::*;
                         use crate::analysis::relationships::TripleCombination::*;
@@ -798,7 +799,7 @@ impl SpiritMarkerAnalysis {
                         reasons.push("지지 합(合)으로 인한 흉살 기운 억제(기반)".to_string());
                     } else if is_yong_hee {
                         description = format!("{} (불리한 살성이나, 용신/희신의 기운 위에 있어 흉함이 크게 억제되거나 오히려 추진력으로 승화됩니다.)", description);
-                        level = InterpretationLevel::Neutral; 
+                        level = InterpretationLevel::Neutral;
                     }
                 }
 

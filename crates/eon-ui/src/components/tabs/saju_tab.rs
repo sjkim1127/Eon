@@ -33,7 +33,7 @@ pub fn SajuTab() -> Element {
 
     // Reactive trigger for manual analysis runs
     let mut analysis_trigger = use_signal(|| 0);
-    
+
     // Sub-tab state
     let mut active_sub_tab = use_signal(|| SubTab::Summary);
 
@@ -302,7 +302,7 @@ pub fn SajuTab() -> Element {
                                         "{t(locale, TK::SajuTabRemedies)}"
                                     }
                                 }
-                                
+
                                 if *active_sub_tab.read() == SubTab::Summary {
                                     div { class: "space-y-8 animate-fade-in",
                             // ── 1. 사주 원국 (천간/지지/십성/12운성/신살) ─────────
@@ -934,7 +934,7 @@ pub fn SajuTab() -> Element {
                                 let struct_type_str = format!("{:?}", struct_type);
                                 let is_golden = struct_type_str.contains("Jong") || struct_type_str == "HwaGi" || struct_type_str == "SpecialTransformation";
                                 let is_crimson = struct_type_str == "YangIn" || struct_type_str == "JianLu";
-                                
+
                                 let container_class = if is_golden {
                                     "bg-gradient-to-r from-amber-950/40 to-yellow-900/20 border border-amber-500/50 rounded-2xl p-5 space-y-4 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
                                 } else if is_crimson {
@@ -950,7 +950,7 @@ pub fn SajuTab() -> Element {
                                 let badge_class = if is_golden { "text-xs font-bold text-amber-900 bg-amber-400 px-3 py-1 rounded border border-amber-500/80 shadow-[0_0_8px_rgba(251,191,36,0.5)]" }
                                                   else if is_crimson { "text-xs font-bold text-rose-900 bg-rose-400 px-3 py-1 rounded border border-rose-500/80 shadow-[0_0_8px_rgba(2fb,113,133,0.5)]" }
                                                   else { "text-xs font-bold text-amber-400 bg-amber-950/20 px-3 py-1 rounded border border-amber-900/30" };
-                                
+
                                 rsx! {
                                     div { class: "{container_class}",
                                         div { class: "flex items-center justify-between border-b border-slate-800/60 pb-3 flex-wrap gap-2",
@@ -991,7 +991,7 @@ pub fn SajuTab() -> Element {
                                                     } else {
                                                         "px-2 py-0.5 bg-slate-900 border border-slate-800/80 text-[10px] text-slate-400 rounded-md"
                                                     };
-                                                    
+
                                                     data.report.structure.reasons.iter().map(move |reason| rsx! {
                                                         span { class: "{reason_class}", "{translate_saju_reason(locale, reason)}" }
                                                     })
@@ -1527,25 +1527,25 @@ pub fn SajuTab() -> Element {
                                                 eon_saju::analysis::spirit_markers::PillarPosition::Hour => t(locale, TK::SajuHourPillar),
                                             };
                                             let part = if m.is_stem { t(locale, TK::SajuPillarStem) } else { t(locale, TK::SajuPillarBranch) };
-                                            
+
                                             let clash_title_cls = if m.is_clashed { "line-through opacity-60 decoration-red-500/80 decoration-2" } else { "" };
                                             let combine_title_cls = if m.is_combined { "drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]" } else { "" };
-                                            
+
                                             let marker_label = match locale {
                                                 Locale::Ko => format!("{} ({})", m.marker.hangul(), m.marker.hanja()),
                                                 Locale::Zh => m.marker.hanja().to_string(),
                                                 _ => translate_saju_spirit_marker_name(locale, m.marker).to_string(),
                                             };
                                             let marker_summary = translate_saju_spirit_marker_name(locale, m.marker); // We might want to use m.summary for KO to show "(파극됨)" etc, but keeping translation logic for now
-                                            
+
                                             // Handle the localized summary manually to inject the "(파극됨)" or "(발동됨)" status from m.summary if it's Korean
                                             let localized_summary = if locale == Locale::Ko { m.summary.clone() } else { marker_summary.to_string() };
-                                            
+
                                             let marker_desc = translate_spirit_desc(locale, m.marker, m.position, &m.description);
                                             let pos_part = format!("{} {}", pos_name, part);
-                                            
+
                                             let box_bg_cls = if m.is_clashed { "bg-red-950/10 border-red-900/30" } else if m.is_combined { "bg-blue-950/10 border-blue-900/30" } else { "bg-slate-800/20 border-slate-800/60" };
-                                            
+
                                             rsx! {
                                                 div { class: "p-4 rounded-xl space-y-2 hover:border-slate-700 transition-colors border {box_bg_cls}",
                                                     div { class: "flex items-center justify-between gap-2 flex-wrap",
@@ -1583,7 +1583,7 @@ pub fn SajuTab() -> Element {
                         }
                         // =================== Summary End ===================
                         }
-                        
+
                         if *active_sub_tab.read() == SubTab::Themes {
                             if let Some(themes) = &data.report.themes {
                                 div { class: "w-full space-y-6 animate-fade-in",
@@ -1631,7 +1631,7 @@ pub fn SajuTab() -> Element {
                                             let m_ganzi = &frame.major_ganzi;
                                             let score = frame.score;
                                             let tags = frame.tags_as_strings();
-                                            
+
                                             let (dot_color, score_color) = if score >= 70.0 {
                                                 ("bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]", "text-emerald-400")
                                             } else if score < 40.0 {
@@ -1639,24 +1639,24 @@ pub fn SajuTab() -> Element {
                                             } else {
                                                 ("bg-slate-500", "text-slate-400")
                                             };
-                                            
+
                                             let stem_god = TenGod::from_stems(day_master, ganzi.stem);
                                             let branch_god = TenGod::from_stem_and_branch(day_master, ganzi.branch);
                                             let stem_god_str = translate_saju_ten_god(locale, stem_god);
                                             let branch_god_str = translate_saju_ten_god(locale, branch_god);
                                             let ganzi_str = translate_saju_ganzi(locale, ganzi);
                                             let m_ganzi_str = translate_saju_ganzi(locale, m_ganzi);
-                                            
+
                                             rsx! {
                                                 div { class: "relative group",
                                                     div { class: "absolute -left-[31px] top-4 w-3 h-3 rounded-full border-2 border-slate-900 {dot_color} group-hover:scale-150 transition-transform" }
-                                                    
+
                                                     div { class: "flex flex-col md:flex-row md:items-center gap-4 bg-slate-800/30 p-5 rounded-2xl border border-slate-800/60 hover:bg-slate-800/80 hover:border-slate-700 transition-all shadow-sm",
                                                         div { class: "flex-shrink-0 w-24",
                                                             div { class: "text-2xl font-black text-slate-200 tracking-tight", "{age}세" }
                                                             div { class: "text-xs text-slate-500 mt-1 font-medium", "대운: {m_ganzi_str}" }
                                                         }
-                                                        
+
                                                         div { class: "flex-1 flex gap-4 md:gap-6",
                                                             div { class: "text-center",
                                                                 div { class: "text-[10px] uppercase tracking-wider text-slate-400 mb-1 font-semibold", "{stem_god_str}" }
@@ -1670,7 +1670,7 @@ pub fn SajuTab() -> Element {
                                                                 "{ganzi_str}년"
                                                             }
                                                         }
-                                                        
+
                                                         div { class: "flex-1 flex flex-col md:items-end gap-2",
                                                             div { class: "text-2xl font-black tracking-tighter {score_color}", "{score as i32}점" }
                                                             div { class: "flex flex-wrap gap-1.5 justify-end",
@@ -1871,7 +1871,7 @@ fn PillarCard(
                 div { class: "flex flex-col gap-1 mt-1.5",
                     {shinsals.iter().map(|s| {
                         let label = translate_saju_spirit_marker_name(locale, s.marker);
-                        
+
                         let bg_cls = match s.level {
                             InterpretationLevel::Auspicious => "bg-emerald-950/30 text-emerald-400 border-emerald-800/40",
                             InterpretationLevel::Caution => "bg-rose-950/30 text-rose-400 border-rose-800/40",

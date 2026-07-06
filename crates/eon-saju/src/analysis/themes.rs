@@ -54,7 +54,7 @@ impl Analyzable for ThemedAnalysis {
     fn analyze(pillars: &FourPillars, config: &AnalysisConfig) -> Self::Output {
         // TODO: 제대로 된 점수 계산 로직은 차후 구체화, 현재는 구조와 기본값 중심 구현
         let strength = pillars.strength_with_config(config);
-        
+
         ThemedAnalysis {
             career: CareerAnalysis {
                 score: 75,

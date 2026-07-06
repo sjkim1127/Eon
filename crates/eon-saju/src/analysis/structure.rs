@@ -162,7 +162,9 @@ impl StructureAnalysis {
         let mut hwagi_result = None;
         let adjacent_stems = [("월간", pillars.month.stem), ("시간", pillars.hour.stem)];
         for (path, stem_on_top) in &adjacent_stems {
-            if let Some(combo) = crate::analysis::relationships::StemCombination::check(dm, *stem_on_top) {
+            if let Some(combo) =
+                crate::analysis::relationships::StemCombination::check(dm, *stem_on_top)
+            {
                 let transformed_elem = combo.transformed_element();
                 if month_branch.element() == transformed_elem {
                     hwagi_result = Some((path, combo, transformed_elem, *stem_on_top));
@@ -370,4 +372,3 @@ impl Analyzable for StructureAnalysis {
         StructureAnalysis::from_pillars_with_config(pillars, config)
     }
 }
-
