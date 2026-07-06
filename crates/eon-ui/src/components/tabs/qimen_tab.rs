@@ -1,6 +1,6 @@
+use crate::i18n::{t, TK};
 use crate::store::{AnalysisState, TaskStatus};
 use dioxus::prelude::*;
-use crate::i18n::{t, TK, Locale};
 
 #[component]
 pub fn QimenTab() -> Element {

@@ -2,10 +2,9 @@ use dioxus::prelude::*;
 
 use crate::components::layout::AppLayout;
 use crate::components::tabs::{
-    human_design_tab::HumanDesignTab, iching_tab::IChingTab, saju_tab::SajuTab,
-    simulation_tab::SimulationTab, strength_tab::StrengthTab, tier_tab::TierTab,
+    human_design_tab::HumanDesignTab, iching_tab::IChingTab, qimen_tab::QimenTab,
+    saju_tab::SajuTab, simulation_tab::SimulationTab, strength_tab::StrengthTab, tier_tab::TierTab,
     transit_tab::TransitTab, vedic_tab::VedicTab, western_tab::WesternTab, zwds_tab::ZwdsTab,
-    qimen_tab::QimenTab,
 };
 
 #[derive(Clone, Routable, Debug, PartialEq)]

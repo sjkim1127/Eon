@@ -1,18 +1,20 @@
 use crate::birth::prepare_birth_context;
 use crate::dto::{AnalysisMeta, BirthTimePrecision, QimenAnalysisInput, QimenAnalysisOutput};
 use crate::error::ServiceError;
+use eon_core::Gender;
 use eon_qimen::analysis::report::QimenAnalysisReport;
 use eon_qimen::core::QimenPan;
 use eon_saju::core::ganzi::GanZi;
-use eon_core::Gender;
 
-use eon_saju::core::stem::HeavenlyStem;
 use eon_saju::core::branch::EarthlyBranch;
+use eon_saju::core::stem::HeavenlyStem;
 
-pub fn analyze_qimen(
-    input: QimenAnalysisInput,
-) -> Result<QimenAnalysisOutput, ServiceError> {
-    let gender = if input.is_male { Gender::Male } else { Gender::Female };
+pub fn analyze_qimen(input: QimenAnalysisInput) -> Result<QimenAnalysisOutput, ServiceError> {
+    let gender = if input.is_male {
+        Gender::Male
+    } else {
+        Gender::Female
+    };
     let birth_ctx = prepare_birth_context(&input.base, Some(gender), true)?;
     let dt = birth_ctx
         .birth_info
@@ -26,8 +28,8 @@ pub fn analyze_qimen(
     let pan = QimenPan {
         time: dt,
         hour_pillar: GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi), // 갑자(JiaZi) 더미
-        is_yin_ju: true, // 둔국 더미
-        ju_number: 1,    // 국수 더미
+        is_yin_ju: true,                                               // 둔국 더미
+        ju_number: 1,                                                  // 국수 더미
     };
 
     let report = QimenAnalysisReport::generate(pan);

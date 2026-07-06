@@ -1,5 +1,5 @@
-use crate::planets::VedicPlanet;
 use crate::core::chart::VedicChart;
+use crate::planets::VedicPlanet;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -254,23 +254,29 @@ impl VimshottariDasha {
         for maha in timeline.iter_mut() {
             let maha_lord = maha.lord;
             let maha_pos = chart.planets.iter().find(|p| p.planet == maha_lord);
-            
+
             if let Some(pos) = maha_pos {
                 let house = pos.house_index;
                 let is_exalted = pos.rasi == maha_lord.exaltation_rasi();
                 let is_debilitated = pos.rasi == maha_lord.debilitation_rasi();
                 let is_own = VedicPlanet::get_ruler_of(pos.rasi) == maha_lord;
-                
+
                 let (favorable, dignity_desc) = if is_exalted {
                     (true, "고양(Exalted)되어 매우 강한 긍정적 힘을 발휘합니다.")
                 } else if is_own {
-                    (true, "본연의 별자리(Own House)에 있어 안정적이고 긍정적입니다.")
+                    (
+                        true,
+                        "본연의 별자리(Own House)에 있어 안정적이고 긍정적입니다.",
+                    )
                 } else if is_debilitated {
-                    (false, "쇠락(Debilitated)하여 에너지가 약화되고 도전 과제가 주어집니다.")
+                    (
+                        false,
+                        "쇠락(Debilitated)하여 에너지가 약화되고 도전 과제가 주어집니다.",
+                    )
                 } else {
                     (true, "일반적인 상태로 본연의 역할을 수행합니다.")
                 };
-                
+
                 let theme = match house {
                     1 => "자아 성장, 건강, 새로운 시작",
                     2 => "재물, 가족, 언어, 가치관",
@@ -301,19 +307,31 @@ impl VimshottariDasha {
                 };
 
                 maha.is_favorable = Some(favorable);
-                maha.interpretation = Some(format!(
-                    "[{}] 이 시기는 {}하우스의 테마({})가 두드러집니다. 행성이 {} {}",
-                    lord_desc, house, theme, dignity_desc,
-                    if !favorable { "어려움을 극복하는 지혜가 필요합니다." } else { "" }
-                ).trim().to_string());
+                maha.interpretation = Some(
+                    format!(
+                        "[{}] 이 시기는 {}하우스의 테마({})가 두드러집니다. 행성이 {} {}",
+                        lord_desc,
+                        house,
+                        theme,
+                        dignity_desc,
+                        if !favorable {
+                            "어려움을 극복하는 지혜가 필요합니다."
+                        } else {
+                            ""
+                        }
+                    )
+                    .trim()
+                    .to_string(),
+                );
 
                 for antar in maha.sub_dashas.iter_mut() {
                     let antar_lord = antar.lord;
                     let antar_pos = chart.planets.iter().find(|p| p.planet == antar_lord);
-                    
+
                     if let Some(a_pos) = antar_pos {
-                        let diff = (a_pos.house_index as i32 - pos.house_index as i32).rem_euclid(12) + 1;
-                        
+                        let diff =
+                            (a_pos.house_index as i32 - pos.house_index as i32).rem_euclid(12) + 1;
+
                         let (a_favorable, rel_desc) = match diff {
                             1 | 5 | 9 => (true, "대운과 소운 행성이 1/5/9 트리콘(Trikona) 조화로운 관계에 있어 발전과 행운이 따릅니다."),
                             3 | 11 => (true, "노력에 따른 성과와 인맥 확장이 이루어집니다."),
@@ -338,11 +356,20 @@ impl VimshottariDasha {
                         };
 
                         antar.is_favorable = Some(favorable && a_favorable);
-                        antar.interpretation = Some(format!(
-                            "{}의 분위기 속에서 {}. {}",
-                            a_lord_desc, rel_desc,
-                            if !a_favorable { "돌발적인 변화에 대비하고 무리한 확장을 자제하는 것이 좋습니다." } else { "" }
-                        ).trim().to_string());
+                        antar.interpretation = Some(
+                            format!(
+                                "{}의 분위기 속에서 {}. {}",
+                                a_lord_desc,
+                                rel_desc,
+                                if !a_favorable {
+                                    "돌발적인 변화에 대비하고 무리한 확장을 자제하는 것이 좋습니다."
+                                } else {
+                                    ""
+                                }
+                            )
+                            .trim()
+                            .to_string(),
+                        );
                     }
                 }
             }

@@ -1,6 +1,6 @@
 // crates/eon-ui/src/components/tabs/human_design_tab.rs
 use crate::components::shared::birth_form::BirthForm;
-use crate::i18n::{t, translate_hd_authority, translate_hd_center, translate_hd_type, Locale, TK};
+use crate::i18n::{t, translate_hd_authority, translate_hd_center, translate_hd_type, TK};
 use crate::store::{AnalysisState, TaskStatus};
 use dioxus::prelude::*;
 use eon_service::dto::HumanDesignAnalysisInput;
@@ -222,19 +222,19 @@ pub fn HumanDesignTab() -> Element {
                                                         "-".to_string()
                                                     };
                                                     let p_name = match p {
-                                                        "Sun" => match locale { Locale::Ko => "태양 (Sun)", _ => "Sun" },
-                                                        "Earth" => match locale { Locale::Ko => "지구 (Earth)", _ => "Earth" },
-                                                        "Moon" => match locale { Locale::Ko => "달 (Moon)", _ => "Moon" },
-                                                        "NorthNode" => match locale { Locale::Ko => "북교점 (North Node)", _ => "North Node" },
-                                                        "SouthNode" => match locale { Locale::Ko => "남교점 (South Node)", _ => "South Node" },
-                                                        "Mercury" => match locale { Locale::Ko => "수성 (Mercury)", _ => "Mercury" },
-                                                        "Venus" => match locale { Locale::Ko => "금성 (Venus)", _ => "Venus" },
-                                                        "Mars" => match locale { Locale::Ko => "화성 (Mars)", _ => "Mars" },
-                                                        "Jupiter" => match locale { Locale::Ko => "목성 (Jupiter)", _ => "Jupiter" },
-                                                        "Saturn" => match locale { Locale::Ko => "토성 (Saturn)", _ => "Saturn" },
-                                                        "Uranus" => match locale { Locale::Ko => "천왕성 (Uranus)", _ => "Uranus" },
-                                                        "Neptune" => match locale { Locale::Ko => "해왕성 (Neptune)", _ => "Neptune" },
-                                                        "Pluto" => match locale { Locale::Ko => "명왕성 (Pluto)", _ => "Pluto" },
+                                                        "Sun" => t(locale, TK::WestPlanetSun),
+                                                        "Earth" => t(locale, TK::WestPlanetEarth),
+                                                        "Moon" => t(locale, TK::WestPlanetMoon),
+                                                        "NorthNode" => t(locale, TK::WestNodeNorth),
+                                                        "SouthNode" => t(locale, TK::WestNodeSouth),
+                                                        "Mercury" => t(locale, TK::WestPlanetMercury),
+                                                        "Venus" => t(locale, TK::WestPlanetVenus),
+                                                        "Mars" => t(locale, TK::WestPlanetMars),
+                                                        "Jupiter" => t(locale, TK::WestPlanetJupiter),
+                                                        "Saturn" => t(locale, TK::WestPlanetSaturn),
+                                                        "Uranus" => t(locale, TK::WestPlanetUranus),
+                                                        "Neptune" => t(locale, TK::WestPlanetNeptune),
+                                                        "Pluto" => t(locale, TK::WestPlanetPluto),
                                                         _ => p,
                                                     };
                                                     rsx! {
@@ -268,19 +268,19 @@ pub fn HumanDesignTab() -> Element {
                                                         "-".to_string()
                                                     };
                                                     let p_name = match p {
-                                                        "Sun" => match locale { Locale::Ko => "태양 (Sun)", _ => "Sun" },
-                                                        "Earth" => match locale { Locale::Ko => "지구 (Earth)", _ => "Earth" },
-                                                        "Moon" => match locale { Locale::Ko => "달 (Moon)", _ => "Moon" },
-                                                        "NorthNode" => match locale { Locale::Ko => "북교점 (North Node)", _ => "North Node" },
-                                                        "SouthNode" => match locale { Locale::Ko => "남교점 (South Node)", _ => "South Node" },
-                                                        "Mercury" => match locale { Locale::Ko => "수성 (Mercury)", _ => "Mercury" },
-                                                        "Venus" => match locale { Locale::Ko => "금성 (Venus)", _ => "Venus" },
-                                                        "Mars" => match locale { Locale::Ko => "화성 (Mars)", _ => "Mars" },
-                                                        "Jupiter" => match locale { Locale::Ko => "목성 (Jupiter)", _ => "Jupiter" },
-                                                        "Saturn" => match locale { Locale::Ko => "토성 (Saturn)", _ => "Saturn" },
-                                                        "Uranus" => match locale { Locale::Ko => "천왕성 (Uranus)", _ => "Uranus" },
-                                                        "Neptune" => match locale { Locale::Ko => "해왕성 (Neptune)", _ => "Neptune" },
-                                                        "Pluto" => match locale { Locale::Ko => "명왕성 (Pluto)", _ => "Pluto" },
+                                                        "Sun" => t(locale, TK::WestPlanetSun),
+                                                        "Earth" => t(locale, TK::WestPlanetEarth),
+                                                        "Moon" => t(locale, TK::WestPlanetMoon),
+                                                        "NorthNode" => t(locale, TK::WestNodeNorth),
+                                                        "SouthNode" => t(locale, TK::WestNodeSouth),
+                                                        "Mercury" => t(locale, TK::WestPlanetMercury),
+                                                        "Venus" => t(locale, TK::WestPlanetVenus),
+                                                        "Mars" => t(locale, TK::WestPlanetMars),
+                                                        "Jupiter" => t(locale, TK::WestPlanetJupiter),
+                                                        "Saturn" => t(locale, TK::WestPlanetSaturn),
+                                                        "Uranus" => t(locale, TK::WestPlanetUranus),
+                                                        "Neptune" => t(locale, TK::WestPlanetNeptune),
+                                                        "Pluto" => t(locale, TK::WestPlanetPluto),
                                                         _ => p,
                                                     };
                                                     rsx! {

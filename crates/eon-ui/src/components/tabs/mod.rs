@@ -1,5 +1,6 @@
 pub mod human_design_tab;
 pub mod iching_tab;
+pub mod qimen_tab;
 pub mod saju_tab;
 pub mod simulation_tab;
 pub mod strength_tab;
@@ -8,4 +9,3 @@ pub mod transit_tab;
 pub mod vedic_tab;
 pub mod western_tab;
 pub mod zwds_tab;
-pub mod qimen_tab;

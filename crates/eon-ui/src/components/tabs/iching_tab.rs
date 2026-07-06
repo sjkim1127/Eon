@@ -84,14 +84,14 @@ pub fn IChingTab() -> Element {
                                 let form_cloned = state.form.read().clone();
                                 let btn_text = if *copied_feedback.read() {
                                     match locale {
-                                        Locale::Ko => "복사 완료! (Copied!)",
+                                        Locale::Ko => "{t(locale, TK::IchingCopied)}",
                                         Locale::En => "Copied!",
                                         Locale::Zh => "复制成功!",
                                         Locale::Ru => "Скопировано!",
                                     }
                                 } else {
                                     match locale {
-                                        Locale::Ko => "📋 보고서 복사",
+                                        Locale::Ko => "{t(locale, TK::IchingCopyReport)}",
                                         Locale::En => "Copy Report",
                                         Locale::Zh => "复制报告",
                                         Locale::Ru => "Копировать отчет",
@@ -204,11 +204,11 @@ pub fn IChingTab() -> Element {
 
                         // 체용 관계 해설 텍스트 생성
                         let ti_yong_rel_text = match res.ti_yong.relationship {
-                            ElementRelation::Same => "체(體)와 용(用)이 비화(比和)하여 내외의 역량이 조화를 이루고, 하는 일마다 막힘없이 순조롭게 번창하는 격국입니다. (吉)",
-                            ElementRelation::Generates => "내(體)가 환경(用)을 도와주거나 설기(洩氣)하니, 겉으로는 힘을 쓰나 내실이 부족할 수 있어 기력 낭비를 조심해야 합니다. (平)",
-                            ElementRelation::GeneratedBy => "환경(用)이 나(體)를 상생(相生)하여 든든히 뒷받침해주니, 생각지 못한 은인과 귀인의 원조를 통해 크게 성취하는 격국입니다. (大吉)",
-                            ElementRelation::Controls => "내(體)가 환경(用)을 극(剋)하여 주도권을 잡으니, 장애를 극복하고 스스로의 힘으로 성취를 쟁취하며 재물을 성실히 축적합니다. (吉)",
-                            ElementRelation::ControlledBy => "환경(用)이 나(體)를 극(剋)해와 사방의 억압이 심하니, 주위의 고난과 방해가 잦아 인내와 각별한 신중함이 요구되는 격국입니다. (凶)",
+                            ElementRelation::Same => "{t(locale, TK::IchingTiYongBiHe)}",
+                            ElementRelation::Generates => "{t(locale, TK::IchingTiHelpsYong)}",
+                            ElementRelation::GeneratedBy => "{t(locale, TK::IchingYongHelpsTi)}",
+                            ElementRelation::Controls => "{t(locale, TK::IchingTiControlsYong)}",
+                            ElementRelation::ControlledBy => "{t(locale, TK::IchingYongControlsTi)}",
                         };
 
                         // 현재 선택된 나이에 따른 유년괘 추출
@@ -224,16 +224,16 @@ pub fn IChingTab() -> Element {
                                             span { class: "text-xs font-bold text-violet-400 tracking-wider uppercase", "{t(locale, TK::IChingYuanQi)}" }
                                             h4 { class: "text-xl font-black text-slate-100 flex items-center gap-2",
                                                 if res.yuan_qi {
-                                                    span { class: "text-emerald-400", "得元氣 (득원기)" }
+                                                    span { class: "text-emerald-400", "{t(locale, TK::IchingGetYuanQi)}" }
                                                 } else {
-                                                    span { class: "text-slate-400", "失元氣 (실원기)" }
+                                                    span { class: "text-slate-400", "{t(locale, TK::IchingLoseYuanQi)}" }
                                                 }
                                             }
                                             p { class: "text-xs text-slate-400 leading-relaxed",
                                                 if res.yuan_qi {
-                                                    "출생 연도의 납음(納音) 오행과 평생 본명괘의 오행이 상생 또는 비화되어, 하늘의 원천적인 기운과 큰 지지를 얻었습니다."
+                                                    "{t(locale, TK::IchingSourceGood)}"
                                                 } else {
-                                                    "원천적 상생 기운은 다소 아쉬우나, 후천적 노력을 통해 자신의 고유한 운명을 개척해나갈 수 있습니다."
+                                                    "{t(locale, TK::IchingSourceBad)}"
                                                 }
                                             }
                                         }
@@ -248,16 +248,16 @@ pub fn IChingTab() -> Element {
                                             span { class: "text-xs font-bold text-indigo-400 tracking-wider uppercase", "{t(locale, TK::IChingHuaGong)}" }
                                             h4 { class: "text-xl font-black text-slate-100 flex items-center gap-2",
                                                 if res.hua_gong {
-                                                    span { class: "text-emerald-400", "得化工 (득화공)" }
+                                                    span { class: "text-emerald-400", "{t(locale, TK::IchingGetHuaGong)}" }
                                                 } else {
-                                                    span { class: "text-slate-400", "失化工 (실화공)" }
+                                                    span { class: "text-slate-400", "{t(locale, TK::IchingLoseHuaGong)}" }
                                                 }
                                             }
                                             p { class: "text-xs text-slate-400 leading-relaxed",
                                                 if res.hua_gong {
-                                                    "태어난 계절의 기운(월지)에 맞춰 본명괘가 힘과 지지(旺/相)를 얻어, 계절의 조화와 환경의 귀한 기회를 득했습니다."
+                                                    "{t(locale, TK::IchingSeasonGood)}"
                                                 } else {
-                                                    "계절의 조화는 득하지 못했으나, 주변 인덕과 환경의 변화를 슬기롭게 포착하여 발전할 수 있습니다."
+                                                    "{t(locale, TK::IchingSeasonBad)}"
                                                 }
                                             }
                                         }
@@ -279,7 +279,7 @@ pub fn IChingTab() -> Element {
                                                     "{t(locale, TK::IChingPreNatal)}"
                                                 }
                                                 span { class: "text-xs bg-violet-500/10 text-violet-300 px-2 py-0.5 rounded-full border border-violet-500/20 font-semibold",
-                                                    "본괘 {res.pre_natal_hexagram}"
+                                                    {t(locale, TK::IchingPreNatal).replace("{}", &res.pre_natal_hexagram.to_string())}
                                                 }
                                             }
 
@@ -343,7 +343,7 @@ pub fn IChingTab() -> Element {
                                                                 }
                                                             }
                                                             span { class: "absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400",
-                                                                "{line_num} 효"
+                                                                {t(locale, TK::IchingLineNum).replace("{}", &line_num.to_string())}
                                                             }
                                                         }
                                                     }
@@ -359,7 +359,7 @@ pub fn IChingTab() -> Element {
                                                     "{t(locale, TK::IChingPostNatal)}"
                                                 }
                                                 span { class: "text-xs bg-indigo-500/10 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/20 font-semibold",
-                                                    "본괘 {res.post_natal_hexagram}"
+                                                    {t(locale, TK::IchingPostNatal).replace("{}", &res.post_natal_hexagram.to_string())}
                                                 }
                                             }
 
@@ -402,7 +402,7 @@ pub fn IChingTab() -> Element {
                                                                 }
                                                             }}
                                                             span { class: "absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400",
-                                                                "{line_num} 효"
+                                                                {t(locale, TK::IchingLineNum).replace("{}", &line_num.to_string())}
                                                             }
                                                         }
                                                     }
@@ -425,11 +425,11 @@ pub fn IChingTab() -> Element {
                                                     }
                                                     span { class: "text-slate-600", "|" }
                                                     span { class: "text-xs font-bold text-slate-450",
-                                                        "{active_line_idx} 효 선택됨"
+                                                        {t(locale, TK::IchingLineSelected).replace("{}", &active_line_idx.to_string())}
                                                     }
                                                     if is_active_yuan_dang {
                                                         span { class: "px-1.5 py-0.5 text-[9px] font-black text-amber-450 bg-amber-950/50 rounded border border-amber-500/20",
-                                                            "원당효"
+                                                            "{t(locale, TK::IchingYuanDang)}"
                                                         }
                                                     }
                                                 }
@@ -446,11 +446,11 @@ pub fn IChingTab() -> Element {
                                             div { class: "p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 space-y-2",
                                                 h5 { class: "text-xs font-black text-slate-300 tracking-wide flex items-center gap-1.5",
                                                     span { "⚖️" }
-                                                    "체용(體用) 분석"
+                                                    "{t(locale, TK::IchingTiYongAnalysis)}"
                                                 }
                                                 div { class: "flex gap-4 text-xs font-bold text-slate-200 py-1 border-b border-slate-800/60",
-                                                    span { "체(體): {res.ti_yong.ti_element.hangul()}({res.ti_yong.ti_element.hanja()})" }
-                                                    span { "용(用): {res.ti_yong.yong_element.hangul()}({res.ti_yong.yong_element.hanja()})" }
+                                                    span { {t(locale, TK::IchingTiElement).replace("{}", res.ti_yong.ti_element.hangul()).replace("{}", res.ti_yong.ti_element.hanja())} }
+                                                    span { {t(locale, TK::IchingYongElement).replace("{}", res.ti_yong.yong_element.hangul()).replace("{}", res.ti_yong.yong_element.hanja())} }
                                                 }
                                                 p { class: "text-xs text-slate-400 leading-relaxed", "{ti_yong_rel_text}" }
                                             }
@@ -470,26 +470,26 @@ pub fn IChingTab() -> Element {
                                                 // 납갑 & 신살 정보 바 렌더링
                                                 div { class: "flex flex-wrap gap-2 text-[10px] pb-2 border-b border-slate-800/50",
                                                     span { class: "px-2 py-0.5 rounded bg-slate-850 text-slate-300 font-bold",
-                                                        "납갑: {active_najia.stem.hanja()}{active_najia.branch.hanja()} ({active_najia.stem.hangul()}{active_najia.branch.hangul()})"
+                                                        {t(locale, TK::IchingNajia).replace("{}", active_najia.stem.hanja()).replace("{}", active_najia.branch.hanja())}
                                                     }
                                                     if active_shinsal.is_noble {
                                                         span { class: "px-2 py-0.5 rounded bg-emerald-950/50 text-emerald-450 border border-emerald-900/60 font-bold",
-                                                            "✨ 귀인"
+                                                            "{t(locale, TK::IchingNoble)}"
                                                         }
                                                     }
                                                     if active_shinsal.is_void {
                                                         span { class: "px-2 py-0.5 rounded bg-rose-950/50 text-rose-450 border border-rose-900/60 font-bold",
-                                                            "🕳️ 공망"
+                                                            "{t(locale, TK::IchingVoid)}"
                                                         }
                                                     }
                                                     if active_shinsal.is_rok {
                                                         span { class: "px-2 py-0.5 rounded bg-amber-950/50 text-amber-450 border border-amber-900/60 font-bold",
-                                                            "💰 록"
+                                                            "{t(locale, TK::IchingLu)}"
                                                         }
                                                     }
                                                     if active_shinsal.is_horse {
                                                         span { class: "px-2 py-0.5 rounded bg-blue-950/50 text-blue-450 border border-blue-900/60 font-bold",
-                                                            "🐎 역마"
+                                                            "{t(locale, TK::IchingHorse)}"
                                                         }
                                                     }
                                                 }
@@ -552,7 +552,7 @@ pub fn IChingTab() -> Element {
                                                                     div { class: "flex items-center gap-2",
                                                                         span { class: "text-xs text-slate-400", "{line_name}" }
                                                                         span { class: "text-[10px] px-1 py-0.2 bg-slate-800 text-slate-500 rounded font-medium",
-                                                                            if cycle.is_pre_natal { "선천" } else { "후천" }
+                                                                            if cycle.is_pre_natal { "{t(locale, TK::IchingPrenatalLabel)}" } else { "{t(locale, TK::IchingPostnatalLabel)}" }
                                                                         }
                                                                     }
                                                                 }
@@ -560,7 +560,7 @@ pub fn IChingTab() -> Element {
                                                             div { class: "flex items-center gap-2",
                                                                 if is_active_cycle {
                                                                     span { class: "text-[10px] font-black bg-gradient-to-r from-violet-500 to-indigo-500 text-white px-2 py-0.5 rounded-full border border-violet-400/20 animate-pulse tracking-wide",
-                                                                        "현재 주기"
+                                                                        "{t(locale, TK::IchingCurrentCycle)}"
                                                                     }
                                                                 }
                                                                 span { class: "text-slate-600 text-sm", "›" }
@@ -598,17 +598,17 @@ pub fn IChingTab() -> Element {
                                             div { class: "border-b border-slate-855 pb-4 space-y-2",
                                                 h3 { class: "text-lg font-bold text-slate-200 flex items-center gap-2",
                                                     span { "🌀" }
-                                                    "유년괘(流年卦) 세운 조회"
+                                                    "{t(locale, TK::IchingYearHexSearch)}"
                                                 }
                                                 p { class: "text-xs text-slate-400 leading-relaxed",
-                                                    "원당효부터 경과한 세수에 따라 매년 괘상의 1개 효가 동(動)하여 해당 세운의 유년괘를 형성합니다. 슬라이더를 통해 만나이별 세운의 변화를 조회해보세요."
+                                                    "{t(locale, TK::IchingYuanDangDesc)}"
                                                 }
                                             }
 
                                             // 나이 선택 슬라이더 위젯
                                             div { class: "p-4 rounded-2xl bg-slate-955/40 border border-slate-800/80 flex flex-col md:flex-row items-center gap-4 justify-between",
                                                 div { class: "flex items-center gap-2 w-full md:w-auto justify-between md:justify-start",
-                                                    span { class: "text-sm text-slate-400 font-medium", "연도 조절" }
+                                                    span { class: "text-sm text-slate-400 font-medium", "{t(locale, TK::IchingYearAdjust)}" }
                                                     div { class: "flex items-center gap-1.5",
                                                         button {
                                                             class: "w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700/60 font-bold text-slate-200 cursor-pointer flex items-center justify-center active:scale-90 transition-transform",
@@ -619,7 +619,7 @@ pub fn IChingTab() -> Element {
                                                             "−"
                                                         }
                                                         span { class: "px-4 py-1.5 rounded-xl bg-slate-900 border border-slate-850 font-black text-lg text-violet-400 min-w-[70px] text-center",
-                                                            "{selected_age} 세"
+                                                            {t(locale, TK::IchingAgeVal).replace("{}", &selected_age.to_string())}
                                                         }
                                                         button {
                                                             class: "w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700/60 font-bold text-slate-200 cursor-pointer flex items-center justify-center active:scale-90 transition-transform",
@@ -679,7 +679,7 @@ pub fn IChingTab() -> Element {
                                                                     }}
                                                                     if is_yearly_change_line {
                                                                         span { class: "absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2 text-[8px] font-black text-yellow-300 bg-slate-900/90 px-1 py-0.2 rounded border border-yellow-500/20 tracking-wider scale-90",
-                                                                            "동(動)"
+                                                                            "{t(locale, TK::IchingDong)}"
                                                                         }
                                                                     }
                                                                 }
@@ -691,7 +691,7 @@ pub fn IChingTab() -> Element {
                                                     div { class: "space-y-1.5 text-center md:text-left flex-1",
                                                         div { class: "flex items-center justify-center md:justify-start gap-1 text-[10px] font-bold text-violet-400",
                                                             span { "🎯" }
-                                                            "{selected_age}세 유년괘"
+                                                            {t(locale, TK::IchingAgeYearHex).replace("{}", &selected_age.to_string())}
                                                         }
                                                         h4 { class: "text-2xl font-black text-slate-100 flex items-baseline justify-center md:justify-start gap-2",
                                                             "{yh_name}"
@@ -699,7 +699,7 @@ pub fn IChingTab() -> Element {
                                                         }
                                                         p { class: "text-xs text-slate-400 leading-relaxed", "{yh_hex.desc_ko}" }
                                                         div { class: "text-[10px] text-yellow-450 font-bold bg-yellow-950/20 border border-yellow-900/30 px-2.5 py-1 rounded-lg inline-block",
-                                                            "올해는 {yh.yearly_line}효가 동(動)하여 대변동을 주도합니다."
+                                                            {t(locale, TK::IchingYearlyDong).replace("{}", &yh.yearly_line.to_string())}
                                                         }
                                                     }
                                                 }
@@ -709,9 +709,9 @@ pub fn IChingTab() -> Element {
                                                     div { class: "flex justify-between items-center border-b border-slate-855 pb-2",
                                                         h4 { class: "text-xs font-bold text-slate-300 tracking-wide flex items-center gap-1.5",
                                                             span { "🌙" }
-                                                            "음력 12개월 유월괘(流月卦) 흐름"
+                                                            "{t(locale, TK::IchingLunar12Months)}"
                                                         }
-                                                        span { class: "text-[10px] text-slate-500", "정월(1월) = 유년괘 변효 {yh.yearly_line}효 기점" }
+                                                        span { class: "text-[10px] text-slate-500", {t(locale, TK::IchingJanStart).replace("{}", &yh.yearly_line.to_string())} }
                                                     }
 
                                                     // 12개월의 유월괘 그리드 렌더링
@@ -728,7 +728,7 @@ pub fn IChingTab() -> Element {
                                                                 div {
                                                                     key: "m-{idx}",
                                                                     class: "p-2 rounded-lg bg-slate-900 border border-slate-850 text-center hover:border-violet-500/20 hover:bg-slate-850/50 transition-colors flex flex-col items-center justify-center gap-1",
-                                                                    span { class: "text-[10px] font-black text-slate-500", "{idx + 1}월" }
+                                                                    span { class: "text-[10px] font-black text-slate-500", {t(locale, TK::IchingMonth).replace("{}", &(idx + 1).to_string())} }
                                                                     span { class: "font-black text-slate-200 text-xs tracking-tight", "{m_name}" }
                                                                     span { class: "text-[9px] text-slate-500 font-medium", "{m_hex.hanja}" }
                                                                 }
@@ -745,7 +745,7 @@ pub fn IChingTab() -> Element {
                     } else {
                         rsx! {
                             div { class: "p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400",
-                                "데이터가 비어 있습니다."
+                                "{t(locale, TK::IchingDataEmpty)}"
                             }
                         }
                     }

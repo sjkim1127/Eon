@@ -204,7 +204,7 @@ pub fn SajuTab() -> Element {
                             (data.report.pillars.year.stem, TK::SajuYearStem, TK::SajuYearPillar),
                         ];
 
-                        for &(branch, is_month, b_pos_tk, b_pillar_tk) in &branch_positions {
+                        for &(branch, is_month, b_pos_tk, _b_pillar_tk) in &branch_positions {
                             for j_item in get_jijanggan_items(branch) {
                                 for &(t_stem, t_pos_tk, _t_pillar_tk) in &target_stems {
                                     if j_item.stem == t_stem {
@@ -373,7 +373,7 @@ pub fn SajuTab() -> Element {
                                             };
                                             let pos_branch_name = t(locale, b_pos_tk);
                                             let pos_stem_name = t(locale, t_pos_tk);
-                                            
+
                                             let stem_trans = translate_saju_stem(locale, stem);
                                             let ten_god_trans = translate_saju_ten_god(locale, ten_god);
                                             let stage_desc = match locale {

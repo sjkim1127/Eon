@@ -82,7 +82,7 @@ pub fn ZwdsTab() -> Element {
                     }
                     p { class: "text-sm text-slate-400 font-medium",
                         match locale {
-                            Locale::Ko => "자미두수 성반을 분석하고 대한 및 유년 운세를 도출합니다.",
+                            Locale::Ko => "{t(locale, TK::ZwdsAnalyzeDesc)}",
                             Locale::Zh => "分析紫微斗数命盘，推算大限及流年运势。",
                             Locale::En => "Analyze ZWDS chart, deduce Da-Xian and Liu-Nian fortunes.",
                             Locale::Ru => "Анализ карты Цзы Вэй Доу Шу, расчет периодов Да-Сянь и Лю-Нянь.",
@@ -95,7 +95,7 @@ pub fn ZwdsTab() -> Element {
                     div { class: "flex items-center bg-slate-950/80 border border-slate-800/80 px-3 py-1.5 rounded-xl gap-2",
                         span { class: "text-xs font-bold text-slate-400 uppercase tracking-wider",
                             match locale {
-                                Locale::Ko => "대상 연도",
+                                Locale::Ko => "{t(locale, TK::ZwdsTargetYear)}",
                                 Locale::Zh => "目标年份",
                                 Locale::En => "Target Year",
                                 Locale::Ru => "Целевой год",
@@ -107,7 +107,7 @@ pub fn ZwdsTab() -> Element {
                             "◀"
                         }
                         span { class: "text-sm font-bold text-violet-400 font-mono min-w-[3.5rem] text-center",
-                            "{target_year}년"
+                            {t(locale, TK::ZwdsTargetYearVal).replace("{}", &target_year.to_string())}
                         }
                         button {
                             class: "text-slate-400 hover:text-white transition-colors cursor-pointer text-xs font-bold px-1.5 py-0.5 hover:bg-slate-800 rounded-md",
@@ -483,7 +483,7 @@ fn PalaceCard(
     let daxian_palace_name = if let Some(ref dx) = current_daxian {
         let name = eon_zwds::palace::get_palace_name(dx.palace_idx, palace.index);
         let prefix = match locale {
-            Locale::Ko => "대",
+            Locale::Ko => "{t(locale, TK::ZwdsDaxianPrefix)}",
             Locale::Zh => "大",
             Locale::En => "D-",
             Locale::Ru => "Д-",
@@ -498,7 +498,7 @@ fn PalaceCard(
     let liunian_palace_name = if let Some(ref ln) = current_liu_nian {
         let name = eon_zwds::palace::get_palace_name(ln.palace_idx, palace.index);
         let prefix = match locale {
-            Locale::Ko => "유",
+            Locale::Ko => "{t(locale, TK::ZwdsLiuNianPrefix)}",
             Locale::Zh => "流",
             Locale::En => "A-",
             Locale::Ru => "Г-",
@@ -684,7 +684,7 @@ fn PalaceCard(
                     {
                         palace.daxian_range
                             .map(|r| {
-                                if locale == Locale::Ko { format!("{} - {}세", r.0, r.1) }
+                                if locale == Locale::Ko { t(locale, TK::ZwdsAgeRange).replace("{}", &r.0.to_string()).replace("{}", &r.1.to_string()) }
                                 else if locale == Locale::Zh { format!("{} - {}岁", r.0, r.1) }
                                 else if locale == Locale::Ru { format!("{} - {} лет", r.0, r.1) }
                                 else { format!("{} - {} yrs", r.0, r.1) }
@@ -719,14 +719,12 @@ fn CenterCard(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
     };
 
     let current_daxian_formatted = if locale == Locale::Ko {
-        format!(
-            "{}{}{} ({}-{}세)",
-            data.current_daxian.stem_hanja,
-            data.current_daxian.branch_hanja,
-            t(locale, TK::ZwdsDaxianSuffix),
-            data.current_daxian.age_start,
-            data.current_daxian.age_end
-        )
+        t(locale, TK::ZwdsDaxianPeriod)
+            .replace("{}", &data.current_daxian.stem_hanja)
+            .replace("{}", &data.current_daxian.branch_hanja)
+            .replace("{}", t(locale, TK::ZwdsDaxianSuffix))
+            .replace("{}", &data.current_daxian.age_start.to_string())
+            .replace("{}", &data.current_daxian.age_end.to_string())
     } else if locale == Locale::Zh {
         format!(
             "{}{}{} ({}-{}岁)",
@@ -800,7 +798,7 @@ fn CenterCard(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
                 if !chart.destiny_patterns.is_empty() {
                     div { class: "border-t border-slate-800/60 pt-3 space-y-2",
                         span { class: "text-[10px] text-slate-500 font-semibold tracking-wider uppercase block",
-                            if locale == Locale::Ko { "감지된 격국" }
+                            if locale == Locale::Ko { "{t(locale, TK::ZwdsDetectedPatterns)}" }
                             else if locale == Locale::Zh { "检测到的格局" }
                             else if locale == Locale::Ru { "Обнаруженные структуры" }
                             else { "Detected Patterns" }
@@ -880,7 +878,7 @@ fn DaXianSection(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
                         };
 
                         let daxian_title = if locale == Locale::Ko {
-                            format!("{} 대운", dx.index + 1)
+                            t(locale, TK::ZwdsDaxianName).replace("{}", &(dx.index + 1).to_string())
                         } else if locale == Locale::Zh {
                             format!("第 {} 大限", dx.index + 1)
                         } else if locale == Locale::Ru {
@@ -893,7 +891,7 @@ fn DaXianSection(data: eon_service::dto::ZwdsAnalysisOutput) -> Element {
                         let daxian_label = format!("{}{}{}", dx.stem_hanja, dx.branch_hanja, t(locale, TK::ZwdsDaxianSuffix));
 
                         let palace_label = if locale == Locale::Ko {
-                            format!("{}번 궁", dx.palace_idx)
+                            t(locale, TK::ZwdsPalaceNum).replace("{}", &dx.palace_idx.to_string())
                         } else if locale == Locale::Zh {
                             format!("{}号宫", dx.palace_idx)
                         } else if locale == Locale::Ru {
@@ -1032,7 +1030,7 @@ fn PalaceDetailModal(
                                         h4 { class: "text-xs font-black text-violet-300 uppercase tracking-wider flex items-center gap-2",
                                             span { "📖" }
                                             match locale {
-                                                Locale::Ko => "궁위 심층 분석 리딩 (Life Reading)",
+                                                Locale::Ko => "{t(locale, TK::ZwdsPalaceLifeReading)}",
                                                 Locale::Zh => "宫位深层分析命运导读",
                                                 Locale::En => "Palace Deep Destiny Reading",
                                                 Locale::Ru => "Глубокое толкование судьбы дворца",
@@ -1057,7 +1055,7 @@ fn PalaceDetailModal(
                             div { class: "space-y-3",
                                 h4 { class: "text-xs font-black text-slate-400 uppercase tracking-wider border-l-2 border-violet-500 pl-2",
                                     match locale {
-                                        Locale::Ko => "배치된 성계 (본궁)",
+                                        Locale::Ko => "{t(locale, TK::ZwdsMainStars)}",
                                         Locale::Zh => "本宫星曜",
                                         Locale::En => "Stars in Palace",
                                         Locale::Ru => "Звезды во дворце",
@@ -1066,7 +1064,7 @@ fn PalaceDetailModal(
                                 if palace.stars.is_empty() {
                                     div { class: "text-xs text-slate-500 italic p-4 bg-slate-950/20 rounded-xl border border-dashed border-slate-800 text-center",
                                         match locale {
-                                            Locale::Ko => "배치된 주요 성계가 없습니다. 대궁(천이궁)의 영향을 강하게 받습니다.",
+                                            Locale::Ko => "{t(locale, TK::ZwdsNoMainStars)}",
                                             Locale::Zh => "无主要星曜，受对宫（迁移）强烈影响",
                                             Locale::En => "No major stars. Heavily influenced by the opposite palace.",
                                             Locale::Ru => "Нет главных звезд. Сильно зависит от противоположного дворца.",
@@ -1107,7 +1105,7 @@ fn PalaceDetailModal(
                                                                     };
                                                                     rsx! {
                                                                         span { class: "px-1.5 py-0.5 rounded text-[9px] font-black border {bg}",
-                                                                            "선천 {sihua.emoji()}"
+                                                                            {t(locale, TK::ZwdsInnateSihua).replace("{}", sihua.emoji())}
                                                                         }
                                                                     }
                                                                 }
@@ -1139,7 +1137,7 @@ fn PalaceDetailModal(
                                     div { class: "space-y-3",
                                         h4 { class: "text-xs font-black text-slate-400 uppercase tracking-wider border-l-2 border-emerald-500 pl-2",
                                             match locale {
-                                                Locale::Ko => "궁간 비성사화 분석 (Palace Flying Stars)",
+                                                Locale::Ko => "{t(locale, TK::ZwdsFlyingStars)}",
                                                 Locale::Zh => "宫干飞星四化分析",
                                                 Locale::En => "Palace Flying Stars Analysis",
                                                 Locale::Ru => "Анализ Летящих Звезд Дворца",
@@ -1151,7 +1149,7 @@ fn PalaceDetailModal(
                                                 span { class: "text-[10px] text-emerald-400 font-bold flex items-center gap-1.5",
                                                     span { class: "w-1.5 h-1.5 rounded-full bg-emerald-500" }
                                                     match locale {
-                                                        Locale::Ko => "송출 사화 (Outbound)",
+                                                        Locale::Ko => "{t(locale, TK::ZwdsOutboundSihua)}",
                                                         Locale::Zh => "送出飞星 (向外)",
                                                         Locale::En => "Outbound Sihua",
                                                         Locale::Ru => "Исходящие Сихуа",
@@ -1190,7 +1188,7 @@ fn PalaceDetailModal(
                                                 span { class: "text-[10px] text-indigo-400 font-bold flex items-center gap-1.5",
                                                     span { class: "w-1.5 h-1.5 rounded-full bg-indigo-500" }
                                                     match locale {
-                                                        Locale::Ko => "유입 사화 (Inbound)",
+                                                        Locale::Ko => "{t(locale, TK::ZwdsInboundSihua)}",
                                                         Locale::Zh => "引入飞星 (向内)",
                                                         Locale::En => "Inbound Sihua",
                                                         Locale::Ru => "Входящие Сихуа",
@@ -1234,7 +1232,7 @@ fn PalaceDetailModal(
                             div { class: "w-full space-y-3",
                                 h4 { class: "text-xs font-black text-slate-400 uppercase tracking-wider border-l-2 border-indigo-500 pl-2",
                                     match locale {
-                                        Locale::Ko => "삼방사정 (三方四正) 맵",
+                                        Locale::Ko => "{t(locale, TK::ZwdsSanFangSiZheng)}",
                                         Locale::Zh => "三方四正图",
                                         Locale::En => "Three-Party & Four-Directions",
                                         Locale::Ru => "Схема влияний (Триада)",
@@ -1291,7 +1289,7 @@ fn PalaceDetailModal(
                             div { class: "w-full space-y-3.5 bg-slate-950/30 p-4 rounded-2xl border border-slate-850 shadow-inner",
                                 h5 { class: "text-[11px] font-black text-slate-400 tracking-wide uppercase border-b border-slate-850 pb-1.5",
                                     match locale {
-                                        Locale::Ko => "삼방사정 영향 성계",
+                                        Locale::Ko => "{t(locale, TK::ZwdsSanFangStars)}",
                                         Locale::Zh => "会照星曜",
                                         Locale::En => "Projected Stars",
                                         Locale::Ru => "Влияющие звезды",
@@ -1302,11 +1300,11 @@ fn PalaceDetailModal(
                                 div { class: "space-y-1",
                                     span { class: "text-[10px] text-fuchsia-400 font-bold flex items-center gap-1.5",
                                         span { class: "w-1.5 h-1.5 rounded-full bg-fuchsia-500" }
-                                        "{translate_zwds_palace(locale, opposite_palace.name)} (대궁)"
+                                        {t(locale, TK::ZwdsOppositePalace).replace("{}", &translate_zwds_palace(locale, opposite_palace.name).to_string())}
                                     }
                                     div { class: "flex flex-wrap gap-1 pl-3",
                                         if opposite_palace.stars.is_empty() {
-                                            span { class: "text-[10px] text-slate-600 italic", "배치성 없음" }
+                                            span { class: "text-[10px] text-slate-600 italic", "{t(locale, TK::ZwdsNoStars)}" }
                                         } else {
                                             {
                                                 opposite_palace.stars.iter().map(|s| {
@@ -1325,7 +1323,7 @@ fn PalaceDetailModal(
                                 div { class: "space-y-1",
                                     span { class: "text-[10px] text-indigo-400 font-bold flex items-center gap-1.5",
                                         span { class: "w-1.5 h-1.5 rounded-full bg-indigo-500" }
-                                        "{translate_zwds_palace(locale, triad1_palace.name)} (합궁)"
+                                        {t(locale, TK::ZwdsTriadPalace).replace("{}", &translate_zwds_palace(locale, triad1_palace.name).to_string())}
                                     }
                                     div { class: "flex flex-wrap gap-1 pl-3",
                                         if triad1_palace.stars.is_empty() {
@@ -1348,7 +1346,7 @@ fn PalaceDetailModal(
                                 div { class: "space-y-1",
                                     span { class: "text-[10px] text-indigo-400 font-bold flex items-center gap-1.5",
                                         span { class: "w-1.5 h-1.5 rounded-full bg-indigo-500" }
-                                        "{translate_zwds_palace(locale, triad2_palace.name)} (합궁)"
+                                        {t(locale, TK::ZwdsTriadPalace).replace("{}", &translate_zwds_palace(locale, triad2_palace.name).to_string())}
                                     }
                                     div { class: "flex flex-wrap gap-1 pl-3",
                                         if triad2_palace.stars.is_empty() {
@@ -1378,18 +1376,18 @@ fn PalaceDetailModal(
 fn get_palace_description(locale: Locale, name: eon_zwds::types::PalaceName) -> &'static str {
     match locale {
         Locale::Ko => match name {
-            eon_zwds::types::PalaceName::Ming => "명궁은 자아, 성격, 평생의 운명적 지향점과 선천적인 복덕을 상징합니다. 인생 전반의 방향성을 좌우하는 가장 중요한 궁입니다.",
-            eon_zwds::types::PalaceName::Xiongdi => "형제궁은 형제자매, 동료와의 관계, 협력 관계 및 재정적 동반자를 의미합니다.",
-            eon_zwds::types::PalaceName::Fuqi => "부처궁은 배우자와의 관계, 이상적인 배우자 상, 결혼 생활의 길흉을 의미합니다.",
-            eon_zwds::types::PalaceName::Zinv => "자녀궁은 자녀와의 유대감, 자손의 번창 여부, 창작 및 투자 기운을 나타냅니다.",
-            eon_zwds::types::PalaceName::Caibo => "재백궁은 재물을 버는 방식, 수입의 원천, 재정적 능력 및 소비 성향을 상징합니다.",
-            eon_zwds::types::PalaceName::Jie => "질액궁은 선천적인 건강 상태, 체질, 주의해야 할 질병 및 재난을 의미합니다.",
-            eon_zwds::types::PalaceName::Qianyi => "천이궁은 사회 활동, 타향/해외 이동, 대인관계에서의 외적인 모습과 여행 운을 나타냅니다.",
-            eon_zwds::types::PalaceName::Nupao => "노복궁은 부하 직원, 친구, 지인, 사회적 인맥과의 관계 및 인복을 의미합니다.",
-            eon_zwds::types::PalaceName::Guanlu => "관록궁은 직업적인 성취, 학업, 승진, 적합한 직업 분야 및 사회적 위상을 상징합니다.",
-            eon_zwds::types::PalaceName::Tianzhai => "전택궁은 부동산, 주거 환경, 가정의 평화 및 자산 축적 형태를 의미합니다.",
-            eon_zwds::types::PalaceName::Fude => "복덕궁은 정신세계, 취미, 영적인 성향, 내면의 행복감 및 노후의 편안함을 상징합니다.",
-            eon_zwds::types::PalaceName::Fumu => "부모궁은 부모님과의 관계, 윗사람이나 국가 기관의 덕, 학문 및 문서를 상징합니다.",
+            eon_zwds::types::PalaceName::Ming => "{t(locale, TK::ZwdsDescPalaceMing)}",
+            eon_zwds::types::PalaceName::Xiongdi => "{t(locale, TK::ZwdsDescPalaceXiongDi)}",
+            eon_zwds::types::PalaceName::Fuqi => "{t(locale, TK::ZwdsDescPalaceFuQi)}",
+            eon_zwds::types::PalaceName::Zinv => "{t(locale, TK::ZwdsDescPalaceZiNv)}",
+            eon_zwds::types::PalaceName::Caibo => "{t(locale, TK::ZwdsDescPalaceCaiBo)}",
+            eon_zwds::types::PalaceName::Jie => "{t(locale, TK::ZwdsDescPalaceJiE)}",
+            eon_zwds::types::PalaceName::Qianyi => "{t(locale, TK::ZwdsDescPalaceQianYi)}",
+            eon_zwds::types::PalaceName::Nupao => "{t(locale, TK::ZwdsDescPalaceJiaoYou)}",
+            eon_zwds::types::PalaceName::Guanlu => "{t(locale, TK::ZwdsDescPalaceGuanLu)}",
+            eon_zwds::types::PalaceName::Tianzhai => "{t(locale, TK::ZwdsDescPalaceTianZhai)}",
+            eon_zwds::types::PalaceName::Fude => "{t(locale, TK::ZwdsDescPalaceFuDe)}",
+            eon_zwds::types::PalaceName::Fumu => "{t(locale, TK::ZwdsDescPalaceFuMu)}",
         },
         Locale::Zh => match name {
             eon_zwds::types::PalaceName::Ming => "命宫代表自我、性格、一生的命运走向和先天福德。是决定人生大方向的最核心宫位。",
@@ -1425,70 +1423,36 @@ fn get_palace_description(locale: Locale, name: eon_zwds::types::PalaceName) -> 
 fn get_star_description(locale: Locale, star: eon_zwds::types::ZwdsStar) -> &'static str {
     match locale {
         Locale::Ko => match star {
-            ZwdsStar::ZiWei => "제왕의 별로 권위, 명예, 리더십, 품격을 상징합니다.",
-            ZwdsStar::TianJi => "기획과 지혜의 별로 계산, 분석, 총명함과 잦은 변화를 나타냅니다.",
-            ZwdsStar::TaiYang => "태양처럼 빛을 퍼뜨리며 명예, 열정, 공익, 부친/남편을 상징합니다.",
-            ZwdsStar::WuQu => "실질적인 재물과 결단력을 상징하는 강력한 금전의 재성(財星)입니다.",
-            ZwdsStar::TianTong => {
-                "안락함과 복덕을 상징하며, 온화하고 친화력이 풍부하지만 다소 나태할 수 있습니다."
-            }
-            ZwdsStar::LianZhen => {
-                "감정과 규율의 별로 강한 주관, 예술성, 도화 기질, 집념을 의미합니다."
-            }
-            ZwdsStar::TianFu => {
-                "안정적인 곳간을 의미하며 자산 보존, 보수적 성향, 포용력을 상징합니다."
-            }
-            ZwdsStar::TaiYin => "저축, 부동산, 모성애를 상징하며 부드럽고 섬세한 재성(財星)입니다.",
-            ZwdsStar::TanLang => {
-                "욕망, 사교성, 현실적인 예술 및 신비한 학문(역학)을 상징하는 도화성입니다."
-            }
-            ZwdsStar::JuMen => {
-                "말(言), 상세한 연구, 의심, 구설수를 뜻하며 깊은 탐구력을 나타냅니다."
-            }
-            ZwdsStar::TianXiang => {
-                "도장(인장)과 보필을 상징하며, 타인을 배려하고 품위와 조화를 유지합니다."
-            }
-            ZwdsStar::TianLiang => {
-                "보호와 천수를 상징하며 문제를 해결하고 아랫사람을 챙겨주는 장로의 성향입니다."
-            }
-            ZwdsStar::QiSha => {
-                "장수와 투지를 상징하며 강력한 돌파력, 추진력과 독립심, 고독을 뜻합니다."
-            }
-            ZwdsStar::PoJun => {
-                "개척과 파괴의 별로 기존 질서를 부수고 새로운 변화를 주도하는 혁명적 기운입니다."
-            }
+            ZwdsStar::ZiWei => "{t(locale, TK::ZwdsDescStarZiWei)}",
+            ZwdsStar::TianJi => "{t(locale, TK::ZwdsDescStarTianJi)}",
+            ZwdsStar::TaiYang => "{t(locale, TK::ZwdsDescStarTaiYang)}",
+            ZwdsStar::WuQu => "{t(locale, TK::ZwdsDescStarWuQu)}",
+            ZwdsStar::TianTong => "{t(locale, TK::ZwdsDescStarTianTong)}",
+            ZwdsStar::LianZhen => "{t(locale, TK::ZwdsDescStarLianZhen)}",
+            ZwdsStar::TianFu => "{t(locale, TK::ZwdsDescStarTianFu)}",
+            ZwdsStar::TaiYin => "{t(locale, TK::ZwdsDescStarTaiYin)}",
+            ZwdsStar::TanLang => "{t(locale, TK::ZwdsDescStarTanLang)}",
+            ZwdsStar::JuMen => "{t(locale, TK::ZwdsDescStarJuMen)}",
+            ZwdsStar::TianXiang => "{t(locale, TK::ZwdsDescStarTianXiang)}",
+            ZwdsStar::TianLiang => "{t(locale, TK::ZwdsDescStarTianLiang)}",
+            ZwdsStar::QiSha => "{t(locale, TK::ZwdsDescStarQiSha)}",
+            ZwdsStar::PoJun => "{t(locale, TK::ZwdsDescStarPoJun)}",
 
-            ZwdsStar::WenChang => "학문, 시험, 문서적 성취 및 이론적인 두뇌 능력을 돕습니다.",
-            ZwdsStar::WenQu => "예술적 재능, 감수성, 임기응변 및 실무적인 문예 재능을 돕습니다.",
-            ZwdsStar::ZuoFu => {
-                "주변 조력자와 귀인의 도움을 보조하여 매사 순조로운 흐름을 만듭니다."
-            }
-            ZwdsStar::YouBi => "보이지 않는 귀인의 조력과 중재를 상징하며 협력을 강하게 만듭니다.",
-            ZwdsStar::TianKui => "사회적인 기회와 공개적인 조력자가 등장하여 명예를 돕습니다.",
-            ZwdsStar::TianYue => {
-                "음덕과 예상치 못한 후원자, 귀인의 도움으로 위기를 돌파하게 합니다."
-            }
+            ZwdsStar::WenChang => "{t(locale, TK::ZwdsDescStarWenChang)}",
+            ZwdsStar::WenQu => "{t(locale, TK::ZwdsDescStarWenQu)}",
+            ZwdsStar::ZuoFu => "{t(locale, TK::ZwdsDescStarZuoFu)}",
+            ZwdsStar::YouBi => "{t(locale, TK::ZwdsDescStarYouBi)}",
+            ZwdsStar::TianKui => "{t(locale, TK::ZwdsDescStarTianKui)}",
+            ZwdsStar::TianYue => "{t(locale, TK::ZwdsDescStarTianYue)}",
 
-            ZwdsStar::LuCun => "선천적인 금전운과 녹봉을 나타내며 안정적인 현금 흐름을 보장합니다.",
-            ZwdsStar::QingYang => {
-                "강력한 경쟁심, 돌파력 및 때로는 부상이나 수술 등의 칼날을 상징합니다."
-            }
-            ZwdsStar::TuoLuo => {
-                "지연, 정체, 끈질김을 나타내며 보이지 않는 암초나 내면의 고민을 뜻합니다."
-            }
-            ZwdsStar::HuoXing => {
-                "빠른 행동력과 폭발성, 때로는 성급함으로 인한 손해나 화재를 뜻합니다."
-            }
-            ZwdsStar::LingXing => {
-                "내면의 열기, 암묵적인 노력, 스트레스와 급작스러운 이탈을 나타냅니다."
-            }
-            ZwdsStar::DiKong => {
-                "정신적인 지향, 공허함, 기존 상식을 벗어난 독창성과 물질적 상실을 상징합니다."
-            }
-            ZwdsStar::DiJie => {
-                "재정적 낭비, 예기치 못한 도난이나 소모, 기발한 발상과 정신적 깨달음을 의미합니다."
-            }
-            _ => "자미두수의 운명적 영향력을 지닌 잡성(雜星)입니다.",
+            ZwdsStar::LuCun => "{t(locale, TK::ZwdsDescStarLuCun)}",
+            ZwdsStar::QingYang => "{t(locale, TK::ZwdsDescStarQingYang)}",
+            ZwdsStar::TuoLuo => "{t(locale, TK::ZwdsDescStarTuoLuo)}",
+            ZwdsStar::HuoXing => "{t(locale, TK::ZwdsDescStarHuoXing)}",
+            ZwdsStar::LingXing => "{t(locale, TK::ZwdsDescStarLingXing)}",
+            ZwdsStar::DiKong => "{t(locale, TK::ZwdsDescStarDiKong)}",
+            ZwdsStar::DiJie => "{t(locale, TK::ZwdsDescStarDiJie)}",
+            _ => "{t(locale, TK::ZwdsMinorStarDesc)}",
         },
         Locale::Zh => match star {
             ZwdsStar::ZiWei => "帝王之星，象征权威、名誉、领导力和高贵品质。",

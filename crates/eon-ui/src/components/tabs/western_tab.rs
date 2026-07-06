@@ -8,114 +8,21 @@ use eon_service::facade;
 
 pub fn get_planet_emoji_and_name(name: &str, locale: Locale) -> (&'static str, String) {
     let (emoji, val) = match name {
-        "Sun" => (
-            "☀️",
-            match locale {
-                Locale::Ko => "태양 (Sun)",
-                Locale::Zh => "太阳",
-                Locale::Ru => "Солнце",
-                _ => "Sun",
-            },
-        ),
-        "Moon" => (
-            "🌙",
-            match locale {
-                Locale::Ko => "달 (Moon)",
-                Locale::Zh => "月亮",
-                Locale::Ru => "Луна",
-                _ => "Moon",
-            },
-        ),
-        "Mercury" => (
-            "☿",
-            match locale {
-                Locale::Ko => "수성 (Mercury)",
-                Locale::Zh => "水星",
-                Locale::Ru => "Меркурий",
-                _ => "Mercury",
-            },
-        ),
-        "Venus" => (
-            "♀",
-            match locale {
-                Locale::Ko => "금성 (Venus)",
-                Locale::Zh => "金星",
-                Locale::Ru => "Венера",
-                _ => "Venus",
-            },
-        ),
-        "Mars" => (
-            "♂",
-            match locale {
-                Locale::Ko => "화성 (Mars)",
-                Locale::Zh => "火星",
-                Locale::Ru => "Марс",
-                _ => "Mars",
-            },
-        ),
-        "Jupiter" => (
-            "♃",
-            match locale {
-                Locale::Ko => "목성 (Jupiter)",
-                Locale::Zh => "木星",
-                Locale::Ru => "Юпитер",
-                _ => "Jupiter",
-            },
-        ),
-        "Saturn" => (
-            "♄",
-            match locale {
-                Locale::Ko => "토성 (Saturn)",
-                Locale::Zh => "土星",
-                Locale::Ru => "Сатурн",
-                _ => "Saturn",
-            },
-        ),
-        "Uranus" => (
-            "♅",
-            match locale {
-                Locale::Ko => "천왕성 (Uranus)",
-                Locale::Zh => "天王星",
-                Locale::Ru => "Уран",
-                _ => "Uranus",
-            },
-        ),
-        "Neptune" => (
-            "♆",
-            match locale {
-                Locale::Ko => "해왕성 (Neptune)",
-                Locale::Zh => "海王星",
-                Locale::Ru => "Нептун",
-                _ => "Neptune",
-            },
-        ),
-        "Pluto" => (
-            "♇",
-            match locale {
-                Locale::Ko => "명왕성 (Pluto)",
-                Locale::Zh => "冥王星",
-                Locale::Ru => "Плутон",
-                _ => "Pluto",
-            },
-        ),
-        "Chiron" => (
-            "🔑",
-            match locale {
-                Locale::Ko => "키론 (Chiron)",
-                Locale::Zh => "凯龙星",
-                Locale::Ru => "Хирон",
-                _ => "Chiron",
-            },
-        ),
-        "True Node" => (
-            "☊",
-            match locale {
-                Locale::Ko => "북노드 (Node)",
-                Locale::Zh => "北交点",
-                Locale::Ru => "Северный узел",
-                _ => "True Node",
-            },
-        ),
+        "Sun" => ("☀️", t(locale, TK::WestPlanetSun)),
+        "Moon" => ("🌙", t(locale, TK::WestPlanetMoon)),
+        "Mercury" => ("☿", t(locale, TK::WestPlanetMercury)),
+        "Venus" => ("♀", t(locale, TK::WestPlanetVenus)),
+        "Mars" => ("♂", t(locale, TK::WestPlanetMars)),
+        "Jupiter" => ("♃", t(locale, TK::WestPlanetJupiter)),
+        "Saturn" => ("♄", t(locale, TK::WestPlanetSaturn)),
+        "Uranus" => ("♅", t(locale, TK::WestPlanetUranus)),
+        "Neptune" => ("♆", t(locale, TK::WestPlanetNeptune)),
+        "Pluto" => ("♇", t(locale, TK::WestPlanetPluto)),
+        "Chiron" => ("🔑", t(locale, TK::WestPlanetChiron)),
+        "True Node" => ("☊", t(locale, TK::WestNodeNorth)),
+        "South Node" => ("☋", t(locale, TK::WestNodeSouth)),
+        "NorthNode" => ("☊", t(locale, TK::WestNodeNorth)),
+        "SouthNode" => ("☋", t(locale, TK::WestNodeSouth)),
         _ => ("🪐", name),
     };
     (emoji, val.to_string())
@@ -123,114 +30,18 @@ pub fn get_planet_emoji_and_name(name: &str, locale: Locale) -> (&'static str, S
 
 pub fn get_sign_emoji_and_name(idx: usize, locale: Locale) -> (&'static str, &'static str) {
     match idx {
-        0 => (
-            "♈",
-            match locale {
-                Locale::Ko => "백양자리 (Aries)",
-                Locale::Zh => "白羊座",
-                Locale::Ru => "Овен",
-                _ => "Aries",
-            },
-        ),
-        1 => (
-            "♉",
-            match locale {
-                Locale::Ko => "황소자리 (Taurus)",
-                Locale::Zh => "金牛座",
-                Locale::Ru => "Телец",
-                _ => "Taurus",
-            },
-        ),
-        2 => (
-            "♊",
-            match locale {
-                Locale::Ko => "쌍둥이자리 (Gemini)",
-                Locale::Zh => "双子座",
-                Locale::Ru => "Близнецы",
-                _ => "Gemini",
-            },
-        ),
-        3 => (
-            "♋",
-            match locale {
-                Locale::Ko => "게자리 (Cancer)",
-                Locale::Zh => "巨蟹座",
-                Locale::Ru => "Рак",
-                _ => "Cancer",
-            },
-        ),
-        4 => (
-            "♌",
-            match locale {
-                Locale::Ko => "사자자리 (Leo)",
-                Locale::Zh => "狮子座",
-                Locale::Ru => "Лев",
-                _ => "Leo",
-            },
-        ),
-        5 => (
-            "♍",
-            match locale {
-                Locale::Ko => "처녀자리 (Virgo)",
-                Locale::Zh => "处女座",
-                Locale::Ru => "Дева",
-                _ => "Virgo",
-            },
-        ),
-        6 => (
-            "♎",
-            match locale {
-                Locale::Ko => "천칭자리 (Libra)",
-                Locale::Zh => "天秤座",
-                Locale::Ru => "Весы",
-                _ => "Libra",
-            },
-        ),
-        7 => (
-            "♏",
-            match locale {
-                Locale::Ko => "전갈자리 (Scorpio)",
-                Locale::Zh => "天蝎座",
-                Locale::Ru => "Скорпион",
-                _ => "Scorpio",
-            },
-        ),
-        8 => (
-            "♐",
-            match locale {
-                Locale::Ko => "사수자리 (Sagittarius)",
-                Locale::Zh => "射手座",
-                Locale::Ru => "Стрелец",
-                _ => "Sagittarius",
-            },
-        ),
-        9 => (
-            "♑",
-            match locale {
-                Locale::Ko => "염소자리 (Capricorn)",
-                Locale::Zh => "摩羯座",
-                Locale::Ru => "Козерог",
-                _ => "Capricorn",
-            },
-        ),
-        10 => (
-            "♒",
-            match locale {
-                Locale::Ko => "물병자리 (Aquarius)",
-                Locale::Zh => "水瓶座",
-                Locale::Ru => "Водолей",
-                _ => "Aquarius",
-            },
-        ),
-        11 => (
-            "♓",
-            match locale {
-                Locale::Ko => "물고기자리 (Pisces)",
-                Locale::Zh => "双鱼座",
-                Locale::Ru => "Рыбы",
-                _ => "Pisces",
-            },
-        ),
+        0 => ("♈", t(locale, TK::WestSignAries)),
+        1 => ("♉", t(locale, TK::WestSignTaurus)),
+        2 => ("♊", t(locale, TK::WestSignGemini)),
+        3 => ("♋", t(locale, TK::WestSignCancer)),
+        4 => ("♌", t(locale, TK::WestSignLeo)),
+        5 => ("♍", t(locale, TK::WestSignVirgo)),
+        6 => ("♎", t(locale, TK::WestSignLibra)),
+        7 => ("♏", t(locale, TK::WestSignScorpio)),
+        8 => ("♐", t(locale, TK::WestSignSagittarius)),
+        9 => ("♑", t(locale, TK::WestSignCapricorn)),
+        10 => ("♒", t(locale, TK::WestSignAquarius)),
+        11 => ("♓", t(locale, TK::WestSignPisces)),
         _ => ("❓", "Unknown"),
     }
 }
@@ -240,51 +51,11 @@ pub fn get_aspect_emoji_and_name(
     locale: Locale,
 ) -> (&'static str, &'static str) {
     match aspect {
-        eon_western::AspectType::Conjunction => (
-            "☌",
-            match locale {
-                Locale::Ko => "합 (Conjunction)",
-                Locale::Zh => "合相",
-                Locale::Ru => "Соединение",
-                _ => "Conjunction",
-            },
-        ),
-        eon_western::AspectType::Sextile => (
-            "⚹",
-            match locale {
-                Locale::Ko => "육분의 (Sextile)",
-                Locale::Zh => "六分相",
-                Locale::Ru => "Секстиль",
-                _ => "Sextile",
-            },
-        ),
-        eon_western::AspectType::Square => (
-            "□",
-            match locale {
-                Locale::Ko => "스퀘어 (Square)",
-                Locale::Zh => "三分相",
-                Locale::Ru => "Квадратура",
-                _ => "Square",
-            },
-        ),
-        eon_western::AspectType::Trine => (
-            "△",
-            match locale {
-                Locale::Ko => "트라인 (Trine)",
-                Locale::Zh => "三分相",
-                Locale::Ru => "Тригон",
-                _ => "Trine",
-            },
-        ),
-        eon_western::AspectType::Opposition => (
-            "☍",
-            match locale {
-                Locale::Ko => "대립 (Opposition)",
-                Locale::Zh => "对分相",
-                Locale::Ru => "Оппозиция",
-                _ => "Opposition",
-            },
-        ),
+        eon_western::AspectType::Conjunction => ("☌", t(locale, TK::WestAspectConjunction)),
+        eon_western::AspectType::Sextile => ("⚹", t(locale, TK::WestAspectSextile)),
+        eon_western::AspectType::Square => ("□", t(locale, TK::WestAspectSquare)),
+        eon_western::AspectType::Trine => ("△", t(locale, TK::WestAspectTrine)),
+        eon_western::AspectType::Opposition => ("☍", t(locale, TK::WestAspectOpposition)),
     }
 }
 
@@ -449,17 +220,17 @@ pub fn WesternTab() -> Element {
                         let (_, cr_korean_name) = get_planet_emoji_and_name(&res.chart_ruler, locale);
 
                         let (el_emoji, el_name) = match res.dominant_element.as_str() {
-                            "Fire" => ("🔥", match locale { Locale::Ko => "불 (Fire)", _ => "Fire" }),
-                            "Earth" => ("⛰️", match locale { Locale::Ko => "흙 (Earth)", _ => "Earth" }),
-                            "Air" => ("💨", match locale { Locale::Ko => "공기 (Air)", _ => "Air" }),
-                            "Water" => ("💧", match locale { Locale::Ko => "물 (Water)", _ => "Water" }),
+                            "Fire" => ("🔥", t(locale, TK::WestElementFire)),
+                            "Earth" => ("⛰️", t(locale, TK::WestElementEarth)),
+                            "Air" => ("💨", t(locale, TK::WestElementAir)),
+                            "Water" => ("💧", t(locale, TK::WestElementWater)),
                             _ => ("❓", res.dominant_element.as_str()),
                         };
 
                         let (mo_emoji, mo_name) = match res.dominant_modality.as_str() {
-                            "Cardinal" => ("⚡", match locale { Locale::Ko => "활동궁 (Cardinal)", _ => "Cardinal" }),
-                            "Fixed" => ("🔒", match locale { Locale::Ko => "고정궁 (Fixed)", _ => "Fixed" }),
-                            "Mutable" => ("🌀", match locale { Locale::Ko => "변통궁 (Mutable)", _ => "Mutable" }),
+                            "Cardinal" => ("⚡", t(locale, TK::WestModalityCardinal)),
+                            "Fixed" => ("🔒", t(locale, TK::WestModalityFixed)),
+                            "Mutable" => ("🌀", t(locale, TK::WestModalityMutable)),
                             _ => ("❓", res.dominant_modality.as_str()),
                         };
 
@@ -597,7 +368,7 @@ pub fn WesternTab() -> Element {
                                                 // Fire
                                                 div {
                                                     div { class: "flex justify-between text-xs font-bold text-slate-300",
-                                                        span { "🔥 Fire (불)" }
+                                                        span { "🔥 {t(locale, TK::WestElementFire)}" }
                                                         span { "{res.elements.fire:.1}%" }
                                                     }
                                                     div { class: "h-2 w-full bg-slate-800 rounded-full overflow-hidden mt-1",
@@ -607,7 +378,7 @@ pub fn WesternTab() -> Element {
                                                 // Earth
                                                 div {
                                                     div { class: "flex justify-between text-xs font-bold text-slate-300",
-                                                        span { "⛰️ Earth (흙)" }
+                                                        span { "⛰️ {t(locale, TK::WestElementEarth)}" }
                                                         span { "{res.elements.earth:.1}%" }
                                                     }
                                                     div { class: "h-2 w-full bg-slate-800 rounded-full overflow-hidden mt-1",
@@ -617,7 +388,7 @@ pub fn WesternTab() -> Element {
                                                 // Air
                                                 div {
                                                     div { class: "flex justify-between text-xs font-bold text-slate-300",
-                                                        span { "💨 Air (공기)" }
+                                                        span { "💨 {t(locale, TK::WestElementAir)}" }
                                                         span { "{res.elements.air:.1}%" }
                                                     }
                                                     div { class: "h-2 w-full bg-slate-800 rounded-full overflow-hidden mt-1",
@@ -627,7 +398,7 @@ pub fn WesternTab() -> Element {
                                                 // Water
                                                 div {
                                                     div { class: "flex justify-between text-xs font-bold text-slate-300",
-                                                        span { "💧 Water (물)" }
+                                                        span { "💧 {t(locale, TK::WestElementWater)}" }
                                                         span { "{res.elements.water:.1}%" }
                                                     }
                                                     div { class: "h-2 w-full bg-slate-800 rounded-full overflow-hidden mt-1",
@@ -644,7 +415,7 @@ pub fn WesternTab() -> Element {
                                                 // Cardinal
                                                 div {
                                                     div { class: "flex justify-between text-xs font-bold text-slate-300",
-                                                        span { "⚡ Cardinal (활동)" }
+                                                        span { "⚡ {t(locale, TK::WestModalityCardinal)}" }
                                                         span { "{res.modalities.cardinal:.1}%" }
                                                     }
                                                     div { class: "h-2 w-full bg-slate-800 rounded-full overflow-hidden mt-1",
@@ -654,7 +425,7 @@ pub fn WesternTab() -> Element {
                                                 // Fixed
                                                 div {
                                                     div { class: "flex justify-between text-xs font-bold text-slate-300",
-                                                        span { "🔒 Fixed (고정)" }
+                                                        span { "🔒 {t(locale, TK::WestModalityFixed)}" }
                                                         span { "{res.modalities.fixed:.1}%" }
                                                     }
                                                     div { class: "h-2 w-full bg-slate-800 rounded-full overflow-hidden mt-1",
@@ -664,7 +435,7 @@ pub fn WesternTab() -> Element {
                                                 // Mutable
                                                 div {
                                                     div { class: "flex justify-between text-xs font-bold text-slate-300",
-                                                        span { "🌀 Mutable (변통)" }
+                                                        span { "🌀 {t(locale, TK::WestModalityMutable)}" }
                                                         span { "{res.modalities.mutable:.1}%" }
                                                     }
                                                     div { class: "h-2 w-full bg-slate-800 rounded-full overflow-hidden mt-1",

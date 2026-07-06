@@ -1,5 +1,5 @@
-pub mod core;
 pub mod analysis;
+pub mod core;
 
-pub use core::*;
 pub use analysis::*;
+pub use core::*;

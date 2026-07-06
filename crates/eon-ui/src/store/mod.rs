@@ -2,8 +2,9 @@ pub mod db;
 use crate::i18n::Locale;
 use dioxus::prelude::*;
 use eon_service::dto::{
-    AnalysisInput, HumanDesignAnalysisOutput, IChingAnalysisOutput, QimenAnalysisOutput, SajuAnalysisOutput, TierResult,
-    TransitAnalysisOutput, VedicAnalysisOutput, WesternAnalysisOutput, ZwdsAnalysisOutput,
+    AnalysisInput, HumanDesignAnalysisOutput, IChingAnalysisOutput, QimenAnalysisOutput,
+    SajuAnalysisOutput, TierResult, TransitAnalysisOutput, VedicAnalysisOutput,
+    WesternAnalysisOutput, ZwdsAnalysisOutput,
 };
 
 #[derive(Clone, PartialEq, Default)]
