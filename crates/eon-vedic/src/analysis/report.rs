@@ -156,11 +156,12 @@ impl VedicAnalysisReport {
         // Calculate Dasha Focus (Vimshottari)
         let moon_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon);
         let (dasha_focus, dasha_timeline) = if let Some(m) = moon_pos {
-            let timeline = crate::analysis::dasha::VimshottariDasha::calculate_timeline(
+            let mut timeline = crate::analysis::dasha::VimshottariDasha::calculate_timeline(
                 birth_time,
                 m.sidereal_deg,
                 3, // Maha + Antar + Pratyantar
             );
+            crate::analysis::dasha::VimshottariDasha::attach_interpretations(&mut timeline, chart);
             let current_time = chrono::Utc::now();
             let focus = if let Some(current_dasha) = timeline
                 .iter()

@@ -2001,9 +2001,16 @@ pub fn VedicTab() -> Element {
                                                                             td { class: "px-4 py-3.5 font-mono text-slate-350 text-xs", "{start_str}" }
                                                                             td { class: "px-4 py-3.5 font-mono text-slate-400 text-xs", "{end_str}" }
                                                                             td { class: "px-4 py-3.5 text-slate-400 text-xs", "{duration_years}년" }
-                                                                            td { class: "px-4 py-3.5",
+                                                                            td { class: "px-4 py-3.5 flex flex-wrap gap-1.5 items-center",
                                                                                 if is_current_maha {
                                                                                     span { class: "px-2.5 py-0.5 rounded-full text-[10px] bg-blue-600/40 text-blue-200 border border-blue-500/40 font-bold animate-pulse", "⬤ 현재 대운" }
+                                                                                }
+                                                                                if let Some(fav) = d.is_favorable {
+                                                                                    if fav {
+                                                                                        span { class: "px-2.5 py-0.5 rounded-full text-[10px] bg-emerald-600/20 text-emerald-300 border border-emerald-500/30", "순조로움" }
+                                                                                    } else {
+                                                                                        span { class: "px-2.5 py-0.5 rounded-full text-[10px] bg-amber-600/20 text-amber-300 border border-amber-500/30", "도전적" }
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         }
@@ -2011,6 +2018,12 @@ pub fn VedicTab() -> Element {
                                                                         if is_expanded_maha {
                                                                             tr { class: "bg-slate-950/40",
                                                                                 td { colspan: 5, class: "p-4 border-t border-b border-slate-850",
+                                                                                    if let Some(interp) = &d.interpretation {
+                                                                                        div { class: "mb-4 p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/50 text-sm text-slate-300 leading-relaxed shadow-inner",
+                                                                                            span { class: "font-bold text-indigo-400 mr-2", "대운 테마:" }
+                                                                                            "{interp}"
+                                                                                        }
+                                                                                    }
                                                                                     div { class: "rounded-xl border border-slate-800/80 bg-slate-900/20 overflow-hidden",
                                                                                         table { class: "w-full text-xs",
                                                                                             thead {
@@ -2057,9 +2070,16 @@ pub fn VedicTab() -> Element {
                                                                                                             td { class: "px-4 py-2.5 font-mono text-slate-350", "{sub_start_str}" }
                                                                                                             td { class: "px-4 py-2.5 font-mono text-slate-400", "{sub_end_str}" }
                                                                                                             td { class: "px-4 py-2.5 text-slate-400", "{sub_duration_months}개월" }
-                                                                                                            td { class: "px-4 py-2.5",
+                                                                                                            td { class: "px-4 py-2.5 flex flex-wrap gap-1.5 items-center",
                                                                                                                 if is_current_antar {
                                                                                                                     span { class: "px-2 py-0.5 rounded-full text-[9px] bg-emerald-600/40 text-emerald-200 border border-emerald-500/40 font-bold", "⬤ 현재 소운" }
+                                                                                                                }
+                                                                                                                if let Some(fav) = sub.is_favorable {
+                                                                                                                    if fav {
+                                                                                                                        span { class: "px-2 py-0.5 rounded-full text-[9px] bg-emerald-600/20 text-emerald-300 border border-emerald-500/30", "순조로움" }
+                                                                                                                    } else {
+                                                                                                                        span { class: "px-2 py-0.5 rounded-full text-[9px] bg-amber-600/20 text-amber-300 border border-amber-500/30", "도전적" }
+                                                                                                                    }
                                                                                                                 }
                                                                                                             }
                                                                                                         }
@@ -2067,6 +2087,12 @@ pub fn VedicTab() -> Element {
                                                                                                         if is_expanded_antar {
                                                                                                             tr { class: "bg-slate-900/60",
                                                                                                                 td { colspan: 5, class: "p-3 border-t border-b border-slate-800/60",
+                                                                                                                    if let Some(interp) = &sub.interpretation {
+                                                                                                                        div { class: "mb-3 p-3 rounded-lg bg-slate-800/60 border border-slate-700/50 text-xs text-slate-300 leading-relaxed shadow-inner",
+                                                                                                                            span { class: "font-bold text-emerald-400 mr-2", "소운 테마:" }
+                                                                                                                            "{interp}"
+                                                                                                                        }
+                                                                                                                    }
                                                                                                                     div { class: "rounded-lg border border-slate-800 bg-slate-950/20 overflow-hidden",
                                                                                                                         table { class: "w-full text-[11px]",
                                                                                                                             thead {
