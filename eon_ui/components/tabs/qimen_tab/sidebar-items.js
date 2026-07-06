@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["QimenTab"]};
+window.SIDEBAR_ITEMS = {"fn":["QimenTab","stem_str","tk_deity","tk_door","tk_palace","tk_star"]};

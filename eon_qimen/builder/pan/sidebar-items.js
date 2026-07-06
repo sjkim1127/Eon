@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["RING_PALACES"],"fn":["build_earth_plate","build_qimen_pan","get_base_door","get_base_star","get_xun_shou"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["QimenPan"]};
+window.SIDEBAR_ITEMS = {"struct":["PalaceState","QimenPan"]};

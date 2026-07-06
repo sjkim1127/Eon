@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["analysis","core"]};
+window.SIDEBAR_ITEMS = {"mod":["analysis","builder","core"]};

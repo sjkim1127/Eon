@@ -3,46 +3,65 @@
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span><span class="kw">crate</span>::error::ServiceError;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>eon_core::Gender;
 <a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>eon_qimen::analysis::report::QimenAnalysisReport;
-<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>eon_qimen::core::QimenPan;
-<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>eon_saju::core::ganzi::GanZi;
-<a href=#8 id=8 data-nosnippet>8</a>
-<a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>eon_saju::core::branch::EarthlyBranch;
-<a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>eon_saju::core::stem::HeavenlyStem;
-<a href=#11 id=11 data-nosnippet>11</a>
-<a href=#12 id=12 data-nosnippet>12</a><span class="kw">pub fn </span>analyze_qimen(input: QimenAnalysisInput) -&gt; <span class="prelude-ty">Result</span>&lt;QimenAnalysisOutput, ServiceError&gt; {
-<a href=#13 id=13 data-nosnippet>13</a>    <span class="kw">let </span>gender = <span class="kw">if </span>input.is_male {
-<a href=#14 id=14 data-nosnippet>14</a>        Gender::Male
-<a href=#15 id=15 data-nosnippet>15</a>    } <span class="kw">else </span>{
-<a href=#16 id=16 data-nosnippet>16</a>        Gender::Female
-<a href=#17 id=17 data-nosnippet>17</a>    };
-<a href=#18 id=18 data-nosnippet>18</a>    <span class="kw">let </span>birth_ctx = prepare_birth_context(<span class="kw-2">&amp;</span>input.base, <span class="prelude-val">Some</span>(gender), <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>eon_qimen::builder::ju::calculate_ju;
+<a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>eon_qimen::builder::pan::build_qimen_pan;
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>eon_saju::core::pillars::{FourPillars, SajuInput};
+<a href=#9 id=9 data-nosnippet>9</a>
+<a href=#10 id=10 data-nosnippet>10</a><span class="kw">pub fn </span>analyze_qimen(input: QimenAnalysisInput) -&gt; <span class="prelude-ty">Result</span>&lt;QimenAnalysisOutput, ServiceError&gt; {
+<a href=#11 id=11 data-nosnippet>11</a>    <span class="kw">let </span>gender = <span class="kw">if </span>input.is_male {
+<a href=#12 id=12 data-nosnippet>12</a>        Gender::Male
+<a href=#13 id=13 data-nosnippet>13</a>    } <span class="kw">else </span>{
+<a href=#14 id=14 data-nosnippet>14</a>        Gender::Female
+<a href=#15 id=15 data-nosnippet>15</a>    };
+<a href=#16 id=16 data-nosnippet>16</a>
+<a href=#17 id=17 data-nosnippet>17</a>    <span class="comment">// 1. 탄생 컨텍스트(진태양시 보정 등) 생성
+<a href=#18 id=18 data-nosnippet>18</a>    </span><span class="kw">let </span>birth_ctx = prepare_birth_context(<span class="kw-2">&amp;</span>input.base, <span class="prelude-val">Some</span>(gender), <span class="bool-val">true</span>)<span class="question-mark">?</span>;
 <a href=#19 id=19 data-nosnippet>19</a>    <span class="kw">let </span>dt = birth_ctx
 <a href=#20 id=20 data-nosnippet>20</a>        .birth_info
 <a href=#21 id=21 data-nosnippet>21</a>        .to_utc()
 <a href=#22 id=22 data-nosnippet>22</a>        .map_err(|e| ServiceError::InvalidInput(e.to_string()))<span class="question-mark">?</span>;
 <a href=#23 id=23 data-nosnippet>23</a>
-<a href=#24 id=24 data-nosnippet>24</a>    <span class="comment">// 스캐폴딩: 임시로 년주, 월주, 일주, 시주를 Dummy 값으로 사용하거나 saju-core를 불러와야 하지만,
-<a href=#25 id=25 data-nosnippet>25</a>    // 현재는 뼈대만 구축하는 단계이므로 QimenPan을 더미 데이터로 채웁니다.
-<a href=#26 id=26 data-nosnippet>26</a>    // 추후 eon-saju::core::calendar::LunarCalendar 등과 연동하여 제대로 된 시주(Hour Pillar)를 가져옵니다.
-<a href=#27 id=27 data-nosnippet>27</a>
-<a href=#28 id=28 data-nosnippet>28</a>    </span><span class="kw">let </span>pan = QimenPan {
-<a href=#29 id=29 data-nosnippet>29</a>        time: dt,
-<a href=#30 id=30 data-nosnippet>30</a>        hour_pillar: GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi), <span class="comment">// 갑자(JiaZi) 더미
-<a href=#31 id=31 data-nosnippet>31</a>        </span>is_yin_ju: <span class="bool-val">true</span>,                                               <span class="comment">// 둔국 더미
-<a href=#32 id=32 data-nosnippet>32</a>        </span>ju_number: <span class="number">1</span>,                                                  <span class="comment">// 국수 더미
-<a href=#33 id=33 data-nosnippet>33</a>    </span>};
+<a href=#24 id=24 data-nosnippet>24</a>    <span class="comment">// 2. 사주 명식(Four Pillars) 계산
+<a href=#25 id=25 data-nosnippet>25</a>    </span><span class="kw">let </span>saju_input = SajuInput::new_solar(
+<a href=#26 id=26 data-nosnippet>26</a>        birth_ctx.corrected_year,
+<a href=#27 id=27 data-nosnippet>27</a>        birth_ctx.corrected_month,
+<a href=#28 id=28 data-nosnippet>28</a>        birth_ctx.corrected_day,
+<a href=#29 id=29 data-nosnippet>29</a>        birth_ctx.corrected_hour,
+<a href=#30 id=30 data-nosnippet>30</a>        birth_ctx.corrected_minute,
+<a href=#31 id=31 data-nosnippet>31</a>    )
+<a href=#32 id=32 data-nosnippet>32</a>    .with_gender(gender)
+<a href=#33 id=33 data-nosnippet>33</a>    .with_night_rat_hour(input.use_night_rat_hour);
 <a href=#34 id=34 data-nosnippet>34</a>
-<a href=#35 id=35 data-nosnippet>35</a>    <span class="kw">let </span>report = QimenAnalysisReport::generate(pan);
-<a href=#36 id=36 data-nosnippet>36</a>
-<a href=#37 id=37 data-nosnippet>37</a>    <span class="kw">let </span>meta = AnalysisMeta {
-<a href=#38 id=38 data-nosnippet>38</a>        precision: BirthTimePrecision::Exact, <span class="comment">// 기본값
-<a href=#39 id=39 data-nosnippet>39</a>        </span>input_time: dt.to_rfc3339(),
-<a href=#40 id=40 data-nosnippet>40</a>        corrected_time: dt.to_rfc3339(), <span class="comment">// 진태양시 보정 추후 적용
-<a href=#41 id=41 data-nosnippet>41</a>        </span>is_dst: <span class="bool-val">false</span>,
-<a href=#42 id=42 data-nosnippet>42</a>        dst_offset_hours: <span class="prelude-val">None</span>,
-<a href=#43 id=43 data-nosnippet>43</a>        analysis_timezone: input.base.timezone,
-<a href=#44 id=44 data-nosnippet>44</a>    };
-<a href=#45 id=45 data-nosnippet>45</a>
-<a href=#46 id=46 data-nosnippet>46</a>    <span class="prelude-val">Ok</span>(QimenAnalysisOutput { meta, report })
-<a href=#47 id=47 data-nosnippet>47</a>}
+<a href=#35 id=35 data-nosnippet>35</a>    <span class="kw">let </span>pillars = FourPillars::calculate(<span class="kw-2">&amp;</span>saju_input)
+<a href=#36 id=36 data-nosnippet>36</a>        .map_err(|e| ServiceError::Saju(<span class="macro">format!</span>(<span class="string">"사주 계산 실패: {}"</span>, e)))<span class="question-mark">?</span>;
+<a href=#37 id=37 data-nosnippet>37</a>
+<a href=#38 id=38 data-nosnippet>38</a>    <span class="comment">// 3. 기문둔갑 국수(Ju Number) 및 음양둔 산출
+<a href=#39 id=39 data-nosnippet>39</a>    </span><span class="kw">let </span>(is_yin_ju, ju_number) = calculate_ju(dt, pillars.day)
+<a href=#40 id=40 data-nosnippet>40</a>        .map_err(|e| ServiceError::InvalidInput(<span class="macro">format!</span>(<span class="string">"기문둔갑 국수 계산 실패: {}"</span>, e)))<span class="question-mark">?</span>;
+<a href=#41 id=41 data-nosnippet>41</a>
+<a href=#42 id=42 data-nosnippet>42</a>    <span class="comment">// 4. 기문둔갑 포국(Pan Building) 알고리즘 실행
+<a href=#43 id=43 data-nosnippet>43</a>    </span><span class="kw">let </span>pan = build_qimen_pan(
+<a href=#44 id=44 data-nosnippet>44</a>        dt,
+<a href=#45 id=45 data-nosnippet>45</a>        pillars.year,
+<a href=#46 id=46 data-nosnippet>46</a>        pillars.month,
+<a href=#47 id=47 data-nosnippet>47</a>        pillars.day,
+<a href=#48 id=48 data-nosnippet>48</a>        pillars.hour,
+<a href=#49 id=49 data-nosnippet>49</a>        is_yin_ju,
+<a href=#50 id=50 data-nosnippet>50</a>        ju_number,
+<a href=#51 id=51 data-nosnippet>51</a>    );
+<a href=#52 id=52 data-nosnippet>52</a>
+<a href=#53 id=53 data-nosnippet>53</a>    <span class="comment">// 5. 분석 리포트 생성
+<a href=#54 id=54 data-nosnippet>54</a>    </span><span class="kw">let </span>report = QimenAnalysisReport::generate(pan);
+<a href=#55 id=55 data-nosnippet>55</a>
+<a href=#56 id=56 data-nosnippet>56</a>    <span class="kw">let </span>meta = AnalysisMeta {
+<a href=#57 id=57 data-nosnippet>57</a>        precision: BirthTimePrecision::Exact,
+<a href=#58 id=58 data-nosnippet>58</a>        input_time: dt.to_rfc3339(),
+<a href=#59 id=59 data-nosnippet>59</a>        corrected_time: dt.to_rfc3339(),
+<a href=#60 id=60 data-nosnippet>60</a>        is_dst: <span class="bool-val">false</span>,
+<a href=#61 id=61 data-nosnippet>61</a>        dst_offset_hours: <span class="prelude-val">None</span>,
+<a href=#62 id=62 data-nosnippet>62</a>        analysis_timezone: input.base.timezone,
+<a href=#63 id=63 data-nosnippet>63</a>    };
+<a href=#64 id=64 data-nosnippet>64</a>
+<a href=#65 id=65 data-nosnippet>65</a>    <span class="prelude-val">Ok</span>(QimenAnalysisOutput { meta, report })
+<a href=#66 id=66 data-nosnippet>66</a>}
 </code></pre></div></section></main></body></html>
