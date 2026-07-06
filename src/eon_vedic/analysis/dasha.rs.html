@@ -1,5 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-vedic/src/analysis/dasha.rs`."><title>dasha.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eon_vedic" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_vedic/analysis/</div>dasha.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::planets::VedicPlanet;
-<a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::core::chart::VedicChart;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-vedic/src/analysis/dasha.rs`."><title>dasha.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eon_vedic" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.1 (31fca3adb 2026-06-26)" data-channel="1.96.1" data-search-js="search-b5634cc7.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_vedic/analysis/</div>dasha.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::core::chart::VedicChart;
+<a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::planets::VedicPlanet;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>chrono::{DateTime, Duration, Utc};
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>serde::{Deserialize, Serialize};
 <a href=#5 id=5 data-nosnippet>5</a>
@@ -254,156 +254,183 @@
 <a href=#254 id=254 data-nosnippet>254</a>        <span class="kw">for </span>maha <span class="kw">in </span>timeline.iter_mut() {
 <a href=#255 id=255 data-nosnippet>255</a>            <span class="kw">let </span>maha_lord = maha.lord;
 <a href=#256 id=256 data-nosnippet>256</a>            <span class="kw">let </span>maha_pos = chart.planets.iter().find(|p| p.planet == maha_lord);
-<a href=#257 id=257 data-nosnippet>257</a>            
+<a href=#257 id=257 data-nosnippet>257</a>
 <a href=#258 id=258 data-nosnippet>258</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(pos) = maha_pos {
 <a href=#259 id=259 data-nosnippet>259</a>                <span class="kw">let </span>house = pos.house_index;
 <a href=#260 id=260 data-nosnippet>260</a>                <span class="kw">let </span>is_exalted = pos.rasi == maha_lord.exaltation_rasi();
 <a href=#261 id=261 data-nosnippet>261</a>                <span class="kw">let </span>is_debilitated = pos.rasi == maha_lord.debilitation_rasi();
 <a href=#262 id=262 data-nosnippet>262</a>                <span class="kw">let </span>is_own = VedicPlanet::get_ruler_of(pos.rasi) == maha_lord;
-<a href=#263 id=263 data-nosnippet>263</a>                
+<a href=#263 id=263 data-nosnippet>263</a>
 <a href=#264 id=264 data-nosnippet>264</a>                <span class="kw">let </span>(favorable, dignity_desc) = <span class="kw">if </span>is_exalted {
 <a href=#265 id=265 data-nosnippet>265</a>                    (<span class="bool-val">true</span>, <span class="string">"고양(Exalted)되어 매우 강한 긍정적 힘을 발휘합니다."</span>)
 <a href=#266 id=266 data-nosnippet>266</a>                } <span class="kw">else if </span>is_own {
-<a href=#267 id=267 data-nosnippet>267</a>                    (<span class="bool-val">true</span>, <span class="string">"본연의 별자리(Own House)에 있어 안정적이고 긍정적입니다."</span>)
-<a href=#268 id=268 data-nosnippet>268</a>                } <span class="kw">else if </span>is_debilitated {
-<a href=#269 id=269 data-nosnippet>269</a>                    (<span class="bool-val">false</span>, <span class="string">"쇠락(Debilitated)하여 에너지가 약화되고 도전 과제가 주어집니다."</span>)
-<a href=#270 id=270 data-nosnippet>270</a>                } <span class="kw">else </span>{
-<a href=#271 id=271 data-nosnippet>271</a>                    (<span class="bool-val">true</span>, <span class="string">"일반적인 상태로 본연의 역할을 수행합니다."</span>)
-<a href=#272 id=272 data-nosnippet>272</a>                };
-<a href=#273 id=273 data-nosnippet>273</a>                
-<a href=#274 id=274 data-nosnippet>274</a>                <span class="kw">let </span>theme = <span class="kw">match </span>house {
-<a href=#275 id=275 data-nosnippet>275</a>                    <span class="number">1 </span>=&gt; <span class="string">"자아 성장, 건강, 새로운 시작"</span>,
-<a href=#276 id=276 data-nosnippet>276</a>                    <span class="number">2 </span>=&gt; <span class="string">"재물, 가족, 언어, 가치관"</span>,
-<a href=#277 id=277 data-nosnippet>277</a>                    <span class="number">3 </span>=&gt; <span class="string">"의지력, 형제, 짧은 여행, 취미"</span>,
-<a href=#278 id=278 data-nosnippet>278</a>                    <span class="number">4 </span>=&gt; <span class="string">"내면의 평화, 어머니, 부동산, 학위"</span>,
-<a href=#279 id=279 data-nosnippet>279</a>                    <span class="number">5 </span>=&gt; <span class="string">"창의성, 자녀, 투자, 로맨스"</span>,
-<a href=#280 id=280 data-nosnippet>280</a>                    <span class="number">6 </span>=&gt; <span class="string">"경쟁, 건강 관리, 부채 극복, 서비스"</span>,
-<a href=#281 id=281 data-nosnippet>281</a>                    <span class="number">7 </span>=&gt; <span class="string">"배우자, 동업자, 대인관계"</span>,
-<a href=#282 id=282 data-nosnippet>282</a>                    <span class="number">8 </span>=&gt; <span class="string">"비밀, 상속, 급격한 변화, 신비로움"</span>,
-<a href=#283 id=283 data-nosnippet>283</a>                    <span class="number">9 </span>=&gt; <span class="string">"행운, 고등 교육, 종교, 철학, 아버지"</span>,
-<a href=#284 id=284 data-nosnippet>284</a>                    <span class="number">10 </span>=&gt; <span class="string">"사회적 명성, 직업, 업적"</span>,
-<a href=#285 id=285 data-nosnippet>285</a>                    <span class="number">11 </span>=&gt; <span class="string">"소득, 인맥, 목표 달성"</span>,
-<a href=#286 id=286 data-nosnippet>286</a>                    <span class="number">12 </span>=&gt; <span class="string">"영성, 해외 연수, 지출, 은둔"</span>,
-<a href=#287 id=287 data-nosnippet>287</a>                    <span class="kw">_ </span>=&gt; <span class="string">"해당 하우스"</span>,
-<a href=#288 id=288 data-nosnippet>288</a>                };
-<a href=#289 id=289 data-nosnippet>289</a>
-<a href=#290 id=290 data-nosnippet>290</a>                <span class="kw">let </span>lord_desc = <span class="kw">match </span>maha_lord {
-<a href=#291 id=291 data-nosnippet>291</a>                    VedicPlanet::Sun =&gt; <span class="string">"자신감과 리더십의 발현기"</span>,
-<a href=#292 id=292 data-nosnippet>292</a>                    VedicPlanet::Moon =&gt; <span class="string">"감정과 내면의 변화기"</span>,
-<a href=#293 id=293 data-nosnippet>293</a>                    VedicPlanet::Mars =&gt; <span class="string">"투지와 행동력의 시기"</span>,
-<a href=#294 id=294 data-nosnippet>294</a>                    VedicPlanet::Mercury =&gt; <span class="string">"지성과 소통, 상업의 시기"</span>,
-<a href=#295 id=295 data-nosnippet>295</a>                    VedicPlanet::Jupiter =&gt; <span class="string">"지혜, 확장, 축복의 시기"</span>,
-<a href=#296 id=296 data-nosnippet>296</a>                    VedicPlanet::Venus =&gt; <span class="string">"관계, 예술, 물질적 풍요의 시기"</span>,
-<a href=#297 id=297 data-nosnippet>297</a>                    VedicPlanet::Saturn =&gt; <span class="string">"인내, 책임, 노력에 대한 결실의 시기"</span>,
-<a href=#298 id=298 data-nosnippet>298</a>                    VedicPlanet::Rahu =&gt; <span class="string">"세속적 야망과 예기치 못한 확장의 시기"</span>,
-<a href=#299 id=299 data-nosnippet>299</a>                    VedicPlanet::Ketu =&gt; <span class="string">"영적 통찰과 분리, 과거의 청산 시기"</span>,
-<a href=#300 id=300 data-nosnippet>300</a>                    <span class="kw">_ </span>=&gt; <span class="string">""</span>,
-<a href=#301 id=301 data-nosnippet>301</a>                };
-<a href=#302 id=302 data-nosnippet>302</a>
-<a href=#303 id=303 data-nosnippet>303</a>                maha.is_favorable = <span class="prelude-val">Some</span>(favorable);
-<a href=#304 id=304 data-nosnippet>304</a>                maha.interpretation = <span class="prelude-val">Some</span>(<span class="macro">format!</span>(
-<a href=#305 id=305 data-nosnippet>305</a>                    <span class="string">"[{}] 이 시기는 {}하우스의 테마({})가 두드러집니다. 행성이 {} {}"</span>,
-<a href=#306 id=306 data-nosnippet>306</a>                    lord_desc, house, theme, dignity_desc,
-<a href=#307 id=307 data-nosnippet>307</a>                    <span class="kw">if </span>!favorable { <span class="string">"어려움을 극복하는 지혜가 필요합니다." </span>} <span class="kw">else </span>{ <span class="string">"" </span>}
-<a href=#308 id=308 data-nosnippet>308</a>                ).trim().to_string());
-<a href=#309 id=309 data-nosnippet>309</a>
-<a href=#310 id=310 data-nosnippet>310</a>                <span class="kw">for </span>antar <span class="kw">in </span>maha.sub_dashas.iter_mut() {
-<a href=#311 id=311 data-nosnippet>311</a>                    <span class="kw">let </span>antar_lord = antar.lord;
-<a href=#312 id=312 data-nosnippet>312</a>                    <span class="kw">let </span>antar_pos = chart.planets.iter().find(|p| p.planet == antar_lord);
-<a href=#313 id=313 data-nosnippet>313</a>                    
-<a href=#314 id=314 data-nosnippet>314</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(a_pos) = antar_pos {
-<a href=#315 id=315 data-nosnippet>315</a>                        <span class="kw">let </span>diff = (a_pos.house_index <span class="kw">as </span>i32 - pos.house_index <span class="kw">as </span>i32).rem_euclid(<span class="number">12</span>) + <span class="number">1</span>;
-<a href=#316 id=316 data-nosnippet>316</a>                        
-<a href=#317 id=317 data-nosnippet>317</a>                        <span class="kw">let </span>(a_favorable, rel_desc) = <span class="kw">match </span>diff {
-<a href=#318 id=318 data-nosnippet>318</a>                            <span class="number">1 </span>| <span class="number">5 </span>| <span class="number">9 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"대운과 소운 행성이 1/5/9 트리콘(Trikona) 조화로운 관계에 있어 발전과 행운이 따릅니다."</span>),
-<a href=#319 id=319 data-nosnippet>319</a>                            <span class="number">3 </span>| <span class="number">11 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"노력에 따른 성과와 인맥 확장이 이루어집니다."</span>),
-<a href=#320 id=320 data-nosnippet>320</a>                            <span class="number">4 </span>| <span class="number">10 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"안정과 성취, 사회적 기틀을 다지는 켄드라(Kendra) 시기입니다."</span>),
-<a href=#321 id=321 data-nosnippet>321</a>                            <span class="number">2 </span>| <span class="number">12 </span>=&gt; (<span class="bool-val">false</span>, <span class="string">"수입과 지출, 혹은 가족과 단절의 이슈가 교차하는 시기입니다."</span>),
-<a href=#322 id=322 data-nosnippet>322</a>                            <span class="number">6 </span>| <span class="number">8 </span>=&gt; (<span class="bool-val">false</span>, <span class="string">"대운 행성과 6/8 축을 형성하여 갑작스러운 변동, 갈등, 건강 이슈 등 시련을 통해 배우는 시기입니다."</span>),
-<a href=#323 id=323 data-nosnippet>323</a>                            <span class="number">7 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"대인관계나 파트너십을 통한 전환점이 발생합니다."</span>),
-<a href=#324 id=324 data-nosnippet>324</a>                            <span class="kw">_ </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"무난한 흐름입니다."</span>),
-<a href=#325 id=325 data-nosnippet>325</a>                        };
+<a href=#267 id=267 data-nosnippet>267</a>                    (
+<a href=#268 id=268 data-nosnippet>268</a>                        <span class="bool-val">true</span>,
+<a href=#269 id=269 data-nosnippet>269</a>                        <span class="string">"본연의 별자리(Own House)에 있어 안정적이고 긍정적입니다."</span>,
+<a href=#270 id=270 data-nosnippet>270</a>                    )
+<a href=#271 id=271 data-nosnippet>271</a>                } <span class="kw">else if </span>is_debilitated {
+<a href=#272 id=272 data-nosnippet>272</a>                    (
+<a href=#273 id=273 data-nosnippet>273</a>                        <span class="bool-val">false</span>,
+<a href=#274 id=274 data-nosnippet>274</a>                        <span class="string">"쇠락(Debilitated)하여 에너지가 약화되고 도전 과제가 주어집니다."</span>,
+<a href=#275 id=275 data-nosnippet>275</a>                    )
+<a href=#276 id=276 data-nosnippet>276</a>                } <span class="kw">else </span>{
+<a href=#277 id=277 data-nosnippet>277</a>                    (<span class="bool-val">true</span>, <span class="string">"일반적인 상태로 본연의 역할을 수행합니다."</span>)
+<a href=#278 id=278 data-nosnippet>278</a>                };
+<a href=#279 id=279 data-nosnippet>279</a>
+<a href=#280 id=280 data-nosnippet>280</a>                <span class="kw">let </span>theme = <span class="kw">match </span>house {
+<a href=#281 id=281 data-nosnippet>281</a>                    <span class="number">1 </span>=&gt; <span class="string">"자아 성장, 건강, 새로운 시작"</span>,
+<a href=#282 id=282 data-nosnippet>282</a>                    <span class="number">2 </span>=&gt; <span class="string">"재물, 가족, 언어, 가치관"</span>,
+<a href=#283 id=283 data-nosnippet>283</a>                    <span class="number">3 </span>=&gt; <span class="string">"의지력, 형제, 짧은 여행, 취미"</span>,
+<a href=#284 id=284 data-nosnippet>284</a>                    <span class="number">4 </span>=&gt; <span class="string">"내면의 평화, 어머니, 부동산, 학위"</span>,
+<a href=#285 id=285 data-nosnippet>285</a>                    <span class="number">5 </span>=&gt; <span class="string">"창의성, 자녀, 투자, 로맨스"</span>,
+<a href=#286 id=286 data-nosnippet>286</a>                    <span class="number">6 </span>=&gt; <span class="string">"경쟁, 건강 관리, 부채 극복, 서비스"</span>,
+<a href=#287 id=287 data-nosnippet>287</a>                    <span class="number">7 </span>=&gt; <span class="string">"배우자, 동업자, 대인관계"</span>,
+<a href=#288 id=288 data-nosnippet>288</a>                    <span class="number">8 </span>=&gt; <span class="string">"비밀, 상속, 급격한 변화, 신비로움"</span>,
+<a href=#289 id=289 data-nosnippet>289</a>                    <span class="number">9 </span>=&gt; <span class="string">"행운, 고등 교육, 종교, 철학, 아버지"</span>,
+<a href=#290 id=290 data-nosnippet>290</a>                    <span class="number">10 </span>=&gt; <span class="string">"사회적 명성, 직업, 업적"</span>,
+<a href=#291 id=291 data-nosnippet>291</a>                    <span class="number">11 </span>=&gt; <span class="string">"소득, 인맥, 목표 달성"</span>,
+<a href=#292 id=292 data-nosnippet>292</a>                    <span class="number">12 </span>=&gt; <span class="string">"영성, 해외 연수, 지출, 은둔"</span>,
+<a href=#293 id=293 data-nosnippet>293</a>                    <span class="kw">_ </span>=&gt; <span class="string">"해당 하우스"</span>,
+<a href=#294 id=294 data-nosnippet>294</a>                };
+<a href=#295 id=295 data-nosnippet>295</a>
+<a href=#296 id=296 data-nosnippet>296</a>                <span class="kw">let </span>lord_desc = <span class="kw">match </span>maha_lord {
+<a href=#297 id=297 data-nosnippet>297</a>                    VedicPlanet::Sun =&gt; <span class="string">"자신감과 리더십의 발현기"</span>,
+<a href=#298 id=298 data-nosnippet>298</a>                    VedicPlanet::Moon =&gt; <span class="string">"감정과 내면의 변화기"</span>,
+<a href=#299 id=299 data-nosnippet>299</a>                    VedicPlanet::Mars =&gt; <span class="string">"투지와 행동력의 시기"</span>,
+<a href=#300 id=300 data-nosnippet>300</a>                    VedicPlanet::Mercury =&gt; <span class="string">"지성과 소통, 상업의 시기"</span>,
+<a href=#301 id=301 data-nosnippet>301</a>                    VedicPlanet::Jupiter =&gt; <span class="string">"지혜, 확장, 축복의 시기"</span>,
+<a href=#302 id=302 data-nosnippet>302</a>                    VedicPlanet::Venus =&gt; <span class="string">"관계, 예술, 물질적 풍요의 시기"</span>,
+<a href=#303 id=303 data-nosnippet>303</a>                    VedicPlanet::Saturn =&gt; <span class="string">"인내, 책임, 노력에 대한 결실의 시기"</span>,
+<a href=#304 id=304 data-nosnippet>304</a>                    VedicPlanet::Rahu =&gt; <span class="string">"세속적 야망과 예기치 못한 확장의 시기"</span>,
+<a href=#305 id=305 data-nosnippet>305</a>                    VedicPlanet::Ketu =&gt; <span class="string">"영적 통찰과 분리, 과거의 청산 시기"</span>,
+<a href=#306 id=306 data-nosnippet>306</a>                    <span class="kw">_ </span>=&gt; <span class="string">""</span>,
+<a href=#307 id=307 data-nosnippet>307</a>                };
+<a href=#308 id=308 data-nosnippet>308</a>
+<a href=#309 id=309 data-nosnippet>309</a>                maha.is_favorable = <span class="prelude-val">Some</span>(favorable);
+<a href=#310 id=310 data-nosnippet>310</a>                maha.interpretation = <span class="prelude-val">Some</span>(
+<a href=#311 id=311 data-nosnippet>311</a>                    <span class="macro">format!</span>(
+<a href=#312 id=312 data-nosnippet>312</a>                        <span class="string">"[{}] 이 시기는 {}하우스의 테마({})가 두드러집니다. 행성이 {} {}"</span>,
+<a href=#313 id=313 data-nosnippet>313</a>                        lord_desc,
+<a href=#314 id=314 data-nosnippet>314</a>                        house,
+<a href=#315 id=315 data-nosnippet>315</a>                        theme,
+<a href=#316 id=316 data-nosnippet>316</a>                        dignity_desc,
+<a href=#317 id=317 data-nosnippet>317</a>                        <span class="kw">if </span>!favorable {
+<a href=#318 id=318 data-nosnippet>318</a>                            <span class="string">"어려움을 극복하는 지혜가 필요합니다."
+<a href=#319 id=319 data-nosnippet>319</a>                        </span>} <span class="kw">else </span>{
+<a href=#320 id=320 data-nosnippet>320</a>                            <span class="string">""
+<a href=#321 id=321 data-nosnippet>321</a>                        </span>}
+<a href=#322 id=322 data-nosnippet>322</a>                    )
+<a href=#323 id=323 data-nosnippet>323</a>                    .trim()
+<a href=#324 id=324 data-nosnippet>324</a>                    .to_string(),
+<a href=#325 id=325 data-nosnippet>325</a>                );
 <a href=#326 id=326 data-nosnippet>326</a>
-<a href=#327 id=327 data-nosnippet>327</a>                        <span class="kw">let </span>a_lord_desc = <span class="kw">match </span>antar_lord {
-<a href=#328 id=328 data-nosnippet>328</a>                            VedicPlanet::Sun =&gt; <span class="string">"자아 실현"</span>,
-<a href=#329 id=329 data-nosnippet>329</a>                            VedicPlanet::Moon =&gt; <span class="string">"감정적 교류"</span>,
-<a href=#330 id=330 data-nosnippet>330</a>                            VedicPlanet::Mars =&gt; <span class="string">"추진력"</span>,
-<a href=#331 id=331 data-nosnippet>331</a>                            VedicPlanet::Mercury =&gt; <span class="string">"지적 활동"</span>,
-<a href=#332 id=332 data-nosnippet>332</a>                            VedicPlanet::Jupiter =&gt; <span class="string">"긍정적 확장"</span>,
-<a href=#333 id=333 data-nosnippet>333</a>                            VedicPlanet::Venus =&gt; <span class="string">"관계와 즐거움"</span>,
-<a href=#334 id=334 data-nosnippet>334</a>                            VedicPlanet::Saturn =&gt; <span class="string">"책임과 인내"</span>,
-<a href=#335 id=335 data-nosnippet>335</a>                            VedicPlanet::Rahu =&gt; <span class="string">"세속적 성취욕"</span>,
-<a href=#336 id=336 data-nosnippet>336</a>                            VedicPlanet::Ketu =&gt; <span class="string">"영적 통찰"</span>,
-<a href=#337 id=337 data-nosnippet>337</a>                            <span class="kw">_ </span>=&gt; <span class="string">""</span>,
-<a href=#338 id=338 data-nosnippet>338</a>                        };
-<a href=#339 id=339 data-nosnippet>339</a>
-<a href=#340 id=340 data-nosnippet>340</a>                        antar.is_favorable = <span class="prelude-val">Some</span>(favorable &amp;&amp; a_favorable);
-<a href=#341 id=341 data-nosnippet>341</a>                        antar.interpretation = <span class="prelude-val">Some</span>(<span class="macro">format!</span>(
-<a href=#342 id=342 data-nosnippet>342</a>                            <span class="string">"{}의 분위기 속에서 {}. {}"</span>,
-<a href=#343 id=343 data-nosnippet>343</a>                            a_lord_desc, rel_desc,
-<a href=#344 id=344 data-nosnippet>344</a>                            <span class="kw">if </span>!a_favorable { <span class="string">"돌발적인 변화에 대비하고 무리한 확장을 자제하는 것이 좋습니다." </span>} <span class="kw">else </span>{ <span class="string">"" </span>}
-<a href=#345 id=345 data-nosnippet>345</a>                        ).trim().to_string());
-<a href=#346 id=346 data-nosnippet>346</a>                    }
-<a href=#347 id=347 data-nosnippet>347</a>                }
-<a href=#348 id=348 data-nosnippet>348</a>            }
-<a href=#349 id=349 data-nosnippet>349</a>        }
-<a href=#350 id=350 data-nosnippet>350</a>    }
-<a href=#351 id=351 data-nosnippet>351</a>}
-<a href=#352 id=352 data-nosnippet>352</a>
-<a href=#353 id=353 data-nosnippet>353</a><span class="kw">pub struct </span>YoginiDasha;
-<a href=#354 id=354 data-nosnippet>354</a>
-<a href=#355 id=355 data-nosnippet>355</a><span class="kw">impl </span>YoginiDasha {
-<a href=#356 id=356 data-nosnippet>356</a>    <span class="kw">const </span>CYCLE: [(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, VedicPlanet, f64); <span class="number">8</span>] = [
-<a href=#357 id=357 data-nosnippet>357</a>        (<span class="string">"Mangala"</span>, VedicPlanet::Moon, <span class="number">1.0</span>),
-<a href=#358 id=358 data-nosnippet>358</a>        (<span class="string">"Pingala"</span>, VedicPlanet::Sun, <span class="number">2.0</span>),
-<a href=#359 id=359 data-nosnippet>359</a>        (<span class="string">"Dhanya"</span>, VedicPlanet::Jupiter, <span class="number">3.0</span>),
-<a href=#360 id=360 data-nosnippet>360</a>        (<span class="string">"Bhramari"</span>, VedicPlanet::Mars, <span class="number">4.0</span>),
-<a href=#361 id=361 data-nosnippet>361</a>        (<span class="string">"Bhadrika"</span>, VedicPlanet::Mercury, <span class="number">5.0</span>),
-<a href=#362 id=362 data-nosnippet>362</a>        (<span class="string">"Ulka"</span>, VedicPlanet::Saturn, <span class="number">6.0</span>),
-<a href=#363 id=363 data-nosnippet>363</a>        (<span class="string">"Siddha"</span>, VedicPlanet::Venus, <span class="number">7.0</span>),
-<a href=#364 id=364 data-nosnippet>364</a>        (<span class="string">"Sankata"</span>, VedicPlanet::Rahu, <span class="number">8.0</span>),
-<a href=#365 id=365 data-nosnippet>365</a>    ];
-<a href=#366 id=366 data-nosnippet>366</a>
-<a href=#367 id=367 data-nosnippet>367</a>    <span class="kw">pub fn </span>calculate_timeline(birth_time: DateTime&lt;Utc&gt;, moon_long: f64) -&gt; Vec&lt;DashaPeriod&gt; {
-<a href=#368 id=368 data-nosnippet>368</a>        <span class="kw">let </span>nak_duration = <span class="number">360.0 </span>/ <span class="number">27.0</span>;
-<a href=#369 id=369 data-nosnippet>369</a>        <span class="kw">let </span>nak_index_1 = (moon_long / nak_duration).floor() <span class="kw">as </span>usize + <span class="number">1</span>;
-<a href=#370 id=370 data-nosnippet>370</a>        <span class="kw">let </span><span class="kw-2">mut </span>start_idx = (nak_index_1 + <span class="number">3</span>) % <span class="number">8</span>;
-<a href=#371 id=371 data-nosnippet>371</a>        <span class="kw">if </span>start_idx == <span class="number">0 </span>{
-<a href=#372 id=372 data-nosnippet>372</a>            start_idx = <span class="number">8</span>;
-<a href=#373 id=373 data-nosnippet>373</a>        }
-<a href=#374 id=374 data-nosnippet>374</a>        <span class="kw">let </span>start_idx_0 = start_idx - <span class="number">1</span>;
-<a href=#375 id=375 data-nosnippet>375</a>
-<a href=#376 id=376 data-nosnippet>376</a>        <span class="kw">let </span>elapsed_in_nak = moon_long % nak_duration;
-<a href=#377 id=377 data-nosnippet>377</a>        <span class="kw">let </span>remaining_in_nak = nak_duration - elapsed_in_nak;
-<a href=#378 id=378 data-nosnippet>378</a>        <span class="kw">let </span>portion_remaining = remaining_in_nak / nak_duration;
+<a href=#327 id=327 data-nosnippet>327</a>                <span class="kw">for </span>antar <span class="kw">in </span>maha.sub_dashas.iter_mut() {
+<a href=#328 id=328 data-nosnippet>328</a>                    <span class="kw">let </span>antar_lord = antar.lord;
+<a href=#329 id=329 data-nosnippet>329</a>                    <span class="kw">let </span>antar_pos = chart.planets.iter().find(|p| p.planet == antar_lord);
+<a href=#330 id=330 data-nosnippet>330</a>
+<a href=#331 id=331 data-nosnippet>331</a>                    <span class="kw">if let </span><span class="prelude-val">Some</span>(a_pos) = antar_pos {
+<a href=#332 id=332 data-nosnippet>332</a>                        <span class="kw">let </span>diff =
+<a href=#333 id=333 data-nosnippet>333</a>                            (a_pos.house_index <span class="kw">as </span>i32 - pos.house_index <span class="kw">as </span>i32).rem_euclid(<span class="number">12</span>) + <span class="number">1</span>;
+<a href=#334 id=334 data-nosnippet>334</a>
+<a href=#335 id=335 data-nosnippet>335</a>                        <span class="kw">let </span>(a_favorable, rel_desc) = <span class="kw">match </span>diff {
+<a href=#336 id=336 data-nosnippet>336</a>                            <span class="number">1 </span>| <span class="number">5 </span>| <span class="number">9 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"대운과 소운 행성이 1/5/9 트리콘(Trikona) 조화로운 관계에 있어 발전과 행운이 따릅니다."</span>),
+<a href=#337 id=337 data-nosnippet>337</a>                            <span class="number">3 </span>| <span class="number">11 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"노력에 따른 성과와 인맥 확장이 이루어집니다."</span>),
+<a href=#338 id=338 data-nosnippet>338</a>                            <span class="number">4 </span>| <span class="number">10 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"안정과 성취, 사회적 기틀을 다지는 켄드라(Kendra) 시기입니다."</span>),
+<a href=#339 id=339 data-nosnippet>339</a>                            <span class="number">2 </span>| <span class="number">12 </span>=&gt; (<span class="bool-val">false</span>, <span class="string">"수입과 지출, 혹은 가족과 단절의 이슈가 교차하는 시기입니다."</span>),
+<a href=#340 id=340 data-nosnippet>340</a>                            <span class="number">6 </span>| <span class="number">8 </span>=&gt; (<span class="bool-val">false</span>, <span class="string">"대운 행성과 6/8 축을 형성하여 갑작스러운 변동, 갈등, 건강 이슈 등 시련을 통해 배우는 시기입니다."</span>),
+<a href=#341 id=341 data-nosnippet>341</a>                            <span class="number">7 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"대인관계나 파트너십을 통한 전환점이 발생합니다."</span>),
+<a href=#342 id=342 data-nosnippet>342</a>                            <span class="kw">_ </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"무난한 흐름입니다."</span>),
+<a href=#343 id=343 data-nosnippet>343</a>                        };
+<a href=#344 id=344 data-nosnippet>344</a>
+<a href=#345 id=345 data-nosnippet>345</a>                        <span class="kw">let </span>a_lord_desc = <span class="kw">match </span>antar_lord {
+<a href=#346 id=346 data-nosnippet>346</a>                            VedicPlanet::Sun =&gt; <span class="string">"자아 실현"</span>,
+<a href=#347 id=347 data-nosnippet>347</a>                            VedicPlanet::Moon =&gt; <span class="string">"감정적 교류"</span>,
+<a href=#348 id=348 data-nosnippet>348</a>                            VedicPlanet::Mars =&gt; <span class="string">"추진력"</span>,
+<a href=#349 id=349 data-nosnippet>349</a>                            VedicPlanet::Mercury =&gt; <span class="string">"지적 활동"</span>,
+<a href=#350 id=350 data-nosnippet>350</a>                            VedicPlanet::Jupiter =&gt; <span class="string">"긍정적 확장"</span>,
+<a href=#351 id=351 data-nosnippet>351</a>                            VedicPlanet::Venus =&gt; <span class="string">"관계와 즐거움"</span>,
+<a href=#352 id=352 data-nosnippet>352</a>                            VedicPlanet::Saturn =&gt; <span class="string">"책임과 인내"</span>,
+<a href=#353 id=353 data-nosnippet>353</a>                            VedicPlanet::Rahu =&gt; <span class="string">"세속적 성취욕"</span>,
+<a href=#354 id=354 data-nosnippet>354</a>                            VedicPlanet::Ketu =&gt; <span class="string">"영적 통찰"</span>,
+<a href=#355 id=355 data-nosnippet>355</a>                            <span class="kw">_ </span>=&gt; <span class="string">""</span>,
+<a href=#356 id=356 data-nosnippet>356</a>                        };
+<a href=#357 id=357 data-nosnippet>357</a>
+<a href=#358 id=358 data-nosnippet>358</a>                        antar.is_favorable = <span class="prelude-val">Some</span>(favorable &amp;&amp; a_favorable);
+<a href=#359 id=359 data-nosnippet>359</a>                        antar.interpretation = <span class="prelude-val">Some</span>(
+<a href=#360 id=360 data-nosnippet>360</a>                            <span class="macro">format!</span>(
+<a href=#361 id=361 data-nosnippet>361</a>                                <span class="string">"{}의 분위기 속에서 {}. {}"</span>,
+<a href=#362 id=362 data-nosnippet>362</a>                                a_lord_desc,
+<a href=#363 id=363 data-nosnippet>363</a>                                rel_desc,
+<a href=#364 id=364 data-nosnippet>364</a>                                <span class="kw">if </span>!a_favorable {
+<a href=#365 id=365 data-nosnippet>365</a>                                    <span class="string">"돌발적인 변화에 대비하고 무리한 확장을 자제하는 것이 좋습니다."
+<a href=#366 id=366 data-nosnippet>366</a>                                </span>} <span class="kw">else </span>{
+<a href=#367 id=367 data-nosnippet>367</a>                                    <span class="string">""
+<a href=#368 id=368 data-nosnippet>368</a>                                </span>}
+<a href=#369 id=369 data-nosnippet>369</a>                            )
+<a href=#370 id=370 data-nosnippet>370</a>                            .trim()
+<a href=#371 id=371 data-nosnippet>371</a>                            .to_string(),
+<a href=#372 id=372 data-nosnippet>372</a>                        );
+<a href=#373 id=373 data-nosnippet>373</a>                    }
+<a href=#374 id=374 data-nosnippet>374</a>                }
+<a href=#375 id=375 data-nosnippet>375</a>            }
+<a href=#376 id=376 data-nosnippet>376</a>        }
+<a href=#377 id=377 data-nosnippet>377</a>    }
+<a href=#378 id=378 data-nosnippet>378</a>}
 <a href=#379 id=379 data-nosnippet>379</a>
-<a href=#380 id=380 data-nosnippet>380</a>        <span class="kw">let </span><span class="kw-2">mut </span>timeline = Vec::new();
-<a href=#381 id=381 data-nosnippet>381</a>        <span class="kw">let </span><span class="kw-2">mut </span>current_start = birth_time;
-<a href=#382 id=382 data-nosnippet>382</a>        <span class="kw">let </span>years_to_secs = |y: f64| (y * <span class="number">365.2425 </span>* <span class="number">24.0 </span>* <span class="number">60.0 </span>* <span class="number">60.0</span>) <span class="kw">as </span>i64;
-<a href=#383 id=383 data-nosnippet>383</a>
-<a href=#384 id=384 data-nosnippet>384</a>        <span class="kw">for </span>cycle_num <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
-<a href=#385 id=385 data-nosnippet>385</a>            <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">8 </span>{
-<a href=#386 id=386 data-nosnippet>386</a>                <span class="kw">let </span>idx = (start_idx_0 + i) % <span class="number">8</span>;
-<a href=#387 id=387 data-nosnippet>387</a>                <span class="kw">let </span>(name, lord, full_years) = <span class="self">Self</span>::CYCLE[idx];
-<a href=#388 id=388 data-nosnippet>388</a>                <span class="kw">let </span>actual_years = <span class="kw">if </span>cycle_num == <span class="number">0 </span>&amp;&amp; i == <span class="number">0 </span>{
-<a href=#389 id=389 data-nosnippet>389</a>                    full_years * portion_remaining
-<a href=#390 id=390 data-nosnippet>390</a>                } <span class="kw">else </span>{
-<a href=#391 id=391 data-nosnippet>391</a>                    full_years
-<a href=#392 id=392 data-nosnippet>392</a>                };
-<a href=#393 id=393 data-nosnippet>393</a>                <span class="kw">let </span>end_time = current_start + Duration::seconds(years_to_secs(actual_years));
-<a href=#394 id=394 data-nosnippet>394</a>                timeline.push(DashaPeriod {
-<a href=#395 id=395 data-nosnippet>395</a>                    lord,
-<a href=#396 id=396 data-nosnippet>396</a>                    start_time: current_start,
-<a href=#397 id=397 data-nosnippet>397</a>                    end_time,
-<a href=#398 id=398 data-nosnippet>398</a>                    sub_dashas: Vec::new(),
-<a href=#399 id=399 data-nosnippet>399</a>                    name: <span class="prelude-val">Some</span>(name.to_string()),
-<a href=#400 id=400 data-nosnippet>400</a>                    interpretation: <span class="prelude-val">None</span>,
-<a href=#401 id=401 data-nosnippet>401</a>                    is_favorable: <span class="prelude-val">None</span>,
-<a href=#402 id=402 data-nosnippet>402</a>                });
-<a href=#403 id=403 data-nosnippet>403</a>                current_start = end_time;
-<a href=#404 id=404 data-nosnippet>404</a>            }
-<a href=#405 id=405 data-nosnippet>405</a>        }
-<a href=#406 id=406 data-nosnippet>406</a>        timeline
-<a href=#407 id=407 data-nosnippet>407</a>    }
-<a href=#408 id=408 data-nosnippet>408</a>}
+<a href=#380 id=380 data-nosnippet>380</a><span class="kw">pub struct </span>YoginiDasha;
+<a href=#381 id=381 data-nosnippet>381</a>
+<a href=#382 id=382 data-nosnippet>382</a><span class="kw">impl </span>YoginiDasha {
+<a href=#383 id=383 data-nosnippet>383</a>    <span class="kw">const </span>CYCLE: [(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, VedicPlanet, f64); <span class="number">8</span>] = [
+<a href=#384 id=384 data-nosnippet>384</a>        (<span class="string">"Mangala"</span>, VedicPlanet::Moon, <span class="number">1.0</span>),
+<a href=#385 id=385 data-nosnippet>385</a>        (<span class="string">"Pingala"</span>, VedicPlanet::Sun, <span class="number">2.0</span>),
+<a href=#386 id=386 data-nosnippet>386</a>        (<span class="string">"Dhanya"</span>, VedicPlanet::Jupiter, <span class="number">3.0</span>),
+<a href=#387 id=387 data-nosnippet>387</a>        (<span class="string">"Bhramari"</span>, VedicPlanet::Mars, <span class="number">4.0</span>),
+<a href=#388 id=388 data-nosnippet>388</a>        (<span class="string">"Bhadrika"</span>, VedicPlanet::Mercury, <span class="number">5.0</span>),
+<a href=#389 id=389 data-nosnippet>389</a>        (<span class="string">"Ulka"</span>, VedicPlanet::Saturn, <span class="number">6.0</span>),
+<a href=#390 id=390 data-nosnippet>390</a>        (<span class="string">"Siddha"</span>, VedicPlanet::Venus, <span class="number">7.0</span>),
+<a href=#391 id=391 data-nosnippet>391</a>        (<span class="string">"Sankata"</span>, VedicPlanet::Rahu, <span class="number">8.0</span>),
+<a href=#392 id=392 data-nosnippet>392</a>    ];
+<a href=#393 id=393 data-nosnippet>393</a>
+<a href=#394 id=394 data-nosnippet>394</a>    <span class="kw">pub fn </span>calculate_timeline(birth_time: DateTime&lt;Utc&gt;, moon_long: f64) -&gt; Vec&lt;DashaPeriod&gt; {
+<a href=#395 id=395 data-nosnippet>395</a>        <span class="kw">let </span>nak_duration = <span class="number">360.0 </span>/ <span class="number">27.0</span>;
+<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw">let </span>nak_index_1 = (moon_long / nak_duration).floor() <span class="kw">as </span>usize + <span class="number">1</span>;
+<a href=#397 id=397 data-nosnippet>397</a>        <span class="kw">let </span><span class="kw-2">mut </span>start_idx = (nak_index_1 + <span class="number">3</span>) % <span class="number">8</span>;
+<a href=#398 id=398 data-nosnippet>398</a>        <span class="kw">if </span>start_idx == <span class="number">0 </span>{
+<a href=#399 id=399 data-nosnippet>399</a>            start_idx = <span class="number">8</span>;
+<a href=#400 id=400 data-nosnippet>400</a>        }
+<a href=#401 id=401 data-nosnippet>401</a>        <span class="kw">let </span>start_idx_0 = start_idx - <span class="number">1</span>;
+<a href=#402 id=402 data-nosnippet>402</a>
+<a href=#403 id=403 data-nosnippet>403</a>        <span class="kw">let </span>elapsed_in_nak = moon_long % nak_duration;
+<a href=#404 id=404 data-nosnippet>404</a>        <span class="kw">let </span>remaining_in_nak = nak_duration - elapsed_in_nak;
+<a href=#405 id=405 data-nosnippet>405</a>        <span class="kw">let </span>portion_remaining = remaining_in_nak / nak_duration;
+<a href=#406 id=406 data-nosnippet>406</a>
+<a href=#407 id=407 data-nosnippet>407</a>        <span class="kw">let </span><span class="kw-2">mut </span>timeline = Vec::new();
+<a href=#408 id=408 data-nosnippet>408</a>        <span class="kw">let </span><span class="kw-2">mut </span>current_start = birth_time;
+<a href=#409 id=409 data-nosnippet>409</a>        <span class="kw">let </span>years_to_secs = |y: f64| (y * <span class="number">365.2425 </span>* <span class="number">24.0 </span>* <span class="number">60.0 </span>* <span class="number">60.0</span>) <span class="kw">as </span>i64;
+<a href=#410 id=410 data-nosnippet>410</a>
+<a href=#411 id=411 data-nosnippet>411</a>        <span class="kw">for </span>cycle_num <span class="kw">in </span><span class="number">0</span>..<span class="number">3 </span>{
+<a href=#412 id=412 data-nosnippet>412</a>            <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">8 </span>{
+<a href=#413 id=413 data-nosnippet>413</a>                <span class="kw">let </span>idx = (start_idx_0 + i) % <span class="number">8</span>;
+<a href=#414 id=414 data-nosnippet>414</a>                <span class="kw">let </span>(name, lord, full_years) = <span class="self">Self</span>::CYCLE[idx];
+<a href=#415 id=415 data-nosnippet>415</a>                <span class="kw">let </span>actual_years = <span class="kw">if </span>cycle_num == <span class="number">0 </span>&amp;&amp; i == <span class="number">0 </span>{
+<a href=#416 id=416 data-nosnippet>416</a>                    full_years * portion_remaining
+<a href=#417 id=417 data-nosnippet>417</a>                } <span class="kw">else </span>{
+<a href=#418 id=418 data-nosnippet>418</a>                    full_years
+<a href=#419 id=419 data-nosnippet>419</a>                };
+<a href=#420 id=420 data-nosnippet>420</a>                <span class="kw">let </span>end_time = current_start + Duration::seconds(years_to_secs(actual_years));
+<a href=#421 id=421 data-nosnippet>421</a>                timeline.push(DashaPeriod {
+<a href=#422 id=422 data-nosnippet>422</a>                    lord,
+<a href=#423 id=423 data-nosnippet>423</a>                    start_time: current_start,
+<a href=#424 id=424 data-nosnippet>424</a>                    end_time,
+<a href=#425 id=425 data-nosnippet>425</a>                    sub_dashas: Vec::new(),
+<a href=#426 id=426 data-nosnippet>426</a>                    name: <span class="prelude-val">Some</span>(name.to_string()),
+<a href=#427 id=427 data-nosnippet>427</a>                    interpretation: <span class="prelude-val">None</span>,
+<a href=#428 id=428 data-nosnippet>428</a>                    is_favorable: <span class="prelude-val">None</span>,
+<a href=#429 id=429 data-nosnippet>429</a>                });
+<a href=#430 id=430 data-nosnippet>430</a>                current_start = end_time;
+<a href=#431 id=431 data-nosnippet>431</a>            }
+<a href=#432 id=432 data-nosnippet>432</a>        }
+<a href=#433 id=433 data-nosnippet>433</a>        timeline
+<a href=#434 id=434 data-nosnippet>434</a>    }
+<a href=#435 id=435 data-nosnippet>435</a>}
 </code></pre></div></section></main></body></html>

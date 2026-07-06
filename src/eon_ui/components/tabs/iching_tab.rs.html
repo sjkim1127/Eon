@@ -84,14 +84,14 @@
 <a href=#84 id=84 data-nosnippet>84</a>                                <span class="kw">let </span>form_cloned = state.form.read().clone();
 <a href=#85 id=85 data-nosnippet>85</a>                                <span class="kw">let </span>btn_text = <span class="kw">if </span><span class="kw-2">*</span>copied_feedback.read() {
 <a href=#86 id=86 data-nosnippet>86</a>                                    <span class="kw">match </span>locale {
-<a href=#87 id=87 data-nosnippet>87</a>                                        Locale::Ko =&gt; <span class="string">"복사 완료! (Copied!)"</span>,
+<a href=#87 id=87 data-nosnippet>87</a>                                        Locale::Ko =&gt; <span class="string">"{t(locale, TK::IchingCopied)}"</span>,
 <a href=#88 id=88 data-nosnippet>88</a>                                        Locale::En =&gt; <span class="string">"Copied!"</span>,
 <a href=#89 id=89 data-nosnippet>89</a>                                        Locale::Zh =&gt; <span class="string">"复制成功!"</span>,
 <a href=#90 id=90 data-nosnippet>90</a>                                        Locale::Ru =&gt; <span class="string">"Скопировано!"</span>,
 <a href=#91 id=91 data-nosnippet>91</a>                                    }
 <a href=#92 id=92 data-nosnippet>92</a>                                } <span class="kw">else </span>{
 <a href=#93 id=93 data-nosnippet>93</a>                                    <span class="kw">match </span>locale {
-<a href=#94 id=94 data-nosnippet>94</a>                                        Locale::Ko =&gt; <span class="string">"📋 보고서 복사"</span>,
+<a href=#94 id=94 data-nosnippet>94</a>                                        Locale::Ko =&gt; <span class="string">"{t(locale, TK::IchingCopyReport)}"</span>,
 <a href=#95 id=95 data-nosnippet>95</a>                                        Locale::En =&gt; <span class="string">"Copy Report"</span>,
 <a href=#96 id=96 data-nosnippet>96</a>                                        Locale::Zh =&gt; <span class="string">"复制报告"</span>,
 <a href=#97 id=97 data-nosnippet>97</a>                                        Locale::Ru =&gt; <span class="string">"Копировать отчет"</span>,
@@ -204,11 +204,11 @@
 <a href=#204 id=204 data-nosnippet>204</a>
 <a href=#205 id=205 data-nosnippet>205</a>                        <span class="comment">// 체용 관계 해설 텍스트 생성
 <a href=#206 id=206 data-nosnippet>206</a>                        </span><span class="kw">let </span>ti_yong_rel_text = <span class="kw">match </span>res.ti_yong.relationship {
-<a href=#207 id=207 data-nosnippet>207</a>                            ElementRelation::Same =&gt; <span class="string">"체(體)와 용(用)이 비화(比和)하여 내외의 역량이 조화를 이루고, 하는 일마다 막힘없이 순조롭게 번창하는 격국입니다. (吉)"</span>,
-<a href=#208 id=208 data-nosnippet>208</a>                            ElementRelation::Generates =&gt; <span class="string">"내(體)가 환경(用)을 도와주거나 설기(洩氣)하니, 겉으로는 힘을 쓰나 내실이 부족할 수 있어 기력 낭비를 조심해야 합니다. (平)"</span>,
-<a href=#209 id=209 data-nosnippet>209</a>                            ElementRelation::GeneratedBy =&gt; <span class="string">"환경(用)이 나(體)를 상생(相生)하여 든든히 뒷받침해주니, 생각지 못한 은인과 귀인의 원조를 통해 크게 성취하는 격국입니다. (大吉)"</span>,
-<a href=#210 id=210 data-nosnippet>210</a>                            ElementRelation::Controls =&gt; <span class="string">"내(體)가 환경(用)을 극(剋)하여 주도권을 잡으니, 장애를 극복하고 스스로의 힘으로 성취를 쟁취하며 재물을 성실히 축적합니다. (吉)"</span>,
-<a href=#211 id=211 data-nosnippet>211</a>                            ElementRelation::ControlledBy =&gt; <span class="string">"환경(用)이 나(體)를 극(剋)해와 사방의 억압이 심하니, 주위의 고난과 방해가 잦아 인내와 각별한 신중함이 요구되는 격국입니다. (凶)"</span>,
+<a href=#207 id=207 data-nosnippet>207</a>                            ElementRelation::Same =&gt; <span class="string">"{t(locale, TK::IchingTiYongBiHe)}"</span>,
+<a href=#208 id=208 data-nosnippet>208</a>                            ElementRelation::Generates =&gt; <span class="string">"{t(locale, TK::IchingTiHelpsYong)}"</span>,
+<a href=#209 id=209 data-nosnippet>209</a>                            ElementRelation::GeneratedBy =&gt; <span class="string">"{t(locale, TK::IchingYongHelpsTi)}"</span>,
+<a href=#210 id=210 data-nosnippet>210</a>                            ElementRelation::Controls =&gt; <span class="string">"{t(locale, TK::IchingTiControlsYong)}"</span>,
+<a href=#211 id=211 data-nosnippet>211</a>                            ElementRelation::ControlledBy =&gt; <span class="string">"{t(locale, TK::IchingYongControlsTi)}"</span>,
 <a href=#212 id=212 data-nosnippet>212</a>                        };
 <a href=#213 id=213 data-nosnippet>213</a>
 <a href=#214 id=214 data-nosnippet>214</a>                        <span class="comment">// 현재 선택된 나이에 따른 유년괘 추출
@@ -224,16 +224,16 @@
 <a href=#224 id=224 data-nosnippet>224</a>                                            span { class: <span class="string">"text-xs font-bold text-violet-400 tracking-wider uppercase"</span>, <span class="string">"{t(locale, TK::IChingYuanQi)}" </span>}
 <a href=#225 id=225 data-nosnippet>225</a>                                            h4 { class: <span class="string">"text-xl font-black text-slate-100 flex items-center gap-2"</span>,
 <a href=#226 id=226 data-nosnippet>226</a>                                                <span class="kw">if </span>res.yuan_qi {
-<a href=#227 id=227 data-nosnippet>227</a>                                                    span { class: <span class="string">"text-emerald-400"</span>, <span class="string">"得元氣 (득원기)" </span>}
+<a href=#227 id=227 data-nosnippet>227</a>                                                    span { class: <span class="string">"text-emerald-400"</span>, <span class="string">"{t(locale, TK::IchingGetYuanQi)}" </span>}
 <a href=#228 id=228 data-nosnippet>228</a>                                                } <span class="kw">else </span>{
-<a href=#229 id=229 data-nosnippet>229</a>                                                    span { class: <span class="string">"text-slate-400"</span>, <span class="string">"失元氣 (실원기)" </span>}
+<a href=#229 id=229 data-nosnippet>229</a>                                                    span { class: <span class="string">"text-slate-400"</span>, <span class="string">"{t(locale, TK::IchingLoseYuanQi)}" </span>}
 <a href=#230 id=230 data-nosnippet>230</a>                                                }
 <a href=#231 id=231 data-nosnippet>231</a>                                            }
 <a href=#232 id=232 data-nosnippet>232</a>                                            p { class: <span class="string">"text-xs text-slate-400 leading-relaxed"</span>,
 <a href=#233 id=233 data-nosnippet>233</a>                                                <span class="kw">if </span>res.yuan_qi {
-<a href=#234 id=234 data-nosnippet>234</a>                                                    <span class="string">"출생 연도의 납음(納音) 오행과 평생 본명괘의 오행이 상생 또는 비화되어, 하늘의 원천적인 기운과 큰 지지를 얻었습니다."
+<a href=#234 id=234 data-nosnippet>234</a>                                                    <span class="string">"{t(locale, TK::IchingSourceGood)}"
 <a href=#235 id=235 data-nosnippet>235</a>                                                </span>} <span class="kw">else </span>{
-<a href=#236 id=236 data-nosnippet>236</a>                                                    <span class="string">"원천적 상생 기운은 다소 아쉬우나, 후천적 노력을 통해 자신의 고유한 운명을 개척해나갈 수 있습니다."
+<a href=#236 id=236 data-nosnippet>236</a>                                                    <span class="string">"{t(locale, TK::IchingSourceBad)}"
 <a href=#237 id=237 data-nosnippet>237</a>                                                </span>}
 <a href=#238 id=238 data-nosnippet>238</a>                                            }
 <a href=#239 id=239 data-nosnippet>239</a>                                        }
@@ -248,16 +248,16 @@
 <a href=#248 id=248 data-nosnippet>248</a>                                            span { class: <span class="string">"text-xs font-bold text-indigo-400 tracking-wider uppercase"</span>, <span class="string">"{t(locale, TK::IChingHuaGong)}" </span>}
 <a href=#249 id=249 data-nosnippet>249</a>                                            h4 { class: <span class="string">"text-xl font-black text-slate-100 flex items-center gap-2"</span>,
 <a href=#250 id=250 data-nosnippet>250</a>                                                <span class="kw">if </span>res.hua_gong {
-<a href=#251 id=251 data-nosnippet>251</a>                                                    span { class: <span class="string">"text-emerald-400"</span>, <span class="string">"得化工 (득화공)" </span>}
+<a href=#251 id=251 data-nosnippet>251</a>                                                    span { class: <span class="string">"text-emerald-400"</span>, <span class="string">"{t(locale, TK::IchingGetHuaGong)}" </span>}
 <a href=#252 id=252 data-nosnippet>252</a>                                                } <span class="kw">else </span>{
-<a href=#253 id=253 data-nosnippet>253</a>                                                    span { class: <span class="string">"text-slate-400"</span>, <span class="string">"失化工 (실화공)" </span>}
+<a href=#253 id=253 data-nosnippet>253</a>                                                    span { class: <span class="string">"text-slate-400"</span>, <span class="string">"{t(locale, TK::IchingLoseHuaGong)}" </span>}
 <a href=#254 id=254 data-nosnippet>254</a>                                                }
 <a href=#255 id=255 data-nosnippet>255</a>                                            }
 <a href=#256 id=256 data-nosnippet>256</a>                                            p { class: <span class="string">"text-xs text-slate-400 leading-relaxed"</span>,
 <a href=#257 id=257 data-nosnippet>257</a>                                                <span class="kw">if </span>res.hua_gong {
-<a href=#258 id=258 data-nosnippet>258</a>                                                    <span class="string">"태어난 계절의 기운(월지)에 맞춰 본명괘가 힘과 지지(旺/相)를 얻어, 계절의 조화와 환경의 귀한 기회를 득했습니다."
+<a href=#258 id=258 data-nosnippet>258</a>                                                    <span class="string">"{t(locale, TK::IchingSeasonGood)}"
 <a href=#259 id=259 data-nosnippet>259</a>                                                </span>} <span class="kw">else </span>{
-<a href=#260 id=260 data-nosnippet>260</a>                                                    <span class="string">"계절의 조화는 득하지 못했으나, 주변 인덕과 환경의 변화를 슬기롭게 포착하여 발전할 수 있습니다."
+<a href=#260 id=260 data-nosnippet>260</a>                                                    <span class="string">"{t(locale, TK::IchingSeasonBad)}"
 <a href=#261 id=261 data-nosnippet>261</a>                                                </span>}
 <a href=#262 id=262 data-nosnippet>262</a>                                            }
 <a href=#263 id=263 data-nosnippet>263</a>                                        }
@@ -279,8 +279,8 @@
 <a href=#279 id=279 data-nosnippet>279</a>                                                    <span class="string">"{t(locale, TK::IChingPreNatal)}"
 <a href=#280 id=280 data-nosnippet>280</a>                                                </span>}
 <a href=#281 id=281 data-nosnippet>281</a>                                                span { class: <span class="string">"text-xs bg-violet-500/10 text-violet-300 px-2 py-0.5 rounded-full border border-violet-500/20 font-semibold"</span>,
-<a href=#282 id=282 data-nosnippet>282</a>                                                    <span class="string">"본괘 {res.pre_natal_hexagram}"
-<a href=#283 id=283 data-nosnippet>283</a>                                                </span>}
+<a href=#282 id=282 data-nosnippet>282</a>                                                    {t(locale, TK::IchingPreNatal).replace(<span class="string">"{}"</span>, <span class="kw-2">&amp;</span>res.pre_natal_hexagram.to_string())}
+<a href=#283 id=283 data-nosnippet>283</a>                                                }
 <a href=#284 id=284 data-nosnippet>284</a>                                            }
 <a href=#285 id=285 data-nosnippet>285</a>
 <a href=#286 id=286 data-nosnippet>286</a>                                            <span class="comment">// 선천괘 효 렌더링
@@ -343,8 +343,8 @@
 <a href=#343 id=343 data-nosnippet>343</a>                                                                </span>}
 <a href=#344 id=344 data-nosnippet>344</a>                                                            }
 <a href=#345 id=345 data-nosnippet>345</a>                                                            span { class: <span class="string">"absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400"</span>,
-<a href=#346 id=346 data-nosnippet>346</a>                                                                <span class="string">"{line_num} 효"
-<a href=#347 id=347 data-nosnippet>347</a>                                                            </span>}
+<a href=#346 id=346 data-nosnippet>346</a>                                                                {t(locale, TK::IchingLineNum).replace(<span class="string">"{}"</span>, <span class="kw-2">&amp;</span>line_num.to_string())}
+<a href=#347 id=347 data-nosnippet>347</a>                                                            }
 <a href=#348 id=348 data-nosnippet>348</a>                                                        }
 <a href=#349 id=349 data-nosnippet>349</a>                                                    }
 <a href=#350 id=350 data-nosnippet>350</a>                                                })}
@@ -359,8 +359,8 @@
 <a href=#359 id=359 data-nosnippet>359</a>                                                    <span class="string">"{t(locale, TK::IChingPostNatal)}"
 <a href=#360 id=360 data-nosnippet>360</a>                                                </span>}
 <a href=#361 id=361 data-nosnippet>361</a>                                                span { class: <span class="string">"text-xs bg-indigo-500/10 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/20 font-semibold"</span>,
-<a href=#362 id=362 data-nosnippet>362</a>                                                    <span class="string">"본괘 {res.post_natal_hexagram}"
-<a href=#363 id=363 data-nosnippet>363</a>                                                </span>}
+<a href=#362 id=362 data-nosnippet>362</a>                                                    {t(locale, TK::IchingPostNatal).replace(<span class="string">"{}"</span>, <span class="kw-2">&amp;</span>res.post_natal_hexagram.to_string())}
+<a href=#363 id=363 data-nosnippet>363</a>                                                }
 <a href=#364 id=364 data-nosnippet>364</a>                                            }
 <a href=#365 id=365 data-nosnippet>365</a>
 <a href=#366 id=366 data-nosnippet>366</a>                                            <span class="comment">// 후천괘 효 렌더링
@@ -402,8 +402,8 @@
 <a href=#402 id=402 data-nosnippet>402</a>                                                                }
 <a href=#403 id=403 data-nosnippet>403</a>                                                            }}
 <a href=#404 id=404 data-nosnippet>404</a>                                                            span { class: <span class="string">"absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400"</span>,
-<a href=#405 id=405 data-nosnippet>405</a>                                                                <span class="string">"{line_num} 효"
-<a href=#406 id=406 data-nosnippet>406</a>                                                            </span>}
+<a href=#405 id=405 data-nosnippet>405</a>                                                                {t(locale, TK::IchingLineNum).replace(<span class="string">"{}"</span>, <span class="kw-2">&amp;</span>line_num.to_string())}
+<a href=#406 id=406 data-nosnippet>406</a>                                                            }
 <a href=#407 id=407 data-nosnippet>407</a>                                                        }
 <a href=#408 id=408 data-nosnippet>408</a>                                                    }
 <a href=#409 id=409 data-nosnippet>409</a>                                                })}
@@ -425,11 +425,11 @@
 <a href=#425 id=425 data-nosnippet>425</a>                                                    }
 <a href=#426 id=426 data-nosnippet>426</a>                                                    span { class: <span class="string">"text-slate-600"</span>, <span class="string">"|" </span>}
 <a href=#427 id=427 data-nosnippet>427</a>                                                    span { class: <span class="string">"text-xs font-bold text-slate-450"</span>,
-<a href=#428 id=428 data-nosnippet>428</a>                                                        <span class="string">"{active_line_idx} 효 선택됨"
-<a href=#429 id=429 data-nosnippet>429</a>                                                    </span>}
+<a href=#428 id=428 data-nosnippet>428</a>                                                        {t(locale, TK::IchingLineSelected).replace(<span class="string">"{}"</span>, <span class="kw-2">&amp;</span>active_line_idx.to_string())}
+<a href=#429 id=429 data-nosnippet>429</a>                                                    }
 <a href=#430 id=430 data-nosnippet>430</a>                                                    <span class="kw">if </span>is_active_yuan_dang {
 <a href=#431 id=431 data-nosnippet>431</a>                                                        span { class: <span class="string">"px-1.5 py-0.5 text-[9px] font-black text-amber-450 bg-amber-950/50 rounded border border-amber-500/20"</span>,
-<a href=#432 id=432 data-nosnippet>432</a>                                                            <span class="string">"원당효"
+<a href=#432 id=432 data-nosnippet>432</a>                                                            <span class="string">"{t(locale, TK::IchingYuanDang)}"
 <a href=#433 id=433 data-nosnippet>433</a>                                                        </span>}
 <a href=#434 id=434 data-nosnippet>434</a>                                                    }
 <a href=#435 id=435 data-nosnippet>435</a>                                                }
@@ -446,11 +446,11 @@
 <a href=#446 id=446 data-nosnippet>446</a>                                            </span>div { class: <span class="string">"p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 space-y-2"</span>,
 <a href=#447 id=447 data-nosnippet>447</a>                                                h5 { class: <span class="string">"text-xs font-black text-slate-300 tracking-wide flex items-center gap-1.5"</span>,
 <a href=#448 id=448 data-nosnippet>448</a>                                                    span { <span class="string">"⚖️" </span>}
-<a href=#449 id=449 data-nosnippet>449</a>                                                    <span class="string">"체용(體用) 분석"
+<a href=#449 id=449 data-nosnippet>449</a>                                                    <span class="string">"{t(locale, TK::IchingTiYongAnalysis)}"
 <a href=#450 id=450 data-nosnippet>450</a>                                                </span>}
 <a href=#451 id=451 data-nosnippet>451</a>                                                div { class: <span class="string">"flex gap-4 text-xs font-bold text-slate-200 py-1 border-b border-slate-800/60"</span>,
-<a href=#452 id=452 data-nosnippet>452</a>                                                    span { <span class="string">"체(體): {res.ti_yong.ti_element.hangul()}({res.ti_yong.ti_element.hanja()})" </span>}
-<a href=#453 id=453 data-nosnippet>453</a>                                                    span { <span class="string">"용(用): {res.ti_yong.yong_element.hangul()}({res.ti_yong.yong_element.hanja()})" </span>}
+<a href=#452 id=452 data-nosnippet>452</a>                                                    span { {t(locale, TK::IchingTiElement).replace(<span class="string">"{}"</span>, res.ti_yong.ti_element.hangul()).replace(<span class="string">"{}"</span>, res.ti_yong.ti_element.hanja())} }
+<a href=#453 id=453 data-nosnippet>453</a>                                                    span { {t(locale, TK::IchingYongElement).replace(<span class="string">"{}"</span>, res.ti_yong.yong_element.hangul()).replace(<span class="string">"{}"</span>, res.ti_yong.yong_element.hanja())} }
 <a href=#454 id=454 data-nosnippet>454</a>                                                }
 <a href=#455 id=455 data-nosnippet>455</a>                                                p { class: <span class="string">"text-xs text-slate-400 leading-relaxed"</span>, <span class="string">"{ti_yong_rel_text}" </span>}
 <a href=#456 id=456 data-nosnippet>456</a>                                            }
@@ -470,26 +470,26 @@
 <a href=#470 id=470 data-nosnippet>470</a>                                                <span class="comment">// 납갑 &amp; 신살 정보 바 렌더링
 <a href=#471 id=471 data-nosnippet>471</a>                                                </span>div { class: <span class="string">"flex flex-wrap gap-2 text-[10px] pb-2 border-b border-slate-800/50"</span>,
 <a href=#472 id=472 data-nosnippet>472</a>                                                    span { class: <span class="string">"px-2 py-0.5 rounded bg-slate-850 text-slate-300 font-bold"</span>,
-<a href=#473 id=473 data-nosnippet>473</a>                                                        <span class="string">"납갑: {active_najia.stem.hanja()}{active_najia.branch.hanja()} ({active_najia.stem.hangul()}{active_najia.branch.hangul()})"
-<a href=#474 id=474 data-nosnippet>474</a>                                                    </span>}
+<a href=#473 id=473 data-nosnippet>473</a>                                                        {t(locale, TK::IchingNajia).replace(<span class="string">"{}"</span>, active_najia.stem.hanja()).replace(<span class="string">"{}"</span>, active_najia.branch.hanja())}
+<a href=#474 id=474 data-nosnippet>474</a>                                                    }
 <a href=#475 id=475 data-nosnippet>475</a>                                                    <span class="kw">if </span>active_shinsal.is_noble {
 <a href=#476 id=476 data-nosnippet>476</a>                                                        span { class: <span class="string">"px-2 py-0.5 rounded bg-emerald-950/50 text-emerald-450 border border-emerald-900/60 font-bold"</span>,
-<a href=#477 id=477 data-nosnippet>477</a>                                                            <span class="string">"✨ 귀인"
+<a href=#477 id=477 data-nosnippet>477</a>                                                            <span class="string">"{t(locale, TK::IchingNoble)}"
 <a href=#478 id=478 data-nosnippet>478</a>                                                        </span>}
 <a href=#479 id=479 data-nosnippet>479</a>                                                    }
 <a href=#480 id=480 data-nosnippet>480</a>                                                    <span class="kw">if </span>active_shinsal.is_void {
 <a href=#481 id=481 data-nosnippet>481</a>                                                        span { class: <span class="string">"px-2 py-0.5 rounded bg-rose-950/50 text-rose-450 border border-rose-900/60 font-bold"</span>,
-<a href=#482 id=482 data-nosnippet>482</a>                                                            <span class="string">"🕳️ 공망"
+<a href=#482 id=482 data-nosnippet>482</a>                                                            <span class="string">"{t(locale, TK::IchingVoid)}"
 <a href=#483 id=483 data-nosnippet>483</a>                                                        </span>}
 <a href=#484 id=484 data-nosnippet>484</a>                                                    }
 <a href=#485 id=485 data-nosnippet>485</a>                                                    <span class="kw">if </span>active_shinsal.is_rok {
 <a href=#486 id=486 data-nosnippet>486</a>                                                        span { class: <span class="string">"px-2 py-0.5 rounded bg-amber-950/50 text-amber-450 border border-amber-900/60 font-bold"</span>,
-<a href=#487 id=487 data-nosnippet>487</a>                                                            <span class="string">"💰 록"
+<a href=#487 id=487 data-nosnippet>487</a>                                                            <span class="string">"{t(locale, TK::IchingLu)}"
 <a href=#488 id=488 data-nosnippet>488</a>                                                        </span>}
 <a href=#489 id=489 data-nosnippet>489</a>                                                    }
 <a href=#490 id=490 data-nosnippet>490</a>                                                    <span class="kw">if </span>active_shinsal.is_horse {
 <a href=#491 id=491 data-nosnippet>491</a>                                                        span { class: <span class="string">"px-2 py-0.5 rounded bg-blue-950/50 text-blue-450 border border-blue-900/60 font-bold"</span>,
-<a href=#492 id=492 data-nosnippet>492</a>                                                            <span class="string">"🐎 역마"
+<a href=#492 id=492 data-nosnippet>492</a>                                                            <span class="string">"{t(locale, TK::IchingHorse)}"
 <a href=#493 id=493 data-nosnippet>493</a>                                                        </span>}
 <a href=#494 id=494 data-nosnippet>494</a>                                                    }
 <a href=#495 id=495 data-nosnippet>495</a>                                                }
@@ -552,7 +552,7 @@
 <a href=#552 id=552 data-nosnippet>552</a>                                                                    div { class: <span class="string">"flex items-center gap-2"</span>,
 <a href=#553 id=553 data-nosnippet>553</a>                                                                        span { class: <span class="string">"text-xs text-slate-400"</span>, <span class="string">"{line_name}" </span>}
 <a href=#554 id=554 data-nosnippet>554</a>                                                                        span { class: <span class="string">"text-[10px] px-1 py-0.2 bg-slate-800 text-slate-500 rounded font-medium"</span>,
-<a href=#555 id=555 data-nosnippet>555</a>                                                                            <span class="kw">if </span>cycle.is_pre_natal { <span class="string">"선천" </span>} <span class="kw">else </span>{ <span class="string">"후천" </span>}
+<a href=#555 id=555 data-nosnippet>555</a>                                                                            <span class="kw">if </span>cycle.is_pre_natal { <span class="string">"{t(locale, TK::IchingPrenatalLabel)}" </span>} <span class="kw">else </span>{ <span class="string">"{t(locale, TK::IchingPostnatalLabel)}" </span>}
 <a href=#556 id=556 data-nosnippet>556</a>                                                                        }
 <a href=#557 id=557 data-nosnippet>557</a>                                                                    }
 <a href=#558 id=558 data-nosnippet>558</a>                                                                }
@@ -560,7 +560,7 @@
 <a href=#560 id=560 data-nosnippet>560</a>                                                            div { class: <span class="string">"flex items-center gap-2"</span>,
 <a href=#561 id=561 data-nosnippet>561</a>                                                                <span class="kw">if </span>is_active_cycle {
 <a href=#562 id=562 data-nosnippet>562</a>                                                                    span { class: <span class="string">"text-[10px] font-black bg-gradient-to-r from-violet-500 to-indigo-500 text-white px-2 py-0.5 rounded-full border border-violet-400/20 animate-pulse tracking-wide"</span>,
-<a href=#563 id=563 data-nosnippet>563</a>                                                                        <span class="string">"현재 주기"
+<a href=#563 id=563 data-nosnippet>563</a>                                                                        <span class="string">"{t(locale, TK::IchingCurrentCycle)}"
 <a href=#564 id=564 data-nosnippet>564</a>                                                                    </span>}
 <a href=#565 id=565 data-nosnippet>565</a>                                                                }
 <a href=#566 id=566 data-nosnippet>566</a>                                                                span { class: <span class="string">"text-slate-600 text-sm"</span>, <span class="string">"›" </span>}
@@ -598,17 +598,17 @@
 <a href=#598 id=598 data-nosnippet>598</a>                                            div { class: <span class="string">"border-b border-slate-855 pb-4 space-y-2"</span>,
 <a href=#599 id=599 data-nosnippet>599</a>                                                h3 { class: <span class="string">"text-lg font-bold text-slate-200 flex items-center gap-2"</span>,
 <a href=#600 id=600 data-nosnippet>600</a>                                                    span { <span class="string">"🌀" </span>}
-<a href=#601 id=601 data-nosnippet>601</a>                                                    <span class="string">"유년괘(流年卦) 세운 조회"
+<a href=#601 id=601 data-nosnippet>601</a>                                                    <span class="string">"{t(locale, TK::IchingYearHexSearch)}"
 <a href=#602 id=602 data-nosnippet>602</a>                                                </span>}
 <a href=#603 id=603 data-nosnippet>603</a>                                                p { class: <span class="string">"text-xs text-slate-400 leading-relaxed"</span>,
-<a href=#604 id=604 data-nosnippet>604</a>                                                    <span class="string">"원당효부터 경과한 세수에 따라 매년 괘상의 1개 효가 동(動)하여 해당 세운의 유년괘를 형성합니다. 슬라이더를 통해 만나이별 세운의 변화를 조회해보세요."
+<a href=#604 id=604 data-nosnippet>604</a>                                                    <span class="string">"{t(locale, TK::IchingYuanDangDesc)}"
 <a href=#605 id=605 data-nosnippet>605</a>                                                </span>}
 <a href=#606 id=606 data-nosnippet>606</a>                                            }
 <a href=#607 id=607 data-nosnippet>607</a>
 <a href=#608 id=608 data-nosnippet>608</a>                                            <span class="comment">// 나이 선택 슬라이더 위젯
 <a href=#609 id=609 data-nosnippet>609</a>                                            </span>div { class: <span class="string">"p-4 rounded-2xl bg-slate-955/40 border border-slate-800/80 flex flex-col md:flex-row items-center gap-4 justify-between"</span>,
 <a href=#610 id=610 data-nosnippet>610</a>                                                div { class: <span class="string">"flex items-center gap-2 w-full md:w-auto justify-between md:justify-start"</span>,
-<a href=#611 id=611 data-nosnippet>611</a>                                                    span { class: <span class="string">"text-sm text-slate-400 font-medium"</span>, <span class="string">"연도 조절" </span>}
+<a href=#611 id=611 data-nosnippet>611</a>                                                    span { class: <span class="string">"text-sm text-slate-400 font-medium"</span>, <span class="string">"{t(locale, TK::IchingYearAdjust)}" </span>}
 <a href=#612 id=612 data-nosnippet>612</a>                                                    div { class: <span class="string">"flex items-center gap-1.5"</span>,
 <a href=#613 id=613 data-nosnippet>613</a>                                                        button {
 <a href=#614 id=614 data-nosnippet>614</a>                                                            class: <span class="string">"w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700/60 font-bold text-slate-200 cursor-pointer flex items-center justify-center active:scale-90 transition-transform"</span>,
@@ -619,8 +619,8 @@
 <a href=#619 id=619 data-nosnippet>619</a>                                                            <span class="string">"−"
 <a href=#620 id=620 data-nosnippet>620</a>                                                        </span>}
 <a href=#621 id=621 data-nosnippet>621</a>                                                        span { class: <span class="string">"px-4 py-1.5 rounded-xl bg-slate-900 border border-slate-850 font-black text-lg text-violet-400 min-w-[70px] text-center"</span>,
-<a href=#622 id=622 data-nosnippet>622</a>                                                            <span class="string">"{selected_age} 세"
-<a href=#623 id=623 data-nosnippet>623</a>                                                        </span>}
+<a href=#622 id=622 data-nosnippet>622</a>                                                            {t(locale, TK::IchingAgeVal).replace(<span class="string">"{}"</span>, <span class="kw-2">&amp;</span>selected_age.to_string())}
+<a href=#623 id=623 data-nosnippet>623</a>                                                        }
 <a href=#624 id=624 data-nosnippet>624</a>                                                        button {
 <a href=#625 id=625 data-nosnippet>625</a>                                                            class: <span class="string">"w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700/60 font-bold text-slate-200 cursor-pointer flex items-center justify-center active:scale-90 transition-transform"</span>,
 <a href=#626 id=626 data-nosnippet>626</a>                                                            onclick: <span class="kw">move </span>|<span class="kw">_</span>| {
@@ -679,7 +679,7 @@
 <a href=#679 id=679 data-nosnippet>679</a>                                                                    }}
 <a href=#680 id=680 data-nosnippet>680</a>                                                                    <span class="kw">if </span>is_yearly_change_line {
 <a href=#681 id=681 data-nosnippet>681</a>                                                                        span { class: <span class="string">"absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2 text-[8px] font-black text-yellow-300 bg-slate-900/90 px-1 py-0.2 rounded border border-yellow-500/20 tracking-wider scale-90"</span>,
-<a href=#682 id=682 data-nosnippet>682</a>                                                                            <span class="string">"동(動)"
+<a href=#682 id=682 data-nosnippet>682</a>                                                                            <span class="string">"{t(locale, TK::IchingDong)}"
 <a href=#683 id=683 data-nosnippet>683</a>                                                                        </span>}
 <a href=#684 id=684 data-nosnippet>684</a>                                                                    }
 <a href=#685 id=685 data-nosnippet>685</a>                                                                }
@@ -691,16 +691,16 @@
 <a href=#691 id=691 data-nosnippet>691</a>                                                    </span>div { class: <span class="string">"space-y-1.5 text-center md:text-left flex-1"</span>,
 <a href=#692 id=692 data-nosnippet>692</a>                                                        div { class: <span class="string">"flex items-center justify-center md:justify-start gap-1 text-[10px] font-bold text-violet-400"</span>,
 <a href=#693 id=693 data-nosnippet>693</a>                                                            span { <span class="string">"🎯" </span>}
-<a href=#694 id=694 data-nosnippet>694</a>                                                            <span class="string">"{selected_age}세 유년괘"
-<a href=#695 id=695 data-nosnippet>695</a>                                                        </span>}
+<a href=#694 id=694 data-nosnippet>694</a>                                                            {t(locale, TK::IchingAgeYearHex).replace(<span class="string">"{}"</span>, <span class="kw-2">&amp;</span>selected_age.to_string())}
+<a href=#695 id=695 data-nosnippet>695</a>                                                        }
 <a href=#696 id=696 data-nosnippet>696</a>                                                        h4 { class: <span class="string">"text-2xl font-black text-slate-100 flex items-baseline justify-center md:justify-start gap-2"</span>,
 <a href=#697 id=697 data-nosnippet>697</a>                                                            <span class="string">"{yh_name}"
 <a href=#698 id=698 data-nosnippet>698</a>                                                            </span>span { class: <span class="string">"text-sm text-slate-500 font-medium"</span>, <span class="string">"({yh_hex.hanja})" </span>}
 <a href=#699 id=699 data-nosnippet>699</a>                                                        }
 <a href=#700 id=700 data-nosnippet>700</a>                                                        p { class: <span class="string">"text-xs text-slate-400 leading-relaxed"</span>, <span class="string">"{yh_hex.desc_ko}" </span>}
 <a href=#701 id=701 data-nosnippet>701</a>                                                        div { class: <span class="string">"text-[10px] text-yellow-450 font-bold bg-yellow-950/20 border border-yellow-900/30 px-2.5 py-1 rounded-lg inline-block"</span>,
-<a href=#702 id=702 data-nosnippet>702</a>                                                            <span class="string">"올해는 {yh.yearly_line}효가 동(動)하여 대변동을 주도합니다."
-<a href=#703 id=703 data-nosnippet>703</a>                                                        </span>}
+<a href=#702 id=702 data-nosnippet>702</a>                                                            {t(locale, TK::IchingYearlyDong).replace(<span class="string">"{}"</span>, <span class="kw-2">&amp;</span>yh.yearly_line.to_string())}
+<a href=#703 id=703 data-nosnippet>703</a>                                                        }
 <a href=#704 id=704 data-nosnippet>704</a>                                                    }
 <a href=#705 id=705 data-nosnippet>705</a>                                                }
 <a href=#706 id=706 data-nosnippet>706</a>
@@ -709,9 +709,9 @@
 <a href=#709 id=709 data-nosnippet>709</a>                                                    div { class: <span class="string">"flex justify-between items-center border-b border-slate-855 pb-2"</span>,
 <a href=#710 id=710 data-nosnippet>710</a>                                                        h4 { class: <span class="string">"text-xs font-bold text-slate-300 tracking-wide flex items-center gap-1.5"</span>,
 <a href=#711 id=711 data-nosnippet>711</a>                                                            span { <span class="string">"🌙" </span>}
-<a href=#712 id=712 data-nosnippet>712</a>                                                            <span class="string">"음력 12개월 유월괘(流月卦) 흐름"
+<a href=#712 id=712 data-nosnippet>712</a>                                                            <span class="string">"{t(locale, TK::IchingLunar12Months)}"
 <a href=#713 id=713 data-nosnippet>713</a>                                                        </span>}
-<a href=#714 id=714 data-nosnippet>714</a>                                                        span { class: <span class="string">"text-[10px] text-slate-500"</span>, <span class="string">"정월(1월) = 유년괘 변효 {yh.yearly_line}효 기점" </span>}
+<a href=#714 id=714 data-nosnippet>714</a>                                                        span { class: <span class="string">"text-[10px] text-slate-500"</span>, {t(locale, TK::IchingJanStart).replace(<span class="string">"{}"</span>, <span class="kw-2">&amp;</span>yh.yearly_line.to_string())} }
 <a href=#715 id=715 data-nosnippet>715</a>                                                    }
 <a href=#716 id=716 data-nosnippet>716</a>
 <a href=#717 id=717 data-nosnippet>717</a>                                                    <span class="comment">// 12개월의 유월괘 그리드 렌더링
@@ -728,7 +728,7 @@
 <a href=#728 id=728 data-nosnippet>728</a>                                                                div {
 <a href=#729 id=729 data-nosnippet>729</a>                                                                    key: <span class="string">"m-{idx}"</span>,
 <a href=#730 id=730 data-nosnippet>730</a>                                                                    class: <span class="string">"p-2 rounded-lg bg-slate-900 border border-slate-850 text-center hover:border-violet-500/20 hover:bg-slate-850/50 transition-colors flex flex-col items-center justify-center gap-1"</span>,
-<a href=#731 id=731 data-nosnippet>731</a>                                                                    span { class: <span class="string">"text-[10px] font-black text-slate-500"</span>, <span class="string">"{idx + 1}월" </span>}
+<a href=#731 id=731 data-nosnippet>731</a>                                                                    span { class: <span class="string">"text-[10px] font-black text-slate-500"</span>, {t(locale, TK::IchingMonth).replace(<span class="string">"{}"</span>, <span class="kw-2">&amp;</span>(idx + <span class="number">1</span>).to_string())} }
 <a href=#732 id=732 data-nosnippet>732</a>                                                                    span { class: <span class="string">"font-black text-slate-200 text-xs tracking-tight"</span>, <span class="string">"{m_name}" </span>}
 <a href=#733 id=733 data-nosnippet>733</a>                                                                    span { class: <span class="string">"text-[9px] text-slate-500 font-medium"</span>, <span class="string">"{m_hex.hanja}" </span>}
 <a href=#734 id=734 data-nosnippet>734</a>                                                                }
@@ -745,7 +745,7 @@
 <a href=#745 id=745 data-nosnippet>745</a>                    } <span class="kw">else </span>{
 <a href=#746 id=746 data-nosnippet>746</a>                        <span class="macro">rsx!</span> {
 <a href=#747 id=747 data-nosnippet>747</a>                            div { class: <span class="string">"p-4 rounded-xl bg-red-900/20 border border-red-800/50 text-red-400"</span>,
-<a href=#748 id=748 data-nosnippet>748</a>                                <span class="string">"데이터가 비어 있습니다."
+<a href=#748 id=748 data-nosnippet>748</a>                                <span class="string">"{t(locale, TK::IchingDataEmpty)}"
 <a href=#749 id=749 data-nosnippet>749</a>                            </span>}
 <a href=#750 id=750 data-nosnippet>750</a>                        }
 <a href=#751 id=751 data-nosnippet>751</a>                    }

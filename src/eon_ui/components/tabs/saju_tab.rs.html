@@ -204,7 +204,7 @@
 <a href=#204 id=204 data-nosnippet>204</a>                            (data.report.pillars.year.stem, TK::SajuYearStem, TK::SajuYearPillar),
 <a href=#205 id=205 data-nosnippet>205</a>                        ];
 <a href=#206 id=206 data-nosnippet>206</a>
-<a href=#207 id=207 data-nosnippet>207</a>                        <span class="kw">for </span><span class="kw-2">&amp;</span>(branch, is_month, b_pos_tk, b_pillar_tk) <span class="kw">in </span><span class="kw-2">&amp;</span>branch_positions {
+<a href=#207 id=207 data-nosnippet>207</a>                        <span class="kw">for </span><span class="kw-2">&amp;</span>(branch, is_month, b_pos_tk, _b_pillar_tk) <span class="kw">in </span><span class="kw-2">&amp;</span>branch_positions {
 <a href=#208 id=208 data-nosnippet>208</a>                            <span class="kw">for </span>j_item <span class="kw">in </span>get_jijanggan_items(branch) {
 <a href=#209 id=209 data-nosnippet>209</a>                                <span class="kw">for </span><span class="kw-2">&amp;</span>(t_stem, t_pos_tk, _t_pillar_tk) <span class="kw">in </span><span class="kw-2">&amp;</span>target_stems {
 <a href=#210 id=210 data-nosnippet>210</a>                                    <span class="kw">if </span>j_item.stem == t_stem {
@@ -373,7 +373,7 @@
 <a href=#373 id=373 data-nosnippet>373</a>                                            </span>};
 <a href=#374 id=374 data-nosnippet>374</a>                                            <span class="kw">let </span>pos_branch_name = t(locale, b_pos_tk);
 <a href=#375 id=375 data-nosnippet>375</a>                                            <span class="kw">let </span>pos_stem_name = t(locale, t_pos_tk);
-<a href=#376 id=376 data-nosnippet>376</a>                                            
+<a href=#376 id=376 data-nosnippet>376</a>
 <a href=#377 id=377 data-nosnippet>377</a>                                            <span class="kw">let </span>stem_trans = translate_saju_stem(locale, stem);
 <a href=#378 id=378 data-nosnippet>378</a>                                            <span class="kw">let </span>ten_god_trans = translate_saju_ten_god(locale, ten_god);
 <a href=#379 id=379 data-nosnippet>379</a>                                            <span class="kw">let </span>stage_desc = <span class="kw">match </span>locale {
