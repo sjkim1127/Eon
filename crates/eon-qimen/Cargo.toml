@@ -13,6 +13,7 @@ eon-saju = { path = "../eon-saju" }
 serde = { workspace = true }
 chrono = { workspace = true }
 anyhow = { workspace = true }
+eon-astro = { version = "0.1.1", path = "../eon-astro" }
 
 [lints]
 workspace = true

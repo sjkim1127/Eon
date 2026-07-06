@@ -135,11 +135,17 @@ pub struct QimenAnalysisInput {
     #[serde(flatten)]
     pub base: AnalysisInput,
     pub is_male: bool,
+    #[serde(default)]
+    pub use_night_rat_hour: bool,
 }
 
 impl QimenAnalysisInput {
     pub fn new(base: AnalysisInput, is_male: bool) -> Self {
-        Self { base, is_male }
+        Self {
+            base,
+            is_male,
+            use_night_rat_hour: false,
+        }
     }
 }
 
@@ -410,6 +416,8 @@ pub struct QimenAnalysisRequest {
     #[ts(flatten)]
     pub base: AnalysisRequest,
     pub is_male: bool,
+    #[serde(default)]
+    pub use_night_rat_hour: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -493,6 +501,7 @@ impl TryFrom<QimenAnalysisRequest> for QimenAnalysisInput {
                 timezone: req.base.timezone,
             },
             is_male: req.is_male,
+            use_night_rat_hour: req.use_night_rat_hour.unwrap_or(false),
         })
     }
 }

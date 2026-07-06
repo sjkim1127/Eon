@@ -26,15 +26,23 @@ pub fn translate(key: TK) -> &'static str {
         TK::ZwdsPalaceLifeReading => "宫位深度解析",
         TK::ZwdsOppositePalace => "{} (对宫)",
         TK::ZwdsTriadPalace => "{} (三合宫)",
-        TK::ZwdsDescPalaceMing => "命宫象征自我、性格、一生的命运走向与先天福报。是主宰整体人生方向的最重要宫位。",
+        TK::ZwdsDescPalaceMing => {
+            "命宫象征自我、性格、一生的命运走向与先天福报。是主宰整体人生方向的最重要宫位。"
+        }
         TK::ZwdsDescPalaceXiongDi => "兄弟宫代表与兄弟姐妹、同僚的关系、合作状况及财务伙伴。",
         TK::ZwdsDescPalaceFuQi => "夫妻宫代表与配偶的关系、理想的伴侣类型及婚姻生活的吉凶。",
         TK::ZwdsDescPalaceZiNv => "子女宫象征与子女的缘分、子嗣繁衍状况、创作及投资运势。",
         TK::ZwdsDescPalaceCaiBo => "财帛宫象征赚钱的方式、收入来源、理财能力及消费倾向。",
         TK::ZwdsDescPalaceJiE => "疾厄宫代表先天的健康状况、体质及需要注意的疾病与灾厄。",
-        TK::ZwdsDescPalaceQianYi => "迁移宫象征社会活动、异乡/海外发展、人际关系中的外在表现及出外运势。",
-        TK::ZwdsDescPalaceJiaoYou => "交友宫（奴仆宫）代表与下属、朋友、熟人、社会人脉的关系及人际福气。",
-        TK::ZwdsDescPalaceGuanLu => "官禄宫（事业宫）象征职业成就、学业、晋升、适合的职业领域及社会地位。",
+        TK::ZwdsDescPalaceQianYi => {
+            "迁移宫象征社会活动、异乡/海外发展、人际关系中的外在表现及出外运势。"
+        }
+        TK::ZwdsDescPalaceJiaoYou => {
+            "交友宫（奴仆宫）代表与下属、朋友、熟人、社会人脉的关系及人际福气。"
+        }
+        TK::ZwdsDescPalaceGuanLu => {
+            "官禄宫（事业宫）象征职业成就、学业、晋升、适合的职业领域及社会地位。"
+        }
         TK::ZwdsDescPalaceTianZhai => "田宅宫代表房地产、居住环境、家庭和睦及资产积累方式。",
         TK::ZwdsDescPalaceFuDe => "福德宫象征精神世界、兴趣爱好、灵性倾向、内在幸福感及晚年生活。",
         TK::ZwdsDescPalaceFuMu => "父母宫代表与父母的关系、长辈或国家机构的恩泽、学业及文书考运。",
@@ -154,6 +162,46 @@ pub fn translate(key: TK) -> &'static str {
         TK::QimenTitle => "奇门遁甲",
         TK::QimenAnalyzing => "正在分析奇门遁甲命盘...",
         TK::QimenPlaceholder => "当前奇门遁甲为脚手架状态，九宫八门等UI即将渲染。",
+        TK::QimenPalaceKan1 => "坎一宫",
+        TK::QimenPalaceKun2 => "坤二宫",
+        TK::QimenPalaceZhen3 => "震三宫",
+        TK::QimenPalaceXun4 => "巽四宫",
+        TK::QimenPalaceCenter5 => "中五宫",
+        TK::QimenPalaceQian6 => "乾六宫",
+        TK::QimenPalaceDui7 => "兑七宫",
+        TK::QimenPalaceGen8 => "艮八宫",
+        TK::QimenPalaceLi9 => "离九宫",
+        TK::QimenDoorXiu => "休门",
+        TK::QimenDoorSheng => "生门",
+        TK::QimenDoorShang => "伤门",
+        TK::QimenDoorDu => "杜门",
+        TK::QimenDoorJing => "景门",
+        TK::QimenDoorSi => "死门",
+        TK::QimenDoorJing2 => "惊门",
+        TK::QimenDoorKai => "开门",
+        TK::QimenStarPeng => "天蓬",
+        TK::QimenStarRen => "天任",
+        TK::QimenStarChong => "天冲",
+        TK::QimenStarFu => "天辅",
+        TK::QimenStarYing => "天英",
+        TK::QimenStarRui => "天芮",
+        TK::QimenStarZhu => "天柱",
+        TK::QimenStarXin => "天心",
+        TK::QimenStarQin => "天禽",
+        TK::QimenDeityZhiFu => "值符",
+        TK::QimenDeityTengShe => "螣蛇",
+        TK::QimenDeityTaiYin => "太阴",
+        TK::QimenDeityLiuHe => "六合",
+        TK::QimenDeityBaiHu => "白虎",
+        TK::QimenDeityXuanWu => "玄武",
+        TK::QimenDeityJiuDi => "九地",
+        TK::QimenDeityJiuTian => "九天",
+        TK::QimenYangJu => "阳遁",
+        TK::QimenYinJu => "阴遁",
+        TK::QimenJu => "局",
+        TK::QimenValueChief => "值符 (星)",
+        TK::QimenValueEnvoy => "值使 (门)",
+
         TK::AiGroqKeyRequired => "请先输入 Groq API Key。",
         TK::AiGroqIntegration => "启用 Llama 3 (Groq) 整合",
         TK::AiAnalysisTarget => "分析目标",
@@ -489,7 +537,9 @@ pub fn translate(key: TK) -> &'static str {
         TK::CompatTableColEarned => "获得分数",
         TK::CompatTableColDesc => "详细描述",
         TK::CompatExplanationGood => "整体非常和谐契合，值得推荐。",
-        TK::CompatExplanationWarning => "分数虽高，但因存在重大不利因素（如Nadi/Bhakoot Dosha），仍需谨慎考虑。",
+        TK::CompatExplanationWarning => {
+            "分数虽高，但因存在重大不利因素（如Nadi/Bhakoot Dosha），仍需谨慎考虑。"
+        }
         TK::CompatExplanationBad => "性格和观念差异较大，需要双方深度的磨合与理解。",
         TK::CompatExplanationSummary => "共获得 {} 分（满分 36 分）。",
 
@@ -552,7 +602,9 @@ pub fn translate(key: TK) -> &'static str {
         // --- Saju Jijanggan ---
         TK::SajuHiddenStemsTitle => "地支藏干 (Jijanggan)",
         TK::SajuProjectionTitle => "地支藏干透出分析 (Projection)",
-        TK::SajuProjectionDesc => "分析地支中隐藏的五行能量显现（透出）于天干的状态，代表其在外部环境的强力显现。",
+        TK::SajuProjectionDesc => {
+            "分析地支中隐藏的五行能量显现（透出）于天干的状态，代表其在外部环境的强力显现。"
+        }
         TK::SajuProjLevelMain => "格局透出 (Main)",
         TK::SajuProjLevelSub => "一般透出 (Sub)",
         TK::SajuJijangganYeogi => "余气 (Yeogi)",

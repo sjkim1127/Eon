@@ -3,11 +3,9 @@ use crate::dto::{AnalysisMeta, BirthTimePrecision, QimenAnalysisInput, QimenAnal
 use crate::error::ServiceError;
 use eon_core::Gender;
 use eon_qimen::analysis::report::QimenAnalysisReport;
-use eon_qimen::core::QimenPan;
-use eon_saju::core::ganzi::GanZi;
-
-use eon_saju::core::branch::EarthlyBranch;
-use eon_saju::core::stem::HeavenlyStem;
+use eon_qimen::builder::ju::calculate_ju;
+use eon_qimen::builder::pan::build_qimen_pan;
+use eon_saju::core::pillars::{FourPillars, SajuInput};
 
 pub fn analyze_qimen(input: QimenAnalysisInput) -> Result<QimenAnalysisOutput, ServiceError> {
     let gender = if input.is_male {
@@ -15,29 +13,50 @@ pub fn analyze_qimen(input: QimenAnalysisInput) -> Result<QimenAnalysisOutput, S
     } else {
         Gender::Female
     };
+
+    // 1. 탄생 컨텍스트(진태양시 보정 등) 생성
     let birth_ctx = prepare_birth_context(&input.base, Some(gender), true)?;
     let dt = birth_ctx
         .birth_info
         .to_utc()
         .map_err(|e| ServiceError::InvalidInput(e.to_string()))?;
 
-    // 스캐폴딩: 임시로 년주, 월주, 일주, 시주를 Dummy 값으로 사용하거나 saju-core를 불러와야 하지만,
-    // 현재는 뼈대만 구축하는 단계이므로 QimenPan을 더미 데이터로 채웁니다.
-    // 추후 eon-saju::core::calendar::LunarCalendar 등과 연동하여 제대로 된 시주(Hour Pillar)를 가져옵니다.
+    // 2. 사주 명식(Four Pillars) 계산
+    let saju_input = SajuInput::new_solar(
+        birth_ctx.corrected_year,
+        birth_ctx.corrected_month,
+        birth_ctx.corrected_day,
+        birth_ctx.corrected_hour,
+        birth_ctx.corrected_minute,
+    )
+    .with_gender(gender)
+    .with_night_rat_hour(input.use_night_rat_hour);
 
-    let pan = QimenPan {
-        time: dt,
-        hour_pillar: GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi), // 갑자(JiaZi) 더미
-        is_yin_ju: true,                                               // 둔국 더미
-        ju_number: 1,                                                  // 국수 더미
-    };
+    let pillars = FourPillars::calculate(&saju_input)
+        .map_err(|e| ServiceError::Saju(format!("사주 계산 실패: {}", e)))?;
 
+    // 3. 기문둔갑 국수(Ju Number) 및 음양둔 산출
+    let (is_yin_ju, ju_number) = calculate_ju(dt, pillars.day)
+        .map_err(|e| ServiceError::InvalidInput(format!("기문둔갑 국수 계산 실패: {}", e)))?;
+
+    // 4. 기문둔갑 포국(Pan Building) 알고리즘 실행
+    let pan = build_qimen_pan(
+        dt,
+        pillars.year,
+        pillars.month,
+        pillars.day,
+        pillars.hour,
+        is_yin_ju,
+        ju_number,
+    );
+
+    // 5. 분석 리포트 생성
     let report = QimenAnalysisReport::generate(pan);
 
     let meta = AnalysisMeta {
-        precision: BirthTimePrecision::Exact, // 기본값
+        precision: BirthTimePrecision::Exact,
         input_time: dt.to_rfc3339(),
-        corrected_time: dt.to_rfc3339(), // 진태양시 보정 추후 적용
+        corrected_time: dt.to_rfc3339(),
         is_dst: false,
         dst_offset_hours: None,
         analysis_timezone: input.base.timezone,

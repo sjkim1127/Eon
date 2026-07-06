@@ -911,6 +911,7 @@ version = "0.1.1"
 dependencies = [
  "anyhow",
  "chrono",
+ "eon-astro",
  "eon-core",
  "eon-saju",
  "serde",
@@ -961,6 +962,7 @@ dependencies = [
  "dioxus",
  "eon-core",
  "eon-human-design",
+ "eon-qimen",
  "eon-saju",
  "eon-service",
  "eon-vedic",
