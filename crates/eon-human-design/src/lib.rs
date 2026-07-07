@@ -1,3 +1,6 @@
+pub mod db;
+pub mod connection;
+pub mod dream_rave;
 use chrono::{DateTime, Utc};
 use eon_astro::{AstroEngine, AstroError};
 use serde::{Deserialize, Serialize};
@@ -314,6 +317,17 @@ pub fn get_defined_centers_and_channels(
     (defined_centers, active_channels)
 }
 
+pub fn determine_defined_centers(active_channels: &[(u8, u8)]) -> HashSet<HdCenter> {
+    let mut defined_centers = HashSet::new();
+    for &(g1, g2) in active_channels {
+        if let Some((c1, c2)) = get_channel_centers(g1, g2) {
+            defined_centers.insert(c1);
+            defined_centers.insert(c2);
+        }
+    }
+    defined_centers
+}
+
 pub fn determine_type(defined_centers: &HashSet<HdCenter>, active_channels: &[(u8, u8)]) -> String {
     let has_sacral = defined_centers.contains(&HdCenter::Sacral);
     let has_throat = defined_centers.contains(&HdCenter::Throat);
@@ -494,14 +508,24 @@ pub fn determine_definition_type(
     }
 }
 
-pub fn determine_incarnation_cross(p_sun_gate: u8, profile: &str) -> String {
-    let cross_type = match profile {
-        "1/3" | "1/4" | "2/4" | "2/5" | "3/5" | "3/6" | "4/6" => "Right Angle Cross",
-        "4/1" => "Juxtaposition Cross",
-        "5/1" | "5/2" | "6/2" | "6/3" => "Left Angle Cross",
-        _ => "Incarnation Cross",
-    };
-    format!("{} (Gate {})", cross_type, p_sun_gate)
+pub fn determine_incarnation_cross(sun_gate: u8, profile: &str) -> String {
+    let parts: Vec<&str> = profile.split('/').collect();
+    if parts.len() == 2 {
+        let p_line: u8 = parts[0].parse().unwrap_or(1);
+        let angle = match p_line {
+            1 | 2 | 3 | 4 => "Right Angle",
+            5 | 6 => "Left Angle",
+            _ => "Right Angle",
+        };
+        let final_angle = if p_line == 4 && parts[1] == "1" {
+            "Juxtaposition"
+        } else {
+            angle
+        };
+        db::get_incarnation_cross_name(sun_gate, final_angle)
+    } else {
+        format!("Unknown Cross of Gate {}", sun_gate)
+    }
 }
 
 pub fn calculate_human_design(
