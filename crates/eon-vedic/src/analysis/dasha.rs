@@ -250,7 +250,7 @@ impl VimshottariDasha {
         sub_periods
     }
 
-    pub fn attach_interpretations(timeline: &mut Vec<DashaPeriod>, chart: &VedicChart) {
+    pub fn attach_interpretations(timeline: &mut [DashaPeriod], chart: &VedicChart) {
         for maha in timeline.iter_mut() {
             let maha_lord = maha.lord;
             let maha_pos = chart.planets.iter().find(|p| p.planet == maha_lord);

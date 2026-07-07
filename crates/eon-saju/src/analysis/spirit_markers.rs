@@ -717,16 +717,16 @@ impl SpiritMarkerAnalysis {
                 if !m.is_stem {
                     let pos_str = m.position.hangul();
                     for (_, p1, p2) in &rel_analysis.branch_clashes {
-                        if p1 == &pos_str || p2 == &pos_str { is_clashed = true; }
+                        if p1 == pos_str || p2 == pos_str { is_clashed = true; }
                     }
                     for (_, p1, p2) in &rel_analysis.branch_punishments {
-                        if p1 == &pos_str || p2 == &pos_str { is_clashed = true; } // 형(刑)도 파탈/발동 요인
+                        if p1 == pos_str || p2 == pos_str { is_clashed = true; } // 형(刑)도 파탈/발동 요인
                     }
                     for (_, p1, p2) in &rel_analysis.six_combinations {
-                        if p1 == &pos_str || p2 == &pos_str { is_combined = true; }
+                        if p1 == pos_str || p2 == pos_str { is_combined = true; }
                     }
                     for (_, p1, p2) in &rel_analysis.dominant_semi_combinations {
-                        if p1 == &pos_str || p2 == &pos_str { is_combined = true; }
+                        if p1 == pos_str || p2 == pos_str { is_combined = true; }
                     }
 
                     let branch = pillar_ganzi.branch;
