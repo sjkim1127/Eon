@@ -4,7 +4,7 @@ use crate::planets::VedicPlanet;
 use chrono::Timelike;
 use serde::{Deserialize, Serialize}; // Time calculation needed
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PlanetStrength {
     pub planet: VedicPlanet,
     pub exaltation_score: f64,   // 0.0 ~ 60.0 (Uchcha Bala)

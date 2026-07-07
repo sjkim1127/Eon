@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct AshtakavargaPoints {
     pub planet: VedicPlanet,
     pub points: [u8; 12],          // Raw points
+    pub pav: [[bool; 8]; 12],      // Prastara Ashtakavarga (8 donors x 12 signs)
     pub trikona_points: [u8; 12],  // After Trikona Shodhana
     pub shodhana_points: [u8; 12], // After Ekadhipatya Shodhana
     pub sodya_pinda: u32,          // Final Pinda score
@@ -50,6 +51,7 @@ impl AshtakavargaEngine {
     /// Bhinnashtakavarga (BAV) for a specific planet using BPHS tables.
     pub fn calculate_bav(target_planet: VedicPlanet, chart: &VedicChart) -> AshtakavargaPoints {
         let mut points = [0u8; 12];
+        let mut pav = [[false; 8]; 12];
 
         let sun_pos = chart
             .planets
@@ -107,11 +109,25 @@ impl AshtakavargaEngine {
         ];
 
         for (ref_planet, ref_rasi) in refs {
+            let kakshya_idx = match ref_planet {
+                VedicPlanet::Saturn => 0,
+                VedicPlanet::Jupiter => 1,
+                VedicPlanet::Mars => 2,
+                VedicPlanet::Sun => 3,
+                VedicPlanet::Venus => 4,
+                VedicPlanet::Mercury => 5,
+                VedicPlanet::Moon => 6,
+                VedicPlanet::Ascendant => 7,
+                _ => continue, // Rahu/Ketu don't contribute
+            };
+
             let offsets = Self::get_offsets(target_planet, ref_planet);
             for &offset in offsets {
                 // target_rasi = (ref_rasi + offset - 1) % 12 + 1
                 let target_rasi = (ref_rasi + offset - 2) % 12 + 1;
-                points[target_rasi as usize - 1] += 1;
+                let sign_idx = target_rasi as usize - 1;
+                points[sign_idx] += 1;
+                pav[sign_idx][kakshya_idx] = true;
             }
         }
 
@@ -122,6 +138,7 @@ impl AshtakavargaEngine {
         AshtakavargaPoints {
             planet: target_planet,
             points,
+            pav,
             trikona_points,
             shodhana_points,
             sodya_pinda,

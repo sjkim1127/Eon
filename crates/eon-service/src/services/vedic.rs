@@ -22,18 +22,11 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
         let mut r = VedicAnalysisReport::generate(&chart, dt, chart.ascendant.rasi);
         // Gochara: natal moon rasi 기준으로 트랜짓 분석
         let gochara_inner = {
-            let natal_moon_rasi = chart
-                .planets
-                .iter()
-                .find(|p| p.planet == eon_vedic::planets::VedicPlanet::Moon)
-                .map(|m| m.rasi)
-                .unwrap_or(1);
-
             let now_utc = input.current.now_utc;
             let transit_chart = calculator
                 .calculate(now_utc, input.base.lat, input.base.lon)
                 .map_err(|e| ServiceError::Vedic(e.to_string()))?;
-            eon_vedic::analysis::gochara::GocharaEngine::analyze(natal_moon_rasi, &transit_chart)
+            eon_vedic::analysis::gochara::GocharaEngine::analyze(&chart, &transit_chart)
         };
         // Unify Sade Sati for text summary
         r.sade_sati = gochara_inner.sade_sati;
@@ -57,17 +50,11 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
 
     // Final gochara for output (same as used in report unification)
     let gochara = {
-        let natal_moon_rasi = chart
-            .planets
-            .iter()
-            .find(|p| p.planet == eon_vedic::planets::VedicPlanet::Moon)
-            .map(|m| m.rasi)
-            .unwrap_or(1);
         let now_utc = input.current.now_utc;
         let transit_chart = calculator
             .calculate(now_utc, input.base.lat, input.base.lon)
             .map_err(|e| ServiceError::Vedic(e.to_string()))?;
-        eon_vedic::analysis::gochara::GocharaEngine::analyze(natal_moon_rasi, &transit_chart)
+        eon_vedic::analysis::gochara::GocharaEngine::analyze(&chart, &transit_chart)
     };
 
     let varga_nakshatra_reports =

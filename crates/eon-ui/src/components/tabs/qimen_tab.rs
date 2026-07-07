@@ -76,7 +76,7 @@ fn stem_str(s: HeavenlyStem) -> &'static str {
 #[component]
 pub fn QimenTab() -> Element {
     let state = use_context::<AnalysisState>();
-    let locale = state.locale.read().clone();
+    let locale = *state.locale.read();
     let qimen = state.qimen.read().clone();
 
     // 9궁 표시 순서 (UI상 낙서 구궁 배열: 4,9,2 / 3,5,7 / 8,1,6 궁)

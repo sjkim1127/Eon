@@ -1,5 +1,6 @@
 use crate::analysis::nature::{FunctionalNature, FunctionalStatus};
 use crate::analysis::strength::StrengthEngine;
+use crate::analysis::avasthas::AvasthaEngine;
 use crate::chart::VedicChart;
 use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
@@ -54,6 +55,7 @@ pub struct YogaResult {
     pub description: String,
     pub planets_involved: Vec<VedicPlanet>,
     pub quality: YogaQuality,
+    pub strength_percentage: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -216,12 +218,34 @@ impl YogaEngine {
                 planets.sort();
                 planets.dedup();
 
+                let mut total_avastha = 0.0;
+                let mut valid_planets_count = 0;
+                for pl in &planets {
+                    if let Some(pos) = chart.planets.iter().find(|p| p.planet == *pl) {
+                        let avastha = AvasthaEngine::calculate(pos, chart);
+                        total_avastha += avastha.score;
+                        valid_planets_count += 1;
+                    }
+                }
+                
+                let mut strength_percentage = if valid_planets_count > 0 {
+                    total_avastha / valid_planets_count as f64
+                } else {
+                    0.0
+                };
+
+                // Adjust strength based on quality
+                if let YogaQuality::Weak(_) = quality {
+                    strength_percentage *= 0.5; // Halve strength if weak
+                }
+
                 results.push(YogaResult {
                     name: rule.name,
                     yoga_type: rule.yoga_type,
                     description: rule.description,
                     planets_involved: planets,
                     quality,
+                    strength_percentage,
                 });
             }
         }
@@ -474,6 +498,24 @@ impl YogaEngine {
                             let planets = vec![lord1, lord2];
                             let quality = Self::assess_quality(chart, &planets);
 
+                            let mut total_avastha = 0.0;
+                            let mut valid_planets_count = 0;
+                            for pl in &planets {
+                                if let Some(pos) = chart.planets.iter().find(|p| p.planet == *pl) {
+                                    let avastha = AvasthaEngine::calculate(pos, chart);
+                                    total_avastha += avastha.score;
+                                    valid_planets_count += 1;
+                                }
+                            }
+                            let mut strength_percentage = if valid_planets_count > 0 {
+                                total_avastha / valid_planets_count as f64
+                            } else {
+                                0.0
+                            };
+                            if let YogaQuality::Weak(_) = quality {
+                                strength_percentage *= 0.5;
+                            }
+
                             results.push(YogaResult {
                                 name: format!("Parivartana Yoga: House {} ↔ House {}", h1, h2),
                                 yoga_type,
@@ -484,6 +526,7 @@ impl YogaEngine {
                                 ),
                                 planets_involved: planets,
                                 quality,
+                                strength_percentage,
                             });
                         }
                     }
@@ -1189,13 +1232,33 @@ impl YogaEngine {
             _ => (None, "", "", YogaQuality::Medium),
         };
 
+        let mut total_avastha = 0.0;
+        let mut valid_planets_count = 0;
+        for pl in &all_planets {
+            if let Some(pos) = chart.planets.iter().find(|p| p.planet == *pl) {
+                let avastha = AvasthaEngine::calculate(pos, chart);
+                total_avastha += avastha.score;
+                valid_planets_count += 1;
+            }
+        }
+        let strength_percentage = if valid_planets_count > 0 {
+            total_avastha / valid_planets_count as f64
+        } else {
+            0.0
+        };
+
         if let Some(yoga_type) = sankhya_type {
+            let mut sankhya_strength = strength_percentage;
+            if let YogaQuality::Weak(_) = sankhya_quality {
+                sankhya_strength *= 0.5;
+            }
             results.push(YogaResult {
                 name: sankhya_name.to_string(),
                 yoga_type,
                 description: sankhya_desc.to_string(),
                 planets_involved: all_planets.clone(),
                 quality: sankhya_quality,
+                strength_percentage: sankhya_strength,
             });
         }
 
@@ -1208,6 +1271,7 @@ impl YogaEngine {
                 description: "All planets in Chara (Cardinal) signs. Restless, adaptable nature; perpetual movement and change.".to_string(),
                 planets_involved: all_planets.clone(),
                 quality: YogaQuality::High,
+                strength_percentage,
             });
         } else if Self::all_planets_in_sign_quality(chart, 1) {
             results.push(YogaResult {
@@ -1216,6 +1280,7 @@ impl YogaEngine {
                 description: "All planets in Sthira (Fixed) signs. Stable, determined, and persistent; builds enduring structures.".to_string(),
                 planets_involved: all_planets.clone(),
                 quality: YogaQuality::High,
+                strength_percentage,
             });
         } else if Self::all_planets_in_sign_quality(chart, 2) {
             results.push(YogaResult {
@@ -1224,6 +1289,7 @@ impl YogaEngine {
                 description: "All planets in Dvisvabhava (Mutable) signs. Dual nature, versatility, and intellectual flexibility.".to_string(),
                 planets_involved: all_planets,
                 quality: YogaQuality::High,
+                strength_percentage,
             });
         }
 

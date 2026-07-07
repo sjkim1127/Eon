@@ -1300,7 +1300,7 @@ fn PalaceDetailModal(
                                 div { class: "space-y-1",
                                     span { class: "text-[10px] text-fuchsia-400 font-bold flex items-center gap-1.5",
                                         span { class: "w-1.5 h-1.5 rounded-full bg-fuchsia-500" }
-                                        {t(locale, TK::ZwdsOppositePalace).replace("{}", &translate_zwds_palace(locale, opposite_palace.name).to_string())}
+                                        {t(locale, TK::ZwdsOppositePalace).replace("{}", translate_zwds_palace(locale, opposite_palace.name))}
                                     }
                                     div { class: "flex flex-wrap gap-1 pl-3",
                                         if opposite_palace.stars.is_empty() {
@@ -1323,7 +1323,7 @@ fn PalaceDetailModal(
                                 div { class: "space-y-1",
                                     span { class: "text-[10px] text-indigo-400 font-bold flex items-center gap-1.5",
                                         span { class: "w-1.5 h-1.5 rounded-full bg-indigo-500" }
-                                        {t(locale, TK::ZwdsTriadPalace).replace("{}", &translate_zwds_palace(locale, triad1_palace.name).to_string())}
+                                        {t(locale, TK::ZwdsTriadPalace).replace("{}", translate_zwds_palace(locale, triad1_palace.name))}
                                     }
                                     div { class: "flex flex-wrap gap-1 pl-3",
                                         if triad1_palace.stars.is_empty() {
@@ -1346,7 +1346,7 @@ fn PalaceDetailModal(
                                 div { class: "space-y-1",
                                     span { class: "text-[10px] text-indigo-400 font-bold flex items-center gap-1.5",
                                         span { class: "w-1.5 h-1.5 rounded-full bg-indigo-500" }
-                                        {t(locale, TK::ZwdsTriadPalace).replace("{}", &translate_zwds_palace(locale, triad2_palace.name).to_string())}
+                                        {t(locale, TK::ZwdsTriadPalace).replace("{}", translate_zwds_palace(locale, triad2_palace.name))}
                                     }
                                     div { class: "flex flex-wrap gap-1 pl-3",
                                         if triad2_palace.stars.is_empty() {

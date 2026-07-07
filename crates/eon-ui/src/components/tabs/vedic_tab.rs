@@ -113,6 +113,7 @@ pub enum VedicTooltipTarget {
         varga_label: String,
         deity: Option<String>,
         purpose: Option<String>,
+        shadbala: Option<eon_vedic::analysis::strength::PlanetStrength>,
     },
     House {
         house_num: u8,
@@ -153,6 +154,7 @@ fn get_d1_planet_tooltip(
     d1_planets: &[eon_vedic::core::chart::VedicPosition],
     d1_ascendant: &eon_vedic::core::chart::VedicPosition,
     varga_label: &str,
+    shadbalas: Option<&[eon_vedic::analysis::strength::PlanetStrength]>,
 ) -> Option<VedicTooltipTarget> {
     let p_opt = planet_from_lbl(lbl);
     if let Some(planet) = p_opt {
@@ -189,6 +191,7 @@ fn get_d1_planet_tooltip(
             varga_label: varga_label.to_string(),
             deity: None,
             purpose: None,
+            shadbala: shadbalas.and_then(|sb| sb.iter().find(|s| s.planet == pos.planet).cloned()),
         })
     } else {
         None
@@ -238,6 +241,7 @@ fn get_varga_planet_tooltip(
         varga_label: varga_label.to_string(),
         deity: Some(row.deity.clone()),
         purpose: Some(row.purpose.clone()),
+        shadbala: None,
     })
 }
 
@@ -282,6 +286,7 @@ fn render_vedic_chart(
     d1_planets: Option<&[eon_vedic::core::chart::VedicPosition]>,
     d1_ascendant: Option<&eon_vedic::core::chart::VedicPosition>,
     bhava_strengths: Option<&[eon_vedic::analysis::bhava::BhavaStrength]>,
+    shadbalas: Option<&[eon_vedic::analysis::strength::PlanetStrength]>,
 ) -> Element {
     if style == "north" {
         let house_bounds = [
@@ -437,7 +442,7 @@ fn render_vedic_chart(
                                     let planet_target = if let Some(rows) = varga_rows {
                                         get_varga_planet_tooltip(locale, lbl, rows, chart_title)
                                     } else if let (Some(planets), Some(asc)) = (d1_planets, d1_ascendant) {
-                                        get_d1_planet_tooltip(locale, lbl, planets, asc, chart_title)
+                                        get_d1_planet_tooltip(locale, lbl, planets, asc, chart_title, shadbalas)
                                     } else {
                                         None
                                     };
@@ -597,7 +602,7 @@ fn render_vedic_chart(
                                         let planet_target = if let Some(rows) = varga_rows {
                                             get_varga_planet_tooltip(locale, lbl, rows, chart_title)
                                         } else if let (Some(planets), Some(asc)) = (d1_planets, d1_ascendant) {
-                                            get_d1_planet_tooltip(locale, lbl, planets, asc, chart_title)
+                                            get_d1_planet_tooltip(locale, lbl, planets, asc, chart_title, shadbalas)
                                         } else {
                                             None
                                         };
@@ -666,6 +671,7 @@ fn render_detail_card(detail_opt: Signal<Option<VedicTooltipData>>) -> Element {
                 varga_label,
                 deity,
                 purpose,
+                shadbala,
             } => {
                 let sign_name = rasi_name(locale, rasi_num);
                 rsx! {
@@ -721,11 +727,46 @@ fn render_detail_card(detail_opt: Signal<Option<VedicTooltipData>>) -> Element {
                                 }
                             }
                         }
+
                         if let Some(p) = &purpose {
                             if !p.is_empty() {
                                 div { class: "border-t border-slate-900 pt-2.5 text-xs text-slate-400 leading-normal max-w-full whitespace-normal",
                                     span { class: "text-slate-500 text-[10px] block mb-1", "우주적 의미 & 길흉 해석" }
                                     "{p}"
+                                }
+                            }
+                        }
+                        
+                        if let Some(sb) = &shadbala {
+                            div { class: "border-t border-slate-900 pt-2.5 mt-2",
+                                div { class: "flex justify-between items-center mb-2",
+                                    span { class: "text-slate-400 font-bold text-[11px]", "Shadbala Breakdown" }
+                                    span { class: "px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-300", "Total: {sb.total_score:.1}" }
+                                }
+                                div { class: "space-y-1.5",
+                                    {
+                                        let items = vec![
+                                            ("Sthana (Positional)", sb.sthana_bala, "bg-indigo-500"),
+                                            ("Dig (Directional)", sb.dig_bala, "bg-emerald-500"),
+                                            ("Kala (Temporal)", sb.kala_bala, "bg-blue-500"),
+                                            ("Chesta (Motional)", sb.chesta_bala, "bg-amber-500"),
+                                            ("Naisargika (Natural)", sb.naisargika_bala, "bg-rose-500"),
+                                            ("Drik (Aspectual)", sb.drik_bala, "bg-purple-500"),
+                                        ];
+
+                                        items.into_iter().map(|(label, val, bg_color)| {
+                                            let pct = (val.max(0.0) / 60.0 * 100.0).clamp(0.0, 100.0);
+                                            rsx! {
+                                                div { class: "flex items-center gap-2",
+                                                    span { class: "w-28 text-[9px] text-slate-500 truncate", "{label}" }
+                                                    div { class: "flex-1 h-1.5 bg-slate-900 rounded-full overflow-hidden",
+                                                        div { class: "h-full {bg_color}", style: "width: {pct}%" }
+                                                    }
+                                                    span { class: "w-8 text-right text-[9px] text-slate-300 font-mono", "{val:.1}" }
+                                                }
+                                            }
+                                        })
+                                    }
                                 }
                             }
                         }
@@ -1205,6 +1246,7 @@ pub fn VedicTab() -> Element {
                                                             Some(&data.chart.planets),
                                                             Some(&data.chart.ascendant),
                                                             Some(&data.chart.bhava_strengths),
+                                                            Some(&data.chart.shadbalas),
                                                         )}
                                                         div { class: "w-full max-w-[400px] mx-auto",
                                                             {render_detail_card(selected_detail)}
@@ -1450,7 +1492,7 @@ pub fn VedicTab() -> Element {
                                                             th { class: "px-4 py-3 text-left font-medium", "하우스" }
                                                             th { class: "px-4 py-3 text-left font-medium", "애스펙트 (Drishti)" }
                                                             th { class: "px-4 py-3 text-left font-medium", "빔쇼파카 강도" }
-                                                            th { class: "px-4 py-3 text-left font-medium", "라지타디 Avastha" }
+                                                            th { class: "px-4 py-3 text-left font-medium", "Avastha 강도 및 상태" }
                                                             th { class: "px-4 py-3 text-center font-medium", "태비/역행" }
                                                         }
                                                     }
@@ -1481,8 +1523,13 @@ pub fn VedicTab() -> Element {
                                                                     td { class: "px-4 py-3 text-indigo-400 font-mono text-xs font-bold", "{v_score_str}" }
                                                                     td { class: "px-4 py-3",
                                                                         if let Some(a) = av {
-                                                                            span { class: "px-2 py-0.5 rounded-full text-xs font-semibold {lajjitadi_color(&a.lajjitadi)}",
-                                                                                "{lajjitadi_name_kr(&a.lajjitadi)}"
+                                                                            div { class: "flex items-center gap-1.5",
+                                                                                span { class: "px-2 py-0.5 rounded-full text-xs font-semibold {lajjitadi_color(&a.lajjitadi)}",
+                                                                                    "{lajjitadi_name_kr(&a.lajjitadi)}"
+                                                                                }
+                                                                                span { class: "px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-300 border border-slate-700",
+                                                                                    "{a.score:.0}%"
+                                                                                }
                                                                             }
                                                                         }
                                                                     }
@@ -1578,12 +1625,21 @@ pub fn VedicTab() -> Element {
                                                                                 } else {
                                                                                     y.description.clone()
                                                                                 };
+                                                                                let strength_val = y.strength_percentage;
+                                                                                let opacity_cls = if strength_val < 40.0 { "opacity-50 grayscale" } else { "" };
                                                                                 rsx! {
-                                                                                    div { class: "rounded-lg border {quality_border} p-3 space-y-1.5 transition-all hover:brightness-125",
+                                                                                    div { class: "rounded-lg border {quality_border} p-3 space-y-1.5 transition-all hover:brightness-125 {opacity_cls}",
                                                                                         div { class: "flex items-start justify-between gap-1",
                                                                                             p { class: "font-semibold text-sm text-slate-100 leading-tight", "{name}" }
-                                                                                            span { class: "shrink-0 text-[10px] font-bold {quality_glow} bg-slate-900/60 rounded px-1.5 py-0.5",
-                                                                                                "{quality_badge}"
+                                                                                            div { class: "flex flex-col items-end gap-1",
+                                                                                                span { class: "shrink-0 text-[10px] font-bold {quality_glow} bg-slate-900/60 rounded px-1.5 py-0.5",
+                                                                                                    "{quality_badge}"
+                                                                                                }
+                                                                                                if strength_val > 0.0 {
+                                                                                                    span { class: "text-[9px] text-slate-400 font-medium tracking-wider",
+                                                                                                        "Strength: {strength_val:.0}%"
+                                                                                                    }
+                                                                                                }
                                                                                             }
                                                                                         }
                                                                                         p { class: "text-[11px] text-slate-400 leading-relaxed", "{desc}" }
@@ -2637,6 +2693,7 @@ pub fn VedicTab() -> Element {
                                                             th { class: "px-4 py-3 text-left font-medium", "달 기준 위치" }
                                                             th { class: "px-4 py-3 text-left font-medium", "무르티 (Murti Nirnaya)" }
                                                             th { class: "px-4 py-3 text-center font-medium", "영향력 / 베다 차단" }
+                                                            th { class: "px-4 py-3 text-center font-medium", "Kakshya (PAV)" }
                                                             th { class: "px-4 py-3 text-left font-medium", "핵심 암시" }
                                                         }
                                                     }
@@ -2666,6 +2723,20 @@ pub fn VedicTab() -> Element {
                                                                         }
                                                                         if tr_pos.is_blocked {
                                                                             span { class: "px-1.5 py-0.5 rounded text-[10px] bg-purple-950/50 text-purple-400 border border-purple-800/50 font-bold", "베다 차단(Vedha)" }
+                                                                        }
+                                                                    }
+                                                                    td { class: "px-4 py-3.5 text-center whitespace-nowrap",
+                                                                        if let Some(kakshya) = &tr_pos.kakshya {
+                                                                            div { class: "flex flex-col items-center justify-center gap-1",
+                                                                                span { class: "text-[11px] font-semibold text-slate-300", "{planet_name_kr(kakshya.kakshya_lord)}" }
+                                                                                if kakshya.has_bindu {
+                                                                                    span { class: "px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/50 text-emerald-400 border border-emerald-800/50", "Bindu 유(길)" }
+                                                                                } else {
+                                                                                    span { class: "px-1.5 py-0.5 rounded text-[9px] bg-slate-800 text-slate-400 border border-slate-700", "Bindu 무(흉)" }
+                                                                                }
+                                                                            }
+                                                                        } else {
+                                                                            span { class: "text-slate-600 text-xs", "-" }
                                                                         }
                                                                     }
                                                                     td { class: "px-4 py-3.5 text-xs text-slate-300 leading-relaxed min-w-[200px]",
@@ -2991,6 +3062,7 @@ pub fn VedicTab() -> Element {
                                                                     active_tooltip,
                                                                     selected_detail,
                                                                     Some(&v_report.rows),
+                                                                    None,
                                                                     None,
                                                                     None,
                                                                     None,

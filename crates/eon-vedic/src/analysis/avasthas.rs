@@ -51,6 +51,7 @@ pub struct PlanetAvastha {
     pub jagradadi: JagradadiAvastha,
     pub deeptaadi: DeeptaadiAvastha,
     pub lajjitadi: LajjitadiAvastha,
+    pub score: f64,
 }
 
 pub struct AvasthaEngine;
@@ -126,12 +127,36 @@ impl AvasthaEngine {
 
         let lajjitadi = calculate_lajjitadi(pos, &deeptaadi, chart);
 
+        let baladi_score = match baladi {
+            BaladiAvastha::Yuva => 100.0,
+            BaladiAvastha::Kumara | BaladiAvastha::Vriddha => 50.0,
+            BaladiAvastha::Bala | BaladiAvastha::Mrita => 0.0,
+        };
+
+        let jagradadi_score = match jagradadi {
+            JagradadiAvastha::Jagrat => 100.0,
+            JagradadiAvastha::Swapna => 50.0,
+            JagradadiAvastha::Sushupti => 0.0,
+        };
+
+        let deeptaadi_score = match deeptaadi {
+            DeeptaadiAvastha::Deepta => 100.0,
+            DeeptaadiAvastha::Svastha => 80.0,
+            DeeptaadiAvastha::Mudita => 60.0,
+            DeeptaadiAvastha::Shanta => 40.0,
+            DeeptaadiAvastha::Deena => 20.0,
+            DeeptaadiAvastha::Dukhita | DeeptaadiAvastha::Vikala | DeeptaadiAvastha::Khala | DeeptaadiAvastha::Kopita => 0.0,
+        };
+
+        let score = (baladi_score * 0.3) + (jagradadi_score * 0.3) + (deeptaadi_score * 0.4);
+
         PlanetAvastha {
             planet: pos.planet,
             baladi,
             jagradadi,
             deeptaadi,
             lajjitadi,
+            score,
         }
     }
 }

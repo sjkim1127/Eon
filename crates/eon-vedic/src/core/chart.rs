@@ -97,6 +97,8 @@ pub struct VedicChart {
     pub panchanga: crate::panchanga::Panchanga,
     pub analysis_report: Option<crate::analysis::report::VedicAnalysisReport>,
     pub ayanamsa: f64,
+    #[serde(default)]
+    pub shadbalas: Vec<crate::analysis::strength::PlanetStrength>,
 }
 
 pub struct VedicChartCalculator {
@@ -372,6 +374,7 @@ impl VedicChartCalculator {
             panchanga,
             analysis_report: None,
             ayanamsa,
+            shadbalas: Vec::new(),
         };
 
         chart.aspects = crate::analysis::aspects::AspectEngine::calculate_aspects(&chart);
@@ -412,6 +415,12 @@ impl VedicChartCalculator {
             ));
         }
         chart.vimshopaka_scores = v_scores;
+
+        let mut shadbalas = Vec::new();
+        for p in &chart.planets {
+            shadbalas.push(crate::analysis::strength::StrengthEngine::calculate(p, &chart));
+        }
+        chart.shadbalas = shadbalas;
 
         chart.analysis_report = Some(crate::analysis::report::VedicAnalysisReport::generate(
             &chart,
