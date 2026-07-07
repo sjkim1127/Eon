@@ -1,6 +1,5 @@
 use crate::core::elements::{Deity, Door, Palace, Star};
 use crate::core::types::{PalaceState, QimenPan};
-use eon_saju::core::branch::EarthlyBranch;
 use eon_saju::core::ganzi::GanZi;
 use eon_saju::core::stem::HeavenlyStem;
 
@@ -221,7 +220,7 @@ pub fn build_qimen_pan(
         _ => 0,
     };
     let hour_branch_idx = hour_pillar.branch.index();
-    let steps = (hour_branch_idx as i32 - xun_branch_idx as i32).rem_euclid(12);
+    let steps = (hour_branch_idx as i32 - xun_branch_idx).rem_euclid(12);
 
     let mut door_target_palace = base_palace_for_chief as i32;
     if !is_yin_ju {

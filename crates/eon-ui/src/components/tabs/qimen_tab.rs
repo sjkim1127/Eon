@@ -1,7 +1,6 @@
 use crate::i18n::{t, TK};
 use crate::store::{AnalysisState, TaskStatus};
 use dioxus::prelude::*;
-use eon_qimen::core::types::PalaceState;
 use eon_qimen::core::{Deity, Door, Palace, Star};
 use eon_saju::core::stem::HeavenlyStem;
 

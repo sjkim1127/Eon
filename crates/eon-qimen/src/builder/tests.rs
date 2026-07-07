@@ -1,22 +1,16 @@
-#[cfg(test)]
-mod tests {
-    use crate::builder::ju::*;
-    use crate::builder::pan::*;
-    use crate::core::elements::*;
-    use chrono::{TimeZone, Utc};
-    use eon_saju::core::branch::EarthlyBranch;
-    use eon_saju::core::ganzi::GanZi;
-    use eon_saju::core::stem::HeavenlyStem;
+use crate::builder::pan::*;
+use eon_saju::core::branch::EarthlyBranch;
+use eon_saju::core::ganzi::GanZi;
+use eon_saju::core::stem::HeavenlyStem;
 
-    #[test]
-    fn test_xun_shou() {
-        let jiazi = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi);
-        assert_eq!(get_xun_shou(jiazi), HeavenlyStem::Wu);
+#[test]
+fn test_xun_shou() {
+    let jiazi = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi);
+    assert_eq!(get_xun_shou(jiazi), HeavenlyStem::Wu);
 
-        let jiayin = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Yin);
-        assert_eq!(get_xun_shou(jiayin), HeavenlyStem::Gui);
+    let jiayin = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Yin);
+    assert_eq!(get_xun_shou(jiayin), HeavenlyStem::Gui);
 
-        let xinwei = GanZi::new(HeavenlyStem::Xin, EarthlyBranch::Wei); // 갑자순 (미=7, 신=7 => 7-7 = 0)
-        assert_eq!(get_xun_shou(xinwei), HeavenlyStem::Wu);
-    }
+    let xinwei = GanZi::new(HeavenlyStem::Xin, EarthlyBranch::Wei); // 갑자순 (미=7, 신=7 => 7-7 = 0)
+    assert_eq!(get_xun_shou(xinwei), HeavenlyStem::Wu);
 }
