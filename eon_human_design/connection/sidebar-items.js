@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["calculate_connection_chart"],"struct":["HumanDesignConnectionResult"]};

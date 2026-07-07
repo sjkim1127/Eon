@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_incarnation_cross_name","get_line_fixation"],"struct":["ExaltationDetriment"]};
