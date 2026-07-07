@@ -250,7 +250,7 @@
 <a href=#250 id=250 data-nosnippet>250</a>        sub_periods
 <a href=#251 id=251 data-nosnippet>251</a>    }
 <a href=#252 id=252 data-nosnippet>252</a>
-<a href=#253 id=253 data-nosnippet>253</a>    <span class="kw">pub fn </span>attach_interpretations(timeline: <span class="kw-2">&amp;mut </span>Vec&lt;DashaPeriod&gt;, chart: <span class="kw-2">&amp;</span>VedicChart) {
+<a href=#253 id=253 data-nosnippet>253</a>    <span class="kw">pub fn </span>attach_interpretations(timeline: <span class="kw-2">&amp;mut </span>[DashaPeriod], chart: <span class="kw-2">&amp;</span>VedicChart) {
 <a href=#254 id=254 data-nosnippet>254</a>        <span class="kw">for </span>maha <span class="kw">in </span>timeline.iter_mut() {
 <a href=#255 id=255 data-nosnippet>255</a>            <span class="kw">let </span>maha_lord = maha.lord;
 <a href=#256 id=256 data-nosnippet>256</a>            <span class="kw">let </span>maha_pos = chart.planets.iter().find(|p| p.planet == maha_lord);
