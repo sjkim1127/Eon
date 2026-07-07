@@ -1,4 +1,7 @@
 {
+  "framework": null,
+  "buildCommand": "echo 'No build command needed'",
+  "outputDirectory": ".",
   "rewrites": [
     {
       "source": "/(.*)",
