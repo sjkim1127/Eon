@@ -1,3 +1,4 @@
+pub mod hd_bodygraph;
 pub mod human_design_tab;
 pub mod iching_tab;
 pub mod qimen_tab;

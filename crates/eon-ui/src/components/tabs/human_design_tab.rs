@@ -1,5 +1,6 @@
 // crates/eon-ui/src/components/tabs/human_design_tab.rs
 use crate::components::shared::birth_form::BirthForm;
+use crate::components::tabs::hd_bodygraph::HdBodyGraph;
 use crate::i18n::{t, translate_hd_authority, translate_hd_center, translate_hd_type, TK};
 use crate::store::{AnalysisState, TaskStatus};
 use dioxus::prelude::*;
@@ -136,7 +137,7 @@ pub fn HumanDesignTab() -> Element {
                         rsx! {
                             div { class: "space-y-6",
                                 // 1. Summary Cards
-                                div { class: "grid grid-cols-1 md:grid-cols-3 gap-4",
+                                div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4",
                                     // Type Card
                                     div { class: "p-5 bg-gradient-to-br from-slate-900/80 to-slate-950/90 border border-slate-800/60 rounded-2xl shadow-xl flex flex-col justify-between backdrop-blur-md relative overflow-hidden group",
                                         div { class: "absolute -right-6 -bottom-6 text-7xl opacity-5 group-hover:scale-110 transition-transform duration-300", "🧩" }
@@ -154,6 +155,54 @@ pub fn HumanDesignTab() -> Element {
                                         div { class: "absolute -right-6 -bottom-6 text-7xl opacity-5 group-hover:scale-110 transition-transform duration-300", "⚖️" }
                                         span { class: "text-xs font-semibold text-slate-400 uppercase tracking-wider", "{t(locale, TK::HdAuthority)}" }
                                         p { class: "text-lg font-bold text-amber-300 mt-2", "{translate_hd_authority(locale, &res.authority)}" }
+                                    }
+                                    // Strategy & Not-Self
+                                    div { class: "p-5 bg-gradient-to-br from-slate-900/80 to-slate-950/90 border border-slate-800/60 rounded-2xl shadow-xl flex flex-col justify-between backdrop-blur-md relative overflow-hidden group lg:col-span-1",
+                                        div { class: "absolute -right-6 -bottom-6 text-7xl opacity-5 group-hover:scale-110 transition-transform duration-300", "🧭" }
+                                        span { class: "text-xs font-semibold text-slate-400 uppercase tracking-wider", "Strategy & Not-Self" }
+                                        p { class: "text-base font-bold text-blue-300 mt-2", "{res.strategy} / {res.not_self_theme}" }
+                                    }
+                                    // Definition Type
+                                    div { class: "p-5 bg-gradient-to-br from-slate-900/80 to-slate-950/90 border border-slate-800/60 rounded-2xl shadow-xl flex flex-col justify-between backdrop-blur-md relative overflow-hidden group lg:col-span-1",
+                                        div { class: "absolute -right-6 -bottom-6 text-7xl opacity-5 group-hover:scale-110 transition-transform duration-300", "🔗" }
+                                        span { class: "text-xs font-semibold text-slate-400 uppercase tracking-wider", "Definition" }
+                                        p { class: "text-base font-bold text-pink-300 mt-2", "{res.definition_type}" }
+                                    }
+                                    // Incarnation Cross
+                                    div { class: "p-5 bg-gradient-to-br from-slate-900/80 to-slate-950/90 border border-slate-800/60 rounded-2xl shadow-xl flex flex-col justify-between backdrop-blur-md relative overflow-hidden group lg:col-span-1",
+                                        div { class: "absolute -right-6 -bottom-6 text-7xl opacity-5 group-hover:scale-110 transition-transform duration-300", "✝️" }
+                                        span { class: "text-xs font-semibold text-slate-400 uppercase tracking-wider", "Incarnation Cross" }
+                                        p { class: "text-base font-bold text-yellow-300 mt-2", "{res.incarnation_cross}" }
+                                    }
+                                    // Variables (Arrows)
+                                    div { class: "p-5 bg-gradient-to-br from-slate-900/80 to-slate-950/90 border border-slate-800/60 rounded-2xl shadow-xl flex flex-col justify-between backdrop-blur-md relative overflow-hidden group lg:col-span-1",
+                                        div { class: "absolute -right-6 -bottom-6 text-7xl opacity-5 group-hover:scale-110 transition-transform duration-300", "⬆️" }
+                                        span { class: "text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2", "Variables (PHS)" }
+                                        div { class: "flex justify-center items-center gap-6 mt-1",
+                                            {
+                                                let get_arrow = |c: u8| if c <= 3 { "←" } else { "→" };
+                                                let pl_sun = res.personality.get("Sun");
+                                                let pl_node = res.personality.get("NorthNode");
+                                                let ds_sun = res.design.get("Sun");
+                                                let ds_node = res.design.get("NorthNode");
+
+                                                let awar = pl_sun.map(|p| get_arrow(p.color)).unwrap_or("-");
+                                                let pers = pl_node.map(|p| get_arrow(p.color)).unwrap_or("-");
+                                                let dige = ds_sun.map(|p| get_arrow(p.color)).unwrap_or("-");
+                                                let envi = ds_node.map(|p| get_arrow(p.color)).unwrap_or("-");
+
+                                                rsx! {
+                                                    div { class: "flex flex-col gap-2 text-2xl font-black text-rose-400",
+                                                        span { class: "drop-shadow-md", "{dige}" }
+                                                        span { class: "drop-shadow-md", "{envi}" }
+                                                    }
+                                                    div { class: "flex flex-col gap-2 text-2xl font-black text-slate-200",
+                                                        span { class: "drop-shadow-md", "{awar}" }
+                                                        span { class: "drop-shadow-md", "{pers}" }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
 
@@ -200,6 +249,15 @@ pub fn HumanDesignTab() -> Element {
                                     }
                                 }
 
+                                // 2.5 BodyGraph UI
+                                div { class: "p-6 bg-slate-950/40 border border-slate-800/50 rounded-2xl backdrop-blur-md space-y-4",
+                                    h3 { class: "text-lg font-bold text-slate-200 flex items-center gap-2",
+                                        span { "🧘" }
+                                        "BodyGraph"
+                                    }
+                                    HdBodyGraph { result: res.clone() }
+                                }
+
                                 // 3. Activations and Channels Grid
                                 div { class: "grid grid-cols-1 lg:grid-cols-3 gap-6",
                                     // Personality (Black) Activations
@@ -213,11 +271,11 @@ pub fn HumanDesignTab() -> Element {
                                                 let planets_ordered = vec![
                                                     "Sun", "Earth", "Moon", "NorthNode", "SouthNode",
                                                     "Mercury", "Venus", "Mars", "Jupiter", "Saturn",
-                                                    "Uranus", "Neptune", "Pluto"
+                                                    "Uranus", "Neptune", "Pluto", "Chiron"
                                                 ];
                                                 planets_ordered.into_iter().map(|p| {
                                                     let val_str = if let Some(p_data) = res.personality.get(p) {
-                                                        format!("{}.{}", p_data.gate, p_data.line)
+                                                        format!("{}.{}.{}.{}.{}", p_data.gate, p_data.line, p_data.color, p_data.tone, p_data.base)
                                                     } else {
                                                         "-".to_string()
                                                     };
@@ -259,11 +317,11 @@ pub fn HumanDesignTab() -> Element {
                                                 let planets_ordered = vec![
                                                     "Sun", "Earth", "Moon", "NorthNode", "SouthNode",
                                                     "Mercury", "Venus", "Mars", "Jupiter", "Saturn",
-                                                    "Uranus", "Neptune", "Pluto"
+                                                    "Uranus", "Neptune", "Pluto", "Chiron"
                                                 ];
                                                 planets_ordered.into_iter().map(|p| {
                                                     let val_str = if let Some(p_data) = res.design.get(p) {
-                                                        format!("{}.{}", p_data.gate, p_data.line)
+                                                        format!("{}.{}.{}.{}.{}", p_data.gate, p_data.line, p_data.color, p_data.tone, p_data.base)
                                                     } else {
                                                         "-".to_string()
                                                     };

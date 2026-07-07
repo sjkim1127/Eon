@@ -44,6 +44,9 @@ pub struct HdPlanetData {
     pub degree: f64,
     pub gate: u8,
     pub line: u8,
+    pub color: u8,
+    pub tone: u8,
+    pub base: u8,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -57,6 +60,10 @@ pub struct HumanDesignResult {
     pub design: HashMap<String, HdPlanetData>,
     pub active_gates: Vec<u8>,
     pub active_channels: Vec<(u8, u8)>,
+    pub definition_type: String,
+    pub strategy: String,
+    pub not_self_theme: String,
+    pub incarnation_cross: String,
 }
 
 pub const GATE_SEQUENCE: [u8; 64] = [
@@ -157,14 +164,30 @@ pub fn get_channel_centers(g1: u8, g2: u8) -> Option<(HdCenter, HdCenter)> {
     }
 }
 
-pub fn degree_to_gate_line(degree: f64) -> (u8, u8) {
+pub fn degree_to_gate_line(degree: f64) -> (u8, u8, u8, u8, u8) {
     let gate_size = 360.0 / 64.0;
     let line_size = gate_size / 6.0;
+    let color_size = line_size / 6.0;
+    let tone_size = color_size / 6.0;
+    let base_size = tone_size / 5.0;
+
     let adjusted = (degree - HD_START_DEGREE + 360.0) % 360.0;
-    let index = (adjusted / gate_size).floor() as usize;
-    let line = ((adjusted % gate_size) / line_size).floor() as u8 + 1;
-    let gate = GATE_SEQUENCE[index % 64];
-    (gate, line)
+    let gate_idx = (adjusted / gate_size).floor() as usize;
+    let rem_gate = adjusted % gate_size;
+
+    let line = (rem_gate / line_size).floor() as u8 + 1;
+    let rem_line = rem_gate % line_size;
+
+    let color = (rem_line / color_size).floor() as u8 + 1;
+    let rem_color = rem_line % color_size;
+
+    let tone = (rem_color / tone_size).floor() as u8 + 1;
+    let rem_tone = rem_color % tone_size;
+
+    let base = (rem_tone / base_size).floor() as u8 + 1;
+
+    let gate = GATE_SEQUENCE[gate_idx % 64];
+    (gate, line, color, tone, base)
 }
 
 pub fn get_planet_positions(
@@ -177,7 +200,7 @@ pub fn get_planet_positions(
     // Flag: SEFLG_SWIEPH = 2, but get_sun_longitude uses FFI internally or we can use swe_calc_ut.
     // Let's use get_sun_longitude or swe_calc_ut.
     let sun_deg = engine.get_sun_longitude(datetime)?;
-    let (gate, line) = degree_to_gate_line(sun_deg);
+    let (gate, line, color, tone, base) = degree_to_gate_line(sun_deg);
     results.insert(
         "Sun".to_string(),
         HdPlanetData {
@@ -185,11 +208,14 @@ pub fn get_planet_positions(
             degree: sun_deg,
             gate,
             line,
+            color,
+            tone,
+            base,
         },
     );
 
     let earth_deg = (sun_deg + 180.0) % 360.0;
-    let (gate, line) = degree_to_gate_line(earth_deg);
+    let (gate, line, color, tone, base) = degree_to_gate_line(earth_deg);
     results.insert(
         "Earth".to_string(),
         HdPlanetData {
@@ -197,13 +223,16 @@ pub fn get_planet_positions(
             degree: earth_deg,
             gate,
             line,
+            color,
+            tone,
+            base,
         },
     );
 
     // 2. Nodes (True Node)
     // Planet id: 11 is SE_TRUE_NODE
     let nn_deg = engine.get_planet_position(datetime, 11, 2)?; // SEFLG_SWIEPH = 2
-    let (gate, line) = degree_to_gate_line(nn_deg);
+    let (gate, line, color, tone, base) = degree_to_gate_line(nn_deg);
     results.insert(
         "N.Node".to_string(),
         HdPlanetData {
@@ -211,11 +240,14 @@ pub fn get_planet_positions(
             degree: nn_deg,
             gate,
             line,
+            color,
+            tone,
+            base,
         },
     );
 
     let sn_deg = (nn_deg + 180.0) % 360.0;
-    let (gate, line) = degree_to_gate_line(sn_deg);
+    let (gate, line, color, tone, base) = degree_to_gate_line(sn_deg);
     results.insert(
         "S.Node".to_string(),
         HdPlanetData {
@@ -223,6 +255,9 @@ pub fn get_planet_positions(
             degree: sn_deg,
             gate,
             line,
+            color,
+            tone,
+            base,
         },
     );
 
@@ -237,11 +272,12 @@ pub fn get_planet_positions(
         ("Uranus", 7),
         ("Neptune", 8),
         ("Pluto", 9),
+        ("Chiron", 15),
     ];
 
     for (name, planet_id) in planets {
         let pos = engine.get_planet_position(datetime, planet_id, 2)?;
-        let (gate, line) = degree_to_gate_line(pos);
+        let (gate, line, color, tone, base) = degree_to_gate_line(pos);
         results.insert(
             name.to_string(),
             HdPlanetData {
@@ -249,6 +285,9 @@ pub fn get_planet_positions(
                 degree: pos,
                 gate,
                 line,
+                color,
+                tone,
+                base,
             },
         );
     }
@@ -376,6 +415,95 @@ pub fn determine_authority(defined_centers: &HashSet<HdCenter>) -> String {
     }
 }
 
+pub fn determine_strategy(chart_type: &str) -> String {
+    match chart_type {
+        "Manifestor" => "To Inform",
+        "Generator" => "To Respond",
+        "Manifesting Generator" => "To Respond",
+        "Projector" => "To Wait for the Invitation",
+        "Reflector" => "To Wait a Lunar Cycle",
+        _ => "Unknown",
+    }
+    .to_string()
+}
+
+pub fn determine_not_self_theme(chart_type: &str) -> String {
+    match chart_type {
+        "Manifestor" => "Anger",
+        "Generator" => "Frustration",
+        "Manifesting Generator" => "Frustration / Anger",
+        "Projector" => "Bitterness",
+        "Reflector" => "Disappointment",
+        _ => "Unknown",
+    }
+    .to_string()
+}
+
+pub fn determine_definition_type(
+    defined_centers: &HashSet<HdCenter>,
+    active_channels: &[(u8, u8)],
+) -> String {
+    if defined_centers.is_empty() {
+        return "No Definition".to_string();
+    }
+
+    let mut adj = HashMap::new();
+    for &center in defined_centers {
+        adj.insert(center, HashSet::new());
+    }
+
+    for &(g1, g2) in active_channels {
+        if let Some((c1, c2)) = get_channel_centers(g1, g2) {
+            if defined_centers.contains(&c1) && defined_centers.contains(&c2) {
+                adj.entry(c1).or_insert_with(HashSet::new).insert(c2);
+                adj.entry(c2).or_insert_with(HashSet::new).insert(c1);
+            }
+        }
+    }
+
+    let mut visited = HashSet::new();
+    let mut components = 0;
+
+    for &center in defined_centers {
+        if !visited.contains(&center) {
+            components += 1;
+            let mut queue = VecDeque::new();
+            queue.push_back(center);
+
+            while let Some(current) = queue.pop_front() {
+                if !visited.contains(&current) {
+                    visited.insert(current);
+                    if let Some(neighbors) = adj.get(&current) {
+                        for &neigh in neighbors {
+                            if !visited.contains(&neigh) {
+                                queue.push_back(neigh);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    match components {
+        1 => "Single Definition".to_string(),
+        2 => "Split Definition".to_string(),
+        3 => "Triple Split Definition".to_string(),
+        4 => "Quadruple Split Definition".to_string(),
+        _ => format!("{} Splits", components),
+    }
+}
+
+pub fn determine_incarnation_cross(p_sun_gate: u8, profile: &str) -> String {
+    let cross_type = match profile {
+        "1/3" | "1/4" | "2/4" | "2/5" | "3/5" | "3/6" | "4/6" => "Right Angle Cross",
+        "4/1" => "Juxtaposition Cross",
+        "5/1" | "5/2" | "6/2" | "6/3" => "Left Angle Cross",
+        _ => "Incarnation Cross",
+    };
+    format!("{} (Gate {})", cross_type, p_sun_gate)
+}
+
 pub fn calculate_human_design(
     engine: &AstroEngine,
     birth_time: DateTime<Utc>,
@@ -429,13 +557,19 @@ pub fn calculate_human_design(
     undefined_centers.sort_by_key(|c| *c as u8);
 
     // 5. Profile
-    let p_sun_line = personality.get("Sun").unwrap().line;
+    let p_sun = personality.get("Sun").unwrap();
+    let p_sun_line = p_sun.line;
+    let p_sun_gate = p_sun.gate;
     let d_sun_line = design.get("Sun").unwrap().line;
     let profile = format!("{}/{}", p_sun_line, d_sun_line);
 
     // 6. Type and Authority
     let chart_type = determine_type(&defined_set, &active_channels);
     let authority = determine_authority(&defined_set);
+    let strategy = determine_strategy(&chart_type);
+    let not_self_theme = determine_not_self_theme(&chart_type);
+    let definition_type = determine_definition_type(&defined_set, &active_channels);
+    let incarnation_cross = determine_incarnation_cross(p_sun_gate, &profile);
 
     let active_gates: Vec<u8> = all_gates.into_iter().collect();
     let mut active_gates = active_gates;
@@ -451,6 +585,10 @@ pub fn calculate_human_design(
         design,
         active_gates,
         active_channels,
+        definition_type,
+        strategy,
+        not_self_theme,
+        incarnation_cross,
     })
 }
 
@@ -462,11 +600,11 @@ mod tests {
     #[test]
     fn test_degree_to_gate_line() {
         // Gate 25 starts at 358.25. Line 1 spans 358.25 to 359.1875.
-        let (gate, line) = degree_to_gate_line(358.5);
+        let (gate, line, _, _, _) = degree_to_gate_line(358.5);
         assert_eq!(gate, 25);
         assert_eq!(line, 1);
 
-        let (gate, line) = degree_to_gate_line(359.25);
+        let (gate, line, _, _, _) = degree_to_gate_line(359.25);
         assert_eq!(gate, 25);
         assert_eq!(line, 2);
     }
