@@ -27,6 +27,7 @@ jobs:
         run: |
           echo '<meta http-equiv="refresh" content="0; url=eon_service/index.html">' > target/doc/index.html
           echo '<a href="eon_service/index.html">Redirecting to Eon Service API documentation...</a>' >> target/doc/index.html
+          cp vercel.json target/doc/vercel.json
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
