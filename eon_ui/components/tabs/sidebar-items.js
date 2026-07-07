@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["human_design_tab","iching_tab","qimen_tab","saju_tab","simulation_tab","strength_tab","tier_tab","transit_tab","vedic_tab","western_tab","zwds_tab"]};
+window.SIDEBAR_ITEMS = {"mod":["hd_bodygraph","human_design_tab","iching_tab","qimen_tab","saju_tab","simulation_tab","strength_tab","tier_tab","transit_tab","vedic_tab","western_tab","zwds_tab"]};
