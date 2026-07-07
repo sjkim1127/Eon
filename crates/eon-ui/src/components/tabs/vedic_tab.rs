@@ -736,7 +736,7 @@ fn render_detail_card(detail_opt: Signal<Option<VedicTooltipData>>) -> Element {
                                 }
                             }
                         }
-                        
+
                         if let Some(sb) = &shadbala {
                             div { class: "border-t border-slate-900 pt-2.5 mt-2",
                                 div { class: "flex justify-between items-center mb-2",

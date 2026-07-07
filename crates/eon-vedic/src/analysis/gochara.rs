@@ -35,10 +35,10 @@ pub struct KakshyaTransit {
 pub struct TransitPosition {
     pub planet: VedicPlanet,
     pub current_rasi: u8,
-    pub house_from_moon: u8,      // 1~12
-    pub is_benefic_transit: bool, // Simple check based on Gochara rules
-    pub is_blocked: bool,         // Blocked by Vedha (obstruction)
-    pub murti: MurtiType,         // Murti Nirnaya
+    pub house_from_moon: u8,             // 1~12
+    pub is_benefic_transit: bool,        // Simple check based on Gochara rules
+    pub is_blocked: bool,                // Blocked by Vedha (obstruction)
+    pub murti: MurtiType,                // Murti Nirnaya
     pub kakshya: Option<KakshyaTransit>, // Kakshya Transit Data
     pub summary: String,
     pub description: String,
@@ -65,9 +65,13 @@ impl GocharaEngine {
     /// let transit_chart = calculator.calculate(current_time, lat, lon);
     /// let transits = GocharaEngine::analyze(&natal_chart, &transit_chart);
     pub fn analyze(natal_chart: &VedicChart, current_chart: &VedicChart) -> GocharaSummary {
-        let natal_moon = natal_chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon).unwrap();
+        let natal_moon = natal_chart
+            .planets
+            .iter()
+            .find(|p| p.planet == VedicPlanet::Moon)
+            .unwrap();
         let natal_moon_rasi = natal_moon.rasi;
-        
+
         let mut transits = Vec::new();
         let mut sade_sati = SadeSatiPhase::None;
 
@@ -179,7 +183,7 @@ impl GocharaEngine {
             let deg_in_sign = pos.sidereal_deg % 30.0;
             let kakshya_idx = (deg_in_sign / 3.75).floor() as u8;
             let kakshya_idx = kakshya_idx.min(7); // clamp to 0-7 just in case
-            
+
             let kakshya_lord = match kakshya_idx {
                 0 => VedicPlanet::Saturn,
                 1 => VedicPlanet::Jupiter,
@@ -195,7 +199,9 @@ impl GocharaEngine {
             // Check PAV for bindu
             // Transiting planet: pos.planet
             // Transiting sign index: pos.rasi - 1
-            let pav_has_bindu = natal_chart.bav.iter()
+            let pav_has_bindu = natal_chart
+                .bav
+                .iter()
                 .find(|b| b.planet == pos.planet)
                 .map(|b| b.pav[(pos.rasi - 1) as usize][kakshya_idx as usize])
                 .unwrap_or(false);

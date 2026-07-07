@@ -145,7 +145,10 @@ impl AvasthaEngine {
             DeeptaadiAvastha::Mudita => 60.0,
             DeeptaadiAvastha::Shanta => 40.0,
             DeeptaadiAvastha::Deena => 20.0,
-            DeeptaadiAvastha::Dukhita | DeeptaadiAvastha::Vikala | DeeptaadiAvastha::Khala | DeeptaadiAvastha::Kopita => 0.0,
+            DeeptaadiAvastha::Dukhita
+            | DeeptaadiAvastha::Vikala
+            | DeeptaadiAvastha::Khala
+            | DeeptaadiAvastha::Kopita => 0.0,
         };
 
         let score = (baladi_score * 0.3) + (jagradadi_score * 0.3) + (deeptaadi_score * 0.4);

@@ -418,7 +418,9 @@ impl VedicChartCalculator {
 
         let mut shadbalas = Vec::new();
         for p in &chart.planets {
-            shadbalas.push(crate::analysis::strength::StrengthEngine::calculate(p, &chart));
+            shadbalas.push(crate::analysis::strength::StrengthEngine::calculate(
+                p, &chart,
+            ));
         }
         chart.shadbalas = shadbalas;
 

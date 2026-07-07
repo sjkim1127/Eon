@@ -1,6 +1,6 @@
+use crate::analysis::avasthas::AvasthaEngine;
 use crate::analysis::nature::{FunctionalNature, FunctionalStatus};
 use crate::analysis::strength::StrengthEngine;
-use crate::analysis::avasthas::AvasthaEngine;
 use crate::chart::VedicChart;
 use crate::planets::VedicPlanet;
 use serde::{Deserialize, Serialize};
@@ -227,7 +227,7 @@ impl YogaEngine {
                         valid_planets_count += 1;
                     }
                 }
-                
+
                 let mut strength_percentage = if valid_planets_count > 0 {
                     total_avastha / valid_planets_count as f64
                 } else {
