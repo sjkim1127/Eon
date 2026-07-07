@@ -76,7 +76,7 @@
 <a href=#76 id=76 data-nosnippet>76</a><span class="attr">#[component]
 <a href=#77 id=77 data-nosnippet>77</a></span><span class="kw">pub fn </span>QimenTab() -&gt; Element {
 <a href=#78 id=78 data-nosnippet>78</a>    <span class="kw">let </span>state = use_context::&lt;AnalysisState&gt;();
-<a href=#79 id=79 data-nosnippet>79</a>    <span class="kw">let </span>locale = state.locale.read().clone();
+<a href=#79 id=79 data-nosnippet>79</a>    <span class="kw">let </span>locale = <span class="kw-2">*</span>state.locale.read();
 <a href=#80 id=80 data-nosnippet>80</a>    <span class="kw">let </span>qimen = state.qimen.read().clone();
 <a href=#81 id=81 data-nosnippet>81</a>
 <a href=#82 id=82 data-nosnippet>82</a>    <span class="comment">// 9궁 표시 순서 (UI상 낙서 구궁 배열: 4,9,2 / 3,5,7 / 8,1,6 궁)

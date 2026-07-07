@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["MurtiType","SadeSatiPhase"],"struct":["GocharaEngine","GocharaSummary","TransitPosition"]};
+window.SIDEBAR_ITEMS = {"enum":["MurtiType","SadeSatiPhase"],"struct":["GocharaEngine","GocharaSummary","KakshyaTransit","TransitPosition"]};
