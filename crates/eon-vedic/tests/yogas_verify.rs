@@ -96,6 +96,7 @@ fn test_libra_lagna_saturn_yogakaraka() {
         bhava_strengths: vec![],
         vimshopaka_scores: vec![],
         avasthas: vec![],
+        shadbalas: vec![],
         panchanga: dummy_panchanga,
         analysis_report: None,
         ayanamsa: 23.0,

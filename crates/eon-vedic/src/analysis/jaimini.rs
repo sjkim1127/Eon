@@ -462,6 +462,7 @@ mod tests {
             bhava_strengths: vec![],
             vimshopaka_scores: vec![],
             avasthas: vec![],
+            shadbalas: vec![],
             panchanga: crate::calc::panchanga::Panchanga {
                 current_time: Utc.with_ymd_and_hms(2000, 1, 1, 12, 0, 0).unwrap(),
                 ..Default::default()

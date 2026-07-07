@@ -225,7 +225,7 @@ fn main() {
     println!("\n[8] Gochara (Transits) - relative to Natal Moon");
     if let Some(natal_moon) = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon) {
         println!("Natal Moon Rasi: {}", natal_moon.rasi);
-        let summary = eon_vedic::analysis::gochara::GocharaEngine::analyze(natal_moon.rasi, &chart);
+        let summary = eon_vedic::analysis::gochara::GocharaEngine::analyze(&chart, &chart);
         println!("Sade Sati Status: {:?}", summary.sade_sati);
 
         for t in summary.transits {

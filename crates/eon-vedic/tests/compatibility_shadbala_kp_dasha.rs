@@ -66,6 +66,7 @@ fn create_mock_chart(planets: Vec<VedicPosition>) -> VedicChart {
         bhava_strengths: vec![],
         vimshopaka_scores: vec![],
         avasthas: vec![],
+        shadbalas: vec![],
         panchanga: eon_vedic::panchanga::Panchanga::default(),
         analysis_report: None,
         ayanamsa: 0.0,

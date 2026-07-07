@@ -422,6 +422,7 @@ mod tests {
             bhava_strengths: vec![],
             vimshopaka_scores: vec![],
             avasthas: vec![],
+            shadbalas: vec![],
             panchanga: Panchanga {
                 vara: "Saturday".to_string(),
                 tithi: 1,

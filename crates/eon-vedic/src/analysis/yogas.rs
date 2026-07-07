@@ -1372,6 +1372,7 @@ mod tests {
             sav: crate::analysis::ashtakavarga::Sarvashtakavarga { points: [0; 12] },
             bav: vec![],
             avasthas: vec![],
+            shadbalas: vec![],
             analysis_report: None,
             panchanga: Panchanga {
                 vara: "Sunday".to_string(),
