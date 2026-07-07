@@ -1372,261 +1372,262 @@
 <a href=#1372 id=1372 data-nosnippet>1372</a>            sav: <span class="kw">crate</span>::analysis::ashtakavarga::Sarvashtakavarga { points: [<span class="number">0</span>; <span class="number">12</span>] },
 <a href=#1373 id=1373 data-nosnippet>1373</a>            bav: <span class="macro">vec!</span>[],
 <a href=#1374 id=1374 data-nosnippet>1374</a>            avasthas: <span class="macro">vec!</span>[],
-<a href=#1375 id=1375 data-nosnippet>1375</a>            analysis_report: <span class="prelude-val">None</span>,
-<a href=#1376 id=1376 data-nosnippet>1376</a>            panchanga: Panchanga {
-<a href=#1377 id=1377 data-nosnippet>1377</a>                vara: <span class="string">"Sunday"</span>.to_string(),
-<a href=#1378 id=1378 data-nosnippet>1378</a>                tithi: <span class="number">1</span>,
-<a href=#1379 id=1379 data-nosnippet>1379</a>                tithi_name: <span class="string">"Pratipada"</span>.to_string(),
-<a href=#1380 id=1380 data-nosnippet>1380</a>                nakshatra: <span class="number">1</span>,
-<a href=#1381 id=1381 data-nosnippet>1381</a>                karana: <span class="number">1</span>,
-<a href=#1382 id=1382 data-nosnippet>1382</a>                karana_name: <span class="string">"Bava"</span>.to_string(),
-<a href=#1383 id=1383 data-nosnippet>1383</a>                yoga: <span class="number">1</span>,
-<a href=#1384 id=1384 data-nosnippet>1384</a>                day_lord: VedicPlanet::Sun,
-<a href=#1385 id=1385 data-nosnippet>1385</a>                hour_lord: VedicPlanet::Sun,
-<a href=#1386 id=1386 data-nosnippet>1386</a>                sunrise: chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
-<a href=#1387 id=1387 data-nosnippet>1387</a>                    .unwrap()
-<a href=#1388 id=1388 data-nosnippet>1388</a>                    .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
-<a href=#1389 id=1389 data-nosnippet>1389</a>                sunset: chrono::DateTime::from_timestamp(<span class="number">64800</span>, <span class="number">0</span>)
-<a href=#1390 id=1390 data-nosnippet>1390</a>                    .unwrap()
-<a href=#1391 id=1391 data-nosnippet>1391</a>                    .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
-<a href=#1392 id=1392 data-nosnippet>1392</a>                next_sunrise: chrono::DateTime::from_timestamp(<span class="number">108000</span>, <span class="number">0</span>)
-<a href=#1393 id=1393 data-nosnippet>1393</a>                    .unwrap()
-<a href=#1394 id=1394 data-nosnippet>1394</a>                    .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
-<a href=#1395 id=1395 data-nosnippet>1395</a>                is_day_birth: <span class="bool-val">true</span>,
-<a href=#1396 id=1396 data-nosnippet>1396</a>                is_night_birth: <span class="bool-val">false</span>,
-<a href=#1397 id=1397 data-nosnippet>1397</a>                daily_parts: [VedicPlanet::Sun; <span class="number">8</span>],
-<a href=#1398 id=1398 data-nosnippet>1398</a>                current_time: chrono::DateTime::from_timestamp(<span class="number">43200</span>, <span class="number">0</span>)
-<a href=#1399 id=1399 data-nosnippet>1399</a>                    .unwrap()
-<a href=#1400 id=1400 data-nosnippet>1400</a>                    .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
-<a href=#1401 id=1401 data-nosnippet>1401</a>                yogi_point: <span class="number">0.0</span>,
-<a href=#1402 id=1402 data-nosnippet>1402</a>                yogi_planet: VedicPlanet::Sun,
-<a href=#1403 id=1403 data-nosnippet>1403</a>                avayogi_planet: VedicPlanet::Saturn,
-<a href=#1404 id=1404 data-nosnippet>1404</a>                dagdha_rashis: <span class="macro">vec!</span>[],
-<a href=#1405 id=1405 data-nosnippet>1405</a>                rahu_kalam: (
-<a href=#1406 id=1406 data-nosnippet>1406</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
-<a href=#1407 id=1407 data-nosnippet>1407</a>                        .unwrap()
-<a href=#1408 id=1408 data-nosnippet>1408</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
-<a href=#1409 id=1409 data-nosnippet>1409</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
-<a href=#1410 id=1410 data-nosnippet>1410</a>                        .unwrap()
-<a href=#1411 id=1411 data-nosnippet>1411</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
-<a href=#1412 id=1412 data-nosnippet>1412</a>                ),
-<a href=#1413 id=1413 data-nosnippet>1413</a>                yamaganda: (
-<a href=#1414 id=1414 data-nosnippet>1414</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
-<a href=#1415 id=1415 data-nosnippet>1415</a>                        .unwrap()
-<a href=#1416 id=1416 data-nosnippet>1416</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
-<a href=#1417 id=1417 data-nosnippet>1417</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
-<a href=#1418 id=1418 data-nosnippet>1418</a>                        .unwrap()
-<a href=#1419 id=1419 data-nosnippet>1419</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
-<a href=#1420 id=1420 data-nosnippet>1420</a>                ),
-<a href=#1421 id=1421 data-nosnippet>1421</a>                gulika: (
-<a href=#1422 id=1422 data-nosnippet>1422</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
-<a href=#1423 id=1423 data-nosnippet>1423</a>                        .unwrap()
-<a href=#1424 id=1424 data-nosnippet>1424</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
-<a href=#1425 id=1425 data-nosnippet>1425</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
-<a href=#1426 id=1426 data-nosnippet>1426</a>                        .unwrap()
-<a href=#1427 id=1427 data-nosnippet>1427</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
-<a href=#1428 id=1428 data-nosnippet>1428</a>                ),
-<a href=#1429 id=1429 data-nosnippet>1429</a>            },
-<a href=#1430 id=1430 data-nosnippet>1430</a>            ayanamsa: <span class="number">23.0</span>,
-<a href=#1431 id=1431 data-nosnippet>1431</a>        }
-<a href=#1432 id=1432 data-nosnippet>1432</a>    }
-<a href=#1433 id=1433 data-nosnippet>1433</a>
-<a href=#1434 id=1434 data-nosnippet>1434</a>    <span class="kw">fn </span>mock_pos(planet: VedicPlanet, rasi: u8, house: u8) -&gt; VedicPosition {
-<a href=#1435 id=1435 data-nosnippet>1435</a>        VedicPosition {
-<a href=#1436 id=1436 data-nosnippet>1436</a>            planet,
-<a href=#1437 id=1437 data-nosnippet>1437</a>            tropical_deg: (rasi <span class="kw">as </span>f64 - <span class="number">1.0</span>) * <span class="number">30.0 </span>+ <span class="number">15.0</span>,
-<a href=#1438 id=1438 data-nosnippet>1438</a>            sidereal_deg: (rasi <span class="kw">as </span>f64 - <span class="number">1.0</span>) * <span class="number">30.0 </span>+ <span class="number">15.0</span>,
-<a href=#1439 id=1439 data-nosnippet>1439</a>            nakshatra: <span class="number">1</span>,
-<a href=#1440 id=1440 data-nosnippet>1440</a>            pada: <span class="number">1</span>,
-<a href=#1441 id=1441 data-nosnippet>1441</a>            rasi,
-<a href=#1442 id=1442 data-nosnippet>1442</a>            house_index: house,
-<a href=#1443 id=1443 data-nosnippet>1443</a>            speed: <span class="number">1.0</span>,
-<a href=#1444 id=1444 data-nosnippet>1444</a>            is_retrograde: <span class="bool-val">false</span>,
-<a href=#1445 id=1445 data-nosnippet>1445</a>            is_combust: <span class="bool-val">false</span>,
-<a href=#1446 id=1446 data-nosnippet>1446</a>            declination: <span class="number">0.0</span>,
-<a href=#1447 id=1447 data-nosnippet>1447</a>            hora_rasi: rasi,
-<a href=#1448 id=1448 data-nosnippet>1448</a>            drekkana_rasi: rasi,
-<a href=#1449 id=1449 data-nosnippet>1449</a>            chaturthamsha_rasi: rasi,
-<a href=#1450 id=1450 data-nosnippet>1450</a>            panchamsa_rasi: rasi,
-<a href=#1451 id=1451 data-nosnippet>1451</a>            saptamsa_rasi: rasi,
-<a href=#1452 id=1452 data-nosnippet>1452</a>            ashtamsa_rasi: rasi,
-<a href=#1453 id=1453 data-nosnippet>1453</a>            navamsa_rasi: rasi,
-<a href=#1454 id=1454 data-nosnippet>1454</a>            dasamsa_rasi: rasi,
-<a href=#1455 id=1455 data-nosnippet>1455</a>            shashtamsa_rasi: rasi,
-<a href=#1456 id=1456 data-nosnippet>1456</a>            rudramsa_rasi: rasi,
-<a href=#1457 id=1457 data-nosnippet>1457</a>            dwadasamsa_rasi: rasi,
-<a href=#1458 id=1458 data-nosnippet>1458</a>            shodashamsa_rasi: rasi,
-<a href=#1459 id=1459 data-nosnippet>1459</a>            vimsamsa_rasi: rasi,
-<a href=#1460 id=1460 data-nosnippet>1460</a>            chaturvimshamsa_rasi: rasi,
-<a href=#1461 id=1461 data-nosnippet>1461</a>            saptavimsamsa_rasi: rasi,
-<a href=#1462 id=1462 data-nosnippet>1462</a>            trimsamsa_rasi: rasi,
-<a href=#1463 id=1463 data-nosnippet>1463</a>            khavedamsa_rasi: rasi,
-<a href=#1464 id=1464 data-nosnippet>1464</a>            akshavedamsa_rasi: rasi,
-<a href=#1465 id=1465 data-nosnippet>1465</a>            shashtyamsa_rasi: rasi,
-<a href=#1466 id=1466 data-nosnippet>1466</a>            navanavamsa_rasi: rasi,
-<a href=#1467 id=1467 data-nosnippet>1467</a>            ashtottaramsa_rasi: rasi,
-<a href=#1468 id=1468 data-nosnippet>1468</a>            dwadasdwadasamsa_rasi: rasi,
-<a href=#1469 id=1469 data-nosnippet>1469</a>        }
-<a href=#1470 id=1470 data-nosnippet>1470</a>    }
-<a href=#1471 id=1471 data-nosnippet>1471</a>
-<a href=#1472 id=1472 data-nosnippet>1472</a>    <span class="attr">#[test]
-<a href=#1473 id=1473 data-nosnippet>1473</a>    </span><span class="kw">fn </span>test_neecha_bhanga_moon_kendra() {
-<a href=#1474 id=1474 data-nosnippet>1474</a>        <span class="comment">// Mars debilitated in Cancer (Rasi 4), which is house 4 for Aries ascendant
-<a href=#1475 id=1475 data-nosnippet>1475</a>        // dispositor is Moon. Exaltation lord is Saturn.
-<a href=#1476 id=1476 data-nosnippet>1476</a>        // If Moon is in Kendra from Ascendant (e.g. 7th house, Libra), cancellation occurs.
-<a href=#1477 id=1477 data-nosnippet>1477</a>        </span><span class="kw">let </span>mars = mock_pos(VedicPlanet::Mars, <span class="number">4</span>, <span class="number">4</span>);
-<a href=#1478 id=1478 data-nosnippet>1478</a>        <span class="kw">let </span>moon = mock_pos(VedicPlanet::Moon, <span class="number">7</span>, <span class="number">7</span>); <span class="comment">// Moon in Kendra from lagna
-<a href=#1479 id=1479 data-nosnippet>1479</a>
-<a href=#1480 id=1480 data-nosnippet>1480</a>        </span><span class="kw">let </span>chart = mock_chart(<span class="macro">vec!</span>[mars, moon]);
-<a href=#1481 id=1481 data-nosnippet>1481</a>
-<a href=#1482 id=1482 data-nosnippet>1482</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
-<a href=#1483 id=1483 data-nosnippet>1483</a>        <span class="kw">let </span>nb_yoga = yogas.iter().find(|y| y.yoga_type == YogaType::NeechaBhanga);
-<a href=#1484 id=1484 data-nosnippet>1484</a>        <span class="macro">assert!</span>(
-<a href=#1485 id=1485 data-nosnippet>1485</a>            nb_yoga.is_some(),
-<a href=#1486 id=1486 data-nosnippet>1486</a>            <span class="string">"Neecha Bhanga should be detected due to Dispositor Moon in Kendra"
-<a href=#1487 id=1487 data-nosnippet>1487</a>        </span>);
-<a href=#1488 id=1488 data-nosnippet>1488</a>
-<a href=#1489 id=1489 data-nosnippet>1489</a>        <span class="kw">let </span>nb_yoga = nb_yoga.unwrap();
-<a href=#1490 id=1490 data-nosnippet>1490</a>        <span class="macro">assert!</span>(nb_yoga.planets_involved.contains(<span class="kw-2">&amp;</span>VedicPlanet::Mars));
-<a href=#1491 id=1491 data-nosnippet>1491</a>        <span class="macro">assert!</span>(nb_yoga.planets_involved.contains(<span class="kw-2">&amp;</span>VedicPlanet::Moon));
-<a href=#1492 id=1492 data-nosnippet>1492</a>    }
-<a href=#1493 id=1493 data-nosnippet>1493</a>
-<a href=#1494 id=1494 data-nosnippet>1494</a>    <span class="attr">#[test]
-<a href=#1495 id=1495 data-nosnippet>1495</a>    </span><span class="kw">fn </span>test_vipareeta_raja_yoga() {
-<a href=#1496 id=1496 data-nosnippet>1496</a>        <span class="comment">// Aries Lagna.
-<a href=#1497 id=1497 data-nosnippet>1497</a>        // Debilitated planet usually doesn't give a strong Vipareeta Raja Yoga according to our refinement.
-<a href=#1498 id=1498 data-nosnippet>1498</a>        // Let's use 8th lord instead. 8th lord is Mars (Scorpio). Mars in 12th (Pisces).
-<a href=#1499 id=1499 data-nosnippet>1499</a>        </span><span class="kw">let </span>mars = mock_pos(VedicPlanet::Mars, <span class="number">12</span>, <span class="number">12</span>);
-<a href=#1500 id=1500 data-nosnippet>1500</a>
-<a href=#1501 id=1501 data-nosnippet>1501</a>        <span class="kw">let </span>chart = mock_chart(<span class="macro">vec!</span>[mars]);
-<a href=#1502 id=1502 data-nosnippet>1502</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
-<a href=#1503 id=1503 data-nosnippet>1503</a>        <span class="kw">let </span>vr_yoga = yogas
-<a href=#1504 id=1504 data-nosnippet>1504</a>            .iter()
-<a href=#1505 id=1505 data-nosnippet>1505</a>            .find(|y| y.yoga_type == YogaType::VipareetaRajaYoga);
-<a href=#1506 id=1506 data-nosnippet>1506</a>        <span class="macro">assert!</span>(
-<a href=#1507 id=1507 data-nosnippet>1507</a>            vr_yoga.is_some(),
-<a href=#1508 id=1508 data-nosnippet>1508</a>            <span class="string">"Vipareeta Raja Yoga should be detected for 8th lord in 12th house"
-<a href=#1509 id=1509 data-nosnippet>1509</a>        </span>);
-<a href=#1510 id=1510 data-nosnippet>1510</a>
-<a href=#1511 id=1511 data-nosnippet>1511</a>        <span class="kw">let </span>vr_yoga = vr_yoga.unwrap();
-<a href=#1512 id=1512 data-nosnippet>1512</a>        <span class="macro">assert!</span>(vr_yoga.planets_involved.contains(<span class="kw-2">&amp;</span>VedicPlanet::Mars));
-<a href=#1513 id=1513 data-nosnippet>1513</a>    }
-<a href=#1514 id=1514 data-nosnippet>1514</a>
-<a href=#1515 id=1515 data-nosnippet>1515</a>    <span class="comment">// ── Nabhasa Yoga Tests ────────────────────────────────────────────────────
-<a href=#1516 id=1516 data-nosnippet>1516</a>
-<a href=#1517 id=1517 data-nosnippet>1517</a>    </span><span class="attr">#[test]
-<a href=#1518 id=1518 data-nosnippet>1518</a>    </span><span class="kw">fn </span>test_nabhasa_veena_yoga_seven_rasi() {
-<a href=#1519 id=1519 data-nosnippet>1519</a>        <span class="comment">// 9 planets spread across 7 distinct rasis → Veena Yoga
-<a href=#1520 id=1520 data-nosnippet>1520</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[
-<a href=#1521 id=1521 data-nosnippet>1521</a>            mock_pos(VedicPlanet::Sun, <span class="number">1</span>, <span class="number">1</span>),
-<a href=#1522 id=1522 data-nosnippet>1522</a>            mock_pos(VedicPlanet::Moon, <span class="number">2</span>, <span class="number">2</span>),
-<a href=#1523 id=1523 data-nosnippet>1523</a>            mock_pos(VedicPlanet::Mars, <span class="number">3</span>, <span class="number">3</span>),
-<a href=#1524 id=1524 data-nosnippet>1524</a>            mock_pos(VedicPlanet::Mercury, <span class="number">4</span>, <span class="number">4</span>),
-<a href=#1525 id=1525 data-nosnippet>1525</a>            mock_pos(VedicPlanet::Jupiter, <span class="number">5</span>, <span class="number">5</span>),
-<a href=#1526 id=1526 data-nosnippet>1526</a>            mock_pos(VedicPlanet::Venus, <span class="number">6</span>, <span class="number">6</span>),
-<a href=#1527 id=1527 data-nosnippet>1527</a>            mock_pos(VedicPlanet::Saturn, <span class="number">7</span>, <span class="number">7</span>),
-<a href=#1528 id=1528 data-nosnippet>1528</a>            mock_pos(VedicPlanet::Rahu, <span class="number">7</span>, <span class="number">7</span>), <span class="comment">// same rasi as Saturn
-<a href=#1529 id=1529 data-nosnippet>1529</a>            </span>mock_pos(VedicPlanet::Ketu, <span class="number">1</span>, <span class="number">1</span>), <span class="comment">// same rasi as Sun
-<a href=#1530 id=1530 data-nosnippet>1530</a>        </span>];
-<a href=#1531 id=1531 data-nosnippet>1531</a>        <span class="comment">// Occupied rasis: {1,2,3,4,5,6,7} = 7 → Veena
-<a href=#1532 id=1532 data-nosnippet>1532</a>        </span><span class="kw">let </span>chart = mock_chart(planets);
-<a href=#1533 id=1533 data-nosnippet>1533</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
-<a href=#1534 id=1534 data-nosnippet>1534</a>        <span class="macro">assert!</span>(
-<a href=#1535 id=1535 data-nosnippet>1535</a>            yogas.iter().any(|y| y.yoga_type == YogaType::NabhasaVeena),
-<a href=#1536 id=1536 data-nosnippet>1536</a>            <span class="string">"Veena Yoga should be detected when 9 planets are in 7 rasis"
-<a href=#1537 id=1537 data-nosnippet>1537</a>        </span>);
-<a href=#1538 id=1538 data-nosnippet>1538</a>    }
-<a href=#1539 id=1539 data-nosnippet>1539</a>
-<a href=#1540 id=1540 data-nosnippet>1540</a>    <span class="attr">#[test]
-<a href=#1541 id=1541 data-nosnippet>1541</a>    </span><span class="kw">fn </span>test_nabhasa_gola_yoga_one_rasi() {
-<a href=#1542 id=1542 data-nosnippet>1542</a>        <span class="comment">// All 9 planets in rasi 5 (Leo) → Gola Yoga
-<a href=#1543 id=1543 data-nosnippet>1543</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[
-<a href=#1544 id=1544 data-nosnippet>1544</a>            mock_pos(VedicPlanet::Sun, <span class="number">5</span>, <span class="number">5</span>),
-<a href=#1545 id=1545 data-nosnippet>1545</a>            mock_pos(VedicPlanet::Moon, <span class="number">5</span>, <span class="number">5</span>),
-<a href=#1546 id=1546 data-nosnippet>1546</a>            mock_pos(VedicPlanet::Mars, <span class="number">5</span>, <span class="number">5</span>),
-<a href=#1547 id=1547 data-nosnippet>1547</a>            mock_pos(VedicPlanet::Mercury, <span class="number">5</span>, <span class="number">5</span>),
-<a href=#1548 id=1548 data-nosnippet>1548</a>            mock_pos(VedicPlanet::Jupiter, <span class="number">5</span>, <span class="number">5</span>),
-<a href=#1549 id=1549 data-nosnippet>1549</a>            mock_pos(VedicPlanet::Venus, <span class="number">5</span>, <span class="number">5</span>),
-<a href=#1550 id=1550 data-nosnippet>1550</a>            mock_pos(VedicPlanet::Saturn, <span class="number">5</span>, <span class="number">5</span>),
-<a href=#1551 id=1551 data-nosnippet>1551</a>            mock_pos(VedicPlanet::Rahu, <span class="number">5</span>, <span class="number">5</span>),
-<a href=#1552 id=1552 data-nosnippet>1552</a>            mock_pos(VedicPlanet::Ketu, <span class="number">5</span>, <span class="number">5</span>),
-<a href=#1553 id=1553 data-nosnippet>1553</a>        ];
-<a href=#1554 id=1554 data-nosnippet>1554</a>        <span class="kw">let </span>chart = mock_chart(planets);
-<a href=#1555 id=1555 data-nosnippet>1555</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
-<a href=#1556 id=1556 data-nosnippet>1556</a>        <span class="macro">assert!</span>(
-<a href=#1557 id=1557 data-nosnippet>1557</a>            yogas.iter().any(|y| y.yoga_type == YogaType::NabhasaGola),
-<a href=#1558 id=1558 data-nosnippet>1558</a>            <span class="string">"Gola Yoga should be detected when all planets are in a single rasi"
-<a href=#1559 id=1559 data-nosnippet>1559</a>        </span>);
-<a href=#1560 id=1560 data-nosnippet>1560</a>    }
-<a href=#1561 id=1561 data-nosnippet>1561</a>
-<a href=#1562 id=1562 data-nosnippet>1562</a>    <span class="attr">#[test]
-<a href=#1563 id=1563 data-nosnippet>1563</a>    </span><span class="kw">fn </span>test_nabhasa_ashrita_yoga_all_chara() {
-<a href=#1564 id=1564 data-nosnippet>1564</a>        <span class="comment">// All planets in Chara (Cardinal) signs: Aries(1), Cancer(4), Libra(7), Capricorn(10)
-<a href=#1565 id=1565 data-nosnippet>1565</a>        // (rasi - 1) % 3 == 0 for all
-<a href=#1566 id=1566 data-nosnippet>1566</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[
-<a href=#1567 id=1567 data-nosnippet>1567</a>            mock_pos(VedicPlanet::Sun, <span class="number">1</span>, <span class="number">1</span>),       <span class="comment">// Aries
-<a href=#1568 id=1568 data-nosnippet>1568</a>            </span>mock_pos(VedicPlanet::Moon, <span class="number">4</span>, <span class="number">4</span>),      <span class="comment">// Cancer
-<a href=#1569 id=1569 data-nosnippet>1569</a>            </span>mock_pos(VedicPlanet::Mars, <span class="number">7</span>, <span class="number">7</span>),      <span class="comment">// Libra
-<a href=#1570 id=1570 data-nosnippet>1570</a>            </span>mock_pos(VedicPlanet::Mercury, <span class="number">10</span>, <span class="number">10</span>), <span class="comment">// Capricorn
-<a href=#1571 id=1571 data-nosnippet>1571</a>            </span>mock_pos(VedicPlanet::Jupiter, <span class="number">1</span>, <span class="number">1</span>),
-<a href=#1572 id=1572 data-nosnippet>1572</a>            mock_pos(VedicPlanet::Venus, <span class="number">4</span>, <span class="number">4</span>),
-<a href=#1573 id=1573 data-nosnippet>1573</a>            mock_pos(VedicPlanet::Saturn, <span class="number">7</span>, <span class="number">7</span>),
-<a href=#1574 id=1574 data-nosnippet>1574</a>            mock_pos(VedicPlanet::Rahu, <span class="number">10</span>, <span class="number">10</span>),
-<a href=#1575 id=1575 data-nosnippet>1575</a>            mock_pos(VedicPlanet::Ketu, <span class="number">1</span>, <span class="number">1</span>),
-<a href=#1576 id=1576 data-nosnippet>1576</a>        ];
-<a href=#1577 id=1577 data-nosnippet>1577</a>        <span class="kw">let </span>chart = mock_chart(planets);
-<a href=#1578 id=1578 data-nosnippet>1578</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
-<a href=#1579 id=1579 data-nosnippet>1579</a>        <span class="macro">assert!</span>(
-<a href=#1580 id=1580 data-nosnippet>1580</a>            yogas
-<a href=#1581 id=1581 data-nosnippet>1581</a>                .iter()
-<a href=#1582 id=1582 data-nosnippet>1582</a>                .any(|y| y.yoga_type == YogaType::NabhasaAshrita),
-<a href=#1583 id=1583 data-nosnippet>1583</a>            <span class="string">"Ashrita Yoga should be detected when all planets are in Chara signs"
-<a href=#1584 id=1584 data-nosnippet>1584</a>        </span>);
-<a href=#1585 id=1585 data-nosnippet>1585</a>    }
-<a href=#1586 id=1586 data-nosnippet>1586</a>
-<a href=#1587 id=1587 data-nosnippet>1587</a>    <span class="attr">#[test]
-<a href=#1588 id=1588 data-nosnippet>1588</a>    </span><span class="kw">fn </span>test_nabhasa_none_if_mixed_signs() {
-<a href=#1589 id=1589 data-nosnippet>1589</a>        <span class="comment">// Planets in both Chara and Sthira signs → no Akriti Yoga
-<a href=#1590 id=1590 data-nosnippet>1590</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[
-<a href=#1591 id=1591 data-nosnippet>1591</a>            mock_pos(VedicPlanet::Sun, <span class="number">1</span>, <span class="number">1</span>),  <span class="comment">// Aries (Chara)
-<a href=#1592 id=1592 data-nosnippet>1592</a>            </span>mock_pos(VedicPlanet::Moon, <span class="number">2</span>, <span class="number">2</span>), <span class="comment">// Taurus (Sthira)
-<a href=#1593 id=1593 data-nosnippet>1593</a>            </span>mock_pos(VedicPlanet::Mars, <span class="number">3</span>, <span class="number">3</span>), <span class="comment">// Gemini (Dvisvabhava)
-<a href=#1594 id=1594 data-nosnippet>1594</a>            </span>mock_pos(VedicPlanet::Mercury, <span class="number">4</span>, <span class="number">4</span>),
-<a href=#1595 id=1595 data-nosnippet>1595</a>            mock_pos(VedicPlanet::Jupiter, <span class="number">5</span>, <span class="number">5</span>),
-<a href=#1596 id=1596 data-nosnippet>1596</a>            mock_pos(VedicPlanet::Venus, <span class="number">6</span>, <span class="number">6</span>),
-<a href=#1597 id=1597 data-nosnippet>1597</a>            mock_pos(VedicPlanet::Saturn, <span class="number">7</span>, <span class="number">7</span>),
-<a href=#1598 id=1598 data-nosnippet>1598</a>            mock_pos(VedicPlanet::Rahu, <span class="number">8</span>, <span class="number">8</span>),
-<a href=#1599 id=1599 data-nosnippet>1599</a>            mock_pos(VedicPlanet::Ketu, <span class="number">9</span>, <span class="number">9</span>),
-<a href=#1600 id=1600 data-nosnippet>1600</a>        ];
-<a href=#1601 id=1601 data-nosnippet>1601</a>        <span class="kw">let </span>chart = mock_chart(planets);
-<a href=#1602 id=1602 data-nosnippet>1602</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
-<a href=#1603 id=1603 data-nosnippet>1603</a>        <span class="kw">let </span>has_akriti = yogas.iter().any(|y| {
-<a href=#1604 id=1604 data-nosnippet>1604</a>            <span class="macro">matches!</span>(
-<a href=#1605 id=1605 data-nosnippet>1605</a>                y.yoga_type,
-<a href=#1606 id=1606 data-nosnippet>1606</a>                YogaType::NabhasaAshrita | YogaType::NabhasaSthira | YogaType::NabhasaDvisvabhava
-<a href=#1607 id=1607 data-nosnippet>1607</a>            )
-<a href=#1608 id=1608 data-nosnippet>1608</a>        });
-<a href=#1609 id=1609 data-nosnippet>1609</a>        <span class="macro">assert!</span>(
-<a href=#1610 id=1610 data-nosnippet>1610</a>            !has_akriti,
-<a href=#1611 id=1611 data-nosnippet>1611</a>            <span class="string">"No Akriti Yoga when planets span mixed sign qualities"
-<a href=#1612 id=1612 data-nosnippet>1612</a>        </span>);
-<a href=#1613 id=1613 data-nosnippet>1613</a>        <span class="comment">// But Sankhya (9 rasis) should produce no Sankhya yoga (only 1-7 generate one)
-<a href=#1614 id=1614 data-nosnippet>1614</a>        </span><span class="kw">let </span>has_sankhya = yogas.iter().any(|y| {
-<a href=#1615 id=1615 data-nosnippet>1615</a>            <span class="macro">matches!</span>(
-<a href=#1616 id=1616 data-nosnippet>1616</a>                y.yoga_type,
-<a href=#1617 id=1617 data-nosnippet>1617</a>                YogaType::NabhasaGola
-<a href=#1618 id=1618 data-nosnippet>1618</a>                    | YogaType::NabhasaYuga
-<a href=#1619 id=1619 data-nosnippet>1619</a>                    | YogaType::NabhasaShoola
-<a href=#1620 id=1620 data-nosnippet>1620</a>                    | YogaType::NabhasaKedara
-<a href=#1621 id=1621 data-nosnippet>1621</a>                    | YogaType::NabhasaPasha
-<a href=#1622 id=1622 data-nosnippet>1622</a>                    | YogaType::NabhasaDaama
-<a href=#1623 id=1623 data-nosnippet>1623</a>                    | YogaType::NabhasaVeena
-<a href=#1624 id=1624 data-nosnippet>1624</a>            )
-<a href=#1625 id=1625 data-nosnippet>1625</a>        });
-<a href=#1626 id=1626 data-nosnippet>1626</a>        <span class="macro">assert!</span>(
-<a href=#1627 id=1627 data-nosnippet>1627</a>            !has_sankhya,
-<a href=#1628 id=1628 data-nosnippet>1628</a>            <span class="string">"No Sankhya Yoga when planets are spread across all 9 rasis"
-<a href=#1629 id=1629 data-nosnippet>1629</a>        </span>);
-<a href=#1630 id=1630 data-nosnippet>1630</a>    }
-<a href=#1631 id=1631 data-nosnippet>1631</a>}
+<a href=#1375 id=1375 data-nosnippet>1375</a>            shadbalas: <span class="macro">vec!</span>[],
+<a href=#1376 id=1376 data-nosnippet>1376</a>            analysis_report: <span class="prelude-val">None</span>,
+<a href=#1377 id=1377 data-nosnippet>1377</a>            panchanga: Panchanga {
+<a href=#1378 id=1378 data-nosnippet>1378</a>                vara: <span class="string">"Sunday"</span>.to_string(),
+<a href=#1379 id=1379 data-nosnippet>1379</a>                tithi: <span class="number">1</span>,
+<a href=#1380 id=1380 data-nosnippet>1380</a>                tithi_name: <span class="string">"Pratipada"</span>.to_string(),
+<a href=#1381 id=1381 data-nosnippet>1381</a>                nakshatra: <span class="number">1</span>,
+<a href=#1382 id=1382 data-nosnippet>1382</a>                karana: <span class="number">1</span>,
+<a href=#1383 id=1383 data-nosnippet>1383</a>                karana_name: <span class="string">"Bava"</span>.to_string(),
+<a href=#1384 id=1384 data-nosnippet>1384</a>                yoga: <span class="number">1</span>,
+<a href=#1385 id=1385 data-nosnippet>1385</a>                day_lord: VedicPlanet::Sun,
+<a href=#1386 id=1386 data-nosnippet>1386</a>                hour_lord: VedicPlanet::Sun,
+<a href=#1387 id=1387 data-nosnippet>1387</a>                sunrise: chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
+<a href=#1388 id=1388 data-nosnippet>1388</a>                    .unwrap()
+<a href=#1389 id=1389 data-nosnippet>1389</a>                    .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
+<a href=#1390 id=1390 data-nosnippet>1390</a>                sunset: chrono::DateTime::from_timestamp(<span class="number">64800</span>, <span class="number">0</span>)
+<a href=#1391 id=1391 data-nosnippet>1391</a>                    .unwrap()
+<a href=#1392 id=1392 data-nosnippet>1392</a>                    .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
+<a href=#1393 id=1393 data-nosnippet>1393</a>                next_sunrise: chrono::DateTime::from_timestamp(<span class="number">108000</span>, <span class="number">0</span>)
+<a href=#1394 id=1394 data-nosnippet>1394</a>                    .unwrap()
+<a href=#1395 id=1395 data-nosnippet>1395</a>                    .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
+<a href=#1396 id=1396 data-nosnippet>1396</a>                is_day_birth: <span class="bool-val">true</span>,
+<a href=#1397 id=1397 data-nosnippet>1397</a>                is_night_birth: <span class="bool-val">false</span>,
+<a href=#1398 id=1398 data-nosnippet>1398</a>                daily_parts: [VedicPlanet::Sun; <span class="number">8</span>],
+<a href=#1399 id=1399 data-nosnippet>1399</a>                current_time: chrono::DateTime::from_timestamp(<span class="number">43200</span>, <span class="number">0</span>)
+<a href=#1400 id=1400 data-nosnippet>1400</a>                    .unwrap()
+<a href=#1401 id=1401 data-nosnippet>1401</a>                    .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
+<a href=#1402 id=1402 data-nosnippet>1402</a>                yogi_point: <span class="number">0.0</span>,
+<a href=#1403 id=1403 data-nosnippet>1403</a>                yogi_planet: VedicPlanet::Sun,
+<a href=#1404 id=1404 data-nosnippet>1404</a>                avayogi_planet: VedicPlanet::Saturn,
+<a href=#1405 id=1405 data-nosnippet>1405</a>                dagdha_rashis: <span class="macro">vec!</span>[],
+<a href=#1406 id=1406 data-nosnippet>1406</a>                rahu_kalam: (
+<a href=#1407 id=1407 data-nosnippet>1407</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
+<a href=#1408 id=1408 data-nosnippet>1408</a>                        .unwrap()
+<a href=#1409 id=1409 data-nosnippet>1409</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
+<a href=#1410 id=1410 data-nosnippet>1410</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
+<a href=#1411 id=1411 data-nosnippet>1411</a>                        .unwrap()
+<a href=#1412 id=1412 data-nosnippet>1412</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
+<a href=#1413 id=1413 data-nosnippet>1413</a>                ),
+<a href=#1414 id=1414 data-nosnippet>1414</a>                yamaganda: (
+<a href=#1415 id=1415 data-nosnippet>1415</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
+<a href=#1416 id=1416 data-nosnippet>1416</a>                        .unwrap()
+<a href=#1417 id=1417 data-nosnippet>1417</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
+<a href=#1418 id=1418 data-nosnippet>1418</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
+<a href=#1419 id=1419 data-nosnippet>1419</a>                        .unwrap()
+<a href=#1420 id=1420 data-nosnippet>1420</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
+<a href=#1421 id=1421 data-nosnippet>1421</a>                ),
+<a href=#1422 id=1422 data-nosnippet>1422</a>                gulika: (
+<a href=#1423 id=1423 data-nosnippet>1423</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
+<a href=#1424 id=1424 data-nosnippet>1424</a>                        .unwrap()
+<a href=#1425 id=1425 data-nosnippet>1425</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
+<a href=#1426 id=1426 data-nosnippet>1426</a>                    chrono::DateTime::from_timestamp(<span class="number">21600</span>, <span class="number">0</span>)
+<a href=#1427 id=1427 data-nosnippet>1427</a>                        .unwrap()
+<a href=#1428 id=1428 data-nosnippet>1428</a>                        .with_timezone(<span class="kw-2">&amp;</span>chrono::Utc),
+<a href=#1429 id=1429 data-nosnippet>1429</a>                ),
+<a href=#1430 id=1430 data-nosnippet>1430</a>            },
+<a href=#1431 id=1431 data-nosnippet>1431</a>            ayanamsa: <span class="number">23.0</span>,
+<a href=#1432 id=1432 data-nosnippet>1432</a>        }
+<a href=#1433 id=1433 data-nosnippet>1433</a>    }
+<a href=#1434 id=1434 data-nosnippet>1434</a>
+<a href=#1435 id=1435 data-nosnippet>1435</a>    <span class="kw">fn </span>mock_pos(planet: VedicPlanet, rasi: u8, house: u8) -&gt; VedicPosition {
+<a href=#1436 id=1436 data-nosnippet>1436</a>        VedicPosition {
+<a href=#1437 id=1437 data-nosnippet>1437</a>            planet,
+<a href=#1438 id=1438 data-nosnippet>1438</a>            tropical_deg: (rasi <span class="kw">as </span>f64 - <span class="number">1.0</span>) * <span class="number">30.0 </span>+ <span class="number">15.0</span>,
+<a href=#1439 id=1439 data-nosnippet>1439</a>            sidereal_deg: (rasi <span class="kw">as </span>f64 - <span class="number">1.0</span>) * <span class="number">30.0 </span>+ <span class="number">15.0</span>,
+<a href=#1440 id=1440 data-nosnippet>1440</a>            nakshatra: <span class="number">1</span>,
+<a href=#1441 id=1441 data-nosnippet>1441</a>            pada: <span class="number">1</span>,
+<a href=#1442 id=1442 data-nosnippet>1442</a>            rasi,
+<a href=#1443 id=1443 data-nosnippet>1443</a>            house_index: house,
+<a href=#1444 id=1444 data-nosnippet>1444</a>            speed: <span class="number">1.0</span>,
+<a href=#1445 id=1445 data-nosnippet>1445</a>            is_retrograde: <span class="bool-val">false</span>,
+<a href=#1446 id=1446 data-nosnippet>1446</a>            is_combust: <span class="bool-val">false</span>,
+<a href=#1447 id=1447 data-nosnippet>1447</a>            declination: <span class="number">0.0</span>,
+<a href=#1448 id=1448 data-nosnippet>1448</a>            hora_rasi: rasi,
+<a href=#1449 id=1449 data-nosnippet>1449</a>            drekkana_rasi: rasi,
+<a href=#1450 id=1450 data-nosnippet>1450</a>            chaturthamsha_rasi: rasi,
+<a href=#1451 id=1451 data-nosnippet>1451</a>            panchamsa_rasi: rasi,
+<a href=#1452 id=1452 data-nosnippet>1452</a>            saptamsa_rasi: rasi,
+<a href=#1453 id=1453 data-nosnippet>1453</a>            ashtamsa_rasi: rasi,
+<a href=#1454 id=1454 data-nosnippet>1454</a>            navamsa_rasi: rasi,
+<a href=#1455 id=1455 data-nosnippet>1455</a>            dasamsa_rasi: rasi,
+<a href=#1456 id=1456 data-nosnippet>1456</a>            shashtamsa_rasi: rasi,
+<a href=#1457 id=1457 data-nosnippet>1457</a>            rudramsa_rasi: rasi,
+<a href=#1458 id=1458 data-nosnippet>1458</a>            dwadasamsa_rasi: rasi,
+<a href=#1459 id=1459 data-nosnippet>1459</a>            shodashamsa_rasi: rasi,
+<a href=#1460 id=1460 data-nosnippet>1460</a>            vimsamsa_rasi: rasi,
+<a href=#1461 id=1461 data-nosnippet>1461</a>            chaturvimshamsa_rasi: rasi,
+<a href=#1462 id=1462 data-nosnippet>1462</a>            saptavimsamsa_rasi: rasi,
+<a href=#1463 id=1463 data-nosnippet>1463</a>            trimsamsa_rasi: rasi,
+<a href=#1464 id=1464 data-nosnippet>1464</a>            khavedamsa_rasi: rasi,
+<a href=#1465 id=1465 data-nosnippet>1465</a>            akshavedamsa_rasi: rasi,
+<a href=#1466 id=1466 data-nosnippet>1466</a>            shashtyamsa_rasi: rasi,
+<a href=#1467 id=1467 data-nosnippet>1467</a>            navanavamsa_rasi: rasi,
+<a href=#1468 id=1468 data-nosnippet>1468</a>            ashtottaramsa_rasi: rasi,
+<a href=#1469 id=1469 data-nosnippet>1469</a>            dwadasdwadasamsa_rasi: rasi,
+<a href=#1470 id=1470 data-nosnippet>1470</a>        }
+<a href=#1471 id=1471 data-nosnippet>1471</a>    }
+<a href=#1472 id=1472 data-nosnippet>1472</a>
+<a href=#1473 id=1473 data-nosnippet>1473</a>    <span class="attr">#[test]
+<a href=#1474 id=1474 data-nosnippet>1474</a>    </span><span class="kw">fn </span>test_neecha_bhanga_moon_kendra() {
+<a href=#1475 id=1475 data-nosnippet>1475</a>        <span class="comment">// Mars debilitated in Cancer (Rasi 4), which is house 4 for Aries ascendant
+<a href=#1476 id=1476 data-nosnippet>1476</a>        // dispositor is Moon. Exaltation lord is Saturn.
+<a href=#1477 id=1477 data-nosnippet>1477</a>        // If Moon is in Kendra from Ascendant (e.g. 7th house, Libra), cancellation occurs.
+<a href=#1478 id=1478 data-nosnippet>1478</a>        </span><span class="kw">let </span>mars = mock_pos(VedicPlanet::Mars, <span class="number">4</span>, <span class="number">4</span>);
+<a href=#1479 id=1479 data-nosnippet>1479</a>        <span class="kw">let </span>moon = mock_pos(VedicPlanet::Moon, <span class="number">7</span>, <span class="number">7</span>); <span class="comment">// Moon in Kendra from lagna
+<a href=#1480 id=1480 data-nosnippet>1480</a>
+<a href=#1481 id=1481 data-nosnippet>1481</a>        </span><span class="kw">let </span>chart = mock_chart(<span class="macro">vec!</span>[mars, moon]);
+<a href=#1482 id=1482 data-nosnippet>1482</a>
+<a href=#1483 id=1483 data-nosnippet>1483</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
+<a href=#1484 id=1484 data-nosnippet>1484</a>        <span class="kw">let </span>nb_yoga = yogas.iter().find(|y| y.yoga_type == YogaType::NeechaBhanga);
+<a href=#1485 id=1485 data-nosnippet>1485</a>        <span class="macro">assert!</span>(
+<a href=#1486 id=1486 data-nosnippet>1486</a>            nb_yoga.is_some(),
+<a href=#1487 id=1487 data-nosnippet>1487</a>            <span class="string">"Neecha Bhanga should be detected due to Dispositor Moon in Kendra"
+<a href=#1488 id=1488 data-nosnippet>1488</a>        </span>);
+<a href=#1489 id=1489 data-nosnippet>1489</a>
+<a href=#1490 id=1490 data-nosnippet>1490</a>        <span class="kw">let </span>nb_yoga = nb_yoga.unwrap();
+<a href=#1491 id=1491 data-nosnippet>1491</a>        <span class="macro">assert!</span>(nb_yoga.planets_involved.contains(<span class="kw-2">&amp;</span>VedicPlanet::Mars));
+<a href=#1492 id=1492 data-nosnippet>1492</a>        <span class="macro">assert!</span>(nb_yoga.planets_involved.contains(<span class="kw-2">&amp;</span>VedicPlanet::Moon));
+<a href=#1493 id=1493 data-nosnippet>1493</a>    }
+<a href=#1494 id=1494 data-nosnippet>1494</a>
+<a href=#1495 id=1495 data-nosnippet>1495</a>    <span class="attr">#[test]
+<a href=#1496 id=1496 data-nosnippet>1496</a>    </span><span class="kw">fn </span>test_vipareeta_raja_yoga() {
+<a href=#1497 id=1497 data-nosnippet>1497</a>        <span class="comment">// Aries Lagna.
+<a href=#1498 id=1498 data-nosnippet>1498</a>        // Debilitated planet usually doesn't give a strong Vipareeta Raja Yoga according to our refinement.
+<a href=#1499 id=1499 data-nosnippet>1499</a>        // Let's use 8th lord instead. 8th lord is Mars (Scorpio). Mars in 12th (Pisces).
+<a href=#1500 id=1500 data-nosnippet>1500</a>        </span><span class="kw">let </span>mars = mock_pos(VedicPlanet::Mars, <span class="number">12</span>, <span class="number">12</span>);
+<a href=#1501 id=1501 data-nosnippet>1501</a>
+<a href=#1502 id=1502 data-nosnippet>1502</a>        <span class="kw">let </span>chart = mock_chart(<span class="macro">vec!</span>[mars]);
+<a href=#1503 id=1503 data-nosnippet>1503</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
+<a href=#1504 id=1504 data-nosnippet>1504</a>        <span class="kw">let </span>vr_yoga = yogas
+<a href=#1505 id=1505 data-nosnippet>1505</a>            .iter()
+<a href=#1506 id=1506 data-nosnippet>1506</a>            .find(|y| y.yoga_type == YogaType::VipareetaRajaYoga);
+<a href=#1507 id=1507 data-nosnippet>1507</a>        <span class="macro">assert!</span>(
+<a href=#1508 id=1508 data-nosnippet>1508</a>            vr_yoga.is_some(),
+<a href=#1509 id=1509 data-nosnippet>1509</a>            <span class="string">"Vipareeta Raja Yoga should be detected for 8th lord in 12th house"
+<a href=#1510 id=1510 data-nosnippet>1510</a>        </span>);
+<a href=#1511 id=1511 data-nosnippet>1511</a>
+<a href=#1512 id=1512 data-nosnippet>1512</a>        <span class="kw">let </span>vr_yoga = vr_yoga.unwrap();
+<a href=#1513 id=1513 data-nosnippet>1513</a>        <span class="macro">assert!</span>(vr_yoga.planets_involved.contains(<span class="kw-2">&amp;</span>VedicPlanet::Mars));
+<a href=#1514 id=1514 data-nosnippet>1514</a>    }
+<a href=#1515 id=1515 data-nosnippet>1515</a>
+<a href=#1516 id=1516 data-nosnippet>1516</a>    <span class="comment">// ── Nabhasa Yoga Tests ────────────────────────────────────────────────────
+<a href=#1517 id=1517 data-nosnippet>1517</a>
+<a href=#1518 id=1518 data-nosnippet>1518</a>    </span><span class="attr">#[test]
+<a href=#1519 id=1519 data-nosnippet>1519</a>    </span><span class="kw">fn </span>test_nabhasa_veena_yoga_seven_rasi() {
+<a href=#1520 id=1520 data-nosnippet>1520</a>        <span class="comment">// 9 planets spread across 7 distinct rasis → Veena Yoga
+<a href=#1521 id=1521 data-nosnippet>1521</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[
+<a href=#1522 id=1522 data-nosnippet>1522</a>            mock_pos(VedicPlanet::Sun, <span class="number">1</span>, <span class="number">1</span>),
+<a href=#1523 id=1523 data-nosnippet>1523</a>            mock_pos(VedicPlanet::Moon, <span class="number">2</span>, <span class="number">2</span>),
+<a href=#1524 id=1524 data-nosnippet>1524</a>            mock_pos(VedicPlanet::Mars, <span class="number">3</span>, <span class="number">3</span>),
+<a href=#1525 id=1525 data-nosnippet>1525</a>            mock_pos(VedicPlanet::Mercury, <span class="number">4</span>, <span class="number">4</span>),
+<a href=#1526 id=1526 data-nosnippet>1526</a>            mock_pos(VedicPlanet::Jupiter, <span class="number">5</span>, <span class="number">5</span>),
+<a href=#1527 id=1527 data-nosnippet>1527</a>            mock_pos(VedicPlanet::Venus, <span class="number">6</span>, <span class="number">6</span>),
+<a href=#1528 id=1528 data-nosnippet>1528</a>            mock_pos(VedicPlanet::Saturn, <span class="number">7</span>, <span class="number">7</span>),
+<a href=#1529 id=1529 data-nosnippet>1529</a>            mock_pos(VedicPlanet::Rahu, <span class="number">7</span>, <span class="number">7</span>), <span class="comment">// same rasi as Saturn
+<a href=#1530 id=1530 data-nosnippet>1530</a>            </span>mock_pos(VedicPlanet::Ketu, <span class="number">1</span>, <span class="number">1</span>), <span class="comment">// same rasi as Sun
+<a href=#1531 id=1531 data-nosnippet>1531</a>        </span>];
+<a href=#1532 id=1532 data-nosnippet>1532</a>        <span class="comment">// Occupied rasis: {1,2,3,4,5,6,7} = 7 → Veena
+<a href=#1533 id=1533 data-nosnippet>1533</a>        </span><span class="kw">let </span>chart = mock_chart(planets);
+<a href=#1534 id=1534 data-nosnippet>1534</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
+<a href=#1535 id=1535 data-nosnippet>1535</a>        <span class="macro">assert!</span>(
+<a href=#1536 id=1536 data-nosnippet>1536</a>            yogas.iter().any(|y| y.yoga_type == YogaType::NabhasaVeena),
+<a href=#1537 id=1537 data-nosnippet>1537</a>            <span class="string">"Veena Yoga should be detected when 9 planets are in 7 rasis"
+<a href=#1538 id=1538 data-nosnippet>1538</a>        </span>);
+<a href=#1539 id=1539 data-nosnippet>1539</a>    }
+<a href=#1540 id=1540 data-nosnippet>1540</a>
+<a href=#1541 id=1541 data-nosnippet>1541</a>    <span class="attr">#[test]
+<a href=#1542 id=1542 data-nosnippet>1542</a>    </span><span class="kw">fn </span>test_nabhasa_gola_yoga_one_rasi() {
+<a href=#1543 id=1543 data-nosnippet>1543</a>        <span class="comment">// All 9 planets in rasi 5 (Leo) → Gola Yoga
+<a href=#1544 id=1544 data-nosnippet>1544</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[
+<a href=#1545 id=1545 data-nosnippet>1545</a>            mock_pos(VedicPlanet::Sun, <span class="number">5</span>, <span class="number">5</span>),
+<a href=#1546 id=1546 data-nosnippet>1546</a>            mock_pos(VedicPlanet::Moon, <span class="number">5</span>, <span class="number">5</span>),
+<a href=#1547 id=1547 data-nosnippet>1547</a>            mock_pos(VedicPlanet::Mars, <span class="number">5</span>, <span class="number">5</span>),
+<a href=#1548 id=1548 data-nosnippet>1548</a>            mock_pos(VedicPlanet::Mercury, <span class="number">5</span>, <span class="number">5</span>),
+<a href=#1549 id=1549 data-nosnippet>1549</a>            mock_pos(VedicPlanet::Jupiter, <span class="number">5</span>, <span class="number">5</span>),
+<a href=#1550 id=1550 data-nosnippet>1550</a>            mock_pos(VedicPlanet::Venus, <span class="number">5</span>, <span class="number">5</span>),
+<a href=#1551 id=1551 data-nosnippet>1551</a>            mock_pos(VedicPlanet::Saturn, <span class="number">5</span>, <span class="number">5</span>),
+<a href=#1552 id=1552 data-nosnippet>1552</a>            mock_pos(VedicPlanet::Rahu, <span class="number">5</span>, <span class="number">5</span>),
+<a href=#1553 id=1553 data-nosnippet>1553</a>            mock_pos(VedicPlanet::Ketu, <span class="number">5</span>, <span class="number">5</span>),
+<a href=#1554 id=1554 data-nosnippet>1554</a>        ];
+<a href=#1555 id=1555 data-nosnippet>1555</a>        <span class="kw">let </span>chart = mock_chart(planets);
+<a href=#1556 id=1556 data-nosnippet>1556</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
+<a href=#1557 id=1557 data-nosnippet>1557</a>        <span class="macro">assert!</span>(
+<a href=#1558 id=1558 data-nosnippet>1558</a>            yogas.iter().any(|y| y.yoga_type == YogaType::NabhasaGola),
+<a href=#1559 id=1559 data-nosnippet>1559</a>            <span class="string">"Gola Yoga should be detected when all planets are in a single rasi"
+<a href=#1560 id=1560 data-nosnippet>1560</a>        </span>);
+<a href=#1561 id=1561 data-nosnippet>1561</a>    }
+<a href=#1562 id=1562 data-nosnippet>1562</a>
+<a href=#1563 id=1563 data-nosnippet>1563</a>    <span class="attr">#[test]
+<a href=#1564 id=1564 data-nosnippet>1564</a>    </span><span class="kw">fn </span>test_nabhasa_ashrita_yoga_all_chara() {
+<a href=#1565 id=1565 data-nosnippet>1565</a>        <span class="comment">// All planets in Chara (Cardinal) signs: Aries(1), Cancer(4), Libra(7), Capricorn(10)
+<a href=#1566 id=1566 data-nosnippet>1566</a>        // (rasi - 1) % 3 == 0 for all
+<a href=#1567 id=1567 data-nosnippet>1567</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[
+<a href=#1568 id=1568 data-nosnippet>1568</a>            mock_pos(VedicPlanet::Sun, <span class="number">1</span>, <span class="number">1</span>),       <span class="comment">// Aries
+<a href=#1569 id=1569 data-nosnippet>1569</a>            </span>mock_pos(VedicPlanet::Moon, <span class="number">4</span>, <span class="number">4</span>),      <span class="comment">// Cancer
+<a href=#1570 id=1570 data-nosnippet>1570</a>            </span>mock_pos(VedicPlanet::Mars, <span class="number">7</span>, <span class="number">7</span>),      <span class="comment">// Libra
+<a href=#1571 id=1571 data-nosnippet>1571</a>            </span>mock_pos(VedicPlanet::Mercury, <span class="number">10</span>, <span class="number">10</span>), <span class="comment">// Capricorn
+<a href=#1572 id=1572 data-nosnippet>1572</a>            </span>mock_pos(VedicPlanet::Jupiter, <span class="number">1</span>, <span class="number">1</span>),
+<a href=#1573 id=1573 data-nosnippet>1573</a>            mock_pos(VedicPlanet::Venus, <span class="number">4</span>, <span class="number">4</span>),
+<a href=#1574 id=1574 data-nosnippet>1574</a>            mock_pos(VedicPlanet::Saturn, <span class="number">7</span>, <span class="number">7</span>),
+<a href=#1575 id=1575 data-nosnippet>1575</a>            mock_pos(VedicPlanet::Rahu, <span class="number">10</span>, <span class="number">10</span>),
+<a href=#1576 id=1576 data-nosnippet>1576</a>            mock_pos(VedicPlanet::Ketu, <span class="number">1</span>, <span class="number">1</span>),
+<a href=#1577 id=1577 data-nosnippet>1577</a>        ];
+<a href=#1578 id=1578 data-nosnippet>1578</a>        <span class="kw">let </span>chart = mock_chart(planets);
+<a href=#1579 id=1579 data-nosnippet>1579</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
+<a href=#1580 id=1580 data-nosnippet>1580</a>        <span class="macro">assert!</span>(
+<a href=#1581 id=1581 data-nosnippet>1581</a>            yogas
+<a href=#1582 id=1582 data-nosnippet>1582</a>                .iter()
+<a href=#1583 id=1583 data-nosnippet>1583</a>                .any(|y| y.yoga_type == YogaType::NabhasaAshrita),
+<a href=#1584 id=1584 data-nosnippet>1584</a>            <span class="string">"Ashrita Yoga should be detected when all planets are in Chara signs"
+<a href=#1585 id=1585 data-nosnippet>1585</a>        </span>);
+<a href=#1586 id=1586 data-nosnippet>1586</a>    }
+<a href=#1587 id=1587 data-nosnippet>1587</a>
+<a href=#1588 id=1588 data-nosnippet>1588</a>    <span class="attr">#[test]
+<a href=#1589 id=1589 data-nosnippet>1589</a>    </span><span class="kw">fn </span>test_nabhasa_none_if_mixed_signs() {
+<a href=#1590 id=1590 data-nosnippet>1590</a>        <span class="comment">// Planets in both Chara and Sthira signs → no Akriti Yoga
+<a href=#1591 id=1591 data-nosnippet>1591</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[
+<a href=#1592 id=1592 data-nosnippet>1592</a>            mock_pos(VedicPlanet::Sun, <span class="number">1</span>, <span class="number">1</span>),  <span class="comment">// Aries (Chara)
+<a href=#1593 id=1593 data-nosnippet>1593</a>            </span>mock_pos(VedicPlanet::Moon, <span class="number">2</span>, <span class="number">2</span>), <span class="comment">// Taurus (Sthira)
+<a href=#1594 id=1594 data-nosnippet>1594</a>            </span>mock_pos(VedicPlanet::Mars, <span class="number">3</span>, <span class="number">3</span>), <span class="comment">// Gemini (Dvisvabhava)
+<a href=#1595 id=1595 data-nosnippet>1595</a>            </span>mock_pos(VedicPlanet::Mercury, <span class="number">4</span>, <span class="number">4</span>),
+<a href=#1596 id=1596 data-nosnippet>1596</a>            mock_pos(VedicPlanet::Jupiter, <span class="number">5</span>, <span class="number">5</span>),
+<a href=#1597 id=1597 data-nosnippet>1597</a>            mock_pos(VedicPlanet::Venus, <span class="number">6</span>, <span class="number">6</span>),
+<a href=#1598 id=1598 data-nosnippet>1598</a>            mock_pos(VedicPlanet::Saturn, <span class="number">7</span>, <span class="number">7</span>),
+<a href=#1599 id=1599 data-nosnippet>1599</a>            mock_pos(VedicPlanet::Rahu, <span class="number">8</span>, <span class="number">8</span>),
+<a href=#1600 id=1600 data-nosnippet>1600</a>            mock_pos(VedicPlanet::Ketu, <span class="number">9</span>, <span class="number">9</span>),
+<a href=#1601 id=1601 data-nosnippet>1601</a>        ];
+<a href=#1602 id=1602 data-nosnippet>1602</a>        <span class="kw">let </span>chart = mock_chart(planets);
+<a href=#1603 id=1603 data-nosnippet>1603</a>        <span class="kw">let </span>yogas = YogaEngine::check_yogas(<span class="kw-2">&amp;</span>chart);
+<a href=#1604 id=1604 data-nosnippet>1604</a>        <span class="kw">let </span>has_akriti = yogas.iter().any(|y| {
+<a href=#1605 id=1605 data-nosnippet>1605</a>            <span class="macro">matches!</span>(
+<a href=#1606 id=1606 data-nosnippet>1606</a>                y.yoga_type,
+<a href=#1607 id=1607 data-nosnippet>1607</a>                YogaType::NabhasaAshrita | YogaType::NabhasaSthira | YogaType::NabhasaDvisvabhava
+<a href=#1608 id=1608 data-nosnippet>1608</a>            )
+<a href=#1609 id=1609 data-nosnippet>1609</a>        });
+<a href=#1610 id=1610 data-nosnippet>1610</a>        <span class="macro">assert!</span>(
+<a href=#1611 id=1611 data-nosnippet>1611</a>            !has_akriti,
+<a href=#1612 id=1612 data-nosnippet>1612</a>            <span class="string">"No Akriti Yoga when planets span mixed sign qualities"
+<a href=#1613 id=1613 data-nosnippet>1613</a>        </span>);
+<a href=#1614 id=1614 data-nosnippet>1614</a>        <span class="comment">// But Sankhya (9 rasis) should produce no Sankhya yoga (only 1-7 generate one)
+<a href=#1615 id=1615 data-nosnippet>1615</a>        </span><span class="kw">let </span>has_sankhya = yogas.iter().any(|y| {
+<a href=#1616 id=1616 data-nosnippet>1616</a>            <span class="macro">matches!</span>(
+<a href=#1617 id=1617 data-nosnippet>1617</a>                y.yoga_type,
+<a href=#1618 id=1618 data-nosnippet>1618</a>                YogaType::NabhasaGola
+<a href=#1619 id=1619 data-nosnippet>1619</a>                    | YogaType::NabhasaYuga
+<a href=#1620 id=1620 data-nosnippet>1620</a>                    | YogaType::NabhasaShoola
+<a href=#1621 id=1621 data-nosnippet>1621</a>                    | YogaType::NabhasaKedara
+<a href=#1622 id=1622 data-nosnippet>1622</a>                    | YogaType::NabhasaPasha
+<a href=#1623 id=1623 data-nosnippet>1623</a>                    | YogaType::NabhasaDaama
+<a href=#1624 id=1624 data-nosnippet>1624</a>                    | YogaType::NabhasaVeena
+<a href=#1625 id=1625 data-nosnippet>1625</a>            )
+<a href=#1626 id=1626 data-nosnippet>1626</a>        });
+<a href=#1627 id=1627 data-nosnippet>1627</a>        <span class="macro">assert!</span>(
+<a href=#1628 id=1628 data-nosnippet>1628</a>            !has_sankhya,
+<a href=#1629 id=1629 data-nosnippet>1629</a>            <span class="string">"No Sankhya Yoga when planets are spread across all 9 rasis"
+<a href=#1630 id=1630 data-nosnippet>1630</a>        </span>);
+<a href=#1631 id=1631 data-nosnippet>1631</a>    }
+<a href=#1632 id=1632 data-nosnippet>1632</a>}
 </code></pre></div></section></main></body></html>

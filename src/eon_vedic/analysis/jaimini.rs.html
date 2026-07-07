@@ -462,59 +462,60 @@
 <a href=#462 id=462 data-nosnippet>462</a>            bhava_strengths: <span class="macro">vec!</span>[],
 <a href=#463 id=463 data-nosnippet>463</a>            vimshopaka_scores: <span class="macro">vec!</span>[],
 <a href=#464 id=464 data-nosnippet>464</a>            avasthas: <span class="macro">vec!</span>[],
-<a href=#465 id=465 data-nosnippet>465</a>            panchanga: <span class="kw">crate</span>::calc::panchanga::Panchanga {
-<a href=#466 id=466 data-nosnippet>466</a>                current_time: Utc.with_ymd_and_hms(<span class="number">2000</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">12</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap(),
-<a href=#467 id=467 data-nosnippet>467</a>                ..Default::default()
-<a href=#468 id=468 data-nosnippet>468</a>            },
-<a href=#469 id=469 data-nosnippet>469</a>            analysis_report: <span class="prelude-val">None</span>,
-<a href=#470 id=470 data-nosnippet>470</a>            ayanamsa: <span class="number">23.0</span>,
-<a href=#471 id=471 data-nosnippet>471</a>        }
-<a href=#472 id=472 data-nosnippet>472</a>    }
-<a href=#473 id=473 data-nosnippet>473</a>
-<a href=#474 id=474 data-nosnippet>474</a>    <span class="attr">#[test]
-<a href=#475 id=475 data-nosnippet>475</a>    </span><span class="kw">fn </span>test_chara_dasha_years_basic() {
-<a href=#476 id=476 data-nosnippet>476</a>        <span class="comment">// Aries (1) lord Mars in Gemini (3)
-<a href=#477 id=477 data-nosnippet>477</a>        // 1 is forward sign. Dist: (3 - 1) = 2. Years: 2 - 1 = 1 year?
-<a href=#478 id=478 data-nosnippet>478</a>        // Wait, my impl says (dist == 0 ? 12 : dist).
-<a href=#479 id=479 data-nosnippet>479</a>        // 3-1 = 2. dist = 2.
-<a href=#480 id=480 data-nosnippet>480</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[mock_position(VedicPlanet::Mars, <span class="number">3</span>, <span class="number">5.0</span>)];
-<a href=#481 id=481 data-nosnippet>481</a>        <span class="kw">let </span>chart = mock_chart(planets, <span class="number">1</span>);
-<a href=#482 id=482 data-nosnippet>482</a>        <span class="kw">let </span>years = JaiminiEngine::calculate_chara_dasha_years(<span class="kw-2">&amp;</span>chart, <span class="number">1</span>);
-<a href=#483 id=483 data-nosnippet>483</a>        <span class="macro">assert_eq!</span>(years, <span class="number">2</span>); <span class="comment">// 1st to 3rd is 3 signs, but Rao uses diff.
-<a href=#484 id=484 data-nosnippet>484</a>                              // Actually dist is sign index difference. 1 to 3 is 2.
-<a href=#485 id=485 data-nosnippet>485</a>                              // If dist=2, years=2.
-<a href=#486 id=486 data-nosnippet>486</a>    </span>}
-<a href=#487 id=487 data-nosnippet>487</a>
-<a href=#488 id=488 data-nosnippet>488</a>    <span class="attr">#[test]
-<a href=#489 id=489 data-nosnippet>489</a>    </span><span class="kw">fn </span>test_scorpio_co_ruler_strength() {
-<a href=#490 id=490 data-nosnippet>490</a>        <span class="comment">// Scorpio (8) lords Mars (4) and Ketu (12)
-<a href=#491 id=491 data-nosnippet>491</a>        // Put Ketu with Sun in 12. Ketu has 1 conjunction. Mars is alone in 4.
-<a href=#492 id=492 data-nosnippet>492</a>        // Ketu should win.
-<a href=#493 id=493 data-nosnippet>493</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[
-<a href=#494 id=494 data-nosnippet>494</a>            mock_position(VedicPlanet::Mars, <span class="number">4</span>, <span class="number">10.0</span>),
-<a href=#495 id=495 data-nosnippet>495</a>            mock_position(VedicPlanet::Ketu, <span class="number">12</span>, <span class="number">15.0</span>),
-<a href=#496 id=496 data-nosnippet>496</a>            mock_position(VedicPlanet::Sun, <span class="number">12</span>, <span class="number">20.0</span>),
-<a href=#497 id=497 data-nosnippet>497</a>        ];
-<a href=#498 id=498 data-nosnippet>498</a>        <span class="kw">let </span>chart = mock_chart(planets, <span class="number">1</span>);
-<a href=#499 id=499 data-nosnippet>499</a>        <span class="kw">let </span>lord_rasi = JaiminiEngine::evaluate_co_ruler_strength(
-<a href=#500 id=500 data-nosnippet>500</a>            <span class="kw-2">&amp;</span>chart,
-<a href=#501 id=501 data-nosnippet>501</a>            <span class="number">8</span>,
-<a href=#502 id=502 data-nosnippet>502</a>            VedicPlanet::Mars,
-<a href=#503 id=503 data-nosnippet>503</a>            VedicPlanet::Ketu,
-<a href=#504 id=504 data-nosnippet>504</a>        );
-<a href=#505 id=505 data-nosnippet>505</a>        <span class="macro">assert_eq!</span>(lord_rasi, <span class="number">12</span>);
-<a href=#506 id=506 data-nosnippet>506</a>    }
-<a href=#507 id=507 data-nosnippet>507</a>
-<a href=#508 id=508 data-nosnippet>508</a>    <span class="attr">#[test]
-<a href=#509 id=509 data-nosnippet>509</a>    </span><span class="kw">fn </span>test_arudha_pada_7th_exception() {
-<a href=#510 id=510 data-nosnippet>510</a>        <span class="comment">// Lagna (1) lord Mars in 4.
-<a href=#511 id=511 data-nosnippet>511</a>        // 4 is 4th from 1. 4th from 4 is 7.
-<a href=#512 id=512 data-nosnippet>512</a>        // This is the 7th house exception. Should move 4 houses from 7 -&gt; 10.
-<a href=#513 id=513 data-nosnippet>513</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[mock_position(VedicPlanet::Mars, <span class="number">4</span>, <span class="number">10.0</span>)];
-<a href=#514 id=514 data-nosnippet>514</a>        <span class="kw">let </span>chart = mock_chart(planets, <span class="number">1</span>);
-<a href=#515 id=515 data-nosnippet>515</a>        <span class="kw">let </span>padas = JaiminiEngine::calculate_arudha_padas(<span class="kw-2">&amp;</span>chart);
-<a href=#516 id=516 data-nosnippet>516</a>        <span class="kw">let </span>l1_arudha = padas.iter().find(|p| p.house == <span class="number">1</span>).unwrap();
-<a href=#517 id=517 data-nosnippet>517</a>        <span class="macro">assert_eq!</span>(l1_arudha.rasi, <span class="number">4</span>);
-<a href=#518 id=518 data-nosnippet>518</a>    }
-<a href=#519 id=519 data-nosnippet>519</a>}
+<a href=#465 id=465 data-nosnippet>465</a>            shadbalas: <span class="macro">vec!</span>[],
+<a href=#466 id=466 data-nosnippet>466</a>            panchanga: <span class="kw">crate</span>::calc::panchanga::Panchanga {
+<a href=#467 id=467 data-nosnippet>467</a>                current_time: Utc.with_ymd_and_hms(<span class="number">2000</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">12</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap(),
+<a href=#468 id=468 data-nosnippet>468</a>                ..Default::default()
+<a href=#469 id=469 data-nosnippet>469</a>            },
+<a href=#470 id=470 data-nosnippet>470</a>            analysis_report: <span class="prelude-val">None</span>,
+<a href=#471 id=471 data-nosnippet>471</a>            ayanamsa: <span class="number">23.0</span>,
+<a href=#472 id=472 data-nosnippet>472</a>        }
+<a href=#473 id=473 data-nosnippet>473</a>    }
+<a href=#474 id=474 data-nosnippet>474</a>
+<a href=#475 id=475 data-nosnippet>475</a>    <span class="attr">#[test]
+<a href=#476 id=476 data-nosnippet>476</a>    </span><span class="kw">fn </span>test_chara_dasha_years_basic() {
+<a href=#477 id=477 data-nosnippet>477</a>        <span class="comment">// Aries (1) lord Mars in Gemini (3)
+<a href=#478 id=478 data-nosnippet>478</a>        // 1 is forward sign. Dist: (3 - 1) = 2. Years: 2 - 1 = 1 year?
+<a href=#479 id=479 data-nosnippet>479</a>        // Wait, my impl says (dist == 0 ? 12 : dist).
+<a href=#480 id=480 data-nosnippet>480</a>        // 3-1 = 2. dist = 2.
+<a href=#481 id=481 data-nosnippet>481</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[mock_position(VedicPlanet::Mars, <span class="number">3</span>, <span class="number">5.0</span>)];
+<a href=#482 id=482 data-nosnippet>482</a>        <span class="kw">let </span>chart = mock_chart(planets, <span class="number">1</span>);
+<a href=#483 id=483 data-nosnippet>483</a>        <span class="kw">let </span>years = JaiminiEngine::calculate_chara_dasha_years(<span class="kw-2">&amp;</span>chart, <span class="number">1</span>);
+<a href=#484 id=484 data-nosnippet>484</a>        <span class="macro">assert_eq!</span>(years, <span class="number">2</span>); <span class="comment">// 1st to 3rd is 3 signs, but Rao uses diff.
+<a href=#485 id=485 data-nosnippet>485</a>                              // Actually dist is sign index difference. 1 to 3 is 2.
+<a href=#486 id=486 data-nosnippet>486</a>                              // If dist=2, years=2.
+<a href=#487 id=487 data-nosnippet>487</a>    </span>}
+<a href=#488 id=488 data-nosnippet>488</a>
+<a href=#489 id=489 data-nosnippet>489</a>    <span class="attr">#[test]
+<a href=#490 id=490 data-nosnippet>490</a>    </span><span class="kw">fn </span>test_scorpio_co_ruler_strength() {
+<a href=#491 id=491 data-nosnippet>491</a>        <span class="comment">// Scorpio (8) lords Mars (4) and Ketu (12)
+<a href=#492 id=492 data-nosnippet>492</a>        // Put Ketu with Sun in 12. Ketu has 1 conjunction. Mars is alone in 4.
+<a href=#493 id=493 data-nosnippet>493</a>        // Ketu should win.
+<a href=#494 id=494 data-nosnippet>494</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[
+<a href=#495 id=495 data-nosnippet>495</a>            mock_position(VedicPlanet::Mars, <span class="number">4</span>, <span class="number">10.0</span>),
+<a href=#496 id=496 data-nosnippet>496</a>            mock_position(VedicPlanet::Ketu, <span class="number">12</span>, <span class="number">15.0</span>),
+<a href=#497 id=497 data-nosnippet>497</a>            mock_position(VedicPlanet::Sun, <span class="number">12</span>, <span class="number">20.0</span>),
+<a href=#498 id=498 data-nosnippet>498</a>        ];
+<a href=#499 id=499 data-nosnippet>499</a>        <span class="kw">let </span>chart = mock_chart(planets, <span class="number">1</span>);
+<a href=#500 id=500 data-nosnippet>500</a>        <span class="kw">let </span>lord_rasi = JaiminiEngine::evaluate_co_ruler_strength(
+<a href=#501 id=501 data-nosnippet>501</a>            <span class="kw-2">&amp;</span>chart,
+<a href=#502 id=502 data-nosnippet>502</a>            <span class="number">8</span>,
+<a href=#503 id=503 data-nosnippet>503</a>            VedicPlanet::Mars,
+<a href=#504 id=504 data-nosnippet>504</a>            VedicPlanet::Ketu,
+<a href=#505 id=505 data-nosnippet>505</a>        );
+<a href=#506 id=506 data-nosnippet>506</a>        <span class="macro">assert_eq!</span>(lord_rasi, <span class="number">12</span>);
+<a href=#507 id=507 data-nosnippet>507</a>    }
+<a href=#508 id=508 data-nosnippet>508</a>
+<a href=#509 id=509 data-nosnippet>509</a>    <span class="attr">#[test]
+<a href=#510 id=510 data-nosnippet>510</a>    </span><span class="kw">fn </span>test_arudha_pada_7th_exception() {
+<a href=#511 id=511 data-nosnippet>511</a>        <span class="comment">// Lagna (1) lord Mars in 4.
+<a href=#512 id=512 data-nosnippet>512</a>        // 4 is 4th from 1. 4th from 4 is 7.
+<a href=#513 id=513 data-nosnippet>513</a>        // This is the 7th house exception. Should move 4 houses from 7 -&gt; 10.
+<a href=#514 id=514 data-nosnippet>514</a>        </span><span class="kw">let </span>planets = <span class="macro">vec!</span>[mock_position(VedicPlanet::Mars, <span class="number">4</span>, <span class="number">10.0</span>)];
+<a href=#515 id=515 data-nosnippet>515</a>        <span class="kw">let </span>chart = mock_chart(planets, <span class="number">1</span>);
+<a href=#516 id=516 data-nosnippet>516</a>        <span class="kw">let </span>padas = JaiminiEngine::calculate_arudha_padas(<span class="kw-2">&amp;</span>chart);
+<a href=#517 id=517 data-nosnippet>517</a>        <span class="kw">let </span>l1_arudha = padas.iter().find(|p| p.house == <span class="number">1</span>).unwrap();
+<a href=#518 id=518 data-nosnippet>518</a>        <span class="macro">assert_eq!</span>(l1_arudha.rasi, <span class="number">4</span>);
+<a href=#519 id=519 data-nosnippet>519</a>    }
+<a href=#520 id=520 data-nosnippet>520</a>}
 </code></pre></div></section></main></body></html>
