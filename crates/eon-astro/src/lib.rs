@@ -48,7 +48,7 @@ impl AstroEngine {
             // Flag::SPEED = 256
             let ret = swiss_eph::swe_calc_ut(
                 julian_day,
-                0,   // SE_SUN
+                0,       // SE_SUN
                 256 | 4, // SEFLG_SPEED | SEFLG_MOEPH
                 results.as_mut_ptr(),
                 error.as_mut_ptr() as *mut i8,
@@ -155,7 +155,7 @@ impl AstroEngine {
             // speed는 일(Day) 당 이동 각도.
             // 초 단위 이동으로 환산.
             let seconds_to_move = (diff / safe_speed) * 86400.0;
-            
+
             // 한 번에 너무 큰 점프를 방지 (예: 최대 30일)
             let max_jump = 30.0 * 86400.0;
             let clamped_seconds = if seconds_to_move > max_jump {

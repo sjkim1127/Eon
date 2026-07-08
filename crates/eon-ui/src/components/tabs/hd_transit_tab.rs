@@ -12,11 +12,11 @@ use eon_service::facade;
 pub fn HdTransitTab() -> Element {
     let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
-    
+
     // UI states
     let mut target_date = use_signal(|| chrono::Local::now().format("%Y-%m-%dT%H:%M").to_string());
     let mut target_year = use_signal(|| chrono::Local::now().format("%Y").to_string());
-    
+
     // Trigger signals
     let mut analyze_transit_trigger = use_signal(|| false);
     let mut analyze_return_trigger = use_signal(|| None::<ReturnType>);
@@ -28,20 +28,21 @@ pub fn HdTransitTab() -> Element {
         let trig = *analyze_transit_trigger.read();
         let form1 = state_cloned.form.read().clone();
         let date_str = target_date.read().clone();
-        
+
         if trig && form1.year > 0 {
             let mut state = state_cloned.clone();
             spawn(async move {
                 analyze_transit_trigger.set(false);
                 state.hd_transit.write().status = TaskStatus::Loading;
-                
+
                 let base_input = form1.to_analysis_input();
                 let hd_input = HumanDesignAnalysisInput::new(base_input);
-                
-                let parsed_dt = match chrono::NaiveDateTime::parse_from_str(&date_str, "%Y-%m-%dT%H:%M") {
-                    Ok(ndt) => DateTime::<Utc>::from_naive_utc_and_offset(ndt, Utc),
-                    Err(_) => Utc::now(), // Fallback
-                };
+
+                let parsed_dt =
+                    match chrono::NaiveDateTime::parse_from_str(&date_str, "%Y-%m-%dT%H:%M") {
+                        Ok(ndt) => DateTime::<Utc>::from_naive_utc_and_offset(ndt, Utc),
+                        Err(_) => Utc::now(), // Fallback
+                    };
 
                 match facade::analyze_hd_transit(hd_input, parsed_dt) {
                     Ok(res) => {
@@ -63,16 +64,16 @@ pub fn HdTransitTab() -> Element {
         let return_type_opt = analyze_return_trigger.read().clone();
         let form1 = state_cloned_2.form.read().clone();
         let year_str = target_year.read().clone();
-        
+
         if let Some(r_type) = return_type_opt {
             let mut state = state_cloned_2.clone();
             spawn(async move {
                 analyze_return_trigger.set(None);
                 state.hd_transit.write().status = TaskStatus::Loading;
-                
+
                 let base_input = form1.to_analysis_input();
                 let hd_input = HumanDesignAnalysisInput::new(base_input);
-                
+
                 let year = year_str.parse::<i32>().unwrap_or(2026);
 
                 match facade::analyze_hd_return(hd_input, r_type, year) {
@@ -97,11 +98,11 @@ pub fn HdTransitTab() -> Element {
                     h3 { class: "text-lg font-bold text-slate-300 mb-3", "Natal Chart (Person)" }
                     BirthForm {}
                 }
-                
+
                 // Right: Transit Controls
                 div { class: "space-y-4",
                     h3 { class: "text-lg font-bold text-slate-300 mb-3", "Transit & Return Controls" }
-                    
+
                     // 1. Manual Transit
                     div { class: "p-4 bg-slate-900/50 border border-slate-700 rounded-xl space-y-3",
                         h4 { class: "font-semibold text-teal-400", "Custom Transit Date" }
@@ -117,11 +118,11 @@ pub fn HdTransitTab() -> Element {
                             "Calculate Transit Chart"
                         }
                     }
-                    
+
                     // 2. Returns
                     div { class: "p-4 bg-slate-900/50 border border-slate-700 rounded-xl space-y-3",
                         h4 { class: "font-semibold text-purple-400", "Exact Returns (Astro Search)" }
-                        
+
                         div { class: "flex items-center gap-2",
                             input {
                                 r#type: "number",
@@ -135,7 +136,7 @@ pub fn HdTransitTab() -> Element {
                                 "Solar Return"
                             }
                         }
-                        
+
                         div { class: "grid grid-cols-2 gap-2",
                             button {
                                 class: "px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded transition-all active:scale-95 text-sm",
@@ -193,11 +194,11 @@ pub fn HdTransitTab() -> Element {
                                             "Target Exact UTC: {res.target_date}"
                                         }
                                     }
-                                    
+
                                     // Reuse the composite bodygraph, treating Person 1 as Natal, Person 2 as Transit
                                     CompositeBodyGraph { result: res.composite_connection.clone() }
                                 }
-                                
+
                                 // Conditioning Info
                                 div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4",
                                     div { class: "p-4 bg-slate-900/50 border border-yellow-500/30 rounded-xl flex flex-col gap-2",

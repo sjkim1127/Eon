@@ -1,21 +1,21 @@
-pub mod quarters;
-pub mod penta;
-pub mod transit;
-pub mod phs;
-pub mod db;
 pub mod connection;
+pub mod db;
 pub mod dream_rave;
+pub mod penta;
+pub mod phs;
+pub mod quarters;
+pub mod transit;
 use chrono::{DateTime, Utc};
 use eon_astro::{AstroEngine, AstroError};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 
-pub use quarters::ZodiacQuarter;
 pub use phs::{
     ArrowDirection, DigestionColor, DigestionVariable, EnvironmentColor, EnvironmentVariable,
     MotivationColor, MotivationVariable, PerspectiveColor, PerspectiveVariable, PhsVariablesResult,
     ToneCognition,
 };
+pub use quarters::ZodiacQuarter;
 pub use transit::*;
 
 #[derive(Debug, thiserror::Error)]
@@ -614,7 +614,8 @@ pub fn calculate_human_design(
     let strategy = determine_strategy(&chart_type);
     let not_self_theme = determine_not_self_theme(&chart_type);
     let definition_type = determine_definition_type(&defined_set, &active_channels);
-    let (incarnation_cross, incarnation_cross_ko) = determine_incarnation_cross(p_sun_gate, &profile);
+    let (incarnation_cross, incarnation_cross_ko) =
+        determine_incarnation_cross(p_sun_gate, &profile);
     let quarter = ZodiacQuarter::from_gate(p_sun_gate);
 
     let active_gates: Vec<u8> = all_gates.into_iter().collect();

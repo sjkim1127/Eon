@@ -1,12 +1,12 @@
-pub mod hd_transit_tab;
-pub mod phs_variables;
-pub mod hd_connection_tab;
-pub mod hd_penta_tab;
 pub mod composite_bodygraph;
 pub mod dream_rave_bodygraph;
 pub mod hd_bodygraph;
+pub mod hd_connection_tab;
+pub mod hd_penta_tab;
+pub mod hd_transit_tab;
 pub mod human_design_tab;
 pub mod iching_tab;
+pub mod phs_variables;
 pub mod qimen_tab;
 pub mod saju_tab;
 pub mod simulation_tab;

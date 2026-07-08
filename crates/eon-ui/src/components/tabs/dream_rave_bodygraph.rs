@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-use std::collections::HashSet;
 use eon_human_design::dream_rave::DreamCenter;
+use std::collections::HashSet;
 
 #[derive(Props, PartialEq, Clone)]
 pub struct DreamRaveBodyGraphProps {
@@ -25,9 +25,7 @@ pub fn DreamRaveBodyGraph(props: DreamRaveBodyGraphProps) -> Element {
         }
     };
 
-    let has_gate = |g: u8| -> bool {
-        props.active_gates.contains(&g)
-    };
+    let has_gate = |g: u8| -> bool { props.active_gates.contains(&g) };
 
     let get_gate_color = |g: u8| -> &'static str {
         if has_gate(g) {
@@ -41,15 +39,15 @@ pub fn DreamRaveBodyGraph(props: DreamRaveBodyGraphProps) -> Element {
         div { class: "w-full flex justify-center items-center py-6 bg-slate-900/50 rounded-2xl border border-indigo-900/50",
             svg {
                 width: "100%", height: "auto", view_box: "0 0 400 600", class: "drop-shadow-2xl max-w-sm",
-                
+
                 // Earth Plane (Center)
                 rect { x: "160", y: "260", width: "80", height: "80", rx: "8", fill: has_center(DreamCenter::EarthPlane), stroke: outline_color, stroke_width: "4" }
                 text { x: "185", y: "305", class: "text-xs font-bold {gate_text_color}", "Earth" }
-                
+
                 // Demon Realm (Left)
                 rect { x: "40", y: "260", width: "80", height: "80", rx: "8", fill: has_center(DreamCenter::DemonRealm), stroke: outline_color, stroke_width: "4" }
                 text { x: "65", y: "305", class: "text-xs font-bold {gate_text_color}", "Demon" }
-                
+
                 // Light Field (Top)
                 rect { x: "160", y: "140", width: "80", height: "80", rx: "8", fill: has_center(DreamCenter::LightField), stroke: outline_color, stroke_width: "4" }
                 text { x: "185", y: "185", class: "text-xs font-bold {gate_text_color}", "Light" }

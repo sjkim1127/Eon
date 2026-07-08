@@ -9,7 +9,7 @@ pub fn HdPentaTab() -> Element {
     let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
     let mut analysis_trigger = use_signal(|| 0);
-    
+
     let mut forms = state.penta_forms;
 
     let state_cloned = state.clone();
@@ -22,10 +22,11 @@ pub fn HdPentaTab() -> Element {
             let mut state = state_cloned.clone();
             spawn(async move {
                 state.hd_penta.write().status = TaskStatus::Loading;
-                
-                let inputs: Vec<HumanDesignAnalysisInput> = current_forms.into_iter().map(|f| {
-                    HumanDesignAnalysisInput::new(f.to_analysis_input())
-                }).collect();
+
+                let inputs: Vec<HumanDesignAnalysisInput> = current_forms
+                    .into_iter()
+                    .map(|f| HumanDesignAnalysisInput::new(f.to_analysis_input()))
+                    .collect();
 
                 match facade::analyze_hd_penta(inputs) {
                     Ok(res) => {
@@ -177,7 +178,7 @@ pub fn HdPentaTab() -> Element {
                                         }
                                     }
                                 }
-                                
+
                                 // Penta Channels
                                 div { class: "p-6 bg-slate-950/40 border border-slate-800/50 rounded-2xl backdrop-blur-md space-y-4",
                                     h3 { class: "text-lg font-bold text-slate-200 flex items-center gap-2",
@@ -194,7 +195,7 @@ pub fn HdPentaTab() -> Element {
                                                 let is_active = ch.is_active;
                                                 let bg_cls = if is_active { "bg-teal-900/30 border-teal-500/50" } else { "bg-slate-900/30 border-slate-800/50" };
                                                 let text_cls = if is_active { "text-teal-300" } else { "text-slate-500" };
-                                                
+
                                                 rsx! {
                                                     div {
                                                         key: "{ch.channel.0}-{ch.channel.1}",
@@ -206,7 +207,7 @@ pub fn HdPentaTab() -> Element {
                                                             }
                                                         }
                                                         span { class: "text-sm {text_cls}", "{ch.name}" }
-                                                        
+
                                                         if !is_active && !ch.missing_gates.is_empty() {
                                                             div { class: "mt-2 pt-2 border-t border-slate-800/50",
                                                                 span { class: "text-xs text-rose-400/80 font-medium", "Missing: {ch.missing_gates.iter().map(|g| g.to_string()).collect::<Vec<_>>().join(\", \")}" }

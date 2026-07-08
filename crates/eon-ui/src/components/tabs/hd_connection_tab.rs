@@ -96,7 +96,7 @@ pub fn HdConnectionTab() -> Element {
                                     }
                                     CompositeBodyGraph { result: res.clone() }
                                 }
-                                
+
                                 div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4",
                                     div { class: "p-4 bg-slate-900/50 border border-yellow-500/30 rounded-xl flex flex-col gap-2",
                                         h4 { class: "font-bold text-yellow-400", "Electromagnetic" }

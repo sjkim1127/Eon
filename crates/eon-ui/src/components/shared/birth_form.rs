@@ -76,7 +76,7 @@ pub fn BirthForm() -> Element {
             return;
         }
         geo_status.set(geo_searching_str.to_string());
-        
+
         let results = crate::utils::geocode::search_city(&query, 15);
         if results.is_empty() {
             geo_status.set(geo_no_result_str.to_string());

@@ -44,12 +44,12 @@ impl DigestionColor {
 // 2. Environment (Design Nodes)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum EnvironmentColor {
-    Caves,    // 1
-    Markets,  // 2
-    Kitchens, // 3
-    Mountains,// 4
-    Valleys,  // 5
-    Shores,   // 6
+    Caves,     // 1
+    Markets,   // 2
+    Kitchens,  // 3
+    Mountains, // 4
+    Valleys,   // 5
+    Shores,    // 6
 }
 
 impl EnvironmentColor {
@@ -262,4 +262,3 @@ pub fn calculate_phs(
         },
     }
 }
-

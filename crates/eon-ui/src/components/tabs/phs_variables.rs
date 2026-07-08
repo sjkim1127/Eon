@@ -29,7 +29,7 @@ pub fn PhsVariables(props: PhsVariablesProps) -> Element {
                 span { "🎯" }
                 "Primary Health System & Variables"
             }
-            
+
             div { class: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10",
                 // 1. Digestion (Design Sun/Earth)
                 div { class: "bg-slate-950/60 p-4 rounded-xl border border-rose-900/50 flex flex-col gap-2 relative",

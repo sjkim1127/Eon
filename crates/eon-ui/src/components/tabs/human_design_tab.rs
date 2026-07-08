@@ -180,7 +180,7 @@ pub fn HumanDesignTab() -> Element {
                                                 "{res.incarnation_cross}"
                                             }
                                         }
-                                        span { class: "text-xs text-slate-500 mt-1", 
+                                        span { class: "text-xs text-slate-500 mt-1",
                                             "{res.quarter.name_ko()} - {res.quarter.theme_ko()}"
                                         }
                                     }

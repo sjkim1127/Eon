@@ -24,13 +24,21 @@ pub fn CompositeBodyGraph(props: CompositeBodyGraphProps) -> Element {
     };
 
     let get_channel_color = |g1: u8, g2: u8| -> &'static str {
-        if props.result.electromagnetic_channels.contains(&(g1, g2)) || props.result.electromagnetic_channels.contains(&(g2, g1)) {
+        if props.result.electromagnetic_channels.contains(&(g1, g2))
+            || props.result.electromagnetic_channels.contains(&(g2, g1))
+        {
             "#facc15" // Yellow/Spark for Electromagnetic
-        } else if props.result.compromise_channels.contains(&(g1, g2)) || props.result.compromise_channels.contains(&(g2, g1)) {
+        } else if props.result.compromise_channels.contains(&(g1, g2))
+            || props.result.compromise_channels.contains(&(g2, g1))
+        {
             "#a855f7" // Purple for Compromise
-        } else if props.result.dominance_channels.contains(&(g1, g2)) || props.result.dominance_channels.contains(&(g2, g1)) {
+        } else if props.result.dominance_channels.contains(&(g1, g2))
+            || props.result.dominance_channels.contains(&(g2, g1))
+        {
             "#3b82f6" // Blue for Dominance (A over B or B over A)
-        } else if props.result.companionship_channels.contains(&(g1, g2)) || props.result.companionship_channels.contains(&(g2, g1)) {
+        } else if props.result.companionship_channels.contains(&(g1, g2))
+            || props.result.companionship_channels.contains(&(g2, g1))
+        {
             "#22c55e" // Green for Companionship
         } else {
             "#e2e8f0" // Default undefined
@@ -42,7 +50,7 @@ pub fn CompositeBodyGraph(props: CompositeBodyGraphProps) -> Element {
             svg {
                 width: "100%", height: "auto", view_box: "0 0 400 600", class: "drop-shadow-2xl max-w-sm",
                 // Example Single Channel to demonstrate the concept.
-                
+
                 // Channel 1-8
                 line { x1: "200", y1: "310", x2: "200", y2: "270", stroke: get_channel_color(1, 8), stroke_width: "6", stroke_linecap: "round" }
                 text { x: "196", y: "308", class: "text-[8px] font-bold {gate_text_color}", "1" }

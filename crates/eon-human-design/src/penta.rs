@@ -1,6 +1,6 @@
+use crate::HumanDesignResult;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use crate::HumanDesignResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PentaGateInfo {
@@ -40,10 +40,14 @@ pub fn calculate_penta(charts: &[HumanDesignResult]) -> PentaResult {
     // Collect all active gates from all participants
     for (i, chart) in charts.iter().enumerate() {
         for &gate in &chart.active_gates {
-            active_gates.entry(gate).or_insert(PentaGateInfo {
-                gate,
-                activated_by: Vec::new(),
-            }).activated_by.push(i);
+            active_gates
+                .entry(gate)
+                .or_insert(PentaGateInfo {
+                    gate,
+                    activated_by: Vec::new(),
+                })
+                .activated_by
+                .push(i);
         }
     }
 
@@ -55,7 +59,7 @@ pub fn calculate_penta(charts: &[HumanDesignResult]) -> PentaResult {
         let has_g1 = active_gates.contains_key(&g1);
         let has_g2 = active_gates.contains_key(&g2);
         let is_active = has_g1 && has_g2;
-        
+
         let mut missing = Vec::new();
         if !is_active {
             if has_g1 && !has_g2 {

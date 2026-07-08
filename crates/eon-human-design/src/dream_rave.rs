@@ -1,6 +1,6 @@
+use crate::HumanDesignResult;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use crate::HumanDesignResult;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DreamCenter {
@@ -20,7 +20,7 @@ pub struct DreamRaveResult {
 
 pub fn calculate_dream_rave(
     personality: &std::collections::HashMap<String, crate::HdPlanetData>,
-    design: &std::collections::HashMap<String, crate::HdPlanetData>
+    design: &std::collections::HashMap<String, crate::HdPlanetData>,
 ) -> DreamRaveResult {
     let mut all_waking_gates = HashSet::new();
     for p in personality.values() {
@@ -35,14 +35,18 @@ pub fn calculate_dream_rave(
         50, 57, 53, // Demon Realm
         27, 42, 19, // Chaos
         60, 38, 58, // Ocean
-        1, 2, 8,    // Light Field (approx)
-    ].iter().cloned().collect();
+        1, 2, 8, // Light Field (approx)
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
-    let active_dream_gates: HashSet<u8> = all_waking_gates.intersection(&dream_gates).cloned().collect();
+    let active_dream_gates: HashSet<u8> = all_waking_gates
+        .intersection(&dream_gates)
+        .cloned()
+        .collect();
 
-    let dream_channels = vec![
-        (62, 20), (20, 12),
-    ];
+    let dream_channels = vec![(62, 20), (20, 12)];
 
     let mut defined_centers = HashSet::new();
     let mut active_channels = Vec::new();

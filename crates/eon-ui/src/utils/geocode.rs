@@ -26,8 +26,12 @@ pub fn search_city(query: &str, limit: usize) -> Vec<CityRecord> {
     for city in CITIES.iter() {
         let name_lower = city.name.to_lowercase();
         let match_en = name_lower.starts_with(&query) || name_lower.contains(&query);
-        let match_ko = city.name_ko.as_ref().map(|k| k.starts_with(&query) || k.contains(&query)).unwrap_or(false);
-        
+        let match_ko = city
+            .name_ko
+            .as_ref()
+            .map(|k| k.starts_with(&query) || k.contains(&query))
+            .unwrap_or(false);
+
         if match_en || match_ko {
             results.push(city.clone());
             if results.len() >= limit {
@@ -35,7 +39,7 @@ pub fn search_city(query: &str, limit: usize) -> Vec<CityRecord> {
             }
         }
     }
-    
+
     // Sort logic is already handled because CITIES is sorted by population descending!
     results
 }

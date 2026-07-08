@@ -98,7 +98,8 @@ pub struct AnalysisState {
     pub iching: Signal<AnalysisTaskState<IChingAnalysisOutput>>,
     pub western: Signal<AnalysisTaskState<WesternAnalysisOutput>>,
     pub human_design: Signal<AnalysisTaskState<HumanDesignAnalysisOutput>>,
-    pub hd_connection: Signal<AnalysisTaskState<eon_human_design::connection::HumanDesignConnectionResult>>,
+    pub hd_connection:
+        Signal<AnalysisTaskState<eon_human_design::connection::HumanDesignConnectionResult>>,
     pub hd_transit: Signal<AnalysisTaskState<eon_human_design::transit::HumanDesignTransitResult>>,
     pub hd_penta: Signal<AnalysisTaskState<eon_human_design::penta::PentaResult>>,
     pub penta_forms: Signal<Vec<FormState>>,
@@ -123,7 +124,11 @@ impl AnalysisState {
             hd_connection: Signal::new(AnalysisTaskState::default()),
             hd_transit: Signal::new(AnalysisTaskState::default()),
             hd_penta: Signal::new(AnalysisTaskState::default()),
-            penta_forms: Signal::new(vec![FormState::default(), FormState::default(), FormState::default()]), // Minimum 3 people
+            penta_forms: Signal::new(vec![
+                FormState::default(),
+                FormState::default(),
+                FormState::default(),
+            ]), // Minimum 3 people
             qimen: Signal::new(AnalysisTaskState::default()),
             locale: Signal::new(Locale::Ko),
         }
