@@ -11,19 +11,22 @@ pub enum DreamCenter {
     Chaos,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct DreamRaveResult {
     pub active_gates: HashSet<u8>,
     pub defined_centers: HashSet<DreamCenter>,
     pub active_channels: Vec<(u8, u8)>,
 }
 
-pub fn calculate_dream_rave(base_result: &HumanDesignResult) -> DreamRaveResult {
+pub fn calculate_dream_rave(
+    personality: &std::collections::HashMap<String, crate::HdPlanetData>,
+    design: &std::collections::HashMap<String, crate::HdPlanetData>
+) -> DreamRaveResult {
     let mut all_waking_gates = HashSet::new();
-    for p in base_result.personality.values() {
+    for p in personality.values() {
         all_waking_gates.insert(p.gate);
     }
-    for p in base_result.design.values() {
+    for p in design.values() {
         all_waking_gates.insert(p.gate);
     }
 

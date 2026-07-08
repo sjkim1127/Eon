@@ -33,6 +33,8 @@ wasm-bindgen = "0.2"
 serde-wasm-bindgen = "0.6"
 urlencoding = "2.1"
 eon-qimen = { version = "0.1.1", path = "../eon-qimen" }
+bincode.workspace = true
+lazy_static = "1.5.0"
 
 [lints]
 workspace = true

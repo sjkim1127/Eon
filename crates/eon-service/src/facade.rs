@@ -69,6 +69,34 @@ pub fn analyze_human_design(
     crate::services::human_design::analyze(input)
 }
 
+pub fn analyze_hd_connection(
+    input1: HumanDesignAnalysisInput,
+    input2: HumanDesignAnalysisInput,
+) -> Result<eon_human_design::connection::HumanDesignConnectionResult, ServiceError> {
+    crate::services::human_design::analyze_connection(input1, input2)
+}
+
+pub fn analyze_hd_transit(
+    natal_input: HumanDesignAnalysisInput,
+    transit_time: chrono::DateTime<chrono::Utc>,
+) -> Result<eon_human_design::transit::HumanDesignTransitResult, ServiceError> {
+    crate::services::human_design::analyze_transit(natal_input, transit_time)
+}
+
+pub fn analyze_hd_return(
+    natal_input: HumanDesignAnalysisInput,
+    return_type: eon_human_design::transit::ReturnType,
+    target_year: i32,
+) -> Result<eon_human_design::transit::HumanDesignTransitResult, ServiceError> {
+    crate::services::human_design::calculate_return(natal_input, return_type, target_year)
+}
+
+pub fn analyze_hd_penta(
+    inputs: Vec<HumanDesignAnalysisInput>,
+) -> Result<eon_human_design::penta::PentaResult, ServiceError> {
+    crate::services::human_design::analyze_penta(inputs)
+}
+
 pub fn generate_themed_report(
     input: ThemedReportInput,
 ) -> Result<ThemedReportOutput, ServiceError> {

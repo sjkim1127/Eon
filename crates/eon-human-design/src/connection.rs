@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use crate::{HdCenter, HumanDesignResult};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct HumanDesignConnectionResult {
     pub electromagnetic_channels: Vec<(u8, u8)>, // Each has half
     pub compromise_channels: Vec<(u8, u8)>,      // One has whole, one has half

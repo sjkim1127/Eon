@@ -1,3 +1,6 @@
+pub mod penta;
+pub mod transit;
+pub mod phs;
 pub mod db;
 pub mod connection;
 pub mod dream_rave;
@@ -67,6 +70,10 @@ pub struct HumanDesignResult {
     pub strategy: String,
     pub not_self_theme: String,
     pub incarnation_cross: String,
+    pub incarnation_cross_ko: String,
+    pub incarnation_quarter: String,
+    pub dream_rave: crate::dream_rave::DreamRaveResult,
+    pub phs_variables: crate::phs::PhsVariablesResult,
 }
 
 pub const GATE_SEQUENCE: [u8; 64] = [
@@ -508,7 +515,7 @@ pub fn determine_definition_type(
     }
 }
 
-pub fn determine_incarnation_cross(sun_gate: u8, profile: &str) -> String {
+pub fn determine_incarnation_cross(sun_gate: u8, profile: &str) -> (String, String) {
     let parts: Vec<&str> = profile.split('/').collect();
     if parts.len() == 2 {
         let p_line: u8 = parts[0].parse().unwrap_or(1);
@@ -522,9 +529,34 @@ pub fn determine_incarnation_cross(sun_gate: u8, profile: &str) -> String {
         } else {
             angle
         };
-        db::get_incarnation_cross_name(sun_gate, final_angle)
+        let cross_name = db::get_incarnation_cross_name(sun_gate, final_angle);
+        let cross_name_ko = db::get_incarnation_cross_name_ko(sun_gate, final_angle);
+        (cross_name, cross_name_ko)
     } else {
-        format!("Unknown Cross of Gate {}", sun_gate)
+        let msg = format!("Unknown Cross of Gate {}", sun_gate);
+        (msg.clone(), msg)
+    }
+}
+
+pub fn determine_incarnation_quarter(sun_gate: u8) -> String {
+    // 4 Quarters based on Zodiac Wheel
+    // Initiation: 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3, 27, 24
+    // Civilization: 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56, 31, 33
+    // Duality: 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50, 28, 44
+    // Mutation: 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60, 41, 19
+    
+    let initiation = [13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3, 27, 24];
+    let civilization = [2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56, 31, 33];
+    let duality = [7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50, 28, 44];
+    
+    if initiation.contains(&sun_gate) {
+        "Quarter of Initiation (Mind)".to_string()
+    } else if civilization.contains(&sun_gate) {
+        "Quarter of Civilization (Form)".to_string()
+    } else if duality.contains(&sun_gate) {
+        "Quarter of Duality (Relationship)".to_string()
+    } else {
+        "Quarter of Mutation (Transformation)".to_string()
     }
 }
 
@@ -593,11 +625,20 @@ pub fn calculate_human_design(
     let strategy = determine_strategy(&chart_type);
     let not_self_theme = determine_not_self_theme(&chart_type);
     let definition_type = determine_definition_type(&defined_set, &active_channels);
-    let incarnation_cross = determine_incarnation_cross(p_sun_gate, &profile);
+    let (incarnation_cross, incarnation_cross_ko) = determine_incarnation_cross(p_sun_gate, &profile);
+    let incarnation_quarter = determine_incarnation_quarter(p_sun_gate);
 
     let active_gates: Vec<u8> = all_gates.into_iter().collect();
     let mut active_gates = active_gates;
     active_gates.sort();
+
+    let dream_rave_res = dream_rave::calculate_dream_rave(&personality, &design);
+    let phs_variables = phs::calculate_phs(
+        design.get("Sun").unwrap(),
+        design.get("NorthNode").unwrap(),
+        personality.get("Sun").unwrap(),
+        personality.get("NorthNode").unwrap(),
+    );
 
     Ok(HumanDesignResult {
         chart_type,
@@ -607,12 +648,16 @@ pub fn calculate_human_design(
         undefined_centers,
         personality,
         design,
-        active_gates,
+        active_gates: active_gates,
         active_channels,
         definition_type,
         strategy,
-        not_self_theme,
+        not_self_theme: not_self_theme.to_string(),
         incarnation_cross,
+        incarnation_cross_ko,
+        incarnation_quarter,
+        dream_rave: dream_rave_res,
+        phs_variables,
     })
 }
 

@@ -49,7 +49,7 @@ impl AstroEngine {
             let ret = swiss_eph::swe_calc_ut(
                 julian_day,
                 0,   // SE_SUN
-                256, // SEFLG_SPEED
+                256 | 4, // SEFLG_SPEED | SEFLG_MOEPH
                 results.as_mut_ptr(),
                 error.as_mut_ptr() as *mut i8,
             );
@@ -115,6 +115,63 @@ impl AstroEngine {
         Ok(current_time)
     }
 
+    /// 특정 행성이 특정 황경(target_long)에 도달하는 정확한 시각을 추적합니다.
+    /// 동적 속도를 사용하여 역행(Retrograde) 시에도 대응하며 Newton's method로 수렴합니다.
+    pub fn find_time_for_planet_longitude(
+        &self,
+        start_time: DateTime<Utc>,
+        target_long: f64,
+        planet_id: i32,
+    ) -> Result<DateTime<Utc>, AstroError> {
+        use chrono::Duration;
+
+        let mut current_time = start_time;
+
+        // 최대 20회 반복
+        for _ in 0..20 {
+            // SEFLG_SPEED = 256
+            let (current_long, speed) = self.get_planet_full(current_time, planet_id, 256)?;
+
+            // 각도 차이 계산 (360도 보정)
+            let mut diff = target_long - current_long;
+            while diff > 180.0 {
+                diff -= 360.0;
+            }
+            while diff < -180.0 {
+                diff += 360.0;
+            }
+
+            if diff.abs() < 0.00001 {
+                // 매우 작은 오차에 도달
+                break;
+            }
+
+            // 속도가 0에 너무 가까울 경우 무한 발산 방지를 위해 최소 속도(절댓값) 보정
+            let mut safe_speed = speed;
+            if safe_speed.abs() < 0.001 {
+                safe_speed = if safe_speed >= 0.0 { 0.001 } else { -0.001 };
+            }
+
+            // speed는 일(Day) 당 이동 각도.
+            // 초 단위 이동으로 환산.
+            let seconds_to_move = (diff / safe_speed) * 86400.0;
+            
+            // 한 번에 너무 큰 점프를 방지 (예: 최대 30일)
+            let max_jump = 30.0 * 86400.0;
+            let clamped_seconds = if seconds_to_move > max_jump {
+                max_jump
+            } else if seconds_to_move < -max_jump {
+                -max_jump
+            } else {
+                seconds_to_move
+            };
+
+            current_time += Duration::seconds(clamped_seconds as i64);
+        }
+
+        Ok(current_time)
+    }
+
     /// 특정 절기(SolarTerm)의 정확한 시작 시각을 찾습니다.
     pub fn find_solar_term_time(
         &self,
@@ -152,10 +209,12 @@ impl AstroEngine {
 
         let _lock = ASTRO_LOCK.lock().map_err(|_| AstroError::LockPoisoned)?;
         unsafe {
+            // 강제로 Moshier Ephemeris 모드 활성화 (파일 시스템 미사용 - Wasm용)
+            let safe_flag = (flag & !2) | 4; // Clear SEFLG_SWIEPH (2), Set SEFLG_MOEPH (4)
             let ret = swiss_eph::swe_calc_ut(
                 julian_day,
                 planet_id,
-                flag,
+                safe_flag,
                 results.as_mut_ptr(),
                 error.as_mut_ptr() as *mut i8,
             );
@@ -191,7 +250,7 @@ impl AstroEngine {
         let julian_day = self.to_julian_day(datetime);
         let mut results = [0.0; 6];
         let mut error = [0; 256];
-        let flag = 2048 | 2; // SEFLG_EQUATORIAL | SEFLG_SWIEPH
+        let flag = 2048 | 4; // SEFLG_EQUATORIAL | SEFLG_MOEPH
 
         let _lock = ASTRO_LOCK.lock().map_err(|_| AstroError::LockPoisoned)?;
         unsafe {
@@ -354,9 +413,10 @@ impl AstroEngine {
         unsafe {
             // 'P' as i32 for Placidus, 'W' for Whole Sign if supported,
             // but SE typically takes char byte.
-            // swe_houses(tjd_ut, lat, lon, hsys, cusps, ascmc)
-            let ret = swiss_eph::swe_houses(
+            // swe_houses_ex(tjd_ut, iflag, lat, lon, hsys, cusps, ascmc)
+            let ret = swiss_eph::swe_houses_ex(
                 julian_day,
+                4, // SEFLG_MOEPH
                 latitude,
                 longitude,
                 house_system,

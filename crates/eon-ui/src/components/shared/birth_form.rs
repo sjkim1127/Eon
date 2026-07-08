@@ -4,14 +4,7 @@ use crate::store::AnalysisState;
 use dioxus::prelude::*;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize, Clone, PartialEq)]
-struct NominatimResult {
-    lat: String,
-    lon: String,
-    display_name: String,
-}
-
-const MAX_SEARCH_RESULTS: usize = 15;
+use crate::utils::geocode::CityRecord;
 
 #[component]
 pub fn BirthForm() -> Element {
@@ -23,7 +16,7 @@ pub fn BirthForm() -> Element {
     let mut new_profile_name = use_signal(String::new);
     let mut city_input = use_signal(String::new);
     let mut geo_status = use_signal(String::new);
-    let mut search_results = use_signal(Vec::<NominatimResult>::new);
+    let mut search_results = use_signal(Vec::<CityRecord>::new);
 
     // Load profiles on mount
     use_effect(move || {
@@ -57,18 +50,16 @@ pub fn BirthForm() -> Element {
         }
     };
 
-    let mut select_city = move |result: NominatimResult| {
-        let lat: f64 = result.lat.parse().unwrap_or(37.5665);
-        let lon: f64 = result.lon.parse().unwrap_or(126.9780);
-        state.form.write().lat = lat;
-        state.form.write().lon = lon;
-        let short_name = result
-            .display_name
-            .split(',')
-            .take(2)
-            .collect::<Vec<_>>()
-            .join(",");
-        geo_status.set(format!("✅ {}", short_name.trim()));
+    let mut select_city = move |result: CityRecord| {
+        state.form.write().lat = result.lat;
+        state.form.write().lon = result.lon;
+        // Optionally save timezone if added to form state later
+        let display_name = if let Some(ko) = &result.name_ko {
+            format!("{} ({})", ko, result.name)
+        } else {
+            result.name.clone()
+        };
+        geo_status.set(format!("✅ {}, {}", display_name, result.country));
         search_results.set(Vec::new());
         city_input.set(String::new());
     };
@@ -78,46 +69,22 @@ pub fn BirthForm() -> Element {
     let geo_parse_err_str = t(locale, TK::GeoParseError);
     let geo_net_err_str = t(locale, TK::GeoNetworkError);
 
-    // 도시 검색 (Nominatim)
+    // 도시 검색 (Local Offline DB)
     let on_city_geocode = move |_| {
         let query = city_input.read().clone();
         if query.trim().is_empty() {
             return;
         }
         geo_status.set(geo_searching_str.to_string());
-        search_results.set(Vec::new());
-        spawn(async move {
-            let url = format!(
-                "https://nominatim.openstreetmap.org/search?q={}&format=json&limit={}&accept-language=ko",
-                urlencoding::encode(&query),
-                MAX_SEARCH_RESULTS
-            );
-            let client = reqwest::Client::builder()
-                .build()
-                .unwrap_or_else(|_| reqwest::Client::new());
-            match client
-                .get(&url)
-                .header("User-Agent", "EonAstroApp/1.0")
-                .send()
-                .await
-            {
-                Ok(resp) => {
-                    if let Ok(results) = resp.json::<Vec<NominatimResult>>().await {
-                        if results.is_empty() {
-                            geo_status.set(geo_no_result_str.to_string());
-                        } else {
-                            geo_status.set(format!("✅ ({} results)", results.len()));
-                            search_results.set(results);
-                        }
-                    } else {
-                        geo_status.set(geo_parse_err_str.to_string());
-                    }
-                }
-                Err(_) => {
-                    geo_status.set(geo_net_err_str.to_string());
-                }
-            }
-        });
+        
+        let results = crate::utils::geocode::search_city(&query, 15);
+        if results.is_empty() {
+            geo_status.set(geo_no_result_str.to_string());
+            search_results.set(Vec::new());
+        } else {
+            geo_status.set(format!("✅ ({} results)", results.len()));
+            search_results.set(results);
+        }
     };
 
     // Enter key search
@@ -128,36 +95,14 @@ pub fn BirthForm() -> Element {
                 return;
             }
             geo_status.set(geo_searching_str.to_string());
-            search_results.set(Vec::new());
-            spawn(async move {
-                let url = format!(
-                    "https://nominatim.openstreetmap.org/search?q={}&format=json&limit=15&accept-language=ko",
-                    urlencoding::encode(&query)
-                );
-                let client = reqwest::Client::new();
-                match client
-                    .get(&url)
-                    .header("User-Agent", "EonAstroApp/1.0")
-                    .send()
-                    .await
-                {
-                    Ok(resp) => {
-                        if let Ok(results) = resp.json::<Vec<NominatimResult>>().await {
-                            if results.is_empty() {
-                                geo_status.set(geo_no_result_str.to_string());
-                            } else {
-                                geo_status.set(format!("✅ ({} results)", results.len()));
-                                search_results.set(results);
-                            }
-                        } else {
-                            geo_status.set(geo_parse_err_str.to_string());
-                        }
-                    }
-                    Err(_) => {
-                        geo_status.set(geo_net_err_str.to_string());
-                    }
-                }
-            });
+            let results = crate::utils::geocode::search_city(&query, 15);
+            if results.is_empty() {
+                geo_status.set(geo_no_result_str.to_string());
+                search_results.set(Vec::new());
+            } else {
+                geo_status.set(format!("✅ ({} results)", results.len()));
+                search_results.set(results);
+            }
         }
     };
 
@@ -283,7 +228,11 @@ pub fn BirthForm() -> Element {
                         div { class: "absolute top-full left-0 mt-1.5 w-72 bg-[#0e0f22]/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden",
                             {search_results.read().iter().map(|result| {
                                 let r = result.clone();
-                                let display = r.display_name.clone();
+                                let display = if let Some(ko) = &r.name_ko {
+                                    format!("{} ({}), {} - {}", ko, r.name, r.country, r.tz)
+                                } else {
+                                    format!("{}, {} - {}", r.name, r.country, r.tz)
+                                };
                                 rsx! {
                                     div {
                                         class: "px-3.5 py-3 text-xs text-slate-300 hover:bg-violet-600/30 hover:text-violet-200 border-b border-white/5 last:border-0 cursor-pointer transition-colors truncate",

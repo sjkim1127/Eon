@@ -88,6 +88,7 @@ impl FormState {
 #[derive(Clone, Default)]
 pub struct AnalysisState {
     pub form: Signal<FormState>,
+    pub form2: Signal<FormState>,
     pub saju: Signal<AnalysisTaskState<SajuAnalysisOutput>>,
     pub vedic: Signal<AnalysisTaskState<VedicAnalysisOutput>>,
     pub transit: Signal<AnalysisTaskState<TransitAnalysisOutput>>,
@@ -97,6 +98,10 @@ pub struct AnalysisState {
     pub iching: Signal<AnalysisTaskState<IChingAnalysisOutput>>,
     pub western: Signal<AnalysisTaskState<WesternAnalysisOutput>>,
     pub human_design: Signal<AnalysisTaskState<HumanDesignAnalysisOutput>>,
+    pub hd_connection: Signal<AnalysisTaskState<eon_human_design::connection::HumanDesignConnectionResult>>,
+    pub hd_transit: Signal<AnalysisTaskState<eon_human_design::transit::HumanDesignTransitResult>>,
+    pub hd_penta: Signal<AnalysisTaskState<eon_human_design::penta::PentaResult>>,
+    pub penta_forms: Signal<Vec<FormState>>,
     pub qimen: Signal<AnalysisTaskState<QimenAnalysisOutput>>,
     pub locale: Signal<Locale>,
 }
@@ -105,6 +110,7 @@ impl AnalysisState {
     pub fn new() -> Self {
         Self {
             form: Signal::new(FormState::default()),
+            form2: Signal::new(FormState::default()),
             saju: Signal::new(AnalysisTaskState::default()),
             vedic: Signal::new(AnalysisTaskState::default()),
             transit: Signal::new(AnalysisTaskState::default()),
@@ -114,6 +120,10 @@ impl AnalysisState {
             iching: Signal::new(AnalysisTaskState::default()),
             western: Signal::new(AnalysisTaskState::default()),
             human_design: Signal::new(AnalysisTaskState::default()),
+            hd_connection: Signal::new(AnalysisTaskState::default()),
+            hd_transit: Signal::new(AnalysisTaskState::default()),
+            hd_penta: Signal::new(AnalysisTaskState::default()),
+            penta_forms: Signal::new(vec![FormState::default(), FormState::default(), FormState::default()]), // Minimum 3 people
             qimen: Signal::new(AnalysisTaskState::default()),
             locale: Signal::new(Locale::Ko),
         }

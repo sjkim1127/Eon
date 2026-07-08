@@ -177,6 +177,26 @@ pub fn AppLayout() -> Element {
                 }
             }
         });
+        // 8. Qimen Dunjia
+        spawn({
+            let mut state = state.clone();
+            let form = form.clone();
+            async move {
+                state.qimen.write().status = TaskStatus::Loading;
+                let base = form.to_analysis_input();
+                let qimen_input = eon_service::dto::QimenAnalysisInput::new(base, form.is_male);
+                match facade::analyze_qimen(qimen_input) {
+                    Ok(res) => {
+                        state.qimen.write().data = Some(res);
+                        state.qimen.write().status = TaskStatus::Success;
+                    }
+                    Err(e) => {
+                        state.qimen.write().error = Some(e.to_string());
+                        state.qimen.write().status = TaskStatus::Error(e.to_string());
+                    }
+                }
+            }
+        });
     });
 
     rsx! {
@@ -258,6 +278,7 @@ fn Sidebar() -> Element {
                 SidebarLink { to: Route::IChingTab {}, icon: "☯️", label: t(locale, TK::NavIChing) }
                 SidebarLink { to: Route::WesternTab {}, icon: "🪐", label: t(locale, TK::NavWestern) }
                 SidebarLink { to: Route::HumanDesignTab {}, icon: "🧬", label: t(locale, TK::NavHumanDesign) }
+                SidebarLink { to: Route::HdPentaTab {}, icon: "🌀", label: "Penta" }
                 SidebarLink { to: Route::QimenTab {}, icon: "🧭", label: t(locale, TK::NavQimen) }
             }
 

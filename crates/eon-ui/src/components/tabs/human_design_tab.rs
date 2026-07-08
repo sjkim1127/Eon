@@ -12,6 +12,7 @@ pub fn HumanDesignTab() -> Element {
     let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
     let mut copied_feedback = use_signal(|| false);
+    let mut is_dream_rave = use_signal(|| false);
 
     // Reactive trigger for manual analysis runs
     let mut analysis_trigger = use_signal(|| 0);
@@ -172,38 +173,17 @@ pub fn HumanDesignTab() -> Element {
                                     div { class: "p-5 bg-gradient-to-br from-slate-900/80 to-slate-950/90 border border-slate-800/60 rounded-2xl shadow-xl flex flex-col justify-between backdrop-blur-md relative overflow-hidden group lg:col-span-1",
                                         div { class: "absolute -right-6 -bottom-6 text-7xl opacity-5 group-hover:scale-110 transition-transform duration-300", "✝️" }
                                         span { class: "text-xs font-semibold text-slate-400 uppercase tracking-wider", "Incarnation Cross" }
-                                        p { class: "text-base font-bold text-yellow-300 mt-2", "{res.incarnation_cross}" }
-                                    }
-                                    // Variables (Arrows)
-                                    div { class: "p-5 bg-gradient-to-br from-slate-900/80 to-slate-950/90 border border-slate-800/60 rounded-2xl shadow-xl flex flex-col justify-between backdrop-blur-md relative overflow-hidden group lg:col-span-1",
-                                        div { class: "absolute -right-6 -bottom-6 text-7xl opacity-5 group-hover:scale-110 transition-transform duration-300", "⬆️" }
-                                        span { class: "text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2", "Variables (PHS)" }
-                                        div { class: "flex justify-center items-center gap-6 mt-1",
-                                            {
-                                                let get_arrow = |c: u8| if c <= 3 { "←" } else { "→" };
-                                                let pl_sun = res.personality.get("Sun");
-                                                let pl_node = res.personality.get("NorthNode");
-                                                let ds_sun = res.design.get("Sun");
-                                                let ds_node = res.design.get("NorthNode");
-
-                                                let awar = pl_sun.map(|p| get_arrow(p.color)).unwrap_or("-");
-                                                let pers = pl_node.map(|p| get_arrow(p.color)).unwrap_or("-");
-                                                let dige = ds_sun.map(|p| get_arrow(p.color)).unwrap_or("-");
-                                                let envi = ds_node.map(|p| get_arrow(p.color)).unwrap_or("-");
-
-                                                rsx! {
-                                                    div { class: "flex flex-col gap-2 text-2xl font-black text-rose-400",
-                                                        span { class: "drop-shadow-md", "{dige}" }
-                                                        span { class: "drop-shadow-md", "{envi}" }
-                                                    }
-                                                    div { class: "flex flex-col gap-2 text-2xl font-black text-slate-200",
-                                                        span { class: "drop-shadow-md", "{awar}" }
-                                                        span { class: "drop-shadow-md", "{pers}" }
-                                                    }
-                                                }
+                                        p { class: "text-base font-bold text-yellow-300 mt-2",
+                                            if locale == crate::i18n::Locale::Ko {
+                                                "{res.incarnation_cross_ko}"
+                                            } else {
+                                                "{res.incarnation_cross}"
                                             }
                                         }
+                                        span { class: "text-xs text-slate-500 mt-1", "{res.incarnation_quarter}" }
                                     }
+                                    // Variables (PHS)
+                                    crate::components::tabs::phs_variables::PhsVariables { data: res.phs_variables.clone() }
                                 }
 
                                 // 2. Energy Centers (Defined / Open)
@@ -251,11 +231,34 @@ pub fn HumanDesignTab() -> Element {
 
                                 // 2.5 BodyGraph UI
                                 div { class: "p-6 bg-slate-950/40 border border-slate-800/50 rounded-2xl backdrop-blur-md space-y-4",
-                                    h3 { class: "text-lg font-bold text-slate-200 flex items-center gap-2",
-                                        span { "🧘" }
-                                        "BodyGraph"
+                                    div { class: "flex justify-between items-center",
+                                        h3 { class: "text-lg font-bold text-slate-200 flex items-center gap-2",
+                                            span { "🧘" }
+                                            if *is_dream_rave.read() { "Dream Rave BodyGraph" } else { "BodyGraph" }
+                                        }
+                                        button {
+                                            class: "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border",
+                                            class: if *is_dream_rave.read() {
+                                                "bg-indigo-900/50 text-indigo-300 border-indigo-700/50"
+                                            } else {
+                                                "bg-slate-800/50 text-slate-300 border-slate-700/50 hover:bg-slate-700/50"
+                                            },
+                                            onclick: move |_| {
+                                                let current = *is_dream_rave.read();
+                                                is_dream_rave.set(!current);
+                                            },
+                                            if *is_dream_rave.read() { "Toggle Waking Mode" } else { "Toggle Dream Mode" }
+                                        }
                                     }
-                                    HdBodyGraph { result: res.clone() }
+                                    if *is_dream_rave.read() {
+                                        crate::components::tabs::dream_rave_bodygraph::DreamRaveBodyGraph {
+                                            active_gates: res.dream_rave.active_gates.clone(),
+                                            defined_centers: res.dream_rave.defined_centers.clone(),
+                                            active_channels: res.dream_rave.active_channels.clone(),
+                                        }
+                                    } else {
+                                        HdBodyGraph { result: res.clone() }
+                                    }
                                 }
 
                                 // 3. Activations and Channels Grid

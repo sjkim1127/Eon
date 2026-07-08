@@ -957,6 +957,7 @@ dependencies = [
 name = "eon-ui"
 version = "0.1.1"
 dependencies = [
+ "bincode",
  "chrono",
  "chrono-tz",
  "dioxus",
@@ -972,6 +973,7 @@ dependencies = [
  "gloo-timers",
  "gloo-worker",
  "indexed_db_futures",
+ "lazy_static",
  "log",
  "reqwest",
  "serde",
