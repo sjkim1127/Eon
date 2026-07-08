@@ -1,9 +1,5 @@
 use dioxus::prelude::*;
-use eon_human_design::phs::{
-    ArrowDirection, DigestionColor, DigestionVariable, EnvironmentColor, EnvironmentVariable,
-    MotivationColor, MotivationVariable, PerspectiveColor, PerspectiveVariable, PhsVariablesResult,
-    ToneCognition,
-};
+use eon_human_design::phs::{ArrowDirection, PhsVariablesResult};
 
 #[derive(Props, PartialEq, Clone)]
 pub struct PhsVariablesProps {

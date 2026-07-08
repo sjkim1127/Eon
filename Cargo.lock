@@ -848,7 +848,7 @@ dependencies = [
 
 [[package]]
 name = "eon-ai"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "async-trait",
  "eon-core",
@@ -862,7 +862,7 @@ dependencies = [
 
 [[package]]
 name = "eon-astro"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "eon-core",
@@ -873,7 +873,7 @@ dependencies = [
 
 [[package]]
 name = "eon-core"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -883,7 +883,7 @@ dependencies = [
 
 [[package]]
 name = "eon-data"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "bincode",
  "chrono",
@@ -896,7 +896,7 @@ dependencies = [
 
 [[package]]
 name = "eon-human-design"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "eon-astro",
@@ -907,7 +907,7 @@ dependencies = [
 
 [[package]]
 name = "eon-qimen"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "chrono",
@@ -919,7 +919,7 @@ dependencies = [
 
 [[package]]
 name = "eon-saju"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "eon-astro",
@@ -933,7 +933,7 @@ dependencies = [
 
 [[package]]
 name = "eon-service"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -955,7 +955,7 @@ dependencies = [
 
 [[package]]
 name = "eon-ui"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "bincode",
  "chrono",
@@ -987,7 +987,7 @@ dependencies = [
 
 [[package]]
 name = "eon-vedic"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -999,7 +999,7 @@ dependencies = [
 
 [[package]]
 name = "eon-western"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "eon-astro",
@@ -1010,7 +1010,7 @@ dependencies = [
 
 [[package]]
 name = "eon-zwds"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "chrono",

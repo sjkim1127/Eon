@@ -2,7 +2,7 @@ use crate::i18n::{t, TK};
 use crate::store::db::{self, UserProfile};
 use crate::store::AnalysisState;
 use dioxus::prelude::*;
-use serde::Deserialize;
+
 
 use crate::utils::geocode::CityRecord;
 
@@ -66,8 +66,6 @@ pub fn BirthForm2() -> Element {
 
     let geo_searching_str = t(locale, TK::GeoSearching);
     let geo_no_result_str = t(locale, TK::GeoNoResult);
-    let geo_parse_err_str = t(locale, TK::GeoParseError);
-    let geo_net_err_str = t(locale, TK::GeoNetworkError);
 
     // 도시 검색 (Local Offline DB)
     let on_city_geocode = move |_| {
