@@ -1,3 +1,4 @@
+pub mod quarters;
 pub mod penta;
 pub mod transit;
 pub mod phs;
@@ -8,6 +9,14 @@ use chrono::{DateTime, Utc};
 use eon_astro::{AstroEngine, AstroError};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
+
+pub use quarters::ZodiacQuarter;
+pub use phs::{
+    ArrowDirection, DigestionColor, DigestionVariable, EnvironmentColor, EnvironmentVariable,
+    MotivationColor, MotivationVariable, PerspectiveColor, PerspectiveVariable, PhsVariablesResult,
+    ToneCognition,
+};
+pub use transit::*;
 
 #[derive(Debug, thiserror::Error)]
 pub enum HdError {
@@ -71,7 +80,7 @@ pub struct HumanDesignResult {
     pub not_self_theme: String,
     pub incarnation_cross: String,
     pub incarnation_cross_ko: String,
-    pub incarnation_quarter: String,
+    pub quarter: ZodiacQuarter,
     pub dream_rave: crate::dream_rave::DreamRaveResult,
     pub phs_variables: crate::phs::PhsVariablesResult,
 }
@@ -538,27 +547,7 @@ pub fn determine_incarnation_cross(sun_gate: u8, profile: &str) -> (String, Stri
     }
 }
 
-pub fn determine_incarnation_quarter(sun_gate: u8) -> String {
-    // 4 Quarters based on Zodiac Wheel
-    // Initiation: 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3, 27, 24
-    // Civilization: 2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56, 31, 33
-    // Duality: 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50, 28, 44
-    // Mutation: 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60, 41, 19
-    
-    let initiation = [13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3, 27, 24];
-    let civilization = [2, 23, 8, 20, 16, 35, 45, 12, 15, 52, 39, 53, 62, 56, 31, 33];
-    let duality = [7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57, 32, 50, 28, 44];
-    
-    if initiation.contains(&sun_gate) {
-        "Quarter of Initiation (Mind)".to_string()
-    } else if civilization.contains(&sun_gate) {
-        "Quarter of Civilization (Form)".to_string()
-    } else if duality.contains(&sun_gate) {
-        "Quarter of Duality (Relationship)".to_string()
-    } else {
-        "Quarter of Mutation (Transformation)".to_string()
-    }
-}
+// (determine_incarnation_quarter was replaced by ZodiacQuarter::from_gate)
 
 pub fn calculate_human_design(
     engine: &AstroEngine,
@@ -626,7 +615,7 @@ pub fn calculate_human_design(
     let not_self_theme = determine_not_self_theme(&chart_type);
     let definition_type = determine_definition_type(&defined_set, &active_channels);
     let (incarnation_cross, incarnation_cross_ko) = determine_incarnation_cross(p_sun_gate, &profile);
-    let incarnation_quarter = determine_incarnation_quarter(p_sun_gate);
+    let quarter = ZodiacQuarter::from_gate(p_sun_gate);
 
     let active_gates: Vec<u8> = all_gates.into_iter().collect();
     let mut active_gates = active_gates;
@@ -655,7 +644,7 @@ pub fn calculate_human_design(
         not_self_theme: not_self_theme.to_string(),
         incarnation_cross,
         incarnation_cross_ko,
-        incarnation_quarter,
+        quarter,
         dream_rave: dream_rave_res,
         phs_variables,
     })

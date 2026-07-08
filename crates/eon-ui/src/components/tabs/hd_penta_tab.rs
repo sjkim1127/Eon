@@ -46,7 +46,11 @@ pub fn HdPentaTab() -> Element {
             div { class: "flex justify-between items-center",
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400 bg-clip-text text-transparent flex items-center gap-2",
                     span { "🌀" }
-                    "Penta Dynamics"
+                    if forms.read().len() >= 6 {
+                        "WA Group Dynamics (6-16)"
+                    } else {
+                        "Penta Dynamics (3-5)"
+                    }
                 }
                 div { class: "flex gap-2",
                     button {
@@ -60,7 +64,7 @@ pub fn HdPentaTab() -> Element {
                     }
                     button {
                         class: "px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors disabled:opacity-50",
-                        disabled: forms.read().len() >= 5,
+                        disabled: forms.read().len() >= 16,
                         onclick: move |_| {
                             let mut f = forms.write();
                             f.push(FormState::default());
@@ -178,7 +182,11 @@ pub fn HdPentaTab() -> Element {
                                 div { class: "p-6 bg-slate-950/40 border border-slate-800/50 rounded-2xl backdrop-blur-md space-y-4",
                                     h3 { class: "text-lg font-bold text-slate-200 flex items-center gap-2",
                                         span { "⚡" }
-                                        "Penta Vortex Channels"
+                                        if res.participants >= 6 {
+                                            "WA Vortex Channels"
+                                        } else {
+                                            "Penta Vortex Channels"
+                                        }
                                     }
                                     div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4",
                                         {

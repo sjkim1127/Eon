@@ -180,7 +180,9 @@ pub fn HumanDesignTab() -> Element {
                                                 "{res.incarnation_cross}"
                                             }
                                         }
-                                        span { class: "text-xs text-slate-500 mt-1", "{res.incarnation_quarter}" }
+                                        span { class: "text-xs text-slate-500 mt-1", 
+                                            "{res.quarter.name_ko()} - {res.quarter.theme_ko()}"
+                                        }
                                     }
                                     // Variables (PHS)
                                     crate::components::tabs::phs_variables::PhsVariables { data: res.phs_variables.clone() }
