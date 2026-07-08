@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CITIES_BIN"],"fn":["search_city"],"struct":["CITIES","CityRecord"]};

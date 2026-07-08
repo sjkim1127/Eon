@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["birth_form","export_markdown"]};
+window.SIDEBAR_ITEMS = {"mod":["birth_form","birth_form2","export_markdown"]};

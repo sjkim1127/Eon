@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["MAX_SEARCH_RESULTS"],"fn":["BirthForm"],"struct":["NominatimResult"]};
+window.SIDEBAR_ITEMS = {"fn":["BirthForm"]};

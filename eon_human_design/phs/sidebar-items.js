@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ArrowDirection","BaseOrientation","DigestionColor","EnvironmentColor","MotivationColor","PerspectiveColor","ToneCognition"],"fn":["calculate_phs"],"struct":["DigestionVariable","EnvironmentVariable","MotivationVariable","PerspectiveVariable","PhsVariablesResult"]};

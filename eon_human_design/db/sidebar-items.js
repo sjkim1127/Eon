@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["get_incarnation_cross_name","get_line_fixation"],"struct":["ExaltationDetriment"]};
+window.SIDEBAR_ITEMS = {"fn":["get_incarnation_cross_name","get_incarnation_cross_name_ko","get_line_fixation"],"struct":["ExaltationDetriment"]};

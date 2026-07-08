@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["analyze"]};
+window.SIDEBAR_ITEMS = {"fn":["analyze","analyze_connection","analyze_penta","analyze_transit","calculate_return"]};
