@@ -529,7 +529,7 @@ pub fn determine_incarnation_cross(sun_gate: u8, profile: &str) -> (String, Stri
     if parts.len() == 2 {
         let p_line: u8 = parts[0].parse().unwrap_or(1);
         let angle = match p_line {
-            1 | 2 | 3 | 4 => "Right Angle",
+            1..=4 => "Right Angle",
             5 | 6 => "Left Angle",
             _ => "Right Angle",
         };
@@ -638,7 +638,7 @@ pub fn calculate_human_design(
         undefined_centers,
         personality,
         design,
-        active_gates: active_gates,
+        active_gates,
         active_channels,
         definition_type,
         strategy,
