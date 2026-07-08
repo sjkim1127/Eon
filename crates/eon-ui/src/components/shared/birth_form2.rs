@@ -3,7 +3,6 @@ use crate::store::db::{self, UserProfile};
 use crate::store::AnalysisState;
 use dioxus::prelude::*;
 
-
 use crate::utils::geocode::CityRecord;
 
 #[component]
