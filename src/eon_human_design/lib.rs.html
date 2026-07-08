@@ -529,7 +529,7 @@
 <a href=#529 id=529 data-nosnippet>529</a>    <span class="kw">if </span>parts.len() == <span class="number">2 </span>{
 <a href=#530 id=530 data-nosnippet>530</a>        <span class="kw">let </span>p_line: u8 = parts[<span class="number">0</span>].parse().unwrap_or(<span class="number">1</span>);
 <a href=#531 id=531 data-nosnippet>531</a>        <span class="kw">let </span>angle = <span class="kw">match </span>p_line {
-<a href=#532 id=532 data-nosnippet>532</a>            <span class="number">1 </span>| <span class="number">2 </span>| <span class="number">3 </span>| <span class="number">4 </span>=&gt; <span class="string">"Right Angle"</span>,
+<a href=#532 id=532 data-nosnippet>532</a>            <span class="number">1</span>..=<span class="number">4 </span>=&gt; <span class="string">"Right Angle"</span>,
 <a href=#533 id=533 data-nosnippet>533</a>            <span class="number">5 </span>| <span class="number">6 </span>=&gt; <span class="string">"Left Angle"</span>,
 <a href=#534 id=534 data-nosnippet>534</a>            <span class="kw">_ </span>=&gt; <span class="string">"Right Angle"</span>,
 <a href=#535 id=535 data-nosnippet>535</a>        };
@@ -638,7 +638,7 @@
 <a href=#638 id=638 data-nosnippet>638</a>        undefined_centers,
 <a href=#639 id=639 data-nosnippet>639</a>        personality,
 <a href=#640 id=640 data-nosnippet>640</a>        design,
-<a href=#641 id=641 data-nosnippet>641</a>        active_gates: active_gates,
+<a href=#641 id=641 data-nosnippet>641</a>        active_gates,
 <a href=#642 id=642 data-nosnippet>642</a>        active_channels,
 <a href=#643 id=643 data-nosnippet>643</a>        definition_type,
 <a href=#644 id=644 data-nosnippet>644</a>        strategy,
