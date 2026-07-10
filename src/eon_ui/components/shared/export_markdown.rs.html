@@ -6237,7 +6237,7 @@
 <a href=#6237 id=6237 data-nosnippet>6237</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(envoy) = <span class="kw-2">&amp;</span>pan.value_envoy_door {
 <a href=#6238 id=6238 data-nosnippet>6238</a>        s.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- **{}**: {:?}\n"</span>, lbl_envoy, envoy));
 <a href=#6239 id=6239 data-nosnippet>6239</a>    }
-<a href=#6240 id=6240 data-nosnippet>6240</a>    s.push_str(<span class="string">"\n"</span>);
+<a href=#6240 id=6240 data-nosnippet>6240</a>    s.push(<span class="string">'\n'</span>);
 <a href=#6241 id=6241 data-nosnippet>6241</a>
 <a href=#6242 id=6242 data-nosnippet>6242</a>    <span class="kw">let </span>lbl_palaces = <span class="kw">match </span>locale {
 <a href=#6243 id=6243 data-nosnippet>6243</a>        Locale::Ko =&gt; <span class="string">"### 🏰 9궁 배치 (Palaces)"</span>,
@@ -6278,7 +6278,7 @@
 <a href=#6278 id=6278 data-nosnippet>6278</a>        ));
 <a href=#6279 id=6279 data-nosnippet>6279</a>    }
 <a href=#6280 id=6280 data-nosnippet>6280</a>
-<a href=#6281 id=6281 data-nosnippet>6281</a>    s.push_str(<span class="string">"\n"</span>);
+<a href=#6281 id=6281 data-nosnippet>6281</a>    s.push(<span class="string">'\n'</span>);
 <a href=#6282 id=6282 data-nosnippet>6282</a>    s
 <a href=#6283 id=6283 data-nosnippet>6283</a>}
 <a href=#6284 id=6284 data-nosnippet>6284</a>
@@ -6349,7 +6349,7 @@
 <a href=#6349 id=6349 data-nosnippet>6349</a>    <span class="kw">for </span>comp <span class="kw">in </span><span class="kw-2">&amp;</span>data.compromise_channels {
 <a href=#6350 id=6350 data-nosnippet>6350</a>        s.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- Channel {}-{}\n"</span>, comp.<span class="number">0</span>, comp.<span class="number">1</span>));
 <a href=#6351 id=6351 data-nosnippet>6351</a>    }
-<a href=#6352 id=6352 data-nosnippet>6352</a>    s.push_str(<span class="string">"\n"</span>);
+<a href=#6352 id=6352 data-nosnippet>6352</a>    s.push(<span class="string">'\n'</span>);
 <a href=#6353 id=6353 data-nosnippet>6353</a>    s
 <a href=#6354 id=6354 data-nosnippet>6354</a>}
 <a href=#6355 id=6355 data-nosnippet>6355</a>
@@ -6366,11 +6366,11 @@
 <a href=#6366 id=6366 data-nosnippet>6366</a>
 <a href=#6367 id=6367 data-nosnippet>6367</a><span class="kw">pub fn </span>format_hd_transit_inner(data: <span class="kw-2">&amp;</span>HumanDesignTransitResult, _locale: Locale) -&gt; String {
 <a href=#6368 id=6368 data-nosnippet>6368</a>    <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
-<a href=#6369 id=6369 data-nosnippet>6369</a>    s.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"### 트랜짓 활성화 채널 (Transit Channels)\n\n"</span>));
+<a href=#6369 id=6369 data-nosnippet>6369</a>    s.push_str(<span class="string">"### 트랜짓 활성화 채널 (Transit Channels)\n\n"</span>);
 <a href=#6370 id=6370 data-nosnippet>6370</a>    <span class="kw">for </span>ch <span class="kw">in </span><span class="kw-2">&amp;</span>data.transit_chart.active_channels {
 <a href=#6371 id=6371 data-nosnippet>6371</a>        s.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- {}-{}\n"</span>, ch.<span class="number">0</span>, ch.<span class="number">1</span>));
 <a href=#6372 id=6372 data-nosnippet>6372</a>    }
-<a href=#6373 id=6373 data-nosnippet>6373</a>    s.push_str(<span class="string">"\n"</span>);
+<a href=#6373 id=6373 data-nosnippet>6373</a>    s.push(<span class="string">'\n'</span>);
 <a href=#6374 id=6374 data-nosnippet>6374</a>    s
 <a href=#6375 id=6375 data-nosnippet>6375</a>}
 </code></pre></div></section></main></body></html>

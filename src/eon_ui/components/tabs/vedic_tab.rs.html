@@ -1003,7 +1003,7 @@
 <a href=#1003 id=1003 data-nosnippet>1003</a>                        </span>},
 <a href=#1004 id=1004 data-nosnippet>1004</a>                        title: <span class="string">"Copy Report"</span>,
 <a href=#1005 id=1005 data-nosnippet>1005</a>                        onclick: <span class="kw">move </span>|<span class="kw">_</span>| {
-<a href=#1006 id=1006 data-nosnippet>1006</a>                            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>data) = state.vedic.read().data.as_ref() {
+<a href=#1006 id=1006 data-nosnippet>1006</a>                            <span class="kw">if let </span><span class="prelude-val">Some</span>(data) = state.vedic.read().data.as_ref() {
 <a href=#1007 id=1007 data-nosnippet>1007</a>                                <span class="kw">let </span>txt = <span class="kw">crate</span>::components::shared::export_markdown::export_vedic_to_markdown(data, <span class="kw-2">&amp;</span>state.form.read(), locale);
 <a href=#1008 id=1008 data-nosnippet>1008</a>                                <span class="kw">crate</span>::components::shared::export_markdown::copy_to_clipboard(<span class="kw-2">&amp;</span>txt);
 <a href=#1009 id=1009 data-nosnippet>1009</a>                                copied_feedback.set(<span class="bool-val">true</span>);
