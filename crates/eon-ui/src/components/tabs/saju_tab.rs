@@ -33,6 +33,7 @@ pub fn SajuTab() -> Element {
 
     // Reactive trigger for manual analysis runs
     let mut analysis_trigger = use_signal(|| 0);
+    let mut copied_feedback = use_signal(|| false);
 
     // Sub-tab state
     let mut active_sub_tab = use_signal(|| SubTab::Summary);
@@ -75,7 +76,32 @@ pub fn SajuTab() -> Element {
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-amber-200 to-orange-400 bg-clip-text text-transparent",
                     "{t(locale, TK::SectionSajuChart)}"
                 }
-                button {
+                div { class: "flex items-center gap-2",
+                    button {
+                        class: if *copied_feedback.read() {
+                            "p-2.5 bg-emerald-650 hover:bg-emerald-600 text-white border border-emerald-500/50 rounded-xl transition-all cursor-pointer flex items-center justify-center active:scale-95 gap-1"
+                        } else {
+                            "p-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center active:scale-95 gap-1"
+                        },
+                        title: "Copy Report",
+                        onclick: move |_| {
+                            if let Some(ref data) = state.saju.read().data.as_ref() {
+                                let txt = crate::components::shared::export_markdown::export_saju_to_markdown(data, &state.form.read(), locale);
+                                crate::components::shared::export_markdown::copy_to_clipboard(&txt);
+                                copied_feedback.set(true);
+                                spawn(async move {
+                                    gloo_timers::future::TimeoutFuture::new(2000).await;
+                                    copied_feedback.set(false);
+                                });
+                            }
+                        },
+                        if *copied_feedback.read() {
+                            span { class: "text-xs font-bold", "✓ Copied" }
+                        } else {
+                            span { class: "text-xs font-medium", "📋 Copy" }
+                        }
+                    }
+                    button {
                     class: "p-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center active:scale-95",
                     onclick: move |_| {
                         let current = *analysis_trigger.peek();
@@ -94,6 +120,7 @@ pub fn SajuTab() -> Element {
                             d: "M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M21 3v5h-5"
                         }
                     }
+                }
                 }
             }
 

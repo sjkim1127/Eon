@@ -12,6 +12,7 @@ pub fn HdConnectionTab() -> Element {
     let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
     let mut analysis_trigger = use_signal(|| 0);
+    let mut copied_feedback = use_signal(|| false);
 
     let state_cloned = state.clone();
     use_effect(move || {
@@ -90,9 +91,35 @@ pub fn HdConnectionTab() -> Element {
                         rsx! {
                             div { class: "space-y-6",
                                 div { class: "p-6 bg-slate-950/40 border border-slate-800/50 rounded-2xl backdrop-blur-md space-y-4",
-                                    h3 { class: "text-lg font-bold text-slate-200 flex items-center gap-2",
-                                        span { "⚡" }
-                                        "Composite BodyGraph"
+                                    div { class: "flex justify-between items-center mb-4",
+                                        h3 { class: "text-lg font-bold text-slate-200 flex items-center gap-2",
+                                            span { "⚡" }
+                                            "Composite BodyGraph"
+                                        }
+                                        button {
+                                            class: if *copied_feedback.read() {
+                                                "px-4 py-2 bg-emerald-650 hover:bg-emerald-600 text-white border border-emerald-500/50 rounded-lg transition-all cursor-pointer flex items-center justify-center active:scale-95 gap-1 text-sm font-medium"
+                                            } else {
+                                                "px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700/50 rounded-lg text-slate-300 transition-all cursor-pointer flex items-center justify-center active:scale-95 gap-1 text-sm font-medium"
+                                            },
+                                            title: "Copy Report",
+                                            onclick: move |_| {
+                                                if let Some(ref data) = state.hd_connection.read().data.as_ref() {
+                                                    let txt = crate::components::shared::export_markdown::export_hd_connection_to_markdown(data, locale);
+                                                    crate::components::shared::export_markdown::copy_to_clipboard(&txt);
+                                                    copied_feedback.set(true);
+                                                    spawn(async move {
+                                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                                        copied_feedback.set(false);
+                                                    });
+                                                }
+                                            },
+                                            if *copied_feedback.read() {
+                                                span { class: "text-xs font-bold", "✓ Copied" }
+                                            } else {
+                                                span { class: "text-xs font-medium", "📋 Copy" }
+                                            }
+                                        }
                                     }
                                     CompositeBodyGraph { result: res.clone() }
                                 }

@@ -78,6 +78,7 @@ pub fn QimenTab() -> Element {
     let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
     let qimen = state.qimen.read().clone();
+    let mut copied_feedback = use_signal(|| false);
 
     // 9궁 표시 순서 (UI상 낙서 구궁 배열: 4,9,2 / 3,5,7 / 8,1,6 궁)
     // palace 배열은 0부터 8까지 1~9궁을 나타내므로, 인덱스로 변환하면 3,8,1 / 2,4,6 / 7,0,5
@@ -109,13 +110,39 @@ pub fn QimenTab() -> Element {
                                     span { class: "text-3xl", "🧭" }
                                     "{t(locale, TK::QimenTitle)}"
                                 }
-                                div { class: "text-sm text-slate-300 font-medium px-4 py-2 bg-slate-800/80 rounded-lg",
-                                    if data.report.pan.is_yin_ju {
-                                        "{t(locale, TK::QimenYinJu)} "
-                                    } else {
-                                        "{t(locale, TK::QimenYangJu)} "
+                                div { class: "flex items-center gap-2",
+                                    button {
+                                        class: if *copied_feedback.read() {
+                                            "px-4 py-2 bg-emerald-650 hover:bg-emerald-600 text-white border border-emerald-500/50 rounded-lg transition-all cursor-pointer flex items-center justify-center active:scale-95 gap-1"
+                                        } else {
+                                            "px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700/50 rounded-lg text-slate-300 transition-all cursor-pointer flex items-center justify-center active:scale-95 gap-1"
+                                        },
+                                        title: "Copy Report",
+                                        onclick: move |_| {
+                                            if let Some(ref data) = state.qimen.read().data.as_ref() {
+                                                let txt = crate::components::shared::export_markdown::export_qimen_to_markdown(data, &state.form.read(), locale);
+                                                crate::components::shared::export_markdown::copy_to_clipboard(&txt);
+                                                copied_feedback.set(true);
+                                                spawn(async move {
+                                                    gloo_timers::future::TimeoutFuture::new(2000).await;
+                                                    copied_feedback.set(false);
+                                                });
+                                            }
+                                        },
+                                        if *copied_feedback.read() {
+                                            span { class: "text-xs font-bold", "✓ Copied" }
+                                        } else {
+                                            span { class: "text-xs font-medium", "📋 Copy" }
+                                        }
                                     }
-                                    "{data.report.pan.ju_number}{t(locale, TK::QimenJu)}"
+                                    div { class: "text-sm text-slate-300 font-medium px-4 py-2 bg-slate-800/80 rounded-lg",
+                                        if data.report.pan.is_yin_ju {
+                                            "{t(locale, TK::QimenYinJu)} "
+                                        } else {
+                                            "{t(locale, TK::QimenYangJu)} "
+                                        }
+                                        "{data.report.pan.ju_number}{t(locale, TK::QimenJu)}"
+                                    }
                                 }
                             }
 

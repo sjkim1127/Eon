@@ -952,7 +952,7 @@ pub fn VedicTab() -> Element {
     let mut expanded_mahadasha = use_signal(|| Option::<usize>::None);
     let mut expanded_antardasha = use_signal(|| Option::<usize>::None);
     let copied_compat = use_signal(|| false);
-
+    let mut copied_feedback = use_signal(|| false);
     let run_compatibility = move |_| {
         spawn(async move {
             state.compat.write().status = TaskStatus::Loading;
@@ -993,6 +993,32 @@ pub fn VedicTab() -> Element {
             div { class: "flex justify-between items-center",
                 h2 { class: "text-2xl font-bold bg-gradient-to-r from-blue-200 to-indigo-400 bg-clip-text text-transparent",
                     "{t(locale, TK::SectionVedicChart)}"
+                }
+                div { class: "flex items-center gap-2",
+                    button {
+                        class: if *copied_feedback.read() {
+                            "p-2.5 bg-emerald-650 hover:bg-emerald-600 text-white border border-emerald-500/50 rounded-xl transition-all cursor-pointer flex items-center justify-center active:scale-95 gap-1"
+                        } else {
+                            "p-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center active:scale-95 gap-1"
+                        },
+                        title: "Copy Report",
+                        onclick: move |_| {
+                            if let Some(ref data) = state.vedic.read().data.as_ref() {
+                                let txt = crate::components::shared::export_markdown::export_vedic_to_markdown(data, &state.form.read(), locale);
+                                crate::components::shared::export_markdown::copy_to_clipboard(&txt);
+                                copied_feedback.set(true);
+                                spawn(async move {
+                                    gloo_timers::future::TimeoutFuture::new(2000).await;
+                                    copied_feedback.set(false);
+                                });
+                            }
+                        },
+                        if *copied_feedback.read() {
+                            span { class: "text-xs font-bold", "✓ Copied" }
+                        } else {
+                            span { class: "text-xs font-medium", "📋 Copy" }
+                        }
+                    }
                 }
             }
 

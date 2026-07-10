@@ -22,6 +22,7 @@ pub fn ZwdsTab() -> Element {
     let target_year = use_signal(|| 2026i32);
     let selected_palace_idx = use_signal(|| None::<usize>);
     let hovered_palace_idx = use_signal(|| None::<usize>);
+    let mut copied_feedback = use_signal(|| false);
 
     // Copy signals to avoid borrowing state mutably in closures
     let zwds_signal = state.zwds;
@@ -113,6 +114,31 @@ pub fn ZwdsTab() -> Element {
                             class: "text-slate-400 hover:text-white transition-colors cursor-pointer text-xs font-bold px-1.5 py-0.5 hover:bg-slate-800 rounded-md",
                             onclick: move |_| update_year(*target_year.read() + 1),
                             "▶"
+                        }
+                    }
+
+                    button {
+                        class: if *copied_feedback.read() {
+                            "p-2.5 bg-emerald-650 hover:bg-emerald-600 text-white border border-emerald-500/50 rounded-xl transition-all cursor-pointer flex items-center justify-center active:scale-95 gap-1"
+                        } else {
+                            "p-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-all cursor-pointer flex items-center justify-center active:scale-95 gap-1"
+                        },
+                        title: "Copy Report",
+                        onclick: move |_| {
+                            if let Some(ref data) = zwds_data.as_ref() {
+                                let txt = crate::components::shared::export_markdown::export_zwds_to_markdown(data, &state.form.read(), locale);
+                                crate::components::shared::export_markdown::copy_to_clipboard(&txt);
+                                copied_feedback.set(true);
+                                spawn(async move {
+                                    gloo_timers::future::TimeoutFuture::new(2000).await;
+                                    copied_feedback.set(false);
+                                });
+                            }
+                        },
+                        if *copied_feedback.read() {
+                            span { class: "text-xs font-bold", "✓ Copied" }
+                        } else {
+                            span { class: "text-xs font-medium", "📋 Copy" }
                         }
                     }
 
