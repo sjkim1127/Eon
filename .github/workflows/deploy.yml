@@ -28,9 +28,10 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@nightly
         with:
           targets: wasm32-unknown-unknown
+          components: rust-src
 
       - name: Install Dioxus CLI
         uses: taiki-e/install-action@v2

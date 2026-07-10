@@ -253,6 +253,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::NavStrength => "行星力量",
         TK::NavTransit => "行星运势",
         TK::NavSimulation => "人生模拟",
+        TK::NavTimeline => "时间线",
         TK::NavTier => "命运等级",
         TK::NavZwds => "紫微斗数",
         // Form

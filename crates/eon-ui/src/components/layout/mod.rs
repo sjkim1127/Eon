@@ -280,6 +280,7 @@ fn Sidebar() -> Element {
                 SidebarLink { to: Route::HumanDesignTab {}, icon: "🧬", label: t(locale, TK::NavHumanDesign) }
                 SidebarLink { to: Route::HdPentaTab {}, icon: "🌀", label: "Penta" }
                 SidebarLink { to: Route::QimenTab {}, icon: "🧭", label: t(locale, TK::NavQimen) }
+                SidebarLink { to: Route::TimelineTab {}, icon: "📅", label: t(locale, TK::NavTimeline) }
             }
 
             // ── Export Results ────────────────────────────────────────────────

@@ -6,6 +6,7 @@ use crate::components::tabs::{
     human_design_tab::HumanDesignTab, iching_tab::IChingTab, qimen_tab::QimenTab,
     saju_tab::SajuTab, simulation_tab::SimulationTab, strength_tab::StrengthTab, tier_tab::TierTab,
     transit_tab::TransitTab, vedic_tab::VedicTab, western_tab::WesternTab, zwds_tab::ZwdsTab,
+    timeline_tab::TimelineTab,
 };
 
 #[derive(Clone, Routable, Debug, PartialEq)]
@@ -52,6 +53,9 @@ pub enum Route {
 
     #[route("/qimen")]
     QimenTab {},
+
+    #[route("/timeline")]
+    TimelineTab {},
 
     #[end_layout]
     #[route("/:..route")]

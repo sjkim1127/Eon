@@ -245,6 +245,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::NavStrength => "Strength Analysis",
         TK::NavTransit => "Transit Forecast",
         TK::NavSimulation => "Life Simulator",
+        TK::NavTimeline => "Timeline",
         TK::NavTier => "Destiny Tier",
         TK::NavZwds => "Zi Wei Dou Shu",
         // Form

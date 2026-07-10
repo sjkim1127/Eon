@@ -245,6 +245,7 @@ pub fn translate(key: TK) -> &'static str {
         TK::NavStrength => "세력 분석",
         TK::NavTransit => "운세 흐름",
         TK::NavSimulation => "생애 시뮬레이터",
+        TK::NavTimeline => "타임라인",
         TK::NavTier => "데스티니 티어",
         TK::NavZwds => "자미두수",
         // Form

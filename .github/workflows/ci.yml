@@ -64,10 +64,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install Rust (stable + wasm target)
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust (nightly + wasm target)
+        uses: dtolnay/rust-toolchain@nightly
         with:
           targets: wasm32-unknown-unknown
+          components: rust-src
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2

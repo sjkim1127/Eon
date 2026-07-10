@@ -100,10 +100,11 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install Rust (stable + wasm target)
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust (nightly + wasm target)
+        uses: dtolnay/rust-toolchain@nightly
         with:
           targets: wasm32-unknown-unknown
+          components: rust-src
 
       - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@main
