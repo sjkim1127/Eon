@@ -8,15 +8,16 @@ use crate::i18n::{
 };
 use crate::store::{AnalysisState, TaskStatus};
 use dioxus::prelude::*;
-use eon_service::dto::{
-    HumanDesignAnalysisOutput, IChingAnalysisOutput, QimenAnalysisOutput, SajuAnalysisOutput,
-    TierResult, TransitAnalysisOutput, VedicAnalysisOutput, WesternAnalysisOutput, ZwdsAnalysisOutput,
-};
-use eon_vedic::planets::VedicPlanet;
-use wasm_bindgen::prelude::*;
 use eon_human_design::connection::HumanDesignConnectionResult;
 use eon_human_design::penta::PentaResult;
 use eon_human_design::transit::HumanDesignTransitResult;
+use eon_service::dto::{
+    HumanDesignAnalysisOutput, IChingAnalysisOutput, QimenAnalysisOutput, SajuAnalysisOutput,
+    TierResult, TransitAnalysisOutput, VedicAnalysisOutput, WesternAnalysisOutput,
+    ZwdsAnalysisOutput,
+};
+use eon_vedic::planets::VedicPlanet;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(inline_js = r#"
 export function copy_to_clipboard(text) {
@@ -3574,18 +3575,21 @@ pub fn ExportWidget() -> Element {
     let has_western = western_state.status == TaskStatus::Success && western_state.data.is_some();
     let hd_state = state.human_design.read();
     let has_hd = hd_state.status == TaskStatus::Success && hd_state.data.is_some();
-    
+
     let qimen_state = state.qimen.read();
     let has_qimen = qimen_state.status == TaskStatus::Success && qimen_state.data.is_some();
-    
+
     let hd_penta_state = state.hd_penta.read();
-    let has_hd_penta = hd_penta_state.status == TaskStatus::Success && hd_penta_state.data.is_some();
-    
+    let has_hd_penta =
+        hd_penta_state.status == TaskStatus::Success && hd_penta_state.data.is_some();
+
     let hd_connection_state = state.hd_connection.read();
-    let has_hd_connection = hd_connection_state.status == TaskStatus::Success && hd_connection_state.data.is_some();
-    
+    let has_hd_connection =
+        hd_connection_state.status == TaskStatus::Success && hd_connection_state.data.is_some();
+
     let hd_transit_state = state.hd_transit.read();
-    let has_hd_transit = hd_transit_state.status == TaskStatus::Success && hd_transit_state.data.is_some();
+    let has_hd_transit =
+        hd_transit_state.status == TaskStatus::Success && hd_transit_state.data.is_some();
 
     let saju_data = saju_state.data.clone();
     let vedic_data = vedic_state.data.clone();
@@ -3675,28 +3679,28 @@ pub fn ExportWidget() -> Element {
         Locale::Zh => "复制人类图报告",
         Locale::Ru => "Копировать отчет Дизайна Человека",
     };
-    
+
     let qimen_btn_lbl = match locale {
         Locale::Ko => "기문둔갑 보고서 복사",
         Locale::En => "Copy Qimen Report",
         Locale::Zh => "复制奇门遁甲报告",
         Locale::Ru => "Копировать отчет Ци Мэнь Дунь Цзя",
     };
-    
+
     let hd_penta_btn_lbl = match locale {
         Locale::Ko => "HD 펜타/WA 보고서 복사",
         Locale::En => "Copy HD Penta/WA Report",
         Locale::Zh => "复制HD Penta/WA报告",
         Locale::Ru => "Копировать отчет HD Penta/WA",
     };
-    
+
     let hd_connection_btn_lbl = match locale {
         Locale::Ko => "HD 컴포지트 보고서 복사",
         Locale::En => "Copy HD Connection Report",
         Locale::Zh => "复制HD合盘报告",
         Locale::Ru => "Копировать отчет HD Connection",
     };
-    
+
     let hd_transit_btn_lbl = match locale {
         Locale::Ko => "HD 트랜짓/리턴 보고서 복사",
         Locale::En => "Copy HD Transit Report",
@@ -3739,7 +3743,7 @@ pub fn ExportWidget() -> Element {
     let hd_penta_data_cloned = hd_penta_data.clone();
     let hd_connection_data_cloned = hd_connection_data.clone();
     let hd_transit_data_cloned = hd_transit_data.clone();
-    
+
     let form_cloned_qimen = form.clone();
 
     rsx! {
@@ -4112,8 +4116,6 @@ pub fn ExportWidget() -> Element {
 // ============================================================
 // 자미두수 (ZWDS) 마크다운 포맷터
 // ============================================================
-
-
 
 pub fn format_zwds_inner(data: &ZwdsAnalysisOutput, locale: Locale) -> String {
     let mut s = String::new();
@@ -5965,7 +5967,15 @@ pub fn format_human_design_inner(data: &HumanDesignAnalysisOutput, locale: Local
         Locale::Ko => "인카네이션 크로스 (Incarnation Cross)",
         _ => "Incarnation Cross",
     };
-    s.push_str(&format!("- **{}**: {}\n", lbl_cross, if locale == Locale::Ko { &res.incarnation_cross_ko } else { &res.incarnation_cross }));
+    s.push_str(&format!(
+        "- **{}**: {}\n",
+        lbl_cross,
+        if locale == Locale::Ko {
+            &res.incarnation_cross_ko
+        } else {
+            &res.incarnation_cross
+        }
+    ));
 
     let lbl_quarter = match locale {
         Locale::Ko => "의식의 분기 (Quarter)",
@@ -5977,8 +5987,13 @@ pub fn format_human_design_inner(data: &HumanDesignAnalysisOutput, locale: Local
         Locale::Ko => "PHS 요약 (Base/Color/Tone)",
         _ => "PHS Variables (Base/Color/Tone)",
     };
-    s.push_str(&format!("- **{}**: Base {:?} / Color {:?} / Tone {:?}\n\n", lbl_phs, res.phs_variables.digestion.base, res.phs_variables.digestion.color, res.phs_variables.digestion.tone));
-
+    s.push_str(&format!(
+        "- **{}**: Base {:?} / Color {:?} / Tone {:?}\n\n",
+        lbl_phs,
+        res.phs_variables.digestion.base,
+        res.phs_variables.digestion.color,
+        res.phs_variables.digestion.tone
+    ));
 
     // Centers
     let (lbl_centers, lbl_defined, lbl_undefined) = match locale {
@@ -6159,7 +6174,6 @@ pub fn format_human_design_inner(data: &HumanDesignAnalysisOutput, locale: Local
     s
 }
 
-
 // ==========================================
 // QIMEN DUNJIA EXPORT
 // ==========================================
@@ -6181,54 +6195,89 @@ pub fn export_qimen_to_markdown(
 pub fn format_qimen_inner(data: &QimenAnalysisOutput, locale: Locale) -> String {
     let mut s = String::new();
     let pan = &data.report.pan;
-    
+
     let lbl_overview = match locale {
         Locale::Ko => "### 🧭 명반 개요 (Pan Overview)",
         _ => "### 🧭 Pan Overview",
     };
     s.push_str(&format!("{}\n\n", lbl_overview));
-    
+
     let lbl_ju = match locale {
         Locale::Ko => "둔국 (Yin/Yang Ju)",
         _ => "Yin/Yang Ju",
     };
     let ju_str = if pan.is_yin_ju {
-        match locale { Locale::Ko => "음둔", _ => "Yin Ju" }
+        match locale {
+            Locale::Ko => "음둔",
+            _ => "Yin Ju",
+        }
     } else {
-        match locale { Locale::Ko => "양둔", _ => "Yang Ju" }
+        match locale {
+            Locale::Ko => "양둔",
+            _ => "Yang Ju",
+        }
     };
-    s.push_str(&format!("- **{}**: {} {}국\n", lbl_ju, ju_str, pan.ju_number));
-    
-    let lbl_chief = match locale { Locale::Ko => "직부 (Value Chief)", _ => "Value Chief Star" };
+    s.push_str(&format!(
+        "- **{}**: {} {}국\n",
+        lbl_ju, ju_str, pan.ju_number
+    ));
+
+    let lbl_chief = match locale {
+        Locale::Ko => "직부 (Value Chief)",
+        _ => "Value Chief Star",
+    };
     if let Some(chief) = &pan.value_chief_star {
         s.push_str(&format!("- **{}**: {:?}\n", lbl_chief, chief));
     }
-    
-    let lbl_envoy = match locale { Locale::Ko => "직사 (Value Envoy)", _ => "Value Envoy Door" };
+
+    let lbl_envoy = match locale {
+        Locale::Ko => "직사 (Value Envoy)",
+        _ => "Value Envoy Door",
+    };
     if let Some(envoy) = &pan.value_envoy_door {
         s.push_str(&format!("- **{}**: {:?}\n", lbl_envoy, envoy));
     }
     s.push_str("\n");
-    
+
     let lbl_palaces = match locale {
         Locale::Ko => "### 🏰 9궁 배치 (Palaces)",
         _ => "### 🏰 9 Palaces",
     };
     s.push_str(&format!("{}\n\n", lbl_palaces));
-    s.push_str("| 궁 (Palace) | 지반 (Earth) | 천반 (Heaven) | 8문 (Door) | 9성 (Star) | 8신 (Deity) |\n");
+    s.push_str(
+        "| 궁 (Palace) | 지반 (Earth) | 천반 (Heaven) | 8문 (Door) | 9성 (Star) | 8신 (Deity) |\n",
+    );
     s.push_str("| --- | --- | --- | --- | --- | --- |\n");
-    
+
     for p in &pan.palaces {
         let palace_str = format!("{:?}", p.palace);
-        let earth_str = p.earth_stem.map(|x| format!("{:?}", x)).unwrap_or_else(|| "-".to_string());
-        let heaven_str = p.heaven_stem.map(|x| format!("{:?}", x)).unwrap_or_else(|| "-".to_string());
-        let door_str = p.door.map(|x| format!("{:?}", x)).unwrap_or_else(|| "-".to_string());
-        let star_str = p.star.map(|x| format!("{:?}", x)).unwrap_or_else(|| "-".to_string());
-        let deity_str = p.deity.map(|x| format!("{:?}", x)).unwrap_or_else(|| "-".to_string());
-        
-        s.push_str(&format!("| {} | {} | {} | {} | {} | {} |\n", palace_str, earth_str, heaven_str, door_str, star_str, deity_str));
+        let earth_str = p
+            .earth_stem
+            .map(|x| format!("{:?}", x))
+            .unwrap_or_else(|| "-".to_string());
+        let heaven_str = p
+            .heaven_stem
+            .map(|x| format!("{:?}", x))
+            .unwrap_or_else(|| "-".to_string());
+        let door_str = p
+            .door
+            .map(|x| format!("{:?}", x))
+            .unwrap_or_else(|| "-".to_string());
+        let star_str = p
+            .star
+            .map(|x| format!("{:?}", x))
+            .unwrap_or_else(|| "-".to_string());
+        let deity_str = p
+            .deity
+            .map(|x| format!("{:?}", x))
+            .unwrap_or_else(|| "-".to_string());
+
+        s.push_str(&format!(
+            "| {} | {} | {} | {} | {} | {} |\n",
+            palace_str, earth_str, heaven_str, door_str, star_str, deity_str
+        ));
     }
-    
+
     s.push_str("\n");
     s
 }
@@ -6236,10 +6285,7 @@ pub fn format_qimen_inner(data: &QimenAnalysisOutput, locale: Locale) -> String 
 // ==========================================
 // HD GROUP / CONNECTION / TRANSIT EXPORT
 // ==========================================
-pub fn export_hd_penta_to_markdown(
-    data: &PentaResult,
-    locale: Locale,
-) -> String {
+pub fn export_hd_penta_to_markdown(data: &PentaResult, locale: Locale) -> String {
     let mut s = String::new();
     let lbl_title = match locale {
         Locale::Ko => "# 휴먼디자인 펜타/WA 그룹 역학 분석",
@@ -6257,7 +6303,10 @@ pub fn format_hd_penta_inner(data: &PentaResult, locale: Locale) -> String {
         _ => "### 📊 Penta Channels Stats",
     };
     s.push_str(&format!("{}\n\n", lbl_stats));
-    s.push_str(&format!("- 활성화된 펜타 채널 수: {} / 6\n", data.fully_defined_channels));
+    s.push_str(&format!(
+        "- 활성화된 펜타 채널 수: {} / 6\n",
+        data.fully_defined_channels
+    ));
     let mut keys: Vec<u8> = data.active_gates.keys().cloned().collect();
     keys.sort();
     s.push_str(&format!("- 전체 활성화된 펜타 게이트: {:?}\n\n", keys));
@@ -6280,16 +6329,22 @@ pub fn export_hd_connection_to_markdown(
 
 pub fn format_hd_connection_inner(data: &HumanDesignConnectionResult, locale: Locale) -> String {
     let mut s = String::new();
-    
+
     let lbl_type = match locale {
         Locale::Ko => "### 🤝 관계 유형 (Connection Type)",
         _ => "### 🤝 Connection Type",
     };
     s.push_str(&format!("{}\n\n", lbl_type));
-    let connection_sum = data.electromagnetic_channels.len() + data.compromise_channels.len() + data.dominance_channels.len() + data.companionship_channels.len();
+    let connection_sum = data.electromagnetic_channels.len()
+        + data.compromise_channels.len()
+        + data.dominance_channels.len()
+        + data.companionship_channels.len();
     s.push_str(&format!("- **총 연결 채널 수: {}**\n\n", connection_sum));
-    
-    let lbl_comp = match locale { Locale::Ko => "### ⚠️ 타협 (Compromise)", _ => "### ⚠️ Compromise" };
+
+    let lbl_comp = match locale {
+        Locale::Ko => "### ⚠️ 타협 (Compromise)",
+        _ => "### ⚠️ Compromise",
+    };
     s.push_str(&format!("{}\n\n", lbl_comp));
     for comp in &data.compromise_channels {
         s.push_str(&format!("- Channel {}-{}\n", comp.0, comp.1));
@@ -6298,10 +6353,7 @@ pub fn format_hd_connection_inner(data: &HumanDesignConnectionResult, locale: Lo
     s
 }
 
-pub fn export_hd_transit_to_markdown(
-    data: &HumanDesignTransitResult,
-    locale: Locale,
-) -> String {
+pub fn export_hd_transit_to_markdown(data: &HumanDesignTransitResult, locale: Locale) -> String {
     let mut s = String::new();
     let lbl_title = match locale {
         Locale::Ko => "# 휴먼디자인 트랜짓 분석",
