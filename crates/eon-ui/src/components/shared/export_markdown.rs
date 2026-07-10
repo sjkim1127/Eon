@@ -6237,7 +6237,7 @@ pub fn format_qimen_inner(data: &QimenAnalysisOutput, locale: Locale) -> String 
     if let Some(envoy) = &pan.value_envoy_door {
         s.push_str(&format!("- **{}**: {:?}\n", lbl_envoy, envoy));
     }
-    s.push_str("\n");
+    s.push('\n');
 
     let lbl_palaces = match locale {
         Locale::Ko => "### 🏰 9궁 배치 (Palaces)",
@@ -6278,7 +6278,7 @@ pub fn format_qimen_inner(data: &QimenAnalysisOutput, locale: Locale) -> String 
         ));
     }
 
-    s.push_str("\n");
+    s.push('\n');
     s
 }
 
@@ -6349,7 +6349,7 @@ pub fn format_hd_connection_inner(data: &HumanDesignConnectionResult, locale: Lo
     for comp in &data.compromise_channels {
         s.push_str(&format!("- Channel {}-{}\n", comp.0, comp.1));
     }
-    s.push_str("\n");
+    s.push('\n');
     s
 }
 
@@ -6366,10 +6366,10 @@ pub fn export_hd_transit_to_markdown(data: &HumanDesignTransitResult, locale: Lo
 
 pub fn format_hd_transit_inner(data: &HumanDesignTransitResult, _locale: Locale) -> String {
     let mut s = String::new();
-    s.push_str(&format!("### 트랜짓 활성화 채널 (Transit Channels)\n\n"));
+    s.push_str("### 트랜짓 활성화 채널 (Transit Channels)\n\n");
     for ch in &data.transit_chart.active_channels {
         s.push_str(&format!("- {}-{}\n", ch.0, ch.1));
     }
-    s.push_str("\n");
+    s.push('\n');
     s
 }

@@ -125,7 +125,7 @@ pub fn ZwdsTab() -> Element {
                         },
                         title: "Copy Report",
                         onclick: move |_| {
-                            if let Some(ref data) = zwds_data.as_ref() {
+                            if let Some(data) = zwds_data.as_ref() {
                                 let txt = crate::components::shared::export_markdown::export_zwds_to_markdown(data, &state.form.read(), locale);
                                 crate::components::shared::export_markdown::copy_to_clipboard(&txt);
                                 copied_feedback.set(true);

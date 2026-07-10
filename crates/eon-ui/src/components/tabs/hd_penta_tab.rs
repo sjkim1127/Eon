@@ -63,7 +63,7 @@ pub fn HdPentaTab() -> Element {
                         },
                         title: "Copy Report",
                         onclick: move |_| {
-                            if let Some(ref data) = state.hd_penta.read().data.as_ref() {
+                            if let Some(data) = state.hd_penta.read().data.as_ref() {
                                 let txt = crate::components::shared::export_markdown::export_hd_penta_to_markdown(data, locale);
                                 crate::components::shared::export_markdown::copy_to_clipboard(&txt);
                                 copied_feedback.set(true);

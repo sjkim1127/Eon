@@ -79,7 +79,7 @@ pub fn TransitTab() -> Element {
                         },
                         title: "Copy Report",
                         onclick: move |_| {
-                            if let Some(ref data) = state.transit.read().data.as_ref() {
+                            if let Some(data) = state.transit.read().data.as_ref() {
                                 let txt = crate::components::shared::export_markdown::export_transit_to_markdown(data, &state.form.read(), locale);
                                 crate::components::shared::export_markdown::copy_to_clipboard(&txt);
                                 copied_feedback.set(true);
