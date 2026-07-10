@@ -16,7 +16,7 @@
 </div><span id="structfield.day_master" class="structfield section-header"><a href="#structfield.day_master" class="anchor field">§</a><code>day_master: <a class="enum" href="../../core/stem/enum.HeavenlyStem.html" title="enum eon_saju::core::stem::HeavenlyStem">HeavenlyStem</a></code></span><div class="docblock"><p>일간 (기준)</p>
 </div><h2 id="implementations" class="section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-MajorLuckAnalysis" class="impl"><a class="src rightside" href="../../../src/eon_saju/analysis/major_luck.rs.html#148-367">Source</a><a href="#impl-MajorLuckAnalysis" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.MajorLuckAnalysis.html" title="struct eon_saju::analysis::major_luck::MajorLuckAnalysis">MajorLuckAnalysis</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.calculate_astro" class="method"><a class="src rightside" href="../../../src/eon_saju/analysis/major_luck.rs.html#150-250">Source</a><h4 class="code-header">pub fn <a href="#method.calculate_astro" class="fn">calculate_astro</a>(
     pillars: &amp;<a class="struct" href="../../core/pillars/struct.FourPillars.html" title="struct eon_saju::core::pillars::FourPillars">FourPillars</a>,
-    gender: Gender,
+    gender: <a class="enum" href="../../../eon_core/birth/enum.Gender.html" title="enum eon_core::birth::Gender">Gender</a>,
     birth_year: <a class="primitive" href="https://doc.rust-lang.org/1.97.0/std/primitive.i32.html">i32</a>,
     birth_month: <a class="primitive" href="https://doc.rust-lang.org/1.97.0/std/primitive.u32.html">u32</a>,
     birth_day: <a class="primitive" href="https://doc.rust-lang.org/1.97.0/std/primitive.u32.html">u32</a>,
@@ -25,7 +25,7 @@
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.97.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Self, <a class="enum" href="../../core/pillars/enum.SajuError.html" title="enum eon_saju::core::pillars::SajuError">SajuError</a>&gt;</h4></section></summary><div class="docblock"><p>천문 엔진을 사용한 대운 분석 생성</p>
 </div></details><section id="method.calculate" class="method"><a class="src rightside" href="../../../src/eon_saju/analysis/major_luck.rs.html#252-331">Source</a><h4 class="code-header">pub fn <a href="#method.calculate" class="fn">calculate</a>(
     pillars: &amp;<a class="struct" href="../../core/pillars/struct.FourPillars.html" title="struct eon_saju::core::pillars::FourPillars">FourPillars</a>,
-    gender: Gender,
+    gender: <a class="enum" href="../../../eon_core/birth/enum.Gender.html" title="enum eon_core::birth::Gender">Gender</a>,
     birth_year: <a class="primitive" href="https://doc.rust-lang.org/1.97.0/std/primitive.i32.html">i32</a>,
     birth_month: <a class="primitive" href="https://doc.rust-lang.org/1.97.0/std/primitive.u32.html">u32</a>,
     birth_day: <a class="primitive" href="https://doc.rust-lang.org/1.97.0/std/primitive.u32.html">u32</a>,
