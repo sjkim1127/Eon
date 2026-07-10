@@ -126,7 +126,7 @@ Eon/
 │   ├── eon-vedic/
 │   ├── eon-western/
 │   └── eon-zwds/
-├── DOCS/
+├── docs/
 ├── scripts/
 └── .github/workflows/
 ```

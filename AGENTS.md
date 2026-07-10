@@ -37,7 +37,7 @@ Eon/
 │       └── src/facade.rs        # analyze_saju / analyze_vedic 등 핵심 진입점
 │
 ├── .github/workflows/           # Vercel 배포용 CI/CD 액션
-└── DOCS/                        # 도메인 분석 문서
+└── docs/                        # 도메인 분석 문서
 ```
 
 ---
