@@ -12,7 +12,7 @@ jobs:
     name: Extract failed WASM log
     runs-on: ubuntu-latest
     steps:
-      - name: Print compiler error
+      - name: Print linker error
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -21,4 +21,7 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             "https://api.github.com/repos/${{ github.repository }}/actions/jobs/86566691471/logs" \
             -o /tmp/job.log
-          grep -A 18 -B 8 -E 'error(\[|:)|failed|Caused by' /tmp/job.log | tail -n 160
+          sed -E 's/\x1B\[[0-9;]*[mK]//g' /tmp/job.log \
+            | grep -E 'rust-lld|wasm-ld|error:|undefined symbol|unknown argument|shared-memory|maximum memory|initial memory|TLS|cannot|failed' \
+            | cut -c1-1200 \
+            | tail -n 120
