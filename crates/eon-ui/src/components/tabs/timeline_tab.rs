@@ -196,10 +196,7 @@ fn draw_timeline(
         .map_err(|error| format!("background draw failed: {error:?}"))?;
 
     let mut chart = ChartBuilder::on(&root)
-        .caption(
-            labels.title,
-            ("sans-serif", 28).into_font().color(&WHITE),
-        )
+        .caption(labels.title, ("sans-serif", 28).into_font().color(&WHITE))
         .margin(24)
         .x_label_area_size(48)
         .y_label_area_size(58)
@@ -215,20 +212,31 @@ fn draw_timeline(
         .light_line_style(RGBColor(63, 63, 70).mix(0.35))
         .bold_line_style(RGBColor(82, 82, 91).mix(0.55))
         .axis_style(RGBColor(113, 113, 122))
-        .label_style(("sans-serif", 14).into_font().color(&RGBColor(212, 212, 216)))
-        .axis_desc_style(("sans-serif", 15).into_font().color(&RGBColor(161, 161, 170)))
+        .label_style(
+            ("sans-serif", 14)
+                .into_font()
+                .color(&RGBColor(212, 212, 216)),
+        )
+        .axis_desc_style(
+            ("sans-serif", 15)
+                .into_font()
+                .color(&RGBColor(161, 161, 170)),
+        )
         .draw()
         .map_err(|error| format!("mesh draw failed: {error:?}"))?;
 
     chart
-        .draw_series(timeline.iter().filter(|point| point.is_transition_period).map(
-            |point| {
-                Rectangle::new(
-                    [(point.year, y_start), (point.year.saturating_add(1), y_end)],
-                    RGBColor(244, 63, 94).mix(0.12).filled(),
-                )
-            },
-        ))
+        .draw_series(
+            timeline
+                .iter()
+                .filter(|point| point.is_transition_period)
+                .map(|point| {
+                    Rectangle::new(
+                        [(point.year, y_start), (point.year.saturating_add(1), y_end)],
+                        RGBColor(244, 63, 94).mix(0.12).filled(),
+                    )
+                }),
+        )
         .map_err(|error| format!("transition band draw failed: {error:?}"))?;
 
     chart
@@ -345,7 +353,8 @@ fn summarize_timeline(timeline: &[YearlyScore]) -> Option<TimelineSummary> {
             .partial_cmp(&right.total_score)
             .unwrap_or(std::cmp::Ordering::Equal)
     })?;
-    let average_score = valid.iter().map(|point| point.total_score).sum::<f64>() / valid.len() as f64;
+    let average_score =
+        valid.iter().map(|point| point.total_score).sum::<f64>() / valid.len() as f64;
 
     Some(TimelineSummary {
         peak_year: peak.year,
