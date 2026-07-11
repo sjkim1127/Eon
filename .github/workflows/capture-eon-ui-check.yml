@@ -1,0 +1,40 @@
+name: Capture eon-ui check
+
+on:
+  push:
+    branches:
+      - improve/timeline-chart
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    if: ${{ !contains(github.event.head_commit.message, 'diagnostics: capture eon-ui check') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: improve/timeline-chart
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Capture cargo check
+        shell: bash
+        run: |
+          set +e
+          cargo check -p eon-ui > /tmp/eon-ui-check.log 2>&1
+          status=$?
+          mkdir -p .github/diagnostics
+          tail -n 300 /tmp/eon-ui-check.log > .github/diagnostics/eon-ui-check.log
+          echo "exit_status=$status" >> .github/diagnostics/eon-ui-check.log
+          exit 0
+
+      - name: Commit diagnostics
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/diagnostics/eon-ui-check.log
+          git commit -m "diagnostics: capture eon-ui check"
+          git push origin HEAD:improve/timeline-chart
