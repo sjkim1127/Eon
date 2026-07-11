@@ -160,13 +160,7 @@ fn timeline_chart(timeline: &[YearlyScore], locale: Locale) -> Element {
         .iter()
         .enumerate()
         .filter(|(_, point)| point.volatility_index.is_finite())
-        .map(|(index, point)| {
-            format!(
-                "{:.1},{:.1}",
-                x_for(index),
-                y_for(point.volatility_index)
-            )
-        })
+        .map(|(index, point)| format!("{:.1},{:.1}", x_for(index), y_for(point.volatility_index)))
         .collect::<Vec<_>>()
         .join(" ");
 
