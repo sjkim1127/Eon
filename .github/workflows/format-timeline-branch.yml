@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   format:
-    if: ${{ !contains(github.event.head_commit.message, 'style: format timeline chart') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
