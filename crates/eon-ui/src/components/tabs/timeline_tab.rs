@@ -2,15 +2,9 @@ use crate::i18n::{format_age, t, Locale, TK};
 use crate::store::AnalysisState;
 use dioxus::prelude::*;
 use eon_saju::engine::emulator::YearlyScore;
-use plotters::prelude::*;
-use plotters_canvas::CanvasBackend;
-use web_sys::HtmlCanvasElement;
 
 #[derive(Clone, Copy)]
 struct TimelineLabels {
-    title: &'static str,
-    year: &'static str,
-    score: &'static str,
     overall: &'static str,
     trend: &'static str,
     volatility: &'static str,
@@ -48,46 +42,6 @@ pub fn TimelineTab() -> Element {
         .map(|output| output.report.timeline.clone())
         .unwrap_or_default();
     let summary = summarize_timeline(&timeline);
-    let has_timeline = !timeline.is_empty();
-
-    let state_for_chart = state.clone();
-    use_effect(move || {
-        let locale = *state_for_chart.locale.read();
-        let timeline = state_for_chart
-            .saju
-            .read()
-            .data
-            .as_ref()
-            .map(|output| output.report.timeline.clone())
-            .unwrap_or_default();
-
-        if timeline.is_empty() {
-            return;
-        }
-
-        let Some(window) = web_sys::window() else {
-            log::warn!("timeline chart skipped: browser window is unavailable");
-            return;
-        };
-        let Some(document) = window.document() else {
-            log::warn!("timeline chart skipped: document is unavailable");
-            return;
-        };
-        let Some(canvas_element) = document.get_element_by_id("timeline-canvas") else {
-            log::warn!("timeline chart skipped: canvas element is unavailable");
-            return;
-        };
-
-        use wasm_bindgen::JsCast;
-        let Ok(canvas) = canvas_element.dyn_into::<HtmlCanvasElement>() else {
-            log::error!("timeline chart skipped: element is not a canvas");
-            return;
-        };
-
-        if let Err(error) = draw_timeline(&canvas, &timeline, locale) {
-            log::error!("failed to draw timeline chart: {error}");
-        }
-    });
 
     rsx! {
         div {
@@ -119,7 +73,13 @@ pub fn TimelineTab() -> Element {
                 }
             }
 
-            if has_timeline {
+            if timeline.is_empty() {
+                div { class: "min-h-[420px] flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 px-6 text-center",
+                    span { class: "text-5xl", "📈" }
+                    h3 { class: "text-lg font-semibold text-zinc-200", "{labels.empty_title}" }
+                    p { class: "max-w-xl text-sm leading-relaxed text-zinc-500", "{labels.empty_body}" }
+                }
+            } else {
                 div { class: "bg-zinc-900/70 border border-zinc-800 rounded-2xl p-4 shadow-xl",
                     div { class: "flex flex-wrap items-center gap-x-5 gap-y-2 mb-3 text-xs text-zinc-400",
                         LegendItem { class_name: "bg-emerald-400", label: labels.overall }
@@ -130,21 +90,10 @@ pub fn TimelineTab() -> Element {
                             "{labels.transition}"
                         }
                     }
-                    div { class: "w-full h-[520px] md:h-[620px] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-800",
-                        canvas {
-                            id: "timeline-canvas",
-                            width: "1400",
-                            height: "680",
-                            class: "w-full h-full"
-                        }
+                    div { class: "w-full overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950/70 p-2",
+                        {timeline_chart(&timeline, locale)}
                     }
                     p { class: "mt-3 text-xs leading-relaxed text-zinc-500", "{labels.disclaimer}" }
-                }
-            } else {
-                div { class: "min-h-[420px] flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 px-6 text-center",
-                    span { class: "text-5xl", "📈" }
-                    h3 { class: "text-lg font-semibold text-zinc-200", "{labels.empty_title}" }
-                    p { class: "max-w-xl text-sm leading-relaxed text-zinc-500", "{labels.empty_body}" }
                 }
             }
         }
@@ -172,189 +121,235 @@ fn LegendItem(class_name: &'static str, label: &'static str) -> Element {
     }
 }
 
-fn draw_timeline(
-    canvas: &HtmlCanvasElement,
-    timeline: &[YearlyScore],
-    locale: Locale,
-) -> Result<(), String> {
-    let Some(first) = timeline.first() else {
-        return Ok(());
-    };
-    let Some(last) = timeline.last() else {
-        return Ok(());
-    };
+fn timeline_chart(timeline: &[YearlyScore], locale: Locale) -> Element {
+    if timeline.is_empty() {
+        return rsx! { div {} };
+    }
 
-    let labels = timeline_labels(locale);
-    let x_start = first.year;
-    let x_end = last.year.saturating_add(1).max(x_start.saturating_add(1));
-    let (y_start, y_end) = score_bounds(timeline);
+    let width = 1200.0;
+    let height = 540.0;
+    let pad_left = 58.0;
+    let pad_right = 24.0;
+    let pad_top = 24.0;
+    let pad_bottom = 44.0;
+    let chart_width = width - pad_left - pad_right;
+    let chart_height = height - pad_top - pad_bottom;
+    let denominator = timeline.len().saturating_sub(1).max(1) as f64;
+    let x_for = |index: usize| pad_left + index as f64 / denominator * chart_width;
+    let y_for = |score: f64| pad_top + (1.0 - score.clamp(0.0, 100.0) / 100.0) * chart_height;
 
-    let backend = CanvasBackend::with_canvas_object(canvas.clone())
-        .ok_or_else(|| "cannot attach Plotters backend to canvas".to_string())?;
-    let root = backend.into_drawing_area();
-    root.fill(&RGBColor(39, 39, 42))
-        .map_err(|error| format!("background draw failed: {error:?}"))?;
-
-    let mut chart = ChartBuilder::on(&root)
-        .caption(labels.title, ("sans-serif", 28).into_font().color(&WHITE))
-        .margin(24)
-        .x_label_area_size(48)
-        .y_label_area_size(58)
-        .build_cartesian_2d(x_start..x_end, y_start..y_end)
-        .map_err(|error| format!("chart construction failed: {error:?}"))?;
-
-    chart
-        .configure_mesh()
-        .x_desc(labels.year)
-        .y_desc(labels.score)
-        .x_labels(11)
-        .y_labels(8)
-        .light_line_style(RGBColor(63, 63, 70).mix(0.35))
-        .bold_line_style(RGBColor(82, 82, 91).mix(0.55))
-        .axis_style(RGBColor(113, 113, 122))
-        .label_style(
-            ("sans-serif", 14)
-                .into_font()
-                .color(&RGBColor(212, 212, 216)),
-        )
-        .axis_desc_style(
-            ("sans-serif", 15)
-                .into_font()
-                .color(&RGBColor(161, 161, 170)),
-        )
-        .draw()
-        .map_err(|error| format!("mesh draw failed: {error:?}"))?;
-
-    chart
-        .draw_series(
-            timeline
-                .iter()
-                .filter(|point| point.is_transition_period)
-                .map(|point| {
-                    Rectangle::new(
-                        [(point.year, y_start), (point.year.saturating_add(1), y_end)],
-                        RGBColor(244, 63, 94).mix(0.12).filled(),
-                    )
-                }),
-        )
-        .map_err(|error| format!("transition band draw failed: {error:?}"))?;
-
-    chart
-        .draw_series(LineSeries::new(
-            timeline
-                .iter()
-                .filter(|point| point.total_score.is_finite())
-                .map(|point| (point.year, point.total_score)),
-            RGBColor(52, 211, 153).stroke_width(3),
-        ))
-        .map_err(|error| format!("overall score draw failed: {error:?}"))?
-        .label(labels.overall)
-        .legend(|(x, y)| {
-            PathElement::new(
-                vec![(x, y), (x + 22, y)],
-                RGBColor(52, 211, 153).stroke_width(3),
+    let overall_points = timeline
+        .iter()
+        .enumerate()
+        .filter(|(_, point)| point.total_score.is_finite())
+        .map(|(index, point)| format!("{:.1},{:.1}", x_for(index), y_for(point.total_score)))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let trend_points = timeline
+        .iter()
+        .enumerate()
+        .filter_map(|(index, point)| {
+            point
+                .trend_ma_5yr
+                .filter(|score| score.is_finite())
+                .map(|score| format!("{:.1},{:.1}", x_for(index), y_for(score)))
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
+    let volatility_points = timeline
+        .iter()
+        .enumerate()
+        .filter(|(_, point)| point.volatility_index.is_finite())
+        .map(|(index, point)| {
+            format!(
+                "{:.1},{:.1}",
+                x_for(index),
+                y_for(point.volatility_index)
             )
-        });
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
 
-    chart
-        .draw_series(LineSeries::new(
-            timeline.iter().filter_map(|point| {
-                point
-                    .trend_ma_5yr
-                    .filter(|score| score.is_finite())
-                    .map(|score| (point.year, score))
-            }),
-            RGBColor(56, 189, 248).stroke_width(2),
-        ))
-        .map_err(|error| format!("moving average draw failed: {error:?}"))?
-        .label(labels.trend)
-        .legend(|(x, y)| {
-            PathElement::new(
-                vec![(x, y), (x + 22, y)],
-                RGBColor(56, 189, 248).stroke_width(2),
-            )
-        });
+    let band_width = (chart_width / denominator).max(2.0);
+    let has_overall_line = overall_points.split_whitespace().nth(1).is_some();
+    let area_points = format!(
+        "{pad_left:.1},{:.1} {overall_points} {:.1},{:.1}",
+        pad_top + chart_height,
+        width - pad_right,
+        pad_top + chart_height,
+    );
+    let summary = summarize_timeline(timeline);
+    let peak_marker = summary.and_then(|summary| {
+        timeline
+            .iter()
+            .position(|point| point.year == summary.peak_year)
+            .map(|index| (x_for(index), y_for(summary.peak_score)))
+    });
+    let valley_marker = summary.and_then(|summary| {
+        timeline
+            .iter()
+            .position(|point| point.year == summary.valley_year)
+            .map(|index| (x_for(index), y_for(summary.valley_score)))
+    });
 
-    chart
-        .draw_series(LineSeries::new(
-            timeline
-                .iter()
-                .filter(|point| point.volatility_index.is_finite())
-                .map(|point| (point.year, point.volatility_index)),
-            RGBColor(251, 191, 36).stroke_width(2),
-        ))
-        .map_err(|error| format!("volatility draw failed: {error:?}"))?
-        .label(labels.volatility)
-        .legend(|(x, y)| {
-            PathElement::new(
-                vec![(x, y), (x + 22, y)],
-                RGBColor(251, 191, 36).stroke_width(2),
-            )
-        });
+    rsx! {
+        svg {
+            view_box: "0 0 {width} {height}",
+            class: "w-full min-w-[900px] h-auto",
+            xmlns: "http://www.w3.org/2000/svg",
 
-    chart
-        .configure_series_labels()
-        .position(SeriesLabelPosition::UpperLeft)
-        .background_style(RGBColor(24, 24, 27).mix(0.88))
-        .border_style(RGBColor(82, 82, 91))
-        .label_font(("sans-serif", 14).into_font().color(&WHITE))
-        .draw()
-        .map_err(|error| format!("legend draw failed: {error:?}"))?;
-
-    root.present()
-        .map_err(|error| format!("canvas presentation failed: {error:?}"))
-}
-
-fn score_bounds(timeline: &[YearlyScore]) -> (f64, f64) {
-    let mut minimum = f64::INFINITY;
-    let mut maximum = f64::NEG_INFINITY;
-
-    for point in timeline {
-        for value in [point.total_score, point.volatility_index] {
-            if value.is_finite() {
-                minimum = minimum.min(value);
-                maximum = maximum.max(value);
+            defs {
+                linearGradient { id: "timeline-area-gradient", x1: "0", y1: "0", x2: "0", y2: "1",
+                    stop { offset: "0%", style: "stop-color:#34d399;stop-opacity:0.20" }
+                    stop { offset: "100%", style: "stop-color:#34d399;stop-opacity:0.01" }
+                }
             }
+
+            {(0..=4u32).map(|index| {
+                let score = 100.0 - index as f64 * 25.0;
+                let y = y_for(score);
+                rsx! {
+                    line {
+                        x1: "{pad_left}",
+                        y1: "{y:.1}",
+                        x2: "{width - pad_right}",
+                        y2: "{y:.1}",
+                        stroke: "#3f3f46",
+                        stroke_width: "1",
+                        opacity: "0.55"
+                    }
+                    text {
+                        x: "{pad_left - 10.0}",
+                        y: "{y + 4.0:.1}",
+                        text_anchor: "end",
+                        font_size: "12",
+                        fill: "#71717a",
+                        "{score:.0}"
+                    }
+                }
+            })}
+
+            {timeline.iter().enumerate().filter(|(_, point)| point.is_transition_period).map(|(index, _)| {
+                let x = x_for(index) - band_width / 2.0;
+                rsx! {
+                    rect {
+                        x: "{x:.1}",
+                        y: "{pad_top}",
+                        width: "{band_width:.1}",
+                        height: "{chart_height}",
+                        fill: "#f43f5e",
+                        opacity: "0.12"
+                    }
+                }
+            })}
+
+            if has_overall_line {
+                polygon { points: "{area_points}", fill: "url(#timeline-area-gradient)" }
+            }
+
+            polyline {
+                points: "{overall_points}",
+                fill: "none",
+                stroke: "#34d399",
+                stroke_width: "3",
+                stroke_linejoin: "round",
+                stroke_linecap: "round"
+            }
+            polyline {
+                points: "{trend_points}",
+                fill: "none",
+                stroke: "#38bdf8",
+                stroke_width: "2",
+                stroke_linejoin: "round",
+                stroke_linecap: "round"
+            }
+            polyline {
+                points: "{volatility_points}",
+                fill: "none",
+                stroke: "#fbbf24",
+                stroke_width: "2",
+                stroke_linejoin: "round",
+                stroke_linecap: "round",
+                opacity: "0.9"
+            }
+
+            if let Some((peak_x, peak_y)) = peak_marker {
+                circle {
+                    cx: "{peak_x:.1}",
+                    cy: "{peak_y:.1}",
+                    r: "5",
+                    fill: "#facc15",
+                    stroke: "#fef08a",
+                    stroke_width: "2"
+                }
+            }
+            if let Some((valley_x, valley_y)) = valley_marker {
+                circle {
+                    cx: "{valley_x:.1}",
+                    cy: "{valley_y:.1}",
+                    r: "5",
+                    fill: "#fb7185",
+                    stroke: "#fecdd3",
+                    stroke_width: "2"
+                }
+            }
+
+            {(0..=10u32).map(|tick| {
+                let index = (tick as usize * (timeline.len() - 1)) / 10;
+                let point = &timeline[index];
+                let x = x_for(index);
+                let age_label = format_age(locale, point.age as i32);
+                rsx! {
+                    line {
+                        x1: "{x:.1}",
+                        y1: "{pad_top + chart_height}",
+                        x2: "{x:.1}",
+                        y2: "{pad_top + chart_height + 6.0}",
+                        stroke: "#71717a",
+                        stroke_width: "1"
+                    }
+                    text {
+                        x: "{x:.1}",
+                        y: "{height - 14.0}",
+                        text_anchor: "middle",
+                        font_size: "11",
+                        fill: "#71717a",
+                        "{age_label}"
+                    }
+                    text {
+                        x: "{x:.1}",
+                        y: "{height - 2.0}",
+                        text_anchor: "middle",
+                        font_size: "9",
+                        fill: "#52525b",
+                        "{point.year}"
+                    }
+                }
+            })}
         }
-
-        if let Some(value) = point.trend_ma_5yr.filter(|value| value.is_finite()) {
-            minimum = minimum.min(value);
-            maximum = maximum.max(value);
-        }
-    }
-
-    if !minimum.is_finite() || !maximum.is_finite() {
-        return (0.0, 100.0);
-    }
-
-    let padding = ((maximum - minimum) * 0.1).max(5.0);
-    let lower = (minimum - padding).floor().min(0.0);
-    let upper = (maximum + padding).ceil().max(100.0);
-
-    if upper <= lower {
-        (lower, lower + 1.0)
-    } else {
-        (lower, upper)
     }
 }
 
 fn summarize_timeline(timeline: &[YearlyScore]) -> Option<TimelineSummary> {
-    let valid: Vec<&YearlyScore> = timeline
+    let mut points = timeline
         .iter()
-        .filter(|point| point.total_score.is_finite())
-        .collect();
-    let peak = valid.iter().copied().max_by(|left, right| {
-        left.total_score
-            .partial_cmp(&right.total_score)
-            .unwrap_or(std::cmp::Ordering::Equal)
-    })?;
-    let valley = valid.iter().copied().min_by(|left, right| {
-        left.total_score
-            .partial_cmp(&right.total_score)
-            .unwrap_or(std::cmp::Ordering::Equal)
-    })?;
-    let average_score =
-        valid.iter().map(|point| point.total_score).sum::<f64>() / valid.len() as f64;
+        .filter(|point| point.total_score.is_finite());
+    let first = points.next()?;
+    let mut peak = first;
+    let mut valley = first;
+    let mut total = first.total_score;
+    let mut count = 1usize;
+
+    for point in points {
+        if point.total_score > peak.total_score {
+            peak = point;
+        }
+        if point.total_score < valley.total_score {
+            valley = point;
+        }
+        total += point.total_score;
+        count += 1;
+    }
 
     Some(TimelineSummary {
         peak_year: peak.year,
@@ -363,7 +358,7 @@ fn summarize_timeline(timeline: &[YearlyScore]) -> Option<TimelineSummary> {
         valley_year: valley.year,
         valley_age: valley.age,
         valley_score: valley.total_score,
-        average_score,
+        average_score: total / count as f64,
         transition_years: timeline
             .iter()
             .filter(|point| point.is_transition_period)
@@ -374,9 +369,6 @@ fn summarize_timeline(timeline: &[YearlyScore]) -> Option<TimelineSummary> {
 fn timeline_labels(locale: Locale) -> TimelineLabels {
     match locale {
         Locale::Ko => TimelineLabels {
-            title: "100년 운명 타임라인",
-            year: "연도",
-            score: "점수",
             overall: "종합 점수",
             trend: "5년 이동평균",
             volatility: "변동성",
@@ -389,9 +381,6 @@ fn timeline_labels(locale: Locale) -> TimelineLabels {
             disclaimer: "이 차트는 Eon의 규칙 기반 시뮬레이션 결과를 시각화한 것으로, 과학적으로 검증된 예측이나 결정론적 진단이 아닙니다.",
         },
         Locale::En => TimelineLabels {
-            title: "100-Year Destiny Timeline",
-            year: "Year",
-            score: "Score",
             overall: "Overall score",
             trend: "5-year moving average",
             volatility: "Volatility",
@@ -404,9 +393,6 @@ fn timeline_labels(locale: Locale) -> TimelineLabels {
             disclaimer: "This chart visualizes Eon's rule-based simulation output. It is not a scientifically validated prediction or deterministic diagnosis.",
         },
         Locale::Zh => TimelineLabels {
-            title: "百年命运时间线",
-            year: "年份",
-            score: "分数",
             overall: "综合分数",
             trend: "5年移动平均",
             volatility: "波动率",
@@ -419,9 +405,6 @@ fn timeline_labels(locale: Locale) -> TimelineLabels {
             disclaimer: "此图仅可视化 Eon 的规则模拟结果，不属于经过科学验证的预测或决定性诊断。",
         },
         Locale::Ru => TimelineLabels {
-            title: "Столетняя линия судьбы",
-            year: "Год",
-            score: "Оценка",
             overall: "Общая оценка",
             trend: "Скользящее среднее за 5 лет",
             volatility: "Волатильность",
