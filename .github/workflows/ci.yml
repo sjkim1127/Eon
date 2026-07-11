@@ -91,6 +91,7 @@ jobs:
           CC_wasm32_unknown_unknown: clang
           AR_wasm32_unknown_unknown: llvm-ar
           WASI_SDK_PATH: /opt/wasi-sdk
+          CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
         run: dx build --release --trace
 
       - name: Measure & Report WASM File Size

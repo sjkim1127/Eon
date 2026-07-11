@@ -1,6 +1,6 @@
-use dioxus::prelude::*;
-use crate::store::AnalysisState;
 use crate::i18n::{t, TK};
+use crate::store::AnalysisState;
+use dioxus::prelude::*;
 use plotters::prelude::*;
 use plotters_canvas::CanvasBackend;
 use web_sys::HtmlCanvasElement;
@@ -42,18 +42,22 @@ pub fn TimelineTab() -> Element {
 }
 
 fn draw_timeline(canvas: &HtmlCanvasElement) {
-    let backend = CanvasBackend::with_canvas_object(canvas.clone())
-        .expect("Cannot attach to canvas");
+    let backend =
+        CanvasBackend::with_canvas_object(canvas.clone()).expect("Cannot attach to canvas");
     let root = backend.into_drawing_area();
     root.fill(&RGBColor(39, 39, 42)).unwrap(); // zinc-800
 
     let mut chart = ChartBuilder::on(&root)
-        .caption("Destiny Timeline", ("sans-serif", 30).into_font().color(&WHITE))
+        .caption(
+            "Destiny Timeline",
+            ("sans-serif", 30).into_font().color(&WHITE),
+        )
         .margin(20)
         .x_label_area_size(40)
         .y_label_area_size(100)
-        .build_cartesian_2d(0..100, 0..50).unwrap();
-    
+        .build_cartesian_2d(0..100, 0..50)
+        .unwrap();
+
     chart
         .configure_mesh()
         .disable_mesh()
@@ -63,12 +67,12 @@ fn draw_timeline(canvas: &HtmlCanvasElement) {
         .label_style(("sans-serif", 15).into_font().color(&WHITE))
         .draw()
         .unwrap();
-    
+
     // Draw dummy Gantt bars for Daewun
     let style = RGBColor(16, 185, 129).filled(); // emerald-500
-    chart.draw_series(std::iter::once(
-        Rectangle::new([(10, 10), (20, 15)], style)
-    )).unwrap();
-    
+    chart
+        .draw_series(std::iter::once(Rectangle::new([(10, 10), (20, 15)], style)))
+        .unwrap();
+
     root.present().unwrap();
 }
