@@ -73,8 +73,17 @@ jobs:
       - name: Validate lockstep versions
         run: python3 scripts/sync_release_version.py --check
 
-      - name: Validate workspace metadata
-        run: cargo metadata --locked --format-version 1 --no-deps >/dev/null
+      - name: Refresh lockfile for manifest changes
+        run: cargo metadata --format-version 1 --no-deps >/dev/null
+
+      - name: Upload synchronized lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: synchronized-cargo-lock
+          path: Cargo.lock
+
+      - name: Verify Cargo.lock is committed
+        run: git diff --exit-code -- Cargo.lock
 
       - name: Package eon-core
         run: |
@@ -87,7 +96,7 @@ jobs:
         with:
           name: release-package-diagnostics
           path: package-*.log
-          if-no-files-found: error
+          if-no-files-found: ignore
 
       - name: Package eon-astro
         run: cargo package -p eon-astro --locked --no-verify
