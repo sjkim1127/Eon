@@ -6,6 +6,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: vercel-production
+  cancel-in-progress: true
+
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
@@ -44,17 +48,6 @@ jobs:
           sudo tar xf wasi-sdk-24.0-x86_64-linux.tar.gz -C /opt
           sudo ln -sf /opt/wasi-sdk-24.0-x86_64-linux /opt/wasi-sdk
 
-      - name: Build Rust Wasm Explicitly (For Debugging Cargo Error)
-        working-directory: ./crates/eon-ui
-        env:
-          CARGO_BUILD_JOBS: 1
-          CC_wasm32_unknown_unknown: clang
-          AR_wasm32_unknown_unknown: llvm-ar
-          WASI_SDK_PATH: /opt/wasi-sdk
-          CFLAGS: "-matomics -mbulk-memory"
-          CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
-        run: cargo build --target wasm32-unknown-unknown --release
-
       - name: Build Dioxus Web App
         working-directory: ./crates/eon-ui
         env:
@@ -64,16 +57,11 @@ jobs:
           WASI_SDK_PATH: /opt/wasi-sdk
           CFLAGS: "-matomics -mbulk-memory"
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
+          "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
         run: dx build --release --trace
 
-      - name: Inject Assets (Post-Build)
-        working-directory: ./crates/eon-ui
-        run: |
-          cp ./public/vercel.json ../../target/dx/eon-ui/release/web/public/
-          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64
-          chmod +x tailwindcss-linux-x64
-          ./tailwindcss-linux-x64 -i ./input.css -o ../../target/dx/eon-ui/release/web/public/tailwind.css --minify
-          rm tailwindcss-linux-x64
+      - name: Prepare and validate static web distribution
+        run: bash scripts/prepare_web_dist.sh target/dx/eon-ui/release/web/public
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v42
