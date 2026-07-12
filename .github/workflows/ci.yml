@@ -99,7 +99,9 @@ jobs:
           CFLAGS: "-matomics -mbulk-memory"
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
           "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
-        run: dx build --release --trace
+        run: |
+          set -o pipefail
+          dx build --release --trace 2>&1 | tee ../../dx-build.log
       - name: Inspect generated web distribution
         run: |
           echo "Deploy directory:"
@@ -131,6 +133,7 @@ jobs:
           path: |
             target/dx/eon-ui/release/web/public
             web-asset-candidates
+            dx-build.log
           if-no-files-found: error
       - name: Validate generated web distribution
         run: python3 scripts/verify_web_dist.py target/dx/eon-ui/release/web/public
