@@ -57,8 +57,15 @@ jobs:
         uses: Swatinem/rust-cache@v2
       - name: Validate release helper syntax
         run: |
-          bash -n scripts/package_workspace.sh scripts/publish_workspace.sh scripts/ensure_web_wasm_bundle.sh
-          python3 -m py_compile scripts/sync_release_version.py scripts/verify_web_dist.py
+          bash -n \
+            scripts/package_workspace.sh \
+            scripts/publish_workspace.sh \
+            scripts/ensure_web_wasm_bundle.sh \
+            scripts/prepare_web_dist.sh
+          python3 -m py_compile \
+            scripts/sync_release_version.py \
+            scripts/normalize_web_entrypoint.py \
+            scripts/verify_web_dist.py
       - name: Validate lockstep versions
         run: python3 scripts/sync_release_version.py --check
       - name: Validate Cargo.lock
@@ -99,51 +106,18 @@ jobs:
           CFLAGS: "-matomics -mbulk-memory"
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
           "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
-        run: |
-          set -o pipefail
-          dx build --release --trace 2>&1 | tee ../../dx-build.log
-      - name: Ensure wasm-bindgen bundle exists
-        run: bash scripts/ensure_web_wasm_bundle.sh target/dx/eon-ui/release/web/public
-      - name: Inspect generated web distribution
-        run: |
-          echo "Deploy directory:"
-          find target/dx/eon-ui/release/web/public -maxdepth 5 -type f -printf '%P\n' | sort
-          echo "Generated index.html:"
-          sed -n '1,220p' target/dx/eon-ui/release/web/public/index.html
-          echo "Candidate JS/WASM/CSS files across the workspace:"
-          find . -type f \( \
-            -path '*/wasm/*' -o \
-            -name 'eon-ui.js' -o \
-            -name 'eon-ui.wasm' -o \
-            -name 'eon-ui_bg.wasm' -o \
-            -name 'eon_ui.wasm' -o \
-            -name 'tailwind.css' \
-          \) -not -path './.git/*' -printf '%p %s bytes\n' | sort
-      - name: Collect generated asset candidates
-        run: |
-          mkdir -p web-asset-candidates
-          find . -type f \( \
-            -path '*/wasm/*' -o \
-            -name 'eon-ui.js' -o \
-            -name 'eon-ui.wasm' -o \
-            -name 'eon-ui_bg.wasm' -o \
-            -name 'eon_ui.wasm' -o \
-            -name 'tailwind.css' \
-          \) -not -path './.git/*' -print0 | xargs -0 -r cp --parents -t web-asset-candidates
-      - name: Upload generated web diagnostics
+        run: dx build --release --trace
+      - name: Prepare and validate static web distribution
+        run: bash scripts/prepare_web_dist.sh target/dx/eon-ui/release/web/public
+      - name: Upload deployable web distribution
         uses: actions/upload-artifact@v4
         with:
-          name: dioxus-web-diagnostics
-          path: |
-            target/dx/eon-ui/release/web/public
-            web-asset-candidates
-            dx-build.log
+          name: eon-web-dist
+          path: target/dx/eon-ui/release/web/public
           if-no-files-found: error
-      - name: Validate generated web distribution
-        run: python3 scripts/verify_web_dist.py target/dx/eon-ui/release/web/public
       - name: Measure & Report WASM File Size
         run: |
           echo "### WebAssembly Binary Sizes 📊" >> $GITHUB_STEP_SUMMARY
           echo "| File Path | Size |" >> $GITHUB_STEP_SUMMARY
           echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
-          find . -name "*.wasm" -not -path './.git/*' -exec ls -lh {} \; | awk '{print "| `" $9 "` | **" $5 "** |"}' >> $GITHUB_STEP_SUMMARY
+          find target/dx/eon-ui/release/web/public -name "*.wasm" -exec ls -lh {} \; | awk '{print "| `" $9 "` | **" $5 "** |"}' >> $GITHUB_STEP_SUMMARY
