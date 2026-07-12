@@ -106,24 +106,24 @@ jobs:
           find target/dx/eon-ui/release/web/public -maxdepth 5 -type f -printf '%P\n' | sort
           echo "Generated index.html:"
           sed -n '1,220p' target/dx/eon-ui/release/web/public/index.html
-          echo "Candidate JS/WASM/CSS files elsewhere under target/:"
-          find target -type f \( \
+          echo "Candidate JS/WASM/CSS files across the workspace:"
+          find . -type f \( \
             -path '*/wasm/*' -o \
             -name 'eon-ui.js' -o \
             -name 'eon-ui_bg.wasm' -o \
             -name 'eon_ui.wasm' -o \
             -name 'tailwind.css' \
-          \) -printf '%p %s bytes\n' | sort
+          \) -not -path './.git/*' -printf '%p %s bytes\n' | sort
       - name: Collect generated asset candidates
         run: |
           mkdir -p web-asset-candidates
-          find target -type f \( \
+          find . -type f \( \
             -path '*/wasm/*' -o \
             -name 'eon-ui.js' -o \
             -name 'eon-ui_bg.wasm' -o \
             -name 'eon_ui.wasm' -o \
             -name 'tailwind.css' \
-          \) -print0 | xargs -0 -r cp --parents -t web-asset-candidates
+          \) -not -path './.git/*' -print0 | xargs -0 -r cp --parents -t web-asset-candidates
       - name: Upload generated web diagnostics
         uses: actions/upload-artifact@v4
         with:
@@ -139,4 +139,4 @@ jobs:
           echo "### WebAssembly Binary Sizes 📊" >> $GITHUB_STEP_SUMMARY
           echo "| File Path | Size |" >> $GITHUB_STEP_SUMMARY
           echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
-          find target -name "*.wasm" -exec ls -lh {} \; | awk '{print "| `" $9 "` | **" $5 "** |"}' >> $GITHUB_STEP_SUMMARY
+          find . -name "*.wasm" -not -path './.git/*' -exec ls -lh {} \; | awk '{print "| `" $9 "` | **" $5 "** |"}' >> $GITHUB_STEP_SUMMARY
