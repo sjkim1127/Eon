@@ -58,7 +58,7 @@ jobs:
       - name: Validate release helper syntax
         run: |
           bash -n scripts/package_workspace.sh scripts/publish_workspace.sh
-          python3 -m py_compile scripts/sync_release_version.py
+          python3 -m py_compile scripts/sync_release_version.py scripts/verify_web_dist.py
       - name: Validate lockstep versions
         run: python3 scripts/sync_release_version.py --check
       - name: Validate Cargo.lock
@@ -100,6 +100,20 @@ jobs:
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
           "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
         run: dx build --release --trace
+      - name: Inspect generated web distribution
+        run: |
+          echo "Generated files:"
+          find target/dx/eon-ui/release/web/public -maxdepth 4 -type f -printf '%P\n' | sort
+          echo "Generated index.html:"
+          sed -n '1,220p' target/dx/eon-ui/release/web/public/index.html
+      - name: Upload generated web distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: dioxus-web-dist
+          path: target/dx/eon-ui/release/web/public
+          if-no-files-found: error
+      - name: Validate generated web distribution
+        run: python3 scripts/verify_web_dist.py target/dx/eon-ui/release/web/public
       - name: Measure & Report WASM File Size
         run: |
           echo "### WebAssembly Binary Sizes 📊" >> $GITHUB_STEP_SUMMARY
