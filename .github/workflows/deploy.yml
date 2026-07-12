@@ -9,7 +9,7 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -40,9 +40,9 @@ jobs:
 
       - name: Install WASI SDK
         run: |
-          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz
+          wget -q https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz
           sudo tar xf wasi-sdk-24.0-x86_64-linux.tar.gz -C /opt
-          sudo ln -s /opt/wasi-sdk-24.0-x86_64-linux /opt/wasi-sdk
+          sudo ln -sf /opt/wasi-sdk-24.0-x86_64-linux /opt/wasi-sdk
 
       - name: Build Rust Wasm Explicitly (For Debugging Cargo Error)
         working-directory: ./crates/eon-ui
@@ -51,6 +51,7 @@ jobs:
           CC_wasm32_unknown_unknown: clang
           AR_wasm32_unknown_unknown: llvm-ar
           WASI_SDK_PATH: /opt/wasi-sdk
+          CFLAGS: "-matomics -mbulk-memory"
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
         run: cargo build --target wasm32-unknown-unknown --release
 
@@ -61,6 +62,7 @@ jobs:
           CC_wasm32_unknown_unknown: clang
           AR_wasm32_unknown_unknown: llvm-ar
           WASI_SDK_PATH: /opt/wasi-sdk
+          CFLAGS: "-matomics -mbulk-memory"
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
         run: dx build --release --trace
 
