@@ -61,56 +61,8 @@ jobs:
         run: |
           cargo metadata --locked --format-version 1 >/dev/null
           git diff --exit-code -- Cargo.lock
-      - name: Package eon-core
-        run: cargo package -p eon-core --locked --no-verify
-      - name: Package eon-astro
-        run: cargo package -p eon-astro --locked --no-verify
-      - name: Package eon-data
-        run: cargo package -p eon-data --locked --no-verify
-      - name: Package eon-saju
-        run: cargo package -p eon-saju --locked --no-verify
-      - name: Package eon-vedic
-        run: cargo package -p eon-vedic --locked --no-verify
-      - name: Package eon-zwds
-        run: cargo package -p eon-zwds --locked --no-verify
-      - name: Package eon-western
-        run: cargo package -p eon-western --locked --no-verify
-      - name: Package eon-human-design
-        run: cargo package -p eon-human-design --locked --no-verify
-      - name: Package eon-qimen
-        run: cargo package -p eon-qimen --locked --no-verify
-      - name: Package eon-ai
-        run: cargo package -p eon-ai --locked --no-verify
-      - name: Package eon-service
-        id: package_eon_service
-        continue-on-error: true
-        run: |
-          cat > package-preflight.toml <<EOF
-          [patch.crates-io]
-          eon-core = { path = "${GITHUB_WORKSPACE}/crates/eon-core" }
-          eon-astro = { path = "${GITHUB_WORKSPACE}/crates/eon-astro" }
-          eon-data = { path = "${GITHUB_WORKSPACE}/crates/eon-data" }
-          eon-saju = { path = "${GITHUB_WORKSPACE}/crates/eon-saju" }
-          eon-vedic = { path = "${GITHUB_WORKSPACE}/crates/eon-vedic" }
-          eon-zwds = { path = "${GITHUB_WORKSPACE}/crates/eon-zwds" }
-          eon-western = { path = "${GITHUB_WORKSPACE}/crates/eon-western" }
-          eon-human-design = { path = "${GITHUB_WORKSPACE}/crates/eon-human-design" }
-          eon-qimen = { path = "${GITHUB_WORKSPACE}/crates/eon-qimen" }
-          eon-ai = { path = "${GITHUB_WORKSPACE}/crates/eon-ai" }
-          EOF
-          cargo --config package-preflight.toml package -p eon-service --locked --no-verify > package-eon-service.log 2>&1
-      - name: Upload eon-service package diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: eon-service-package-diagnostics
-          path: package-eon-service.log
-          if-no-files-found: error
-      - name: Fail when eon-service packaging failed
-        if: steps.package_eon_service.outcome == 'failure'
-        run: |
-          tail -n 120 package-eon-service.log
-          exit 1
+      - name: Package publishable workspace crates
+        run: bash scripts/package_workspace.sh
 
   wasm-build:
     name: WASM Build & Size Monitor
