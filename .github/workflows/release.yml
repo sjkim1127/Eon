@@ -6,7 +6,11 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+'
 
 permissions:
-  contents: write   # GitHub Release 생성 권한
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   # ── 1단계: 전체 워크스페이스 테스트 ──────────────────────────────────────────
@@ -40,60 +44,48 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
-      # workspace.package.version 을 태그 버전으로 맞춤
-      - name: Sync workspace version from tag
+      - name: Synchronize workspace version from tag
         run: |
-          TAG="${GITHUB_REF_NAME}"          # e.g. v0.2.0
-          VERSION="${TAG#v}"                # e.g. 0.2.0
-          sed -i "s/^version = \"[^\"]*\"/version = \"${VERSION}\"/" Cargo.toml
-          echo "Publishing version ${VERSION}"
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          python3 scripts/sync_release_version.py "$VERSION"
+          cargo metadata --format-version 1 --no-deps >/dev/null
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
-      # 의존 계층 순서대로 배포 (실패 시 중단)
-      - name: Publish eon-core
-        run: cargo publish -p eon-core --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
-        continue-on-error: false
+      - name: Validate release packages
+        run: |
+          set -euo pipefail
+          python3 scripts/sync_release_version.py "$VERSION" --check
 
-      - name: Wait for crates.io index
-        run: sleep 20
+          crates=(
+            eon-core
+            eon-astro
+            eon-data
+            eon-saju
+            eon-vedic
+            eon-zwds
+            eon-western
+            eon-human-design
+            eon-qimen
+            eon-ai
+            eon-service
+          )
 
-      - name: Publish eon-data
-        run: cargo publish -p eon-data --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
+          for crate in "${crates[@]}"; do
+            echo "Packaging $crate $VERSION..."
+            cargo package -p "$crate" --locked --no-verify --allow-dirty
+          done
 
-      - name: Wait for crates.io index
-        run: sleep 20
-
-      - name: Publish eon-astro
-        run: cargo publish -p eon-astro --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
-
-      - name: Wait for crates.io index
-        run: sleep 20
-
-      - name: Publish eon-saju
-        run: cargo publish -p eon-saju --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
-
-      - name: Publish eon-vedic
-        run: cargo publish -p eon-vedic --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
-
-      - name: Publish eon-zwds
-        run: cargo publish -p eon-zwds --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
-
-      - name: Publish eon-western
-        run: cargo publish -p eon-western --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
-
-      - name: Publish eon-human-design
-        run: cargo publish -p eon-human-design --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
-
-      - name: Wait for crates.io index (service depends on all)
-        run: sleep 30
-
-      - name: Publish eon-service
-        run: cargo publish -p eon-service --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --no-verify
+      - name: Publish workspace crates
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: bash scripts/publish_workspace.sh
 
   # ── 3단계: Vercel 릴리즈 배포 ──────────────────────────────────────────────
   deploy-vercel:
     name: Deploy to Vercel (Production)
     runs-on: ubuntu-latest
-    needs: test    # 테스트만 통과하면 crates.io와 병렬로 진행
+    needs: test
     steps:
       - uses: actions/checkout@v7
 
@@ -127,6 +119,7 @@ jobs:
           WASI_SDK_PATH: /opt/wasi-sdk
           CFLAGS: "-matomics -mbulk-memory"
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
+          "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
         run: cargo build --target wasm32-unknown-unknown --release
 
       - name: Build Dioxus Web App
@@ -138,6 +131,7 @@ jobs:
           WASI_SDK_PATH: /opt/wasi-sdk
           CFLAGS: "-matomics -mbulk-memory"
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
+          "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
         run: dx build --release --trace
 
       - name: Inject assets (post-build)
@@ -166,7 +160,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0   # 전체 git history (git log 범위 산출용)
+          fetch-depth: 0
 
       - name: Generate release notes from git log
         id: notes
@@ -183,7 +177,6 @@ jobs:
           echo "## What's Changed" > release_notes.md
           echo "" >> release_notes.md
 
-          # Conventional Commits 기반 섹션 분류
           FEATURES=$(git log $RANGE --oneline --no-merges | grep "^[a-f0-9]* feat" || true)
           FIXES=$(git log $RANGE --oneline --no-merges | grep "^[a-f0-9]* fix" || true)
           PERF=$(git log $RANGE --oneline --no-merges | grep "^[a-f0-9]* perf" || true)
