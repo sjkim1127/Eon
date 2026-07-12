@@ -10,46 +10,35 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  # ── 1단계: 코드 품질 검사 (Format & Clippy) ───────────────────────────────────
   lints:
     name: Format & Clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
       - name: Install Rust (stable)
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
-
       - name: Check formatting
         run: cargo fmt --all -- --check
-
       - name: Run Clippy Linter
         run: cargo clippy --workspace --all-targets -- -D warnings
 
-  # ── 2단계: 테스트 및 테스트 커버리지 측정 ─────────────────────────────────────
   test:
     name: Test & Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
       - name: Install Rust (stable)
         uses: dtolnay/rust-toolchain@stable
-
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
-
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
-
       - name: Run Tests & Generate Coverage
         run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
-
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
@@ -57,33 +46,49 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  # ── 3단계: WASM 빌드 검증 및 바이너리 크기 측정 ──────────────────────────────
+  release-preflight:
+    name: Release Package Preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+      - name: Validate release helper syntax
+        run: |
+          bash -n scripts/package_workspace.sh scripts/publish_workspace.sh
+          python3 -m py_compile scripts/sync_release_version.py
+      - name: Validate lockstep versions
+        run: python3 scripts/sync_release_version.py --check
+      - name: Validate Cargo.lock
+        run: |
+          cargo metadata --locked --format-version 1 >/dev/null
+          git diff --exit-code -- Cargo.lock
+      - name: Package publishable workspace crates
+        run: bash scripts/package_workspace.sh
+
   wasm-build:
     name: WASM Build & Size Monitor
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
       - name: Install Rust (nightly + wasm target)
         uses: dtolnay/rust-toolchain@nightly
         with:
           targets: wasm32-unknown-unknown
           components: rust-src
-
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
-
       - name: Install Dioxus CLI
         uses: taiki-e/install-action@v2
         with:
           tool: dioxus-cli@0.6.1
-
       - name: Install WASI SDK
         run: |
           wget -q https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz
           sudo tar xf wasi-sdk-24.0-x86_64-linux.tar.gz -C /opt
           sudo ln -sf /opt/wasi-sdk-24.0-x86_64-linux /opt/wasi-sdk
-
       - name: Build Web App (Dioxus Release)
         working-directory: ./crates/eon-ui
         env:
@@ -95,7 +100,6 @@ jobs:
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
           "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
         run: dx build --release --trace
-
       - name: Measure & Report WASM File Size
         run: |
           echo "### WebAssembly Binary Sizes 📊" >> $GITHUB_STEP_SUMMARY

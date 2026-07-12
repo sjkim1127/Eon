@@ -8,12 +8,12 @@ repository.workspace = true
 description = "Qimen Dunjia Engine for Eon"
 
 [dependencies]
-eon-core = { path = "../eon-core" }
-eon-saju = { path = "../eon-saju" }
+eon-core = { workspace = true }
+eon-saju = { workspace = true }
+eon-astro = { workspace = true }
 serde = { workspace = true }
 chrono = { workspace = true }
 anyhow = { workspace = true }
-eon-astro = { version = "0.1.1", path = "../eon-astro" }
 
 [lints]
 workspace = true
