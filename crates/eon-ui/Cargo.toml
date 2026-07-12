@@ -25,7 +25,7 @@ reqwest = { version = "0.13.4", features = ["json"] }
 wasm-logger = "0.2"
 log = "0.4"
 getrandom = { version = "0.2", features = ["js"] }
-gloo-timers = { version = "0.3", features = ["futures"] }
+gloo-timers = { version = "0.4", features = ["futures"] }
 gloo-worker = "0.5.0"
 indexed_db_futures = "0.5.0"
 uuid = { version = "1.8", features = ["v4", "js", "serde"] }
