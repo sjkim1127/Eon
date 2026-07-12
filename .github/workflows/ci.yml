@@ -108,13 +108,24 @@ jobs:
           "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
         run: dx build --release --trace
       - name: Prepare and validate static web distribution
-        run: bash scripts/prepare_web_dist.sh target/dx/eon-ui/release/web/public
-      - name: Upload deployable web distribution
+        id: prepare_web
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          bash scripts/prepare_web_dist.sh target/dx/eon-ui/release/web/public 2>&1 | tee web-prepare.log
+      - name: Upload web build diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: eon-web-dist
-          path: target/dx/eon-ui/release/web/public
-          if-no-files-found: error
+          name: eon-web-build
+          path: |
+            target/dx/eon-ui/release/web/public
+            wasm-bindgen.log
+            web-prepare.log
+          if-no-files-found: warn
+      - name: Fail when web distribution preparation failed
+        if: steps.prepare_web.outcome != 'success'
+        run: exit 1
       - name: Measure & Report WASM File Size
         run: |
           echo "### WebAssembly Binary Sizes 📊" >> $GITHUB_STEP_SUMMARY
