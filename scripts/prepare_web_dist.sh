@@ -2,7 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DIST_DIR="${1:-$ROOT_DIR/target/dx/eon-ui/release/web/public}"
+DIST_INPUT="${1:-$ROOT_DIR/target/dx/eon-ui/release/web/public}"
+DIST_DIR="$(realpath -m "$DIST_INPUT")"
 UI_DIR="$ROOT_DIR/crates/eon-ui"
 TAILWIND_VERSION="3.4.17"
 TAILWIND_BIN="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/tailwindcss-${TAILWIND_VERSION}-linux-x64"
