@@ -24,6 +24,7 @@ PUBLISHABLE_CRATES = (
     "eon-ai",
     "eon-service",
 )
+WORKSPACE_CRATES = PUBLISHABLE_CRATES + ("eon-ui",)
 
 SEMVER_RE = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
@@ -83,7 +84,7 @@ def replace_internal_versions(text: str, version: str) -> str:
 
 
 def validate_member_manifests() -> None:
-    for crate in PUBLISHABLE_CRATES:
+    for crate in WORKSPACE_CRATES:
         manifest = ROOT / "crates" / crate / "Cargo.toml"
         if not manifest.exists():
             raise ValueError(f"missing manifest: {manifest.relative_to(ROOT)}")
