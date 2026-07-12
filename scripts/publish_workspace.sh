@@ -21,30 +21,58 @@ CRATES=(
 CRATES_IO_API="https://crates.io/api/v1/crates"
 USER_AGENT="eon-release-workflow/1.0 (https://github.com/sjkim1127/Eon)"
 
+# Return codes: 0 = exists, 1 = does not exist, 2 = registry/API error.
 crate_exists() {
   local crate="$1"
-  curl \
+  local code
+
+  if ! code=$(curl \
     --silent \
     --show-error \
-    --fail \
+    --output /dev/null \
+    --write-out "%{http_code}" \
     --retry 3 \
     --retry-delay 2 \
+    --retry-all-errors \
     --user-agent "$USER_AGENT" \
-    "$CRATES_IO_API/$crate/$VERSION" \
-    >/dev/null 2>&1
+    "$CRATES_IO_API/$crate/$VERSION"); then
+    echo "Failed to query crates.io for $crate $VERSION." >&2
+    return 2
+  fi
+
+  case "$code" in
+    200)
+      return 0
+      ;;
+    404)
+      return 1
+      ;;
+    *)
+      echo "Unexpected crates.io API status $code for $crate $VERSION." >&2
+      return 2
+      ;;
+  esac
 }
 
 wait_for_crate() {
   local crate="$1"
   local max_attempts=60
+  local status
 
-  for attempt in $(seq 1 "$max_attempts"); do
-    if crate_exists "$crate"; then
+  for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+    status=0
+    crate_exists "$crate" || status=$?
+
+    if [[ "$status" -eq 0 ]]; then
       echo "$crate $VERSION is available on crates.io."
       return 0
     fi
 
-    echo "Waiting for $crate $VERSION to appear on crates.io ($attempt/$max_attempts)..."
+    if [[ "$status" -eq 2 ]]; then
+      echo "Registry check failed while waiting for $crate ($attempt/$max_attempts); retrying." >&2
+    else
+      echo "Waiting for $crate $VERSION to appear on crates.io ($attempt/$max_attempts)..."
+    fi
     sleep 10
   done
 
@@ -54,11 +82,21 @@ wait_for_crate() {
 
 publish_crate() {
   local crate="$1"
+  local status=0
 
-  if crate_exists "$crate"; then
-    echo "Skipping $crate $VERSION: version already exists on crates.io."
-    return 0
-  fi
+  crate_exists "$crate" || status=$?
+  case "$status" in
+    0)
+      echo "Skipping $crate $VERSION: version already exists on crates.io."
+      return 0
+      ;;
+    1)
+      ;;
+    *)
+      echo "Cannot safely determine whether $crate $VERSION exists; aborting." >&2
+      return 1
+      ;;
+  esac
 
   for attempt in 1 2 3; do
     echo "Publishing $crate $VERSION (attempt $attempt/3)..."
@@ -67,9 +105,14 @@ publish_crate() {
       return 0
     fi
 
-    if crate_exists "$crate"; then
+    status=0
+    crate_exists "$crate" || status=$?
+    if [[ "$status" -eq 0 ]]; then
       echo "$crate $VERSION was published despite the client error."
       return 0
+    fi
+    if [[ "$status" -eq 2 ]]; then
+      echo "Could not verify publish state for $crate because crates.io is unavailable." >&2
     fi
 
     if [[ "$attempt" -lt 3 ]]; then
