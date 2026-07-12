@@ -62,7 +62,7 @@ publish_crate() {
 
   for attempt in 1 2 3; do
     echo "Publishing $crate $VERSION (attempt $attempt/3)..."
-    if cargo publish -p "$crate" --locked; then
+    if cargo publish -p "$crate" --locked --allow-dirty; then
       wait_for_crate "$crate"
       return 0
     fi
