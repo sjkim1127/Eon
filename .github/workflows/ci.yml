@@ -77,7 +77,17 @@ jobs:
         run: cargo metadata --locked --format-version 1 --no-deps >/dev/null
 
       - name: Package eon-core
-        run: cargo package -p eon-core --locked --no-verify
+        run: |
+          set -o pipefail
+          cargo package -p eon-core --locked --no-verify 2>&1 | tee package-eon-core.log
+
+      - name: Upload package diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-package-diagnostics
+          path: package-*.log
+          if-no-files-found: error
 
       - name: Package eon-astro
         run: cargo package -p eon-astro --locked --no-verify
