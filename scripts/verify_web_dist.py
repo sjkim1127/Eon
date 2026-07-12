@@ -20,9 +20,7 @@ def local_asset_path(dist: Path, raw_url: str) -> Path | None:
     if parsed.scheme or parsed.netloc or raw_url.startswith(("data:", "blob:")):
         return None
 
-    path = parsed.path
-    if path.startswith("/"):
-        return dist / path.lstrip("/")
+    path = parsed.path.lstrip("/")
     return (dist / path).resolve()
 
 
@@ -46,7 +44,16 @@ def main() -> int:
     missing: list[tuple[str, Path]] = []
     for raw_url in referenced:
         asset = local_asset_path(dist, raw_url)
-        if asset is not None and not asset.is_file():
+        if asset is None:
+            continue
+
+        try:
+            asset.relative_to(dist)
+            is_valid = asset.is_file()
+        except ValueError:
+            is_valid = False
+
+        if not is_valid:
             missing.append((raw_url, asset))
 
     print(f"Validated {len(referenced)} generated asset reference(s) in {index}.")
@@ -54,7 +61,7 @@ def main() -> int:
         print(f"  {raw_url}")
 
     if missing:
-        print("Generated entrypoint references missing local assets:", file=sys.stderr)
+        print("Generated entrypoint references missing or unsafe local assets:", file=sys.stderr)
         for raw_url, asset in missing:
             print(f"  {raw_url} -> {asset}", file=sys.stderr)
         return 1
