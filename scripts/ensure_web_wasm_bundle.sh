@@ -61,6 +61,7 @@ mkdir -p "$WASM_DIR"
 set +e
 "$WASM_BINDGEN" \
   --target web \
+  --keep-lld-exports \
   --no-demangle \
   --remove-name-section \
   --remove-producers-section \
