@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ "main" ]
 
-permissions:
-  contents: write
-
 env:
   CARGO_TERM_COLOR: always
 
@@ -54,30 +51,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
       - name: Install Rust (stable)
         uses: dtolnay/rust-toolchain@stable
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
       - name: Validate lockstep versions
         run: python3 scripts/sync_release_version.py --check
-      - name: Refresh full lockfile graph for manifest changes
-        run: cargo metadata --format-version 1 >/dev/null
-      - name: Commit synchronized lockfile
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      - name: Validate Cargo.lock
         run: |
-          if git diff --quiet -- Cargo.lock; then
-            echo "Cargo.lock is already synchronized."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Cargo.lock
-          git commit -m "chore: synchronize Cargo.lock"
-          git push origin "HEAD:${GITHUB_HEAD_REF}"
-      - name: Verify Cargo.lock is committed
-        run: git diff --exit-code -- Cargo.lock
+          cargo metadata --locked --format-version 1 >/dev/null
+          git diff --exit-code -- Cargo.lock
       - name: Package eon-core
         run: cargo package -p eon-core --locked --no-verify
       - name: Package eon-astro
@@ -99,7 +82,21 @@ jobs:
       - name: Package eon-ai
         run: cargo package -p eon-ai --locked --no-verify
       - name: Package eon-service
-        run: cargo package -p eon-service --locked --no-verify
+        id: package_eon_service
+        continue-on-error: true
+        run: cargo package -p eon-service --locked --no-verify > package-eon-service.log 2>&1
+      - name: Upload eon-service package diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eon-service-package-diagnostics
+          path: package-eon-service.log
+          if-no-files-found: error
+      - name: Fail when eon-service packaging failed
+        if: steps.package_eon_service.outcome == 'failure'
+        run: |
+          tail -n 120 package-eon-service.log
+          exit 1
 
   wasm-build:
     name: WASM Build & Size Monitor
