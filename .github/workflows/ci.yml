@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -51,6 +54,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - name: Install Rust (stable)
         uses: dtolnay/rust-toolchain@stable
       - name: Rust cache
@@ -59,24 +64,22 @@ jobs:
         run: python3 scripts/sync_release_version.py --check
       - name: Refresh full lockfile graph for manifest changes
         run: cargo metadata --format-version 1 >/dev/null
-      - name: Upload synchronized lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: synchronized-cargo-lock
-          path: Cargo.lock
+      - name: Commit synchronized lockfile
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          if git diff --quiet -- Cargo.lock; then
+            echo "Cargo.lock is already synchronized."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Cargo.lock
+          git commit -m "chore: synchronize Cargo.lock"
+          git push origin "HEAD:${GITHUB_HEAD_REF}"
       - name: Verify Cargo.lock is committed
         run: git diff --exit-code -- Cargo.lock
       - name: Package eon-core
-        run: |
-          set -o pipefail
-          cargo package -p eon-core --locked --no-verify 2>&1 | tee package-eon-core.log
-      - name: Upload package diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-package-diagnostics
-          path: package-*.log
-          if-no-files-found: ignore
+        run: cargo package -p eon-core --locked --no-verify
       - name: Package eon-astro
         run: cargo package -p eon-astro --locked --no-verify
       - name: Package eon-data
