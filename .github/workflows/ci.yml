@@ -57,7 +57,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
       - name: Validate release helper syntax
         run: |
-          bash -n scripts/package_workspace.sh scripts/publish_workspace.sh
+          bash -n scripts/package_workspace.sh scripts/publish_workspace.sh scripts/ensure_web_wasm_bundle.sh
           python3 -m py_compile scripts/sync_release_version.py scripts/verify_web_dist.py
       - name: Validate lockstep versions
         run: python3 scripts/sync_release_version.py --check
@@ -102,6 +102,8 @@ jobs:
         run: |
           set -o pipefail
           dx build --release --trace 2>&1 | tee ../../dx-build.log
+      - name: Ensure wasm-bindgen bundle exists
+        run: bash scripts/ensure_web_wasm_bundle.sh target/dx/eon-ui/release/web/public
       - name: Inspect generated web distribution
         run: |
           echo "Deploy directory:"
@@ -112,6 +114,7 @@ jobs:
           find . -type f \( \
             -path '*/wasm/*' -o \
             -name 'eon-ui.js' -o \
+            -name 'eon-ui.wasm' -o \
             -name 'eon-ui_bg.wasm' -o \
             -name 'eon_ui.wasm' -o \
             -name 'tailwind.css' \
@@ -122,6 +125,7 @@ jobs:
           find . -type f \( \
             -path '*/wasm/*' -o \
             -name 'eon-ui.js' -o \
+            -name 'eon-ui.wasm' -o \
             -name 'eon-ui_bg.wasm' -o \
             -name 'eon_ui.wasm' -o \
             -name 'tailwind.css' \
