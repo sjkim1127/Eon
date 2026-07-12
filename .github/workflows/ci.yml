@@ -76,27 +76,38 @@ jobs:
       - name: Validate workspace metadata
         run: cargo metadata --locked --format-version 1 --no-deps >/dev/null
 
-      - name: Package every publishable crate
-        run: |
-          set -euo pipefail
-          crates=(
-            eon-core
-            eon-astro
-            eon-data
-            eon-saju
-            eon-vedic
-            eon-zwds
-            eon-western
-            eon-human-design
-            eon-qimen
-            eon-ai
-            eon-service
-          )
+      - name: Package eon-core
+        run: cargo package -p eon-core --locked --no-verify
 
-          for crate in "${crates[@]}"; do
-            echo "Packaging $crate..."
-            cargo package -p "$crate" --locked --no-verify
-          done
+      - name: Package eon-astro
+        run: cargo package -p eon-astro --locked --no-verify
+
+      - name: Package eon-data
+        run: cargo package -p eon-data --locked --no-verify
+
+      - name: Package eon-saju
+        run: cargo package -p eon-saju --locked --no-verify
+
+      - name: Package eon-vedic
+        run: cargo package -p eon-vedic --locked --no-verify
+
+      - name: Package eon-zwds
+        run: cargo package -p eon-zwds --locked --no-verify
+
+      - name: Package eon-western
+        run: cargo package -p eon-western --locked --no-verify
+
+      - name: Package eon-human-design
+        run: cargo package -p eon-human-design --locked --no-verify
+
+      - name: Package eon-qimen
+        run: cargo package -p eon-qimen --locked --no-verify
+
+      - name: Package eon-ai
+        run: cargo package -p eon-ai --locked --no-verify
+
+      - name: Package eon-service
+        run: cargo package -p eon-service --locked --no-verify
 
   # ── 4단계: WASM 빌드 검증 및 바이너리 크기 측정 ──────────────────────────────
   wasm-build:
