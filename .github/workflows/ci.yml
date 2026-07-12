@@ -57,8 +57,15 @@ jobs:
         uses: Swatinem/rust-cache@v2
       - name: Validate release helper syntax
         run: |
-          bash -n scripts/package_workspace.sh scripts/publish_workspace.sh
-          python3 -m py_compile scripts/sync_release_version.py
+          bash -n \
+            scripts/package_workspace.sh \
+            scripts/publish_workspace.sh \
+            scripts/ensure_web_wasm_bundle.sh \
+            scripts/prepare_web_dist.sh
+          python3 -m py_compile \
+            scripts/sync_release_version.py \
+            scripts/normalize_web_entrypoint.py \
+            scripts/verify_web_dist.py
       - name: Validate lockstep versions
         run: python3 scripts/sync_release_version.py --check
       - name: Validate Cargo.lock
@@ -100,9 +107,28 @@ jobs:
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
           "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
         run: dx build --release --trace
+      - name: Prepare and validate static web distribution
+        id: prepare_web
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          bash scripts/prepare_web_dist.sh target/dx/eon-ui/release/web/public 2>&1 | tee web-prepare.log
+      - name: Upload web build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eon-web-build
+          path: |
+            target/dx/eon-ui/release/web/public
+            wasm-bindgen.log
+            web-prepare.log
+          if-no-files-found: warn
+      - name: Fail when web distribution preparation failed
+        if: steps.prepare_web.outcome != 'success'
+        run: exit 1
       - name: Measure & Report WASM File Size
         run: |
           echo "### WebAssembly Binary Sizes 📊" >> $GITHUB_STEP_SUMMARY
           echo "| File Path | Size |" >> $GITHUB_STEP_SUMMARY
           echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
-          find target -name "*.wasm" -exec ls -lh {} \; | awk '{print "| `" $9 "` | **" $5 "** |"}' >> $GITHUB_STEP_SUMMARY
+          find target/dx/eon-ui/release/web/public -name "*.wasm" -exec ls -lh {} \; | awk '{print "| `" $9 "` | **" $5 "** |"}' >> $GITHUB_STEP_SUMMARY

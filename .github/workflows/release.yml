@@ -77,26 +77,15 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
           components: rust-src
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
       - name: Install Dioxus CLI
-        run: cargo binstall dioxus-cli@0.6.1 -y
+        uses: taiki-e/install-action@v2
+        with:
+          tool: dioxus-cli@0.6.1
       - name: Install WASI SDK
         run: |
           wget -q https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz
           sudo tar xf wasi-sdk-24.0-x86_64-linux.tar.gz -C /opt
           sudo ln -sf /opt/wasi-sdk-24.0-x86_64-linux /opt/wasi-sdk
-      - name: Build Wasm (pre-check)
-        working-directory: ./crates/eon-ui
-        env:
-          CARGO_BUILD_JOBS: 1
-          CC_wasm32_unknown_unknown: clang
-          AR_wasm32_unknown_unknown: llvm-ar
-          WASI_SDK_PATH: /opt/wasi-sdk
-          CFLAGS: "-matomics -mbulk-memory"
-          CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
-          "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
-        run: cargo build --target wasm32-unknown-unknown --release
       - name: Build Dioxus Web App
         working-directory: ./crates/eon-ui
         env:
@@ -108,14 +97,8 @@ jobs:
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
           "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
         run: dx build --release --trace
-      - name: Inject assets (post-build)
-        working-directory: ./crates/eon-ui
-        run: |
-          cp ./public/vercel.json ../../target/dx/eon-ui/release/web/public/
-          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64
-          chmod +x tailwindcss-linux-x64
-          ./tailwindcss-linux-x64 -i ./input.css -o ../../target/dx/eon-ui/release/web/public/tailwind.css --minify
-          rm tailwindcss-linux-x64
+      - name: Prepare and validate static web distribution
+        run: bash scripts/prepare_web_dist.sh target/dx/eon-ui/release/web/public
       - name: Deploy to Vercel (Production)
         uses: amondnet/vercel-action@v42
         with:
