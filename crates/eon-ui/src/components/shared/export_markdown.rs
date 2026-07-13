@@ -3556,6 +3556,37 @@ pub fn export_combined_to_markdown(
 pub fn ExportWidget() -> Element {
     let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
+    let mut show_modal = use_signal(|| false);
+
+    let widget_title = match locale {
+        Locale::Ko => "분석 결과 내보내기",
+        Locale::En => "EXPORT REPORTS",
+        Locale::Zh => "导出分析报告",
+        Locale::Ru => "ЭКСПОРТ ОТЧЕТОВ",
+    };
+
+    rsx! {
+        div { class: "px-4 py-4 border-t border-slate-800/50 mt-auto",
+            button {
+                class: "w-full py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border border-violet-500/30 text-violet-300 font-medium hover:bg-violet-500/30 hover:text-white transition-all duration-300 shadow-md shadow-violet-900/20 group",
+                onclick: move |_| show_modal.set(true),
+                span { class: "text-lg group-hover:-translate-y-1 transition-transform", "📥" }
+                span { class: "tracking-wide text-sm", "{widget_title}" }
+            }
+        }
+        
+        if *show_modal.read() {
+            ExportModal {
+                show_modal: show_modal
+            }
+        }
+    }
+}
+
+#[component]
+fn ExportModal(mut show_modal: Signal<bool>) -> Element {
+    let state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
 
     let saju_state = state.saju.read();
     let vedic_state = state.vedic.read();
@@ -3580,16 +3611,13 @@ pub fn ExportWidget() -> Element {
     let has_qimen = qimen_state.status == TaskStatus::Success && qimen_state.data.is_some();
 
     let hd_penta_state = state.hd_penta.read();
-    let has_hd_penta =
-        hd_penta_state.status == TaskStatus::Success && hd_penta_state.data.is_some();
+    let has_hd_penta = hd_penta_state.status == TaskStatus::Success && hd_penta_state.data.is_some();
 
     let hd_connection_state = state.hd_connection.read();
-    let has_hd_connection =
-        hd_connection_state.status == TaskStatus::Success && hd_connection_state.data.is_some();
+    let has_hd_connection = hd_connection_state.status == TaskStatus::Success && hd_connection_state.data.is_some();
 
     let hd_transit_state = state.hd_transit.read();
-    let has_hd_transit =
-        hd_transit_state.status == TaskStatus::Success && hd_transit_state.data.is_some();
+    let has_hd_transit = hd_transit_state.status == TaskStatus::Success && hd_transit_state.data.is_some();
 
     let saju_data = saju_state.data.clone();
     let vedic_data = vedic_state.data.clone();
@@ -3618,95 +3646,26 @@ pub fn ExportWidget() -> Element {
     let mut copied_hd_transit = use_signal(|| false);
     let mut copied_combined = use_signal(|| false);
 
-    let widget_title = match locale {
+    let modal_title = match locale {
         Locale::Ko => "분석 결과 내보내기",
-        Locale::En => "EXPORT REPORT",
-        Locale::Zh => "导出分析报告",
-        Locale::Ru => "ЭКСПОРТ ОТЧЕТА",
+        Locale::En => "Export Reports",
+        Locale::Zh => "导出报告",
+        Locale::Ru => "Экспорт отчетов",
     };
 
-    let saju_btn_lbl = match locale {
-        Locale::Ko => "사주 보고서 복사",
-        Locale::En => "Copy Saju Report",
-        Locale::Zh => "复制八字报告",
-        Locale::Ru => "Копировать отчет Бацзы",
-    };
-    let vedic_btn_lbl = match locale {
-        Locale::Ko => "베딕 보고서 복사",
-        Locale::En => "Copy Vedic Report",
-        Locale::Zh => "复制吠陀报告",
-        Locale::Ru => "Копировать Ведический отчет",
-    };
-    let zwds_btn_lbl = match locale {
-        Locale::Ko => "자미두수 보고서 복사",
-        Locale::En => "Copy ZWDS Report",
-        Locale::Zh => "复制紫微斗数报告",
-        Locale::Ru => "Копировать отчет ЦВдШ",
-    };
-    let tier_btn_lbl = match locale {
-        Locale::Ko => "운명 티어 보고서 복사",
-        Locale::En => "Copy Destiny Tier Report",
-        Locale::Zh => "复制命运阶级报告",
-        Locale::Ru => "Копировать отчет уровня судьбы",
-    };
-    let transit_btn_lbl = match locale {
-        Locale::Ko => "실시간 운세 보고서 복사",
-        Locale::En => "Copy Transit Luck Report",
-        Locale::Zh => "复制实时运势报告",
-        Locale::Ru => "Копировать отчет транзитной удачи",
-    };
-    let combined_btn_lbl = match locale {
-        Locale::Ko => "통합 분석 보고서 복사",
-        Locale::En => "Copy Combined Report",
-        Locale::Zh => "复制综合分析报告",
-        Locale::Ru => "Копировать объединенный отчет",
-    };
-    let iching_btn_lbl = match locale {
-        Locale::Ko => "주역 보고서 복사",
-        Locale::En => "Copy I Ching Report",
-        Locale::Zh => "复制周易报告",
-        Locale::Ru => "Копировать отчет И Цзин",
-    };
-    let western_btn_lbl = match locale {
-        Locale::Ko => "서양 점성학 보고서 복사",
-        Locale::En => "Copy Western Astro Report",
-        Locale::Zh => "复制西洋占星报告",
-        Locale::Ru => "Копировать отчет западной астрологии",
-    };
-    let hd_btn_lbl = match locale {
-        Locale::Ko => "휴먼디자인 보고서 복사",
-        Locale::En => "Copy Human Design Report",
-        Locale::Zh => "复制人类图报告",
-        Locale::Ru => "Копировать отчет Дизайна Человека",
-    };
-
-    let qimen_btn_lbl = match locale {
-        Locale::Ko => "기문둔갑 보고서 복사",
-        Locale::En => "Copy Qimen Report",
-        Locale::Zh => "复制奇门遁甲报告",
-        Locale::Ru => "Копировать отчет Ци Мэнь Дунь Цзя",
-    };
-
-    let hd_penta_btn_lbl = match locale {
-        Locale::Ko => "HD 펜타/WA 보고서 복사",
-        Locale::En => "Copy HD Penta/WA Report",
-        Locale::Zh => "复制HD Penta/WA报告",
-        Locale::Ru => "Копировать отчет HD Penta/WA",
-    };
-
-    let hd_connection_btn_lbl = match locale {
-        Locale::Ko => "HD 컴포지트 보고서 복사",
-        Locale::En => "Copy HD Connection Report",
-        Locale::Zh => "复制HD合盘报告",
-        Locale::Ru => "Копировать отчет HD Connection",
-    };
-
-    let hd_transit_btn_lbl = match locale {
-        Locale::Ko => "HD 트랜짓/리턴 보고서 복사",
-        Locale::En => "Copy HD Transit Report",
-        Locale::Zh => "复制HD流年报告",
-        Locale::Ru => "Копировать отчет HD Transit",
-    };
+    let saju_btn_lbl = match locale { Locale::Ko => "사주 보고서", Locale::En => "Saju Report", Locale::Zh => "八字报告", Locale::Ru => "Отчет Бацзы" };
+    let vedic_btn_lbl = match locale { Locale::Ko => "베딕 보고서", Locale::En => "Vedic Report", Locale::Zh => "吠陀报告", Locale::Ru => "Ведический отчет" };
+    let zwds_btn_lbl = match locale { Locale::Ko => "자미두수 보고서", Locale::En => "ZWDS Report", Locale::Zh => "紫微斗数报告", Locale::Ru => "Отчет ЦВдШ" };
+    let tier_btn_lbl = match locale { Locale::Ko => "운명 티어 보고서", Locale::En => "Destiny Tier", Locale::Zh => "命运阶级报告", Locale::Ru => "Отчет уровня судьбы" };
+    let transit_btn_lbl = match locale { Locale::Ko => "실시간 운세", Locale::En => "Transit Luck", Locale::Zh => "实时运势", Locale::Ru => "Транзитная удача" };
+    let combined_btn_lbl = match locale { Locale::Ko => "통합 분석 보고서", Locale::En => "Combined Report", Locale::Zh => "综合分析报告", Locale::Ru => "Объединенный отчет" };
+    let iching_btn_lbl = match locale { Locale::Ko => "주역 보고서", Locale::En => "I Ching Report", Locale::Zh => "周易报告", Locale::Ru => "Отчет И Цзин" };
+    let western_btn_lbl = match locale { Locale::Ko => "서양 점성학", Locale::En => "Western Astro", Locale::Zh => "西洋占星", Locale::Ru => "Западная астрология" };
+    let hd_btn_lbl = match locale { Locale::Ko => "휴먼디자인 보고서", Locale::En => "Human Design", Locale::Zh => "人类图报告", Locale::Ru => "Дизайн Человека" };
+    let qimen_btn_lbl = match locale { Locale::Ko => "기문둔갑 보고서", Locale::En => "Qimen Report", Locale::Zh => "奇门遁甲", Locale::Ru => "Отчет Ци Мэнь" };
+    let hd_penta_btn_lbl = match locale { Locale::Ko => "HD 펜타/WA", Locale::En => "HD Penta/WA", Locale::Zh => "HD Penta/WA", Locale::Ru => "HD Penta/WA" };
+    let hd_connection_btn_lbl = match locale { Locale::Ko => "HD 컴포지트", Locale::En => "HD Composite", Locale::Zh => "HD合盘报告", Locale::Ru => "HD Композит" };
+    let hd_transit_btn_lbl = match locale { Locale::Ko => "HD 트랜짓/리턴", Locale::En => "HD Transit", Locale::Zh => "HD流年报告", Locale::Ru => "HD Транзит" };
 
     let form_cloned_saju = form.clone();
     let form_cloned_vedic = form.clone();
@@ -3717,22 +3676,18 @@ pub fn ExportWidget() -> Element {
     let form_cloned_western = form.clone();
     let form_cloned_hd = form.clone();
     let form_cloned_comb = form.clone();
+    let form_cloned_qimen = form.clone();
 
     let saju_data_cloned_saju = saju_data.clone();
     let saju_data_cloned_comb = saju_data.clone();
-
     let vedic_data_cloned_vedic = vedic_data.clone();
     let vedic_data_cloned_comb = vedic_data.clone();
-
     let zwds_data_cloned_zwds = zwds_data.clone();
     let zwds_data_cloned_comb = zwds_data.clone();
-
     let tier_data_cloned_tier = tier_data.clone();
     let tier_data_cloned_comb = tier_data.clone();
-
     let transit_data_cloned_transit = transit_data.clone();
     let transit_data_cloned_comb = transit_data.clone();
-
     let iching_data_cloned_iching = iching_data.clone();
     let iching_data_cloned_comb = iching_data.clone();
     let western_data_cloned_western = western_data.clone();
@@ -3744,374 +3699,409 @@ pub fn ExportWidget() -> Element {
     let hd_connection_data_cloned = hd_connection_data.clone();
     let hd_transit_data_cloned = hd_transit_data.clone();
 
-    let form_cloned_qimen = form.clone();
+    let active_cls = "text-sm font-medium py-4 px-4 rounded-xl border transition-all duration-300 cursor-pointer flex flex-col gap-3 bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/80 hover:text-white hover:border-violet-500/50 hover:shadow-lg hover:shadow-violet-900/20 group text-left relative overflow-hidden";
+    let inactive_cls = "text-sm font-medium py-4 px-4 rounded-xl border flex flex-col gap-3 bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-50 text-left";
 
     rsx! {
-        div { class: "px-4 py-4 border-t border-slate-800/50 flex flex-col gap-2.5",
-            p { class: "text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-1", "{widget_title}" }
-
-            // 1. Copy Saju
-            button {
-                class: if has_saju {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_saju,
-                onclick: move |_| {
-                    if let Some(ref data) = saju_data_cloned_saju {
-                        let txt = export_saju_to_markdown(data, &form_cloned_saju, locale);
-                        copy_to_clipboard(&txt);
-                        copied_saju.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_saju.set(false);
-                        });
+        div {
+            class: "fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 md:p-6 animate-in fade-in duration-200",
+            onclick: move |_| show_modal.set(false),
+            
+            div {
+                class: "bg-[#0a0c1a] border border-white/10 shadow-2xl shadow-violet-900/20 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200",
+                onclick: move |e| e.stop_propagation(),
+                
+                // Header
+                div {
+                    class: "flex items-center justify-between px-6 py-5 border-b border-white/5 bg-white/5",
+                    h2 { class: "text-xl md:text-2xl font-bold text-slate-100 flex items-center gap-3 tracking-wide", 
+                        span { "📥" }
+                        "{modal_title}" 
                     }
-                },
-                span { "📝 {saju_btn_lbl}" }
-                if *copied_saju.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
-                }
-            }
-
-            // 2. Copy Vedic
-            button {
-                class: if has_vedic {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_vedic,
-                onclick: move |_| {
-                    if let Some(ref data) = vedic_data_cloned_vedic {
-                        let txt = export_vedic_to_markdown(data, &form_cloned_vedic, locale);
-                        copy_to_clipboard(&txt);
-                        copied_vedic.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_vedic.set(false);
-                        });
+                    button {
+                        class: "text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors text-xl",
+                        onclick: move |_| show_modal.set(false),
+                        "✕"
                     }
-                },
-                span { "✨ {vedic_btn_lbl}" }
-                if *copied_vedic.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
                 }
-            }
+                
+                // Body
+                div {
+                    class: "p-6 overflow-y-auto flex-1",
+                    div { class: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
+                        
+                        // 1. Saju
+                        button {
+                            class: if has_saju { active_cls } else { inactive_cls },
+                            disabled: !has_saju,
+                            onclick: move |_| {
+                                if let Some(ref data) = saju_data_cloned_saju {
+                                    let txt = export_saju_to_markdown(data, &form_cloned_saju, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_saju.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_saju.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "📝" }
+                                if *copied_saju.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{saju_btn_lbl}" }
+                            if has_saju { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
+                        
+                        // 2. Vedic
+                        button {
+                            class: if has_vedic { active_cls } else { inactive_cls },
+                            disabled: !has_vedic,
+                            onclick: move |_| {
+                                if let Some(ref data) = vedic_data_cloned_vedic {
+                                    let txt = export_vedic_to_markdown(data, &form_cloned_vedic, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_vedic.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_vedic.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "✨" }
+                                if *copied_vedic.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{vedic_btn_lbl}" }
+                            if has_vedic { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
 
-            // 3. Copy ZWDS
-            button {
-                class: if has_zwds {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_zwds,
-                onclick: move |_| {
-                    if let Some(ref data) = zwds_data_cloned_zwds {
-                        let txt = export_zwds_to_markdown(data, &form_cloned_zwds, locale);
-                        copy_to_clipboard(&txt);
-                        copied_zwds.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_zwds.set(false);
-                        });
+                        // 3. ZWDS
+                        button {
+                            class: if has_zwds { active_cls } else { inactive_cls },
+                            disabled: !has_zwds,
+                            onclick: move |_| {
+                                if let Some(ref data) = zwds_data_cloned_zwds {
+                                    let txt = export_zwds_to_markdown(data, &form_cloned_zwds, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_zwds.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_zwds.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "🔮" }
+                                if *copied_zwds.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{zwds_btn_lbl}" }
+                            if has_zwds { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
+
+                        // 4. Destiny Tier
+                        button {
+                            class: if has_tier { active_cls } else { inactive_cls },
+                            disabled: !has_tier,
+                            onclick: move |_| {
+                                if let Some(ref data) = tier_data_cloned_tier {
+                                    let txt = export_tier_to_markdown(data, &form_cloned_tier, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_tier.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_tier.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "🏆" }
+                                if *copied_tier.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{tier_btn_lbl}" }
+                            if has_tier { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
+
+                        // 5. Transit
+                        button {
+                            class: if has_transit { active_cls } else { inactive_cls },
+                            disabled: !has_transit,
+                            onclick: move |_| {
+                                if let Some(ref data) = transit_data_cloned_transit {
+                                    let txt = export_transit_to_markdown(data, &form_cloned_transit, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_transit.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_transit.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "⏳" }
+                                if *copied_transit.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{transit_btn_lbl}" }
+                            if has_transit { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
+
+                        // 6. I Ching
+                        button {
+                            class: if has_iching { active_cls } else { inactive_cls },
+                            disabled: !has_iching,
+                            onclick: move |_| {
+                                if let Some(ref data) = iching_data_cloned_iching {
+                                    let txt = export_iching_to_markdown(data, &form_cloned_iching, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_iching.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_iching.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "☯️" }
+                                if *copied_iching.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{iching_btn_lbl}" }
+                            if has_iching { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
+
+                        // 7. Western Astro
+                        button {
+                            class: if has_western { active_cls } else { inactive_cls },
+                            disabled: !has_western,
+                            onclick: move |_| {
+                                if let Some(ref data) = western_data_cloned_western {
+                                    let txt = export_western_to_markdown(data, &form_cloned_western, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_western.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_western.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "🪐" }
+                                if *copied_western.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{western_btn_lbl}" }
+                            if has_western { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
+
+                        // 8. Human Design
+                        button {
+                            class: if has_hd { active_cls } else { inactive_cls },
+                            disabled: !has_hd,
+                            onclick: move |_| {
+                                if let Some(ref data) = hd_data_cloned_hd {
+                                    let txt = export_human_design_to_markdown(data, &form_cloned_hd, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_hd.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_hd.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "🧬" }
+                                if *copied_hd.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{hd_btn_lbl}" }
+                            if has_hd { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
+
+                        // 9. Qimen
+                        button {
+                            class: if has_qimen { active_cls } else { inactive_cls },
+                            disabled: !has_qimen,
+                            onclick: move |_| {
+                                if let Some(ref data) = qimen_data_cloned {
+                                    let txt = export_qimen_to_markdown(data, &form_cloned_qimen, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_qimen.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_qimen.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "🚪" }
+                                if *copied_qimen.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{qimen_btn_lbl}" }
+                            if has_qimen { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
+
+                        // 10. HD Penta
+                        button {
+                            class: if has_hd_penta { active_cls } else { inactive_cls },
+                            disabled: !has_hd_penta,
+                            onclick: move |_| {
+                                if let Some(ref data) = hd_penta_data_cloned {
+                                    let txt = export_hd_penta_to_markdown(data, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_hd_penta.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_hd_penta.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "🌀" }
+                                if *copied_hd_penta.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{hd_penta_btn_lbl}" }
+                            if has_hd_penta { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
+
+                        // 11. HD Connection
+                        button {
+                            class: if has_hd_connection { active_cls } else { inactive_cls },
+                            disabled: !has_hd_connection,
+                            onclick: move |_| {
+                                if let Some(ref data) = hd_connection_data_cloned {
+                                    let txt = export_hd_connection_to_markdown(data, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_hd_connection.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_hd_connection.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "⚡" }
+                                if *copied_hd_connection.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{hd_connection_btn_lbl}" }
+                            if has_hd_connection { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
+
+                        // 12. HD Transit
+                        button {
+                            class: if has_hd_transit { active_cls } else { inactive_cls },
+                            disabled: !has_hd_transit,
+                            onclick: move |_| {
+                                if let Some(ref data) = hd_transit_data_cloned {
+                                    let txt = export_hd_transit_to_markdown(data, locale);
+                                    copy_to_clipboard(&txt);
+                                    copied_hd_transit.set(true);
+                                    spawn(async move {
+                                        gloo_timers::future::TimeoutFuture::new(2000).await;
+                                        copied_hd_transit.set(false);
+                                    });
+                                }
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "✨" }
+                                if *copied_hd_transit.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-slate-500 bg-slate-800/80 px-2 py-1 rounded-full", "Markdown" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide", "{hd_transit_btn_lbl}" }
+                            if has_hd_transit { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
+                        }
+
+                        // 13. Combined
+                        button {
+                            class: if has_saju || has_vedic || has_zwds || has_tier || has_transit || has_iching || has_western || has_hd {
+                                "text-sm font-medium py-4 px-4 rounded-xl border transition-all duration-300 cursor-pointer flex flex-col gap-3 bg-gradient-to-br from-violet-900/40 to-indigo-900/40 border-violet-500/50 text-violet-100 hover:from-violet-800/50 hover:to-indigo-800/50 hover:border-violet-400 hover:shadow-xl hover:shadow-violet-900/30 group text-left relative overflow-hidden sm:col-span-2 lg:col-span-3 mt-2"
+                            } else {
+                                "text-sm font-medium py-4 px-4 rounded-xl border flex flex-col gap-3 bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-50 text-left sm:col-span-2 lg:col-span-3 mt-2"
+                            },
+                            disabled: !has_saju && !has_vedic && !has_zwds && !has_tier && !has_transit && !has_iching && !has_western && !has_hd,
+                            onclick: move |_| {
+                                let txt = export_combined_to_markdown(
+                                    saju_data_cloned_comb.as_ref(),
+                                    vedic_data_cloned_comb.as_ref(),
+                                    zwds_data_cloned_comb.as_ref(),
+                                    tier_data_cloned_comb.as_ref(),
+                                    transit_data_cloned_comb.as_ref(),
+                                    iching_data_cloned_comb.as_ref(),
+                                    western_data_cloned_comb.as_ref(),
+                                    hd_data_cloned_comb.as_ref(),
+                                    &form_cloned_comb,
+                                    locale
+                                );
+                                copy_to_clipboard(&txt);
+                                copied_combined.set(true);
+                                spawn(async move {
+                                    gloo_timers::future::TimeoutFuture::new(2000).await;
+                                    copied_combined.set(false);
+                                });
+                            },
+                            div { class: "flex justify-between items-start w-full",
+                                span { class: "text-2xl group-hover:scale-110 transition-transform", "🌌✨" }
+                                if *copied_combined.read() {
+                                    span { class: "text-[10px] text-emerald-400 font-bold px-2.5 py-1 bg-emerald-400/10 rounded-full animate-in zoom-in", "{t(locale, TK::MsgCopiedToClipboard)}" }
+                                } else {
+                                    span { class: "text-[10px] text-violet-300 bg-violet-900/50 px-2 py-1 rounded-full", "All" }
+                                }
+                            }
+                            span { class: "mt-1 tracking-wide font-bold", "{combined_btn_lbl}" }
+                            if has_saju || has_vedic || has_zwds || has_tier || has_transit || has_iching || has_western || has_hd {
+                                div { class: "absolute inset-0 bg-gradient-to-tr from-white/0 via-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity" }
+                            }
+                        }
                     }
-                },
-                span { "🔮 {zwds_btn_lbl}" }
-                if *copied_zwds.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
-                }
-            }
-
-            // 4. Copy Destiny Tier
-            button {
-                class: if has_tier {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_tier,
-                onclick: move |_| {
-                    if let Some(ref data) = tier_data_cloned_tier {
-                        let txt = export_tier_to_markdown(data, &form_cloned_tier, locale);
-                        copy_to_clipboard(&txt);
-                        copied_tier.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_tier.set(false);
-                        });
-                    }
-                },
-                span { "🏆 {tier_btn_lbl}" }
-                if *copied_tier.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
-                }
-            }
-
-            // 5. Copy Transit Luck
-            button {
-                class: if has_transit {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_transit,
-                onclick: move |_| {
-                    if let Some(ref data) = transit_data_cloned_transit {
-                        let txt = export_transit_to_markdown(data, &form_cloned_transit, locale);
-                        copy_to_clipboard(&txt);
-                        copied_transit.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_transit.set(false);
-                        });
-                    }
-                },
-                span { "⏳ {transit_btn_lbl}" }
-                if *copied_transit.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
-                }
-            }
-
-            // 5.5 Copy I Ching
-            button {
-                class: if has_iching {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_iching,
-                onclick: move |_| {
-                    if let Some(ref data) = iching_data_cloned_iching {
-                        let txt = export_iching_to_markdown(data, &form_cloned_iching, locale);
-                        copy_to_clipboard(&txt);
-                        copied_iching.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_iching.set(false);
-                        });
-                    }
-                },
-                span { "☯️ {iching_btn_lbl}" }
-                if *copied_iching.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
-                }
-            }
-
-            // 5.6 Copy Western Astrology
-            button {
-                class: if has_western {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_western,
-                onclick: move |_| {
-                    if let Some(ref data) = western_data_cloned_western {
-                        let txt = export_western_to_markdown(data, &form_cloned_western, locale);
-                        copy_to_clipboard(&txt);
-                        copied_western.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_western.set(false);
-                        });
-                    }
-                },
-                span { "🪐 {western_btn_lbl}" }
-                if *copied_western.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
-                }
-            }
-
-            // 5.7 Copy Human Design
-            button {
-                class: if has_hd {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_hd,
-                onclick: move |_| {
-                    if let Some(ref data) = hd_data_cloned_hd {
-                        let txt = export_human_design_to_markdown(data, &form_cloned_hd, locale);
-                        copy_to_clipboard(&txt);
-                        copied_hd.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_hd.set(false);
-                        });
-                    }
-                },
-                span { "🧬 {hd_btn_lbl}" }
-                if *copied_hd.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
-                }
-            }
-
-            // 5.8 Copy Qimen
-            button {
-                class: if has_qimen {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_qimen,
-                onclick: move |_| {
-                    if let Some(ref data) = qimen_data_cloned {
-                        let txt = export_qimen_to_markdown(data, &form_cloned_qimen, locale);
-                        copy_to_clipboard(&txt);
-                        copied_qimen.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_qimen.set(false);
-                        });
-                    }
-                },
-                span { "🚪 {qimen_btn_lbl}" }
-                if *copied_qimen.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
-                }
-            }
-
-            // 5.9 Copy HD Penta
-            button {
-                class: if has_hd_penta {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_hd_penta,
-                onclick: move |_| {
-                    if let Some(ref data) = hd_penta_data_cloned {
-                        let txt = export_hd_penta_to_markdown(data, locale);
-                        copy_to_clipboard(&txt);
-                        copied_hd_penta.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_hd_penta.set(false);
-                        });
-                    }
-                },
-                span { "🌀 {hd_penta_btn_lbl}" }
-                if *copied_hd_penta.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
-                }
-            }
-
-            // 5.10 Copy HD Connection
-            button {
-                class: if has_hd_connection {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_hd_connection,
-                onclick: move |_| {
-                    if let Some(ref data) = hd_connection_data_cloned {
-                        let txt = export_hd_connection_to_markdown(data, locale);
-                        copy_to_clipboard(&txt);
-                        copied_hd_connection.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_hd_connection.set(false);
-                        });
-                    }
-                },
-                span { "⚡ {hd_connection_btn_lbl}" }
-                if *copied_hd_connection.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
-                }
-            }
-
-            // 5.11 Copy HD Transit
-            button {
-                class: if has_hd_transit {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-slate-800/40 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_hd_transit,
-                onclick: move |_| {
-                    if let Some(ref data) = hd_transit_data_cloned {
-                        let txt = export_hd_transit_to_markdown(data, locale);
-                        copy_to_clipboard(&txt);
-                        copied_hd_transit.set(true);
-                        spawn(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            copied_hd_transit.set(false);
-                        });
-                    }
-                },
-                span { "✨ {hd_transit_btn_lbl}" }
-                if *copied_hd_transit.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-slate-500", "Markdown" }
-                }
-            }
-
-            // 6. Copy Combined
-            button {
-                class: if has_saju || has_vedic || has_zwds || has_tier || has_transit || has_iching || has_western || has_hd {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border transition-all duration-200 cursor-pointer flex items-center justify-between bg-gradient-to-r from-violet-900/20 to-indigo-900/20 border-violet-800/40 text-violet-300 hover:from-violet-850/40 hover:to-indigo-850/40 hover:text-white hover:border-violet-600/50"
-                } else {
-                    "w-full text-xs font-semibold py-2 px-3 rounded-lg border flex items-center justify-between bg-slate-900/20 border-slate-800/40 text-slate-600 cursor-not-allowed opacity-40"
-                },
-                disabled: !has_saju && !has_vedic && !has_zwds && !has_tier && !has_transit && !has_iching && !has_western && !has_hd,
-                onclick: move |_| {
-                    let txt = export_combined_to_markdown(
-                        saju_data_cloned_comb.as_ref(),
-                        vedic_data_cloned_comb.as_ref(),
-                        zwds_data_cloned_comb.as_ref(),
-                        tier_data_cloned_comb.as_ref(),
-                        transit_data_cloned_comb.as_ref(),
-                        iching_data_cloned_comb.as_ref(),
-                        western_data_cloned_comb.as_ref(),
-                        hd_data_cloned_comb.as_ref(),
-                        &form_cloned_comb,
-                        locale
-                    );
-                    copy_to_clipboard(&txt);
-                    copied_combined.set(true);
-                    spawn(async move {
-                        gloo_timers::future::TimeoutFuture::new(2000).await;
-                        copied_combined.set(false);
-                    });
-                },
-                span { "🌌✨ {combined_btn_lbl}" }
-                if *copied_combined.read() {
-                    span { class: "text-[10px] text-emerald-400 font-bold transition-all duration-300 animate-pulse", "{t(locale, TK::MsgCopiedToClipboard)}" }
-                } else {
-                    span { class: "text-[10px] text-violet-400/80", "All" }
                 }
             }
         }
     }
 }
+
 
 // ============================================================
 // 자미두수 (ZWDS) 마크다운 포맷터
