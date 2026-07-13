@@ -105,33 +105,35 @@
 <a href=#105 id=105 data-nosnippet>105</a>    <span class="kw">pub </span>penta_forms: Signal&lt;Vec&lt;FormState&gt;&gt;,
 <a href=#106 id=106 data-nosnippet>106</a>    <span class="kw">pub </span>qimen: Signal&lt;AnalysisTaskState&lt;QimenAnalysisOutput&gt;&gt;,
 <a href=#107 id=107 data-nosnippet>107</a>    <span class="kw">pub </span>locale: Signal&lt;Locale&gt;,
-<a href=#108 id=108 data-nosnippet>108</a>}
-<a href=#109 id=109 data-nosnippet>109</a>
-<a href=#110 id=110 data-nosnippet>110</a><span class="kw">impl </span>AnalysisState {
-<a href=#111 id=111 data-nosnippet>111</a>    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-<a href=#112 id=112 data-nosnippet>112</a>        <span class="self">Self </span>{
-<a href=#113 id=113 data-nosnippet>113</a>            form: Signal::new(FormState::default()),
-<a href=#114 id=114 data-nosnippet>114</a>            form2: Signal::new(FormState::default()),
-<a href=#115 id=115 data-nosnippet>115</a>            saju: Signal::new(AnalysisTaskState::default()),
-<a href=#116 id=116 data-nosnippet>116</a>            vedic: Signal::new(AnalysisTaskState::default()),
-<a href=#117 id=117 data-nosnippet>117</a>            transit: Signal::new(AnalysisTaskState::default()),
-<a href=#118 id=118 data-nosnippet>118</a>            tier: Signal::new(AnalysisTaskState::default()),
-<a href=#119 id=119 data-nosnippet>119</a>            compat: Signal::new(AnalysisTaskState::default()),
-<a href=#120 id=120 data-nosnippet>120</a>            zwds: Signal::new(AnalysisTaskState::default()),
-<a href=#121 id=121 data-nosnippet>121</a>            iching: Signal::new(AnalysisTaskState::default()),
-<a href=#122 id=122 data-nosnippet>122</a>            western: Signal::new(AnalysisTaskState::default()),
-<a href=#123 id=123 data-nosnippet>123</a>            human_design: Signal::new(AnalysisTaskState::default()),
-<a href=#124 id=124 data-nosnippet>124</a>            hd_connection: Signal::new(AnalysisTaskState::default()),
-<a href=#125 id=125 data-nosnippet>125</a>            hd_transit: Signal::new(AnalysisTaskState::default()),
-<a href=#126 id=126 data-nosnippet>126</a>            hd_penta: Signal::new(AnalysisTaskState::default()),
-<a href=#127 id=127 data-nosnippet>127</a>            penta_forms: Signal::new(<span class="macro">vec!</span>[
-<a href=#128 id=128 data-nosnippet>128</a>                FormState::default(),
+<a href=#108 id=108 data-nosnippet>108</a>    <span class="kw">pub </span>show_export_modal: Signal&lt;bool&gt;,
+<a href=#109 id=109 data-nosnippet>109</a>}
+<a href=#110 id=110 data-nosnippet>110</a>
+<a href=#111 id=111 data-nosnippet>111</a><span class="kw">impl </span>AnalysisState {
+<a href=#112 id=112 data-nosnippet>112</a>    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+<a href=#113 id=113 data-nosnippet>113</a>        <span class="self">Self </span>{
+<a href=#114 id=114 data-nosnippet>114</a>            form: Signal::new(FormState::default()),
+<a href=#115 id=115 data-nosnippet>115</a>            form2: Signal::new(FormState::default()),
+<a href=#116 id=116 data-nosnippet>116</a>            saju: Signal::new(AnalysisTaskState::default()),
+<a href=#117 id=117 data-nosnippet>117</a>            vedic: Signal::new(AnalysisTaskState::default()),
+<a href=#118 id=118 data-nosnippet>118</a>            transit: Signal::new(AnalysisTaskState::default()),
+<a href=#119 id=119 data-nosnippet>119</a>            tier: Signal::new(AnalysisTaskState::default()),
+<a href=#120 id=120 data-nosnippet>120</a>            compat: Signal::new(AnalysisTaskState::default()),
+<a href=#121 id=121 data-nosnippet>121</a>            zwds: Signal::new(AnalysisTaskState::default()),
+<a href=#122 id=122 data-nosnippet>122</a>            iching: Signal::new(AnalysisTaskState::default()),
+<a href=#123 id=123 data-nosnippet>123</a>            western: Signal::new(AnalysisTaskState::default()),
+<a href=#124 id=124 data-nosnippet>124</a>            human_design: Signal::new(AnalysisTaskState::default()),
+<a href=#125 id=125 data-nosnippet>125</a>            hd_connection: Signal::new(AnalysisTaskState::default()),
+<a href=#126 id=126 data-nosnippet>126</a>            hd_transit: Signal::new(AnalysisTaskState::default()),
+<a href=#127 id=127 data-nosnippet>127</a>            hd_penta: Signal::new(AnalysisTaskState::default()),
+<a href=#128 id=128 data-nosnippet>128</a>            penta_forms: Signal::new(<span class="macro">vec!</span>[
 <a href=#129 id=129 data-nosnippet>129</a>                FormState::default(),
 <a href=#130 id=130 data-nosnippet>130</a>                FormState::default(),
-<a href=#131 id=131 data-nosnippet>131</a>            ]), <span class="comment">// Minimum 3 people
-<a href=#132 id=132 data-nosnippet>132</a>            </span>qimen: Signal::new(AnalysisTaskState::default()),
-<a href=#133 id=133 data-nosnippet>133</a>            locale: Signal::new(Locale::Ko),
-<a href=#134 id=134 data-nosnippet>134</a>        }
-<a href=#135 id=135 data-nosnippet>135</a>    }
-<a href=#136 id=136 data-nosnippet>136</a>}
+<a href=#131 id=131 data-nosnippet>131</a>                FormState::default(),
+<a href=#132 id=132 data-nosnippet>132</a>            ]), <span class="comment">// Minimum 3 people
+<a href=#133 id=133 data-nosnippet>133</a>            </span>qimen: Signal::new(AnalysisTaskState::default()),
+<a href=#134 id=134 data-nosnippet>134</a>            locale: Signal::new(Locale::Ko),
+<a href=#135 id=135 data-nosnippet>135</a>            show_export_modal: Signal::new(<span class="bool-val">false</span>),
+<a href=#136 id=136 data-nosnippet>136</a>        }
+<a href=#137 id=137 data-nosnippet>137</a>    }
+<a href=#138 id=138 data-nosnippet>138</a>}
 </code></pre></div></section></main></body></html>
