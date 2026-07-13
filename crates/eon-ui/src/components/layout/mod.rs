@@ -9,7 +9,7 @@ pub fn AppLayout() -> Element {
     let state = use_context::<AnalysisState>();
 
     // state.form 이 변경되면 모든 분석 실시간 자동 비동기 수행
-    let mut effect_state = state.clone();
+    let effect_state = state.clone();
     use_effect(move || {
         let form = effect_state.form.read().clone();
 
