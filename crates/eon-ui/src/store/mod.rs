@@ -105,6 +105,7 @@ pub struct AnalysisState {
     pub penta_forms: Signal<Vec<FormState>>,
     pub qimen: Signal<AnalysisTaskState<QimenAnalysisOutput>>,
     pub locale: Signal<Locale>,
+    pub show_export_modal: Signal<bool>,
 }
 
 impl AnalysisState {
@@ -131,6 +132,7 @@ impl AnalysisState {
             ]), // Minimum 3 people
             qimen: Signal::new(AnalysisTaskState::default()),
             locale: Signal::new(Locale::Ko),
+            show_export_modal: Signal::new(false),
         }
     }
 }

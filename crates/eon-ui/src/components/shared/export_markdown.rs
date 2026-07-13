@@ -3554,9 +3554,8 @@ pub fn export_combined_to_markdown(
 
 #[component]
 pub fn ExportWidget() -> Element {
-    let state = use_context::<AnalysisState>();
+    let mut state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
-    let mut show_modal = use_signal(|| false);
 
     let widget_title = match locale {
         Locale::Ko => "분석 결과 내보내기",
@@ -3569,23 +3568,17 @@ pub fn ExportWidget() -> Element {
         div { class: "px-4 py-4 border-t border-slate-800/50 mt-auto",
             button {
                 class: "w-full py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border border-violet-500/30 text-violet-300 font-medium hover:bg-violet-500/30 hover:text-white transition-all duration-300 shadow-md shadow-violet-900/20 group",
-                onclick: move |_| show_modal.set(true),
+                onclick: move |_| state.show_export_modal.set(true),
                 span { class: "text-lg group-hover:-translate-y-1 transition-transform", "📥" }
                 span { class: "tracking-wide text-sm", "{widget_title}" }
-            }
-        }
-
-        if *show_modal.read() {
-            ExportModal {
-                show_modal: show_modal
             }
         }
     }
 }
 
 #[component]
-fn ExportModal(mut show_modal: Signal<bool>) -> Element {
-    let state = use_context::<AnalysisState>();
+pub fn ExportModal() -> Element {
+    let mut state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
 
     let saju_state = state.saju.read();
@@ -3773,7 +3766,7 @@ fn ExportModal(mut show_modal: Signal<bool>) -> Element {
     rsx! {
         div {
             class: "fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 md:p-6 animate-in fade-in duration-200",
-            onclick: move |_| show_modal.set(false),
+            onclick: move |_| state.show_export_modal.set(false),
 
             div {
                 class: "bg-[#0a0c1a] border border-white/10 shadow-2xl shadow-violet-900/20 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200",
@@ -3788,7 +3781,7 @@ fn ExportModal(mut show_modal: Signal<bool>) -> Element {
                     }
                     button {
                         class: "text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors text-xl",
-                        onclick: move |_| show_modal.set(false),
+                        onclick: move |_| state.show_export_modal.set(false),
                         "✕"
                     }
                 }

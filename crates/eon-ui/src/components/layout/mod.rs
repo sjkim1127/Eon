@@ -9,12 +9,13 @@ pub fn AppLayout() -> Element {
     let state = use_context::<AnalysisState>();
 
     // state.form 이 변경되면 모든 분석 실시간 자동 비동기 수행
+    let mut effect_state = state.clone();
     use_effect(move || {
-        let form = state.form.read().clone();
+        let form = effect_state.form.read().clone();
 
         // 1. Saju (Simulation 포함)
         spawn({
-            let mut state = state.clone();
+            let mut state = effect_state.clone();
             let form = form.clone();
             async move {
                 state.saju.write().status = TaskStatus::Loading;
@@ -40,7 +41,7 @@ pub fn AppLayout() -> Element {
 
         // 2. Vedic
         spawn({
-            let mut state = state.clone();
+            let mut state = effect_state.clone();
             let form = form.clone();
             async move {
                 state.vedic.write().status = TaskStatus::Loading;
@@ -65,7 +66,7 @@ pub fn AppLayout() -> Element {
 
         // 3. Transit
         spawn({
-            let mut state = state.clone();
+            let mut state = effect_state.clone();
             let form = form.clone();
             async move {
                 state.transit.write().status = TaskStatus::Loading;
@@ -91,7 +92,7 @@ pub fn AppLayout() -> Element {
 
         // 4. ZWDS
         spawn({
-            let mut state = state.clone();
+            let mut state = effect_state.clone();
             let form = form.clone();
             async move {
                 state.zwds.write().status = TaskStatus::Loading;
@@ -112,7 +113,7 @@ pub fn AppLayout() -> Element {
 
         // 5. IChing (주역 하락수)
         spawn({
-            let mut state = state.clone();
+            let mut state = effect_state.clone();
             let form = form.clone();
             async move {
                 state.iching.write().status = TaskStatus::Loading;
@@ -137,7 +138,7 @@ pub fn AppLayout() -> Element {
 
         // 6. Western (서양 점성학)
         spawn({
-            let mut state = state.clone();
+            let mut state = effect_state.clone();
             let form = form.clone();
             async move {
                 state.western.write().status = TaskStatus::Loading;
@@ -159,7 +160,7 @@ pub fn AppLayout() -> Element {
 
         // 7. Human Design
         spawn({
-            let mut state = state.clone();
+            let mut state = effect_state.clone();
             let form = form.clone();
             async move {
                 state.human_design.write().status = TaskStatus::Loading;
@@ -179,7 +180,7 @@ pub fn AppLayout() -> Element {
         });
         // 8. Qimen Dunjia
         spawn({
-            let mut state = state.clone();
+            let mut state = effect_state.clone();
             let form = form.clone();
             async move {
                 state.qimen.write().status = TaskStatus::Loading;
@@ -210,6 +211,10 @@ pub fn AppLayout() -> Element {
                 div { class: "p-6 w-full max-w-6xl mx-auto space-y-6 flex-1",
                     Outlet::<Route> {}
                 }
+            }
+
+            if *state.show_export_modal.read() {
+                crate::components::shared::export_markdown::ExportModal {}
             }
         }
     }
