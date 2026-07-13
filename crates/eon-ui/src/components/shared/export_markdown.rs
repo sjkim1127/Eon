@@ -3574,7 +3574,7 @@ pub fn ExportWidget() -> Element {
                 span { class: "tracking-wide text-sm", "{widget_title}" }
             }
         }
-        
+
         if *show_modal.read() {
             ExportModal {
                 show_modal: show_modal
@@ -3611,13 +3611,16 @@ fn ExportModal(mut show_modal: Signal<bool>) -> Element {
     let has_qimen = qimen_state.status == TaskStatus::Success && qimen_state.data.is_some();
 
     let hd_penta_state = state.hd_penta.read();
-    let has_hd_penta = hd_penta_state.status == TaskStatus::Success && hd_penta_state.data.is_some();
+    let has_hd_penta =
+        hd_penta_state.status == TaskStatus::Success && hd_penta_state.data.is_some();
 
     let hd_connection_state = state.hd_connection.read();
-    let has_hd_connection = hd_connection_state.status == TaskStatus::Success && hd_connection_state.data.is_some();
+    let has_hd_connection =
+        hd_connection_state.status == TaskStatus::Success && hd_connection_state.data.is_some();
 
     let hd_transit_state = state.hd_transit.read();
-    let has_hd_transit = hd_transit_state.status == TaskStatus::Success && hd_transit_state.data.is_some();
+    let has_hd_transit =
+        hd_transit_state.status == TaskStatus::Success && hd_transit_state.data.is_some();
 
     let saju_data = saju_state.data.clone();
     let vedic_data = vedic_state.data.clone();
@@ -3653,19 +3656,84 @@ fn ExportModal(mut show_modal: Signal<bool>) -> Element {
         Locale::Ru => "Экспорт отчетов",
     };
 
-    let saju_btn_lbl = match locale { Locale::Ko => "사주 보고서", Locale::En => "Saju Report", Locale::Zh => "八字报告", Locale::Ru => "Отчет Бацзы" };
-    let vedic_btn_lbl = match locale { Locale::Ko => "베딕 보고서", Locale::En => "Vedic Report", Locale::Zh => "吠陀报告", Locale::Ru => "Ведический отчет" };
-    let zwds_btn_lbl = match locale { Locale::Ko => "자미두수 보고서", Locale::En => "ZWDS Report", Locale::Zh => "紫微斗数报告", Locale::Ru => "Отчет ЦВдШ" };
-    let tier_btn_lbl = match locale { Locale::Ko => "운명 티어 보고서", Locale::En => "Destiny Tier", Locale::Zh => "命运阶级报告", Locale::Ru => "Отчет уровня судьбы" };
-    let transit_btn_lbl = match locale { Locale::Ko => "실시간 운세", Locale::En => "Transit Luck", Locale::Zh => "实时运势", Locale::Ru => "Транзитная удача" };
-    let combined_btn_lbl = match locale { Locale::Ko => "통합 분석 보고서", Locale::En => "Combined Report", Locale::Zh => "综合分析报告", Locale::Ru => "Объединенный отчет" };
-    let iching_btn_lbl = match locale { Locale::Ko => "주역 보고서", Locale::En => "I Ching Report", Locale::Zh => "周易报告", Locale::Ru => "Отчет И Цзин" };
-    let western_btn_lbl = match locale { Locale::Ko => "서양 점성학", Locale::En => "Western Astro", Locale::Zh => "西洋占星", Locale::Ru => "Западная астрология" };
-    let hd_btn_lbl = match locale { Locale::Ko => "휴먼디자인 보고서", Locale::En => "Human Design", Locale::Zh => "人类图报告", Locale::Ru => "Дизайн Человека" };
-    let qimen_btn_lbl = match locale { Locale::Ko => "기문둔갑 보고서", Locale::En => "Qimen Report", Locale::Zh => "奇门遁甲", Locale::Ru => "Отчет Ци Мэнь" };
-    let hd_penta_btn_lbl = match locale { Locale::Ko => "HD 펜타/WA", Locale::En => "HD Penta/WA", Locale::Zh => "HD Penta/WA", Locale::Ru => "HD Penta/WA" };
-    let hd_connection_btn_lbl = match locale { Locale::Ko => "HD 컴포지트", Locale::En => "HD Composite", Locale::Zh => "HD合盘报告", Locale::Ru => "HD Композит" };
-    let hd_transit_btn_lbl = match locale { Locale::Ko => "HD 트랜짓/리턴", Locale::En => "HD Transit", Locale::Zh => "HD流年报告", Locale::Ru => "HD Транзит" };
+    let saju_btn_lbl = match locale {
+        Locale::Ko => "사주 보고서",
+        Locale::En => "Saju Report",
+        Locale::Zh => "八字报告",
+        Locale::Ru => "Отчет Бацзы",
+    };
+    let vedic_btn_lbl = match locale {
+        Locale::Ko => "베딕 보고서",
+        Locale::En => "Vedic Report",
+        Locale::Zh => "吠陀报告",
+        Locale::Ru => "Ведический отчет",
+    };
+    let zwds_btn_lbl = match locale {
+        Locale::Ko => "자미두수 보고서",
+        Locale::En => "ZWDS Report",
+        Locale::Zh => "紫微斗数报告",
+        Locale::Ru => "Отчет ЦВдШ",
+    };
+    let tier_btn_lbl = match locale {
+        Locale::Ko => "운명 티어 보고서",
+        Locale::En => "Destiny Tier",
+        Locale::Zh => "命运阶级报告",
+        Locale::Ru => "Отчет уровня судьбы",
+    };
+    let transit_btn_lbl = match locale {
+        Locale::Ko => "실시간 운세",
+        Locale::En => "Transit Luck",
+        Locale::Zh => "实时运势",
+        Locale::Ru => "Транзитная удача",
+    };
+    let combined_btn_lbl = match locale {
+        Locale::Ko => "통합 분석 보고서",
+        Locale::En => "Combined Report",
+        Locale::Zh => "综合分析报告",
+        Locale::Ru => "Объединенный отчет",
+    };
+    let iching_btn_lbl = match locale {
+        Locale::Ko => "주역 보고서",
+        Locale::En => "I Ching Report",
+        Locale::Zh => "周易报告",
+        Locale::Ru => "Отчет И Цзин",
+    };
+    let western_btn_lbl = match locale {
+        Locale::Ko => "서양 점성학",
+        Locale::En => "Western Astro",
+        Locale::Zh => "西洋占星",
+        Locale::Ru => "Западная астрология",
+    };
+    let hd_btn_lbl = match locale {
+        Locale::Ko => "휴먼디자인 보고서",
+        Locale::En => "Human Design",
+        Locale::Zh => "人类图报告",
+        Locale::Ru => "Дизайн Человека",
+    };
+    let qimen_btn_lbl = match locale {
+        Locale::Ko => "기문둔갑 보고서",
+        Locale::En => "Qimen Report",
+        Locale::Zh => "奇门遁甲",
+        Locale::Ru => "Отчет Ци Мэнь",
+    };
+    let hd_penta_btn_lbl = match locale {
+        Locale::Ko => "HD 펜타/WA",
+        Locale::En => "HD Penta/WA",
+        Locale::Zh => "HD Penta/WA",
+        Locale::Ru => "HD Penta/WA",
+    };
+    let hd_connection_btn_lbl = match locale {
+        Locale::Ko => "HD 컴포지트",
+        Locale::En => "HD Composite",
+        Locale::Zh => "HD合盘报告",
+        Locale::Ru => "HD Композит",
+    };
+    let hd_transit_btn_lbl = match locale {
+        Locale::Ko => "HD 트랜짓/리턴",
+        Locale::En => "HD Transit",
+        Locale::Zh => "HD流年报告",
+        Locale::Ru => "HD Транзит",
+    };
 
     let form_cloned_saju = form.clone();
     let form_cloned_vedic = form.clone();
@@ -3706,17 +3774,17 @@ fn ExportModal(mut show_modal: Signal<bool>) -> Element {
         div {
             class: "fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 md:p-6 animate-in fade-in duration-200",
             onclick: move |_| show_modal.set(false),
-            
+
             div {
                 class: "bg-[#0a0c1a] border border-white/10 shadow-2xl shadow-violet-900/20 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200",
                 onclick: move |e| e.stop_propagation(),
-                
+
                 // Header
                 div {
                     class: "flex items-center justify-between px-6 py-5 border-b border-white/5 bg-white/5",
-                    h2 { class: "text-xl md:text-2xl font-bold text-slate-100 flex items-center gap-3 tracking-wide", 
+                    h2 { class: "text-xl md:text-2xl font-bold text-slate-100 flex items-center gap-3 tracking-wide",
                         span { "📥" }
-                        "{modal_title}" 
+                        "{modal_title}"
                     }
                     button {
                         class: "text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors text-xl",
@@ -3724,12 +3792,12 @@ fn ExportModal(mut show_modal: Signal<bool>) -> Element {
                         "✕"
                     }
                 }
-                
+
                 // Body
                 div {
                     class: "p-6 overflow-y-auto flex-1",
                     div { class: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
-                        
+
                         // 1. Saju
                         button {
                             class: if has_saju { active_cls } else { inactive_cls },
@@ -3756,7 +3824,7 @@ fn ExportModal(mut show_modal: Signal<bool>) -> Element {
                             span { class: "mt-1 tracking-wide", "{saju_btn_lbl}" }
                             if has_saju { div { class: "absolute inset-0 bg-gradient-to-tr from-violet-500/0 via-violet-500/0 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" } }
                         }
-                        
+
                         // 2. Vedic
                         button {
                             class: if has_vedic { active_cls } else { inactive_cls },
@@ -4101,7 +4169,6 @@ fn ExportModal(mut show_modal: Signal<bool>) -> Element {
         }
     }
 }
-
 
 // ============================================================
 // 자미두수 (ZWDS) 마크다운 포맷터
