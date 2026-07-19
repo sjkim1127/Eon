@@ -115,7 +115,7 @@ jobs:
           bash scripts/prepare_web_dist.sh target/dx/eon-ui/release/web/public 2>&1 | tee web-prepare.log
       - name: Upload web build diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: eon-web-build
           path: |
