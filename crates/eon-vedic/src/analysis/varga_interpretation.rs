@@ -41,7 +41,11 @@ impl VargaInterpretationEngine {
                 } else {
                     "Standard".to_string()
                 },
-                description: format!("{:?} occupies the same sign in D1 and D9 charts.", planet),
+                description: if is_vargottama {
+                    format!("{:?} occupies the same sign in D1 and D9 charts.", planet)
+                } else {
+                    format!("{:?} occupies different signs in D1 and D9 charts.", planet)
+                },
                 reasons: {
                     let mut r = Vec::new();
                     if is_vargottama {

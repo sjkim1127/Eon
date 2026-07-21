@@ -11,6 +11,7 @@ use crate::core::pillars::FourPillars;
 use crate::core::pillars::SajuError;
 use crate::core::stem::HeavenlyStem;
 use crate::core::ten_gods::TenGod;
+use chrono::Datelike;
 use eon_core::Gender;
 use serde::{Deserialize, Serialize};
 
@@ -336,20 +337,19 @@ impl LuckAnalysis {
             .map(|m| MonthlyLuck::calculate(current_year, m, pillars))
             .collect();
 
-        // 일운 계산 (기준 연도/월의 모든 날짜 계산)
-        // 현재는 단순히 1~28/31일까지를 계산함.
-        // TODO: 정확한 월별 일수를 위해 chrono 등을 활용하거나 고정 31일까지 시도 (유효하지 않은 날짜는 skip 가능)
-        let mut daily_lucks = Vec::new();
-        // 실제 분석 기준 시점(term_year/month) 또는 current_year의 현재 월 기준
-        // 여기서는 calculate 인자로 들어온 current_year와 term_month(분석 기준월)를 사용하거나,
-        // 외부에서 context를 통해 주입받은 값을 사용하는 것이 좋지만,
-        // 현재 시그니처에서는 current_year만 명확하므로 12개월 중 현재 월(term_month) 기준 31일을 채움.
-        for d in 1..=31 {
-            // 날짜 유효성 체크는 calculate_day_ganzi 내부 혹은 NaiveDate로 수행
-            if chrono::NaiveDate::from_ymd_opt(current_year, term_month, d).is_some() {
-                daily_lucks.push(DailyLuck::calculate(current_year, term_month, d, pillars));
-            }
+        // 일운 계산 (기준 연도/월의 모든 날짜 계산 - 윤년 및 해당 월의 실제 말일까지)
+        let days_in_month = if term_month == 12 {
+            chrono::NaiveDate::from_ymd_opt(current_year + 1, 1, 1)
+        } else {
+            chrono::NaiveDate::from_ymd_opt(current_year, term_month + 1, 1)
         }
+        .and_then(|next_1st| next_1st.pred_opt())
+        .map(|last_day| last_day.day())
+        .unwrap_or(30);
+
+        let daily_lucks: Vec<DailyLuck> = (1..=days_in_month)
+            .map(|d| DailyLuck::calculate(current_year, term_month, d, pillars))
+            .collect();
 
         // 시운 계산 (기준 일자의 24시간 또는 12시진)
         let mut hourly_lucks = Vec::new();

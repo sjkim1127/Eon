@@ -1984,9 +1984,9 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
     s.push_str("\n**Arudha Padas**:\n");
     for ap in &data.chart.arudha_padas {
         s.push_str(&format!(
-            "- **{}**: House {} ({})\n",
+            "- **{}**: Sign {} ({})\n",
             ap.name,
-            ap.house,
+            ap.rasi,
             rasi_name(locale, ap.rasi)
         ));
     }
@@ -2058,10 +2058,16 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
         "- **Dagdha Rashis (연소된 사인)**: {}\n",
         dagdha_names.join(", ")
     ));
+    let tz: chrono_tz::Tz = data
+        .meta
+        .analysis_timezone
+        .parse()
+        .unwrap_or(chrono_tz::UTC);
+
     s.push_str(&format!(
         "- **Sunrise/Sunset (일출/일몰)**: {} / {} ({})\n",
-        pan.sunrise.format("%H:%M:%S"),
-        pan.sunset.format("%H:%M:%S"),
+        pan.sunrise.with_timezone(&tz).format("%H:%M:%S"),
+        pan.sunset.with_timezone(&tz).format("%H:%M:%S"),
         if pan.is_day_birth {
             "Day Birth ☀️"
         } else {
@@ -2073,23 +2079,25 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
     let (guli_start, guli_end) = pan.gulika;
     s.push_str(&format!(
         "- **Rahu Kalam (라후 칼람)**: {} ~ {}\n",
-        rahu_start.format("%H:%M"),
-        rahu_end.format("%H:%M")
+        rahu_start.with_timezone(&tz).format("%H:%M"),
+        rahu_end.with_timezone(&tz).format("%H:%M")
     ));
     s.push_str(&format!(
         "- **Yamaganda (야마간다)**: {} ~ {}\n",
-        yama_start.format("%H:%M"),
-        yama_end.format("%H:%M")
+        yama_start.with_timezone(&tz).format("%H:%M"),
+        yama_end.with_timezone(&tz).format("%H:%M")
     ));
     s.push_str(&format!(
         "- **Gulika (굴리카)**: {} ~ {}\n\n",
-        guli_start.format("%H:%M"),
-        guli_end.format("%H:%M")
+        guli_start.with_timezone(&tz).format("%H:%M"),
+        guli_end.with_timezone(&tz).format("%H:%M")
     ));
 
     // KP System cusps/significators
     if let Some(kp) = &data.kp_analysis {
         s.push_str("### 3.7 KP System unequal 하우스 및 지표성 (KP Significators)\n\n");
+        s.push_str("> [!NOTE]\n");
+        s.push_str("> KP 차트의 하우스는 Placidus 기반의 unequal 하우스 시스템(KP Cusp)을 사용합니다. 따라서 기본 D1 차트(Whole Sign)의 하우스 위치와 행성 배치가 다를 수 있습니다.\n\n");
         s.push_str("**KP House Cusps**:\n");
         s.push_str("| Cusp | Longitude | Sign Lord | Star Lord | Sub Lord |\n");
         s.push_str("| --- | --- | --- | --- | --- |\n");
@@ -3262,6 +3270,8 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
         ),
     };
     s.push_str(&format!("### {}\n\n", shadbala_title));
+    s.push_str("> [!NOTE]\n");
+    s.push_str("> Shadbala 및 Bhava Bala 등의 점수는 전통적인 점성술 수치인 Virupas(비루파) 단위를 사용합니다. 총점이 300 이상일 경우 해당 행성이나 하우스가 평균 이상의 강한 세력을 가졌다고 평가할 수 있습니다.\n\n");
     s.push_str(&format!(
         "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |\n",
         sb_planet,

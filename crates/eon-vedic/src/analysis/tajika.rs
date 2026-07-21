@@ -228,25 +228,25 @@ impl TajikaBala {
             let h = p.house_index;
             match planet {
                 VedicPlanet::Sun if h == 9 => {
-                    score += 5;
+                    score += 1;
                 }
                 VedicPlanet::Moon if h == 4 => {
-                    score += 5;
+                    score += 1;
                 }
                 VedicPlanet::Mars if h == 6 => {
-                    score += 5;
+                    score += 1;
                 }
                 VedicPlanet::Mercury if h == 1 => {
-                    score += 5;
+                    score += 1;
                 }
                 VedicPlanet::Jupiter if h == 11 => {
-                    score += 5;
+                    score += 1;
                 }
                 VedicPlanet::Venus if h == 5 => {
-                    score += 5;
+                    score += 1;
                 }
                 VedicPlanet::Saturn if h == 12 => {
-                    score += 5;
+                    score += 1;
                 }
                 _ => {}
             }
@@ -254,24 +254,24 @@ impl TajikaBala {
             // 2. Swavarga (Own/Exaltation Sign in Annual Chart)
             let lord = VedicPlanet::get_ruler_of(p.rasi);
             if lord == planet || p.rasi == planet.exaltation_rasi() {
-                score += 5;
+                score += 1;
             }
 
             // 3. Stri-Purusha (Gender/Sect)
             let is_day = chart.panchanga.is_day_birth;
             match planet {
                 VedicPlanet::Sun | VedicPlanet::Mars | VedicPlanet::Jupiter if is_day => {
-                    score += 5;
+                    score += 1;
                 }
                 VedicPlanet::Moon | VedicPlanet::Venus | VedicPlanet::Saturn if !is_day => {
-                    score += 5;
+                    score += 1;
                 }
                 _ => {}
             }
 
             // 4. Appearance (In Kendra)
             if [1, 4, 7, 10].contains(&h) {
-                score += 5;
+                score += 1;
             }
         }
         score
