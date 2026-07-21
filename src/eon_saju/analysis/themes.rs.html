@@ -1,86 +1,246 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-saju/src/analysis/themes.rs`."><title>themes.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1ed95124.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eon_saju" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.0-nightly (77cf889bc 2026-07-12)" data-channel="nightly" data-search-js="search-9944d736.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_saju/analysis/</div>themes.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::analysis::Analyzable;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-saju/src/analysis/themes.rs`."><title>themes.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ddecd707.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eon_saju" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.0-nightly (87e5904f5 2026-07-20)" data-channel="nightly" data-search-js="search-cf4fc35e.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_saju/analysis/</div>themes.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::analysis::Analyzable;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::core::config::AnalysisConfig;
-<a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span><span class="kw">crate</span>::core::pillars::FourPillars;
-<a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>serde::{Deserialize, Serialize};
-<a href=#5 id=5 data-nosnippet>5</a>
-<a href=#6 id=6 data-nosnippet>6</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-<a href=#7 id=7 data-nosnippet>7</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#8 id=8 data-nosnippet>8</a></span><span class="kw">pub struct </span>ThemedAnalysis {
-<a href=#9 id=9 data-nosnippet>9</a>    <span class="kw">pub </span>career: CareerAnalysis,
-<a href=#10 id=10 data-nosnippet>10</a>    <span class="kw">pub </span>wealth: WealthAnalysis,
-<a href=#11 id=11 data-nosnippet>11</a>    <span class="kw">pub </span>romance: RomanceAnalysis,
-<a href=#12 id=12 data-nosnippet>12</a>    <span class="kw">pub </span>health: HealthAnalysis,
-<a href=#13 id=13 data-nosnippet>13</a>}
-<a href=#14 id=14 data-nosnippet>14</a>
-<a href=#15 id=15 data-nosnippet>15</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-<a href=#16 id=16 data-nosnippet>16</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#17 id=17 data-nosnippet>17</a></span><span class="kw">pub struct </span>CareerAnalysis {
-<a href=#18 id=18 data-nosnippet>18</a>    <span class="kw">pub </span>score: u32, <span class="comment">// 0-100
-<a href=#19 id=19 data-nosnippet>19</a>    </span><span class="kw">pub </span>keywords: Vec&lt;String&gt;,
-<a href=#20 id=20 data-nosnippet>20</a>    <span class="kw">pub </span>summary: String,
-<a href=#21 id=21 data-nosnippet>21</a>    <span class="kw">pub </span>recommendation: String,
-<a href=#22 id=22 data-nosnippet>22</a>}
-<a href=#23 id=23 data-nosnippet>23</a>
-<a href=#24 id=24 data-nosnippet>24</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-<a href=#25 id=25 data-nosnippet>25</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#26 id=26 data-nosnippet>26</a></span><span class="kw">pub struct </span>WealthAnalysis {
-<a href=#27 id=27 data-nosnippet>27</a>    <span class="kw">pub </span>score: u32,
-<a href=#28 id=28 data-nosnippet>28</a>    <span class="kw">pub </span>keywords: Vec&lt;String&gt;,
-<a href=#29 id=29 data-nosnippet>29</a>    <span class="kw">pub </span>summary: String,
-<a href=#30 id=30 data-nosnippet>30</a>    <span class="kw">pub </span>flow: String,
-<a href=#31 id=31 data-nosnippet>31</a>}
-<a href=#32 id=32 data-nosnippet>32</a>
-<a href=#33 id=33 data-nosnippet>33</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-<a href=#34 id=34 data-nosnippet>34</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#35 id=35 data-nosnippet>35</a></span><span class="kw">pub struct </span>RomanceAnalysis {
-<a href=#36 id=36 data-nosnippet>36</a>    <span class="kw">pub </span>score: u32,
-<a href=#37 id=37 data-nosnippet>37</a>    <span class="kw">pub </span>keywords: Vec&lt;String&gt;,
-<a href=#38 id=38 data-nosnippet>38</a>    <span class="kw">pub </span>summary: String,
-<a href=#39 id=39 data-nosnippet>39</a>    <span class="kw">pub </span>advice: String,
-<a href=#40 id=40 data-nosnippet>40</a>}
-<a href=#41 id=41 data-nosnippet>41</a>
-<a href=#42 id=42 data-nosnippet>42</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-<a href=#43 id=43 data-nosnippet>43</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#44 id=44 data-nosnippet>44</a></span><span class="kw">pub struct </span>HealthAnalysis {
-<a href=#45 id=45 data-nosnippet>45</a>    <span class="kw">pub </span>score: u32,
-<a href=#46 id=46 data-nosnippet>46</a>    <span class="kw">pub </span>keywords: Vec&lt;String&gt;,
-<a href=#47 id=47 data-nosnippet>47</a>    <span class="kw">pub </span>summary: String,
-<a href=#48 id=48 data-nosnippet>48</a>    <span class="kw">pub </span>vulnerable_organs: Vec&lt;String&gt;,
-<a href=#49 id=49 data-nosnippet>49</a>}
-<a href=#50 id=50 data-nosnippet>50</a>
-<a href=#51 id=51 data-nosnippet>51</a><span class="kw">impl </span>Analyzable <span class="kw">for </span>ThemedAnalysis {
-<a href=#52 id=52 data-nosnippet>52</a>    <span class="kw">type </span>Output = ThemedAnalysis;
-<a href=#53 id=53 data-nosnippet>53</a>
-<a href=#54 id=54 data-nosnippet>54</a>    <span class="kw">fn </span>analyze(pillars: <span class="kw-2">&amp;</span>FourPillars, config: <span class="kw-2">&amp;</span>AnalysisConfig) -&gt; <span class="self">Self</span>::Output {
-<a href=#55 id=55 data-nosnippet>55</a>        <span class="comment">// TODO: 제대로 된 점수 계산 로직은 차후 구체화, 현재는 구조와 기본값 중심 구현
-<a href=#56 id=56 data-nosnippet>56</a>        </span><span class="kw">let </span>strength = pillars.strength_with_config(config);
-<a href=#57 id=57 data-nosnippet>57</a>
-<a href=#58 id=58 data-nosnippet>58</a>        ThemedAnalysis {
-<a href=#59 id=59 data-nosnippet>59</a>            career: CareerAnalysis {
-<a href=#60 id=60 data-nosnippet>60</a>                score: <span class="number">75</span>,
-<a href=#61 id=61 data-nosnippet>61</a>                keywords: <span class="macro">vec!</span>[<span class="string">"전문성"</span>.to_string(), <span class="string">"독립적"</span>.to_string()],
-<a href=#62 id=62 data-nosnippet>62</a>                summary: <span class="string">"자신의 재능을 살려 독립적으로 일할 때 가장 큰 성과를 거둡니다."</span>.to_string(),
-<a href=#63 id=63 data-nosnippet>63</a>                recommendation: <span class="string">"조직에 얽매이기보다는 프리랜서나 전문직, 또는 주도적으로 프로젝트를 이끌 수 있는 환경이 적합합니다."</span>.to_string(),
-<a href=#64 id=64 data-nosnippet>64</a>            },
-<a href=#65 id=65 data-nosnippet>65</a>            wealth: WealthAnalysis {
-<a href=#66 id=66 data-nosnippet>66</a>                score: <span class="kw">if </span>strength.deuk_se.caisheng_count &gt; <span class="number">0 </span>{ <span class="number">80 </span>} <span class="kw">else </span>{ <span class="number">60 </span>},
-<a href=#67 id=67 data-nosnippet>67</a>                keywords: <span class="macro">vec!</span>[<span class="string">"안정적 수익"</span>.to_string(), <span class="string">"투자 주의"</span>.to_string()],
-<a href=#68 id=68 data-nosnippet>68</a>                summary: <span class="string">"재물이 안정적으로 들어오지만 관리가 중요합니다."</span>.to_string(),
-<a href=#69 id=69 data-nosnippet>69</a>                flow: <span class="string">"큰 돈을 한 번에 벌기보다는 차곡차곡 모으는 것이 유리합니다."</span>.to_string(),
-<a href=#70 id=70 data-nosnippet>70</a>            },
-<a href=#71 id=71 data-nosnippet>71</a>            romance: RomanceAnalysis {
-<a href=#72 id=72 data-nosnippet>72</a>                score: <span class="number">70</span>,
-<a href=#73 id=73 data-nosnippet>73</a>                keywords: <span class="macro">vec!</span>[<span class="string">"신중함"</span>.to_string(), <span class="string">"안정감"</span>.to_string()],
-<a href=#74 id=74 data-nosnippet>74</a>                summary: <span class="string">"신중하게 관계를 발전시키는 타입입니다."</span>.to_string(),
-<a href=#75 id=75 data-nosnippet>75</a>                advice: <span class="string">"상대방의 마음을 편안하게 해주는 매력이 있습니다."</span>.to_string(),
-<a href=#76 id=76 data-nosnippet>76</a>            },
-<a href=#77 id=77 data-nosnippet>77</a>            health: HealthAnalysis {
-<a href=#78 id=78 data-nosnippet>78</a>                score: <span class="number">85</span>,
-<a href=#79 id=79 data-nosnippet>79</a>                keywords: <span class="macro">vec!</span>[<span class="string">"활력"</span>.to_string(), <span class="string">"스트레스 주의"</span>.to_string()],
-<a href=#80 id=80 data-nosnippet>80</a>                summary: <span class="string">"대체로 건강하지만 신경성 질환에 유의해야 합니다."</span>.to_string(),
-<a href=#81 id=81 data-nosnippet>81</a>                vulnerable_organs: <span class="macro">vec!</span>[<span class="string">"위장"</span>.to_string(), <span class="string">"신경계"</span>.to_string()],
-<a href=#82 id=82 data-nosnippet>82</a>            },
-<a href=#83 id=83 data-nosnippet>83</a>        }
-<a href=#84 id=84 data-nosnippet>84</a>    }
-<a href=#85 id=85 data-nosnippet>85</a>}
+<a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span><span class="kw">crate</span>::core::element::Element;
+<a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::core::pillars::FourPillars;
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>serde::{Deserialize, Serialize};
+<a href=#6 id=6 data-nosnippet>6</a>
+<a href=#7 id=7 data-nosnippet>7</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+<a href=#8 id=8 data-nosnippet>8</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#9 id=9 data-nosnippet>9</a></span><span class="kw">pub struct </span>ThemedAnalysis {
+<a href=#10 id=10 data-nosnippet>10</a>    <span class="kw">pub </span>career: CareerAnalysis,
+<a href=#11 id=11 data-nosnippet>11</a>    <span class="kw">pub </span>wealth: WealthAnalysis,
+<a href=#12 id=12 data-nosnippet>12</a>    <span class="kw">pub </span>romance: RomanceAnalysis,
+<a href=#13 id=13 data-nosnippet>13</a>    <span class="kw">pub </span>health: HealthAnalysis,
+<a href=#14 id=14 data-nosnippet>14</a>}
+<a href=#15 id=15 data-nosnippet>15</a>
+<a href=#16 id=16 data-nosnippet>16</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+<a href=#17 id=17 data-nosnippet>17</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#18 id=18 data-nosnippet>18</a></span><span class="kw">pub struct </span>CareerAnalysis {
+<a href=#19 id=19 data-nosnippet>19</a>    <span class="kw">pub </span>score: u32, <span class="comment">// 0-100
+<a href=#20 id=20 data-nosnippet>20</a>    </span><span class="kw">pub </span>keywords: Vec&lt;String&gt;,
+<a href=#21 id=21 data-nosnippet>21</a>    <span class="kw">pub </span>summary: String,
+<a href=#22 id=22 data-nosnippet>22</a>    <span class="kw">pub </span>recommendation: String,
+<a href=#23 id=23 data-nosnippet>23</a>}
+<a href=#24 id=24 data-nosnippet>24</a>
+<a href=#25 id=25 data-nosnippet>25</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+<a href=#26 id=26 data-nosnippet>26</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#27 id=27 data-nosnippet>27</a></span><span class="kw">pub struct </span>WealthAnalysis {
+<a href=#28 id=28 data-nosnippet>28</a>    <span class="kw">pub </span>score: u32,
+<a href=#29 id=29 data-nosnippet>29</a>    <span class="kw">pub </span>keywords: Vec&lt;String&gt;,
+<a href=#30 id=30 data-nosnippet>30</a>    <span class="kw">pub </span>summary: String,
+<a href=#31 id=31 data-nosnippet>31</a>    <span class="kw">pub </span>flow: String,
+<a href=#32 id=32 data-nosnippet>32</a>}
+<a href=#33 id=33 data-nosnippet>33</a>
+<a href=#34 id=34 data-nosnippet>34</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+<a href=#35 id=35 data-nosnippet>35</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#36 id=36 data-nosnippet>36</a></span><span class="kw">pub struct </span>RomanceAnalysis {
+<a href=#37 id=37 data-nosnippet>37</a>    <span class="kw">pub </span>score: u32,
+<a href=#38 id=38 data-nosnippet>38</a>    <span class="kw">pub </span>keywords: Vec&lt;String&gt;,
+<a href=#39 id=39 data-nosnippet>39</a>    <span class="kw">pub </span>summary: String,
+<a href=#40 id=40 data-nosnippet>40</a>    <span class="kw">pub </span>advice: String,
+<a href=#41 id=41 data-nosnippet>41</a>}
+<a href=#42 id=42 data-nosnippet>42</a>
+<a href=#43 id=43 data-nosnippet>43</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+<a href=#44 id=44 data-nosnippet>44</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#45 id=45 data-nosnippet>45</a></span><span class="kw">pub struct </span>HealthAnalysis {
+<a href=#46 id=46 data-nosnippet>46</a>    <span class="kw">pub </span>score: u32,
+<a href=#47 id=47 data-nosnippet>47</a>    <span class="kw">pub </span>keywords: Vec&lt;String&gt;,
+<a href=#48 id=48 data-nosnippet>48</a>    <span class="kw">pub </span>summary: String,
+<a href=#49 id=49 data-nosnippet>49</a>    <span class="kw">pub </span>vulnerable_organs: Vec&lt;String&gt;,
+<a href=#50 id=50 data-nosnippet>50</a>}
+<a href=#51 id=51 data-nosnippet>51</a>
+<a href=#52 id=52 data-nosnippet>52</a><span class="kw">impl </span>Analyzable <span class="kw">for </span>ThemedAnalysis {
+<a href=#53 id=53 data-nosnippet>53</a>    <span class="kw">type </span>Output = ThemedAnalysis;
+<a href=#54 id=54 data-nosnippet>54</a>
+<a href=#55 id=55 data-nosnippet>55</a>    <span class="kw">fn </span>analyze(pillars: <span class="kw-2">&amp;</span>FourPillars, config: <span class="kw-2">&amp;</span>AnalysisConfig) -&gt; <span class="self">Self</span>::Output {
+<a href=#56 id=56 data-nosnippet>56</a>        <span class="kw">let </span>strength = pillars.strength_with_config(config);
+<a href=#57 id=57 data-nosnippet>57</a>        <span class="kw">let </span>deuk_se = <span class="kw-2">&amp;</span>strength.deuk_se;
+<a href=#58 id=58 data-nosnippet>58</a>
+<a href=#59 id=59 data-nosnippet>59</a>        <span class="comment">// 1. Career (직업/커리어)
+<a href=#60 id=60 data-nosnippet>60</a>        </span><span class="kw">let </span>career_score = ((<span class="number">60
+<a href=#61 id=61 data-nosnippet>61</a>            </span>+ (deuk_se.guanxing_count <span class="kw">as </span>u32 * <span class="number">8</span>)
+<a href=#62 id=62 data-nosnippet>62</a>            + (deuk_se.shishang_count <span class="kw">as </span>u32 * <span class="number">6</span>)
+<a href=#63 id=63 data-nosnippet>63</a>            + (deuk_se.bijie_count <span class="kw">as </span>u32 * <span class="number">4</span>))
+<a href=#64 id=64 data-nosnippet>64</a>            .min(<span class="number">95</span>))
+<a href=#65 id=65 data-nosnippet>65</a>        .max(<span class="number">50</span>);
+<a href=#66 id=66 data-nosnippet>66</a>
+<a href=#67 id=67 data-nosnippet>67</a>        <span class="kw">let </span>career_keywords = <span class="kw">if </span>deuk_se.guanxing_count &gt;= <span class="number">2 </span>{
+<a href=#68 id=68 data-nosnippet>68</a>            <span class="macro">vec!</span>[<span class="string">"조직 리더십"</span>.to_string(), <span class="string">"체계적 역량"</span>.to_string()]
+<a href=#69 id=69 data-nosnippet>69</a>        } <span class="kw">else if </span>deuk_se.shishang_count &gt;= <span class="number">2 </span>{
+<a href=#70 id=70 data-nosnippet>70</a>            <span class="macro">vec!</span>[<span class="string">"창의적 전문성"</span>.to_string(), <span class="string">"기술/기획력"</span>.to_string()]
+<a href=#71 id=71 data-nosnippet>71</a>        } <span class="kw">else if </span>deuk_se.bijie_count &gt;= <span class="number">2 </span>{
+<a href=#72 id=72 data-nosnippet>72</a>            <span class="macro">vec!</span>[
+<a href=#73 id=73 data-nosnippet>73</a>                <span class="string">"독립 자영/프리랜서"</span>.to_string(),
+<a href=#74 id=74 data-nosnippet>74</a>                <span class="string">"주도적 실행력"</span>.to_string(),
+<a href=#75 id=75 data-nosnippet>75</a>            ]
+<a href=#76 id=76 data-nosnippet>76</a>        } <span class="kw">else </span>{
+<a href=#77 id=77 data-nosnippet>77</a>            <span class="macro">vec!</span>[<span class="string">"수용적 협업"</span>.to_string(), <span class="string">"안정적 기획"</span>.to_string()]
+<a href=#78 id=78 data-nosnippet>78</a>        };
+<a href=#79 id=79 data-nosnippet>79</a>
+<a href=#80 id=80 data-nosnippet>80</a>        <span class="kw">let </span>career_summary = <span class="kw">if </span>deuk_se.guanxing_count &gt;= <span class="number">2 </span>{
+<a href=#81 id=81 data-nosnippet>81</a>            <span class="string">"조직 및 가치 체계 내에서 신뢰와 리더십을 바탕으로 성장하는 스타일입니다."</span>.to_string()
+<a href=#82 id=82 data-nosnippet>82</a>        } <span class="kw">else if </span>deuk_se.shishang_count &gt;= <span class="number">2 </span>{
+<a href=#83 id=83 data-nosnippet>83</a>            <span class="string">"독창적인 기술이나 아이디어를 바탕으로 전문성을 인정받을 때 가장 빛납니다."</span>.to_string()
+<a href=#84 id=84 data-nosnippet>84</a>        } <span class="kw">else </span>{
+<a href=#85 id=85 data-nosnippet>85</a>            <span class="string">"자율성과 독자적인 판단력을 존중받는 업무 환경에서 높은 성과를 냅니다."</span>.to_string()
+<a href=#86 id=86 data-nosnippet>86</a>        };
+<a href=#87 id=87 data-nosnippet>87</a>
+<a href=#88 id=88 data-nosnippet>88</a>        <span class="kw">let </span>career_recommendation = <span class="kw">if </span>deuk_se.guanxing_count &gt;= <span class="number">2 </span>{
+<a href=#89 id=89 data-nosnippet>89</a>            <span class="string">"공공기관, 대기업, 체계화된 조직 내 핵심 보직이나 전문 관리직이 적합합니다."</span>.to_string()
+<a href=#90 id=90 data-nosnippet>90</a>        } <span class="kw">else if </span>deuk_se.shishang_count &gt;= <span class="number">2 </span>{
+<a href=#91 id=91 data-nosnippet>91</a>            <span class="string">"연구개발, 디자이너, 콘텐츠 크리에이터, 전문 자격 기술직이 유망합니다."</span>.to_string()
+<a href=#92 id=92 data-nosnippet>92</a>        } <span class="kw">else </span>{
+<a href=#93 id=93 data-nosnippet>93</a>            <span class="string">"주도적으로 프로젝트를 이끌 수 있는 전문 프론티어 분야나 스타트업이 적합합니다."
+<a href=#94 id=94 data-nosnippet>94</a>                </span>.to_string()
+<a href=#95 id=95 data-nosnippet>95</a>        };
+<a href=#96 id=96 data-nosnippet>96</a>
+<a href=#97 id=97 data-nosnippet>97</a>        <span class="comment">// 2. Wealth (재물운)
+<a href=#98 id=98 data-nosnippet>98</a>        </span><span class="kw">let </span>wealth_score = ((<span class="number">50
+<a href=#99 id=99 data-nosnippet>99</a>            </span>+ (deuk_se.caisheng_count <span class="kw">as </span>u32 * <span class="number">12</span>)
+<a href=#100 id=100 data-nosnippet>100</a>            + (deuk_se.shishang_count <span class="kw">as </span>u32 * <span class="number">6</span>)
+<a href=#101 id=101 data-nosnippet>101</a>            + (deuk_se.yinxing_count <span class="kw">as </span>u32 * <span class="number">4</span>))
+<a href=#102 id=102 data-nosnippet>102</a>            .min(<span class="number">98</span>))
+<a href=#103 id=103 data-nosnippet>103</a>        .max(<span class="number">45</span>);
+<a href=#104 id=104 data-nosnippet>104</a>
+<a href=#105 id=105 data-nosnippet>105</a>        <span class="kw">let </span>wealth_keywords = <span class="kw">if </span>deuk_se.caisheng_count &gt;= <span class="number">2 </span>{
+<a href=#106 id=106 data-nosnippet>106</a>            <span class="macro">vec!</span>[<span class="string">"풍부한 재물 기반"</span>.to_string(), <span class="string">"자산 운용"</span>.to_string()]
+<a href=#107 id=107 data-nosnippet>107</a>        } <span class="kw">else if </span>deuk_se.shishang_count &gt;= <span class="number">1 </span>{
+<a href=#108 id=108 data-nosnippet>108</a>            <span class="macro">vec!</span>[<span class="string">"식상생재"</span>.to_string(), <span class="string">"기술/성과 수익"</span>.to_string()]
+<a href=#109 id=109 data-nosnippet>109</a>        } <span class="kw">else </span>{
+<a href=#110 id=110 data-nosnippet>110</a>            <span class="macro">vec!</span>[<span class="string">"안정적 저축"</span>.to_string(), <span class="string">"지출 관리 필요"</span>.to_string()]
+<a href=#111 id=111 data-nosnippet>111</a>        };
+<a href=#112 id=112 data-nosnippet>112</a>
+<a href=#113 id=113 data-nosnippet>113</a>        <span class="kw">let </span>wealth_summary = <span class="kw">if </span>deuk_se.caisheng_count &gt;= <span class="number">2 </span>{
+<a href=#114 id=114 data-nosnippet>114</a>            <span class="string">"재물 인연이 깊으며 실속 있게 자산을 증식할 수 있는 사주 구조입니다."</span>.to_string()
+<a href=#115 id=115 data-nosnippet>115</a>        } <span class="kw">else if </span>deuk_se.shishang_count &gt;= <span class="number">1 </span>{
+<a href=#116 id=116 data-nosnippet>116</a>            <span class="string">"자신의 재능과 활동이 곧 직간접적인 수익으로 이어지는 재물 흐름을 가집니다."</span>.to_string()
+<a href=#117 id=117 data-nosnippet>117</a>        } <span class="kw">else </span>{
+<a href=#118 id=118 data-nosnippet>118</a>            <span class="string">"무리한 투기보다 꾸준한 저축과 계획적인 리스크 관리가 재물운을 지켜줍니다."</span>.to_string()
+<a href=#119 id=119 data-nosnippet>119</a>        };
+<a href=#120 id=120 data-nosnippet>120</a>
+<a href=#121 id=121 data-nosnippet>121</a>        <span class="kw">let </span>wealth_flow = <span class="kw">if </span>deuk_se.caisheng_count &gt;= <span class="number">2 </span>{
+<a href=#122 id=122 data-nosnippet>122</a>            <span class="string">"다각화된 투자나 부동산/금융 자산을 통해 안정적 부를 구축하는 흐름입니다."</span>.to_string()
+<a href=#123 id=123 data-nosnippet>123</a>        } <span class="kw">else </span>{
+<a href=#124 id=124 data-nosnippet>124</a>            <span class="string">"한 번에 큰 이익을 노리기보다 꾸준한 파이프라인 확장을 통한 장기 성장이 유리합니다."
+<a href=#125 id=125 data-nosnippet>125</a>                </span>.to_string()
+<a href=#126 id=126 data-nosnippet>126</a>        };
+<a href=#127 id=127 data-nosnippet>127</a>
+<a href=#128 id=128 data-nosnippet>128</a>        <span class="comment">// 3. Romance (연애/인연)
+<a href=#129 id=129 data-nosnippet>129</a>        </span><span class="kw">let </span>romance_score = ((<span class="number">55
+<a href=#130 id=130 data-nosnippet>130</a>            </span>+ (deuk_se.caisheng_count <span class="kw">as </span>u32 * <span class="number">7</span>)
+<a href=#131 id=131 data-nosnippet>131</a>            + (deuk_se.guanxing_count <span class="kw">as </span>u32 * <span class="number">7</span>)
+<a href=#132 id=132 data-nosnippet>132</a>            + (deuk_se.yinxing_count <span class="kw">as </span>u32 * <span class="number">5</span>))
+<a href=#133 id=133 data-nosnippet>133</a>            .min(<span class="number">95</span>))
+<a href=#134 id=134 data-nosnippet>134</a>        .max(<span class="number">50</span>);
+<a href=#135 id=135 data-nosnippet>135</a>
+<a href=#136 id=136 data-nosnippet>136</a>        <span class="kw">let </span>romance_keywords = <span class="kw">if </span>deuk_se.caisheng_count &gt;= <span class="number">1 </span>|| deuk_se.guanxing_count &gt;= <span class="number">1 </span>{
+<a href=#137 id=137 data-nosnippet>137</a>            <span class="macro">vec!</span>[<span class="string">"적극적 매력"</span>.to_string(), <span class="string">"활발한 이성운"</span>.to_string()]
+<a href=#138 id=138 data-nosnippet>138</a>        } <span class="kw">else if </span>deuk_se.yinxing_count &gt;= <span class="number">2 </span>{
+<a href=#139 id=139 data-nosnippet>139</a>            <span class="macro">vec!</span>[<span class="string">"신중함"</span>.to_string(), <span class="string">"정서적 깊이"</span>.to_string()]
+<a href=#140 id=140 data-nosnippet>140</a>        } <span class="kw">else </span>{
+<a href=#141 id=141 data-nosnippet>141</a>            <span class="macro">vec!</span>[<span class="string">"자연스러운 인연"</span>.to_string(), <span class="string">"상호 존중"</span>.to_string()]
+<a href=#142 id=142 data-nosnippet>142</a>        };
+<a href=#143 id=143 data-nosnippet>143</a>
+<a href=#144 id=144 data-nosnippet>144</a>        <span class="kw">let </span>romance_summary = <span class="kw">if </span>deuk_se.caisheng_count &gt;= <span class="number">1 </span>|| deuk_se.guanxing_count &gt;= <span class="number">1 </span>{
+<a href=#145 id=145 data-nosnippet>145</a>            <span class="string">"이성과의 인연이 활발하며 배려와 이끌림을 동시에 줄 수 있는 인연운을 지닙니다."
+<a href=#146 id=146 data-nosnippet>146</a>                </span>.to_string()
+<a href=#147 id=147 data-nosnippet>147</a>        } <span class="kw">else </span>{
+<a href=#148 id=148 data-nosnippet>148</a>            <span class="string">"신중하게 상대를 탐색하고 서로의 깊은 정서적 안정감을 중요하게 생각합니다."</span>.to_string()
+<a href=#149 id=149 data-nosnippet>149</a>        };
+<a href=#150 id=150 data-nosnippet>150</a>
+<a href=#151 id=151 data-nosnippet>151</a>        <span class="kw">let </span>romance_advice =
+<a href=#152 id=152 data-nosnippet>152</a>            <span class="string">"상대방의 입장을 먼저 공감해 주고 사소한 대화를 자주 나누는 것이 깊은 관계 발전에 도움이 됩니다."
+<a href=#153 id=153 data-nosnippet>153</a>                </span>.to_string();
+<a href=#154 id=154 data-nosnippet>154</a>
+<a href=#155 id=155 data-nosnippet>155</a>        <span class="comment">// 4. Health (건강운 &amp; 장기 취약도)
+<a href=#156 id=156 data-nosnippet>156</a>        </span><span class="kw">let </span>elements = [
+<a href=#157 id=157 data-nosnippet>157</a>            pillars.year.stem.element(),
+<a href=#158 id=158 data-nosnippet>158</a>            pillars.year.branch.element(),
+<a href=#159 id=159 data-nosnippet>159</a>            pillars.month.stem.element(),
+<a href=#160 id=160 data-nosnippet>160</a>            pillars.month.branch.element(),
+<a href=#161 id=161 data-nosnippet>161</a>            pillars.day.stem.element(),
+<a href=#162 id=162 data-nosnippet>162</a>            pillars.day.branch.element(),
+<a href=#163 id=163 data-nosnippet>163</a>            pillars.hour.stem.element(),
+<a href=#164 id=164 data-nosnippet>164</a>            pillars.hour.branch.element(),
+<a href=#165 id=165 data-nosnippet>165</a>        ];
+<a href=#166 id=166 data-nosnippet>166</a>
+<a href=#167 id=167 data-nosnippet>167</a>        <span class="kw">let </span><span class="kw-2">mut </span>wood_cnt = <span class="number">0</span>;
+<a href=#168 id=168 data-nosnippet>168</a>        <span class="kw">let </span><span class="kw-2">mut </span>fire_cnt = <span class="number">0</span>;
+<a href=#169 id=169 data-nosnippet>169</a>        <span class="kw">let </span><span class="kw-2">mut </span>earth_cnt = <span class="number">0</span>;
+<a href=#170 id=170 data-nosnippet>170</a>        <span class="kw">let </span><span class="kw-2">mut </span>metal_cnt = <span class="number">0</span>;
+<a href=#171 id=171 data-nosnippet>171</a>        <span class="kw">let </span><span class="kw-2">mut </span>water_cnt = <span class="number">0</span>;
+<a href=#172 id=172 data-nosnippet>172</a>
+<a href=#173 id=173 data-nosnippet>173</a>        <span class="kw">for </span>e <span class="kw">in </span>elements {
+<a href=#174 id=174 data-nosnippet>174</a>            <span class="kw">match </span>e {
+<a href=#175 id=175 data-nosnippet>175</a>                Element::Wood =&gt; wood_cnt += <span class="number">1</span>,
+<a href=#176 id=176 data-nosnippet>176</a>                Element::Fire =&gt; fire_cnt += <span class="number">1</span>,
+<a href=#177 id=177 data-nosnippet>177</a>                Element::Earth =&gt; earth_cnt += <span class="number">1</span>,
+<a href=#178 id=178 data-nosnippet>178</a>                Element::Metal =&gt; metal_cnt += <span class="number">1</span>,
+<a href=#179 id=179 data-nosnippet>179</a>                Element::Water =&gt; water_cnt += <span class="number">1</span>,
+<a href=#180 id=180 data-nosnippet>180</a>            }
+<a href=#181 id=181 data-nosnippet>181</a>        }
+<a href=#182 id=182 data-nosnippet>182</a>
+<a href=#183 id=183 data-nosnippet>183</a>        <span class="kw">let </span><span class="kw-2">mut </span>vulnerable_organs = Vec::new();
+<a href=#184 id=184 data-nosnippet>184</a>        <span class="kw">if </span>wood_cnt == <span class="number">0 </span>|| wood_cnt &gt;= <span class="number">4 </span>{
+<a href=#185 id=185 data-nosnippet>185</a>            vulnerable_organs.push(<span class="string">"간/담(Liver/Gallbladder)"</span>.to_string());
+<a href=#186 id=186 data-nosnippet>186</a>            vulnerable_organs.push(<span class="string">"신경계"</span>.to_string());
+<a href=#187 id=187 data-nosnippet>187</a>        }
+<a href=#188 id=188 data-nosnippet>188</a>        <span class="kw">if </span>fire_cnt == <span class="number">0 </span>|| fire_cnt &gt;= <span class="number">4 </span>{
+<a href=#189 id=189 data-nosnippet>189</a>            vulnerable_organs.push(<span class="string">"심장/소장"</span>.to_string());
+<a href=#190 id=190 data-nosnippet>190</a>            vulnerable_organs.push(<span class="string">"혈관계"</span>.to_string());
+<a href=#191 id=191 data-nosnippet>191</a>        }
+<a href=#192 id=192 data-nosnippet>192</a>        <span class="kw">if </span>earth_cnt == <span class="number">0 </span>|| earth_cnt &gt;= <span class="number">4 </span>{
+<a href=#193 id=193 data-nosnippet>193</a>            vulnerable_organs.push(<span class="string">"위장/비장(Stomach)"</span>.to_string());
+<a href=#194 id=194 data-nosnippet>194</a>            vulnerable_organs.push(<span class="string">"소화기계"</span>.to_string());
+<a href=#195 id=195 data-nosnippet>195</a>        }
+<a href=#196 id=196 data-nosnippet>196</a>        <span class="kw">if </span>metal_cnt == <span class="number">0 </span>|| metal_cnt &gt;= <span class="number">4 </span>{
+<a href=#197 id=197 data-nosnippet>197</a>            vulnerable_organs.push(<span class="string">"폐/대장(Lungs)"</span>.to_string());
+<a href=#198 id=198 data-nosnippet>198</a>            vulnerable_organs.push(<span class="string">"호흡기계"</span>.to_string());
+<a href=#199 id=199 data-nosnippet>199</a>        }
+<a href=#200 id=200 data-nosnippet>200</a>        <span class="kw">if </span>water_cnt == <span class="number">0 </span>|| water_cnt &gt;= <span class="number">4 </span>{
+<a href=#201 id=201 data-nosnippet>201</a>            vulnerable_organs.push(<span class="string">"신장/방광(Kidney)"</span>.to_string());
+<a href=#202 id=202 data-nosnippet>202</a>            vulnerable_organs.push(<span class="string">"비뇨생식계"</span>.to_string());
+<a href=#203 id=203 data-nosnippet>203</a>        }
+<a href=#204 id=204 data-nosnippet>204</a>
+<a href=#205 id=205 data-nosnippet>205</a>        <span class="kw">if </span>vulnerable_organs.is_empty() {
+<a href=#206 id=206 data-nosnippet>206</a>            vulnerable_organs.push(<span class="string">"위장계(스트레스 주의)"</span>.to_string());
+<a href=#207 id=207 data-nosnippet>207</a>            vulnerable_organs.push(<span class="string">"자율신경계"</span>.to_string());
+<a href=#208 id=208 data-nosnippet>208</a>        }
+<a href=#209 id=209 data-nosnippet>209</a>
+<a href=#210 id=210 data-nosnippet>210</a>        <span class="kw">let </span>health_score = <span class="number">90 </span>- (vulnerable_organs.len() <span class="kw">as </span>u32 * <span class="number">5</span>);
+<a href=#211 id=211 data-nosnippet>211</a>
+<a href=#212 id=212 data-nosnippet>212</a>        <span class="kw">let </span>health_keywords = <span class="macro">vec!</span>[<span class="string">"체질 밸런스"</span>.to_string(), <span class="string">"스트레스 케어"</span>.to_string()];
+<a href=#213 id=213 data-nosnippet>213</a>        <span class="kw">let </span>health_summary = <span class="macro">format!</span>(
+<a href=#214 id=214 data-nosnippet>214</a>            <span class="string">"오행 균형 분석에 따라 {} 관련 장기 관리 및 일상 스트레스 완화에 유의하는 것이 좋습니다."</span>,
+<a href=#215 id=215 data-nosnippet>215</a>            vulnerable_organs.first().cloned().unwrap_or_default()
+<a href=#216 id=216 data-nosnippet>216</a>        );
+<a href=#217 id=217 data-nosnippet>217</a>
+<a href=#218 id=218 data-nosnippet>218</a>        ThemedAnalysis {
+<a href=#219 id=219 data-nosnippet>219</a>            career: CareerAnalysis {
+<a href=#220 id=220 data-nosnippet>220</a>                score: career_score,
+<a href=#221 id=221 data-nosnippet>221</a>                keywords: career_keywords,
+<a href=#222 id=222 data-nosnippet>222</a>                summary: career_summary,
+<a href=#223 id=223 data-nosnippet>223</a>                recommendation: career_recommendation,
+<a href=#224 id=224 data-nosnippet>224</a>            },
+<a href=#225 id=225 data-nosnippet>225</a>            wealth: WealthAnalysis {
+<a href=#226 id=226 data-nosnippet>226</a>                score: wealth_score,
+<a href=#227 id=227 data-nosnippet>227</a>                keywords: wealth_keywords,
+<a href=#228 id=228 data-nosnippet>228</a>                summary: wealth_summary,
+<a href=#229 id=229 data-nosnippet>229</a>                flow: wealth_flow,
+<a href=#230 id=230 data-nosnippet>230</a>            },
+<a href=#231 id=231 data-nosnippet>231</a>            romance: RomanceAnalysis {
+<a href=#232 id=232 data-nosnippet>232</a>                score: romance_score,
+<a href=#233 id=233 data-nosnippet>233</a>                keywords: romance_keywords,
+<a href=#234 id=234 data-nosnippet>234</a>                summary: romance_summary,
+<a href=#235 id=235 data-nosnippet>235</a>                advice: romance_advice,
+<a href=#236 id=236 data-nosnippet>236</a>            },
+<a href=#237 id=237 data-nosnippet>237</a>            health: HealthAnalysis {
+<a href=#238 id=238 data-nosnippet>238</a>                score: health_score,
+<a href=#239 id=239 data-nosnippet>239</a>                keywords: health_keywords,
+<a href=#240 id=240 data-nosnippet>240</a>                summary: health_summary,
+<a href=#241 id=241 data-nosnippet>241</a>                vulnerable_organs,
+<a href=#242 id=242 data-nosnippet>242</a>            },
+<a href=#243 id=243 data-nosnippet>243</a>        }
+<a href=#244 id=244 data-nosnippet>244</a>    }
+<a href=#245 id=245 data-nosnippet>245</a>}
 </code></pre></div></section></main></body></html>
