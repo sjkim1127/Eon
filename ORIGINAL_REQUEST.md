@@ -35,3 +35,29 @@ Integrity mode: benchmark
 ### UI 레이아웃 및 다국어 지원 (Manual/Visual Verification)
 - [ ] Dioxus 웹 화면에서 새로 디자인된 Shadbala 프로그레스 바 그리드와 계층형 Dasha 아코디언 UI가 깨짐이나 스크롤 오버플로우 없이 미려하고 반응형으로 표현되어야 합니다.
 - [ ] 추가된 모든 신규 분석 레이블 및 설명 텍스트에 다국어 번역 키(`crates/eon-ui/src/i18n/`)가 매핑되어 한글/영어/러시아어/중국어로 정상 전환되어야 합니다.
+
+## Follow-up — 2026-07-25T03:18:07+09:00
+
+Eon 프로젝트의 사주(Saju) 분석 코어 엔진(`crates/eon-saju`)의 분석 정밀도 완비, 고급 특수 격국 및 동적 운세 시뮬레이터 고도화, 종합 엣지케이스 검증 테스트 파이프라인 구축을 완수합니다.
+
+Working directory: /Users/sjkim1127/Eon
+Integrity mode: demo
+
+## Requirements
+
+### R1. Core Analysis Precision & Pattern Completeness
+억부(抑扶), 조후(調候), 통관(通關), 병약(病藥) 용신 산출 및 격국/12운성/신살 분석 알고리즘의 예외 케이스를 정밀 보완하고, 고급 특수 격국 패턴 처리 로직을 완비합니다.
+
+### R2. Dynamic Luck & Temporal Simulation
+대운(大運), 세운(年運), 월운(月運) 등 동적 시기별 운세 흐름 계산 및 지장간/충합 변형에 따른 운성 시뮬레이션 엔진을 보강합니다.
+
+### R3. Codebase Architecture & Edge-Case Verification
+`crates/eon-saju` 모듈 구조의 보완 및 성능 최적화를 수행하고, 다양한 명조 엣지케이스를 검증하는 단위/통합 테스트 suite를 대폭 확충합니다.
+
+## Acceptance Criteria
+
+### Verification & Quality Bar
+- [ ] `cargo check --workspace` 실행 시 빌드 오류 및 경고 없이 완벽히 컴파일되어야 함.
+- [ ] `cargo test -p eon-saju` 실행 시 모든 기본 및 신규 엣지케이스 테스트가 100% 통과하여야 함.
+- [ ] 대표 사주 명조 데이터(다양한 격국 및 신강/신약 케이스)에 대해 용신, 격국, 동적 운세 산출 결과가 명리학적 규칙에 부합하여 검증되어야 함.
+

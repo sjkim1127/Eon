@@ -2088,6 +2088,7 @@ pub fn translate_saju_structure(
             eon_saju::analysis::structure::StructureType::SpecialTransformation => {
                 "Dominant One-Element Structure"
             }
+            _ => st.hangul(),
         },
         Locale::Ru => match st {
             eon_saju::analysis::structure::StructureType::ShiShen => "Структура Духа Пищи",
@@ -2123,6 +2124,7 @@ pub fn translate_saju_structure(
             eon_saju::analysis::structure::StructureType::SpecialTransformation => {
                 "Специальная Структура Трансформации"
             }
+            _ => st.hangul(),
         },
     }
 }

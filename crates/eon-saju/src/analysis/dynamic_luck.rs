@@ -12,6 +12,59 @@ use crate::core::pillars::FourPillars;
 use crate::core::stem::HeavenlyStem;
 use serde::{Deserialize, Serialize};
 
+use crate::core::element::Element;
+
+/// 고지 개고(開庫, Storage Branch Unsealing) 이벤트
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct GaeGoEvent {
+    pub branch: EarthlyBranch,
+    pub position: String,
+    pub trigger: String,
+    pub unsealed_stems: Vec<HeavenlyStem>,
+}
+
+/// 고지 입묘(入墓, Trapping into Storage) 이벤트
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct IpMyoEvent {
+    pub element: Element,
+    pub tomb_branch: EarthlyBranch,
+    pub trigger: String,
+}
+
+/// 동적 격국 변화 상태
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum GyeokStatus {
+    /// 안정 (원국 격국 유지)
+    Stable,
+    /// 변격 (새로운 격국으로 변화)
+    Transformed,
+    /// 파격 (격국 파괴/손상)
+    Broken,
+    /// 성격 (용신 투출 또는 삼합 완성으로 격국 완비)
+    Fulfilled,
+}
+
+impl GyeokStatus {
+    pub const fn hangul(&self) -> &'static str {
+        match self {
+            Self::Stable => "안정(안격)",
+            Self::Transformed => "변격(變格)",
+            Self::Broken => "파격(破格)",
+            Self::Fulfilled => "성격(成格)",
+        }
+    }
+}
+
+/// 동적 격국 상태 추적
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DynamicStructureState {
+    pub base_structure: crate::analysis::structure::StructureType,
+    pub active_structure: crate::analysis::structure::StructureType,
+    pub status: GyeokStatus,
+    pub description: String,
+}
+
 /// 동적 분석 결과
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DynamicLuckAnalysis {
@@ -29,6 +82,12 @@ pub struct DynamicLuckAnalysis {
     pub hourly_influence: Option<LuckInfluence>,
     /// 원국 + 모든 운이 결합된 종합 합충
     pub combined_relations: RelationshipAnalysis,
+    /// 고지 개고 이벤트 목록
+    pub gaego_events: Vec<GaeGoEvent>,
+    /// 고지 입묘 이벤트 목록
+    pub ipmyo_events: Vec<IpMyoEvent>,
+    /// 동적 격국 변화 상태
+    pub structure_state: DynamicStructureState,
 }
 
 /// 삶의 영역(Domain)에 대한 구체적인 영향을 담는 구조체
@@ -98,6 +157,10 @@ impl DynamicLuckAnalysis {
 
         // 확장된 구성을 기반으로 종합 합충 분석
         let combined_relations = Self::analyze_expanded(&stems, &branches);
+        let gaego_events = Self::evaluate_gaego_events(&branches, &combined_relations);
+        let ipmyo_events = Self::evaluate_ipmyo_events(natal, major, yearly);
+        let structure_state =
+            Self::evaluate_structure_state(natal, major, yearly, &combined_relations);
 
         let major_influence = major.map(|m| Self::get_influence(m, "대운", natal));
         let yearly_influence = yearly.map(|y| Self::get_influence(y, "세운", natal));
@@ -113,6 +176,9 @@ impl DynamicLuckAnalysis {
             daily_influence,
             hourly_influence,
             combined_relations,
+            gaego_events,
+            ipmyo_events,
+            structure_state,
         }
     }
 
@@ -244,6 +310,48 @@ impl DynamicLuckAnalysis {
         analysis.triple_combinations = TripleCombination::check(&all_b);
         analysis.seasonal_combinations = SeasonalCombination::check(&all_b);
 
+        // 동적 우선순위 계층 (Dynamic Precedence Hierarchy):
+        // 완성된 삼합(三合) 또는 방합(方合)에 참여하는 지지 위치(Position-aware)는
+        // 하위 우선순위인 지지충(沖) 및 육합(六合)을 억제(suppress)함
+        let mut alliance_positions = std::collections::HashSet::new();
+        for tc in &analysis.triple_combinations {
+            let req = tc.branches();
+            let mut used_positions = std::collections::HashSet::new();
+            for &req_b in &req {
+                if let Some((pos, _)) = branches
+                    .iter()
+                    .find(|(pos, b)| *b == req_b && !used_positions.contains(pos))
+                {
+                    used_positions.insert(*pos);
+                    alliance_positions.insert(*pos);
+                }
+            }
+        }
+        for sc in &analysis.seasonal_combinations {
+            let req = sc.branches();
+            let mut used_positions = std::collections::HashSet::new();
+            for &req_b in &req {
+                if let Some((pos, _)) = branches
+                    .iter()
+                    .find(|(pos, b)| *b == req_b && !used_positions.contains(pos))
+                {
+                    used_positions.insert(*pos);
+                    alliance_positions.insert(*pos);
+                }
+            }
+        }
+
+        if !alliance_positions.is_empty() {
+            analysis.six_combinations.retain(|(_, p1, p2)| {
+                !alliance_positions.contains(p1.as_str())
+                    && !alliance_positions.contains(p2.as_str())
+            });
+            analysis.branch_clashes.retain(|(_, p1, p2)| {
+                !alliance_positions.contains(p1.as_str())
+                    && !alliance_positions.contains(p2.as_str())
+            });
+        }
+
         let is_luck =
             |p: &str| p == "대운" || p == "세운" || p == "월운" || p == "일운" || p == "시운";
 
@@ -310,6 +418,182 @@ impl DynamicLuckAnalysis {
         analysis.mapped_relationships = mapped;
 
         analysis
+    }
+
+    fn evaluate_gaego_events(
+        branches: &[(&'static str, EarthlyBranch)],
+        combined: &RelationshipAnalysis,
+    ) -> Vec<GaeGoEvent> {
+        let mut events = Vec::new();
+        let is_storage = |b: EarthlyBranch| {
+            matches!(
+                b,
+                EarthlyBranch::Chen | EarthlyBranch::Xu | EarthlyBranch::Chou | EarthlyBranch::Wei
+            )
+        };
+
+        for &(pos, b) in branches {
+            if is_storage(b) {
+                let mut trigger = None;
+                for (clash, p1, p2) in &combined.branch_clashes {
+                    if (p1 == pos || p2 == pos) && (p1.contains("운") || p2.contains("운")) {
+                        trigger = Some(format!("지충:{}", clash.hangul()));
+                        break;
+                    }
+                }
+                if trigger.is_none() {
+                    for tri in &combined.triple_combinations {
+                        if tri.branches().contains(&b)
+                            && branches
+                                .iter()
+                                .any(|(p, br)| p.contains("운") && tri.branches().contains(br))
+                        {
+                            trigger = Some(format!("삼합:{}", tri.hangul()));
+                            break;
+                        }
+                    }
+                }
+                if trigger.is_none() {
+                    for sea in &combined.seasonal_combinations {
+                        if sea.branches().contains(&b)
+                            && branches
+                                .iter()
+                                .any(|(p, br)| p.contains("운") && sea.branches().contains(br))
+                        {
+                            trigger = Some(format!("방합:{}", sea.hangul()));
+                            break;
+                        }
+                    }
+                }
+                if trigger.is_none() {
+                    for (six, p1, p2) in &combined.six_combinations {
+                        if (p1 == pos || p2 == pos) && (p1.contains("운") || p2.contains("운")) {
+                            trigger = Some(format!("육합:{}", six.hangul()));
+                            break;
+                        }
+                    }
+                }
+
+                if let Some(trig) = trigger {
+                    events.push(GaeGoEvent {
+                        branch: b,
+                        position: pos.to_string(),
+                        trigger: trig,
+                        unsealed_stems: b.jijanggan().to_vec(),
+                    });
+                }
+            }
+        }
+        events
+    }
+
+    fn evaluate_ipmyo_events(
+        natal: &FourPillars,
+        major: Option<GanZi>,
+        yearly: Option<GanZi>,
+    ) -> Vec<IpMyoEvent> {
+        let dm = natal.day_master();
+        let mut events = Vec::new();
+
+        for (luck_ganzi, label) in [(major, "대운"), (yearly, "세운")] {
+            if let Some(g) = luck_ganzi {
+                let stage = crate::core::twelve_stages::calculate_twelve_stage(dm, g.branch);
+                if stage == crate::core::twelve_stages::TwelveStage::Mu {
+                    let trapped_el = dm.element();
+                    events.push(IpMyoEvent {
+                        element: trapped_el,
+                        tomb_branch: g.branch,
+                        trigger: format!("{} 12운성 묘(墓)지 입묘", label),
+                    });
+                }
+            }
+        }
+        events
+    }
+
+    fn evaluate_structure_state(
+        natal: &FourPillars,
+        major: Option<GanZi>,
+        yearly: Option<GanZi>,
+        combined: &RelationshipAnalysis,
+    ) -> DynamicStructureState {
+        use crate::analysis::structure::{StructureAnalysis, StructureType};
+        let base_struct = StructureAnalysis::from_pillars(natal).structure;
+
+        let mut active_struct = base_struct;
+        let mut status = GyeokStatus::Stable;
+        let mut desc = format!("원국 기본 격국 {} 유지", base_struct.hangul());
+
+        if let Some(tri) = combined.triple_combinations.first() {
+            let el = tri.element();
+            active_struct = match el {
+                Element::Wood => StructureType::GokJik,
+                Element::Fire => StructureType::YeomSang,
+                Element::Earth => StructureType::GaSaek,
+                Element::Metal => StructureType::JongHyeok,
+                Element::Water => StructureType::YoonHa,
+            };
+            status = GyeokStatus::Transformed;
+            desc = format!(
+                "삼합({}) 완성으로 {} 변격",
+                tri.hangul(),
+                active_struct.hangul()
+            );
+        } else if let Some(sea) = combined.seasonal_combinations.first() {
+            let el = sea.element();
+            active_struct = match el {
+                Element::Wood => StructureType::GokJik,
+                Element::Fire => StructureType::YeomSang,
+                Element::Earth => StructureType::GaSaek,
+                Element::Metal => StructureType::JongHyeok,
+                Element::Water => StructureType::YoonHa,
+            };
+            status = GyeokStatus::Transformed;
+            desc = format!(
+                "방합({}) 완성으로 {} 변격",
+                sea.hangul(),
+                active_struct.hangul()
+            );
+        }
+
+        if status == GyeokStatus::Stable {
+            let dm = natal.day_master();
+            for (luck_stem, label) in [
+                (major.map(|m| m.stem), "대운"),
+                (yearly.map(|y| y.stem), "세운"),
+            ] {
+                if let Some(s) = luck_stem {
+                    let god = crate::core::ten_gods::TenGod::from_stems(dm, s);
+                    let is_valid_gyeok_god = !matches!(
+                        god,
+                        crate::core::ten_gods::TenGod::Bijian
+                            | crate::core::ten_gods::TenGod::Jiecai
+                    );
+                    let is_month_root = natal.month.branch.hidden_stems().contains(&s);
+                    if is_month_root && is_valid_gyeok_god {
+                        status = GyeokStatus::Fulfilled;
+                        desc = format!("{} 천간 {} 투출로 격국 성격", label, god.hangul());
+                        break;
+                    }
+                }
+            }
+        }
+
+        if combined
+            .branch_clashes
+            .iter()
+            .any(|(_, p1, p2)| p1 == "월지" || p2 == "월지")
+        {
+            status = GyeokStatus::Broken;
+            desc = format!("월지 충발로 인한 {} 파격", active_struct.hangul());
+        }
+
+        DynamicStructureState {
+            base_structure: base_struct,
+            active_structure: active_struct,
+            status,
+            description: desc,
+        }
     }
 
     pub fn get_influence(luck: GanZi, label: &str, natal: &FourPillars) -> LuckInfluence {

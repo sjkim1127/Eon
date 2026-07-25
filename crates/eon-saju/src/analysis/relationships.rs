@@ -78,6 +78,18 @@ impl StemCombination {
         }
     }
 
+    /// 구성 천간 반환
+    pub const fn stems(&self) -> (HeavenlyStem, HeavenlyStem) {
+        use HeavenlyStem::*;
+        match self {
+            Self::JiaJi => (Jia, Ji),
+            Self::YiGeng => (Yi, Geng),
+            Self::BingXin => (Bing, Xin),
+            Self::DingRen => (Ding, Ren),
+            Self::WuGui => (Wu, Gui),
+        }
+    }
+
     pub const fn hanja(&self) -> &'static str {
         match self {
             Self::JiaJi => "甲己合",
@@ -342,6 +354,17 @@ impl SeasonalCombination {
         results
     }
 
+    /// 구성 지지 반환
+    pub fn branches(&self) -> [EarthlyBranch; 3] {
+        use EarthlyBranch::*;
+        match self {
+            Self::YinMaoChen => [Yin, Mao, Chen],
+            Self::SiWuWei => [Si, Wu, Wei],
+            Self::ShenYouXu => [Shen, You, Xu],
+            Self::HaiZiChou => [Hai, Zi, Chou],
+        }
+    }
+
     /// 방합에 의한 오행
     pub const fn element(&self) -> Element {
         match self {
@@ -358,17 +381,6 @@ impl SeasonalCombination {
             Self::SiWuWei => "사오미 화방",
             Self::ShenYouXu => "신유술 금방",
             Self::HaiZiChou => "해자축 수방",
-        }
-    }
-
-    /// 구성 지지 반환
-    pub fn branches(&self) -> [EarthlyBranch; 3] {
-        use EarthlyBranch::*;
-        match self {
-            Self::YinMaoChen => [Yin, Mao, Chen],
-            Self::SiWuWei => [Si, Wu, Wei],
-            Self::ShenYouXu => [Shen, You, Xu],
-            Self::HaiZiChou => [Hai, Zi, Chou],
         }
     }
 }
@@ -429,6 +441,19 @@ impl SixCombination {
             Self::ChenYou => "진유합",
             Self::SiShen => "사신합",
             Self::WuWei => "오미합",
+        }
+    }
+
+    /// 구성 지지 반환
+    pub const fn branches(&self) -> (EarthlyBranch, EarthlyBranch) {
+        use EarthlyBranch::*;
+        match self {
+            Self::ZiChou => (Zi, Chou),
+            Self::YinHai => (Yin, Hai),
+            Self::MaoXu => (Mao, Xu),
+            Self::ChenYou => (Chen, You),
+            Self::SiShen => (Si, Shen),
+            Self::WuWei => (Wu, Wei),
         }
     }
 }
@@ -531,6 +556,19 @@ impl BranchClash {
             Self::MaoYou => "묘유충",
             Self::ChenXu => "진술충",
             Self::SiHai => "사해충",
+        }
+    }
+
+    /// 구성 지지 반환
+    pub const fn branches(&self) -> (EarthlyBranch, EarthlyBranch) {
+        use EarthlyBranch::*;
+        match self {
+            Self::ZiWu => (Zi, Wu),
+            Self::ChouWei => (Chou, Wei),
+            Self::YinShen => (Yin, Shen),
+            Self::MaoYou => (Mao, You),
+            Self::ChenXu => (Chen, Xu),
+            Self::SiHai => (Si, Hai),
         }
     }
 }

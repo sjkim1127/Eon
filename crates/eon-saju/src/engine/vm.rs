@@ -16,7 +16,8 @@ use crate::core::ten_gods::TenGod;
 use crate::core::twelve_stages::TwelveStage;
 use crate::engine::signatures::{LuckSignature, SignatureScanner};
 use crate::engine::trace_tag::{
-    AuspiciousSpiritName, InterruptType, LuckPeriod, StrengthTypeName, TraceTag,
+    AuspiciousSpiritName, InauspiciousSpiritName, InterruptType, LuckPeriod, PillarPosition,
+    StrengthTypeName, TraceTag,
 };
 use serde::{Deserialize, Serialize};
 
@@ -88,6 +89,12 @@ impl QiRegisters {
 
     /// 기운의 정규화 (전체 합을 100%로 유지하여 상대적 균형 분석)
     pub fn normalize(&mut self) {
+        self.r0_wood = self.r0_wood.max(0.0);
+        self.r1_fire = self.r1_fire.max(0.0);
+        self.r2_earth = self.r2_earth.max(0.0);
+        self.r3_metal = self.r3_metal.max(0.0);
+        self.r4_water = self.r4_water.max(0.0);
+
         let total = self.r0_wood + self.r1_fire + self.r2_earth + self.r3_metal + self.r4_water;
         if total > 0.1 {
             self.r0_wood = (self.r0_wood / total) * 100.0;
@@ -208,6 +215,13 @@ impl SajuVM {
     ) -> f32 {
         let mut score = self.config.vm.base_score;
 
+        let power_res = self
+            .natal
+            .integrated_analysis(Default::default(), &self.config);
+        for (el, pct, _) in power_res.element_scores {
+            registers.update(el, pct);
+        }
+
         // 0. 하드웨어 인터럽트 체크 (Interrupt Vector Table Scan)
         self.handle_interrupts(dynamic, tags, esil_trace, registers, &mut score);
 
@@ -266,6 +280,16 @@ impl SajuVM {
                                 let period = LuckPeriod::from_label(label);
                                 tags.push(TraceTag::EscapedVoidSixCombo { period });
                                 break;
+                            }
+                        }
+                        if !is_escaped {
+                            for (_, p1, p2) in &dynamic.combined_relations.branch_clashes {
+                                if p1.contains(label) || p2.contains(label) {
+                                    is_escaped = true;
+                                    let period = LuckPeriod::from_label(label);
+                                    tags.push(TraceTag::EscapedVoidClash { period });
+                                    break;
+                                }
                             }
                         }
                         // 삼합/방합 체크 (이미 combined_relations에 포함됨)
@@ -338,11 +362,10 @@ impl SajuVM {
                 };
                 if s_score != 0.0 {
                     score += s_score;
-                    tags.push(TraceTag::Custom(format!(
-                        "신살:{}({})",
-                        shinsal_day.hangul(),
-                        label
-                    )));
+                    tags.push(TraceTag::TwelveShinsal {
+                        name: shinsal_day.into(),
+                        period: LuckPeriod::from_label(label),
+                    });
                     esil_trace.push_str(&format!(
                         "shinsal:{},score:{:.1}; ",
                         shinsal_day.hangul(),
@@ -366,23 +389,21 @@ impl SajuVM {
                 for (target, target_name) in
                     [(natal_day_branch, "일지"), (natal_year_branch, "년지")]
                 {
-                    if let Some(wonjin) = EvilSpirit::check_wonjin(target, b) {
+                    if let Some(_wonjin) = EvilSpirit::check_wonjin(target, b) {
                         score -= 5.0;
-                        tags.push(TraceTag::Custom(format!(
-                            "흉살:{}({}-{})",
-                            wonjin.hangul(),
-                            target_name,
-                            label
-                        )));
+                        tags.push(TraceTag::InauspiciousSpirit {
+                            name: InauspiciousSpiritName::Wonjin,
+                            position: PillarPosition::from_label(target_name),
+                            period: LuckPeriod::from_label(label),
+                        });
                     }
-                    if let Some(gwimun) = EvilSpirit::check_gwimun(target, b) {
+                    if let Some(_gwimun) = EvilSpirit::check_gwimun(target, b) {
                         score -= 3.0;
-                        tags.push(TraceTag::Custom(format!(
-                            "흉살:{}({}-{})",
-                            gwimun.hangul(),
-                            target_name,
-                            label
-                        )));
+                        tags.push(TraceTag::InauspiciousSpirit {
+                            name: InauspiciousSpiritName::Gwimun,
+                            position: PillarPosition::from_label(target_name),
+                            period: LuckPeriod::from_label(label),
+                        });
                     }
                 }
             }
@@ -424,11 +445,10 @@ impl SajuVM {
                         label,
                         stage_score
                     ));
-                    tags.push(TraceTag::Custom(format!(
-                        "운성:{}({})",
-                        stage.hangul(),
-                        label
-                    )));
+                    tags.push(TraceTag::LifeStage {
+                        stage: stage.into(),
+                        period: LuckPeriod::from_label(label),
+                    });
                 }
             }
         }
@@ -552,6 +572,15 @@ impl SajuVM {
                 for b in [b1_obj, b2_obj].iter().flatten() {
                     let hidden_stems = b.jijanggan();
                     for stem in hidden_stems {
+                        // Skip stems that will be scored by GaeGo events in Section 6.7 to prevent double scoring
+                        let is_gaego_unsealed = dynamic
+                            .gaego_events
+                            .iter()
+                            .any(|ev| ev.branch == *b && ev.unsealed_stems.contains(&stem));
+                        if is_gaego_unsealed {
+                            continue;
+                        }
+
                         let el = stem.element();
                         let weight = self.get_element_priority(
                             el,
@@ -577,7 +606,7 @@ impl SajuVM {
                     }
                 }
                 tags.push(TraceTag::BranchClash {
-                    clash_type: clash.hangul().to_string(),
+                    clash_type: clash.hangul().into(),
                 });
             }
         }
@@ -591,7 +620,7 @@ impl SajuVM {
                 p1, p2, penalty
             ));
             tags.push(TraceTag::Punishment {
-                punishment_type: pun.hangul().to_string(),
+                punishment_type: pun.hangul().into(),
             });
         }
 
@@ -604,7 +633,7 @@ impl SajuVM {
                 p1, p2, penalty
             ));
             tags.push(TraceTag::Harm {
-                harm_type: harm.hangul().to_string(),
+                harm_type: harm.hangul().into(),
             });
         }
 
@@ -614,7 +643,7 @@ impl SajuVM {
             score -= penalty;
             esil_trace.push_str(&format!("io_error:{}-{},penalty:-{:.1}; ", p1, p2, penalty));
             tags.push(TraceTag::Destruction {
-                destruction_type: dest.hangul().to_string(),
+                destruction_type: dest.hangul().into(),
             });
         }
 
@@ -640,7 +669,7 @@ impl SajuVM {
 
                 esil_trace.push_str(&format!("six_combo:{}-{},bonus:{:.1}; ", p1, p2, bonus));
                 tags.push(TraceTag::SixCombination {
-                    combo_type: six.hangul().to_string(),
+                    combo_type: six.hangul().into(),
                 });
             }
         }
@@ -654,9 +683,75 @@ impl SajuVM {
                 p1, p2, penalty
             ));
             tags.push(TraceTag::StemClash {
-                clash_type: clash.hangul().to_string(),
+                clash_type: clash.hangul().into(),
             });
         }
+
+        // 6.7 고지 개고 (GaeGo: Storage Unsealing)
+        for event in &dynamic.gaego_events {
+            for stem in &event.unsealed_stems {
+                let el = stem.element();
+                let weight = self.get_element_priority(
+                    el,
+                    primary_yongshin,
+                    assistant_yongshin,
+                    thermal_index,
+                );
+                let bonus = 10.0 * self.config.vm.memory_dump_weight * weight;
+                score += bonus;
+                registers.update(el, bonus);
+                esil_trace.push_str(&format!(
+                    "gaego:{}({}),bonus:{:.1}; ",
+                    event.branch.hangul(),
+                    stem.hangul(),
+                    bonus
+                ));
+                tags.push(TraceTag::GaeGo {
+                    branch: event.branch,
+                    unsealed_stem: *stem,
+                });
+            }
+        }
+
+        // 6.8 고지 입묘 (IpMyo: Trapping into Storage)
+        for event in &dynamic.ipmyo_events {
+            let el = event.element;
+            let penalty = 8.0;
+            score -= penalty;
+            registers.update(el, -penalty);
+            esil_trace.push_str(&format!(
+                "ipmyo:{},tomb:{},penalty:-{:.1}; ",
+                el.hangul(),
+                event.tomb_branch.hangul(),
+                penalty
+            ));
+            tags.push(TraceTag::IpMyo {
+                element: el,
+                tomb_branch: event.tomb_branch,
+            });
+        }
+
+        // 6.9 동적 격국 상태 (Dynamic Structure State Transition)
+        let gyeok_state = &dynamic.structure_state;
+        let gyeok_score = match gyeok_state.status {
+            crate::analysis::dynamic_luck::GyeokStatus::Fulfilled => 15.0,
+            crate::analysis::dynamic_luck::GyeokStatus::Transformed => 8.0,
+            crate::analysis::dynamic_luck::GyeokStatus::Broken => -15.0,
+            crate::analysis::dynamic_luck::GyeokStatus::Stable => 0.0,
+        };
+        if gyeok_score != 0.0 {
+            score += gyeok_score;
+            esil_trace.push_str(&format!(
+                "gyeok_state:{},status:{},score:{:.1}; ",
+                gyeok_state.active_structure.hangul(),
+                gyeok_state.status.hangul(),
+                gyeok_score
+            ));
+        }
+        tags.push(TraceTag::DynamicGyeok {
+            active_structure: gyeok_state.active_structure,
+            status: gyeok_state.status,
+        });
 
         // 7. 동적 회합(Triple/Seasonal) 완성 분석 - Dynamic Combination Completion
         // 원국에 없던 삼합/방합이 대운/세운에 의해 완성될 때 강력한 시너지 보너스 부여
@@ -788,7 +883,7 @@ impl SajuVM {
     fn trigger_irq(
         &self,
         irq: SajuInterrupt,
-        marker_name: &str,
+        marker_name: &'static str,
         tags: &mut Vec<TraceTag>,
         esil_trace: &mut String,
         registers: &mut QiRegisters,
@@ -812,7 +907,7 @@ impl SajuVM {
         esil_trace.push_str(&format!("irq_handle:{:?},impact:-{:.1}; ", irq, penalty));
         tags.push(TraceTag::Interrupt {
             irq_type,
-            marker: marker_name.to_string(),
+            marker: marker_name.into(),
         });
 
         // 인터럽트 발생 시 특정 레지스터 강제 변조 (Kernel Panic 효과)

@@ -35,6 +35,10 @@ pub struct VoidDetail {
     pub description: String,
     pub reasons: Vec<String>,
     pub level: crate::analysis::supplementary_pillars::InterpretationLevel,
+    #[serde(default)]
+    pub is_dissolved: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dissolution_reason: Option<String>,
 }
 
 impl VoidAnalysis {
@@ -61,8 +65,34 @@ impl VoidAnalysis {
                 void_positions.push(pos.to_string());
                 void_ten_gods.push(tg);
 
-                // 상세 해석 생성
-                let summary = format!("{}에 위치한 {} 공망", pos, tg.hangul());
+                // 공망해충/공망해합 (해소) 여부 검사
+                let dissolution = check_void_dissolution(ganzi.branch, pos, pillars);
+                let (is_dissolved, dissolution_reason) = match dissolution {
+                    Some((diss, msg)) => (diss, Some(msg)),
+                    None => (false, None),
+                };
+
+                let mut reasons = vec![
+                    format!("일주 기준 공망: {}", ganzi.branch.hangul()),
+                    format!("{} 위치 중복", pos),
+                ];
+
+                let (summary, level, desc_extra) = if is_dissolved {
+                    let reason_str = dissolution_reason.clone().unwrap_or_default();
+                    reasons.push(reason_str.clone());
+                    (
+                        format!("{}에 위치한 {} 공망 (해충/해합 해소)", pos, tg.hangul()),
+                        crate::analysis::supplementary_pillars::InterpretationLevel::Neutral,
+                        format!(" (단, {}에 의해 공망이 해소/구원되었습니다.)", reason_str),
+                    )
+                } else {
+                    (
+                        format!("{}에 위치한 {} 공망", pos, tg.hangul()),
+                        crate::analysis::supplementary_pillars::InterpretationLevel::Caution,
+                        "".to_string(),
+                    )
+                };
+
                 let description = match pos {
                     "년주" => "선조나 국가적 혜택이 약하거나, 어린 시절의 근간이 흔들릴 수 있음을 의미합니다.",
                     "월주" => "부모/형제운이 약하거나 직업적 정착에 더 많은 노력이 필요할 수 있습니다.",
@@ -75,12 +105,11 @@ impl VoidAnalysis {
                     position: pos.to_string(),
                     ten_god: tg,
                     summary,
-                    description: description.to_string(),
-                    reasons: vec![
-                        format!("일주 기준 공망: {}", ganzi.branch.hangul()),
-                        format!("{} 위치 중복", pos),
-                    ],
-                    level: crate::analysis::supplementary_pillars::InterpretationLevel::Caution,
+                    description: format!("{}{}", description, desc_extra),
+                    reasons,
+                    level,
+                    is_dissolved,
+                    dissolution_reason,
                 });
             }
         }
@@ -93,6 +122,71 @@ impl VoidAnalysis {
             mapped_voids,
         }
     }
+}
+
+/// 공망 해충 / 공망 해합 여부 판정
+fn check_void_dissolution(
+    target_branch: EarthlyBranch,
+    target_pos: &str,
+    pillars: &FourPillars,
+) -> Option<(bool, String)> {
+    let other_branches = [
+        ("년주", pillars.year.branch),
+        ("월주", pillars.month.branch),
+        ("일주", pillars.day.branch),
+        ("시주", pillars.hour.branch),
+    ];
+    let all_branches = [
+        pillars.year.branch,
+        pillars.month.branch,
+        pillars.day.branch,
+        pillars.hour.branch,
+    ];
+
+    for (pos, b) in other_branches {
+        if pos == target_pos {
+            continue;
+        }
+        if crate::analysis::relationships::BranchClash::check(target_branch, b).is_some() {
+            return Some((
+                true,
+                format!("{} {}와 충(沖)하여 공망 해소 (공망해충)", pos, b.hangul()),
+            ));
+        }
+        if crate::analysis::relationships::SixCombination::check(target_branch, b).is_some() {
+            return Some((
+                true,
+                format!(
+                    "{} {}와 육합(六合)하여 공망 해소 (공망해합)",
+                    pos,
+                    b.hangul()
+                ),
+            ));
+        }
+    }
+
+    let triples = crate::analysis::relationships::TripleCombination::check(&all_branches);
+    if triples
+        .iter()
+        .any(|c| c.branches().contains(&target_branch))
+    {
+        return Some((
+            true,
+            "원국 삼합(三合) 성국으로 공망 해소 (공망해합)".to_string(),
+        ));
+    }
+    let seasonals = crate::analysis::relationships::SeasonalCombination::check(&all_branches);
+    if seasonals
+        .iter()
+        .any(|c| c.branches().contains(&target_branch))
+    {
+        return Some((
+            true,
+            "원국 방합(方合) 성국으로 공망 해소 (공망해합)".to_string(),
+        ));
+    }
+
+    None
 }
 
 /// 특정 간지의 공망 지지와 순(旬) 그룹 산출

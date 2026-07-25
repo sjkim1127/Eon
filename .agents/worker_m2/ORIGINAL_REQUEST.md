@@ -1,28 +1,29 @@
-## 2026-06-20T10:38:31Z
-You are the Worker agent (teamwork_preview_worker).
-Your working directory is `/Users/sjkim1127/Eon/.agents/worker_m2` (please write all coordination and handoff files there).
-Your task is to implement Milestone M2 (R1 Ashtakoota Guna Milan) in Eon based on the synthesis report at `/Users/sjkim1127/Eon/.agents/impl_orch/synthesis_m2.md` and proposed changes at `/Users/sjkim1127/Eon/.agents/explorer_m2_1/proposed_changes.md`.
+## 2026-07-24T18:29:42Z
 
-Specifically:
-1. Update `KootaScore` struct and its initialization in `crates/eon-vedic/src/analysis/matching.rs` to add `id: String`.
-2. Add `compat` field to `AnalysisState` in `crates/eon-ui/src/store/mod.rs` as:
-   `pub compat: Signal<AnalysisTaskState<eon_service::dto::VedicCompatibilityOutput>>`
-   And initialize it in `AnalysisState::new()` with `compat: Signal::new(AnalysisTaskState::default())`.
-3. Add the translation keys to `TK` in `crates/eon-ui/src/i18n/mod.rs` and update the translations in `en.rs`, `ko.rs`, `zh.rs`, and `ru.rs`. Implement `translate_koota_name` and `translate_koota_desc` helper functions.
-4. Refactor `crates/eon-ui/src/components/tabs/vedic_tab.rs`'s Compatibility rendering block:
-   - Use the global `state.compat` instead of local component signals `compat_status` and `compat_data`.
-   - Implement the `CompatibilityGauge` component as an SVG circular progress ring (showing score out of 36).
-   - Use `translate_koota_name`, `translate_koota_desc`, and other localized keys to translate all table contents, headers, button labels, Mangal Dosha texts, and explanations.
-5. After implementing, run verification:
-   - Run `cargo check --workspace`
-   - Run `cargo test --workspace` to ensure all tests pass
-   - Run `dx build` in `crates/eon-ui/` to verify frontend compilation success.
+<USER_REQUEST>
+You are the Implementation Worker for Milestone 2 (R2): Dynamic Luck & Temporal Simulation Engine in `crates/eon-saju`.
+
+Read `AGENTS.md` at `/Users/sjkim1127/Eon/AGENTS.md` first.
+Read the Explorer 3 handoff report at `/Users/sjkim1127/Eon/.agents/teamwork_preview_explorer_m1_3/handoff.md`.
+
+Your tasks for Milestone 2 (R2):
+1. **Wolwun Astronomical Solar Term Alignment (`crates/eon-saju/src/analysis/periodic_luck.rs`)**:
+   - Refactor `MonthlyLuck::calculate` and `month_ganzi` to calculate true Saju month GanZi based on astronomical solar term entry boundaries (`AstroEngine` solar term indices) rather than simple calendar month `- 1`.
+2. **Dynamic Precedence Hierarchy (`crates/eon-saju/src/analysis/dynamic_luck.rs`)**:
+   - Filter `combined_relations`: When a branch participates in a completed Triple Alliance (삼합) or Seasonal Alliance (방합), suppress lower-priority Branch Clash (지충) and Six Combination (육합) entries involving that branch.
+3. **Augmented Dynamic Transformation Analysis (`crates/eon-saju/src/analysis/transformations.rs`)**:
+   - Add `TransformationAnalysis::from_expanded` to evaluate 5/6 pillars (Natal + active Daewun + Saewun) during luck cycles and dynamically compute updated elemental power scores in `power.rs`.
+4. **Jijanggan Tomb Opening & Trapping (`crates/eon-saju/src/analysis/dynamic_luck.rs` & `crates/eon-saju/src/engine/vm.rs`)**:
+   - Implement storage branch (고지 辰, 戌, 丑, 未) unsealing (`GaeGo` 개고) and trapping (`IpMyo` 입묘) in `SajuVM` when hit by Daewun/Saewun clashes, combinations, or 12-Unseong Mu. Unseal stored hidden stems and update `QiRegisters`.
+5. **Dynamic Gyeokguk State Transitions (`crates/eon-saju/src/analysis/dynamic_luck.rs` & `crates/eon-saju/src/engine/vm.rs`)**:
+   - Implement dynamic Gyeokguk state tracking (`DynamicStructureState`: `Stable`, `Transformed` (변격), `Broken` (파격), `Fulfilled` (성격)) during active luck cycles when new stems project or triple alliances complete.
 
 MANDATORY INTEGRITY WARNING:
-DO NOT CHEAT. All implementations must be genuine. DO NOT
-hardcode test results, create dummy/facade implementations, or
-circumvent the intended task. A Forensic Auditor will independently
-verify your work. Integrity violations WILL be detected and your
-work WILL be rejected.
+DO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.
 
-Please report back when done, providing a detailed handoff report including command lines used and output results.
+After completing code modifications:
+- Run `cargo check --workspace` to ensure zero compilation errors and warnings.
+- Run `cargo test -p eon-saju` to verify all unit and integration tests pass 100%.
+- Document all file modifications, build outputs, and test outputs in `/Users/sjkim1127/Eon/.agents/worker_m2/handoff.md`.
+- Send your completion report message back to parent orchestrator.
+</USER_REQUEST>

@@ -38,16 +38,27 @@ pub enum StructureType {
     Special,
 
     // --- 종격 (從格) ---
-    /// 종아격 (從兒格) - 식상으로 종함
+    /// 진종아격 (眞從兒格) - 식상으로 순수 종함
     JongAh,
-    /// 종재격 (從財格) - 재성으로 종함
+    /// 진종재격 (眞從財格) - 재성으로 순수 종함
     JongJae,
-    /// 종살격 (從殺格) - 관성으로 종함
+    /// 진종살격 (眞從殺格) - 관성으로 순수 종함
     JongSal,
-    /// 종강격 (從强格) - 인성으로 종함
+    /// 진종강격 (眞從强格) - 인성으로 순수 종함
     JongGang,
-    /// 종왕격 (從旺格) - 비겁으로 종함
+    /// 진종왕격 (眞從旺格) - 비겁으로 순수 종함
     JongWang,
+
+    /// 가종아격 (假從兒格) - 미약한 인성/비겁 근이 있는 가종
+    GaJongAh,
+    /// 가종재격 (假從財格) - 미약한 인성/비겁 근이 있는 가종
+    GaJongJae,
+    /// 가종살격 (假從殺格) - 미약한 인성/비겁 근이 있는 가종
+    GaJongSal,
+    /// 가종강격 (假從强格) - 미약한 식상/재성/관성 근이 있는 가종
+    GaJongGang,
+    /// 가종왕격 (假從旺格) - 미약한 식상/재성/관성 근이 있는 가종
+    GaJongWang,
 
     /// 화기격 (化氣格) - 일간이 합화하여 성질이 변함
     HwaGi,
@@ -56,6 +67,21 @@ pub enum StructureType {
     Follower,
     /// 전왕격 (專旺格) - 자신의 기운이 극도로 강함
     SpecialTransformation,
+
+    // --- 전왕격 외격 5종 ---
+    /// 곡직격 (曲直格 - 목 전왕)
+    GokJik,
+    /// 염상격 (炎上格 - 화 전왕)
+    YeomSang,
+    /// 가색격 (稼穡格 - 토 전왕)
+    GaSaek,
+    /// 종혁격 (從革格 - 금 전왕)
+    JongHyeok,
+    /// 윤하격 (潤下格 - 수 전왕)
+    YoonHa,
+
+    /// 관살혼잡격 (官殺混雜格)
+    GwanSalHonJab,
 }
 
 impl StructureType {
@@ -72,14 +98,25 @@ impl StructureType {
             Self::JianLu => "건록격",
             Self::YangIn => "양인격",
             Self::Special => "비겁격",
-            Self::JongAh => "종아격",
-            Self::JongJae => "종재격",
-            Self::JongSal => "종살격",
-            Self::JongGang => "종강격",
-            Self::JongWang => "종왕격",
+            Self::JongAh => "진종아격",
+            Self::JongJae => "진종재격",
+            Self::JongSal => "진종살격",
+            Self::JongGang => "진종강격",
+            Self::JongWang => "진종왕격",
+            Self::GaJongAh => "가종아격",
+            Self::GaJongJae => "가종재격",
+            Self::GaJongSal => "가종살격",
+            Self::GaJongGang => "가종강격",
+            Self::GaJongWang => "가종왕격",
             Self::HwaGi => "화기격",
             Self::Follower => "종격(從格)",
             Self::SpecialTransformation => "전왕격(專旺格)",
+            Self::GokJik => "곡직격(木전왕)",
+            Self::YeomSang => "염상격(火전왕)",
+            Self::GaSaek => "가색격(土전왕)",
+            Self::JongHyeok => "종혁격(金전왕)",
+            Self::YoonHa => "윤하격(水전왕)",
+            Self::GwanSalHonJab => "관살혼잡격",
         }
     }
 
@@ -96,14 +133,25 @@ impl StructureType {
             Self::JianLu => "建祿格",
             Self::YangIn => "陽刃格",
             Self::Special => "特殊格",
-            Self::JongAh => "從兒格",
-            Self::JongJae => "從財格",
-            Self::JongSal => "從殺格",
-            Self::JongGang => "從强格",
-            Self::JongWang => "從旺格",
+            Self::JongAh => "眞從兒格",
+            Self::JongJae => "眞從財格",
+            Self::JongSal => "眞從殺格",
+            Self::JongGang => "眞從强格",
+            Self::JongWang => "眞從旺格",
+            Self::GaJongAh => "假從兒格",
+            Self::GaJongJae => "假從財格",
+            Self::GaJongSal => "假從殺格",
+            Self::GaJongGang => "假從强格",
+            Self::GaJongWang => "假從旺格",
             Self::HwaGi => "化氣格",
             Self::Follower => "從格",
             Self::SpecialTransformation => "專旺格",
+            Self::GokJik => "曲直格",
+            Self::YeomSang => "炎上格",
+            Self::GaSaek => "稼穡格",
+            Self::JongHyeok => "從革格",
+            Self::YoonHa => "潤下格",
+            Self::GwanSalHonJab => "官殺混雜格",
         }
     }
 
@@ -157,8 +205,7 @@ impl StructureAnalysis {
             ("시간", pillars.hour.stem),
         ];
 
-        // -1. 화기격(HwaGi) 우선 판정
-        // 월간이나 시간과 천간합을 이루고, 합화 오행이 월지(Month Branch) 오행과 일치하는지 확인
+        // -1. 화기격(HwaGi) 우선 판정 (파성 破星 및 쟁합/투합 검증)
         let mut hwagi_result = None;
         let adjacent_stems = [("월간", pillars.month.stem), ("시간", pillars.hour.stem)];
         for (path, stem_on_top) in &adjacent_stems {
@@ -167,8 +214,26 @@ impl StructureAnalysis {
             {
                 let transformed_elem = combo.transformed_element();
                 if month_branch.element() == transformed_elem {
-                    hwagi_result = Some((path, combo, transformed_elem, *stem_on_top));
-                    break;
+                    // 1) 합화 오행을 극하는 파성(破星) 존재 여부 검사
+                    let breaker_elem = transformed_elem.controlled_by();
+                    let all_stems = [
+                        pillars.year.stem,
+                        pillars.month.stem,
+                        pillars.day.stem,
+                        pillars.hour.stem,
+                    ];
+                    let has_break_star = all_stems.iter().any(|s| s.element() == breaker_elem);
+
+                    // 2) 쟁합/투합 검사
+                    let same_dm_count = all_stems.iter().filter(|&&s| s == dm).count();
+                    let same_partner_count =
+                        all_stems.iter().filter(|&&s| s == *stem_on_top).count();
+                    let is_competing = same_dm_count > 1 || same_partner_count > 1;
+
+                    if !has_break_star && !is_competing {
+                        hwagi_result = Some((path, combo, transformed_elem, *stem_on_top));
+                        break;
+                    }
                 }
             }
         }
@@ -183,6 +248,7 @@ impl StructureAnalysis {
                 reasons: vec![
                     format!("일간 {}와 {} {}이 {}", dm.hanja(), path, matched_stem.hanja(), combo.hanja()),
                     format!("합화 오행({})이 월지 {}과 일치", transformed_elem.hanja(), month_branch.hanja()),
+                    "파성(破星) 없음 및 쟁합/투합 없음 검증 완료".to_string(),
                 ],
             };
         }
@@ -193,23 +259,70 @@ impl StructureAnalysis {
             || strength.deuk_se.support_ratio <= config.strength.polarized_low;
 
         if is_polarized {
-            if strength.deuk_se.support_ratio >= config.strength.polarized_high {
-                // 비겁 vs 인성 비중 확인
-                let yinxing = strength.deuk_se.yinxing_count;
-                let bijie = strength.deuk_se.bijie_count;
+            let all_branches = [
+                pillars.year.branch,
+                pillars.month.branch,
+                pillars.day.branch,
+                pillars.hour.branch,
+            ];
 
-                let (structure, name, desc) = if bijie >= yinxing {
-                    (
-                        StructureType::JongWang,
-                        "종왕격(從旺格)",
-                        "자신의 기운이 극도로 강하여 그 기세를 유지해야 하는 격국입니다.",
-                    )
-                } else {
-                    (
-                        StructureType::JongGang,
-                        "종강격(從强格)",
-                        "자신을 돕는 인성의 기운이 극도로 강하여 그 기세를 따르는 격국입니다.",
-                    )
+            // 일간 및 인성 통근(뿌리) 여부 검사 (진종 眞從 vs 가종 假從 판정용)
+            let dm_el = dm.element();
+            let yin_el = dm_el.generated_by();
+            let has_dm_root = all_branches.iter().any(|b| {
+                b.hidden_stems()
+                    .iter()
+                    .any(|hs| hs.element() == dm_el || hs.element() == yin_el)
+            });
+
+            if strength.deuk_se.support_ratio >= config.strength.polarized_high {
+                // 삼합/방합 전왕 외격 5종 (곡직, 염상, 가색, 종혁, 윤하) 및 전왕격 판정
+                use crate::core::branch::EarthlyBranch::*;
+                use crate::core::element::Element;
+
+                let (structure, name, desc) = match dm_el {
+                    Element::Wood if matches!(month_branch, Yin | Mao | Chen | Hai) => (
+                        StructureType::GokJik,
+                        "곡직격(曲直格 - 木전왕)",
+                        "목(木)의 청아하고 인자한 기운이 전왕을 이루어 성품이 어질고 학문과 예술에 탁월합니다.",
+                    ),
+                    Element::Fire if matches!(month_branch, Si | Wu | Wei | Yin) => (
+                        StructureType::YeomSang,
+                        "염상격(炎上格 - 火전왕)",
+                        "화(火)의 뜨겁고 예의 바른 기운이 전왕을 이루어 명예와 예의가 높고 기상이 화려합니다.",
+                    ),
+                    Element::Earth if matches!(month_branch, Chen | Xu | Chou | Wei) => (
+                        StructureType::GaSaek,
+                        "가색격(稼穡格 - 土전왕)",
+                        "토(土)의 두텁고 신의 있는 기운이 전왕을 이루어 포용력이 크고 재물이 넉넉합니다.",
+                    ),
+                    Element::Metal if matches!(month_branch, Shen | You | Xu | Si) => (
+                        StructureType::JongHyeok,
+                        "종혁격(從革格 - 金전왕)",
+                        "금(金)의 과단하고 숙살하는 기운이 전왕을 이루어 결단력이 강하고 권위를 쥡니다.",
+                    ),
+                    Element::Water if matches!(month_branch, Hai | Zi | Chou | Shen) => (
+                        StructureType::YoonHa,
+                        "윤하격(潤下格 - 水전왕)",
+                        "수(水)의 지혜롭고 흐르는 기운이 전왕을 이루어 지혜가 깊고 만물을 유통시킵니다.",
+                    ),
+                    _ => {
+                        let yinxing = strength.deuk_se.yinxing_count;
+                        let bijie = strength.deuk_se.bijie_count;
+                        if bijie >= yinxing {
+                            (
+                                StructureType::JongWang,
+                                "종왕격(從旺格)",
+                                "자신의 기운이 극도로 강하여 그 기세를 유지해야 하는 전왕 격국입니다.",
+                            )
+                        } else {
+                            (
+                                StructureType::JongGang,
+                                "종강격(從强格)",
+                                "자신을 돕는 인성의 기운이 극도로 강하여 그 기세를 따르는 전왕 격국입니다.",
+                            )
+                        }
+                    }
                 };
 
                 return Self {
@@ -224,29 +337,70 @@ impl StructureAnalysis {
                     ],
                 };
             } else {
-                // 식상 vs 재성 vs 관성 비중 확인
-                let shishang = strength.deuk_se.shishang_count;
-                let cai = strength.deuk_se.caisheng_count;
-                let guan = strength.deuk_se.guanxing_count;
+                use crate::analysis::power::{AnalysisOptions, IntegratedAnalysis};
+                let options = AnalysisOptions {
+                    apply_transform: false,
+                    apply_correction: true,
+                };
+                let integrated = IntegratedAnalysis::calculate(pillars, options, config);
 
-                let (structure, name, desc) = if shishang >= cai && shishang >= guan {
-                    (
-                        StructureType::JongAh,
-                        "종아격(從兒格)",
-                        "일간보다 자식(식상)의 세력을 따르는 격국입니다.",
-                    )
-                } else if cai >= shishang && cai >= guan {
-                    (
-                        StructureType::JongJae,
-                        "종재격(從財格)",
-                        "일간보다 재물의 세력을 따르는 격국입니다.",
-                    )
+                let mut shishang_power = 0.0f32;
+                let mut cai_power = 0.0f32;
+                let mut guan_power = 0.0f32;
+
+                for (tg, pct, _) in integrated.ten_god_scores {
+                    match tg {
+                        TenGod::Shishen | TenGod::Shangguan => shishang_power += pct,
+                        TenGod::Zhengcai | TenGod::Piancai => cai_power += pct,
+                        TenGod::Zhengguan | TenGod::Pianguan => guan_power += pct,
+                        _ => {}
+                    }
+                }
+
+                let (structure, name, desc) = if shishang_power >= cai_power
+                    && shishang_power >= guan_power
+                {
+                    if has_dm_root {
+                        (
+                            StructureType::GaJongAh,
+                            "가종아격(假從兒格)",
+                            "일간이나 인성의 미약한 뿌리가 잔재하나 식상 세력을 따르는 가종격입니다.",
+                        )
+                    } else {
+                        (
+                            StructureType::JongAh,
+                            "진종아격(眞從兒格)",
+                            "일간/인성의 뿌리가 일절 없어 식상의 세력을 순수하게 따르는 진종격입니다.",
+                        )
+                    }
+                } else if cai_power >= shishang_power && cai_power >= guan_power {
+                    if has_dm_root {
+                        (
+                            StructureType::GaJongJae,
+                            "가종재격(假從財格)",
+                            "일간이나 인성의 미약한 뿌리가 잔재하나 재물 세력을 따르는 가종격입니다.",
+                        )
+                    } else {
+                        (
+                            StructureType::JongJae,
+                            "진종재격(眞從財格)",
+                            "일간/인성의 뿌리가 일절 없어 재물의 세력을 순수하게 따르는 진종격입니다.",
+                        )
+                    }
                 } else {
-                    (
-                        StructureType::JongSal,
-                        "종살격(從殺格)",
-                        "일간보다 관성의 세력을 따르는 격국입니다.",
-                    )
+                    if has_dm_root {
+                        (
+                            StructureType::GaJongSal,
+                            "가종살격(假從殺格)",
+                            "일간이나 인성의 미약한 뿌리가 잔재하나 관살 세력을 따르는 가종격입니다.",
+                        )
+                    } else {
+                        (
+                            StructureType::JongSal,
+                            "진종살격(眞從殺格)",
+                            "일간/인성의 뿌리가 일절 없어 관살의 세력을 순수하게 따르는 진종격입니다.",
+                        )
+                    }
                 };
 
                 return Self {
@@ -258,9 +412,40 @@ impl StructureAnalysis {
                     reasons: vec![
                         format!("일간 세력비율: {:.1}%", strength.deuk_se.support_ratio),
                         format!("종격 임계치: {:.1}% 이하", config.strength.polarized_low),
+                        format!(
+                            "일간/인성 지지 통근: {}",
+                            if has_dm_root {
+                                "존재 (가종격 판정)"
+                            } else {
+                                "없음 (진종격 판정)"
+                            }
+                        ),
                     ],
                 };
             }
+        }
+
+        // 0.5. 관살혼잡격(官殺混雜格) 판정
+        // 년/월/시간에 정관과 편관이 동시에 투출하고 제화(합/극)되지 않은 경우
+        let exposed_stems = [pillars.year.stem, pillars.month.stem, pillars.hour.stem];
+        let exposed_tgs: Vec<TenGod> = exposed_stems
+            .iter()
+            .map(|&s| TenGod::from_stems(dm, s))
+            .collect();
+        let has_zhengguan = exposed_tgs.contains(&TenGod::Zhengguan);
+        let has_pianguan = exposed_tgs.contains(&TenGod::Pianguan);
+        if has_zhengguan && has_pianguan {
+            return Self {
+                structure: StructureType::GwanSalHonJab,
+                projected_stem: None,
+                projection_path: None,
+                summary: "정관과 편관이 함께 투출하여 혼란스러운 관살혼잡격".to_string(),
+                description: "원국 천간에 정관과 편관(칠살)이 동시에 드러나 있어 직업적 갈등이나 명예 선택의 난관이 따를 수 있으므로 정리가 필요합니다.".to_string(),
+                reasons: vec![
+                    "원국 천간에 정관(正官)과 편관(偏官/七殺)이 동시 투출됨".to_string(),
+                    "관살혼잡(官殺混雜) 상태 형성".to_string(),
+                ],
+            };
         }
 
         // 1. 건록격/양인격 우선 판정

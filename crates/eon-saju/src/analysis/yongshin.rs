@@ -45,6 +45,19 @@ pub struct RecommendedYongshin {
     pub summary: String,
     pub description: String,
     pub reasons: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preferred_stems: Option<Vec<crate::core::stem::HeavenlyStem>>,
+}
+
+/// 병약용신 정밀 진단 결과
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ByeongyakAnalysis {
+    pub disease: Element,
+    pub medicine: Element,
+    pub summary: String,
+    pub description: String,
+    pub reasons: Vec<String>,
 }
 
 /// 용신 분석 종합 결과
@@ -57,6 +70,9 @@ pub struct YongshinAnalysis {
     pub primary: Element,
     /// 이를 돕는 희신(喜神)
     pub assistant: Element,
+    /// 병약 용신 상세 진단 (있을 경우)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub byeongyak_detail: Option<ByeongyakAnalysis>,
 }
 
 impl YongshinAnalysis {
@@ -70,44 +86,74 @@ impl YongshinAnalysis {
         let day_master_el = pillars.day_master_element();
         let structure_analysis = pillars.structure();
 
-        let eokbu_element = match structure_analysis.structure {
-            StructureType::JongAh => day_master_el.generates(),
-            StructureType::JongJae => day_master_el.generates().generates(), // 재성
-            StructureType::JongSal => day_master_el.controlled_by(),
-            StructureType::JongGang => day_master_el.generated_by(),
-            StructureType::JongWang => day_master_el,
-            StructureType::Follower => pillars.month.branch.element(),
-            StructureType::SpecialTransformation => day_master_el,
-            _ => {
-                match strength.strength_type {
-                    StrengthType::Weak => {
-                        // 신약(身弱)은 항상 인성(印星)이 억부용신
-                        // - 인성이 원국에 없으면: 인성 보충 필요
-                        // - 인성이 원국에 있어도: 그 힘을 더 강화해야 함
-                        day_master_el.generated_by() // 인성
-                    }
-                    StrengthType::Strong => {
-                        // 신강의 원인을 분석하여 용신 세분화
-                        let yinxing = strength.deuk_se.yinxing_count as f32;
-                        let bijie = strength.deuk_se.bijie_count as f32;
+        // 1. 오행 및 십성 가중치 세력 점수 계산 (IntegratedAnalysis)
+        let options = crate::analysis::power::AnalysisOptions {
+            apply_transform: false,
+            apply_correction: true,
+        };
+        let integrated =
+            crate::analysis::power::IntegratedAnalysis::calculate(pillars, options, config);
 
-                        if yinxing > bijie * 1.5 {
-                            // 인성 과다로 신강: 재성으로 인성 극복 (용재파인)
-                            day_master_el.generates() // 재성
-                        } else if bijie > yinxing * 1.5 {
-                            // 비겁 과다로 신강: 관성으로 비겁 제어 (관살제겁)
-                            day_master_el.controlled_by() // 관성
-                        } else {
-                            // 인성/비겁 균형: 식상으로 설기 (설기생재)
-                            day_master_el.generates() // 식상
-                        }
-                    }
-                    StrengthType::Balanced => day_master_el,
-                }
-            }
+        let get_elem_power = |el: Element| -> f32 {
+            integrated
+                .element_scores
+                .iter()
+                .find(|(e, _, _)| *e == el)
+                .map(|(_, pct, _)| *pct)
+                .unwrap_or(0.0)
         };
 
-        // 종격/전왕격인 경우 억부(격국) 용신을 최우선으로 배치하고 조후는 참고로만 제시
+        let dm_power = get_elem_power(day_master_el);
+        let yin_power = get_elem_power(day_master_el.generated_by());
+        let shi_power = get_elem_power(day_master_el.generates());
+        let cai_power = get_elem_power(day_master_el.generates().generates());
+        let guan_power = get_elem_power(day_master_el.controlled_by());
+
+        let eokbu_element = match structure_analysis.structure {
+            StructureType::JongAh | StructureType::GaJongAh => day_master_el.generates(),
+            StructureType::JongJae | StructureType::GaJongJae => {
+                day_master_el.generates().generates()
+            }
+            StructureType::JongSal | StructureType::GaJongSal => day_master_el.controlled_by(),
+            StructureType::JongGang | StructureType::GaJongGang => day_master_el.generated_by(),
+            StructureType::JongWang | StructureType::GaJongWang => day_master_el,
+            StructureType::GokJik
+            | StructureType::YeomSang
+            | StructureType::GaSaek
+            | StructureType::JongHyeok
+            | StructureType::YoonHa => day_master_el,
+            StructureType::Follower => pillars.month.branch.element(),
+            StructureType::SpecialTransformation => day_master_el,
+            _ => match strength.strength_type {
+                StrengthType::Weak => {
+                    // 신약 사주 억부 세분화:
+                    // 1) 재다신약 (Caisheng > 35% & Yinxing weak < 15%): 비겁(BiGeop) 선택
+                    // 2) 관살과다 / 식상과다: 인성(Inseong) 선택
+                    if cai_power > 35.0 && yin_power < 15.0 {
+                        day_master_el // 비겁
+                    } else {
+                        day_master_el.generated_by() // 인성
+                    }
+                }
+                StrengthType::Strong => {
+                    // 신강 사주 억부 세분화 (가중치 세력 점수 기반):
+                    if yin_power > dm_power * 1.2 || (yin_power > 30.0 && yin_power > dm_power) {
+                        // 인성 과다: 재성 (용재파인)
+                        day_master_el.generates().generates()
+                    } else if dm_power > yin_power * 1.2
+                        || (dm_power > 30.0 && dm_power > yin_power)
+                    {
+                        // 비겁 과다: 관성 (관살제겁)
+                        day_master_el.controlled_by()
+                    } else {
+                        // 인성/비겁 균형: 식상 (설기생재)
+                        day_master_el.generates()
+                    }
+                }
+                StrengthType::Balanced => day_master_el,
+            },
+        };
+
         let is_polarized = matches!(
             structure_analysis.structure,
             StructureType::JongAh
@@ -115,9 +161,22 @@ impl YongshinAnalysis {
                 | StructureType::JongSal
                 | StructureType::JongGang
                 | StructureType::JongWang
+                | StructureType::GaJongAh
+                | StructureType::GaJongJae
+                | StructureType::GaJongSal
+                | StructureType::GaJongGang
+                | StructureType::GaJongWang
+                | StructureType::GokJik
+                | StructureType::YeomSang
+                | StructureType::GaSaek
+                | StructureType::JongHyeok
+                | StructureType::YoonHa
                 | StructureType::Follower
                 | StructureType::SpecialTransformation
         );
+
+        let thermal_index = calculate_thermal_index(pillars, config);
+        let humidity_index = calculate_humidity_index(pillars, config);
 
         if is_polarized {
             let reasons = vec![
@@ -140,11 +199,9 @@ impl YongshinAnalysis {
                     "강한 세력에 대항하기보다 그 흐름을 따르는 것이 운의 흐름을 원활하게 합니다."
                         .to_string(),
                 reasons,
+                preferred_stems: None,
             });
 
-            // 조후(調候) 판단 (종격에서는 조후보다 격국이 우선임)
-            let thermal_index = calculate_thermal_index(pillars, config);
-            let humidity_index = calculate_humidity_index(pillars, config);
             if let Some(mut johu) =
                 get_johu_analysis(pillars, thermal_index, humidity_index, config)
             {
@@ -155,21 +212,26 @@ impl YongshinAnalysis {
                 recommendations.push(johu);
             }
         } else {
-            // 일반적인 경우 조후가 급하면 조후 우선
-            let thermal_index = calculate_thermal_index(pillars, config);
-            let humidity_index = calculate_humidity_index(pillars, config);
             if let Some(johu) = get_johu_analysis(pillars, thermal_index, humidity_index, config) {
                 recommendations.push(johu);
             }
 
-            let (summary, description, reasons) =
-                get_eokbu_explainability(&strength, eokbu_element);
+            let (summary, description, reasons) = get_eokbu_explainability(
+                &strength,
+                eokbu_element,
+                cai_power,
+                yin_power,
+                guan_power,
+                shi_power,
+                dm_power,
+            );
             recommendations.push(RecommendedYongshin {
                 yongshin_type: YongshinType::Eokbu,
                 element: eokbu_element,
                 summary,
                 description,
                 reasons,
+                preferred_stems: None,
             });
         }
 
@@ -179,55 +241,55 @@ impl YongshinAnalysis {
         }
 
         // 4. 병약용신(病藥) 판단 (최악의 기운 제어)
-        if let Some(byeongyak) = get_byeongyak_analysis(pillars, &strength) {
-            recommendations.push(byeongyak);
-        }
-
-        // 제1용신 결정 로직
-        // 조후가 극단적이거나(절기 영향) 억부 균형보다 시급할 때 조후 우선
-        let thermal_index_for_primary = calculate_thermal_index(pillars, config);
-        let humidity_index_for_primary = calculate_humidity_index(pillars, config);
-        let is_extreme_thermal = thermal_index_for_primary.abs() >= config.thermal.extreme
-            || humidity_index_for_primary.abs() >= config.thermal.extreme
-            || (thermal_index_for_primary.abs() >= config.thermal.moderate
-                && strength.strength_score.abs() < 10.0)
-            || (humidity_index_for_primary.abs() >= config.thermal.moderate
-                && strength.strength_score.abs() < 10.0);
-        let primary = if is_extreme_thermal
-            && recommendations
-                .iter()
-                .any(|r| r.yongshin_type == YongshinType::Johu)
-        {
-            recommendations
-                .iter()
-                .find(|r| r.yongshin_type == YongshinType::Johu)
-                .map(|r| r.element)
-                .unwrap_or(recommendations[0].element)
-        } else if recommendations
-            .iter()
-            .any(|r| r.yongshin_type == YongshinType::Byeongyak)
-        {
-            // 병약용신이 있으면 약을 우선으로 쓰는 경우가 많음
-            recommendations
-                .iter()
-                .find(|r| r.yongshin_type == YongshinType::Byeongyak)
-                .map(|r| r.element)
-                .unwrap_or(recommendations[0].element)
+        let byeongyak_res = get_byeongyak_analysis(pillars, &strength, config, eokbu_element);
+        let byeongyak_detail = if let Some((rec, detail)) = byeongyak_res {
+            recommendations.push(rec);
+            Some(detail)
         } else {
-            recommendations
-                .iter()
-                .find(|r| r.yongshin_type == YongshinType::Eokbu)
-                .map(|r| r.element)
-                .unwrap_or(recommendations[0].element)
+            None
         };
 
-        // 희신은 용신을 생하거나 돕는 오행
+        // 5. 다요소 우열 매트릭스 기반 제1용신(Primary Yongshin) 결정
+        let mut best_priority = -100.0f32;
+        let mut primary = recommendations[0].element;
+
+        for rec in &recommendations {
+            let priority = match rec.yongshin_type {
+                YongshinType::Johu => {
+                    let t_abs = thermal_index.abs();
+                    let h_abs = humidity_index.abs();
+                    if t_abs >= config.thermal.extreme || h_abs >= config.thermal.extreme {
+                        90.0 + (t_abs.max(h_abs) as f32) * 0.1
+                    } else if t_abs >= config.thermal.moderate || h_abs >= config.thermal.moderate {
+                        65.0
+                    } else {
+                        45.0
+                    }
+                }
+                YongshinType::Tonggwan => 85.0,
+                YongshinType::Byeongyak => 80.0,
+                YongshinType::Eokbu => {
+                    if is_polarized {
+                        95.0
+                    } else {
+                        60.0
+                    }
+                }
+            };
+
+            if priority > best_priority {
+                best_priority = priority;
+                primary = rec.element;
+            }
+        }
+
         let assistant = primary.generated_by();
 
         Self {
             recommendations,
             primary,
             assistant,
+            byeongyak_detail,
         }
     }
 }
@@ -378,99 +440,101 @@ pub fn calculate_humidity_index(pillars: &FourPillars, _config: &AnalysisConfig)
     score.clamp(-100, 100)
 }
 
-/// 조후 분석 (한난 & 조습 2D 매트릭스)
+/// 조후 분석 (한난 & 조습 2D 매트릭스 및 궁통보감 선호 천간)
 fn get_johu_analysis(
     _pillars: &FourPillars,
     thermal: i32,
     humidity: i32,
     _config: &AnalysisConfig,
 ) -> Option<RecommendedYongshin> {
+    use crate::core::stem::HeavenlyStem as S;
+
     let is_cold = thermal <= -30;
     let is_hot = thermal >= 30;
     let is_wet = humidity <= -30;
     let is_dry = humidity >= 30;
 
-    let reasons = vec![
+    let mut reasons = vec![
         format!("한난 지수: {}", thermal),
         format!("조습 지수: {}", humidity),
     ];
 
-    if is_cold && is_wet {
-        Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Johu,
-            element: Element::Fire,
-            summary: "한습(寒濕)한 사주를 덥히고 말리는 火 용신".to_string(),
-            description: "사주가 매우 차갑고 습하므로, 불(火)과 마른 흙(燥土)의 기운이 절실합니다."
-                .to_string(),
-            reasons,
-        })
+    let (element, summary, desc, preferred) = if is_cold && is_wet {
+        reasons.push("궁통보감 조후: 丙火(태양) 최우선".to_string());
+        (
+            Element::Fire,
+            "한습(寒濕)한 사주를 덥히고 말리는 火 용신 (丙火)",
+            "사주가 매우 차갑고 습하므로 丙火 태양의 온기와 마른 흙(燥土)의 기운이 절실합니다.",
+            Some(vec![S::Bing]),
+        )
     } else if is_hot && is_dry {
-        Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Johu,
-            element: Element::Water,
-            summary: "조열(燥熱)한 사주를 식히고 적시는 水 용신".to_string(),
-            description:
-                "사주가 매우 뜨겁고 건조하므로, 물(水)과 습한 흙(濕土)의 기운이 절실합니다."
-                    .to_string(),
-            reasons,
-        })
+        reasons.push("궁통보감 조후: 癸水(우로) 최우선".to_string());
+        (
+            Element::Water,
+            "조열(燥熱)한 사주를 식히고 적시는 水 용신 (癸水)",
+            "사주가 매우 뜨겁고 건조하므로 癸水 빗물과 습한 흙(濕土)의 기운이 절실합니다.",
+            Some(vec![S::Gui, S::Ren]),
+        )
     } else if is_hot && is_wet {
-        Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Johu,
-            element: Element::Metal, // 금이나 수
-            summary: "습열(濕熱)한 사주를 씻어내리는 金 용신".to_string(),
-            description: "사주가 뜨겁고 습하여 불쾌지수가 높으므로, 금(金)이나 수(水)의 기운으로 씻어내려야 합니다.".to_string(),
-            reasons,
-        })
+        reasons.push("궁통보감 조후: 庚金 / 癸水 선호".to_string());
+        (
+            Element::Metal,
+            "습열(濕熱)한 사주를 씻어내리는 金 용신 (庚金/癸水)",
+            "사주가 뜨겁고 습하여 불쾌지수가 높으므로, 金이나 水의 기운으로 씻어내려야 합니다.",
+            Some(vec![S::Geng, S::Gui]),
+        )
     } else if is_cold && is_dry {
-        Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Johu,
-            element: Element::Wood, // 목이나 화
-            summary: "한조(寒燥)한 사주에 생기를 부여하는 木 용신".to_string(),
-            description:
-                "사주가 춥고 메말라 있으므로, 생기를 돋우는 목(木)이나 화(火)의 기운이 필요합니다."
-                    .to_string(),
-            reasons,
-        })
+        reasons.push("궁통보감 조후: 甲木 / 丙火 선호".to_string());
+        (
+            Element::Wood,
+            "한조(寒燥)한 사주에 생기를 부여하는 木 용신 (甲木/丙火)",
+            "사주가 춥고 메말라 있으므로, 생기를 돋우는 木이나 火의 기운이 필요합니다.",
+            Some(vec![S::Jia, S::Bing]),
+        )
     } else if is_cold {
-        Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Johu,
-            element: Element::Fire,
-            summary: "한랭한 사주를 따뜻하게 하는 火 용신".to_string(),
-            description: "사주의 기운이 차가우므로 불(火)의 기운으로 온도를 조절해야 발복합니다."
-                .to_string(),
-            reasons,
-        })
+        reasons.push("궁통보감 조후: 丙火 선호".to_string());
+        (
+            Element::Fire,
+            "한랭한 사주를 따뜻하게 하는 火 용신 (丙火)",
+            "사주의 기운이 차가우므로 丙火의 기운으로 온도를 조절해야 발복합니다.",
+            Some(vec![S::Bing]),
+        )
     } else if is_hot {
-        Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Johu,
-            element: Element::Water,
-            summary: "조열한 사주를 시원하게 하는 水 용신".to_string(),
-            description: "사주의 기운이 뜨거우므로 물(水)의 기운으로 온도를 낮추어야 발복합니다."
-                .to_string(),
-            reasons,
-        })
+        reasons.push("궁통보감 조후: 癸水 선호".to_string());
+        (
+            Element::Water,
+            "조열한 사주를 시원하게 하는 水 용신 (癸水)",
+            "사주의 기운이 뜨거우므로 癸水의 기운으로 온도를 낮추어야 발복합니다.",
+            Some(vec![S::Gui]),
+        )
     } else if is_wet {
-        Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Johu,
-            element: Element::Fire, // 습하면 마르게
-            summary: "습한 사주를 뽀송하게 말리는 火 용신".to_string(),
-            description:
-                "사주에 습기가 과다하므로 이를 말려주는 볕이나 마른 흙(燥土)이 필요합니다."
-                    .to_string(),
-            reasons,
-        })
+        reasons.push("궁통보감 조후: 丙火 선호".to_string());
+        (
+            Element::Fire,
+            "습한 사주를 뽀송하게 말리는 火 용신 (丙火)",
+            "사주에 습기가 과다하므로 이를 말려주는 볕이나 마른 흙이 필요합니다.",
+            Some(vec![S::Bing]),
+        )
     } else if is_dry {
-        Some(RecommendedYongshin {
-            yongshin_type: YongshinType::Johu,
-            element: Element::Water, // 건조하면 적시게
-            summary: "건조한 사주를 촉촉하게 적시는 水 용신".to_string(),
-            description: "사주가 메말라 있으므로 물기를 공급해주어야 생기가 돕니다.".to_string(),
-            reasons,
-        })
+        reasons.push("궁통보감 조후: 癸水 선호".to_string());
+        (
+            Element::Water,
+            "건조한 사주를 촉촉하게 적시는 水 용신 (癸水)",
+            "사주가 메말라 있으므로 물기를 공급해주어야 생기가 돕니다.",
+            Some(vec![S::Gui]),
+        )
     } else {
-        None
-    }
+        return None;
+    };
+
+    Some(RecommendedYongshin {
+        yongshin_type: YongshinType::Johu,
+        element,
+        summary: summary.to_string(),
+        description: desc.to_string(),
+        reasons,
+        preferred_stems: preferred,
+    })
 }
 
 /// 통관 분석 (서로 싸우는 강한 두 기운 중재)
@@ -552,6 +616,7 @@ fn get_tonggwan_analysis(
                         format!("{}: {:.1}%", elem1.hangul(), score1),
                         format!("{}: {:.1}%", elem2.hangul(), score2),
                     ],
+                    preferred_stems: None,
                 });
             }
         }
@@ -560,33 +625,90 @@ fn get_tonggwan_analysis(
     None
 }
 
-/// 병약 분석 (사주의 가장 큰 문제점 제어)
+/// 병약 분석 (사주의 과다한 문제 오행 제어 및 약 오행 선택)
 fn get_byeongyak_analysis(
     pillars: &FourPillars,
-    strength: &crate::analysis::strength::StrengthAnalysis,
-) -> Option<RecommendedYongshin> {
-    // 일간을 극하거나 설기하는 기운이 너무 강할 때 (병)
-    // 병을 제어하는 기운 (약)
-    if strength.strength_type == StrengthType::Weak {
-        if strength.deuk_se.guanxing_count >= 3 {
-            return Some(RecommendedYongshin {
-                 yongshin_type: YongshinType::Byeongyak,
-                 element: pillars.day_master_element().generated_by(),
-                 summary: "과도한 관성을 제어하는 병약용신".to_string(),
-                 description: "일간을 극하는 관성이 너무 강해 병이 되었으므로, 이를 화(化)해주는 인성이 약이 됩니다.".to_string(),
-                 reasons: vec![format!("관성 개수: {}개", strength.deuk_se.guanxing_count)],
-             });
-        }
-        if strength.deuk_se.shishang_count >= 3 {
-            return Some(RecommendedYongshin {
-                yongshin_type: YongshinType::Byeongyak,
-                element: pillars.day_master_element().generated_by(),
-                summary: "과도한 식상을 제어하는 병약용신".to_string(),
-                description: "일간의 기운을 빼앗는 식상이 너무 강해 병이 되었으므로, 이를 제어하는 인성이 약이 됩니다.".to_string(),
-                reasons: vec![format!("식상 개수: {}개", strength.deuk_se.shishang_count)],
-            });
+    _strength: &crate::analysis::strength::StrengthAnalysis,
+    config: &AnalysisConfig,
+    eokbu_element: Element,
+) -> Option<(RecommendedYongshin, ByeongyakAnalysis)> {
+    let options = crate::analysis::power::AnalysisOptions {
+        apply_transform: false,
+        apply_correction: true,
+    };
+    let integrated =
+        crate::analysis::power::IntegratedAnalysis::calculate(pillars, options, config);
+    let dm_el = pillars.day_master_element();
+
+    // 1. 세력 40% 이상 초과하는 과다 오행(병) 탐색
+    let mut disease_elem = None;
+    for (elem, pct, _) in &integrated.element_scores {
+        if *pct >= 40.0 {
+            disease_elem = Some((*elem, *pct));
+            break;
         }
     }
+
+    // 2. 40% 초과 오행이 없더라도 억부용신이 강한 상극 오행(25% 이상)에 충극받는지 검사
+    if disease_elem.is_none() {
+        let clashing_elem = eokbu_element.controlled_by();
+        let clashing_pct = integrated
+            .element_scores
+            .iter()
+            .find(|(e, _, _)| *e == clashing_elem)
+            .map(|(_, pct, _)| *pct)
+            .unwrap_or(0.0);
+        if clashing_pct >= 25.0 {
+            disease_elem = Some((clashing_elem, clashing_pct));
+        }
+    }
+
+    if let Some((disease, pct)) = disease_elem {
+        let medicine = if disease == dm_el.controlled_by() || disease == dm_el.generates() {
+            dm_el.generated_by()
+        } else if disease == dm_el.generates().generates() {
+            dm_el
+        } else if disease == dm_el.generated_by() {
+            dm_el.generates().generates()
+        } else {
+            dm_el.controlled_by()
+        };
+
+        let summary = format!(
+            "과도한 {} 기운({:.1}%)을 제어하는 병약용신 {}",
+            disease.hangul(),
+            pct,
+            medicine.hangul()
+        );
+        let description = format!(
+            "원국 내 {} 기운이 {:.1}%로 병(病)이 되었으므로, 이를 극제하거나 중재하는 {} 기운이 약(藥)이 됩니다.",
+            disease.hangul(), pct, medicine.hangul()
+        );
+        let reasons = vec![
+            format!("병(病) 오행: {} ({:.1}%)", disease.hangul(), pct),
+            format!("약(藥) 오행: {}", medicine.hangul()),
+        ];
+
+        let rec = RecommendedYongshin {
+            yongshin_type: YongshinType::Byeongyak,
+            element: medicine,
+            summary: summary.clone(),
+            description: description.clone(),
+            reasons: reasons.clone(),
+            preferred_stems: None,
+        };
+
+        let detail = ByeongyakAnalysis {
+            disease,
+            medicine,
+            summary,
+            description,
+            reasons,
+        };
+
+        return Some((rec, detail));
+    }
+
     None
 }
 
@@ -653,6 +775,11 @@ impl Analyzable for YongshinAnalysis {
 fn get_eokbu_explainability(
     strength: &StrengthAnalysis,
     eokbu_element: Element,
+    cai_power: f32,
+    yin_power: f32,
+    guan_power: f32,
+    shi_power: f32,
+    dm_power: f32,
 ) -> (String, String, Vec<String>) {
     let mut reasons = vec![
         format!("신강약점수: {:.1}", strength.strength_score),
@@ -661,45 +788,63 @@ fn get_eokbu_explainability(
 
     match strength.strength_type {
         StrengthType::Weak => {
-            (
-                format!("일간을 돕는 {} 억부용신", eokbu_element.hangul()),
-                "일간이 신약하여 기운이 부족하므로 이를 비추거나 생조해주는 오행이 행운을 가져옵니다.".to_string(),
-                reasons
-            )
-        },
+            if cai_power > 35.0 && yin_power < 15.0 {
+                reasons.push(format!("재성 세력({:.1}%) 과다 (재다신약)", cai_power));
+                (
+                    format!("일간을 돕고 재물을 견디는 {} 비겁 용신", eokbu_element.hangul()),
+                    "재성이 지나치게 강해 신약해진 사주이므로 인성보다는 비겁으로 일간을 돕고 재물을 감당해야 합니다.".to_string(),
+                    reasons,
+                )
+            } else if guan_power > 35.0 {
+                reasons.push(format!("관성 세력({:.1}%) 과다 (관살태과)", guan_power));
+                (
+                    format!("관성을 화해시키는 {} 관인상생 용신", eokbu_element.hangul()),
+                    "관성의 압박이 너무 거세 신약해졌으므로 인성으로 관성을 살살 달래어 일간을 도와야 합니다.".to_string(),
+                    reasons,
+                )
+            } else if shi_power > 35.0 {
+                reasons.push(format!("식상 세력({:.1}%) 과다 (식상다설)", shi_power));
+                (
+                    format!("식상을 제어하고 일간을 도우는 {} 인성 용신", eokbu_element.hangul()),
+                    "식상의 설기가 심하여 기운이 약해졌으므로 인성으로 식상을 억제하고 일간에 에너지를 보충합니다.".to_string(),
+                    reasons,
+                )
+            } else {
+                (
+                    format!("일간을 돕는 {} 억부용신", eokbu_element.hangul()),
+                    "일간이 신약하여 기운이 부족하므로 이를 생조해주는 오행이 행운을 가져옵니다.".to_string(),
+                    reasons,
+                )
+            }
+        }
         StrengthType::Strong => {
-            let yinxing = strength.deuk_se.yinxing_count as f32;
-            let bijie = strength.deuk_se.bijie_count as f32;
-
-            if yinxing > bijie * 1.5 {
-                reasons.push(format!("인성({}) 과다", yinxing));
+            if yin_power > dm_power * 1.2 || (yin_power > 30.0 && yin_power > dm_power) {
+                reasons.push(format!("인성 세력({:.1}%) 과다", yin_power));
                 (
                     format!("인성을 제어하는 {} 용재파인 용신", eokbu_element.hangul()),
                     "인성이 너무 많아 신강해진 경우, 부작용을 막기 위해 재성으로 인성을 적절히 견제해야 합니다.".to_string(),
-                    reasons
+                    reasons,
                 )
-            } else if bijie > yinxing * 1.5 {
-                reasons.push(format!("비겁({}) 과다", bijie));
+            } else if dm_power > yin_power * 1.2 || (dm_power > 30.0 && dm_power > yin_power) {
+                reasons.push(format!("비겁 세력({:.1}%) 과다", dm_power));
                 (
                     format!("비겁을 제어하는 {} 관살제겁 용신", eokbu_element.hangul()),
                     "자아가 너무 강해져 주변과 충돌하기 쉬운 경우, 관성으로 스스로를 다스리는 힘을 길러야 합니다.".to_string(),
-                    reasons
+                    reasons,
                 )
             } else {
                 (
                     format!("기운을 유통시키는 {} 설기생재 용신", eokbu_element.hangul()),
                     "일간이 신강하여 기운이 옹색해지기 쉬우므로 식상으로 기운을 빼서 재성으로 연결해야 합니다.".to_string(),
-                    reasons
+                    reasons,
                 )
             }
-        },
-        StrengthType::Balanced => {
-            (
-                format!("균형을 유지하는 {} 중화용신", eokbu_element.hangul()),
-                "이미 기운이 중화되어 안정적이므로, 현재의 균형을 유지해 주는 오행을 용신으로 삼습니다.".to_string(),
-                reasons
-            )
         }
+        StrengthType::Balanced => (
+            format!("균형을 유지하는 {} 중화용신", eokbu_element.hangul()),
+            "이미 기운이 중화되어 안정적이므로, 현재의 균형을 유지해 주는 오행을 용신으로 삼습니다.".to_string(),
+            reasons,
+        ),
     }
 }
 
@@ -723,5 +868,23 @@ mod tests {
         assert!(johu.is_some());
         let johu = johu.unwrap();
         assert_eq!(johu.element, Element::Fire);
+        assert!(johu.preferred_stems.is_some());
+        assert!(johu
+            .preferred_stems
+            .unwrap()
+            .contains(&crate::core::stem::HeavenlyStem::Bing));
+    }
+
+    #[test]
+    fn test_byeongyak_and_priority_matrix() {
+        let input = SajuInput::new_solar(1984, 7, 15, 12, 0);
+        let pillars = FourPillars::calculate(&input).unwrap();
+        let yongshin = pillars.yongshin();
+        assert!(!yongshin.recommendations.is_empty());
+        assert!(
+            yongshin.primary != Element::Earth
+                || yongshin.assistant == Element::Fire
+                || yongshin.assistant != Element::Earth
+        );
     }
 }

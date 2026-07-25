@@ -1,12 +1,12 @@
-# BRIEFING — 2026-06-20T10:09:43+09:00
+# BRIEFING — 2026-07-25T03:18:07+09:00
 
 ## Mission
-Launch and monitor the Project Orchestrator to implement Vedic astrology enhancements (Ashtakoota Guna Milan, Shadbala details, KP System Cusps/Significators, hierarchical Dasha timeline) and verify victory before completion.
+Launch and monitor the Project Orchestrator to enhance Saju Core Engine (`crates/eon-saju`) precision, special patterns, dynamic luck simulator, and edge-case test suite, and verify victory before completion.
 
 ## 🔒 My Identity
 - Archetype: sentinel
 - Working directory: /Users/sjkim1127/Eon/.agents/sentinel
-- Orchestrator: 20f76d00-efdd-4079-926e-7b9151ca9a8a
+- Orchestrator: 065248ca-634a-4b71-9d43-d37c20d29f79
 - Victory Auditor: TBD
 
 ## 🔒 Key Constraints
@@ -15,7 +15,7 @@ Launch and monitor the Project Orchestrator to implement Vedic astrology enhance
 - Must not write code, analyze problems, or make any technical decisions
 
 ## User Context
-- **Last user request**: Vedic Astrology enhancements (R1-R4) implementation and UI visualization.
+- **Last user request**: Enhance Saju Core Engine (`crates/eon-saju`): Precision, Special Patterns, Dynamic Luck Simulation, Edge-Case Verification.
 - **Pending clarifications**: none
 - **Delivered results**: none
 

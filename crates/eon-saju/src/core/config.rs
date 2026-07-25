@@ -4,14 +4,33 @@
 
 use serde::{Deserialize, Serialize};
 
+fn default_true() -> bool {
+    true
+}
+
 /// 전역 분석 설정
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisConfig {
     pub weights: WeightsConfig,
     pub strength: StrengthConfig,
     pub root: RootConfig,
     pub thermal: ThermalConfig,
     pub vm: VmConfig,
+    #[serde(default = "default_true")]
+    pub yin_stem_reverse: bool,
+}
+
+impl Default for AnalysisConfig {
+    fn default() -> Self {
+        Self {
+            weights: WeightsConfig::default(),
+            strength: StrengthConfig::default(),
+            root: RootConfig::default(),
+            thermal: ThermalConfig::default(),
+            vm: VmConfig::default(),
+            yin_stem_reverse: true,
+        }
+    }
 }
 
 /// 위치별 가중치 (110점법)

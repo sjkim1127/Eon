@@ -169,7 +169,16 @@ impl IntegratedAnalysis {
 
             // 조후 보정 (Climate) - 예: 여름의 미토는 화로 취급 (합화되지 않은 경우에만 또는 보정이 우선일 수 있음)
             // 여기서는 보정이 합화보다 시급한 물리적 변동으로 간주함
-            if options.apply_correction {
+            if options.apply_correction
+                && effective_el == branch.element()
+                && matches!(
+                    branch,
+                    EarthlyBranch::Chen
+                        | EarthlyBranch::Xu
+                        | EarthlyBranch::Chou
+                        | EarthlyBranch::Wei
+                )
+            {
                 effective_el = apply_climate_correction(branch, month_branch);
             }
 
@@ -222,13 +231,236 @@ impl IntegratedAnalysis {
             dominant_ten_god,
         }
     }
+
+    /// 5/6주 (원국 + 대운 + 세운) 확장 오행/십성 점수 계산
+    pub fn calculate_expanded(
+        pillars: &FourPillars,
+        major: Option<crate::core::ganzi::GanZi>,
+        yearly: Option<crate::core::ganzi::GanZi>,
+        options: AnalysisOptions,
+        config: &crate::core::config::AnalysisConfig,
+    ) -> Self {
+        let dm = pillars.day_master();
+        let month_branch = pillars.month.branch;
+
+        let trans = crate::analysis::transformations::TransformationAnalysis::from_expanded(
+            pillars, major, yearly,
+        );
+
+        let mut total_weight: f32 = 0.0;
+        let mut el_scores = [0.0f32; 5];
+        let mut tg_scores = [0.0f32; 10];
+
+        let base_weights = if options.apply_correction {
+            [
+                config.weights.stem,
+                config.weights.stem,
+                config.weights.stem,
+                config.weights.stem,
+                config.weights.other_branch,
+                config.weights.month_branch,
+                config.weights.day_branch,
+                config.weights.other_branch,
+            ]
+        } else {
+            [1.0; 8]
+        };
+
+        let mut items = vec![
+            (
+                pillars.year.stem.element(),
+                trans.year_stem.effective,
+                base_weights[0],
+                true,
+                pillars.year.stem.polarity(),
+                None,
+            ),
+            (
+                pillars.month.stem.element(),
+                trans.month_stem.effective,
+                base_weights[1],
+                true,
+                pillars.month.stem.polarity(),
+                None,
+            ),
+            (
+                pillars.day.stem.element(),
+                trans.day_stem.effective,
+                base_weights[2],
+                true,
+                pillars.day.stem.polarity(),
+                None,
+            ),
+            (
+                pillars.hour.stem.element(),
+                trans.hour_stem.effective,
+                base_weights[3],
+                true,
+                pillars.hour.stem.polarity(),
+                None,
+            ),
+            (
+                pillars.year.branch.element(),
+                trans.year_branch.effective,
+                base_weights[4],
+                false,
+                pillars.year.branch.primary_stem().polarity(),
+                Some(pillars.year.branch),
+            ),
+            (
+                pillars.month.branch.element(),
+                trans.month_branch.effective,
+                base_weights[5],
+                false,
+                pillars.month.branch.primary_stem().polarity(),
+                Some(pillars.month.branch),
+            ),
+            (
+                pillars.day.branch.element(),
+                trans.day_branch.effective,
+                base_weights[6],
+                false,
+                pillars.day.branch.primary_stem().polarity(),
+                Some(pillars.day.branch),
+            ),
+            (
+                pillars.hour.branch.element(),
+                trans.hour_branch.effective,
+                base_weights[7],
+                false,
+                pillars.hour.branch.primary_stem().polarity(),
+                Some(pillars.hour.branch),
+            ),
+        ];
+
+        if let (Some(m_ganzi), Some(ref ms)) = (major, &trans.major_stem) {
+            items.push((
+                m_ganzi.stem.element(),
+                ms.effective,
+                1.0,
+                true,
+                m_ganzi.stem.polarity(),
+                None,
+            ));
+        }
+        if let (Some(m_ganzi), Some(ref mb)) = (major, &trans.major_branch) {
+            items.push((
+                m_ganzi.branch.element(),
+                mb.effective,
+                1.5,
+                false,
+                m_ganzi.branch.primary_stem().polarity(),
+                Some(m_ganzi.branch),
+            ));
+        }
+        if let (Some(y_ganzi), Some(ref ss)) = (yearly, &trans.saewun_stem) {
+            items.push((
+                y_ganzi.stem.element(),
+                ss.effective,
+                1.0,
+                true,
+                y_ganzi.stem.polarity(),
+                None,
+            ));
+        }
+        if let (Some(y_ganzi), Some(ref sb)) = (yearly, &trans.saewun_branch) {
+            items.push((
+                y_ganzi.branch.element(),
+                sb.effective,
+                1.5,
+                false,
+                y_ganzi.branch.primary_stem().polarity(),
+                Some(y_ganzi.branch),
+            ));
+        }
+
+        for (orig_el, eff_el, weight, is_stem, polarity, branch_opt) in items {
+            let actual_el =
+                if let (false, true, Some(br)) = (is_stem, options.apply_correction, branch_opt) {
+                    if eff_el != orig_el {
+                        eff_el
+                    } else if matches!(
+                        br,
+                        EarthlyBranch::Chen
+                            | EarthlyBranch::Xu
+                            | EarthlyBranch::Chou
+                            | EarthlyBranch::Wei
+                    ) {
+                        apply_climate_correction(br, month_branch)
+                    } else {
+                        eff_el
+                    }
+                } else {
+                    eff_el
+                };
+
+            el_scores[actual_el.index() as usize] += weight;
+            total_weight += weight;
+
+            let god = if actual_el != orig_el {
+                TenGod::from_stems(dm, get_dummy_stem(actual_el, polarity))
+            } else {
+                TenGod::from_stems(dm, get_dummy_stem(orig_el, polarity))
+            };
+            tg_scores[god.index()] += weight;
+        }
+
+        let mut final_el = Vec::new();
+        for i in 0..5 {
+            let el = Element::from_index(i as i32);
+            let score = el_scores[i];
+            final_el.push((
+                el,
+                if total_weight > 0.0 {
+                    (score / total_weight) * 100.0
+                } else {
+                    0.0
+                },
+                score,
+            ));
+        }
+
+        let mut final_tg = Vec::new();
+        for i in 0..10 {
+            let god = TenGod::ALL[i];
+            let score = tg_scores[i];
+            final_tg.push((
+                god,
+                if total_weight > 0.0 {
+                    (score / total_weight) * 100.0
+                } else {
+                    0.0
+                },
+                score,
+            ));
+        }
+
+        let dominant_element = final_el
+            .iter()
+            .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+            .unwrap_or(&final_el[0])
+            .0;
+        let dominant_ten_god = final_tg
+            .iter()
+            .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+            .unwrap_or(&final_tg[0])
+            .0;
+
+        Self {
+            options,
+            element_scores: final_el,
+            ten_god_scores: final_tg,
+            dominant_element,
+            dominant_ten_god,
+        }
+    }
 }
 
-/// 조후 보정 로직
+/// 조후 보정 로직 (4토지 辰戌丑未 계절별 변형)
 fn apply_climate_correction(branch: EarthlyBranch, month: EarthlyBranch) -> Element {
     match branch {
         EarthlyBranch::Wei => {
-            // 여름(巳, 午)의 미토는 화(火)의 기운이 강함
+            // 여름(巳, 午)의 미토는 화(火) 기운이 강화됨
             if matches!(month, EarthlyBranch::Si | EarthlyBranch::Wu) {
                 Element::Fire
             } else {
@@ -236,9 +468,25 @@ fn apply_climate_correction(branch: EarthlyBranch, month: EarthlyBranch) -> Elem
             }
         }
         EarthlyBranch::Chou => {
-            // 겨울(亥, 子)의 축토는 수(水)의 기운이 강함
+            // 겨울(亥, 子)의 축토는 수(水) 기운이 강화됨
             if matches!(month, EarthlyBranch::Hai | EarthlyBranch::Zi) {
                 Element::Water
+            } else {
+                Element::Earth
+            }
+        }
+        EarthlyBranch::Chen => {
+            // 봄(寅, 卯)의 진토는 목(木) 기운이 강화됨
+            if matches!(month, EarthlyBranch::Yin | EarthlyBranch::Mao) {
+                Element::Wood
+            } else {
+                Element::Earth
+            }
+        }
+        EarthlyBranch::Xu => {
+            // 가을(申, 酉)의 술토는 금(金) 기운이 강화됨
+            if matches!(month, EarthlyBranch::Shen | EarthlyBranch::You) {
+                Element::Metal
             } else {
                 Element::Earth
             }
@@ -334,6 +582,17 @@ impl FourPillars {
         config: &crate::core::config::AnalysisConfig,
     ) -> IntegratedAnalysis {
         IntegratedAnalysis::calculate(self, options, config)
+    }
+
+    /// 5/6주 (원국 + 대운 + 세운) 통합 정밀 분석
+    pub fn integrated_analysis_expanded(
+        &self,
+        major: Option<crate::core::ganzi::GanZi>,
+        yearly: Option<crate::core::ganzi::GanZi>,
+        options: AnalysisOptions,
+        config: &crate::core::config::AnalysisConfig,
+    ) -> IntegratedAnalysis {
+        IntegratedAnalysis::calculate_expanded(self, major, yearly, options, config)
     }
 
     /// 기본 옵션 및 기본 설정으로 분석 수행

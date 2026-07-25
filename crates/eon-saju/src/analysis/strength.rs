@@ -414,18 +414,20 @@ impl DeukSe {
         let mut support_ratio = 0.0;
 
         for (ten_god, percentage, _) in integrated.ten_god_scores {
-            match ten_god {
-                TenGod::Bijian | TenGod::Jiecai => {
-                    bijie_count += 1;
-                    support_ratio += percentage;
+            if percentage > 0.0 {
+                match ten_god {
+                    TenGod::Bijian | TenGod::Jiecai => {
+                        bijie_count += 1;
+                        support_ratio += percentage;
+                    }
+                    TenGod::Zhengyin | TenGod::Pianyin => {
+                        yinxing_count += 1;
+                        support_ratio += percentage;
+                    }
+                    TenGod::Shishen | TenGod::Shangguan => shishang_count += 1,
+                    TenGod::Zhengcai | TenGod::Piancai => caisheng_count += 1,
+                    TenGod::Zhengguan | TenGod::Pianguan => guanxing_count += 1,
                 }
-                TenGod::Zhengyin | TenGod::Pianyin => {
-                    yinxing_count += 1;
-                    support_ratio += percentage;
-                }
-                TenGod::Shishen | TenGod::Shangguan => shishang_count += 1,
-                TenGod::Zhengcai | TenGod::Piancai => caisheng_count += 1,
-                TenGod::Zhengguan | TenGod::Pianguan => guanxing_count += 1,
             }
         }
 

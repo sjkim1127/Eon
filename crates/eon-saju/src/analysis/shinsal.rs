@@ -409,6 +409,74 @@ impl std::fmt::Display for ShinsalAnalysis {
     }
 }
 
+/// 삼재 단계 (입삼재, 눌삼재, 날삼재)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SamjaeStage {
+    /// 입삼재 (들삼재 - 첫째 해)
+    Entrance,
+    /// 눌삼재 (누울삼재 - 둘째 해)
+    Dwelling,
+    /// 날삼재 (날아갈삼재 - 셋째 해)
+    Exit,
+}
+
+impl SamjaeStage {
+    pub const fn hangul(&self) -> &'static str {
+        match self {
+            Self::Entrance => "입삼재(들삼재)",
+            Self::Dwelling => "눌삼재(누울삼재)",
+            Self::Exit => "날삼재(날아갈삼재)",
+        }
+    }
+
+    pub const fn description(&self) -> &'static str {
+        match self {
+            Self::Entrance => {
+                "삼재의 첫 번째 해로 실물수나 변화가 시작되므로 언행을 조심해야 합니다."
+            }
+            Self::Dwelling => "삼재의 두 번째 해로 사업이나 주거 변동 시 세심한 주의가 필요합니다.",
+            Self::Exit => {
+                "삼재의 세 번째 해로 마지막 고비를 잘 넘겨 재난을 매듭짓고 액땜을 마무리합니다."
+            }
+        }
+    }
+}
+
+/// 년지 삼합 그룹 기준 3재(三災) 연도 여부 계산
+pub fn calculate_samjae(
+    year_branch: EarthlyBranch,
+    transit_year_branch: EarthlyBranch,
+) -> Option<SamjaeStage> {
+    use EarthlyBranch::*;
+    match year_branch {
+        Shen | Zi | Chen => match transit_year_branch {
+            Yin => Some(SamjaeStage::Entrance),
+            Mao => Some(SamjaeStage::Dwelling),
+            Chen => Some(SamjaeStage::Exit),
+            _ => None,
+        },
+        Yin | Wu | Xu => match transit_year_branch {
+            Shen => Some(SamjaeStage::Entrance),
+            You => Some(SamjaeStage::Dwelling),
+            Xu => Some(SamjaeStage::Exit),
+            _ => None,
+        },
+        Si | You | Chou => match transit_year_branch {
+            Hai => Some(SamjaeStage::Entrance),
+            Zi => Some(SamjaeStage::Dwelling),
+            Chou => Some(SamjaeStage::Exit),
+            _ => None,
+        },
+        Hai | Mao | Wei => match transit_year_branch {
+            Si => Some(SamjaeStage::Entrance),
+            Wu => Some(SamjaeStage::Dwelling),
+            Wei => Some(SamjaeStage::Exit),
+            _ => None,
+        },
+    }
+}
+
 impl FourPillars {
     /// 신살 분석
     pub fn shinsal(&self) -> ShinsalAnalysis {

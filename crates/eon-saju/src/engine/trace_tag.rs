@@ -3,8 +3,14 @@
 //! String 힙 할당을 최소화하기 위해 태그를 Enum으로 정의합니다.
 //! 최종 리포트 생성 시에만 문자열로 변환됩니다.
 
+use crate::analysis::dynamic_luck::GyeokStatus;
+use crate::analysis::shinsal::TwelveShinsal;
+use crate::analysis::structure::StructureType;
+use crate::core::branch::EarthlyBranch;
 use crate::core::element::Element;
+use crate::core::stem::HeavenlyStem;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::fmt;
 
 /// 분석 태그 - 문자열 대신 구조화된 Enum 사용
@@ -20,11 +26,11 @@ pub enum TraceTag {
 
     // === 합충 태그 ===
     /// 지지 충
-    BranchClash { clash_type: String },
+    BranchClash { clash_type: Cow<'static, str> },
     /// 천간 충
-    StemClash { clash_type: String },
+    StemClash { clash_type: Cow<'static, str> },
     /// 육합
-    SixCombination { combo_type: String },
+    SixCombination { combo_type: Cow<'static, str> },
     /// 삼합 완성
     TripleCombination {
         element: Element,
@@ -40,11 +46,11 @@ pub enum TraceTag {
 
     // === 지지 관계 태그 ===
     /// 형 (刑)
-    Punishment { punishment_type: String },
+    Punishment { punishment_type: Cow<'static, str> },
     /// 해 (害)
-    Harm { harm_type: String },
+    Harm { harm_type: Cow<'static, str> },
     /// 파 (破)
-    Destruction { destruction_type: String },
+    Destruction { destruction_type: Cow<'static, str> },
 
     // === 공망 태그 ===
     /// 운성 공망 (진공)
@@ -57,6 +63,23 @@ pub enum TraceTag {
     EscapedVoidTriple { period: LuckPeriod },
     /// 탈공 (방합에 의한)
     EscapedVoidSeasonal { period: LuckPeriod },
+
+    // === 개고 / 입묘 / 격국 변화 태그 ===
+    /// 개고 (Storage Unsealing)
+    GaeGo {
+        branch: EarthlyBranch,
+        unsealed_stem: HeavenlyStem,
+    },
+    /// 입묘 (Storage Trapping)
+    IpMyo {
+        element: Element,
+        tomb_branch: EarthlyBranch,
+    },
+    /// 동적 격국 변화
+    DynamicGyeok {
+        active_structure: StructureType,
+        status: GyeokStatus,
+    },
 
     // === 신살 태그 ===
     /// 12신살
@@ -105,12 +128,12 @@ pub enum TraceTag {
     /// 하드웨어 인터럽트 (백호살, 괴강살 등)
     Interrupt {
         irq_type: InterruptType,
-        marker: String,
+        marker: Cow<'static, str>,
     },
 
     // === 기타 ===
     /// 커스텀 태그 (레거시 호환용)
-    Custom(String),
+    Custom(Cow<'static, str>),
 }
 
 /// 운의 종류 (대운, 세운, 월운 등)
@@ -148,7 +171,7 @@ impl LuckPeriod {
 }
 
 /// 12신살 이름
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ShinsalName {
     Jangseongsal, // 장성살
     Banansal,     // 반안살
@@ -158,7 +181,15 @@ pub enum ShinsalName {
     Yeokmasal,    // 역마살
     Jisal,        // 지살
     Hwagaesal,    // 화개살
-    Yuhaengsal,   // 유해살
+    Yuhaengsal,   // 육해살
+    Yeonsal,      // 년살(도화)
+    Wolsal,       // 월살
+    Mangshinsal,  // 망신살
+    Baekhosal,    // 백호살
+    Goegangsal,   // 괴강살
+    Yanginsal,    // 양인살
+    Gwirok,       // 귀록
+    Gongmang,     // 공망
     Dolsal,       // 돌살
     Wonsuksal,    // 원숙살
     Dosasal,      // 도사살
@@ -175,10 +206,42 @@ impl ShinsalName {
             ShinsalName::Yeokmasal => "역마살",
             ShinsalName::Jisal => "지살",
             ShinsalName::Hwagaesal => "화개살",
-            ShinsalName::Yuhaengsal => "유해살",
+            ShinsalName::Yuhaengsal => "육해살",
+            ShinsalName::Yeonsal => "년살(도화)",
+            ShinsalName::Wolsal => "월살",
+            ShinsalName::Mangshinsal => "망신살",
+            ShinsalName::Baekhosal => "백호살",
+            ShinsalName::Goegangsal => "괴강살",
+            ShinsalName::Yanginsal => "양인살",
+            ShinsalName::Gwirok => "귀록",
+            ShinsalName::Gongmang => "공망",
             ShinsalName::Dolsal => "돌살",
             ShinsalName::Wonsuksal => "원숙살",
             ShinsalName::Dosasal => "도사살",
+        }
+    }
+}
+
+impl From<TwelveShinsal> for ShinsalName {
+    fn from(s: TwelveShinsal) -> Self {
+        match s {
+            TwelveShinsal::Jisal => ShinsalName::Jisal,
+            TwelveShinsal::Yeonsal => ShinsalName::Yeonsal,
+            TwelveShinsal::Wolsal => ShinsalName::Wolsal,
+            TwelveShinsal::Mangshinsal => ShinsalName::Mangshinsal,
+            TwelveShinsal::Jangseongsal => ShinsalName::Jangseongsal,
+            TwelveShinsal::Banansal => ShinsalName::Banansal,
+            TwelveShinsal::Yeokmasal => ShinsalName::Yeokmasal,
+            TwelveShinsal::Yukhaesal => ShinsalName::Yuhaengsal,
+            TwelveShinsal::Hwagaesal => ShinsalName::Hwagaesal,
+            TwelveShinsal::Geopsal => ShinsalName::Geopsal,
+            TwelveShinsal::Jaesal => ShinsalName::Jaesal,
+            TwelveShinsal::Cheonsal => ShinsalName::Cheonsal,
+            TwelveShinsal::Baekhosal => ShinsalName::Baekhosal,
+            TwelveShinsal::Goegangsal => ShinsalName::Goegangsal,
+            TwelveShinsal::Yanginsal => ShinsalName::Yanginsal,
+            TwelveShinsal::Gwirok => ShinsalName::Gwirok,
+            TwelveShinsal::Gongmang => ShinsalName::Gongmang,
         }
     }
 }
@@ -243,6 +306,16 @@ impl PillarPosition {
             PillarPosition::Hour => "시지",
         }
     }
+
+    pub fn from_label(label: &str) -> Self {
+        match label {
+            "년지" | "년" => PillarPosition::Year,
+            "월지" | "월" => PillarPosition::Month,
+            "일지" | "일" => PillarPosition::Day,
+            "시지" | "시" => PillarPosition::Hour,
+            _ => PillarPosition::Day,
+        }
+    }
 }
 
 /// 12운성 이름
@@ -277,6 +350,26 @@ impl LifeStageName {
             LifeStageName::Jue => "절",
             LifeStageName::Tai => "태",
             LifeStageName::Yang => "양",
+        }
+    }
+}
+
+impl From<crate::core::twelve_stages::TwelveStage> for LifeStageName {
+    fn from(s: crate::core::twelve_stages::TwelveStage) -> Self {
+        use crate::core::twelve_stages::TwelveStage::*;
+        match s {
+            Changsheng => LifeStageName::Changsheng,
+            Muyu => LifeStageName::Muyu,
+            Guandai => LifeStageName::Guandai,
+            Jianlu => LifeStageName::Jianlu,
+            Diwang => LifeStageName::Diwang,
+            Shuai => LifeStageName::Shuai,
+            Bing => LifeStageName::Bing,
+            Si => LifeStageName::Si,
+            Mu => LifeStageName::Mu,
+            Jue => LifeStageName::Jue,
+            Tai => LifeStageName::Tai,
+            Yang => LifeStageName::Yang,
         }
     }
 }
@@ -361,6 +454,26 @@ impl fmt::Display for TraceTag {
             TraceTag::EscapedVoidTriple { period } => write!(f, "탈공:삼합({})", period.hangul()),
             TraceTag::EscapedVoidSeasonal { period } => write!(f, "탈공:방합({})", period.hangul()),
 
+            // 개고 / 입묘 / 격국
+            TraceTag::GaeGo {
+                branch,
+                unsealed_stem,
+            } => {
+                write!(f, "개고:{}({})", branch.hangul(), unsealed_stem.hangul())
+            }
+            TraceTag::IpMyo {
+                element,
+                tomb_branch,
+            } => {
+                write!(f, "입묘:{}({})", element.hangul(), tomb_branch.hangul())
+            }
+            TraceTag::DynamicGyeok {
+                active_structure,
+                status,
+            } => {
+                write!(f, "격국:{}({})", active_structure.hangul(), status.hangul())
+            }
+
             // 신살
             TraceTag::TwelveShinsal { name, period } => {
                 write!(f, "신살:{}({})", name.hangul(), period.hangul())
@@ -429,7 +542,7 @@ pub fn tags_to_strings(tags: &[TraceTag]) -> Vec<String> {
 pub fn strings_to_tags(strings: &[String]) -> Vec<TraceTag> {
     strings
         .iter()
-        .map(|s| TraceTag::Custom(s.clone()))
+        .map(|s| TraceTag::Custom(Cow::Owned(s.clone())))
         .collect()
 }
 

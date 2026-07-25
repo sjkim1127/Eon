@@ -10,6 +10,7 @@
 //! ### 흉살 (凶煞)
 //! - 역마살, 화개살, 괴강살, 도화살, 고신살 등
 
+pub use crate::analysis::shinsal::{calculate_samjae, SamjaeStage};
 use crate::analysis::shinsal::{EvilSpirit, Gilsin, TwelveShinsal};
 use crate::analysis::supplementary_pillars::InterpretationLevel;
 use crate::core::branch::EarthlyBranch;
@@ -715,7 +716,12 @@ impl SpiritMarkerAnalysis {
                 let mut is_combined = false;
 
                 if !m.is_stem {
-                    let pos_str = m.position.hangul();
+                    let pos_str = match m.position {
+                        PillarPosition::Year => "년지",
+                        PillarPosition::Month => "월지",
+                        PillarPosition::Day => "일지",
+                        PillarPosition::Hour => "시지",
+                    };
                     for (_, p1, p2) in &rel_analysis.branch_clashes {
                         if p1 == pos_str || p2 == pos_str { is_clashed = true; }
                     }
@@ -769,8 +775,33 @@ impl SpiritMarkerAnalysis {
                 let mut description = m.marker.description().to_string();
                 let mut summary = m.marker.hangul().to_string();
 
-                // 형충파해에 따른 신살 변질(파탈/발동) 적용
-                if m.marker.is_auspicious() {
+                let void_analysis = pillars.void_analysis();
+                let is_in_void = !m.is_stem && void_analysis.void_branches.contains(&pillar_ganzi.branch);
+                let is_void_dissolved = is_in_void && (is_clashed || is_combined);
+
+                // 형충파해 및 공망에 따른 신살 변질(파탈/발동/귀인공망) 적용
+                if is_in_void && !is_void_dissolved && m.marker.is_auspicious() {
+                    level = InterpretationLevel::Neutral; // 귀인공망으로 길신 효과 무력화
+                    summary.push_str(" (귀인공망)");
+                    description = format!("{} (지지가 공망(空亡)에 해당하여 귀인의 길한 효력이 크게 반감되거나 무력화되었습니다.)", description);
+                    reasons.push("귀인공망: 공망으로 인한 길신 작용력 무력화".to_string());
+                } else if is_in_void && is_void_dissolved {
+                    summary.push_str(" (공망해충/해합 구원)");
+                    reasons.push("공망 위치이나 충/합으로 공망 해소(구원)됨".to_string());
+                    if m.marker.is_auspicious() {
+                        if is_clashed {
+                            level = InterpretationLevel::Neutral;
+                            summary.push_str(" (파극됨)");
+                            description = format!("{} (길신이나 지지가 충(沖)이나 형(刑)을 만나 귀인파탈(貴人破脫)되어 그 효력이 크게 반감되었습니다.)", description);
+                            reasons.push("지지의 형/충으로 인한 길신 작용력 상실".to_string());
+                        } else if is_combined {
+                            level = InterpretationLevel::Auspicious;
+                            summary.push_str(" (합 증폭)");
+                            description = format!("{} (지지가 합(合)을 이루어 길신의 긍정적 기운이 더욱 안정적이고 강하게 증폭됩니다.)", description);
+                            reasons.push("지지 합(合)으로 인한 작용력 강화".to_string());
+                        }
+                    }
+                } else if m.marker.is_auspicious() {
                     if is_clashed {
                         level = InterpretationLevel::Neutral; // 길신 파탈로 레벨 하향
                         summary.push_str(" (파극됨)");

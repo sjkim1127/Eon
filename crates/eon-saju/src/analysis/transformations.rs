@@ -22,6 +22,8 @@ pub struct EffectiveElement {
     pub reason: Option<String>,
 }
 
+use crate::core::ganzi::GanZi;
+
 /// 사주 전체의 실질적 오행 통계
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransformationAnalysis {
@@ -38,6 +40,14 @@ pub struct TransformationAnalysis {
     pub month_branch: EffectiveElement,
     pub day_branch: EffectiveElement,
     pub hour_branch: EffectiveElement,
+    /// 대운 천간 실질 오행
+    pub major_stem: Option<EffectiveElement>,
+    /// 세운 천간 실질 오행
+    pub saewun_stem: Option<EffectiveElement>,
+    /// 대운 지지 실질 오행
+    pub major_branch: Option<EffectiveElement>,
+    /// 세운 지지 실질 오행
+    pub saewun_branch: Option<EffectiveElement>,
 }
 
 impl TransformationAnalysis {
@@ -209,6 +219,166 @@ impl TransformationAnalysis {
             month_branch,
             day_branch,
             hour_branch,
+            major_stem: None,
+            saewun_stem: None,
+            major_branch: None,
+            saewun_branch: None,
+        }
+    }
+
+    /// 5/6주 (원국 4주 + 대운 + 세운) 확장 합화 분석
+    pub fn from_expanded(
+        pillars: &FourPillars,
+        major: Option<GanZi>,
+        yearly: Option<GanZi>,
+    ) -> Self {
+        use crate::analysis::dynamic_luck::DynamicLuckAnalysis;
+        let dyn_luck = DynamicLuckAnalysis::analyze(pillars, major, yearly, None, None, None);
+        let rel = &dyn_luck.combined_relations;
+        let month_branch_element = pillars.month.branch.element();
+
+        let mut year_stem = EffectiveElement::new(pillars.year.stem.element());
+        let mut month_stem = EffectiveElement::new(pillars.month.stem.element());
+        let mut day_stem = EffectiveElement::new(pillars.day.stem.element());
+        let mut hour_stem = EffectiveElement::new(pillars.hour.stem.element());
+        let mut major_stem = major.map(|m| EffectiveElement::new(m.stem.element()));
+        let mut saewun_stem = yearly.map(|y| EffectiveElement::new(y.stem.element()));
+
+        // 1. 천간 합화 처리
+        for (combo, _p1, _p2) in &rel.stem_combinations {
+            let transformed_element = combo.transformed_element();
+            let is_supported = month_branch_element == transformed_element
+                || transformed_element.generated_by() == month_branch_element;
+
+            if is_supported {
+                let reason = format!("{}에 의한 합화", combo.hangul());
+                apply_stem_transform(
+                    pillars,
+                    combo,
+                    transformed_element,
+                    &reason,
+                    &mut year_stem,
+                    &mut month_stem,
+                    &mut day_stem,
+                    &mut hour_stem,
+                );
+                let (s1, s2) = combo.stems();
+                if let (Some(ref mut ms), Some(m)) = (&mut major_stem, major) {
+                    if m.stem == s1 || m.stem == s2 {
+                        ms.effective = transformed_element;
+                        ms.reason = Some(reason.clone());
+                    }
+                }
+                if let (Some(ref mut ss), Some(y)) = (&mut saewun_stem, yearly) {
+                    if y.stem == s1 || y.stem == s2 {
+                        ss.effective = transformed_element;
+                        ss.reason = Some(reason.clone());
+                    }
+                }
+            }
+        }
+
+        // 2. 지지 합화 처리 (삼합)
+        let mut year_branch = EffectiveElement::new(pillars.year.branch.element());
+        let mut month_branch = EffectiveElement::new(pillars.month.branch.element());
+        let mut day_branch = EffectiveElement::new(pillars.day.branch.element());
+        let mut hour_branch = EffectiveElement::new(pillars.hour.branch.element());
+        let mut major_branch = major.map(|m| EffectiveElement::new(m.branch.element()));
+        let mut saewun_branch = yearly.map(|y| EffectiveElement::new(y.branch.element()));
+
+        for tri in &rel.triple_combinations {
+            let transformed = tri.element();
+            let reason = format!("{}에 의한 합화", tri.hangul());
+            apply_triple_transform(
+                pillars,
+                tri,
+                transformed,
+                &reason,
+                &mut year_branch,
+                &mut month_branch,
+                &mut day_branch,
+                &mut hour_branch,
+            );
+            let tri_bs = tri.branches();
+            if let (Some(ref mut mb), Some(m)) = (&mut major_branch, major) {
+                if tri_bs.contains(&m.branch) {
+                    mb.effective = transformed;
+                    mb.reason = Some(reason.clone());
+                }
+            }
+            if let (Some(ref mut sb), Some(y)) = (&mut saewun_branch, yearly) {
+                if tri_bs.contains(&y.branch) {
+                    sb.effective = transformed;
+                    sb.reason = Some(reason.clone());
+                }
+            }
+        }
+
+        // 3. 지지 방합 처리
+        for sea in &rel.seasonal_combinations {
+            let transformed = sea.element();
+            let reason = format!("{}에 의한 합화", sea.hangul());
+            apply_seasonal_transform(
+                pillars,
+                sea,
+                transformed,
+                &reason,
+                &mut year_branch,
+                &mut month_branch,
+                &mut day_branch,
+                &mut hour_branch,
+            );
+            let sea_bs = sea.branches();
+            if let (Some(ref mut mb), Some(m)) = (&mut major_branch, major) {
+                if sea_bs.contains(&m.branch) {
+                    mb.effective = transformed;
+                    mb.reason = Some(reason.clone());
+                }
+            }
+            if let (Some(ref mut sb), Some(y)) = (&mut saewun_branch, yearly) {
+                if sea_bs.contains(&y.branch) {
+                    sb.effective = transformed;
+                    sb.reason = Some(reason.clone());
+                }
+            }
+        }
+
+        // 4. 지지 반합 처리
+        for (semi, _p1, _p2) in &rel.dominant_semi_combinations {
+            let transformed = match semi {
+                SemiCombination::YinWu | SemiCombination::WuXu => Element::Fire,
+                SemiCombination::ShenZi | SemiCombination::ZiChen => Element::Water,
+                SemiCombination::SiYou | SemiCombination::YouChou => Element::Metal,
+                SemiCombination::HaiMao | SemiCombination::MaoWei => Element::Wood,
+                _ => continue,
+            };
+
+            let reason = format!("{}에 의한 합화", semi.hangul());
+            apply_semi_transform(
+                pillars,
+                semi,
+                transformed,
+                &reason,
+                &mut year_branch,
+                &mut month_branch,
+                &mut day_branch,
+                &mut hour_branch,
+            );
+        }
+
+        Self {
+            year_stem,
+            month_stem,
+            day_stem,
+            hour_stem,
+            year_branch,
+            month_branch,
+            day_branch,
+            hour_branch,
+            major_stem,
+            saewun_stem,
+            major_branch,
+            saewun_branch,
         }
     }
 
@@ -222,7 +392,7 @@ impl TransformationAnalysis {
             (Element::Water, 0.0),
         ];
 
-        let elements = [
+        let mut elements = vec![
             &self.year_stem,
             &self.month_stem,
             &self.day_stem,
@@ -232,6 +402,18 @@ impl TransformationAnalysis {
             &self.day_branch,
             &self.hour_branch,
         ];
+        if let Some(ref s) = self.major_stem {
+            elements.push(s);
+        }
+        if let Some(ref s) = self.saewun_stem {
+            elements.push(s);
+        }
+        if let Some(ref b) = self.major_branch {
+            elements.push(b);
+        }
+        if let Some(ref b) = self.saewun_branch {
+            elements.push(b);
+        }
 
         for eff in elements {
             let idx = eff.effective.index() as usize;
@@ -491,6 +673,15 @@ impl FourPillars {
     /// 오행 합화 분석
     pub fn transformations(&self) -> TransformationAnalysis {
         TransformationAnalysis::from_pillars(self)
+    }
+
+    /// 5/6주 (원국 4주 + 대운 + 세운) 확장 합화 분석
+    pub fn transformations_expanded(
+        &self,
+        major: Option<GanZi>,
+        yearly: Option<GanZi>,
+    ) -> TransformationAnalysis {
+        TransformationAnalysis::from_expanded(self, major, yearly)
     }
 
     /// 실질 오행 맵 추출 (년/월/일/시 간/지 순서)

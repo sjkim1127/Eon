@@ -225,6 +225,19 @@ const YIN_STEM_CHANGSHENG: [EarthlyBranch; 5] = [
 
 /// 일간과 지지로부터 12운성 계산
 pub fn calculate_twelve_stage(day_stem: HeavenlyStem, branch: EarthlyBranch) -> TwelveStage {
+    calculate_twelve_stage_with_config(
+        day_stem,
+        branch,
+        &crate::core::config::AnalysisConfig::default(),
+    )
+}
+
+/// 설정을 포함하여 일간과 지지로부터 12운성 계산
+pub fn calculate_twelve_stage_with_config(
+    day_stem: HeavenlyStem,
+    branch: EarthlyBranch,
+    config: &crate::core::config::AnalysisConfig,
+) -> TwelveStage {
     // 양간과 음간 구분
     let is_yang = day_stem.index().is_multiple_of(2);
 
@@ -242,11 +255,11 @@ pub fn calculate_twelve_stage(day_stem: HeavenlyStem, branch: EarthlyBranch) -> 
     let branch_idx = branch.index() as i32;
     let changsheng_idx = changsheng_branch.index() as i32;
 
-    let distance = if is_yang {
-        // 양간: 순행 (시계방향)
+    let distance = if is_yang || !config.yin_stem_reverse {
+        // 양간 또는 음포태 동행설(yin_stem_reverse == false): 순행 (시계방향)
         (branch_idx - changsheng_idx).rem_euclid(12)
     } else {
-        // 음간: 역행 (반시계방향)
+        // 음간 기본: 역행 (반시계방향)
         (changsheng_idx - branch_idx).rem_euclid(12)
     };
 
@@ -286,18 +299,33 @@ pub struct TwelveStageAnalysis {
 impl TwelveStageAnalysis {
     /// 사주로부터 12운성 분석
     pub fn from_pillars(pillars: &FourPillars) -> Self {
+        Self::from_pillars_with_config(pillars, &crate::core::config::AnalysisConfig::default())
+    }
+
+    /// 설정을 포함하여 사주로부터 12운성 분석
+    pub fn from_pillars_with_config(
+        pillars: &FourPillars,
+        config: &crate::core::config::AnalysisConfig,
+    ) -> Self {
         let day_master = pillars.day_master();
 
-        let year_stage = calculate_twelve_stage(day_master, pillars.year.branch);
-        let month_stage = calculate_twelve_stage(day_master, pillars.month.branch);
-        let day_stage = calculate_twelve_stage(day_master, pillars.day.branch);
-        let hour_stage = calculate_twelve_stage(day_master, pillars.hour.branch);
+        let year_stage =
+            calculate_twelve_stage_with_config(day_master, pillars.year.branch, config);
+        let month_stage =
+            calculate_twelve_stage_with_config(day_master, pillars.month.branch, config);
+        let day_stage = calculate_twelve_stage_with_config(day_master, pillars.day.branch, config);
+        let hour_stage =
+            calculate_twelve_stage_with_config(day_master, pillars.hour.branch, config);
 
         // 자좌 12운성 (각 기둥의 천간 vs 지지)
-        let year_self = calculate_twelve_stage(pillars.year.stem, pillars.year.branch);
-        let month_self = calculate_twelve_stage(pillars.month.stem, pillars.month.branch);
-        let day_self = calculate_twelve_stage(pillars.day.stem, pillars.day.branch);
-        let hour_self = calculate_twelve_stage(pillars.hour.stem, pillars.hour.branch);
+        let year_self =
+            calculate_twelve_stage_with_config(pillars.year.stem, pillars.year.branch, config);
+        let month_self =
+            calculate_twelve_stage_with_config(pillars.month.stem, pillars.month.branch, config);
+        let day_self =
+            calculate_twelve_stage_with_config(pillars.day.stem, pillars.day.branch, config);
+        let hour_self =
+            calculate_twelve_stage_with_config(pillars.hour.stem, pillars.hour.branch, config);
 
         let total_energy = (year_stage.energy_level() as u32
             + month_stage.energy_level() as u32
