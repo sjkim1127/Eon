@@ -2818,43 +2818,123 @@ pub fn VedicTab() -> Element {
                                                     }
                                                 }
 
-                                                // Full summary text
-                                                div { class: "p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-2",
-                                                    h4 { class: "text-xs text-slate-500 uppercase tracking-widest font-bold", "타지카 연간 거시 운세 해설" }
+                                                // Full summary text & Muntha interpretation
+                                                div { class: "p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-3",
+                                                    h4 { class: "text-xs text-slate-500 uppercase tracking-widest font-bold", "타지카 연간 거시 운세 및 문타 해설" }
+                                                    if let Some(m_ana) = &tajika.muntha_analysis {
+                                                        div { class: "p-3.5 bg-indigo-950/20 border border-indigo-900/40 rounded-xl space-y-1",
+                                                            p { class: "text-sm font-bold text-indigo-300", "{m_ana.summary}" }
+                                                            p { class: "text-xs text-slate-300 leading-relaxed", "{m_ana.details}" }
+                                                        }
+                                                    }
                                                     p { class: "text-sm text-slate-300 leading-relaxed font-medium", "{tajika.summary}" }
                                                 }
 
-                                                // 2) Sahams Table
-                                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl",
-                                                    div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
-                                                        h3 { class: "font-semibold text-slate-200", "연간 민감점 (Tajika Sahams)" }
+                                                // 2) Mudda Dasha Timeline Table
+                                                if !tajika.mudda_dasha.is_empty() {
+                                                    div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl",
+                                                        div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3 flex justify-between items-center",
+                                                            h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-widest", "⏳ 무다 다샤 (Mudda Dasha — 1년 분할 타임라인)" }
+                                                            span { class: "text-xs text-slate-400 font-mono", "총 365.25일 비축 분할" }
+                                                        }
+                                                        div { class: "overflow-x-auto",
+                                                            table { class: "w-full text-sm",
+                                                                thead {
+                                                                    tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
+                                                                        th { class: "px-4 py-3 text-left font-medium", "주인 행성 (Dasha Lord)" }
+                                                                        th { class: "px-4 py-3 text-left font-medium", "할당 기간 (일)" }
+                                                                        th { class: "px-4 py-3 text-left font-medium", "누적 일수 (Offset)" }
+                                                                    }
+                                                                }
+                                                                tbody { class: "divide-y divide-slate-800",
+                                                                    {tajika.mudda_dasha.iter().map(|m| {
+                                                                        let color = planet_color(m.planet);
+                                                                        rsx! {
+                                                                            tr { class: "hover:bg-slate-800/20 transition-colors",
+                                                                                td { class: "px-4 py-3 font-bold {color}", "{m.planet_kr}" }
+                                                                                td { class: "px-4 py-3 text-slate-200 font-mono", "{m.duration_days:.1} 일" }
+                                                                                td { class: "px-4 py-3 text-xs text-slate-400 font-mono", "{m.start_day_offset:.1}일 ~ {m.end_day_offset:.1}일" }
+                                                                            }
+                                                                        }
+                                                                    })}
+                                                                }
+                                                            }
+                                                        }
                                                     }
-                                                    div { class: "overflow-x-auto",
+                                                }
+
+                                                // 3) Pancha-Vargeeya Bala Table
+                                                if !tajika.pancha_vargeeya_bala.is_empty() {
+                                                    div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl",
+                                                        div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
+                                                            h3 { class: "font-semibold text-slate-200 text-sm uppercase tracking-widest", "⚖️ 판차-바르기야 발라 (Pancha-Vargeeya Bala — 5대 강도 평가)" }
+                                                        }
+                                                        div { class: "overflow-x-auto",
+                                                            table { class: "w-full text-sm",
+                                                                thead {
+                                                                    tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
+                                                                        th { class: "px-4 py-3 text-left font-medium", "행성" }
+                                                                        th { class: "px-4 py-3 text-center font-medium", "셰트라" }
+                                                                        th { class: "px-4 py-3 text-center font-medium", "우차" }
+                                                                        th { class: "px-4 py-3 text-center font-medium", "하다" }
+                                                                        th { class: "px-4 py-3 text-center font-medium", "드레카나" }
+                                                                        th { class: "px-4 py-3 text-center font-medium", "나밤샤" }
+                                                                        th { class: "px-4 py-3 text-center font-medium", "총점 (Virupas)" }
+                                                                        th { class: "px-4 py-3 text-center font-medium", "평가 등급" }
+                                                                    }
+                                                                }
+                                                                tbody { class: "divide-y divide-slate-800",
+                                                                    {tajika.pancha_vargeeya_bala.iter().map(|pvb| {
+                                                                        let color = planet_color(pvb.planet);
+                                                                        let grade_color = if pvb.total_virupas >= 15.0 { "text-emerald-400 font-bold" } else if pvb.total_virupas >= 10.0 { "text-amber-400" } else { "text-rose-400" };
+                                                                        rsx! {
+                                                                            tr { class: "hover:bg-slate-800/20 transition-colors",
+                                                                                td { class: "px-4 py-3 font-bold {color}", "{planet_name_kr(pvb.planet)}" }
+                                                                                td { class: "px-4 py-3 text-center font-mono text-xs text-slate-300", "{pvb.kshetra_bala:.1}" }
+                                                                                td { class: "px-4 py-3 text-center font-mono text-xs text-slate-300", "{pvb.uchcha_bala:.1}" }
+                                                                                td { class: "px-4 py-3 text-center font-mono text-xs text-slate-300", "{pvb.hadda_bala:.1}" }
+                                                                                td { class: "px-4 py-3 text-center font-mono text-xs text-slate-300", "{pvb.drekkana_bala:.1}" }
+                                                                                td { class: "px-4 py-3 text-center font-mono text-xs text-slate-300", "{pvb.navamsha_bala:.1}" }
+                                                                                td { class: "px-4 py-3 text-center font-mono font-bold text-amber-300", "{pvb.total_virupas:.2}" }
+                                                                                td { class: "px-4 py-3 text-center text-xs {grade_color}", "{pvb.grade}" }
+                                                                            }
+                                                                        }
+                                                                    })}
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                // 4) 36 Sahams Table
+                                                div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl",
+                                                    div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3 flex justify-between items-center",
+                                                        h3 { class: "font-semibold text-slate-200", "📍 연간 36대 민감점 (Tajika 36 Sahams)" }
+                                                        span { class: "text-xs text-slate-400 font-mono", "총 {tajika.sahams.len()}개 지점" }
+                                                    }
+                                                    div { class: "overflow-x-auto max-h-96 overflow-y-auto",
                                                         table { class: "w-full text-sm",
                                                             thead {
-                                                                tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase",
-                                                                    th { class: "px-4 py-3 text-left font-medium", "이름 (Saham)" }
+                                                                tr { class: "bg-slate-800/30 text-xs text-slate-400 uppercase sticky top-0 bg-slate-900 z-10",
+                                                                    th { class: "px-4 py-3 text-left font-medium", "민감점 (Saham)" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "산출 공식" }
                                                                     th { class: "px-4 py-3 text-left font-medium", "성좌 (Rasi)" }
-                                                                    th { class: "px-4 py-3 text-left font-medium", "황경 (Longitude)" }
-                                                                    th { class: "px-4 py-3 text-left font-medium", "동작/특성" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "황경 (Pos)" }
+                                                                    th { class: "px-4 py-3 text-center font-medium", "하우스" }
+                                                                    th { class: "px-4 py-3 text-left font-medium", "수장 (Lord)" }
                                                                 }
                                                             }
                                                             tbody { class: "divide-y divide-slate-800",
                                                                 {tajika.sahams.iter().map(|saham| {
-                                                                    let desc = match saham.name.as_str() {
-                                                                        "Punya Saham" => "재물, 풍요, 행운과 전반적 조력",
-                                                                        "Vidya Saham" => "지혜, 지식 습득, 학업 및 연구 성과",
-                                                                        "Vivaha Saham" => "결혼, 파트너십, 대인 상생 관계",
-                                                                        "Karma Saham" => "직업, 비즈니스 성과, 승진 및 명예",
-                                                                        "Roga Saham" => "질병 예방, 건강 관리 필요 구역",
-                                                                        _ => "올해 활성화되는 개별 운세 감지점",
-                                                                    };
+                                                                    let lord_color = planet_color(saham.lord);
                                                                     rsx! {
                                                                         tr { class: "hover:bg-slate-800/20 transition-colors",
-                                                                            td { class: "px-4 py-3 font-bold text-amber-300", "{saham.name}" }
-                                                                            td { class: "px-4 py-3 text-slate-300", "{rasi_name(saham.rasi)}" }
-                                                                            td { class: "px-4 py-3 font-mono text-slate-400 text-xs", "{saham.longitude:.2}°" }
-                                                                            td { class: "px-4 py-3 text-xs text-slate-400", "{desc}" }
+                                                                            td { class: "px-4 py-2.5 font-bold text-amber-300 text-xs", "{saham.name_kr}" }
+                                                                            td { class: "px-4 py-2.5 font-mono text-slate-400 text-[11px]", "{saham.formula}" }
+                                                                            td { class: "px-4 py-2.5 text-slate-300 text-xs", "{rasi_name(saham.rasi)}" }
+                                                                            td { class: "px-4 py-2.5 font-mono text-slate-400 text-xs", "{saham.longitude:.2}°" }
+                                                                            td { class: "px-4 py-2.5 text-center text-xs font-mono text-indigo-300", "{saham.house}H" }
+                                                                            td { class: "px-4 py-2.5 text-xs font-semibold {lord_color}", "{planet_name_kr(saham.lord)}" }
                                                                         }
                                                                     }
                                                                 })}
@@ -2863,7 +2943,32 @@ pub fn VedicTab() -> Element {
                                                     }
                                                 }
 
-                                                // 3) Harsha Bala Grid
+                                                // 5) 16 Tajika Yogas Cards
+                                                if !tajika.tajika_yogas.is_empty() {
+                                                    div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
+                                                        h3 { class: "text-sm font-semibold text-slate-200 uppercase tracking-widest", "🌌 타지카 결합 요가 (Tajika Yogas)" }
+                                                        div { class: "grid grid-cols-1 md:grid-cols-2 gap-3",
+                                                            {tajika.tajika_yogas.iter().map(|yoga| {
+                                                                let (badge_bg, badge_text, border_color) = if yoga.is_benefic {
+                                                                    ("bg-emerald-950/40 text-emerald-300 border-emerald-800/40", "길조 (Benefic)", "border-emerald-900/30")
+                                                                } else {
+                                                                    ("bg-rose-950/40 text-rose-300 border-rose-800/40", "주의 (Malefic)", "border-rose-900/30")
+                                                                };
+                                                                rsx! {
+                                                                    div { class: "p-4 bg-slate-800/30 border {border_color} rounded-xl space-y-2",
+                                                                        div { class: "flex justify-between items-center",
+                                                                            span { class: "font-bold text-sm text-slate-200", "{yoga.name_kr}" }
+                                                                            span { class: "text-[10px] font-bold px-2 py-0.5 rounded border {badge_bg}", "{badge_text}" }
+                                                                        }
+                                                                        p { class: "text-xs text-slate-300 leading-relaxed", "{yoga.description}" }
+                                                                    }
+                                                                }
+                                                            })}
+                                                        }
+                                                    }
+                                                }
+
+                                                // 6) Harsha Bala Grid
                                                 if !tajika.harsha_bala_summary.is_empty() {
                                                     div { class: "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl",
                                                         h3 { class: "text-sm font-semibold text-slate-400 uppercase tracking-widest", "하르샤 발라 강도 (Harsha Bala - 연간 행성 행복도)" }

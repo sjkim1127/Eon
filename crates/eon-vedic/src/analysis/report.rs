@@ -55,6 +55,14 @@ pub struct TajikaReport {
     pub sahams: Vec<Saham>,
     pub harsha_bala_summary: Vec<(VedicPlanet, u32)>,
     #[serde(default)]
+    pub mudda_dasha: Vec<crate::analysis::tajika::MuddaDashaPeriod>,
+    #[serde(default)]
+    pub pancha_vargeeya_bala: Vec<crate::analysis::tajika::PanchaVargeeyaBala>,
+    #[serde(default)]
+    pub tajika_yogas: Vec<crate::analysis::tajika::TajikaYogaInfo>,
+    #[serde(default)]
+    pub muntha_analysis: Option<crate::analysis::tajika::MunthaAnalysis>,
+    #[serde(default)]
     pub summary: String,
 }
 
@@ -282,7 +290,12 @@ impl VedicAnalysisReport {
 
 impl TajikaReport {
     pub fn generate(chart: &VedicChart, birth_lagna_rasi: u8, age_years: u32) -> Self {
-        let sahams = TajikaEngine::calculate_sahams(chart);
+        let sahams = TajikaEngine::calculate_all_sahams(chart);
+        let mudda_dasha = TajikaEngine::calculate_mudda_dasha(chart);
+        let pancha_vargeeya_bala = TajikaEngine::calculate_pancha_vargeeya_bala(chart);
+        let tajika_yogas = TajikaEngine::detect_tajika_yogas(chart);
+        let muntha_analysis = TajikaEngine::analyze_muntha(chart, birth_lagna_rasi, age_years);
+
         let mut harsha_bala_summary = Vec::new();
         let planets_to_check = [
             VedicPlanet::Sun,
@@ -297,7 +310,7 @@ impl TajikaReport {
             harsha_bala_summary.push((p, TajikaBala::calculate_harsha_bala(chart, p)));
         }
 
-        let muntha_rasi = TajikaEngine::calculate_muntha(birth_lagna_rasi, age_years);
+        let muntha_rasi = muntha_analysis.muntha_rasi;
         let year_lord = TajikaEngine::select_year_lord(chart, birth_lagna_rasi, age_years);
 
         Self {
@@ -305,6 +318,10 @@ impl TajikaReport {
             muntha_rasi,
             sahams,
             harsha_bala_summary,
+            mudda_dasha,
+            pancha_vargeeya_bala,
+            tajika_yogas,
+            muntha_analysis: Some(muntha_analysis),
             summary: format!(
                 "Annual Chart Summary: Year Lord is {:?}, Muntha in Sign {}.",
                 year_lord, muntha_rasi

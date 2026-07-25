@@ -2592,8 +2592,8 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
         t_muntha_lbl,
         t_saham_lbl,
         t_saham_name,
-        t_saham_pos,
-        t_saham_rasi,
+        _t_saham_pos,
+        _t_saham_rasi,
         t_harsha_lbl,
         t_harsha_score,
     ) = match locale {
@@ -2651,23 +2651,90 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
             .unwrap_or("—");
         let muntha_str = rasi_name(locale, tajika.muntha_rasi);
         s.push_str(&format!("- **{}**: {}\n", t_lord_lbl, yl_str));
-        s.push_str(&format!("- **{}**: {}\n\n", t_muntha_lbl, muntha_str));
+        s.push_str(&format!("- **{}**: {}\n", t_muntha_lbl, muntha_str));
 
+        if let Some(m_ana) = &tajika.muntha_analysis {
+            s.push_str(&format!(
+                "- **문타 위치 및 해석**: {}\n  - {}\n\n",
+                m_ana.summary, m_ana.details
+            ));
+        } else {
+            s.push('\n');
+        }
+
+        // Mudda Dasha Table
+        if !tajika.mudda_dasha.is_empty() {
+            s.push_str("#### ⏳ 무다 다샤 (Mudda Dasha — 1년 분할 운세 타임라인)\n\n");
+            s.push_str("| 행성 (Dasha Lord) | 기간 (일) | 누적 일수 범위 |\n");
+            s.push_str("| --- | --- | --- |\n");
+            for m in &tajika.mudda_dasha {
+                let p_str = translate_planet(locale, m.planet);
+                s.push_str(&format!(
+                    "| {} ({}) | {:.1}일 | {:.1}일 ~ {:.1}일 |\n",
+                    m.planet_kr, p_str, m.duration_days, m.start_day_offset, m.end_day_offset
+                ));
+            }
+            s.push('\n');
+        }
+
+        // Pancha-Vargeeya Bala Table
+        if !tajika.pancha_vargeeya_bala.is_empty() {
+            s.push_str("#### ⚖️ 판차-바르기야 발라 (Pancha-Vargeeya Bala — 5대 강도 평가)\n\n");
+            s.push_str(
+                "| 행성 | 셰트라 | 우차 | 하다 | 드레카나 | 나밤샤 | 총점 (Virupas) | 등급 |\n",
+            );
+            s.push_str("| --- | --- | --- | --- | --- | --- | --- | --- |\n");
+            for pvb in &tajika.pancha_vargeeya_bala {
+                let p_str = translate_planet(locale, pvb.planet);
+                s.push_str(&format!(
+                    "| {} | {:.1} | {:.1} | {:.1} | {:.1} | {:.1} | **{:.2}** | {} |\n",
+                    p_str,
+                    pvb.kshetra_bala,
+                    pvb.uchcha_bala,
+                    pvb.hadda_bala,
+                    pvb.drekkana_bala,
+                    pvb.navamsha_bala,
+                    pvb.total_virupas,
+                    pvb.grade
+                ));
+            }
+            s.push('\n');
+        }
+
+        // 36 Sahams Table
         s.push_str(&format!("#### {}\n\n", t_saham_lbl));
-        s.push_str(&format!(
-            "| {} | {} | {} |\n",
-            t_saham_name, t_saham_pos, t_saham_rasi
-        ));
-        s.push_str("| --- | --- | --- |\n");
+        s.push_str("| 민감점 (Saham) | 공식 (Formula) | 성좌 (Sign) | 위치 (Position) | 하우스 | 수장 (Lord) |\n");
+        s.push_str("| --- | --- | --- | --- | --- | --- |\n");
         for saham in &tajika.sahams {
             let deg_within_sign = saham.longitude % 30.0;
             let deg_floor = deg_within_sign.floor() as i32;
             let min_val = ((deg_within_sign - deg_floor as f64) * 60.0).round() as i32;
             let pos_str = format!("{:02}° {:02}'", deg_floor, min_val);
             let s_rasi = rasi_name(locale, saham.rasi);
-            s.push_str(&format!("| {} | {} | {} |\n", saham.name, pos_str, s_rasi));
+            let lord_str = translate_planet(locale, saham.lord);
+            s.push_str(&format!(
+                "| {} ({}) | {} | {} | {} | {}H | {} |\n",
+                saham.name_kr, saham.name, saham.formula, s_rasi, pos_str, saham.house, lord_str
+            ));
         }
         s.push('\n');
+
+        // 16 Tajika Yogas
+        if !tajika.tajika_yogas.is_empty() {
+            s.push_str("#### 🌌 타지카 주요 결합 요가 (Tajika Yogas)\n\n");
+            for yoga in &tajika.tajika_yogas {
+                let badge = if yoga.is_benefic {
+                    "🟢 길조"
+                } else {
+                    "🔴 주의"
+                };
+                s.push_str(&format!(
+                    "- **{} ({})** [{}]\n  - {}\n",
+                    yoga.name_kr, yoga.name, badge, yoga.description
+                ));
+            }
+            s.push('\n');
+        }
 
         s.push_str(&format!("#### {}\n\n", t_harsha_lbl));
         s.push_str(&format!("| {} | {} |\n", t_saham_name, t_harsha_score));
