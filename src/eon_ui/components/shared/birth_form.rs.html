@@ -107,11 +107,11 @@
 <a href=#107 id=107 data-nosnippet>107</a>    <span class="kw">let </span>lon_display = state.form.read().lon;
 <a href=#108 id=108 data-nosnippet>108</a>
 <a href=#109 id=109 data-nosnippet>109</a>    <span class="macro">rsx!</span> {
-<a href=#110 id=110 data-nosnippet>110</a>        div { class: <span class="string">"glass-premium rounded-2xl p-5 flex flex-col gap-4 border border-white/5"</span>,
+<a href=#110 id=110 data-nosnippet>110</a>        div { class: <span class="string">"glass-premium rounded-2xl p-4 sm:p-5 flex flex-col gap-4 border border-white/5"</span>,
 <a href=#111 id=111 data-nosnippet>111</a>
 <a href=#112 id=112 data-nosnippet>112</a>            <span class="comment">// Profile Row
-<a href=#113 id=113 data-nosnippet>113</a>            </span>div { class: <span class="string">"flex items-center gap-3 pb-3 border-b border-white/5"</span>,
-<a href=#114 id=114 data-nosnippet>114</a>                div { class: <span class="string">"flex flex-col gap-1.5 flex-1 min-w-0"</span>,
+<a href=#113 id=113 data-nosnippet>113</a>            </span>div { class: <span class="string">"grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-white/5"</span>,
+<a href=#114 id=114 data-nosnippet>114</a>                div { class: <span class="string">"flex flex-col gap-1.5 min-w-0"</span>,
 <a href=#115 id=115 data-nosnippet>115</a>                    label { class: <span class="string">"text-xs text-slate-400 font-semibold tracking-wide"</span>, <span class="string">"{t(locale, TK::FormSavedProfiles)}" </span>}
 <a href=#116 id=116 data-nosnippet>116</a>                    select {
 <a href=#117 id=117 data-nosnippet>117</a>                        class: <span class="string">"bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus-glow transition-all w-full cursor-pointer"</span>,
@@ -122,7 +122,7 @@
 <a href=#122 id=122 data-nosnippet>122</a>                        })}
 <a href=#123 id=123 data-nosnippet>123</a>                    }
 <a href=#124 id=124 data-nosnippet>124</a>                }
-<a href=#125 id=125 data-nosnippet>125</a>                div { class: <span class="string">"flex items-end gap-2 flex-1 min-w-0"</span>,
+<a href=#125 id=125 data-nosnippet>125</a>                div { class: <span class="string">"flex items-end gap-2 min-w-0"</span>,
 <a href=#126 id=126 data-nosnippet>126</a>                    div { class: <span class="string">"flex flex-col gap-1.5 flex-1 min-w-0"</span>,
 <a href=#127 id=127 data-nosnippet>127</a>                        label { class: <span class="string">"text-xs text-slate-400 font-semibold tracking-wide"</span>, <span class="string">"{t(locale, TK::FormSaveProfile)}" </span>}
 <a href=#128 id=128 data-nosnippet>128</a>                        input {
@@ -141,12 +141,12 @@
 <a href=#141 id=141 data-nosnippet>141</a>            }
 <a href=#142 id=142 data-nosnippet>142</a>
 <a href=#143 id=143 data-nosnippet>143</a>            <span class="comment">// Input Row
-<a href=#144 id=144 data-nosnippet>144</a>            </span>div { class: <span class="string">"flex flex-wrap gap-3.5 items-end"</span>,
+<a href=#144 id=144 data-nosnippet>144</a>            </span>div { class: <span class="string">"flex flex-wrap gap-2.5 sm:gap-3.5 items-end"</span>,
 <a href=#145 id=145 data-nosnippet>145</a>                <span class="comment">// Year
-<a href=#146 id=146 data-nosnippet>146</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5"</span>,
+<a href=#146 id=146 data-nosnippet>146</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5 flex-1 sm:flex-initial"</span>,
 <a href=#147 id=147 data-nosnippet>147</a>                    label { class: <span class="string">"text-xs text-slate-400 font-semibold tracking-wide"</span>, <span class="string">"{t(locale, TK::FormYear)}" </span>}
 <a href=#148 id=148 data-nosnippet>148</a>                    input {
-<a href=#149 id=149 data-nosnippet>149</a>                        class: <span class="string">"w-24 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all"</span>,
+<a href=#149 id=149 data-nosnippet>149</a>                        class: <span class="string">"w-full sm:w-24 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left"</span>,
 <a href=#150 id=150 data-nosnippet>150</a>                        r#type: <span class="string">"number"</span>, min: <span class="string">"1900"</span>, max: <span class="string">"2100"</span>,
 <a href=#151 id=151 data-nosnippet>151</a>                        value: <span class="string">"{state.form.read().year}"</span>,
 <a href=#152 id=152 data-nosnippet>152</a>                        oninput: <span class="kw">move </span>|evt| {
@@ -155,10 +155,10 @@
 <a href=#155 id=155 data-nosnippet>155</a>                    }
 <a href=#156 id=156 data-nosnippet>156</a>                }
 <a href=#157 id=157 data-nosnippet>157</a>                <span class="comment">// Month
-<a href=#158 id=158 data-nosnippet>158</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5"</span>,
+<a href=#158 id=158 data-nosnippet>158</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5 flex-1 sm:flex-initial"</span>,
 <a href=#159 id=159 data-nosnippet>159</a>                    label { class: <span class="string">"text-xs text-slate-400 font-semibold tracking-wide"</span>, <span class="string">"{t(locale, TK::FormMonth)}" </span>}
 <a href=#160 id=160 data-nosnippet>160</a>                    input {
-<a href=#161 id=161 data-nosnippet>161</a>                        class: <span class="string">"w-16 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all"</span>,
+<a href=#161 id=161 data-nosnippet>161</a>                        class: <span class="string">"w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left"</span>,
 <a href=#162 id=162 data-nosnippet>162</a>                        r#type: <span class="string">"number"</span>, min: <span class="string">"1"</span>, max: <span class="string">"12"</span>,
 <a href=#163 id=163 data-nosnippet>163</a>                        value: <span class="string">"{state.form.read().month}"</span>,
 <a href=#164 id=164 data-nosnippet>164</a>                        oninput: <span class="kw">move </span>|evt| {
@@ -167,10 +167,10 @@
 <a href=#167 id=167 data-nosnippet>167</a>                    }
 <a href=#168 id=168 data-nosnippet>168</a>                }
 <a href=#169 id=169 data-nosnippet>169</a>                <span class="comment">// Day
-<a href=#170 id=170 data-nosnippet>170</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5"</span>,
+<a href=#170 id=170 data-nosnippet>170</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5 flex-1 sm:flex-initial"</span>,
 <a href=#171 id=171 data-nosnippet>171</a>                    label { class: <span class="string">"text-xs text-slate-400 font-semibold tracking-wide"</span>, <span class="string">"{t(locale, TK::FormDay)}" </span>}
 <a href=#172 id=172 data-nosnippet>172</a>                    input {
-<a href=#173 id=173 data-nosnippet>173</a>                        class: <span class="string">"w-16 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all"</span>,
+<a href=#173 id=173 data-nosnippet>173</a>                        class: <span class="string">"w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left"</span>,
 <a href=#174 id=174 data-nosnippet>174</a>                        r#type: <span class="string">"number"</span>, min: <span class="string">"1"</span>, max: <span class="string">"31"</span>,
 <a href=#175 id=175 data-nosnippet>175</a>                        value: <span class="string">"{state.form.read().day}"</span>,
 <a href=#176 id=176 data-nosnippet>176</a>                        oninput: <span class="kw">move </span>|evt| {
@@ -179,10 +179,10 @@
 <a href=#179 id=179 data-nosnippet>179</a>                    }
 <a href=#180 id=180 data-nosnippet>180</a>                }
 <a href=#181 id=181 data-nosnippet>181</a>                <span class="comment">// Hour
-<a href=#182 id=182 data-nosnippet>182</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5"</span>,
+<a href=#182 id=182 data-nosnippet>182</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5 flex-1 sm:flex-initial"</span>,
 <a href=#183 id=183 data-nosnippet>183</a>                    label { class: <span class="string">"text-xs text-slate-400 font-semibold tracking-wide"</span>, <span class="string">"{t(locale, TK::FormHour)}" </span>}
 <a href=#184 id=184 data-nosnippet>184</a>                    input {
-<a href=#185 id=185 data-nosnippet>185</a>                        class: <span class="string">"w-16 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all"</span>,
+<a href=#185 id=185 data-nosnippet>185</a>                        class: <span class="string">"w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left"</span>,
 <a href=#186 id=186 data-nosnippet>186</a>                        r#type: <span class="string">"number"</span>, min: <span class="string">"0"</span>, max: <span class="string">"23"</span>,
 <a href=#187 id=187 data-nosnippet>187</a>                        value: <span class="string">"{state.form.read().hour}"</span>,
 <a href=#188 id=188 data-nosnippet>188</a>                        oninput: <span class="kw">move </span>|evt| {
@@ -191,10 +191,10 @@
 <a href=#191 id=191 data-nosnippet>191</a>                    }
 <a href=#192 id=192 data-nosnippet>192</a>                }
 <a href=#193 id=193 data-nosnippet>193</a>                <span class="comment">// Minute
-<a href=#194 id=194 data-nosnippet>194</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5"</span>,
+<a href=#194 id=194 data-nosnippet>194</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5 flex-1 sm:flex-initial"</span>,
 <a href=#195 id=195 data-nosnippet>195</a>                    label { class: <span class="string">"text-xs text-slate-400 font-semibold tracking-wide"</span>, <span class="string">"{t(locale, TK::FormMinute)}" </span>}
 <a href=#196 id=196 data-nosnippet>196</a>                    input {
-<a href=#197 id=197 data-nosnippet>197</a>                        class: <span class="string">"w-16 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all"</span>,
+<a href=#197 id=197 data-nosnippet>197</a>                        class: <span class="string">"w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left"</span>,
 <a href=#198 id=198 data-nosnippet>198</a>                        r#type: <span class="string">"number"</span>, min: <span class="string">"0"</span>, max: <span class="string">"59"</span>,
 <a href=#199 id=199 data-nosnippet>199</a>                        value: <span class="string">"{state.form.read().minute}"</span>,
 <a href=#200 id=200 data-nosnippet>200</a>                        oninput: <span class="kw">move </span>|evt| {
@@ -203,26 +203,26 @@
 <a href=#203 id=203 data-nosnippet>203</a>                    }
 <a href=#204 id=204 data-nosnippet>204</a>                }
 <a href=#205 id=205 data-nosnippet>205</a>                <span class="comment">// Birthplace (text search)
-<a href=#206 id=206 data-nosnippet>206</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5 min-w-0 relative flex-1 md:flex-initial"</span>,
+<a href=#206 id=206 data-nosnippet>206</a>                </span>div { class: <span class="string">"flex flex-col gap-1.5 min-w-0 relative w-full sm:w-auto flex-1 sm:flex-initial"</span>,
 <a href=#207 id=207 data-nosnippet>207</a>                    label { class: <span class="string">"text-xs text-slate-400 font-semibold tracking-wide"</span>,
 <a href=#208 id=208 data-nosnippet>208</a>                        <span class="string">"{t(locale, TK::FormBirthplace)}"
 <a href=#209 id=209 data-nosnippet>209</a>                    </span>}
 <a href=#210 id=210 data-nosnippet>210</a>                    div { class: <span class="string">"flex gap-1.5"</span>,
 <a href=#211 id=211 data-nosnippet>211</a>                        input {
-<a href=#212 id=212 data-nosnippet>212</a>                            class: <span class="string">"w-full md:w-44 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all"</span>,
+<a href=#212 id=212 data-nosnippet>212</a>                            class: <span class="string">"w-full sm:w-44 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all"</span>,
 <a href=#213 id=213 data-nosnippet>213</a>                            placeholder: <span class="string">"{t(locale, TK::FormCityPlaceholder)}"</span>,
 <a href=#214 id=214 data-nosnippet>214</a>                            value: <span class="string">"{city_input}"</span>,
 <a href=#215 id=215 data-nosnippet>215</a>                            oninput: <span class="kw">move </span>|evt| city_input.set(evt.value()),
 <a href=#216 id=216 data-nosnippet>216</a>                            onkeydown: on_city_keydown,
 <a href=#217 id=217 data-nosnippet>217</a>                        }
 <a href=#218 id=218 data-nosnippet>218</a>                        button {
-<a href=#219 id=219 data-nosnippet>219</a>                            class: <span class="string">"bg-white/10 hover:bg-white/15 active:scale-95 text-slate-200 text-sm px-3 py-2 rounded-xl transition-all cursor-pointer border border-white/5"</span>,
+<a href=#219 id=219 data-nosnippet>219</a>                            class: <span class="string">"bg-white/10 hover:bg-white/15 active:scale-95 text-slate-200 text-sm px-3 py-2 rounded-xl transition-all cursor-pointer border border-white/5 shrink-0"</span>,
 <a href=#220 id=220 data-nosnippet>220</a>                            onclick: on_city_geocode,
 <a href=#221 id=221 data-nosnippet>221</a>                            <span class="string">"🔍"
 <a href=#222 id=222 data-nosnippet>222</a>                        </span>}
 <a href=#223 id=223 data-nosnippet>223</a>                    }
 <a href=#224 id=224 data-nosnippet>224</a>                    <span class="kw">if </span>!search_results.read().is_empty() {
-<a href=#225 id=225 data-nosnippet>225</a>                        div { class: <span class="string">"absolute top-full left-0 mt-1.5 w-72 bg-[#0e0f22]/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden"</span>,
+<a href=#225 id=225 data-nosnippet>225</a>                        div { class: <span class="string">"absolute top-full left-0 mt-1.5 w-full sm:w-72 bg-[#0e0f22]/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden"</span>,
 <a href=#226 id=226 data-nosnippet>226</a>                            {search_results.read().iter().map(|result| {
 <a href=#227 id=227 data-nosnippet>227</a>                                <span class="kw">let </span>r = result.clone();
 <a href=#228 id=228 data-nosnippet>228</a>                                <span class="kw">let </span>display = <span class="kw">if let </span><span class="prelude-val">Some</span>(ko) = <span class="kw-2">&amp;</span>r.name_ko {
@@ -251,7 +251,7 @@
 <a href=#251 id=251 data-nosnippet>251</a>                }
 <a href=#252 id=252 data-nosnippet>252</a>
 <a href=#253 id=253 data-nosnippet>253</a>                <span class="comment">// Form Checkboxes Section
-<a href=#254 id=254 data-nosnippet>254</a>                </span>div { class: <span class="string">"flex items-center gap-4 flex-wrap pb-1 h-9"</span>,
+<a href=#254 id=254 data-nosnippet>254</a>                </span>div { class: <span class="string">"flex items-center gap-3 sm:gap-4 flex-wrap pt-1 min-h-[36px]"</span>,
 <a href=#255 id=255 data-nosnippet>255</a>                    <span class="comment">// Lunar calendar checkbox
 <a href=#256 id=256 data-nosnippet>256</a>                    </span>div { class: <span class="string">"flex items-center gap-2"</span>,
 <a href=#257 id=257 data-nosnippet>257</a>                        input {
