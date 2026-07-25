@@ -2012,7 +2012,11 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
         for arg in &j.argala_matrix {
             s.push_str(&format!(
                 "| Rasi {} | +{:.1} | -{:.1} | {:+.1} | {} |\n",
-                arg.rasi, arg.primary_argala_score, arg.virodhargala_score, arg.net_argala_score, arg.status
+                arg.rasi,
+                arg.primary_argala_score,
+                arg.virodhargala_score,
+                arg.net_argala_score,
+                arg.status
             ));
         }
     } else {

@@ -270,8 +270,7 @@ impl VedicAnalysisReport {
             crate::analysis::jaimini::JaiminiEngine::analyze_karakamsha(chart);
         let arudha_padas_info =
             crate::analysis::jaimini::JaiminiEngine::analyze_arudha_padas(chart);
-        let argala_matrix_info =
-            crate::analysis::jaimini::JaiminiEngine::analyze_argala(chart);
+        let argala_matrix_info = crate::analysis::jaimini::JaiminiEngine::analyze_argala(chart);
 
         let jaimini_report = Some(JaiminiReport {
             chara_karakas: jaimini_karakas,

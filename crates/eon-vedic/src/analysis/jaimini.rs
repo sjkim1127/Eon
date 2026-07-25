@@ -217,9 +217,18 @@ impl JaiminiEngine {
     pub fn analyze_arudha_padas(chart: &VedicChart) -> Vec<ArudhaAnalysisInfo> {
         let padas = Self::calculate_arudha_padas(chart);
         let rasi_names = [
-            "양자리(Aries)", "황소자리(Taurus)", "쌍둥이자리(Gemini)", "게자리(Cancer)",
-            "사자자리(Leo)", "처녀자리(Virgo)", "천칭자리(Libra)", "전갈자리(Scorpio)",
-            "궁수자리(Sagittarius)", "염소자리(Capricorn)", "물병자리(Aquarius)", "물고기자리(Pisces)",
+            "양자리(Aries)",
+            "황소자리(Taurus)",
+            "쌍둥이자리(Gemini)",
+            "게자리(Cancer)",
+            "사자자리(Leo)",
+            "처녀자리(Virgo)",
+            "천칭자리(Libra)",
+            "전갈자리(Scorpio)",
+            "궁수자리(Sagittarius)",
+            "염소자리(Capricorn)",
+            "물병자리(Aquarius)",
+            "물고기자리(Pisces)",
         ];
 
         padas
@@ -483,11 +492,19 @@ impl JaiminiEngine {
         let ishta_deity = match ishta_lord {
             VedicPlanet::Sun => "비슈누 / 시바 (Shiva / Vishnu - 빛과 권능의 수호신)",
             VedicPlanet::Moon => "가우리 / 사라스바티 (Gouri / Saraswati - 지혜와 번영의 수호신)",
-            VedicPlanet::Mars => "카르티케야 / 나라심하 (Subrahmanya / Narasimha - 용맹과 보호의 신)",
+            VedicPlanet::Mars => {
+                "카르티케야 / 나라심하 (Subrahmanya / Narasimha - 용맹과 보호의 신)"
+            }
             VedicPlanet::Mercury => "비슈누 / 부다 (Narayana - 지성, 지혜, 학문의 수호신)",
-            VedicPlanet::Jupiter => "바마나 / 스승 (Vamana / Dakshinamurthy - 영적 스승, 자비의 신)",
-            VedicPlanet::Venus => "락슈미 / 파르바티 (Lakshmi / Parvati - 풍요, 아름다움, 조화의 신)",
-            VedicPlanet::Saturn => "나레이나 / 하누만 (Kurma / Hanuman - 인내, 구원, 시련 극복의 신)",
+            VedicPlanet::Jupiter => {
+                "바마나 / 스승 (Vamana / Dakshinamurthy - 영적 스승, 자비의 신)"
+            }
+            VedicPlanet::Venus => {
+                "락슈미 / 파르바티 (Lakshmi / Parvati - 풍요, 아름다움, 조화의 신)"
+            }
+            VedicPlanet::Saturn => {
+                "나레이나 / 하누만 (Kurma / Hanuman - 인내, 구원, 시련 극복의 신)"
+            }
             VedicPlanet::Rahu => "두르가 / 바라하 (Durga - 악을 물리치는 권능의 신)",
             VedicPlanet::Ketu => "가네샤 (Ganesha - 장애를 제거하고 깨달음을 주는 신)",
             _ => "영적 원천 (Universal Source)",
@@ -495,11 +512,22 @@ impl JaiminiEngine {
         .to_string();
 
         let rasi_names = [
-            "양자리(Aries)", "황소자리(Taurus)", "쌍둥이자리(Gemini)", "게자리(Cancer)",
-            "사자자리(Leo)", "처녀자리(Virgo)", "천칭자리(Libra)", "전갈자리(Scorpio)",
-            "궁수자리(Sagittarius)", "염소자리(Capricorn)", "물병자리(Aquarius)", "물고기자리(Pisces)",
+            "양자리(Aries)",
+            "황소자리(Taurus)",
+            "쌍둥이자리(Gemini)",
+            "게자리(Cancer)",
+            "사자자리(Leo)",
+            "처녀자리(Virgo)",
+            "천칭자리(Libra)",
+            "전갈자리(Scorpio)",
+            "궁수자리(Sagittarius)",
+            "염소자리(Capricorn)",
+            "물병자리(Aquarius)",
+            "물고기자리(Pisces)",
         ];
-        let r_name = rasi_names.get(karakamsha_rasi as usize - 1).unwrap_or(&"Unknown");
+        let r_name = rasi_names
+            .get(karakamsha_rasi as usize - 1)
+            .unwrap_or(&"Unknown");
 
         let spiritual_summary = format!(
             "아트마카라카(AK: {:?})가 D9 나밤샤의 {}에 위치하여 카라캄샤를 형성합니다. Ishta Devata(영적 수호신)는 {}이며, 영혼의 깨달음과 진정한 라이프 사명을 부여합니다.",
@@ -529,7 +557,11 @@ impl JaiminiEngine {
             // Count planet presence in Argala & Virodhargala positions
             let count_planets = |dist: u8| {
                 let target_rasi = ((rasi as i16 + dist as i16 - 2) % 12 + 1) as u8;
-                chart.planets.iter().filter(|p| p.rasi == target_rasi).count() as f64
+                chart
+                    .planets
+                    .iter()
+                    .filter(|p| p.rasi == target_rasi)
+                    .count() as f64
             };
 
             // Primary Argala: 2nd, 4th, 11th from Rasi
