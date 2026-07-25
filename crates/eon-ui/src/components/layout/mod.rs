@@ -6,7 +6,9 @@ use eon_service::facade;
 
 #[component]
 pub fn AppLayout() -> Element {
-    let state = use_context::<AnalysisState>();
+    let mut state = use_context::<AnalysisState>();
+    let mut show_mobile_drawer = use_signal(|| false);
+    let locale = *state.locale.read();
 
     // state.form 이 변경되면 모든 분석 실시간 자동 비동기 수행
     let effect_state = state.clone();
@@ -201,15 +203,115 @@ pub fn AppLayout() -> Element {
     });
 
     rsx! {
-        div { class: "flex h-screen w-full bg-brand-950 text-slate-100 relative overflow-hidden",
+        div { class: "flex flex-col md:flex-row h-screen w-full bg-brand-950 text-slate-100 relative overflow-hidden",
             // Celestial background nebula glows
             div { class: "absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.15)_0%,transparent_50%)] pointer-events-none" }
             div { class: "absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(6,182,212,0.12)_0%,transparent_50%)] pointer-events-none" }
 
+            // Desktop Sidebar
             Sidebar {}
+
+            // Mobile Top Header Bar
+            div { class: "md:hidden flex items-center justify-between px-4 py-3 bg-[#0d0f22]/90 border-b border-white/10 backdrop-blur-xl z-30 shrink-0",
+                h1 { class: "text-xl font-bold bg-gradient-to-r from-violet-400 via-indigo-400 to-cyan-400 bg-clip-text text-transparent tracking-wider",
+                    "EON"
+                }
+                div { class: "flex items-center gap-2",
+                    button {
+                        class: "px-3 py-1.5 rounded-xl bg-violet-600/20 text-violet-300 text-xs font-semibold border border-violet-500/30 flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer",
+                        onclick: move |_| state.show_export_modal.set(true),
+                        "📥 내보내기"
+                    }
+                    button {
+                        class: "p-2 rounded-xl bg-white/5 border border-white/10 text-slate-200 active:scale-95 transition-transform cursor-pointer text-sm font-bold",
+                        onclick: move |_| {
+                            let is_open = *show_mobile_drawer.read();
+                            show_mobile_drawer.set(!is_open);
+                        },
+                        if *show_mobile_drawer.read() { "✕" } else { "☰" }
+                    }
+                }
+            }
+
+            // Mobile Drawer Overlay
+            if *show_mobile_drawer.read() {
+                div {
+                    class: "md:hidden fixed inset-0 bg-black/70 backdrop-blur-md z-40 flex flex-col justify-end animate-in fade-in duration-200",
+                    onclick: move |_| show_mobile_drawer.set(false),
+                    div {
+                        class: "bg-[#0d0f22] border-t border-white/10 rounded-t-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl",
+                        onclick: move |e| e.stop_propagation(),
+                        div { class: "flex justify-between items-center pb-2 border-b border-white/5",
+                            h2 { class: "text-sm font-bold text-slate-300 uppercase tracking-widest", "분석 탐색 및 메뉴" }
+                            button {
+                                class: "text-slate-400 text-lg p-1 cursor-pointer",
+                                onclick: move |_| show_mobile_drawer.set(false),
+                                "✕"
+                            }
+                        }
+                        nav { class: "grid grid-cols-2 gap-2 py-2",
+                            MobileLink { to: Route::SajuTab {}, icon: "📝", label: t(locale, TK::NavSaju), close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::VedicTab {}, icon: "✨", label: t(locale, TK::NavVedic), close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::StrengthTab {}, icon: "💪", label: t(locale, TK::NavStrength), close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::TransitTab {}, icon: "⏳", label: t(locale, TK::NavTransit), close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::SimulationTab {}, icon: "🧪", label: t(locale, TK::NavSimulation), close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::TierTab {}, icon: "🏆", label: t(locale, TK::NavTier), close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::ZwdsTab {}, icon: "🔮", label: t(locale, TK::NavZwds), close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::IChingTab {}, icon: "☯️", label: t(locale, TK::NavIChing), close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::WesternTab {}, icon: "🪐", label: t(locale, TK::NavWestern), close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::HumanDesignTab {}, icon: "🧬", label: t(locale, TK::NavHumanDesign), close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::HdPentaTab {}, icon: "🌀", label: "Penta", close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::QimenTab {}, icon: "🧭", label: t(locale, TK::NavQimen), close_drawer: move || show_mobile_drawer.set(false) }
+                            MobileLink { to: Route::TimelineTab {}, icon: "📅", label: t(locale, TK::NavTimeline), close_drawer: move || show_mobile_drawer.set(false) }
+                        }
+                        // Mobile Language Switcher
+                        div { class: "pt-3 border-t border-white/5",
+                            p { class: "text-[10px] text-slate-500 uppercase tracking-widest mb-2 font-semibold", "Language / 언어 설정" }
+                            div { class: "grid grid-cols-4 gap-2",
+                                {Locale::all().iter().map(|&loc| {
+                                    let is_active = locale == loc;
+                                    let active_cls = if is_active {
+                                        "bg-violet-600/20 border-violet-500/40 text-violet-300 font-bold"
+                                    } else {
+                                        "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10"
+                                    };
+                                    rsx! {
+                                        button {
+                                            key: "{loc.code()}",
+                                            class: "py-2 rounded-xl border text-xs flex items-center justify-center gap-1.5 cursor-pointer {active_cls}",
+                                            onclick: move |_| {
+                                                state.locale.set(loc);
+                                                let _ = web_sys_set_locale(loc.code());
+                                            },
+                                            span { "{loc.flag()}" }
+                                            span { "{loc.code().to_uppercase()}" }
+                                        }
+                                    }
+                                })}
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Main Content Area
             main { class: "flex-1 overflow-auto bg-transparent relative flex flex-col z-10",
-                div { class: "p-6 w-full max-w-6xl mx-auto space-y-6 flex-1",
+                div { class: "p-3.5 sm:p-6 pb-24 md:pb-6 w-full max-w-6xl mx-auto space-y-6 flex-1",
                     Outlet::<Route> {}
+                }
+            }
+
+            // Mobile Bottom Navigation Bar
+            div { class: "md:hidden fixed bottom-0 left-0 right-0 bg-[#0d0f22]/95 border-t border-white/10 backdrop-blur-2xl px-2 py-1.5 flex justify-around items-center z-30 shadow-2xl",
+                BottomNavLink { to: Route::SajuTab {}, icon: "📝", label: t(locale, TK::NavSaju) }
+                BottomNavLink { to: Route::VedicTab {}, icon: "✨", label: t(locale, TK::NavVedic) }
+                BottomNavLink { to: Route::TierTab {}, icon: "🏆", label: t(locale, TK::NavTier) }
+                BottomNavLink { to: Route::ZwdsTab {}, icon: "🔮", label: t(locale, TK::NavZwds) }
+                button {
+                    class: "flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 hover:text-slate-200 transition-colors cursor-pointer",
+                    onclick: move |_| show_mobile_drawer.set(true),
+                    span { class: "text-lg leading-tight", "☰" }
+                    span { class: "text-[10px] font-medium mt-0.5", "더보기" }
                 }
             }
 
@@ -352,6 +454,54 @@ fn SidebarLink(to: Route, icon: &'static str, label: &'static str) -> Element {
             class: "flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 cursor-pointer {active_class}",
             span { class: "text-xl", "{icon}" }
             span { class: "font-medium", "{label}" }
+        }
+    }
+}
+
+#[component]
+fn MobileLink(
+    to: Route,
+    icon: &'static str,
+    label: &'static str,
+    close_drawer: EventHandler<()>,
+) -> Element {
+    let route: Route = use_route();
+    let is_active = route == to;
+
+    let active_class = if is_active {
+        "bg-violet-600/20 text-violet-300 border-violet-500/40 font-bold"
+    } else {
+        "bg-white/5 text-slate-300 hover:bg-white/10 border-white/5"
+    };
+
+    rsx! {
+        Link {
+            to: to,
+            class: "flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-xs transition-all cursor-pointer {active_class}",
+            onclick: move |_| close_drawer.call(()),
+            span { class: "text-base", "{icon}" }
+            span { class: "truncate", "{label}" }
+        }
+    }
+}
+
+#[component]
+fn BottomNavLink(to: Route, icon: &'static str, label: &'static str) -> Element {
+    let route: Route = use_route();
+    let is_active = route == to;
+
+    let active_class = if is_active {
+        "text-violet-300 font-bold"
+    } else {
+        "text-slate-400 hover:text-slate-200"
+    };
+
+    rsx! {
+        Link {
+            to: to,
+            class: "flex flex-col items-center py-1 px-3 rounded-xl transition-colors cursor-pointer {active_class}",
+            span { class: "text-lg leading-tight", "{icon}" }
+            span { class: "text-[10px] font-medium mt-0.5", "{label}" }
         }
     }
 }

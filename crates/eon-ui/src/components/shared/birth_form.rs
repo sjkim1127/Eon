@@ -107,11 +107,11 @@ pub fn BirthForm() -> Element {
     let lon_display = state.form.read().lon;
 
     rsx! {
-        div { class: "glass-premium rounded-2xl p-5 flex flex-col gap-4 border border-white/5",
+        div { class: "glass-premium rounded-2xl p-4 sm:p-5 flex flex-col gap-4 border border-white/5",
 
             // Profile Row
-            div { class: "flex items-center gap-3 pb-3 border-b border-white/5",
-                div { class: "flex flex-col gap-1.5 flex-1 min-w-0",
+            div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-white/5",
+                div { class: "flex flex-col gap-1.5 min-w-0",
                     label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormSavedProfiles)}" }
                     select {
                         class: "bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus-glow transition-all w-full cursor-pointer",
@@ -122,7 +122,7 @@ pub fn BirthForm() -> Element {
                         })}
                     }
                 }
-                div { class: "flex items-end gap-2 flex-1 min-w-0",
+                div { class: "flex items-end gap-2 min-w-0",
                     div { class: "flex flex-col gap-1.5 flex-1 min-w-0",
                         label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormSaveProfile)}" }
                         input {
@@ -141,12 +141,12 @@ pub fn BirthForm() -> Element {
             }
 
             // Input Row
-            div { class: "flex flex-wrap gap-3.5 items-end",
+            div { class: "flex flex-wrap gap-2.5 sm:gap-3.5 items-end",
                 // Year
-                div { class: "flex flex-col gap-1.5",
+                div { class: "flex flex-col gap-1.5 flex-1 sm:flex-initial",
                     label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormYear)}" }
                     input {
-                        class: "w-24 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all",
+                        class: "w-full sm:w-24 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left",
                         r#type: "number", min: "1900", max: "2100",
                         value: "{state.form.read().year}",
                         oninput: move |evt| {
@@ -155,10 +155,10 @@ pub fn BirthForm() -> Element {
                     }
                 }
                 // Month
-                div { class: "flex flex-col gap-1.5",
+                div { class: "flex flex-col gap-1.5 flex-1 sm:flex-initial",
                     label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormMonth)}" }
                     input {
-                        class: "w-16 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all",
+                        class: "w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left",
                         r#type: "number", min: "1", max: "12",
                         value: "{state.form.read().month}",
                         oninput: move |evt| {
@@ -167,10 +167,10 @@ pub fn BirthForm() -> Element {
                     }
                 }
                 // Day
-                div { class: "flex flex-col gap-1.5",
+                div { class: "flex flex-col gap-1.5 flex-1 sm:flex-initial",
                     label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormDay)}" }
                     input {
-                        class: "w-16 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all",
+                        class: "w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left",
                         r#type: "number", min: "1", max: "31",
                         value: "{state.form.read().day}",
                         oninput: move |evt| {
@@ -179,10 +179,10 @@ pub fn BirthForm() -> Element {
                     }
                 }
                 // Hour
-                div { class: "flex flex-col gap-1.5",
+                div { class: "flex flex-col gap-1.5 flex-1 sm:flex-initial",
                     label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormHour)}" }
                     input {
-                        class: "w-16 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all",
+                        class: "w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left",
                         r#type: "number", min: "0", max: "23",
                         value: "{state.form.read().hour}",
                         oninput: move |evt| {
@@ -191,10 +191,10 @@ pub fn BirthForm() -> Element {
                     }
                 }
                 // Minute
-                div { class: "flex flex-col gap-1.5",
+                div { class: "flex flex-col gap-1.5 flex-1 sm:flex-initial",
                     label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormMinute)}" }
                     input {
-                        class: "w-16 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all",
+                        class: "w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left",
                         r#type: "number", min: "0", max: "59",
                         value: "{state.form.read().minute}",
                         oninput: move |evt| {
@@ -203,26 +203,26 @@ pub fn BirthForm() -> Element {
                     }
                 }
                 // Birthplace (text search)
-                div { class: "flex flex-col gap-1.5 min-w-0 relative flex-1 md:flex-initial",
+                div { class: "flex flex-col gap-1.5 min-w-0 relative w-full sm:w-auto flex-1 sm:flex-initial",
                     label { class: "text-xs text-slate-400 font-semibold tracking-wide",
                         "{t(locale, TK::FormBirthplace)}"
                     }
                     div { class: "flex gap-1.5",
                         input {
-                            class: "w-full md:w-44 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all",
+                            class: "w-full sm:w-44 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all",
                             placeholder: "{t(locale, TK::FormCityPlaceholder)}",
                             value: "{city_input}",
                             oninput: move |evt| city_input.set(evt.value()),
                             onkeydown: on_city_keydown,
                         }
                         button {
-                            class: "bg-white/10 hover:bg-white/15 active:scale-95 text-slate-200 text-sm px-3 py-2 rounded-xl transition-all cursor-pointer border border-white/5",
+                            class: "bg-white/10 hover:bg-white/15 active:scale-95 text-slate-200 text-sm px-3 py-2 rounded-xl transition-all cursor-pointer border border-white/5 shrink-0",
                             onclick: on_city_geocode,
                             "🔍"
                         }
                     }
                     if !search_results.read().is_empty() {
-                        div { class: "absolute top-full left-0 mt-1.5 w-72 bg-[#0e0f22]/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden",
+                        div { class: "absolute top-full left-0 mt-1.5 w-full sm:w-72 bg-[#0e0f22]/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden",
                             {search_results.read().iter().map(|result| {
                                 let r = result.clone();
                                 let display = if let Some(ko) = &r.name_ko {
@@ -251,7 +251,7 @@ pub fn BirthForm() -> Element {
                 }
 
                 // Form Checkboxes Section
-                div { class: "flex items-center gap-4 flex-wrap pb-1 h-9",
+                div { class: "flex items-center gap-3 sm:gap-4 flex-wrap pt-1 min-h-[36px]",
                     // Lunar calendar checkbox
                     div { class: "flex items-center gap-2",
                         input {
