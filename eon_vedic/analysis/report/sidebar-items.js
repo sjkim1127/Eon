@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["HouseRating","KarakaSummary","TajikaReport","VedicAnalysisReport"]};
+window.SIDEBAR_ITEMS = {"struct":["HouseRating","JaiminiReport","KarakaSummary","TajikaReport","VedicAnalysisReport"]};

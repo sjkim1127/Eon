@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["JaiminiKarakaRole"],"struct":["ArudhaPada","JaiminiEngine","KarakaAssignment","SignDashaPeriod","SpecialLagna"]};
+window.SIDEBAR_ITEMS = {"enum":["JaiminiKarakaRole"],"struct":["ArgalaRasiInfo","ArudhaAnalysisInfo","ArudhaPada","JaiminiEngine","KarakaAssignment","KarakamshaAnalysis","SignDashaPeriod","SignDashaSubPeriod","SpecialLagna"]};
