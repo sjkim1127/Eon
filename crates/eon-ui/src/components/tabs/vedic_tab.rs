@@ -1126,6 +1126,15 @@ pub fn VedicTab() -> Element {
                                     onclick: move |_| *active_subtab.write() = 8,
                                     "📊 아쉬타카바르가"
                                 }
+                                button {
+                                    class: if *active_subtab.read() == 9 {
+                                        "px-4 py-2.5 font-medium text-sm transition-colors border-b-2 border-blue-500 text-blue-400"
+                                    } else {
+                                        "px-4 py-2.5 font-medium text-sm transition-colors border-b-2 border-transparent text-slate-400 hover:text-slate-200"
+                                    },
+                                    onclick: move |_| *active_subtab.write() = 9,
+                                    "☸️ 자이미니 체계"
+                                }
                             }
 
                             // ── 서브 탭 콘텐츠 ─────────────────────────────────
@@ -3484,6 +3493,9 @@ pub fn VedicTab() -> Element {
                                         }
                                     }
                                 },
+                                9 => rsx! {
+                                    {JaiminiTabSection(data.clone())}
+                                },
                                 _ => rsx! { div {} }
                             }
                             {render_floating_tooltip(active_tooltip)}
@@ -3506,6 +3518,185 @@ fn KarakaCard(label: String, planet: VedicPlanet) -> Element {
         div { class: "p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 flex flex-col gap-1",
             p { class: "text-xs text-slate-500", "{label}" }
             p { class: "font-bold text-sm {color}", "{translate_planet(locale, planet)}" }
+        }
+    }
+}
+
+fn JaiminiTabSection(data: eon_service::dto::VedicAnalysisOutput) -> Element {
+    let state = use_context::<AnalysisState>();
+    let locale = *state.locale.read();
+    let rasi_name = move |r: u8| rasi_name(locale, r);
+    let report = &data.report;
+    let j_report_opt = &report.jaimini_report;
+    let mut selected_dasha_idx = use_signal(|| 0usize);
+
+    rsx! {
+        div { class: "space-y-6 animate-fade-in",
+            if let Some(j) = j_report_opt {
+                // 1. Karakamsha & Ishta Devata Spiritual Focus Card
+                    div { class: "p-6 bg-gradient-to-r from-purple-950/40 via-slate-900 to-indigo-950/40 border border-purple-800/30 rounded-2xl shadow-xl space-y-4",
+                        div { class: "flex items-center justify-between border-b border-purple-800/20 pb-3 flex-wrap gap-2",
+                            div { class: "flex items-center gap-3",
+                                span { class: "text-2xl", "☸️" }
+                                div {
+                                    h3 { class: "text-lg font-bold text-purple-200", "카라캄샤 (Karakamsha) 및 Ishta Devata (영적 수호신)" }
+                                    p { class: "text-xs text-purple-300/70", "아트마카라카(AK)의 나밤샤(D9) 배치와 영혼의 궁극적 해탈 및 지혜 수호신" }
+                                }
+                            }
+                            span { class: "px-3 py-1 bg-purple-900/40 text-purple-300 rounded-full text-xs font-semibold border border-purple-700/50",
+                                "AK: {translate_planet(*state.locale.read(), j.karakamsha_analysis.atmakaraka)} (D9 {rasi_name(j.karakamsha_analysis.karakamsha_rasi)})"
+                            }
+                        }
+
+                        div { class: "grid grid-cols-1 md:grid-cols-2 gap-4",
+                            div { class: "p-4 bg-slate-900/80 rounded-xl border border-slate-800 space-y-1.5",
+                                p { class: "text-xs font-bold text-amber-400 uppercase tracking-wider", "🕉️ Ishta Devata (영적 수호신)" }
+                                p { class: "text-sm font-bold text-slate-100", "{j.karakamsha_analysis.ishta_devata_deity}" }
+                                p { class: "text-xs text-slate-400 leading-relaxed", "{j.karakamsha_analysis.spiritual_summary}" }
+                            }
+                            div { class: "p-4 bg-slate-900/80 rounded-xl border border-slate-800 space-y-1.5",
+                                p { class: "text-xs font-bold text-cyan-400 uppercase tracking-wider", "💎 카라캄샤 재능 및 소명 (Career & Spirit)" }
+                                p { class: "text-xs text-slate-300 leading-relaxed", "{j.karakamsha_analysis.career_talent_summary}" }
+                            }
+                        }
+                    }
+
+                    // 2. 12 Arudha Padas Table & AL/UL Callouts
+                    div { class: "p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl space-y-4",
+                        div { class: "flex justify-between items-center border-b border-slate-800 pb-3 flex-wrap gap-2",
+                            h3 { class: "text-base font-bold text-slate-200 uppercase tracking-widest", "🏛️ 12 Arudha Padas (외형적 성과 및 사회적 위상)" }
+                            span { class: "text-xs text-slate-500", "AL: Arudha Lagna (사회적 신분) | UL: Upapada Lagna (배우자/결혼)" }
+                        }
+
+                        div { class: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3",
+                            {j.arudha_padas.iter().map(|ap| {
+                                let highlight_cls = match ap.house {
+                                    1 => "border-violet-500/50 bg-violet-950/20",
+                                    12 => "border-rose-500/50 bg-rose-950/20",
+                                    _ => "border-slate-800 bg-slate-900/50",
+                                };
+                                rsx! {
+                                    div { class: "p-3.5 rounded-xl border flex flex-col justify-between gap-1.5 {highlight_cls}",
+                                        div { class: "flex justify-between items-center",
+                                            span { class: "font-bold text-xs text-slate-200", "{ap.name}" }
+                                            span { class: "text-xs font-mono font-semibold text-cyan-400 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-800/40",
+                                                "{rasi_name(ap.rasi)}"
+                                            }
+                                        }
+                                        p { class: "text-[11px] text-slate-400 leading-snug", "{ap.interpretation}" }
+                                    }
+                                }
+                            })}
+                        }
+                    }
+
+                    // 3. 2-Tier Chara Dasha (Mahadasha & Antardasha) Timeline
+                    div { class: "p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl space-y-4",
+                        div { class: "flex justify-between items-center border-b border-slate-800 pb-3 flex-wrap gap-2",
+                            h3 { class: "text-base font-bold text-slate-200 uppercase tracking-widest", "⏳ Chara Dasha (자라 다샤 2단계 마하다샤 & 안타르다샤)" }
+                            span { class: "text-xs text-slate-400 font-mono", "KN Rao 징후 순서 기반 12개 마하다샤 & 서브 분할" }
+                        }
+
+                        div { class: "overflow-x-auto",
+                            table { class: "w-full text-sm",
+                                thead {
+                                    tr { class: "bg-slate-800/50 text-xs text-slate-400 uppercase",
+                                        th { class: "px-4 py-3 text-left font-medium", "마하다샤 징후" }
+                                        th { class: "px-4 py-3 text-left font-medium", "기간 (연수)" }
+                                        th { class: "px-4 py-3 text-left font-medium", "시작일" }
+                                        th { class: "px-4 py-3 text-left font-medium", "종료일" }
+                                        th { class: "px-4 py-3 text-center font-medium", "안타르다샤 (2단계)" }
+                                    }
+                                }
+                                tbody { class: "divide-y divide-slate-800",
+                                    {j.chara_dasha.iter().enumerate().map(|(idx, d)| {
+                                        let is_selected = *selected_dasha_idx.read() == idx;
+                                        let row_bg = if is_selected { "bg-blue-950/20" } else { "hover:bg-slate-800/30" };
+                                        rsx! {
+                                            tr { class: "transition-colors {row_bg}",
+                                                td { class: "px-4 py-3 font-bold text-amber-300", "{rasi_name(d.rasi)}" }
+                                                td { class: "px-4 py-3 font-mono text-slate-300", "{d.years}년" }
+                                                td { class: "px-4 py-3 font-mono text-slate-400 text-xs", "{d.start_time.format(\"%Y-%m-%d\")}" }
+                                                td { class: "px-4 py-3 font-mono text-slate-400 text-xs", "{d.end_time.format(\"%Y-%m-%d\")}" }
+                                                td { class: "px-4 py-3 text-center",
+                                                    button {
+                                                        class: "px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600/20 text-blue-300 border border-blue-500/30 hover:bg-blue-600/40 transition-colors cursor-pointer",
+                                                        onclick: move |_| *selected_dasha_idx.write() = idx,
+                                                        if is_selected { "펼침 닫기 ▲" } else { "서브기간 보기 ▼" }
+                                                    }
+                                                }
+                                            }
+                                            if is_selected && !d.sub_periods.is_empty() {
+                                                tr { class: "bg-slate-950/60",
+                                                    td { colspan: "5", class: "p-4",
+                                                        div { class: "space-y-2",
+                                                            h4 { class: "text-xs font-bold text-blue-300 uppercase tracking-wider", "➔ {rasi_name(d.rasi)} 마하다샤 내 12개 안타르다샤 서브 기간" }
+                                                            div { class: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2",
+                                                                {d.sub_periods.iter().map(|sp| rsx! {
+                                                                    div { class: "p-2 rounded bg-slate-900 border border-slate-800 flex flex-col text-xs",
+                                                                        span { class: "font-bold text-slate-200", "{rasi_name(sp.rasi)}" }
+                                                                        span { class: "text-[10px] font-mono text-slate-400", "{sp.start_time.format(\"%Y-%m\")} ~ {sp.end_time.format(\"%Y-%m\")}" }
+                                                                        span { class: "text-[9px] text-slate-500 font-mono", "{sp.duration_days:.0}일" }
+                                                                    }
+                                                                })}
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    })}
+                                }
+                            }
+                        }
+                    }
+
+                    // 4. Argala & Virodhargala Matrix Table
+                    div { class: "p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl space-y-4",
+                        div { class: "flex justify-between items-center border-b border-slate-800 pb-3 flex-wrap gap-2",
+                            h3 { class: "text-base font-bold text-slate-200 uppercase tracking-widest", "🛡️ Argala & Virodhargala (아르갈라 개입 및 방해 행렬)" }
+                            span { class: "text-xs text-slate-500", "Primary (2/4/11) vs Virodhargala (12/10/3)" }
+                        }
+
+                        div { class: "overflow-x-auto",
+                            table { class: "w-full text-sm",
+                                thead {
+                                    tr { class: "bg-slate-800/50 text-xs text-slate-400 uppercase",
+                                        th { class: "px-4 py-3 text-left font-medium", "징후 (Rasi)" }
+                                        th { class: "px-4 py-3 text-center font-medium", "아르갈라 (+)" }
+                                        th { class: "px-4 py-3 text-center font-medium", "지로다 방해 (-)" }
+                                        th { class: "px-4 py-3 text-center font-medium", "순 개입 점수" }
+                                        th { class: "px-4 py-3 text-left font-medium", "상태 해설" }
+                                    }
+                                }
+                                tbody { class: "divide-y divide-slate-800",
+                                    {j.argala_matrix.iter().map(|arg| {
+                                        let score_color = if arg.net_argala_score > 0.0 {
+                                            "text-emerald-400"
+                                        } else if arg.net_argala_score < 0.0 {
+                                            "text-rose-400"
+                                        } else {
+                                            "text-slate-400"
+                                        };
+                                        rsx! {
+                                            tr { class: "hover:bg-slate-800/30 transition-colors",
+                                                td { class: "px-4 py-3 font-bold text-slate-200", "{rasi_name(arg.rasi)}" }
+                                                td { class: "px-4 py-3 text-center font-mono text-emerald-400", "+{arg.primary_argala_score:.1}" }
+                                                td { class: "px-4 py-3 text-center font-mono text-rose-400", "-{arg.virodhargala_score:.1}" }
+                                                td { class: "px-4 py-3 text-center font-mono font-bold {score_color}", "{arg.net_argala_score:+.1}" }
+                                                td { class: "px-4 py-3 text-xs text-slate-300", "{arg.status}" }
+                                            }
+                                        }
+                                    })}
+                                }
+                            }
+                        }
+                    }
+            } else {
+                div { class: "p-8 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl",
+                    "자이미니 분석 리포트가 존재하지 않습니다."
+                }
+            }
         }
     }
 }

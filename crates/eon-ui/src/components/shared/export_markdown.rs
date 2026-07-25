@@ -1971,7 +1971,7 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
     ));
 
     // Jaimini Karakas & Special Lagnas
-    s.push_str("### 3.4 Jaimini Chara Karakas & Special Lagnas\n\n");
+    s.push_str("### 3.4 Jaimini (자이미니) 정밀 분석 체계\n\n");
     s.push_str("**Chara Karaka Assignments**:\n");
     for k in &data.chart.karakas {
         s.push_str(&format!(
@@ -1981,15 +1981,52 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
             k.degree_in_rasi
         ));
     }
-    s.push_str("\n**Arudha Padas**:\n");
-    for ap in &data.chart.arudha_padas {
+
+    if let Some(j) = &data.report.jaimini_report {
+        s.push_str("\n**Karakamsha & Ishta Devata (영적 수호신 및 카라캄샤)**:\n");
         s.push_str(&format!(
-            "- **{}**: Sign {} ({})\n",
-            ap.name,
-            ap.rasi,
-            rasi_name(locale, ap.rasi)
+            "- **Atmakaraka (AK)**: {} (Navamsha D9 Rasi {})\n",
+            translate_planet(locale, j.karakamsha_analysis.atmakaraka),
+            j.karakamsha_analysis.karakamsha_rasi
         ));
+        s.push_str(&format!(
+            "- **Ishta Devata**: {}\n",
+            j.karakamsha_analysis.ishta_devata_deity
+        ));
+        s.push_str(&format!(
+            "- **영적 해탈 및 지혜**: {}\n",
+            j.karakamsha_analysis.spiritual_summary
+        ));
+
+        s.push_str("\n**12 Arudha Padas & AL/UL 해석**:\n");
+        for ap in &j.arudha_padas {
+            s.push_str(&format!(
+                "- **{}** (Rasi {}): {}\n",
+                ap.name, ap.rasi, ap.interpretation
+            ));
+        }
+
+        s.push_str("\n**Argala & Virodhargala (개입 및 방해 행렬)**:\n");
+        s.push_str("| 징후 (Rasi) | Primary Argala (+) | Virodhargala (-) | Net Score | 상태 |\n");
+        s.push_str("| --- | --- | --- | --- | --- |\n");
+        for arg in &j.argala_matrix {
+            s.push_str(&format!(
+                "| Rasi {} | +{:.1} | -{:.1} | {:+.1} | {} |\n",
+                arg.rasi, arg.primary_argala_score, arg.virodhargala_score, arg.net_argala_score, arg.status
+            ));
+        }
+    } else {
+        s.push_str("\n**Arudha Padas**:\n");
+        for ap in &data.chart.arudha_padas {
+            s.push_str(&format!(
+                "- **{}**: Sign {} ({})\n",
+                ap.name,
+                ap.rasi,
+                rasi_name(locale, ap.rasi)
+            ));
+        }
     }
+
     s.push_str("\n**Special Lagnas**:\n");
     for sl in &data.chart.special_lagnas {
         s.push_str(&format!(

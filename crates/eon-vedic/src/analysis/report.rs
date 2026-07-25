@@ -45,6 +45,18 @@ pub struct VedicAnalysisReport {
     pub d10_career_analysis: String,
     #[serde(default)]
     pub kalachakra_timeline: Vec<crate::prediction::kalachakra::KalaChakraPeriod>,
+    #[serde(default)]
+    pub jaimini_report: Option<JaiminiReport>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JaiminiReport {
+    pub chara_karakas: Vec<crate::analysis::jaimini::KarakaAssignment>,
+    pub karakamsha_analysis: crate::analysis::jaimini::KarakamshaAnalysis,
+    pub arudha_padas: Vec<crate::analysis::jaimini::ArudhaAnalysisInfo>,
+    pub chara_dasha: Vec<crate::analysis::jaimini::SignDashaPeriod>,
+    pub argala_matrix: Vec<crate::analysis::jaimini::ArgalaRasiInfo>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -251,6 +263,24 @@ impl VedicAnalysisReport {
             Vec::new()
         };
 
+        // Jaimini Full System Report
+        let jaimini_karakas =
+            crate::analysis::jaimini::JaiminiEngine::calculate_karakas(chart, true);
+        let karakamsha_analysis =
+            crate::analysis::jaimini::JaiminiEngine::analyze_karakamsha(chart);
+        let arudha_padas_info =
+            crate::analysis::jaimini::JaiminiEngine::analyze_arudha_padas(chart);
+        let argala_matrix_info =
+            crate::analysis::jaimini::JaiminiEngine::analyze_argala(chart);
+
+        let jaimini_report = Some(JaiminiReport {
+            chara_karakas: jaimini_karakas,
+            karakamsha_analysis,
+            arudha_padas: arudha_padas_info,
+            chara_dasha: chara_dasha_timeline.clone(),
+            argala_matrix: argala_matrix_info,
+        });
+
         Self {
             primary_karakas: KarakaSummary {
                 atmakaraka: ak,
@@ -284,6 +314,7 @@ impl VedicAnalysisReport {
             d9_marriage_analysis,
             d10_career_analysis,
             kalachakra_timeline,
+            jaimini_report,
         }
     }
 }
