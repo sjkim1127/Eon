@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["TwelveStage"],"fn":["calculate_twelve_stage"],"struct":["TwelveStageAnalysis"]};
+window.SIDEBAR_ITEMS = {"enum":["TwelveStage"],"fn":["calculate_twelve_stage","calculate_twelve_stage_with_config"],"struct":["TwelveStageAnalysis"]};

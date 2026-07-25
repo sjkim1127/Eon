@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["DomainImpact","DynamicLuckAnalysis","LuckInfluence"]};
+window.SIDEBAR_ITEMS = {"enum":["GyeokStatus"],"struct":["DomainImpact","DynamicLuckAnalysis","DynamicStructureState","GaeGoEvent","IpMyoEvent","LuckInfluence"]};

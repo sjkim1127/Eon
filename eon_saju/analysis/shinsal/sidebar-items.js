@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["EvilSpirit","Gilsin","TwelveShinsal"],"struct":["ShinsalAnalysis"]};
+window.SIDEBAR_ITEMS = {"enum":["EvilSpirit","Gilsin","SamjaeStage","TwelveShinsal"],"fn":["calculate_samjae"],"struct":["ShinsalAnalysis"]};
