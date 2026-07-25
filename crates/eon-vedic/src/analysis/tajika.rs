@@ -237,12 +237,11 @@ impl TajikaEngine {
         ));
 
         let calc_saham = |a: f64, b: f64, ref_pt: f64, day_mode: bool| -> f64 {
-            let val = if day_mode == is_day {
+            if day_mode == is_day {
                 (a - b + ref_pt + 360.0) % 360.0
             } else {
                 (b - a + ref_pt + 360.0) % 360.0
-            };
-            val
+            }
         };
 
         let sahams_def = vec![
