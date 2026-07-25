@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["TajikaAspectType"],"struct":["Saham","TajikaBala","TajikaEngine"]};
+window.SIDEBAR_ITEMS = {"enum":["TajikaAspectType"],"struct":["MuddaDashaPeriod","MunthaAnalysis","PanchaVargeeyaBala","Saham","TajikaBala","TajikaEngine","TajikaYogaInfo"]};
