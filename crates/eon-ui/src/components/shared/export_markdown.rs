@@ -6052,10 +6052,10 @@ pub fn format_western_inner(data: &WesternAnalysisOutput, locale: Locale) -> Str
     };
     s.push_str(&format!("{}\n\n", lbl_aspects));
     s.push_str(&format!(
-        "| {} | {} | {} | {} |\n",
-        col_body_a, col_body_b, col_aspect, col_orb
+        "| {} | {} | {} | {} | {} |\n",
+        col_body_a, col_body_b, col_aspect, col_orb, "동역학 (Dynamics)"
     ));
-    s.push_str("| --- | --- | --- | --- |\n");
+    s.push_str("| --- | --- | --- | --- | --- |\n");
     for asp in &res.aspects {
         let (_, b_a_name) = crate::components::tabs::western_tab::get_planet_emoji_and_name(
             &asp.body_a_name,
@@ -6069,12 +6069,72 @@ pub fn format_western_inner(data: &WesternAnalysisOutput, locale: Locale) -> Str
             asp.aspect_type,
             locale,
         );
+        let dyn_str = match asp.dynamics {
+            eon_western::AspectDynamics::Applying => "Applying (접근)",
+            eon_western::AspectDynamics::Separating => "Separating (이탈)",
+            eon_western::AspectDynamics::Exact => "Exact (정확)",
+        };
         s.push_str(&format!(
-            "| {} | {} | {} {} | {:.2}° |\n",
-            b_a_name, b_b_name, asp_emoji, asp_name, asp.orb
+            "| {} | {} | {} {} | {:.2}° | {} |\n",
+            b_a_name, b_b_name, asp_emoji, asp_name, asp.orb, dyn_str
         ));
     }
     s.push('\n');
+
+    if !res.aspect_patterns.is_empty() {
+        s.push_str("### 📐 기하학적 아스펙트 패턴 (Aspect Patterns)\n\n");
+        for pat in &res.aspect_patterns {
+            s.push_str(&format!(
+                "- **{}** ({}): {}\n",
+                pat.name_kr,
+                pat.planets.join(" - "),
+                pat.interpretation
+            ));
+        }
+        s.push('\n');
+    }
+
+    if !res.arabian_parts.is_empty() {
+        s.push_str("### 🎯 아라비안 파트 (Arabian Parts / Lots)\n\n");
+        s.push_str("| 민감점 | 성좌 (Sign) | 하우스 | 공식 |\n");
+        s.push_str("| --- | --- | --- | --- |\n");
+        for ap in &res.arabian_parts {
+            let (_, s_name) = crate::components::tabs::western_tab::get_sign_emoji_and_name(
+                ap.sign_index,
+                locale,
+            );
+            s.push_str(&format!(
+                "| {} | {} {:.1}° | 제 {} 하우스 | `{}` |\n",
+                ap.name_kr, s_name, ap.degree_in_sign, ap.house_number, ap.formula
+            ));
+        }
+        s.push('\n');
+    }
+
+    if !res.dignities.is_empty() {
+        s.push_str("### 🏛️ 고전 행성 위계 (Essential Dignities)\n\n");
+        s.push_str("| 행성 | 종합 위계 점수 및 상태 |\n");
+        s.push_str("| --- | --- |\n");
+        for d in &res.dignities {
+            let (_, p_name) = crate::components::tabs::western_tab::get_planet_emoji_and_name(
+                &d.planet_name,
+                locale,
+            );
+            s.push_str(&format!("| {} | {} |\n", p_name, d.status_summary));
+        }
+        s.push('\n');
+    }
+
+    if !res.house_rulerships.is_empty() {
+        s.push_str("### 🔗 하우스 통치 네트워크 (House Rulership Network)\n\n");
+        for hr in &res.house_rulerships {
+            s.push_str(&format!(
+                "- **House {}** (Ruler: {} ➔ House {}): {}\n",
+                hr.house_number, hr.ruler_planet, hr.ruler_in_house, hr.interpretation
+            ));
+        }
+        s.push('\n');
+    }
 
     s
 }
