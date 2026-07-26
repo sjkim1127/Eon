@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["FiveElementsClass","PalaceName","SiHuaType","ZwdsBrightness","ZwdsStar"],"struct":["DaXian","DestinyPattern","FlyingSiHua","LiuNian","LunarBirthInfo","PalaceData","StarInPalace","ZwdsChart"],"type":["PalaceIndex"]};
+window.SIDEBAR_ITEMS = {"enum":["FiveElementsClass","PalaceName","SiHuaType","ZwdsBrightness","ZwdsStar"],"struct":["BorrowedStarsInfo","DaXian","DestinyPattern","FlyingSiHua","LiuNian","LiuRi","LiuYue","LunarBirthInfo","PalaceData","StarInPalace","TripleSihuaCollision","ZiHuaInfo","ZwdsChart"],"type":["PalaceIndex"]};

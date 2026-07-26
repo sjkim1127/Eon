@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["detect_borrowed_stars","detect_triple_sihua_collisions","detect_zi_hua"]};

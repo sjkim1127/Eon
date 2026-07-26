@@ -1,0 +1,217 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-zwds/src/collisions_zihua.rs`."><title>collisions_zihua.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ddecd707.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="eon_zwds" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.0-nightly (008fa22ce 2026-07-25)" data-channel="nightly" data-search-js="search-cf4fc35e.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_zwds/</div>collisions_zihua.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! 궁간 자화(自化), 3중 사화 충국(Triple Sihua Collision), 차성기궁(Borrowed Stars) 분석 연산기
+<a href=#2 id=2 data-nosnippet>2</a>
+<a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span><span class="kw">crate</span>::transformations::get_sihua_stars;
+<a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::types::{
+<a href=#5 id=5 data-nosnippet>5</a>    BorrowedStarsInfo, DaXian, LiuNian, PalaceData, SiHuaType, TripleSihuaCollision, ZiHuaInfo,
+<a href=#6 id=6 data-nosnippet>6</a>    ZwdsStar,
+<a href=#7 id=7 data-nosnippet>7</a>};
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>eon_saju::core::stem::HeavenlyStem;
+<a href=#9 id=9 data-nosnippet>9</a>
+<a href=#10 id=10 data-nosnippet>10</a><span class="doccomment">/// 각 궁의 천간(宮幹)에 의해 자궁 내 주성에 발생하는 자화(自化)를 검출합니다.
+<a href=#11 id=11 data-nosnippet>11</a></span><span class="kw">pub fn </span>detect_zi_hua(palaces: <span class="kw-2">&amp;</span>[PalaceData; <span class="number">12</span>]) -&gt; Vec&lt;ZiHuaInfo&gt; {
+<a href=#12 id=12 data-nosnippet>12</a>    <span class="kw">let </span><span class="kw-2">mut </span>results = Vec::new();
+<a href=#13 id=13 data-nosnippet>13</a>
+<a href=#14 id=14 data-nosnippet>14</a>    <span class="kw">for </span>p <span class="kw">in </span>palaces {
+<a href=#15 id=15 data-nosnippet>15</a>        <span class="kw">if let </span><span class="prelude-val">Ok</span>(stem) = parse_stem(<span class="kw-2">&amp;</span>p.heavenly_stem) {
+<a href=#16 id=16 data-nosnippet>16</a>            <span class="kw">let </span>sihua_stars = get_sihua_stars(stem);
+<a href=#17 id=17 data-nosnippet>17</a>            <span class="kw">let </span>sihua_types = [
+<a href=#18 id=18 data-nosnippet>18</a>                SiHuaType::HuaLu,
+<a href=#19 id=19 data-nosnippet>19</a>                SiHuaType::HuaQuan,
+<a href=#20 id=20 data-nosnippet>20</a>                SiHuaType::HuaKe,
+<a href=#21 id=21 data-nosnippet>21</a>                SiHuaType::HuaJi,
+<a href=#22 id=22 data-nosnippet>22</a>            ];
+<a href=#23 id=23 data-nosnippet>23</a>
+<a href=#24 id=24 data-nosnippet>24</a>            <span class="kw">for </span>(idx, <span class="kw-2">&amp;</span>s_star) <span class="kw">in </span>sihua_stars.iter().enumerate() {
+<a href=#25 id=25 data-nosnippet>25</a>                <span class="kw">if </span>p.stars.iter().any(|st| st.star == s_star) {
+<a href=#26 id=26 data-nosnippet>26</a>                    <span class="kw">let </span>s_type = sihua_types[idx];
+<a href=#27 id=27 data-nosnippet>27</a>                    <span class="kw">let </span>desc = <span class="macro">format!</span>(
+<a href=#28 id=28 data-nosnippet>28</a>                        <span class="string">"{}에서 궁간({}) 자화({}) 발생 — {} 별이 자화됨"</span>,
+<a href=#29 id=29 data-nosnippet>29</a>                        p.name.korean(),
+<a href=#30 id=30 data-nosnippet>30</a>                        p.heavenly_stem,
+<a href=#31 id=31 data-nosnippet>31</a>                        s_type.korean(),
+<a href=#32 id=32 data-nosnippet>32</a>                        s_star.korean()
+<a href=#33 id=33 data-nosnippet>33</a>                    );
+<a href=#34 id=34 data-nosnippet>34</a>                    results.push(ZiHuaInfo {
+<a href=#35 id=35 data-nosnippet>35</a>                        palace_idx: p.index,
+<a href=#36 id=36 data-nosnippet>36</a>                        palace_name: p.name,
+<a href=#37 id=37 data-nosnippet>37</a>                        star: s_star,
+<a href=#38 id=38 data-nosnippet>38</a>                        sihua_type: s_type,
+<a href=#39 id=39 data-nosnippet>39</a>                        description: desc,
+<a href=#40 id=40 data-nosnippet>40</a>                    });
+<a href=#41 id=41 data-nosnippet>41</a>                }
+<a href=#42 id=42 data-nosnippet>42</a>            }
+<a href=#43 id=43 data-nosnippet>43</a>        }
+<a href=#44 id=44 data-nosnippet>44</a>    }
+<a href=#45 id=45 data-nosnippet>45</a>
+<a href=#46 id=46 data-nosnippet>46</a>    results
+<a href=#47 id=47 data-nosnippet>47</a>}
+<a href=#48 id=48 data-nosnippet>48</a>
+<a href=#49 id=49 data-nosnippet>49</a><span class="doccomment">/// 주성이 없는 공궁(空宮)일 때 대궁(對宮)의 주성을 빌려오는 차성기궁(借星騎宮)을 검출합니다.
+<a href=#50 id=50 data-nosnippet>50</a></span><span class="kw">pub fn </span>detect_borrowed_stars(palaces: <span class="kw-2">&amp;</span>[PalaceData; <span class="number">12</span>]) -&gt; Vec&lt;BorrowedStarsInfo&gt; {
+<a href=#51 id=51 data-nosnippet>51</a>    <span class="kw">let </span><span class="kw-2">mut </span>results = Vec::new();
+<a href=#52 id=52 data-nosnippet>52</a>
+<a href=#53 id=53 data-nosnippet>53</a>    <span class="kw">for </span>p <span class="kw">in </span>palaces {
+<a href=#54 id=54 data-nosnippet>54</a>        <span class="comment">// 14 주성 존재 여부 체크
+<a href=#55 id=55 data-nosnippet>55</a>        </span><span class="kw">let </span>has_major_star = p.stars.iter().any(|st| st.star.is_major());
+<a href=#56 id=56 data-nosnippet>56</a>        <span class="kw">if </span>!has_major_star {
+<a href=#57 id=57 data-nosnippet>57</a>            <span class="kw">let </span>opposite_idx = (p.index + <span class="number">6</span>) % <span class="number">12</span>;
+<a href=#58 id=58 data-nosnippet>58</a>            <span class="kw">let </span>opp_palace = <span class="kw-2">&amp;</span>palaces[opposite_idx];
+<a href=#59 id=59 data-nosnippet>59</a>            <span class="kw">let </span>borrowed: Vec&lt;ZwdsStar&gt; = opp_palace
+<a href=#60 id=60 data-nosnippet>60</a>                .stars
+<a href=#61 id=61 data-nosnippet>61</a>                .iter()
+<a href=#62 id=62 data-nosnippet>62</a>                .filter(|st| st.star.is_major())
+<a href=#63 id=63 data-nosnippet>63</a>                .map(|st| st.star)
+<a href=#64 id=64 data-nosnippet>64</a>                .collect();
+<a href=#65 id=65 data-nosnippet>65</a>
+<a href=#66 id=66 data-nosnippet>66</a>            <span class="kw">if </span>!borrowed.is_empty() {
+<a href=#67 id=67 data-nosnippet>67</a>                results.push(BorrowedStarsInfo {
+<a href=#68 id=68 data-nosnippet>68</a>                    palace_idx: p.index,
+<a href=#69 id=69 data-nosnippet>69</a>                    palace_name: p.name,
+<a href=#70 id=70 data-nosnippet>70</a>                    opposite_palace_idx: opposite_idx,
+<a href=#71 id=71 data-nosnippet>71</a>                    borrowed_stars: borrowed,
+<a href=#72 id=72 data-nosnippet>72</a>                });
+<a href=#73 id=73 data-nosnippet>73</a>            }
+<a href=#74 id=74 data-nosnippet>74</a>        }
+<a href=#75 id=75 data-nosnippet>75</a>    }
+<a href=#76 id=76 data-nosnippet>76</a>
+<a href=#77 id=77 data-nosnippet>77</a>    results
+<a href=#78 id=78 data-nosnippet>78</a>}
+<a href=#79 id=79 data-nosnippet>79</a>
+<a href=#80 id=80 data-nosnippet>80</a><span class="doccomment">/// 생년 사화 + 대한 사화 + 유년 사화 간의 3중 충국 및 상충 패턴을 감지합니다.
+<a href=#81 id=81 data-nosnippet>81</a></span><span class="kw">pub fn </span>detect_triple_sihua_collisions(
+<a href=#82 id=82 data-nosnippet>82</a>    palaces: <span class="kw-2">&amp;</span>[PalaceData; <span class="number">12</span>],
+<a href=#83 id=83 data-nosnippet>83</a>    daxian_list: <span class="kw-2">&amp;</span>[DaXian],
+<a href=#84 id=84 data-nosnippet>84</a>    current_liunian: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>LiuNian&gt;,
+<a href=#85 id=85 data-nosnippet>85</a>) -&gt; Vec&lt;TripleSihuaCollision&gt; {
+<a href=#86 id=86 data-nosnippet>86</a>    <span class="kw">let </span><span class="kw-2">mut </span>collisions = Vec::new();
+<a href=#87 id=87 data-nosnippet>87</a>
+<a href=#88 id=88 data-nosnippet>88</a>    <span class="kw">if </span>daxian_list.is_empty() {
+<a href=#89 id=89 data-nosnippet>89</a>        <span class="kw">return </span>collisions;
+<a href=#90 id=90 data-nosnippet>90</a>    }
+<a href=#91 id=91 data-nosnippet>91</a>
+<a href=#92 id=92 data-nosnippet>92</a>    <span class="comment">// 대표 대한 사화 추출 (첫번째 대한 기준 또는 지정 대한)
+<a href=#93 id=93 data-nosnippet>93</a>    </span><span class="kw">let </span>active_daxian = <span class="kw-2">&amp;</span>daxian_list[<span class="number">0</span>];
+<a href=#94 id=94 data-nosnippet>94</a>    <span class="kw">let </span>daxian_stem = parse_stem(<span class="kw-2">&amp;</span>active_daxian.stem_hanja).ok();
+<a href=#95 id=95 data-nosnippet>95</a>
+<a href=#96 id=96 data-nosnippet>96</a>    <span class="kw">for </span>p <span class="kw">in </span>palaces {
+<a href=#97 id=97 data-nosnippet>97</a>        <span class="kw">let </span><span class="kw-2">mut </span>huaji_count = <span class="number">0</span>;
+<a href=#98 id=98 data-nosnippet>98</a>        <span class="kw">let </span><span class="kw-2">mut </span>hualu_count = <span class="number">0</span>;
+<a href=#99 id=99 data-nosnippet>99</a>        <span class="kw">let </span><span class="kw-2">mut </span>stars_involved = Vec::new();
+<a href=#100 id=100 data-nosnippet>100</a>
+<a href=#101 id=101 data-nosnippet>101</a>        <span class="comment">// 1. 생년 사화 체크
+<a href=#102 id=102 data-nosnippet>102</a>        </span><span class="kw">for </span>st <span class="kw">in </span><span class="kw-2">&amp;</span>p.stars {
+<a href=#103 id=103 data-nosnippet>103</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(s_type) = st.si_hua {
+<a href=#104 id=104 data-nosnippet>104</a>                <span class="kw">match </span>s_type {
+<a href=#105 id=105 data-nosnippet>105</a>                    SiHuaType::HuaJi =&gt; {
+<a href=#106 id=106 data-nosnippet>106</a>                        huaji_count += <span class="number">1</span>;
+<a href=#107 id=107 data-nosnippet>107</a>                        stars_involved.push(st.star);
+<a href=#108 id=108 data-nosnippet>108</a>                    }
+<a href=#109 id=109 data-nosnippet>109</a>                    SiHuaType::HuaLu =&gt; {
+<a href=#110 id=110 data-nosnippet>110</a>                        hualu_count += <span class="number">1</span>;
+<a href=#111 id=111 data-nosnippet>111</a>                        stars_involved.push(st.star);
+<a href=#112 id=112 data-nosnippet>112</a>                    }
+<a href=#113 id=113 data-nosnippet>113</a>                    <span class="kw">_ </span>=&gt; {}
+<a href=#114 id=114 data-nosnippet>114</a>                }
+<a href=#115 id=115 data-nosnippet>115</a>            }
+<a href=#116 id=116 data-nosnippet>116</a>        }
+<a href=#117 id=117 data-nosnippet>117</a>
+<a href=#118 id=118 data-nosnippet>118</a>        <span class="comment">// 2. 대한 사화 체크
+<a href=#119 id=119 data-nosnippet>119</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(d_stem) = daxian_stem {
+<a href=#120 id=120 data-nosnippet>120</a>            <span class="kw">let </span>d_sihua = get_sihua_stars(d_stem);
+<a href=#121 id=121 data-nosnippet>121</a>            <span class="kw">if </span>p.stars.iter().any(|st| st.star == d_sihua[<span class="number">3</span>]) {
+<a href=#122 id=122 data-nosnippet>122</a>                huaji_count += <span class="number">1</span>;
+<a href=#123 id=123 data-nosnippet>123</a>                stars_involved.push(d_sihua[<span class="number">3</span>]);
+<a href=#124 id=124 data-nosnippet>124</a>            }
+<a href=#125 id=125 data-nosnippet>125</a>            <span class="kw">if </span>p.stars.iter().any(|st| st.star == d_sihua[<span class="number">0</span>]) {
+<a href=#126 id=126 data-nosnippet>126</a>                hualu_count += <span class="number">1</span>;
+<a href=#127 id=127 data-nosnippet>127</a>                stars_involved.push(d_sihua[<span class="number">0</span>]);
+<a href=#128 id=128 data-nosnippet>128</a>            }
+<a href=#129 id=129 data-nosnippet>129</a>        }
+<a href=#130 id=130 data-nosnippet>130</a>
+<a href=#131 id=131 data-nosnippet>131</a>        <span class="comment">// 3. 유년 사화 체크
+<a href=#132 id=132 data-nosnippet>132</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(ln) = current_liunian {
+<a href=#133 id=133 data-nosnippet>133</a>            <span class="kw">if </span>p.stars.iter().any(|st| st.star == ln.si_hua[<span class="number">3</span>]) {
+<a href=#134 id=134 data-nosnippet>134</a>                huaji_count += <span class="number">1</span>;
+<a href=#135 id=135 data-nosnippet>135</a>                stars_involved.push(ln.si_hua[<span class="number">3</span>]);
+<a href=#136 id=136 data-nosnippet>136</a>            }
+<a href=#137 id=137 data-nosnippet>137</a>            <span class="kw">if </span>p.stars.iter().any(|st| st.star == ln.si_hua[<span class="number">0</span>]) {
+<a href=#138 id=138 data-nosnippet>138</a>                hualu_count += <span class="number">1</span>;
+<a href=#139 id=139 data-nosnippet>139</a>                stars_involved.push(ln.si_hua[<span class="number">0</span>]);
+<a href=#140 id=140 data-nosnippet>140</a>            }
+<a href=#141 id=141 data-nosnippet>141</a>        }
+<a href=#142 id=142 data-nosnippet>142</a>
+<a href=#143 id=143 data-nosnippet>143</a>        stars_involved.sort();
+<a href=#144 id=144 data-nosnippet>144</a>        stars_involved.dedup();
+<a href=#145 id=145 data-nosnippet>145</a>
+<a href=#146 id=146 data-nosnippet>146</a>        <span class="kw">if </span>huaji_count &gt;= <span class="number">3 </span>{
+<a href=#147 id=147 data-nosnippet>147</a>            collisions.push(TripleSihuaCollision {
+<a href=#148 id=148 data-nosnippet>148</a>                palace_idx: p.index,
+<a href=#149 id=149 data-nosnippet>149</a>                palace_name: p.name,
+<a href=#150 id=150 data-nosnippet>150</a>                collision_type: <span class="string">"삼화기 (三化忌 — 3중 화기 중첩)"</span>.to_string(),
+<a href=#151 id=151 data-nosnippet>151</a>                severity: <span class="string">"Crisis"</span>.to_string(),
+<a href=#152 id=152 data-nosnippet>152</a>                description: <span class="macro">format!</span>(
+<a href=#153 id=153 data-nosnippet>153</a>                    <span class="string">"{}에 3중 화기(化忌)가 집결하여 극심한 변화 및 과제가 집중되는 연도/시기입니다."</span>,
+<a href=#154 id=154 data-nosnippet>154</a>                    p.name.korean()
+<a href=#155 id=155 data-nosnippet>155</a>                ),
+<a href=#156 id=156 data-nosnippet>156</a>                stars_involved: stars_involved.clone(),
+<a href=#157 id=157 data-nosnippet>157</a>            });
+<a href=#158 id=158 data-nosnippet>158</a>        } <span class="kw">else if </span>huaji_count &gt;= <span class="number">2 </span>{
+<a href=#159 id=159 data-nosnippet>159</a>            collisions.push(TripleSihuaCollision {
+<a href=#160 id=160 data-nosnippet>160</a>                palace_idx: p.index,
+<a href=#161 id=161 data-nosnippet>161</a>                palace_name: p.name,
+<a href=#162 id=162 data-nosnippet>162</a>                collision_type: <span class="string">"쌍화기 (雙化忌 — 2중 화기 중첩)"</span>.to_string(),
+<a href=#163 id=163 data-nosnippet>163</a>                severity: <span class="string">"Caution"</span>.to_string(),
+<a href=#164 id=164 data-nosnippet>164</a>                description: <span class="macro">format!</span>(
+<a href=#165 id=165 data-nosnippet>165</a>                    <span class="string">"{}에 2중 화기(化忌)가 중첩하여 주의와 세심한 관리가 요구되는 시기입니다."</span>,
+<a href=#166 id=166 data-nosnippet>166</a>                    p.name.korean()
+<a href=#167 id=167 data-nosnippet>167</a>                ),
+<a href=#168 id=168 data-nosnippet>168</a>                stars_involved: stars_involved.clone(),
+<a href=#169 id=169 data-nosnippet>169</a>            });
+<a href=#170 id=170 data-nosnippet>170</a>        }
+<a href=#171 id=171 data-nosnippet>171</a>
+<a href=#172 id=172 data-nosnippet>172</a>        <span class="kw">if </span>hualu_count &gt;= <span class="number">2 </span>{
+<a href=#173 id=173 data-nosnippet>173</a>            collisions.push(TripleSihuaCollision {
+<a href=#174 id=174 data-nosnippet>174</a>                palace_idx: p.index,
+<a href=#175 id=175 data-nosnippet>175</a>                palace_name: p.name,
+<a href=#176 id=176 data-nosnippet>176</a>                collision_type: <span class="string">"쌍록 (雙祿 / 祿轉成福 — 2중 화록 중첩)"</span>.to_string(),
+<a href=#177 id=177 data-nosnippet>177</a>                severity: <span class="string">"Opportunity"</span>.to_string(),
+<a href=#178 id=178 data-nosnippet>178</a>                description: <span class="macro">format!</span>(
+<a href=#179 id=179 data-nosnippet>179</a>                    <span class="string">"{}에 2중 화록(化祿)이 중첩하여 대단한 재물과 기회가 함께 도래하는 길시입니다."</span>,
+<a href=#180 id=180 data-nosnippet>180</a>                    p.name.korean()
+<a href=#181 id=181 data-nosnippet>181</a>                ),
+<a href=#182 id=182 data-nosnippet>182</a>                stars_involved: stars_involved.clone(),
+<a href=#183 id=183 data-nosnippet>183</a>            });
+<a href=#184 id=184 data-nosnippet>184</a>        } <span class="kw">else if </span>hualu_count &gt;= <span class="number">1 </span>&amp;&amp; huaji_count &gt;= <span class="number">1 </span>{
+<a href=#185 id=185 data-nosnippet>185</a>            collisions.push(TripleSihuaCollision {
+<a href=#186 id=186 data-nosnippet>186</a>                palace_idx: p.index,
+<a href=#187 id=187 data-nosnippet>187</a>                palace_name: p.name,
+<a href=#188 id=188 data-nosnippet>188</a>                collision_type: <span class="string">"록기상충 (祿忌相沖 — 기회와 위험 교차)"</span>.to_string(),
+<a href=#189 id=189 data-nosnippet>189</a>                severity: <span class="string">"Caution"</span>.to_string(),
+<a href=#190 id=190 data-nosnippet>190</a>                description: <span class="macro">format!</span>(
+<a href=#191 id=191 data-nosnippet>191</a>                    <span class="string">"{}에 화록과 화기가 공존하여 큰 성과 뒤에 리스크 관리가 동시에 요구됩니다."</span>,
+<a href=#192 id=192 data-nosnippet>192</a>                    p.name.korean()
+<a href=#193 id=193 data-nosnippet>193</a>                ),
+<a href=#194 id=194 data-nosnippet>194</a>                stars_involved,
+<a href=#195 id=195 data-nosnippet>195</a>            });
+<a href=#196 id=196 data-nosnippet>196</a>        }
+<a href=#197 id=197 data-nosnippet>197</a>    }
+<a href=#198 id=198 data-nosnippet>198</a>
+<a href=#199 id=199 data-nosnippet>199</a>    collisions
+<a href=#200 id=200 data-nosnippet>200</a>}
+<a href=#201 id=201 data-nosnippet>201</a>
+<a href=#202 id=202 data-nosnippet>202</a><span class="kw">fn </span>parse_stem(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;HeavenlyStem, ()&gt; {
+<a href=#203 id=203 data-nosnippet>203</a>    <span class="kw">match </span>s {
+<a href=#204 id=204 data-nosnippet>204</a>        <span class="string">"甲" </span>| <span class="string">"갑" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Jia),
+<a href=#205 id=205 data-nosnippet>205</a>        <span class="string">"乙" </span>| <span class="string">"을" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Yi),
+<a href=#206 id=206 data-nosnippet>206</a>        <span class="string">"丙" </span>| <span class="string">"병" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Bing),
+<a href=#207 id=207 data-nosnippet>207</a>        <span class="string">"丁" </span>| <span class="string">"정" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Ding),
+<a href=#208 id=208 data-nosnippet>208</a>        <span class="string">"戊" </span>| <span class="string">"무" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Wu),
+<a href=#209 id=209 data-nosnippet>209</a>        <span class="string">"己" </span>| <span class="string">"기" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Ji),
+<a href=#210 id=210 data-nosnippet>210</a>        <span class="string">"庚" </span>| <span class="string">"경" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Geng),
+<a href=#211 id=211 data-nosnippet>211</a>        <span class="string">"辛" </span>| <span class="string">"신" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Xin),
+<a href=#212 id=212 data-nosnippet>212</a>        <span class="string">"壬" </span>| <span class="string">"임" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Ren),
+<a href=#213 id=213 data-nosnippet>213</a>        <span class="string">"癸" </span>| <span class="string">"계" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Gui),
+<a href=#214 id=214 data-nosnippet>214</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(()),
+<a href=#215 id=215 data-nosnippet>215</a>    }
+<a href=#216 id=216 data-nosnippet>216</a>}
+</code></pre></div></section></main></body></html>

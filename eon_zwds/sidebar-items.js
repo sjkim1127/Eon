@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["annual","brightness","calendar","chart","decadal","destiny_patterns","error","palace","stars","transformations","types"]};
+window.SIDEBAR_ITEMS = {"mod":["annual","brightness","calendar","chart","collisions_zihua","decadal","destiny_patterns","error","monthly_daily","palace","stars","transformations","types"]};
