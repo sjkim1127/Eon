@@ -178,6 +178,11 @@ pub fn build_chart_from_lunar(
         }
     }
 
+    let zi_hua = crate::collisions_zihua::detect_zi_hua(&palaces);
+    let borrowed_stars = crate::collisions_zihua::detect_borrowed_stars(&palaces);
+    let collisions =
+        crate::collisions_zihua::detect_triple_sihua_collisions(&palaces, &daxian_list, None);
+
     Ok(ZwdsChart {
         palaces,
         soul_idx,
@@ -188,6 +193,9 @@ pub fn build_chart_from_lunar(
         daxian: daxian_list,
         destiny_patterns,
         flying_sihua,
+        zi_hua,
+        collisions,
+        borrowed_stars,
     })
 }
 

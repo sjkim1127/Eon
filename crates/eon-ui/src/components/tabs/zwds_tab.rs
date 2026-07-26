@@ -189,6 +189,15 @@ pub fn ZwdsTab() -> Element {
                                     // 4x4 성반 격자 시각화
                                     ZwdsGrid { data: res.clone(), selected_palace_idx, hovered_palace_idx }
 
+                                    // 유월/유일 운세 시뮬레이터
+                                    MonthlyDailySection {
+                                        annual_palace_idx: res.current_liu_nian.palace_idx,
+                                        annual_stem_str: res.current_liu_nian.stem_hanja.clone(),
+                                    }
+
+                                    // 3중 사화 충국 및 자화, 차성기궁 카드
+                                    CollisionsAndZihuaSection { chart: res.chart.clone() }
+
                                     // 10년 대한 주기 목록
                                     DaXianSection { data: res.clone() }
                                 }
@@ -1605,4 +1614,167 @@ fn get_palace_center(p_idx: usize) -> (f64, f64) {
         _ => (0, 0),
     };
     ((c as f64 * 2.0 + 1.0) * 12.5, (r as f64 * 2.0 + 1.0) * 12.5)
+}
+
+#[component]
+fn MonthlyDailySection(annual_palace_idx: usize, annual_stem_str: String) -> Element {
+    let mut selected_month = use_signal(|| 1u32);
+    let mut selected_day = use_signal(|| 1u32);
+
+    let stem = match annual_stem_str.as_str() {
+        "甲" | "갑" => eon_saju::core::stem::HeavenlyStem::Jia,
+        "乙" | "을" => eon_saju::core::stem::HeavenlyStem::Yi,
+        "丙" | "병" => eon_saju::core::stem::HeavenlyStem::Bing,
+        "丁" | "정" => eon_saju::core::stem::HeavenlyStem::Ding,
+        "戊" | "무" => eon_saju::core::stem::HeavenlyStem::Wu,
+        "己" | "기" => eon_saju::core::stem::HeavenlyStem::Ji,
+        "庚" | "경" => eon_saju::core::stem::HeavenlyStem::Geng,
+        "辛" | "신" => eon_saju::core::stem::HeavenlyStem::Xin,
+        "壬" | "임" => eon_saju::core::stem::HeavenlyStem::Ren,
+        _ => eon_saju::core::stem::HeavenlyStem::Gui,
+    };
+
+    let liuyue =
+        eon_zwds::monthly_daily::calculate_liuyue(annual_palace_idx, stem, *selected_month.read());
+    let liuri = eon_zwds::monthly_daily::calculate_liuri(liuyue.palace_idx, *selected_day.read());
+
+    rsx! {
+        div { class: "p-5 bg-slate-900/60 border border-slate-800/80 rounded-3xl space-y-4",
+            h3 { class: "text-sm font-bold text-slate-200 tracking-wider flex items-center gap-2",
+                span { "📅" }
+                span { "유월(流月) · 유일(流日) 시간 운세 시뮬레이터" }
+            }
+            div { class: "grid grid-cols-1 sm:grid-cols-2 gap-4",
+                // Month selector & info card
+                div { class: "p-4 bg-slate-950/60 rounded-2xl border border-violet-500/20 space-y-2",
+                    div { class: "flex items-center justify-between",
+                        label { class: "text-xs font-semibold text-violet-300", "음력 유월 (Month)" }
+                        select {
+                            class: "bg-slate-900 border border-violet-500/40 rounded-lg px-2.5 py-1 text-xs text-violet-200 outline-none cursor-pointer",
+                            value: "{selected_month}",
+                            onchange: move |evt| {
+                                if let Ok(m) = evt.value().parse::<u32>() {
+                                    selected_month.set(m);
+                                }
+                            },
+                            {(1..=12).map(|m| rsx! { option { value: "{m}", "{m}월" } })}
+                        }
+                    }
+                    div { class: "text-xs text-slate-300 space-y-1.5 pt-1",
+                        p { class: "font-semibold text-slate-100", "유월 궁: {liuyue.palace_idx + 1}번 궁 ({liuyue.stem_hanja}{liuyue.branch_hanja}月)" }
+                        div { class: "flex flex-wrap gap-1 pt-1",
+                            span { class: "text-[10px] font-medium bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded", "祿: {liuyue.si_hua[0].korean()}" }
+                            span { class: "text-[10px] font-medium bg-blue-950/60 border border-blue-500/30 text-blue-300 px-1.5 py-0.5 rounded", "權: {liuyue.si_hua[1].korean()}" }
+                            span { class: "text-[10px] font-medium bg-purple-950/60 border border-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded", "科: {liuyue.si_hua[2].korean()}" }
+                            span { class: "text-[10px] font-medium bg-red-950/60 border border-red-500/30 text-red-300 px-1.5 py-0.5 rounded", "忌: {liuyue.si_hua[3].korean()}" }
+                        }
+                    }
+                }
+                // Day selector & info card
+                div { class: "p-4 bg-slate-950/60 rounded-2xl border border-indigo-500/20 space-y-2",
+                    div { class: "flex items-center justify-between",
+                        label { class: "text-xs font-semibold text-indigo-300", "음력 유일 (Day)" }
+                        select {
+                            class: "bg-slate-900 border border-indigo-500/40 rounded-lg px-2.5 py-1 text-xs text-indigo-200 outline-none cursor-pointer",
+                            value: "{selected_day}",
+                            onchange: move |evt| {
+                                if let Ok(d) = evt.value().parse::<u32>() {
+                                    selected_day.set(d);
+                                }
+                            },
+                            {(1..=30).map(|d| rsx! { option { value: "{d}", "{d}일" } })}
+                        }
+                    }
+                    div { class: "text-xs text-slate-300 space-y-1.5 pt-1",
+                        p { class: "font-semibold text-slate-100", "유일 궁: {liuri.palace_idx + 1}번 궁 ({liuri.stem_hanja}{liuri.branch_hanja}日)" }
+                        div { class: "flex flex-wrap gap-1 pt-1",
+                            span { class: "text-[10px] font-medium bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded", "祿: {liuri.si_hua[0].korean()}" }
+                            span { class: "text-[10px] font-medium bg-blue-950/60 border border-blue-500/30 text-blue-300 px-1.5 py-0.5 rounded", "權: {liuri.si_hua[1].korean()}" }
+                            span { class: "text-[10px] font-medium bg-purple-950/60 border border-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded", "科: {liuri.si_hua[2].korean()}" }
+                            span { class: "text-[10px] font-medium bg-red-950/60 border border-red-500/30 text-red-300 px-1.5 py-0.5 rounded", "忌: {liuri.si_hua[3].korean()}" }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn CollisionsAndZihuaSection(chart: eon_zwds::types::ZwdsChart) -> Element {
+    let collisions = &chart.collisions;
+    let zi_hua = &chart.zi_hua;
+    let borrowed = &chart.borrowed_stars;
+
+    rsx! {
+        div { class: "p-5 bg-slate-900/60 border border-slate-800/80 rounded-3xl space-y-4",
+            h3 { class: "text-sm font-bold text-slate-200 tracking-wider flex items-center gap-2",
+                span { "⚡" }
+                span { "3중 사화 충국 · 궁간 자화 (自化) · 차성기궁 (借星)" }
+            }
+            div { class: "grid grid-cols-1 md:grid-cols-3 gap-4",
+                // Collisions Card
+                div { class: "p-4 bg-slate-950/60 rounded-2xl border border-red-500/20 space-y-2",
+                    div { class: "flex items-center justify-between",
+                        span { class: "text-xs font-semibold text-red-300", "🚨 사화 충국 경보 ({collisions.len()})" }
+                    }
+                    if collisions.is_empty() {
+                        p { class: "text-xs text-slate-500 italic", "중첩된 3중 사화 충국이 없습니다." }
+                    } else {
+                        div { class: "space-y-2 max-h-48 overflow-y-auto pr-1",
+                            {collisions.iter().map(|c| rsx! {
+                                div { key: "{c.palace_idx}-{c.collision_type}", class: "p-2 rounded-xl bg-slate-900/80 border border-red-500/30 text-xs space-y-1",
+                                    p { class: "font-bold text-red-300", "{c.collision_type}" }
+                                    p { class: "text-[11px] text-slate-300 leading-relaxed", "{c.description}" }
+                                }
+                            })}
+                        }
+                    }
+                }
+
+                // Zihua Card
+                div { class: "p-4 bg-slate-950/60 rounded-2xl border border-violet-500/20 space-y-2",
+                    div { class: "flex items-center justify-between",
+                        span { class: "text-xs font-semibold text-violet-300", "🌀 궁간 자화(自化) ({zi_hua.len()})" }
+                    }
+                    if zi_hua.is_empty() {
+                        p { class: "text-xs text-slate-500 italic", "발생된 자화 현상이 없습니다." }
+                    } else {
+                        div { class: "space-y-2 max-h-48 overflow-y-auto pr-1",
+                            {zi_hua.iter().map(|z| rsx! {
+                                div { key: "{z.palace_idx}-{z.star.korean()}", class: "p-2 rounded-xl bg-slate-900/80 border border-violet-500/30 text-xs space-y-1",
+                                    p { class: "font-bold text-violet-300", "{z.palace_name.korean()} — 自化{z.sihua_type.emoji()} ({z.star.korean()})" }
+                                    p { class: "text-[11px] text-slate-300 leading-relaxed", "{z.description}" }
+                                }
+                            })}
+                        }
+                    }
+                }
+
+                // Borrowed Stars Card
+                div { class: "p-4 bg-slate-950/60 rounded-2xl border border-amber-500/20 space-y-2",
+                    div { class: "flex items-center justify-between",
+                        span { class: "text-xs font-semibold text-amber-300", "🏛️ 차성기궁 (借星) ({borrowed.len()})" }
+                    }
+                    if borrowed.is_empty() {
+                        p { class: "text-xs text-slate-500 italic", "차성기궁이 진행된 공궁이 없습니다." }
+                    } else {
+                        div { class: "space-y-2 max-h-48 overflow-y-auto pr-1",
+                            {borrowed.iter().map(|b| rsx! {
+                                div { key: "{b.palace_idx}", class: "p-2 rounded-xl bg-slate-900/80 border border-amber-500/30 text-xs space-y-1",
+                                    p { class: "font-bold text-amber-300", "{b.palace_name.korean()} (공궁)" }
+                                    p { class: "text-[11px] text-slate-300 leading-relaxed", "대궁({b.opposite_palace_idx + 1}번 궁)의 주성 차성: " }
+                                    div { class: "flex flex-wrap gap-1 pt-0.5",
+                                        {b.borrowed_stars.iter().map(|st| rsx! {
+                                            span { key: "{st.korean()}", class: "text-[9px] bg-amber-950/60 border border-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded font-semibold", "{st.korean()}" }
+                                        })}
+                                    }
+                                }
+                            })}
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

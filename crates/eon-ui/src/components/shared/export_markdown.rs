@@ -4407,6 +4407,39 @@ pub fn format_zwds_inner(data: &ZwdsAnalysisOutput, locale: Locale) -> String {
         "- **{}**: {} ({}: {})\n",
         cur_liunian_lbl, ln.year, cur_sihua_lbl, ln_sihua_str
     ));
+
+    // 3중 사화 충국 & 자화 & 차성기궁
+    if !data.chart.collisions.is_empty() {
+        s.push_str("\n#### 🚨 3중 사화 충국 경보\n");
+        for c in &data.chart.collisions {
+            s.push_str(&format!("- **{}**: {}\n", c.collision_type, c.description));
+        }
+    }
+
+    if !data.chart.zi_hua.is_empty() {
+        s.push_str("\n#### 🌀 궁간 자화 (自化)\n");
+        for z in &data.chart.zi_hua {
+            s.push_str(&format!("- {}\n", z.description));
+        }
+    }
+
+    if !data.chart.borrowed_stars.is_empty() {
+        s.push_str("\n#### 🏛️ 차성기궁 (借星騎宮)\n");
+        for b in &data.chart.borrowed_stars {
+            let stars_str = b
+                .borrowed_stars
+                .iter()
+                .map(|st| st.korean())
+                .collect::<Vec<_>>()
+                .join(", ");
+            s.push_str(&format!(
+                "- **{} (공궁)**: 대궁의 주성 차성 ({})\n",
+                b.palace_name.korean(),
+                stars_str
+            ));
+        }
+    }
+
     s.push('\n');
 
     // Translated metadata labels

@@ -380,6 +380,78 @@ pub fn analyze_destiny_patterns(
         });
     }
 
+    // 18. 양타협기격 (羊陀夾忌格)
+    // 조건: 화기(HuaJi)가 들어 있는 궁의 양 옆 궁(left/right)에 경양(QingYang)과 타라(TuoLuo)가 배치되는 격국.
+    let left_of_ming = (ming_idx + 11) % 12;
+    let right_of_ming = (ming_idx + 1) % 12;
+    let ming_has_huaji = palaces[ming_idx]
+        .stars
+        .iter()
+        .any(|st| st.si_hua == Some(SiHuaType::HuaJi));
+    if ming_has_huaji
+        && ((has_star_in_palace(ZwdsStar::QingYang, left_of_ming)
+            && has_star_in_palace(ZwdsStar::TuoLuo, right_of_ming))
+            || (has_star_in_palace(ZwdsStar::TuoLuo, left_of_ming)
+                && has_star_in_palace(ZwdsStar::QingYang, right_of_ming)))
+    {
+        patterns.push(DestinyPattern {
+            name_hanja: "羊陀夾忌".to_string(),
+            name_korean: "양타협기격".to_string(),
+            is_auspicious: false,
+            description_korean: "화기가 든 명궁 양쪽을 살성인 경양과 타라가 겹겹이 고립시키는 극단적 억압 격국으로, 사업상의 위협이나 대인관계 시련에 부딪히기 쉬우므로 방어적 경영과 내면 관리가 필수적입니다.".to_string(),
+            description_english: "The Life Palace with HuaJi is sandwiched between Qingyang and Tuoluo, creating an oppressive environment that requires defensive strategy and inner resilience.".to_string(),
+        });
+    }
+
+    // 19. 화령협명격 (火鈴夾命格)
+    if (has_star_in_palace(ZwdsStar::HuoXing, left_of_ming)
+        && has_star_in_palace(ZwdsStar::LingXing, right_of_ming))
+        || (has_star_in_palace(ZwdsStar::LingXing, left_of_ming)
+            && has_star_in_palace(ZwdsStar::HuoXing, right_of_ming))
+    {
+        patterns.push(DestinyPattern {
+            name_hanja: "火鈴夾命".to_string(),
+            name_korean: "화령협명격".to_string(),
+            is_auspicious: false,
+            description_korean: "화성과 령성 두 화기 살성이 명궁 양옆에서 압박하는 격국으로, 성품이 조급하거나 주위 환경의 돌발 돌풍을 겪을 수 있으나 굳은 결단력으로 장애를 뚫고 나아갈 수 있습니다.".to_string(),
+            description_english: "The Life Palace is sandwiched by Huoxing and Lingxing, indicating environmental friction and abrupt shifts requiring emotional control.".to_string(),
+        });
+    }
+
+    // 20. 공겁협명격 (空劫夾命格)
+    if (has_star_in_palace(ZwdsStar::DiKong, left_of_ming)
+        && has_star_in_palace(ZwdsStar::DiJie, right_of_ming))
+        || (has_star_in_palace(ZwdsStar::DiJie, left_of_ming)
+            && has_star_in_palace(ZwdsStar::DiKong, right_of_ming))
+    {
+        patterns.push(DestinyPattern {
+            name_hanja: "空劫夾命".to_string(),
+            name_korean: "공겁협명격".to_string(),
+            is_auspicious: false,
+            description_korean: "지공과 지겁이 명궁 양옆을 감싸는 격국으로, 재물이나 비전의 일시적 공허함을 느낄 수 있으나 정신적·철학적 성찰이나 기술 전문 분야에서 남다른 독창성을 발휘할 수 있습니다.".to_string(),
+            description_english: "The Life Palace is flanked by Dikong and Dijie, fostering spiritual depth and artistic or technical genius despite worldly fluctuations.".to_string(),
+        });
+    }
+
+    // 21. 쌍록수명격 (雙祿守命格)
+    let ming_has_lu = palaces[ming_idx]
+        .stars
+        .iter()
+        .any(|st| st.si_hua == Some(SiHuaType::HuaLu) || st.star == ZwdsStar::LuCun);
+    let qianyi_has_lu = palaces[qianyi_idx]
+        .stars
+        .iter()
+        .any(|st| st.si_hua == Some(SiHuaType::HuaLu) || st.star == ZwdsStar::LuCun);
+    if ming_has_lu && qianyi_has_lu {
+        patterns.push(DestinyPattern {
+            name_hanja: "雙祿守命".to_string(),
+            name_korean: "쌍록수명격".to_string(),
+            is_auspicious: true,
+            description_korean: "명궁과 대궁(천이궁)에 화록과 록존이 차례로 모여드는 대부 길격으로, 평생 재물운이 풍부하고 주변 사람들과 사업적 호응을 이루며 평안함을 누리는 좋은 명조입니다.".to_string(),
+            description_english: "HuaLu and LuCun align across the Life and Travel Palaces, indicating exceptional wealth luck and financial harmony.".to_string(),
+        });
+    }
+
     patterns
 }
 

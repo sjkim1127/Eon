@@ -98,7 +98,7 @@ impl PalaceName {
 // ============================================================
 
 /// 자미두수 전체 성계(星系)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum ZwdsStar {
     // ── 14 主星 ──────────────────────────────────────────
     /// 紫微 (자미)
@@ -374,6 +374,10 @@ impl ZwdsStar {
                 | Self::PoJun
         )
     }
+
+    pub fn is_major(&self) -> bool {
+        self.is_main_star()
+    }
 }
 
 // ============================================================
@@ -560,6 +564,51 @@ pub struct LiuNian {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct LiuYue {
+    pub month: u32,
+    pub palace_idx: PalaceIndex,
+    pub stem_hanja: String,
+    pub branch_hanja: String,
+    pub si_hua: [ZwdsStar; 4],
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct LiuRi {
+    pub day: u32,
+    pub palace_idx: PalaceIndex,
+    pub stem_hanja: String,
+    pub branch_hanja: String,
+    pub si_hua: [ZwdsStar; 4],
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ZiHuaInfo {
+    pub palace_idx: PalaceIndex,
+    pub palace_name: PalaceName,
+    pub star: ZwdsStar,
+    pub sihua_type: SiHuaType,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TripleSihuaCollision {
+    pub palace_idx: PalaceIndex,
+    pub palace_name: PalaceName,
+    pub collision_type: String,
+    pub severity: String,
+    pub description: String,
+    pub stars_involved: Vec<ZwdsStar>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BorrowedStarsInfo {
+    pub palace_idx: PalaceIndex,
+    pub palace_name: PalaceName,
+    pub opposite_palace_idx: PalaceIndex,
+    pub borrowed_stars: Vec<ZwdsStar>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DestinyPattern {
     pub name_hanja: String,
     pub name_korean: String,
@@ -587,4 +636,10 @@ pub struct ZwdsChart {
     pub daxian: Vec<DaXian>,
     pub destiny_patterns: Vec<DestinyPattern>,
     pub flying_sihua: Vec<FlyingSiHua>,
+    #[serde(default)]
+    pub zi_hua: Vec<ZiHuaInfo>,
+    #[serde(default)]
+    pub collisions: Vec<TripleSihuaCollision>,
+    #[serde(default)]
+    pub borrowed_stars: Vec<BorrowedStarsInfo>,
 }
