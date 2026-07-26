@@ -281,6 +281,80 @@ pub fn TierTab() -> Element {
                                     }
                                 }
                             }
+
+                            // ── 6. ⚛️ 퀀텀 시너지 행렬 ──────────────────────────
+                            if !data.quantum_synergies.is_empty() {
+                                div { class: "p-5 rounded-3xl bg-slate-900/60 border border-violet-500/30 space-y-3",
+                                    h4 { class: "font-bold text-violet-300 flex items-center gap-2 text-sm tracking-wide",
+                                        span { "⚛️" }
+                                        span { "동서양 크로스 엔진 퀀텀 시너지 (Quantum Cross-Engine Synergy)" }
+                                    }
+                                    div { class: "grid grid-cols-1 md:grid-cols-2 gap-3",
+                                        {data.quantum_synergies.iter().map(|qs| {
+                                            let bg_clr = if qs.is_positive { "bg-emerald-950/40 border-emerald-500/30 text-emerald-300" } else { "bg-red-950/40 border-red-500/30 text-red-300" };
+                                            let delta_lbl = if qs.is_positive { format!("+{:.1}pt", qs.score_delta) } else { format!("{:.1}pt", qs.score_delta) };
+                                            rsx! {
+                                                div { key: "{qs.title}", class: "p-3.5 rounded-2xl border space-y-1.5 {bg_clr}",
+                                                    div { class: "flex justify-between items-center",
+                                                        span { class: "font-bold text-xs", "{qs.title}" }
+                                                        span { class: "text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900/80 border border-slate-700 font-bold", "{delta_lbl}" }
+                                                    }
+                                                    p { class: "text-[11px] opacity-90 leading-relaxed", "{qs.description}" }
+                                                }
+                                            }
+                                        })}
+                                    }
+                                }
+                            }
+
+                            // ── 7. 🌌 8대 다차원 도메인 레이더 ───────────────────
+                            if !data.domain_radar.is_empty() {
+                                div { class: "p-5 rounded-3xl bg-slate-900/60 border border-amber-500/30 space-y-4",
+                                    h4 { class: "font-bold text-amber-300 flex items-center gap-2 text-sm tracking-wide",
+                                        span { "🌌" }
+                                        span { "8대 다차원 인생 도메인 레이더 (8D Domain Radar Tiers)" }
+                                    }
+                                    div { class: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3",
+                                        {data.domain_radar.iter().map(|d| {
+                                            let pct = d.score as u32;
+                                            rsx! {
+                                                div { key: "{d.domain_key}", class: "p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-2",
+                                                    div { class: "flex justify-between items-center",
+                                                        span { class: "text-xs font-bold text-slate-200", "{d.domain_name}" }
+                                                        span { class: "text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono", "{d.tier}" }
+                                                    }
+                                                    div { class: "h-2 w-full bg-slate-800 rounded-full overflow-hidden",
+                                                        div { class: "h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full", style: "width: {pct}%" }
+                                                    }
+                                                    div { class: "flex justify-between text-[10px] text-slate-400 font-mono",
+                                                        span { "점수" }
+                                                        span { class: "font-bold text-amber-200", "{d.score}점" }
+                                                    }
+                                                }
+                                            }
+                                        })}
+                                    }
+                                }
+                            }
+
+                            // ── 8. 📈 생애 티어 변동 궤적 ────────────────────────
+                            if !data.tier_trajectory.is_empty() {
+                                div { class: "p-5 rounded-3xl bg-slate-900/60 border border-indigo-500/30 space-y-3",
+                                    h4 { class: "font-bold text-indigo-300 flex items-center gap-2 text-sm tracking-wide",
+                                        span { "📈" }
+                                        span { "100년 생애 운명 티어 변동 궤적 (Temporal Tier Trajectory)" }
+                                    }
+                                    div { class: "grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2",
+                                        {data.tier_trajectory.iter().map(|tp| rsx! {
+                                            div { key: "{tp.age}", class: "p-3 rounded-2xl bg-slate-950/60 border border-indigo-500/20 text-center space-y-1",
+                                                span { class: "text-[10px] text-indigo-400 font-bold block", "{tp.age}세" }
+                                                span { class: "text-lg font-black text-amber-300 block font-mono", "{tp.tier_grade}" }
+                                                span { class: "text-[10px] text-slate-400 block truncate", "{tp.score}점" }
+                                            }
+                                        })}
+                                    }
+                                }
+                            }
                         }
                     } else {
                         rsx! { div {} }

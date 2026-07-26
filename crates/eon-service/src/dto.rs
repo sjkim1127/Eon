@@ -356,6 +356,38 @@ pub struct DestinyComponent {
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
+pub struct QuantumSynergyItem {
+    pub title: String,
+    pub engines: Vec<String>,
+    pub score_delta: f32,
+    pub is_positive: bool,
+    pub description: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DomainRadarTier {
+    pub domain_key: String,
+    pub domain_name: String,
+    pub score: f32,
+    pub tier: String,
+    pub key_factors: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct TemporalTierPoint {
+    pub age: u32,
+    pub score: f32,
+    pub tier_grade: String,
+    pub note: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct TierResult {
     pub natal_score: f32,
     pub current_score: f32,
@@ -378,6 +410,9 @@ pub struct TierResult {
     pub destiny_tier_score: f32,
     pub detailed_components: Vec<DestinyComponent>,
     pub tier_model_version: String,
+    pub quantum_synergies: Vec<QuantumSynergyItem>,
+    pub domain_radar: Vec<DomainRadarTier>,
+    pub tier_trajectory: Vec<TemporalTierPoint>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

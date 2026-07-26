@@ -39,8 +39,8 @@ fn test_omni_destiny_tier_synthesis() {
 
     let tier_res = facade::analyze_destiny_tier_omni(omni_input).unwrap();
 
-    assert_eq!(tier_res.version, "v4_omni_model");
-    assert_eq!(tier_res.tier_model_version, "4.0.0");
+    assert_eq!(tier_res.version, "v5_quantum_model");
+    assert_eq!(tier_res.tier_model_version, "5.0.0");
     assert!(tier_res.destiny_tier_score >= 0.0 && tier_res.destiny_tier_score <= 100.0);
     assert!(!tier_res.detailed_components.is_empty());
     assert!(tier_res
@@ -51,4 +51,9 @@ fn test_omni_destiny_tier_synthesis() {
         .detailed_components
         .iter()
         .any(|c| c.key == "zwds_harmony"));
+
+    // Destiny Tier 5.0 Verification
+    assert!(!tier_res.quantum_synergies.is_empty());
+    assert_eq!(tier_res.domain_radar.len(), 8);
+    assert!(!tier_res.tier_trajectory.is_empty());
 }

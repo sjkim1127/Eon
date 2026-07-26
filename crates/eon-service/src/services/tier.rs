@@ -100,6 +100,10 @@ pub fn analyze(
     let potential_tier_score = spread_normalize(pot_res.score);
     let potential_tier = get_tier_from_score(potential_tier_score);
 
+    let quantum_synergies = compute_quantum_synergies(&saju, &vedic, None, None);
+    let domain_radar = compute_8d_domain_radar(&saju, &vedic, None, None);
+    let tier_trajectory = compute_temporal_tier_trajectory(&saju, &vedic);
+
     TierResult {
         natal_score: clamp_score(destiny_tier_score),
         current_score: transit_res.score,
@@ -121,6 +125,9 @@ pub fn analyze(
         destiny_tier_score,
         detailed_components,
         tier_model_version: "3.0.0".to_string(),
+        quantum_synergies,
+        domain_radar,
+        tier_trajectory,
     }
 }
 
@@ -218,6 +225,10 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
     let potential_tier_score = spread_normalize(pot_res.score);
     let potential_tier = get_tier_from_score(potential_tier_score);
 
+    let quantum_synergies = compute_quantum_synergies(saju, vedic, western, zwds);
+    let domain_radar = compute_8d_domain_radar(saju, vedic, western, zwds);
+    let tier_trajectory = compute_temporal_tier_trajectory(saju, vedic);
+
     TierResult {
         natal_score: clamp_score(destiny_tier_score),
         current_score: transit_res.score,
@@ -234,11 +245,14 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
         growth_gap: (potential_tier_score - destiny_tier_score).round(),
         risk_level: compute_risk_level(saju, vedic, &transit_res),
         profile,
-        version: "v4_omni_model".to_string(),
+        version: "v5_quantum_model".to_string(),
         destiny_raw_score,
         destiny_tier_score,
         detailed_components,
-        tier_model_version: "4.0.0".to_string(),
+        tier_model_version: "5.0.0".to_string(),
+        quantum_synergies,
+        domain_radar,
+        tier_trajectory,
     }
 }
 
@@ -723,4 +737,187 @@ fn compute_potential_score(saju: &SajuAnalysisOutput, vedic: &VedicAnalysisOutpu
         score: clamp_score(score.round()),
         highlights: vec![],
     }
+}
+
+fn compute_quantum_synergies(
+    saju: &SajuAnalysisOutput,
+    vedic: &VedicAnalysisOutput,
+    western: Option<&crate::dto::WesternAnalysisOutput>,
+    zwds: Option<&crate::dto::ZwdsAnalysisOutput>,
+) -> Vec<crate::dto::QuantumSynergyItem> {
+    let mut items = Vec::new();
+
+    let saju_ausp_count = saju.report.spirit_markers.auspicious.len();
+    let vedic_yoga_count = vedic
+        .report
+        .yogas
+        .iter()
+        .filter(|y| matches!(y.quality, YogaQuality::VeryHigh))
+        .count();
+    if saju_ausp_count >= 2 && vedic_yoga_count >= 1 {
+        items.push(crate::dto::QuantumSynergyItem {
+            title: "동서양 귀인/요가 조화 (Noble Synergy)".to_string(),
+            engines: vec!["Saju".to_string(), "Vedic".to_string()],
+            score_delta: 12.0,
+            is_positive: true,
+            description: "사주 원국의 길신과 베딕 점성학 최상급 요가가 교차 협력하여 강력한 천운 형성을 입증합니다.".to_string(),
+        });
+    }
+
+    if let (Some(w), Some(z)) = (western, zwds) {
+        if !w.result.aspect_patterns.is_empty() && !z.chart.destiny_patterns.is_empty() {
+            items.push(crate::dto::QuantumSynergyItem {
+                title: "서양 기하학 & 자미두수 격국 공명 (Geometric Resonance)".to_string(),
+                engines: vec!["Western".to_string(), "ZWDS".to_string()],
+                score_delta: 15.0,
+                is_positive: true,
+                description: "서양 점성학의 아스펙트 다이어그램과 자미두수 12궁 성반 주성 격국이 상호 공명하고 있습니다.".to_string(),
+            });
+        }
+    }
+
+    if saju
+        .vulnerability_report
+        .as_ref()
+        .map(|v| v.total_crashes)
+        .unwrap_or(0)
+        > 20
+    {
+        items.push(crate::dto::QuantumSynergyItem {
+            title: "운명 변곡점 충돌 경보 (Collision Risk Warning)".to_string(),
+            engines: vec!["Saju VM".to_string()],
+            score_delta: -10.0,
+            is_positive: false,
+            description: "100년 생애 경로 에뮬레이션 과정에서 시기별 충/형 변곡점이 감지되어 신중한 관리가 필요합니다.".to_string(),
+        });
+    }
+
+    items
+}
+
+fn compute_8d_domain_radar(
+    saju: &SajuAnalysisOutput,
+    vedic: &VedicAnalysisOutput,
+    western: Option<&crate::dto::WesternAnalysisOutput>,
+    zwds: Option<&crate::dto::ZwdsAnalysisOutput>,
+) -> Vec<crate::dto::DomainRadarTier> {
+    let mut domains = Vec::new();
+    let saju_str = saju.report.strength.strength_score.abs().min(50.0) * 2.0;
+
+    let domain_defs = [
+        ("self_health", "자아·건강 (Self & Health)", 1u8, 0.15),
+        ("wealth_asset", "재물·자산 (Wealth & Asset)", 2u8, 0.15),
+        ("career_honor", "직업·명예 (Career & Honor)", 10u8, 0.15),
+        (
+            "knowledge_wisdom",
+            "학문·지혜 (Knowledge & Wisdom)",
+            9u8,
+            0.10,
+        ),
+        (
+            "relationship_marriage",
+            "애정·결혼 (Relationship & Marriage)",
+            7u8,
+            0.12,
+        ),
+        (
+            "lineage_descendants",
+            "자녀·가문 (Lineage & Descendants)",
+            5u8,
+            0.10,
+        ),
+        (
+            "network_social",
+            "인맥·사회 (Network & Influence)",
+            11u8,
+            0.11,
+        ),
+        (
+            "spirituality_intuition",
+            "영성·직관 (Spirituality & Intuition)",
+            12u8,
+            0.12,
+        ),
+    ];
+
+    for (key, name, house_num, weight) in domain_defs {
+        let v_h = vedic
+            .report
+            .house_summary
+            .iter()
+            .find(|h| h.house == house_num);
+        let base_score = match v_h.map(|h| h.rating.as_str()).unwrap_or("Average") {
+            "Excellent" => 92.0,
+            "Strong" => 80.0,
+            "Average" => 65.0,
+            "Weak" => 48.0,
+            _ => 35.0,
+        };
+
+        let w_bonus = western
+            .map(|w| (w.result.planets.len() as f32 * 2.0).min(10.0))
+            .unwrap_or(5.0);
+        let z_bonus = zwds
+            .map(|z| (z.chart.destiny_patterns.len() as f32 * 3.0).min(10.0))
+            .unwrap_or(4.0);
+
+        let final_score =
+            (base_score * 0.6 + saju_str * 0.2 + (w_bonus + z_bonus) * 1.5).clamp(20.0, 99.0);
+        let tier = get_tier_from_score(final_score).grade;
+
+        domains.push(crate::dto::DomainRadarTier {
+            domain_key: key.to_string(),
+            domain_name: name.to_string(),
+            score: final_score.round(),
+            tier,
+            key_factors: vec![
+                format!(
+                    "베딕 {}하우스 평점: {}",
+                    house_num,
+                    v_h.map(|h| h.rating.as_str()).unwrap_or("N/A")
+                ),
+                format!("동양 오행 가중치: {:.1}%", weight * 100.0),
+            ],
+        });
+    }
+
+    domains
+}
+
+fn compute_temporal_tier_trajectory(
+    saju: &SajuAnalysisOutput,
+    _vedic: &VedicAnalysisOutput,
+) -> Vec<crate::dto::TemporalTierPoint> {
+    let mut trajectory = Vec::new();
+    let frames = &saju.report.simulation_frames;
+
+    if !frames.is_empty() {
+        for frame in frames.iter().step_by(10) {
+            let grade = get_tier_from_score(frame.score).grade;
+            let note = if frame.score >= 80.0 {
+                "최상급 대운 도래 시기 (Apex Era)"
+            } else if frame.score >= 60.0 {
+                "안정성 및 성취 누적 시기 (Growth Era)"
+            } else {
+                "내면 축적 및 인고 시기 (Restoration Era)"
+            };
+            trajectory.push(crate::dto::TemporalTierPoint {
+                age: frame.age,
+                score: frame.score,
+                tier_grade: grade,
+                note: note.to_string(),
+            });
+        }
+    } else {
+        for age in (10..=80).step_by(10) {
+            trajectory.push(crate::dto::TemporalTierPoint {
+                age,
+                score: 65.0,
+                tier_grade: "B+".to_string(),
+                note: "안정성 연산 추정 시기".to_string(),
+            });
+        }
+    }
+
+    trajectory
 }
