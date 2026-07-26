@@ -108,15 +108,14 @@ pub fn BirthForm() -> Element {
 
     rsx! {
         div { class: "glass-premium rounded-2xl p-4 sm:p-5 flex flex-col gap-4 border border-white/5",
-
-            // Profile Row
-            div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-white/5",
+            // Profile management
+            div { class: "grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-b border-white/5 pb-3",
                 div { class: "flex flex-col gap-1.5 min-w-0",
                     label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormSavedProfiles)}" }
                     select {
-                        class: "bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus-glow transition-all w-full cursor-pointer",
+                        class: "w-full bg-white/5 border border-white/10 rounded-xl px-3 min-h-[44px] py-2.5 text-sm text-slate-200 focus-glow transition-all outline-none cursor-pointer",
                         onchange: on_select_profile,
-                        option { value: "", class: "bg-brand-950 text-slate-300", "{t(locale, TK::FormLoadProfile)}" }
+                        option { value: "", class: "bg-brand-950 text-slate-400", "-- {t(locale, TK::FormLoadProfile)} --" }
                         {profiles.read().iter().map(|p| rsx! {
                             option { value: "{p.id}", class: "bg-brand-950 text-slate-300", "{p.name}" }
                         })}
@@ -126,166 +125,177 @@ pub fn BirthForm() -> Element {
                     div { class: "flex flex-col gap-1.5 flex-1 min-w-0",
                         label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormSaveProfile)}" }
                         input {
-                            class: "w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus-glow transition-all",
+                            class: "w-full bg-white/5 border border-white/10 rounded-xl px-3 min-h-[44px] py-2 text-sm text-slate-200 focus-glow transition-all",
                             placeholder: "{t(locale, TK::FormProfileNamePlaceholder)}",
                             value: "{new_profile_name}",
                             oninput: move |evt| new_profile_name.set(evt.value()),
                         }
                     }
                     button {
-                        class: "shrink-0 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-violet-950/20 active:scale-95 cursor-pointer",
+                        class: "shrink-0 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-semibold px-4 min-h-[44px] rounded-xl transition-all shadow-md shadow-violet-950/20 active:scale-95 cursor-pointer flex items-center justify-center",
                         onclick: on_save_profile,
                         "{t(locale, TK::FormSaveBtn)}"
                     }
                 }
             }
 
-            // Input Row
-            div { class: "flex flex-wrap gap-2.5 sm:gap-3.5 items-end",
-                // Year
-                div { class: "flex flex-col gap-1.5 flex-1 sm:flex-initial",
-                    label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormYear)}" }
-                    input {
-                        class: "w-full sm:w-24 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left",
-                        r#type: "number", min: "1900", max: "2100",
-                        value: "{state.form.read().year}",
-                        oninput: move |evt| {
-                            if let Ok(v) = evt.value().parse::<i32>() { state.form.write().year = v; }
-                        },
-                    }
-                }
-                // Month
-                div { class: "flex flex-col gap-1.5 flex-1 sm:flex-initial",
-                    label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormMonth)}" }
-                    input {
-                        class: "w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left",
-                        r#type: "number", min: "1", max: "12",
-                        value: "{state.form.read().month}",
-                        oninput: move |evt| {
-                            if let Ok(v) = evt.value().parse::<u32>() { state.form.write().month = v; }
-                        },
-                    }
-                }
-                // Day
-                div { class: "flex flex-col gap-1.5 flex-1 sm:flex-initial",
-                    label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormDay)}" }
-                    input {
-                        class: "w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left",
-                        r#type: "number", min: "1", max: "31",
-                        value: "{state.form.read().day}",
-                        oninput: move |evt| {
-                            if let Ok(v) = evt.value().parse::<u32>() { state.form.write().day = v; }
-                        },
-                    }
-                }
-                // Hour
-                div { class: "flex flex-col gap-1.5 flex-1 sm:flex-initial",
-                    label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormHour)}" }
-                    input {
-                        class: "w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left",
-                        r#type: "number", min: "0", max: "23",
-                        value: "{state.form.read().hour}",
-                        oninput: move |evt| {
-                            if let Ok(v) = evt.value().parse::<u32>() { state.form.write().hour = v; }
-                        },
-                    }
-                }
-                // Minute
-                div { class: "flex flex-col gap-1.5 flex-1 sm:flex-initial",
-                    label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormMinute)}" }
-                    input {
-                        class: "w-full sm:w-16 bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-200 focus-glow transition-all text-center sm:text-left",
-                        r#type: "number", min: "0", max: "59",
-                        value: "{state.form.read().minute}",
-                        oninput: move |evt| {
-                            if let Ok(v) = evt.value().parse::<u32>() { state.form.write().minute = v; }
-                        },
-                    }
-                }
-                // Birthplace (text search)
-                div { class: "flex flex-col gap-1.5 min-w-0 relative w-full sm:w-auto flex-1 sm:flex-initial",
-                    label { class: "text-xs text-slate-400 font-semibold tracking-wide",
-                        "{t(locale, TK::FormBirthplace)}"
-                    }
-                    div { class: "flex gap-1.5",
+            // Input Row (Responsive Grid for Mobile)
+            div { class: "space-y-3",
+                div { class: "grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 items-end",
+                    // Year
+                    div { class: "flex flex-col gap-1.5 col-span-1",
+                        label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormYear)}" }
                         input {
-                            class: "w-full sm:w-44 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-200 focus-glow transition-all",
-                            placeholder: "{t(locale, TK::FormCityPlaceholder)}",
-                            value: "{city_input}",
-                            oninput: move |evt| city_input.set(evt.value()),
-                            onkeydown: on_city_keydown,
-                        }
-                        button {
-                            class: "bg-white/10 hover:bg-white/15 active:scale-95 text-slate-200 text-sm px-3 py-2 rounded-xl transition-all cursor-pointer border border-white/5 shrink-0",
-                            onclick: on_city_geocode,
-                            "🔍"
+                            class: "w-full bg-white/5 border border-white/10 rounded-xl px-2.5 min-h-[44px] text-sm text-slate-200 focus-glow transition-all text-center font-mono font-semibold",
+                            r#type: "number", min: "1900", max: "2100",
+                            value: "{state.form.read().year}",
+                            oninput: move |evt| {
+                                if let Ok(v) = evt.value().parse::<i32>() { state.form.write().year = v; }
+                            },
                         }
                     }
-                    if !search_results.read().is_empty() {
-                        div { class: "absolute top-full left-0 mt-1.5 w-full sm:w-72 bg-[#0e0f22]/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden",
-                            {search_results.read().iter().map(|result| {
-                                let r = result.clone();
-                                let display = if let Some(ko) = &r.name_ko {
-                                    format!("{} ({}), {} - {}", ko, r.name, r.country, r.tz)
-                                } else {
-                                    format!("{}, {} - {}", r.name, r.country, r.tz)
-                                };
-                                rsx! {
-                                    div {
-                                        class: "px-3.5 py-3 text-xs text-slate-300 hover:bg-violet-600/30 hover:text-violet-200 border-b border-white/5 last:border-0 cursor-pointer transition-colors truncate",
-                                        onclick: move |_| select_city(r.clone()),
-                                        "{display}"
-                                    }
-                                }
-                            })}
+                    // Month
+                    div { class: "flex flex-col gap-1.5 col-span-1",
+                        label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormMonth)}" }
+                        input {
+                            class: "w-full bg-white/5 border border-white/10 rounded-xl px-2.5 min-h-[44px] text-sm text-slate-200 focus-glow transition-all text-center font-mono font-semibold",
+                            r#type: "number", min: "1", max: "12",
+                            value: "{state.form.read().month}",
+                            oninput: move |evt| {
+                                if let Ok(v) = evt.value().parse::<u32>() { state.form.write().month = v; }
+                            },
                         }
                     }
-                    // Geocoding result / coordinate display
-                    div { class: "text-[10px] text-slate-500 mt-0.5 tracking-wider font-semibold",
-                        if geo_status.read().is_empty() {
-                            "📍 {lat_display:.4}°N, {lon_display:.4}°E"
-                        } else {
-                            "{geo_status}"
+                    // Day
+                    div { class: "flex flex-col gap-1.5 col-span-1",
+                        label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormDay)}" }
+                        input {
+                            class: "w-full bg-white/5 border border-white/10 rounded-xl px-2.5 min-h-[44px] text-sm text-slate-200 focus-glow transition-all text-center font-mono font-semibold",
+                            r#type: "number", min: "1", max: "31",
+                            value: "{state.form.read().day}",
+                            oninput: move |evt| {
+                                if let Ok(v) = evt.value().parse::<u32>() { state.form.write().day = v; }
+                            },
+                        }
+                    }
+                    // Hour
+                    div { class: "flex flex-col gap-1.5 col-span-1 sm:col-span-1",
+                        label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormHour)}" }
+                        input {
+                            class: "w-full bg-white/5 border border-white/10 rounded-xl px-2.5 min-h-[44px] text-sm text-slate-200 focus-glow transition-all text-center font-mono font-semibold",
+                            r#type: "number", min: "0", max: "23",
+                            value: "{state.form.read().hour}",
+                            oninput: move |evt| {
+                                if let Ok(v) = evt.value().parse::<u32>() { state.form.write().hour = v; }
+                            },
+                        }
+                    }
+                    // Minute
+                    div { class: "flex flex-col gap-1.5 col-span-1 sm:col-span-1",
+                        label { class: "text-xs text-slate-400 font-semibold tracking-wide", "{t(locale, TK::FormMinute)}" }
+                        input {
+                            class: "w-full bg-white/5 border border-white/10 rounded-xl px-2.5 min-h-[44px] text-sm text-slate-200 focus-glow transition-all text-center font-mono font-semibold",
+                            r#type: "number", min: "0", max: "59",
+                            value: "{state.form.read().minute}",
+                            oninput: move |evt| {
+                                if let Ok(v) = evt.value().parse::<u32>() { state.form.write().minute = v; }
+                            },
                         }
                     }
                 }
 
-                // Form Checkboxes Section
-                div { class: "flex items-center gap-3 sm:gap-4 flex-wrap pt-1 min-h-[36px]",
-                    // Lunar calendar checkbox
-                    div { class: "flex items-center gap-2",
-                        input {
-                            r#type: "checkbox", id: "is_lunar",
-                            class: "w-4 h-4 rounded border-white/10 bg-white/5 accent-violet-500 cursor-pointer",
-                            checked: "{state.form.read().is_lunar}",
-                            onchange: move |evt| state.form.write().is_lunar = evt.value() == "true"
+                // Birthplace & Checkbox Row
+                div { class: "grid grid-cols-1 md:grid-cols-2 gap-3 items-end pt-1",
+                    // Birthplace (text search)
+                    div { class: "flex flex-col gap-1.5 relative w-full",
+                        label { class: "text-xs text-slate-400 font-semibold tracking-wide",
+                            "{t(locale, TK::FormBirthplace)}"
                         }
-                        label { r#for: "is_lunar", class: "text-sm text-slate-300 select-none cursor-pointer whitespace-nowrap hover:text-slate-200 transition-colors",
-                            "{t(locale, TK::FormLunar)}"
+                        div { class: "flex gap-1.5",
+                            input {
+                                class: "w-full bg-white/5 border border-white/10 rounded-xl px-3 min-h-[44px] text-sm text-slate-200 focus-glow transition-all",
+                                placeholder: "{t(locale, TK::FormCityPlaceholder)}",
+                                value: "{city_input}",
+                                oninput: move |evt| city_input.set(evt.value()),
+                                onkeydown: on_city_keydown,
+                            }
+                            button {
+                                class: "bg-white/10 hover:bg-white/15 active:scale-95 text-slate-200 text-sm px-3.5 min-h-[44px] rounded-xl transition-all cursor-pointer border border-white/5 shrink-0 flex items-center justify-center",
+                                onclick: on_city_geocode,
+                                "🔍"
+                            }
+                        }
+                        if !search_results.read().is_empty() {
+                            div { class: "absolute top-full left-0 mt-1.5 w-full bg-[#0e0f22]/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur-2xl z-50 overflow-hidden max-h-60 overflow-y-auto",
+                                {search_results.read().iter().map(|result| {
+                                    let r = result.clone();
+                                    let display = if let Some(ko) = &r.name_ko {
+                                        format!("{} ({}), {} - {}", ko, r.name, r.country, r.tz)
+                                    } else {
+                                        format!("{}, {} - {}", r.name, r.country, r.tz)
+                                    };
+                                    rsx! {
+                                        div {
+                                            class: "px-3.5 py-3 text-xs text-slate-300 hover:bg-violet-600/30 hover:text-violet-200 border-b border-white/5 last:border-0 cursor-pointer transition-colors truncate",
+                                            onclick: move |_| select_city(r.clone()),
+                                            "{display}"
+                                        }
+                                    }
+                                })}
+                            }
+                        }
+                        div { class: "text-[10px] text-slate-500 tracking-wider font-semibold",
+                            if geo_status.read().is_empty() {
+                                "📍 {lat_display:.4}°N, {lon_display:.4}°E"
+                            } else {
+                                "{geo_status}"
+                            }
                         }
                     }
-                    // Male checkbox
-                    div { class: "flex items-center gap-2",
-                        input {
-                            r#type: "checkbox", id: "is_male",
-                            class: "w-4 h-4 rounded border-white/10 bg-white/5 accent-violet-500 cursor-pointer",
-                            checked: "{state.form.read().is_male}",
-                            onchange: move |evt| state.form.write().is_male = evt.value() == "true"
+
+                    // Form Checkboxes Section (Touch-friendly Pill Toggles)
+                    div { class: "grid grid-cols-3 gap-2 min-h-[44px]",
+                        // Lunar calendar toggle
+                        div {
+                            class: if state.form.read().is_lunar {
+                                "flex items-center justify-center gap-1.5 p-2 rounded-xl border border-violet-500/40 bg-violet-600/20 text-violet-200 font-bold text-xs cursor-pointer active:scale-95 transition-all select-none min-h-[44px]"
+                            } else {
+                                "flex items-center justify-center gap-1.5 p-2 rounded-xl border border-white/10 bg-white/5 text-slate-400 text-xs cursor-pointer hover:bg-white/10 active:scale-95 transition-all select-none min-h-[44px]"
+                            },
+                            onclick: move |_| {
+                                let val = state.form.read().is_lunar;
+                                state.form.write().is_lunar = !val;
+                            },
+                            span { if state.form.read().is_lunar { "🌙" } else { "☀️" } }
+                            span { "{t(locale, TK::FormLunar)}" }
                         }
-                        label { r#for: "is_male", class: "text-sm text-slate-300 select-none cursor-pointer whitespace-nowrap hover:text-slate-200 transition-colors",
-                            "{t(locale, TK::FormMale)}"
+                        // Male/Female toggle
+                        div {
+                            class: if state.form.read().is_male {
+                                "flex items-center justify-center gap-1.5 p-2 rounded-xl border border-indigo-500/40 bg-indigo-600/20 text-indigo-200 font-bold text-xs cursor-pointer active:scale-95 transition-all select-none min-h-[44px]"
+                            } else {
+                                "flex items-center justify-center gap-1.5 p-2 rounded-xl border border-pink-500/40 bg-pink-600/20 text-pink-200 font-bold text-xs cursor-pointer active:scale-95 transition-all select-none min-h-[44px]"
+                            },
+                            onclick: move |_| {
+                                let val = state.form.read().is_male;
+                                state.form.write().is_male = !val;
+                            },
+                            span { if state.form.read().is_male { "♂️" } else { "♀️" } }
+                            span { "{t(locale, TK::FormMale)}" }
                         }
-                    }
-                    // Night Rat Hour checkbox
-                    div { class: "flex items-center gap-2",
-                        input {
-                            r#type: "checkbox", id: "use_night_rat_hour",
-                            class: "w-4 h-4 rounded border-white/10 bg-white/5 accent-violet-500 cursor-pointer",
-                            checked: "{state.form.read().use_night_rat_hour}",
-                            onchange: move |evt| state.form.write().use_night_rat_hour = evt.value() == "true"
-                        }
-                        label { r#for: "use_night_rat_hour", class: "text-sm text-slate-300 select-none cursor-pointer whitespace-nowrap hover:text-slate-200 transition-colors",
-                            "{t(locale, TK::FormUseNightRatHour)}"
+                        // Night Rat Hour toggle
+                        div {
+                            class: if state.form.read().use_night_rat_hour {
+                                "flex items-center justify-center gap-1.5 p-2 rounded-xl border border-amber-500/40 bg-amber-600/20 text-amber-200 font-bold text-xs cursor-pointer active:scale-95 transition-all select-none min-h-[44px]"
+                            } else {
+                                "flex items-center justify-center gap-1.5 p-2 rounded-xl border border-white/10 bg-white/5 text-slate-400 text-xs cursor-pointer hover:bg-white/10 active:scale-95 transition-all select-none min-h-[44px]"
+                            },
+                            onclick: move |_| {
+                                let val = state.form.read().use_night_rat_hour;
+                                state.form.write().use_night_rat_hour = !val;
+                            },
+                            span { "🌌" }
+                            span { "{t(locale, TK::FormUseNightRatHour)}" }
                         }
                     }
                 }

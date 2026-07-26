@@ -469,18 +469,18 @@ fn MobileLink(
     let is_active = route == to;
 
     let active_class = if is_active {
-        "bg-violet-600/20 text-violet-300 border-violet-500/40 font-bold"
+        "bg-violet-600/25 text-violet-200 border-violet-500/50 font-bold shadow-md shadow-violet-950/40"
     } else {
-        "bg-white/5 text-slate-300 hover:bg-white/10 border-white/5"
+        "bg-white/5 text-slate-300 hover:bg-white/10 border-white/5 active:bg-white/15"
     };
 
     rsx! {
         Link {
             to: to,
-            class: "flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-xs transition-all cursor-pointer {active_class}",
+            class: "flex items-center gap-2.5 px-3.5 py-3 rounded-xl border text-xs transition-all active:scale-95 cursor-pointer min-h-[44px] touch-manipulation {active_class}",
             onclick: move |_| close_drawer.call(()),
             span { class: "text-base", "{icon}" }
-            span { class: "truncate", "{label}" }
+            span { class: "truncate font-medium", "{label}" }
         }
     }
 }
@@ -491,17 +491,17 @@ fn BottomNavLink(to: Route, icon: &'static str, label: &'static str) -> Element 
     let is_active = route == to;
 
     let active_class = if is_active {
-        "text-violet-300 font-bold"
+        "text-violet-300 font-bold bg-violet-600/15 border-violet-500/30 scale-105"
     } else {
-        "text-slate-400 hover:text-slate-200"
+        "text-slate-400 hover:text-slate-200 border-transparent active:bg-white/5"
     };
 
     rsx! {
         Link {
             to: to,
-            class: "flex flex-col items-center py-1 px-3 rounded-xl transition-colors cursor-pointer {active_class}",
+            class: "flex flex-col items-center justify-center py-1.5 px-3.5 rounded-xl border transition-all active:scale-95 cursor-pointer touch-manipulation {active_class}",
             span { class: "text-lg leading-tight", "{icon}" }
-            span { class: "text-[10px] font-medium mt-0.5", "{label}" }
+            span { class: "text-[10px] font-semibold mt-0.5 tracking-tight", "{label}" }
         }
     }
 }
