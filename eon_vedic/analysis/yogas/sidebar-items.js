@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["YogaCondition","YogaQuality","YogaType"],"struct":["YogaEngine","YogaResult","YogaRule"]};
+window.SIDEBAR_ITEMS = {"enum":["YogaCondition","YogaQuality","YogaType"],"struct":["YogaActivationPeriod","YogaEngine","YogaResult","YogaRule"]};
