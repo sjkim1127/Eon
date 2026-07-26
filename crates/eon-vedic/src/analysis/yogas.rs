@@ -47,6 +47,16 @@ pub enum YogaType {
     NabhasaDvisvabhava, // Dvisvabhava 사인만 (Gem/Vir/Sag/Pis): 유연, 이중성
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct YogaActivationPeriod {
+    pub mahadasha_lord: VedicPlanet,
+    pub antardasha_lord: Option<VedicPlanet>,
+    pub start_year: i32,
+    pub end_year: i32,
+    pub period_summary: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct YogaResult {
@@ -56,6 +66,8 @@ pub struct YogaResult {
     pub planets_involved: Vec<VedicPlanet>,
     pub quality: YogaQuality,
     pub strength_percentage: f64,
+    #[serde(default)]
+    pub activation_periods: Vec<YogaActivationPeriod>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -246,6 +258,7 @@ impl YogaEngine {
                     planets_involved: planets,
                     quality,
                     strength_percentage,
+                    activation_periods: Vec::new(),
                 });
             }
         }
@@ -257,6 +270,54 @@ impl YogaEngine {
         results.extend(Self::evaluate_nabhasa_yogas(chart));
 
         results
+    }
+
+    /// Vimshottari Dasha 대운/소운 타임라인을 기반으로 요가 발현 시기를 자동 산출하여 첨부합니다.
+    pub fn attach_dasha_activations(
+        chart: &VedicChart,
+        yogas: &mut [YogaResult],
+        birth_time: chrono::DateTime<chrono::Utc>,
+    ) {
+        use chrono::Datelike;
+        let moon_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon);
+        if let Some(m) = moon_pos {
+            let timeline = crate::analysis::dasha::VimshottariDasha::calculate_timeline(
+                birth_time,
+                m.sidereal_deg,
+                2, // Maha + Antar
+            );
+
+            for yoga in yogas.iter_mut() {
+                if yoga.planets_involved.is_empty() {
+                    continue;
+                }
+                let mut activations = Vec::new();
+                for maha in &timeline {
+                    let maha_involved = yoga.planets_involved.contains(&maha.lord);
+                    for antar in &maha.sub_dashas {
+                        let antar_involved = yoga.planets_involved.contains(&antar.lord);
+                        if maha_involved || antar_involved {
+                            let summary = format!(
+                                "{:?} 대운 / {:?} 소운 ({:04}~{:04})",
+                                maha.lord,
+                                antar.lord,
+                                antar.start_time.year(),
+                                antar.end_time.year()
+                            );
+                            activations.push(YogaActivationPeriod {
+                                mahadasha_lord: maha.lord,
+                                antardasha_lord: Some(antar.lord),
+                                start_year: antar.start_time.year(),
+                                end_year: antar.end_time.year(),
+                                period_summary: summary,
+                            });
+                        }
+                    }
+                }
+                activations.truncate(6);
+                yoga.activation_periods = activations;
+            }
+        }
     }
 
     fn get_rules() -> Vec<YogaRule> {
@@ -527,6 +588,7 @@ impl YogaEngine {
                                 planets_involved: planets,
                                 quality,
                                 strength_percentage,
+                                activation_periods: Vec::new(),
                             });
                         }
                     }
@@ -1259,6 +1321,7 @@ impl YogaEngine {
                 planets_involved: all_planets.clone(),
                 quality: sankhya_quality,
                 strength_percentage: sankhya_strength,
+                activation_periods: Vec::new(),
             });
         }
 
@@ -1272,6 +1335,7 @@ impl YogaEngine {
                 planets_involved: all_planets.clone(),
                 quality: YogaQuality::High,
                 strength_percentage,
+                activation_periods: Vec::new(),
             });
         } else if Self::all_planets_in_sign_quality(chart, 1) {
             results.push(YogaResult {
@@ -1281,6 +1345,7 @@ impl YogaEngine {
                 planets_involved: all_planets.clone(),
                 quality: YogaQuality::High,
                 strength_percentage,
+                activation_periods: Vec::new(),
             });
         } else if Self::all_planets_in_sign_quality(chart, 2) {
             results.push(YogaResult {
@@ -1290,6 +1355,7 @@ impl YogaEngine {
                 planets_involved: all_planets,
                 quality: YogaQuality::High,
                 strength_percentage,
+                activation_periods: Vec::new(),
             });
         }
 

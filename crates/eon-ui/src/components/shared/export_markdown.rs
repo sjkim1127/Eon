@@ -2227,10 +2227,26 @@ fn format_vedic_inner(data: &VedicAnalysisOutput, locale: Locale) -> String {
 
     s.push_str(&format!("### {}\n\n", yogas_title));
     if !data.report.yogas.is_empty() {
-        s.push_str(&format!("| {} | {} |\n", yoga_name_col, yoga_desc_col));
-        s.push_str("| --- | --- |\n");
+        s.push_str(&format!(
+            "| {} | {} | Dasha 발현 시기 |\n",
+            yoga_name_col, yoga_desc_col
+        ));
+        s.push_str("| --- | --- | --- |\n");
         for y in &data.report.yogas {
-            s.push_str(&format!("| **{}** | {} |\n", y.name, y.description));
+            let act_str = if y.activation_periods.is_empty() {
+                "—".to_string()
+            } else {
+                y.activation_periods
+                    .iter()
+                    .take(2)
+                    .map(|a| a.period_summary.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            s.push_str(&format!(
+                "| **{}** | {} | `{}` |\n",
+                y.name, y.description, act_str
+            ));
         }
     } else {
         s.push_str("—\n");

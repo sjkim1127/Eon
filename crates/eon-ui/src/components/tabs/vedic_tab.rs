@@ -1678,6 +1678,15 @@ pub fn VedicTab() -> Element {
                                                                                             }
                                                                                         }
                                                                                         p { class: "text-[11px] text-slate-400 leading-relaxed", "{desc}" }
+                                                                                        if !y.activation_periods.is_empty() {
+                                                                                            div { class: "pt-1 border-t border-slate-800/40 flex flex-wrap gap-1",
+                                                                                                {y.activation_periods.iter().take(2).map(|act| rsx! {
+                                                                                                    span { class: "text-[9px] font-semibold text-violet-300 bg-violet-950/50 border border-violet-800/40 px-1.5 py-0.5 rounded",
+                                                                                                        "⏳ {act.period_summary}"
+                                                                                                    }
+                                                                                                })}
+                                                                                            }
+                                                                                        }
                                                                                     }
                                                                                 }
                                                                             })}

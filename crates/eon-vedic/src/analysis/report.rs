@@ -213,8 +213,9 @@ impl VedicAnalysisReport {
             "Nakshatra info unavailable".to_string()
         };
 
-        // Yoga 계산
-        let yogas = YogaEngine::check_yogas(chart);
+        // Yoga 계산 & Vimshottari Dasha 발현 시기 연동
+        let mut yogas = YogaEngine::check_yogas(chart);
+        YogaEngine::attach_dasha_activations(chart, &mut yogas, birth_time);
 
         // Jaimini Integration
         let al = chart
