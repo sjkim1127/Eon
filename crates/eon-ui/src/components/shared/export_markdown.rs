@@ -5367,10 +5367,10 @@ pub fn export_tier_to_markdown(
 ) -> String {
     let mut s = String::new();
     let title = match locale {
-        Locale::Ko => "🏆 EON - 운명 티어 분석 보고서",
-        Locale::En => "🏆 EON - Destiny Tier Analysis Report",
-        Locale::Zh => "🏆 EON - 命运阶级分析报告",
-        Locale::Ru => "🏆 EON - Отчет по уровню судьбы",
+        Locale::Ko => "🏆 EON - Omni-Engine Destiny Tier 4.0 융합 리포트",
+        Locale::En => "🏆 EON - Omni-Engine Destiny Tier 4.0 Report",
+        Locale::Zh => "🏆 EON - 全引擎融合命运阶级 4.0 报告",
+        Locale::Ru => "🏆 EON - Отчет по уровню судьбы (Omni 4.0)",
     };
     s.push_str(&format!("# {}\n\n", title));
     s.push_str(&format_global_header(form, locale));

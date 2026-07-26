@@ -39,6 +39,12 @@ pub fn analyze_destiny_tier(
     Ok(crate::services::tier::analyze(saju, vedic, transit))
 }
 
+pub fn analyze_destiny_tier_omni(
+    input: crate::dto::OmniDestinyTierInput,
+) -> Result<TierResult, ServiceError> {
+    Ok(crate::services::tier::analyze_omni(input))
+}
+
 pub fn analyze_iching(input: SajuAnalysisInput) -> Result<IChingAnalysisOutput, ServiceError> {
     let saju_res = analyze_saju(input.clone())?;
     let pillars = &saju_res.report.pillars;

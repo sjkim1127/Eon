@@ -38,8 +38,16 @@ pub fn TierTab() -> Element {
                     Some(false),
                 );
                 let vedic_input = VedicAnalysisInput::new(base_input.clone(), Some(false), None);
+                let western_input = eon_service::dto::WesternAnalysisInput::new(
+                    base_input.clone(),
+                    "Placidus".to_string(),
+                );
+                let zwds_input = eon_service::dto::ZwdsAnalysisInput::new(
+                    base_input.clone(),
+                    form.is_male,
+                    None,
+                );
 
-                // 병렬이 좋지만 간소화를 위해 순차 실행
                 let saju_res = match facade::analyze_saju(saju_input) {
                     Ok(r) => r,
                     Err(e) => {
@@ -58,7 +66,18 @@ pub fn TierTab() -> Element {
                     }
                 };
 
-                match facade::analyze_destiny_tier(saju_res, vedic_res, None) {
+                let western_res = facade::analyze_western(western_input).ok();
+                let zwds_res = facade::analyze_zwds(zwds_input).ok();
+
+                let omni_input = eon_service::dto::OmniDestinyTierInput {
+                    saju: saju_res,
+                    vedic: vedic_res,
+                    western: western_res,
+                    zwds: zwds_res,
+                    transit: None,
+                };
+
+                match facade::analyze_destiny_tier_omni(omni_input) {
                     Ok(res) => {
                         state.tier.write().data = Some(res);
                         state.tier.write().status = TaskStatus::Success;

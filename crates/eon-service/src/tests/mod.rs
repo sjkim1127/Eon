@@ -1,5 +1,7 @@
 pub mod contract;
 #[cfg(test)]
+mod destiny_tier_omni_tests;
+#[cfg(test)]
 mod tuning;
 
 #[cfg(test)]

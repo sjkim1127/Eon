@@ -453,6 +453,22 @@ pub struct DestinyTierRequest {
     pub transit: Option<TransitAnalysisOutput>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct OmniDestinyTierInput {
+    #[ts(type = "any")]
+    pub saju: SajuAnalysisOutput,
+    #[ts(type = "any")]
+    pub vedic: VedicAnalysisOutput,
+    #[ts(type = "any")]
+    pub western: Option<WesternAnalysisOutput>,
+    #[ts(type = "any")]
+    pub zwds: Option<ZwdsAnalysisOutput>,
+    #[ts(type = "any")]
+    pub transit: Option<TransitAnalysisOutput>,
+}
+
 impl TryFrom<SajuAnalysisRequest> for SajuAnalysisInput {
     type Error = ServiceError;
 
