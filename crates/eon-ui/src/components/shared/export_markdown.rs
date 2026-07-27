@@ -5002,6 +5002,110 @@ fn format_tier_inner(data: &TierResult, locale: Locale) -> String {
         s.push('\n');
     }
 
+    // Quantum Synergies (#4 Fix)
+    if !data.quantum_synergies.is_empty() {
+        let synergy_hdr = match locale {
+            Locale::Ko => "⚛️ 동서양 크로스 엔진 퀀텀 시너지 (Quantum Synergy)",
+            Locale::En => "⚛️ Quantum Cross-Engine Synergy",
+            Locale::Zh => "⚛️ 东西方跨引擎量子协同 (Quantum Synergy)",
+            Locale::Ru => "⚛️ Квантовая синергия восточных и западных систем",
+        };
+        s.push_str(&format!("#### {}\n\n", synergy_hdr));
+        for qs in &data.quantum_synergies {
+            let sign = if qs.is_positive { "+" } else { "" };
+            s.push_str(&format!(
+                "- **{}** ({}{:.1}pt): {}\n",
+                qs.title, sign, qs.score_delta, qs.description
+            ));
+        }
+        s.push('\n');
+    }
+
+    // 8D Domain Radar (#4 Fix)
+    if !data.domain_radar.is_empty() {
+        let (radar_hdr, domain_lbl, tier_lbl, score_lbl) = match locale {
+            Locale::Ko => (
+                "🌌 8대 다차원 인생 도메인 레이더 (8D Domain Radar)",
+                "도메인",
+                "티어",
+                "점수",
+            ),
+            Locale::En => (
+                "🌌 8D Dimensional Life Domain Radar",
+                "Domain",
+                "Tier",
+                "Score",
+            ),
+            Locale::Zh => (
+                "🌌 8维人生领域雷达 (8D Domain Radar)",
+                "领域",
+                "阶级",
+                "得分",
+            ),
+            Locale::Ru => ("🌌 8D Радар жизненных сфер", "Сфера", "Уровень", "Балл"),
+        };
+        s.push_str(&format!("#### {}\n\n", radar_hdr));
+        s.push_str(&format!(
+            "| {} | {} | {} |\n",
+            domain_lbl, tier_lbl, score_lbl
+        ));
+        s.push_str("| --- | --- | --- |\n");
+        for dr in &data.domain_radar {
+            s.push_str(&format!(
+                "| {} | **{}** | {:.1} |\n",
+                dr.domain_name, dr.tier, dr.score
+            ));
+        }
+        s.push('\n');
+    }
+
+    // Temporal Trajectory (#4 Fix)
+    if !data.tier_trajectory.is_empty() {
+        let (traj_hdr, age_lbl, grade_lbl, score_lbl, note_lbl) = match locale {
+            Locale::Ko => (
+                "📈 100년 생애 운명 티어 변동 궤적 (Temporal Trajectory)",
+                "나이",
+                "티어",
+                "점수",
+                "비고",
+            ),
+            Locale::En => (
+                "📈 100-Year Temporal Destiny Tier Trajectory",
+                "Age",
+                "Tier",
+                "Score",
+                "Notes",
+            ),
+            Locale::Zh => (
+                "📈 100年生命命运阶级轨迹 (Temporal Trajectory)",
+                "年龄",
+                "阶级",
+                "得分",
+                "备注",
+            ),
+            Locale::Ru => (
+                "📈 100-летняя траектория уровней судьбы",
+                "Возраст",
+                "Уровень",
+                "Балл",
+                "Заметки",
+            ),
+        };
+        s.push_str(&format!("#### {}\n\n", traj_hdr));
+        s.push_str(&format!(
+            "| {} | {} | {} | {} |\n",
+            age_lbl, grade_lbl, score_lbl, note_lbl
+        ));
+        s.push_str("| --- | --- | --- | --- |\n");
+        for tp in &data.tier_trajectory {
+            s.push_str(&format!(
+                "| {}세 | **{}** | {:.1} | {} |\n",
+                tp.age, tp.tier_grade, tp.score, tp.note
+            ));
+        }
+        s.push('\n');
+    }
+
     s
 }
 

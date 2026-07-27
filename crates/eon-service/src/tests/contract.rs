@@ -41,9 +41,9 @@ mod tests {
         let tier_res = facade::analyze_destiny_tier(saju_res, vedic_res, transit_res)
             .expect("Tier analysis failed");
 
-        // 3. Verify V3 Contract Fields (Manual Check Points)
-        assert_eq!(tier_res.tier_model_version, "3.0.0");
-        assert_eq!(tier_res.version, "v3_spread_model");
+        // 3. Verify Contract Fields (Manual Check Points)
+        assert_eq!(tier_res.tier_model_version, "5.1.0");
+        assert_eq!(tier_res.version, "v5.1_quantum_synergy_model");
 
         // Detailed components must exist and have 12 items
         assert_eq!(tier_res.detailed_components.len(), 12);
