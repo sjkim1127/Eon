@@ -38,7 +38,7 @@ jobs:
           components: rust-src
 
       - name: Install Dioxus CLI
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@v2.85.5
         with:
           tool: dioxus-cli@0.6.1
 
