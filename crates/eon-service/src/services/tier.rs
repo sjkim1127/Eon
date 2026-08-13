@@ -17,6 +17,8 @@ pub fn analyze(
         vedic,
         western: None,
         zwds: None,
+        human_design: None,
+        qimen: None,
         transit,
     };
     analyze_omni(omni_input)
@@ -27,6 +29,8 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
     let vedic = &input.vedic;
     let western = input.western.as_ref();
     let zwds = input.zwds.as_ref();
+    let human_design = input.human_design.as_ref();
+    let qimen = input.qimen.as_ref();
     let transit = input.transit.as_ref();
 
     let saju_res = compute_saju_score(saju);
@@ -39,11 +43,19 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
 
     let current_age = transit.map(|t| t.current_age).unwrap_or(30);
 
-    let detailed_components =
-        compute_omni_detailed_components(saju, vedic, western, zwds, transit, &transit_res);
+    let detailed_components = compute_omni_detailed_components(
+        saju,
+        vedic,
+        western,
+        zwds,
+        human_design,
+        qimen,
+        transit,
+        &transit_res,
+    );
 
-    // #1 Fix: Compute quantum synergies BEFORE raw score, then apply deltas
-    let quantum_synergies = compute_quantum_synergies(saju, vedic, western, zwds);
+    let quantum_synergies =
+        compute_quantum_synergies(saju, vedic, western, zwds, human_design, qimen);
     let component_raw: f32 = detailed_components.iter().map(|c| c.score * c.weight).sum();
     let synergy_delta: f32 = quantum_synergies.iter().map(|s| s.score_delta).sum();
     let destiny_raw_score = (component_raw + synergy_delta).clamp(0.0, 100.0);
@@ -64,6 +76,23 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
         strengths.push(format!(
             "자미두수 명궁 {}",
             z.chart.palaces[z.chart.soul_idx].name.korean()
+        ));
+    }
+    if let Some(hd) = human_design {
+        strengths.push(format!(
+            "휴먼디자인 Type: {}, Profile: {}",
+            hd.result.chart_type, hd.result.profile
+        ));
+    }
+    if let Some(qm) = qimen {
+        strengths.push(format!(
+            "기문둔갑 {}국 ({})",
+            qm.report.pan.ju_number,
+            if qm.report.pan.is_yin_ju {
+                "음둔"
+            } else {
+                "양둔"
+            }
         ));
     }
 
@@ -118,7 +147,7 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
     let potential_tier_score = spread_normalize(pot_res.score);
     let potential_tier = get_tier_from_score(potential_tier_score);
 
-    let domain_radar = compute_8d_domain_radar(saju, vedic, western, zwds);
+    let domain_radar = compute_8d_domain_radar(saju, vedic, western, zwds, human_design, qimen);
     let tier_trajectory = compute_temporal_tier_trajectory(saju, vedic);
 
     TierResult {
@@ -137,11 +166,11 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
         growth_gap: (potential_tier_score - destiny_tier_score).round(),
         risk_level: compute_risk_level(saju, vedic, &transit_res),
         profile,
-        version: "v5.1_quantum_synergy_model".to_string(),
+        version: "v6.0_full_7engine_model".to_string(),
         destiny_raw_score,
         destiny_tier_score,
         detailed_components,
-        tier_model_version: "5.1.0".to_string(),
+        tier_model_version: "6.0.0".to_string(),
         quantum_synergies,
         domain_radar,
         tier_trajectory,
@@ -153,6 +182,8 @@ fn compute_omni_detailed_components(
     vedic: &VedicAnalysisOutput,
     western: Option<&crate::dto::WesternAnalysisOutput>,
     zwds: Option<&crate::dto::ZwdsAnalysisOutput>,
+    human_design: Option<&crate::dto::HumanDesignAnalysisOutput>,
+    qimen: Option<&crate::dto::QimenAnalysisOutput>,
     _transit_opt: Option<&TransitAnalysisOutput>,
     transit_res: &ScoreResult,
 ) -> Vec<DestinyComponent> {
@@ -171,12 +202,12 @@ fn compute_omni_detailed_components(
         )],
     });
 
-    // 2. Element Flow (Weight: 0.08)
+    // 2. Element Flow (Weight: 0.07)
     components.push(DestinyComponent {
         key: "element_flow".to_string(),
         label: "오행 유통성".to_string(),
         score: saju.qi_topology.throughput * 100.0,
-        weight: 0.08,
+        weight: 0.07,
         reasons: vec![format!(
             "오행 흐름 효율: {:.1}%",
             saju.qi_topology.throughput * 100.0
@@ -200,14 +231,14 @@ fn compute_omni_detailed_components(
         reasons: vec![format!("격국: {:?}", saju.report.structure.structure)],
     });
 
-    // 4. Spirit Markers (Weight: 0.06)
+    // 4. Spirit Markers (Weight: 0.05)
     let spirit_score = (saju.report.spirit_markers.auspicious.len() as f32 * 20.0).min(100.0)
         - (saju.report.spirit_markers.inauspicious.len() as f32 * 10.0).max(0.0);
     components.push(DestinyComponent {
         key: "spirit_markers".to_string(),
         label: "사주 길흉신 분포".to_string(),
         score: spirit_score.clamp(0.0, 100.0),
-        weight: 0.06,
+        weight: 0.05,
         reasons: vec![format!(
             "길신 {}개, 흉신 {}개",
             saju.report.spirit_markers.auspicious.len(),
@@ -215,17 +246,17 @@ fn compute_omni_detailed_components(
         )],
     });
 
-    // 5. Vedic House Score (Weight: 0.10)
+    // 5. Vedic House Score (Weight: 0.09)
     let house_score = vedic.report.overall_strength_score as f32 / 6.0;
     components.push(DestinyComponent {
         key: "vedic_houses".to_string(),
         label: "베딕 12하우스 역량".to_string(),
         score: house_score.clamp(0.0, 100.0),
-        weight: 0.10,
+        weight: 0.09,
         reasons: vec![format!("하우스 평균 강도: {:.1}", house_score)],
     });
 
-    // 6. Vedic Yogas (Weight: 0.09)
+    // 6. Vedic Yogas (Weight: 0.08)
     let yoga_score = (vedic
         .report
         .yogas
@@ -238,7 +269,7 @@ fn compute_omni_detailed_components(
         key: "vedic_yogas".to_string(),
         label: "베딕 108대 요가".to_string(),
         score: yoga_score,
-        weight: 0.09,
+        weight: 0.08,
         reasons: vec![format!(
             "최상급 요가 {}개 감지",
             vedic
@@ -275,7 +306,7 @@ fn compute_omni_detailed_components(
         )],
     });
 
-    // 8. Western Dignities & Aspects (Weight: 0.10)
+    // 8. Western Dignities & Aspects (Weight: 0.09)
     let west_score = if let Some(w) = western {
         let pattern_bonus = w.result.aspect_patterns.len() as f32 * 15.0;
         let aspect_score = (w.result.aspects.len() as f32 * 2.0).min(50.0);
@@ -287,7 +318,7 @@ fn compute_omni_detailed_components(
         key: "western_astrology".to_string(),
         label: "서양 점성학 아스펙트 및 디그니티".to_string(),
         score: west_score,
-        weight: 0.10,
+        weight: 0.09,
         reasons: vec![if let Some(w) = western {
             format!(
                 "아스펙트 {}개, 패턴 {}개 감지",
@@ -299,7 +330,7 @@ fn compute_omni_detailed_components(
         }],
     });
 
-    // 9. ZWDS Pattern & Sihua (Weight: 0.10)
+    // 9. ZWDS Pattern & Sihua (Weight: 0.09)
     let zwds_score = if let Some(z) = zwds {
         let pat_score = (z.chart.destiny_patterns.len() as f32 * 20.0).min(60.0);
         let collision_penalty = z.chart.collisions.len() as f32 * 10.0;
@@ -311,7 +342,7 @@ fn compute_omni_detailed_components(
         key: "zwds_harmony".to_string(),
         label: "자미두수 격국 및 3중 사화 충국".to_string(),
         score: zwds_score,
-        weight: 0.10,
+        weight: 0.09,
         reasons: vec![if let Some(z) = zwds {
             format!(
                 "길흉 격국 {}개, 사화 충국 {}개",
@@ -323,17 +354,82 @@ fn compute_omni_detailed_components(
         }],
     });
 
-    // 10. Luck Cycle & Transits (Weight: 0.10)
+    // 10. Human Design Dynamics (Weight: 0.08)
+    let hd_score = if let Some(hd) = human_design {
+        let center_bonus = hd.result.defined_centers.len() as f32 * 10.0;
+        let channel_bonus = hd.result.active_channels.len() as f32 * 12.0;
+        (30.0 + center_bonus + channel_bonus).clamp(20.0, 100.0)
+    } else {
+        55.0
+    };
+    components.push(DestinyComponent {
+        key: "human_design_dynamics".to_string(),
+        label: "휴먼디자인 에너지 정의 및 채널".to_string(),
+        score: hd_score,
+        weight: 0.08,
+        reasons: vec![if let Some(hd) = human_design {
+            format!(
+                "정의 센터 {}개, 활성 채널 {}개, Type: {}",
+                hd.result.defined_centers.len(),
+                hd.result.active_channels.len(),
+                hd.result.chart_type
+            )
+        } else {
+            "기본 휴먼디자인 모듈 적용".to_string()
+        }],
+    });
+
+    // 11. Qimen Harmony (Weight: 0.07)
+    let qimen_score = if let Some(qm) = qimen {
+        let ju_base = (qm.report.pan.ju_number as f32 * 8.0).min(70.0);
+        let palace_bonus = (qm.report.pan.palaces.len() as f32 * 3.0).min(30.0);
+        (20.0 + ju_base + palace_bonus).clamp(20.0, 100.0)
+    } else {
+        55.0
+    };
+    components.push(DestinyComponent {
+        key: "qimen_harmony".to_string(),
+        label: "기문둔갑 9궁 & 3길문/8신 공명".to_string(),
+        score: qimen_score,
+        weight: 0.07,
+        reasons: vec![if let Some(qm) = qimen {
+            format!(
+                "기문둔갑 {}국 ({}), 직부: {:?}, 직사: {:?}",
+                qm.report.pan.ju_number,
+                if qm.report.pan.is_yin_ju {
+                    "음둔"
+                } else {
+                    "양둔"
+                },
+                qm.report
+                    .pan
+                    .value_chief_star
+                    .as_ref()
+                    .map(|s| format!("{:?}", s))
+                    .unwrap_or_default(),
+                qm.report
+                    .pan
+                    .value_envoy_door
+                    .as_ref()
+                    .map(|d| format!("{:?}", d))
+                    .unwrap_or_default()
+            )
+        } else {
+            "기본 기문둔갑 모듈 적용".to_string()
+        }],
+    });
+
+    // 12. Luck Cycle & Transits (Weight: 0.07)
     let luck_score = transit_res.score;
     components.push(DestinyComponent {
         key: "luck_cycle".to_string(),
         label: "현재 트랜짓 운세 흐름".to_string(),
         score: luck_score,
-        weight: 0.10,
+        weight: 0.07,
         reasons: vec![format!("트랜짓 종합 점수: {:.1}", luck_score)],
     });
 
-    // 11. Stability & System Safety (Weight: 0.07)
+    // 13. Stability & System Safety (Weight: 0.04)
     let risk_inv = 100.0
         - (saju
             .vulnerability_report
@@ -346,7 +442,7 @@ fn compute_omni_detailed_components(
         key: "stability".to_string(),
         label: "운명 안정성 및 붕괴 예방".to_string(),
         score: risk_inv,
-        weight: 0.07,
+        weight: 0.04,
         reasons: vec![format!(
             "취약점(Crash) 지수: {}",
             saju.vulnerability_report
@@ -356,7 +452,7 @@ fn compute_omni_detailed_components(
         )],
     });
 
-    // 12. Golden Time (Weight: 0.07)
+    // 14. Golden Time (Weight: 0.04)
     let golden_score = saju
         .report
         .golden_time
@@ -367,7 +463,7 @@ fn compute_omni_detailed_components(
         key: "golden_time".to_string(),
         label: "인생 골든타임 수치".to_string(),
         score: golden_score,
-        weight: 0.07,
+        weight: 0.04,
         reasons: vec![saju
             .report
             .golden_time
@@ -385,7 +481,16 @@ fn compute_detailed_components(
     _transit_opt: Option<&TransitAnalysisOutput>,
     transit_res: &ScoreResult,
 ) -> Vec<DestinyComponent> {
-    compute_omni_detailed_components(saju, vedic, None, None, _transit_opt, transit_res)
+    compute_omni_detailed_components(
+        saju,
+        vedic,
+        None,
+        None,
+        None,
+        None,
+        _transit_opt,
+        transit_res,
+    )
 }
 
 fn clamp_score(score: f32) -> f32 {
@@ -655,6 +760,8 @@ fn compute_quantum_synergies(
     vedic: &VedicAnalysisOutput,
     western: Option<&crate::dto::WesternAnalysisOutput>,
     zwds: Option<&crate::dto::ZwdsAnalysisOutput>,
+    human_design: Option<&crate::dto::HumanDesignAnalysisOutput>,
+    qimen: Option<&crate::dto::QimenAnalysisOutput>,
 ) -> Vec<crate::dto::QuantumSynergyItem> {
     let mut items = Vec::new();
 
@@ -687,6 +794,42 @@ fn compute_quantum_synergies(
         }
     }
 
+    if let (Some(hd), Some(qm)) = (human_design, qimen) {
+        if hd.result.defined_centers.len() >= 3 && qm.report.pan.ju_number > 0 {
+            items.push(crate::dto::QuantumSynergyItem {
+                title: "휴먼디자인 센터 & 기문둔갑 9궁 공명 (Quantum Energy Alignment)".to_string(),
+                engines: vec!["Human Design".to_string(), "QiMen".to_string()],
+                score_delta: 14.0,
+                is_positive: true,
+                description: "휴먼디자인 정의 센터의 에너지 흐름과 기문둔갑 9궁 길문 배치가 정합하여 천시지리를 형성합니다.".to_string(),
+            });
+        }
+    }
+
+    if saju_ausp_count >= 1
+        && vedic_yoga_count >= 1
+        && western
+            .map(|w| !w.result.aspects.is_empty())
+            .unwrap_or(false)
+        && zwds
+            .map(|z| !z.chart.destiny_patterns.is_empty())
+            .unwrap_or(false)
+        && human_design
+            .map(|hd| !hd.result.defined_centers.is_empty())
+            .unwrap_or(false)
+        && qimen
+            .map(|qm| !qm.report.pan.palaces.is_empty())
+            .unwrap_or(false)
+    {
+        items.push(crate::dto::QuantumSynergyItem {
+            title: "전 7대 운명 엔진 천운 중첩 (7-Engine Universal Harmony)".to_string(),
+            engines: vec!["Saju".to_string(), "Vedic".to_string(), "Western".to_string(), "ZWDS".to_string(), "HD".to_string(), "QiMen".to_string()],
+            score_delta: 20.0,
+            is_positive: true,
+            description: "사주, 베딕, 서양점성학, 자미두수, 휴먼디자인, 기문둔갑 전 7대 엔진의 천운 조화가 입증되어 대귀(大貴)의 이치에 달했습니다.".to_string(),
+        });
+    }
+
     if saju
         .vulnerability_report
         .as_ref()
@@ -711,11 +854,12 @@ fn compute_8d_domain_radar(
     vedic: &VedicAnalysisOutput,
     western: Option<&crate::dto::WesternAnalysisOutput>,
     zwds: Option<&crate::dto::ZwdsAnalysisOutput>,
+    human_design: Option<&crate::dto::HumanDesignAnalysisOutput>,
+    qimen: Option<&crate::dto::QimenAnalysisOutput>,
 ) -> Vec<crate::dto::DomainRadarTier> {
     let mut domains = Vec::new();
     let saju_str = saju.report.strength.strength_score.abs().min(50.0) * 2.0;
 
-    // #2 Fix: Each domain maps to specific vedic house(s) for per-domain differentiation
     let domain_defs: [(&str, &str, &[u8], f64); 8] = [
         ("self_health", "자아·건강 (Self & Health)", &[1, 6], 0.15),
         ("wealth_asset", "재물·자산 (Wealth & Asset)", &[2, 11], 0.15),
@@ -753,7 +897,6 @@ fn compute_8d_domain_radar(
     ];
 
     for (key, name, house_nums, weight) in domain_defs {
-        // Average vedic house ratings for this domain's relevant houses
         let mut house_scores: Vec<f32> = Vec::new();
         for &hn in house_nums {
             let v_h = vedic.report.house_summary.iter().find(|h| h.house == hn);
@@ -772,7 +915,6 @@ fn compute_8d_domain_radar(
             house_scores.iter().sum::<f32>() / house_scores.len() as f32
         };
 
-        // #2 Fix: Per-domain western bonus — count planets in relevant houses
         let w_bonus = western
             .map(|w| {
                 let relevant = w
@@ -785,7 +927,6 @@ fn compute_8d_domain_radar(
             })
             .unwrap_or(3.0);
 
-        // #2 Fix: Per-domain ZWDS bonus — check palace quality for relevant indices
         let z_bonus = zwds
             .map(|z| {
                 let mut bonus = 0.0f32;
@@ -798,8 +939,17 @@ fn compute_8d_domain_radar(
             })
             .unwrap_or(3.0);
 
+        let hd_bonus = human_design
+            .map(|hd| (hd.result.defined_centers.len() as f32 * 2.5).min(15.0))
+            .unwrap_or(3.0);
+
+        let qm_bonus = qimen
+            .map(|qm| (qm.report.pan.ju_number as f32 * 1.5).min(10.0))
+            .unwrap_or(2.0);
+
         let final_score =
-            (base_score * 0.55 + saju_str * 0.15 + w_bonus + z_bonus).clamp(20.0, 99.0);
+            (base_score * 0.50 + saju_str * 0.12 + w_bonus + z_bonus + hd_bonus + qm_bonus)
+                .clamp(20.0, 99.0);
         let tier = get_tier_from_score(final_score).grade;
 
         let primary_house = house_nums[0];

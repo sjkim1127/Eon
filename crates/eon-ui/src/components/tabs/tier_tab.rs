@@ -47,6 +47,9 @@ pub fn TierTab() -> Element {
                     form.is_male,
                     None,
                 );
+                let hd_input = eon_service::dto::HumanDesignAnalysisInput::new(base_input.clone());
+                let qimen_input =
+                    eon_service::dto::QimenAnalysisInput::new(base_input.clone(), form.is_male);
 
                 let saju_res = match facade::analyze_saju(saju_input) {
                     Ok(r) => r,
@@ -68,12 +71,16 @@ pub fn TierTab() -> Element {
 
                 let western_res = facade::analyze_western(western_input).ok();
                 let zwds_res = facade::analyze_zwds(zwds_input).ok();
+                let hd_res = facade::analyze_human_design(hd_input).ok();
+                let qimen_res = facade::analyze_qimen(qimen_input).ok();
 
                 let omni_input = eon_service::dto::OmniDestinyTierInput {
                     saju: saju_res,
                     vedic: vedic_res,
                     western: western_res,
                     zwds: zwds_res,
+                    human_design: hd_res,
+                    qimen: qimen_res,
                     transit: None,
                 };
 

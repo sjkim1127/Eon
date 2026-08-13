@@ -42,11 +42,11 @@ mod tests {
             .expect("Tier analysis failed");
 
         // 3. Verify Contract Fields (Manual Check Points)
-        assert_eq!(tier_res.tier_model_version, "5.1.0");
-        assert_eq!(tier_res.version, "v5.1_quantum_synergy_model");
+        assert_eq!(tier_res.tier_model_version, "6.0.0");
+        assert_eq!(tier_res.version, "v6.0_full_7engine_model");
 
-        // Detailed components must exist and have 12 items
-        assert_eq!(tier_res.detailed_components.len(), 12);
+        // Detailed components must exist and have 14 items
+        assert_eq!(tier_res.detailed_components.len(), 14);
 
         // Check specific keys to ensure contract alignment with frontend
         let keys: Vec<String> = tier_res

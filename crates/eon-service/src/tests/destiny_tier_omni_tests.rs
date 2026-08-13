@@ -1,6 +1,7 @@
 use crate::dto::{
-    AnalysisInput, OmniDestinyTierInput, SajuAnalysisInput, TransitAnalysisInput,
-    VedicAnalysisInput, WesternAnalysisInput, ZwdsAnalysisInput,
+    AnalysisInput, HumanDesignAnalysisInput, OmniDestinyTierInput, QimenAnalysisInput,
+    SajuAnalysisInput, TransitAnalysisInput, VedicAnalysisInput, WesternAnalysisInput,
+    ZwdsAnalysisInput,
 };
 use crate::facade;
 
@@ -27,36 +28,42 @@ fn test_omni_destiny_tier_synthesis() {
     let vedic_input = VedicAnalysisInput::new(base.clone(), Some(false), None);
     let western_input = WesternAnalysisInput::new(base.clone(), "Placidus".to_string());
     let zwds_input = ZwdsAnalysisInput::new(base.clone(), true, None);
+    let hd_input = HumanDesignAnalysisInput::new(base.clone());
+    let qimen_input = QimenAnalysisInput::new(base.clone(), true);
 
     let saju_res = facade::analyze_saju(saju_input).unwrap();
     let vedic_res = facade::analyze_vedic(vedic_input).unwrap();
     let western_res = facade::analyze_western(western_input).ok();
     let zwds_res = facade::analyze_zwds(zwds_input).ok();
+    let hd_res = facade::analyze_human_design(hd_input).ok();
+    let qimen_res = facade::analyze_qimen(qimen_input).ok();
 
     let omni_input = OmniDestinyTierInput {
         saju: saju_res,
         vedic: vedic_res,
         western: western_res,
         zwds: zwds_res,
+        human_design: hd_res,
+        qimen: qimen_res,
         transit: None,
     };
 
     let tier_res = facade::analyze_destiny_tier_omni(omni_input).unwrap();
 
-    assert_eq!(tier_res.version, "v5.1_quantum_synergy_model");
-    assert_eq!(tier_res.tier_model_version, "5.1.0");
+    assert_eq!(tier_res.version, "v6.0_full_7engine_model");
+    assert_eq!(tier_res.tier_model_version, "6.0.0");
     assert!(tier_res.destiny_tier_score >= 0.0 && tier_res.destiny_tier_score <= 100.0);
-    assert!(!tier_res.detailed_components.is_empty());
+    assert_eq!(tier_res.detailed_components.len(), 14);
     assert!(tier_res
         .detailed_components
         .iter()
-        .any(|c| c.key == "western_astrology"));
+        .any(|c| c.key == "human_design_dynamics"));
     assert!(tier_res
         .detailed_components
         .iter()
-        .any(|c| c.key == "zwds_harmony"));
+        .any(|c| c.key == "qimen_harmony"));
 
-    // Destiny Tier 5.1 Verification
+    // Destiny Tier 6.0 7D Quantum Synergy Verification
     assert!(!tier_res.quantum_synergies.is_empty());
     assert_eq!(tier_res.domain_radar.len(), 8);
     assert!(!tier_res.tier_trajectory.is_empty());
@@ -81,6 +88,8 @@ fn test_omni_destiny_tier_female_case() {
         vedic: vedic_res,
         western: western_res,
         zwds: zwds_res,
+        human_design: None,
+        qimen: None,
         transit: None,
     };
 
@@ -106,6 +115,8 @@ fn test_omni_destiny_tier_with_transit() {
         vedic: vedic_res,
         western: None,
         zwds: None,
+        human_design: None,
+        qimen: None,
         transit: Some(transit_res),
     };
 
@@ -129,6 +140,8 @@ fn test_omni_destiny_tier_weight_sum_is_one() {
         vedic: vedic_res,
         western: None,
         zwds: None,
+        human_design: None,
+        qimen: None,
         transit: None,
     };
 
@@ -160,6 +173,8 @@ fn test_legacy_analyze_delegation_parity() {
         vedic: vedic_res,
         western: None,
         zwds: None,
+        human_design: None,
+        qimen: None,
         transit: None,
     };
     let omni_res = facade::analyze_destiny_tier_omni(omni_input).unwrap();

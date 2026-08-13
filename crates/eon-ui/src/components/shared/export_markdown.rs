@@ -4820,9 +4820,9 @@ fn format_tier_inner(data: &TierResult, locale: Locale) -> String {
         profile_lbl,
     ) = match locale {
         Locale::Ko => (
-            "종합 운명 티어 분석 (Destiny Tier)",
+            "7대 운명 체계 종합 운명 티어 분석 (Full 7-Engine Destiny Tier)",
             "분야별 운명 티어 (Domain Tiers)",
-            "사주 및 베딕 세부 결과 (Eastern & Vedic Detailed Results)",
+            "동서양 7대 엔진 세부 분석 결과 (Full 7-Engine Detailed Results)",
             "선천적 강점 및 주의점 (Strengths & Weaknesses)",
             "운명 구성요소 가중치 세부 정보 (Detailed Components & Weights)",
             "종합 운명 티어",

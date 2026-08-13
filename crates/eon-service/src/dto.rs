@@ -501,6 +501,10 @@ pub struct OmniDestinyTierInput {
     #[ts(type = "any")]
     pub zwds: Option<ZwdsAnalysisOutput>,
     #[ts(type = "any")]
+    pub human_design: Option<HumanDesignAnalysisOutput>,
+    #[ts(type = "any")]
+    pub qimen: Option<QimenAnalysisOutput>,
+    #[ts(type = "any")]
     pub transit: Option<TransitAnalysisOutput>,
 }
 
