@@ -2,6 +2,7 @@ pub mod ai_audit;
 pub mod saju;
 
 pub mod human_design;
+pub mod numerology;
 pub mod qimen;
 pub mod report;
 pub mod tier;

@@ -915,6 +915,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "eon-numerology"
+version = "0.1.2"
+dependencies = [
+ "chrono",
+ "serde",
+]
+
+[[package]]
 name = "eon-qimen"
 version = "0.1.2"
 dependencies = [
@@ -951,6 +959,7 @@ dependencies = [
  "eon-core",
  "eon-data",
  "eon-human-design",
+ "eon-numerology",
  "eon-qimen",
  "eon-saju",
  "eon-vedic",

@@ -6,6 +6,7 @@ pub mod hd_penta_tab;
 pub mod hd_transit_tab;
 pub mod human_design_tab;
 pub mod iching_tab;
+pub mod numerology_tab;
 pub mod phs_variables;
 pub mod qimen_tab;
 pub mod saju_tab;

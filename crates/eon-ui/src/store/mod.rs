@@ -2,9 +2,9 @@ pub mod db;
 use crate::i18n::Locale;
 use dioxus::prelude::*;
 use eon_service::dto::{
-    AnalysisInput, HumanDesignAnalysisOutput, IChingAnalysisOutput, QimenAnalysisOutput,
-    SajuAnalysisOutput, TierResult, TransitAnalysisOutput, VedicAnalysisOutput,
-    WesternAnalysisOutput, ZwdsAnalysisOutput,
+    AnalysisInput, HumanDesignAnalysisOutput, IChingAnalysisOutput, NumerologyAnalysisOutput,
+    QimenAnalysisOutput, SajuAnalysisOutput, TierResult, TransitAnalysisOutput,
+    VedicAnalysisOutput, WesternAnalysisOutput, ZwdsAnalysisOutput,
 };
 
 #[derive(Clone, PartialEq, Default)]
@@ -104,6 +104,7 @@ pub struct AnalysisState {
     pub hd_penta: Signal<AnalysisTaskState<eon_human_design::penta::PentaResult>>,
     pub penta_forms: Signal<Vec<FormState>>,
     pub qimen: Signal<AnalysisTaskState<QimenAnalysisOutput>>,
+    pub numerology: Signal<AnalysisTaskState<NumerologyAnalysisOutput>>,
     pub locale: Signal<Locale>,
     pub show_export_modal: Signal<bool>,
 }
@@ -131,6 +132,7 @@ impl AnalysisState {
                 FormState::default(),
             ]), // Minimum 3 people
             qimen: Signal::new(AnalysisTaskState::default()),
+            numerology: Signal::new(AnalysisTaskState::default()),
             locale: Signal::new(Locale::Ko),
             show_export_modal: Signal::new(false),
         }

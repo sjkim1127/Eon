@@ -283,6 +283,32 @@ pub struct QimenAnalysisOutput {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct NumerologyAnalysisInput {
+    #[serde(flatten)]
+    pub base: AnalysisInput,
+    pub name_latin: Option<String>,
+    pub target_year: Option<u32>,
+}
+
+impl NumerologyAnalysisInput {
+    pub fn new(base: AnalysisInput, name_latin: Option<String>, target_year: Option<u32>) -> Self {
+        Self {
+            base,
+            name_latin,
+            target_year,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NumerologyAnalysisOutput {
+    pub meta: AnalysisMeta,
+    pub result: eon_numerology::NumerologyResult,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LifeFrameDto {
     pub age: u32,
     pub ganzi: eon_saju::core::ganzi::GanZi,
@@ -504,6 +530,8 @@ pub struct OmniDestinyTierInput {
     pub human_design: Option<HumanDesignAnalysisOutput>,
     #[ts(type = "any")]
     pub qimen: Option<QimenAnalysisOutput>,
+    #[ts(type = "any")]
+    pub numerology: Option<NumerologyAnalysisOutput>,
     #[ts(type = "any")]
     pub transit: Option<TransitAnalysisOutput>,
 }

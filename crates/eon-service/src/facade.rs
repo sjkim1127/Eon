@@ -108,3 +108,9 @@ pub fn generate_themed_report(
 ) -> Result<ThemedReportOutput, ServiceError> {
     crate::services::report::generate(input)
 }
+
+pub fn analyze_numerology(
+    input: NumerologyAnalysisInput,
+) -> Result<NumerologyAnalysisOutput, ServiceError> {
+    crate::services::numerology::analyze(input)
+}

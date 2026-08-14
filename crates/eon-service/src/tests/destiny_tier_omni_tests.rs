@@ -1,7 +1,7 @@
 use crate::dto::{
-    AnalysisInput, HumanDesignAnalysisInput, OmniDestinyTierInput, QimenAnalysisInput,
-    SajuAnalysisInput, TransitAnalysisInput, VedicAnalysisInput, WesternAnalysisInput,
-    ZwdsAnalysisInput,
+    AnalysisInput, HumanDesignAnalysisInput, NumerologyAnalysisInput, OmniDestinyTierInput,
+    QimenAnalysisInput, SajuAnalysisInput, TransitAnalysisInput, VedicAnalysisInput,
+    WesternAnalysisInput, ZwdsAnalysisInput,
 };
 use crate::facade;
 
@@ -30,6 +30,7 @@ fn test_omni_destiny_tier_synthesis() {
     let zwds_input = ZwdsAnalysisInput::new(base.clone(), true, None);
     let hd_input = HumanDesignAnalysisInput::new(base.clone());
     let qimen_input = QimenAnalysisInput::new(base.clone(), true);
+    let num_input = NumerologyAnalysisInput::new(base.clone(), None, None);
 
     let saju_res = facade::analyze_saju(saju_input).unwrap();
     let vedic_res = facade::analyze_vedic(vedic_input).unwrap();
@@ -37,6 +38,7 @@ fn test_omni_destiny_tier_synthesis() {
     let zwds_res = facade::analyze_zwds(zwds_input).ok();
     let hd_res = facade::analyze_human_design(hd_input).ok();
     let qimen_res = facade::analyze_qimen(qimen_input).ok();
+    let num_res = facade::analyze_numerology(num_input).ok();
 
     let omni_input = OmniDestinyTierInput {
         saju: saju_res,
@@ -45,25 +47,22 @@ fn test_omni_destiny_tier_synthesis() {
         zwds: zwds_res,
         human_design: hd_res,
         qimen: qimen_res,
+        numerology: num_res,
         transit: None,
     };
 
     let tier_res = facade::analyze_destiny_tier_omni(omni_input).unwrap();
 
-    assert_eq!(tier_res.version, "v6.0_full_7engine_model");
-    assert_eq!(tier_res.tier_model_version, "6.0.0");
+    assert_eq!(tier_res.version, "v7.0_omni_8engine_model");
+    assert_eq!(tier_res.tier_model_version, "7.0.0");
     assert!(tier_res.destiny_tier_score >= 0.0 && tier_res.destiny_tier_score <= 100.0);
-    assert_eq!(tier_res.detailed_components.len(), 14);
+    assert_eq!(tier_res.detailed_components.len(), 15);
     assert!(tier_res
         .detailed_components
         .iter()
-        .any(|c| c.key == "human_design_dynamics"));
-    assert!(tier_res
-        .detailed_components
-        .iter()
-        .any(|c| c.key == "qimen_harmony"));
+        .any(|c| c.key == "numerology_vibration"));
 
-    // Destiny Tier 6.0 7D Quantum Synergy Verification
+    // Destiny Tier 7.0 8D Quantum Synergy Verification
     assert!(!tier_res.quantum_synergies.is_empty());
     assert_eq!(tier_res.domain_radar.len(), 8);
     assert!(!tier_res.tier_trajectory.is_empty());
@@ -90,6 +89,7 @@ fn test_omni_destiny_tier_female_case() {
         zwds: zwds_res,
         human_design: None,
         qimen: None,
+        numerology: None,
         transit: None,
     };
 
@@ -117,6 +117,7 @@ fn test_omni_destiny_tier_with_transit() {
         zwds: None,
         human_design: None,
         qimen: None,
+        numerology: None,
         transit: Some(transit_res),
     };
 
@@ -142,6 +143,7 @@ fn test_omni_destiny_tier_weight_sum_is_one() {
         zwds: None,
         human_design: None,
         qimen: None,
+        numerology: None,
         transit: None,
     };
 
@@ -175,6 +177,7 @@ fn test_legacy_analyze_delegation_parity() {
         zwds: None,
         human_design: None,
         qimen: None,
+        numerology: None,
         transit: None,
     };
     let omni_res = facade::analyze_destiny_tier_omni(omni_input).unwrap();

@@ -10,6 +10,7 @@ members = [
     "crates/eon-western",
     "crates/eon-human-design",
     "crates/eon-qimen",
+    "crates/eon-numerology",
     "crates/eon-ai",
     "crates/eon-service",
     "crates/eon-ui",
@@ -43,6 +44,7 @@ eon-ai = { path = "crates/eon-ai", version = "=0.1.2" }
 eon-western = { path = "crates/eon-western", version = "=0.1.2" }
 eon-human-design = { path = "crates/eon-human-design", version = "=0.1.2" }
 eon-qimen = { path = "crates/eon-qimen", version = "=0.1.2" }
+eon-numerology = { path = "crates/eon-numerology", version = "=0.1.2" }
 eon-service = { path = "crates/eon-service", version = "=0.1.2" }
 
 [profile.release]
