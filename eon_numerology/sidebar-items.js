@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["calculate_numerology","is_vowel","letter_value","reduce_number"],"struct":["NumerologyCoreNumbers","NumerologyResult","PinnaclePeriod"]};
