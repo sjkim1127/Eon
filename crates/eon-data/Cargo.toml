@@ -13,7 +13,7 @@ eon-astro = { workspace = true }
 chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-bincode = "1.3"
+bincode = "3.0"
 thiserror.workspace = true
 
 [dev-dependencies]
