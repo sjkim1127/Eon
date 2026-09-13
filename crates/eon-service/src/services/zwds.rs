@@ -5,6 +5,7 @@
 use crate::birth::prepare_birth_context;
 use crate::dto::{AnalysisMeta, BirthTimePrecision, ZwdsAnalysisInput, ZwdsAnalysisOutput};
 use crate::error::ServiceError;
+use chrono::Datelike;
 use eon_core::Gender;
 use eon_zwds::annual::calculate_liunian;
 use eon_zwds::build_chart;
@@ -24,8 +25,10 @@ pub fn analyze(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceEr
     let mut chart = build_chart(&birth_ctx.birth_info)
         .map_err(|e| ServiceError::Zwds(format!("자미두수 성반 생성 실패: {}", e)))?;
 
-    // 2. 대상 연도 지정 (기본값은 현재 연도 2026년)
-    let target_year = input.target_year.unwrap_or(2026);
+    // 2. 대상 연도 지정 (기본값은 실행 시점의 현재 연도)
+    let target_year = input
+        .target_year
+        .unwrap_or_else(|| chrono::Utc::now().year());
 
     // 3. 대상 연도에 따른 유년(流年) 계산
     let current_liu_nian = calculate_liunian(target_year);
@@ -40,7 +43,8 @@ pub fn analyze(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceEr
     // 4. 나이 계산 및 현재 대한(大限) 식별
     // 자미두수 대운(대한)은 태어난 해(1세)부터 시작해 만 나이/한국 나이가 아닌 오행국 나이(예: 2~11세) 기준입니다.
     // 여기서는 간단하게 경과 연도(target_year - birth_year + 1)를 나이로 보고 현재 대한을 매핑합니다.
-    let age = (target_year - birth_ctx.birth_info.year).max(0) as u32 + 1; // 세는 나이 기준
+    let age =
+        (target_year.saturating_sub(birth_ctx.birth_info.year).max(0) as u32).saturating_add(1); // 세는 나이 기준
 
     let current_daxian = chart
         .daxian

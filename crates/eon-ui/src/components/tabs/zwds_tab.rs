@@ -10,6 +10,7 @@ use crate::i18n::{
     Locale, TK,
 };
 use crate::store::{AnalysisState, TaskStatus};
+use chrono::Datelike;
 use dioxus::prelude::*;
 use eon_service::dto::ZwdsAnalysisInput;
 use eon_service::facade;
@@ -19,7 +20,7 @@ use eon_zwds::types::{PalaceData, SiHuaType, ZwdsStar};
 pub fn ZwdsTab() -> Element {
     let state = use_context::<AnalysisState>();
     let locale = *state.locale.read();
-    let target_year = use_signal(|| 2026i32);
+    let target_year = use_signal(|| chrono::Local::now().year());
     let selected_palace_idx = use_signal(|| None::<usize>);
     let hovered_palace_idx = use_signal(|| None::<usize>);
     let mut copied_feedback = use_signal(|| false);
