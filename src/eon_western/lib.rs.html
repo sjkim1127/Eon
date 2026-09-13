@@ -747,7 +747,7 @@
 <a href=#747 id=747 data-nosnippet>747</a>    ];
 <a href=#748 id=748 data-nosnippet>748</a>
 <a href=#749 id=749 data-nosnippet>749</a>    <span class="kw">let </span><span class="kw-2">mut </span>planets = Vec::new();
-<a href=#750 id=750 data-nosnippet>750</a>    <span class="kw">let </span>flag = <span class="number">4</span>; <span class="comment">// SEFLG_MOEPH (Moshier Wasm compatible)
+<a href=#750 id=750 data-nosnippet>750</a>    <span class="kw">let </span>flag = <span class="number">4 </span>| <span class="number">256</span>; <span class="comment">// SEFLG_MOEPH | SEFLG_SPEED
 <a href=#751 id=751 data-nosnippet>751</a>
 <a href=#752 id=752 data-nosnippet>752</a>    </span><span class="kw">for </span>(id, name) <span class="kw">in </span>bodies {
 <a href=#753 id=753 data-nosnippet>753</a>        <span class="kw">let </span>(long, speed) = <span class="kw">match </span>engine.get_planet_full(datetime, id, flag) {
