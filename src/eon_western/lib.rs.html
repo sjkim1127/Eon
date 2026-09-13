@@ -1026,8 +1026,8 @@
 <a href=#1026 id=1026 data-nosnippet>1026</a>
 <a href=#1027 id=1027 data-nosnippet>1027</a>    <span class="kw">for </span>pa <span class="kw">in </span><span class="kw-2">&amp;</span>chart_a.planets {
 <a href=#1028 id=1028 data-nosnippet>1028</a>        <span class="kw">for </span>pb <span class="kw">in </span><span class="kw-2">&amp;</span>chart_b.planets {
-<a href=#1029 id=1029 data-nosnippet>1029</a>            <span class="kw">let </span>diff = (pa.longitude - pb.longitude).abs();
-<a href=#1030 id=1030 data-nosnippet>1030</a>            <span class="kw">let </span>angle = <span class="kw">if </span>diff &gt; <span class="number">180.0 </span>{ <span class="number">360.0 </span>- diff } <span class="kw">else </span>{ diff };
+<a href=#1029 id=1029 data-nosnippet>1029</a>            <span class="kw">let </span>signed_delta = (pa.longitude - pb.longitude + <span class="number">540.0</span>).rem_euclid(<span class="number">360.0</span>) - <span class="number">180.0</span>;
+<a href=#1030 id=1030 data-nosnippet>1030</a>            <span class="kw">let </span>angle = signed_delta.abs();
 <a href=#1031 id=1031 data-nosnippet>1031</a>
 <a href=#1032 id=1032 data-nosnippet>1032</a>            <span class="kw">for </span><span class="kw-2">&amp;</span>asp <span class="kw">in </span><span class="kw-2">&amp;</span>aspect_types {
 <a href=#1033 id=1033 data-nosnippet>1033</a>                <span class="kw">let </span>target = asp.angle();
@@ -1039,7 +1039,7 @@
 <a href=#1039 id=1039 data-nosnippet>1039</a>                        aspect_type: asp,
 <a href=#1040 id=1040 data-nosnippet>1040</a>                        angle_diff: angle,
 <a href=#1041 id=1041 data-nosnippet>1041</a>                        orb,
-<a href=#1042 id=1042 data-nosnippet>1042</a>                        dynamics: AspectDynamics::Exact,
+<a href=#1042 id=1042 data-nosnippet>1042</a>                        dynamics: aspect_dynamics(angle, target, signed_delta, pa.speed - pb.speed),
 <a href=#1043 id=1043 data-nosnippet>1043</a>                        is_major: asp.is_major(),
 <a href=#1044 id=1044 data-nosnippet>1044</a>                    });
 <a href=#1045 id=1045 data-nosnippet>1045</a>                }
