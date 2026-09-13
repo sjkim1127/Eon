@@ -67,6 +67,13 @@ fn verify_position_oracle_fixtures() {
             case.input.lon,
         );
 
+        common::assert_approx_eq(
+            chart.ayanamsa,
+            case.expected.ayanamsa,
+            0.0001,
+            &format!("Case {} failed for ayanamsa", case.case_id),
+        );
+
         // 1. Verify Planets
         for (name, expected) in &case.expected.planets {
             let p_enum = get_planet_enum(name);

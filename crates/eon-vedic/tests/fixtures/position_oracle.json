@@ -18,5 +18,41 @@
       "ascendant": { "sidereal": 205.2538 }
     },
     "notes": "Verified against engine output using Swiss Ephemeris Lahiri Ayanamsa."
+  },
+  {
+    "case_id": "historical_positions_1988_03_14",
+    "description": "Historical cross-check against Swiss Ephemeris Lahiri/Moshier",
+    "input": { "year": 1988, "month": 3, "day": 14, "hour": 15, "lat": 37.5665, "lon": 126.9780 },
+    "expected": {
+      "ayanamsa": 23.69226672,
+      "planets": {
+        "Sun": { "tropical": 354.25010031, "sidereal": 330.55783360 },
+        "Moon": { "tropical": 306.02193591, "sidereal": 282.32966919 },
+        "Mars": { "sidereal": 260.60872896 },
+        "Jupiter": { "sidereal": 7.57166052 },
+        "Saturn": { "sidereal": 248.24422407 },
+        "Rahu": { "sidereal": 329.57712423 }
+      },
+      "ascendant": { "sidereal": 216.47482163 }
+    },
+    "notes": "Generated with Swiss Ephemeris 2.10.3.2, SEFLG_MOSEPH, SE_SIDM_LAHIRI, mean node, whole-sign houses."
+  },
+  {
+    "case_id": "future_positions_2050_06_21",
+    "description": "Future-range cross-check against Swiss Ephemeris Lahiri/Moshier",
+    "input": { "year": 2050, "month": 6, "day": 21, "hour": 0, "lat": -33.8688, "lon": 151.2093 },
+    "expected": {
+      "ayanamsa": 24.56215439,
+      "planets": {
+        "Sun": { "tropical": 89.85870616, "sidereal": 65.29655177 },
+        "Moon": { "tropical": 109.14695112, "sidereal": 84.58479673 },
+        "Mars": { "sidereal": 298.60218745 },
+        "Jupiter": { "sidereal": 100.72530161 },
+        "Saturn": { "sidereal": 283.49399224 },
+        "Rahu": { "sidereal": 204.36334599 }
+      },
+      "ascendant": { "sidereal": 112.76545045 }
+    },
+    "notes": "Generated with Swiss Ephemeris 2.10.3.2, SEFLG_MOSEPH, SE_SIDM_LAHIRI, mean node, whole-sign houses."
   }
 ]
