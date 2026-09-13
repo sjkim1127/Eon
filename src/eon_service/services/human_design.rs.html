@@ -83,7 +83,7 @@
 <a href=#83 id=83 data-nosnippet>83</a>            <span class="kw">let </span>sun_data = engine
 <a href=#84 id=84 data-nosnippet>84</a>                .get_planet_full(dt, <span class="number">0</span>, <span class="number">256</span>)
 <a href=#85 id=85 data-nosnippet>85</a>                .map_err(|e| ServiceError::HumanDesign(e.to_string()))<span class="question-mark">?</span>;
-<a href=#86 id=86 data-nosnippet>86</a>            <span class="kw">let </span>age_diff = target_year - dt.year();
+<a href=#86 id=86 data-nosnippet>86</a>            <span class="kw">let </span>age_diff = i64::from(target_year) - i64::from(dt.year());
 <a href=#87 id=87 data-nosnippet>87</a>            (<span class="number">0</span>, sun_data.<span class="number">0</span>, age_diff <span class="kw">as </span>f64) <span class="comment">// SE_SUN
 <a href=#88 id=88 data-nosnippet>88</a>        </span>}
 <a href=#89 id=89 data-nosnippet>89</a>        eon_human_design::transit::ReturnType::Saturn =&gt; {

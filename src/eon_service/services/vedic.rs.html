@@ -41,7 +41,7 @@
 <a href=#41 id=41 data-nosnippet>41</a>        .calculate_solar_return(dt, input.base.lat, input.base.lon, target_year)
 <a href=#42 id=42 data-nosnippet>42</a>        .map_err(|e| ServiceError::Vedic(e.to_string()))<span class="question-mark">?</span>;
 <a href=#43 id=43 data-nosnippet>43</a>
-<a href=#44 id=44 data-nosnippet>44</a>    <span class="kw">let </span>age_years = (target_year - dt.year()).unsigned_abs();
+<a href=#44 id=44 data-nosnippet>44</a>    <span class="kw">let </span>age_years = (i64::from(target_year) - i64::from(dt.year())).unsigned_abs() <span class="kw">as </span>u32;
 <a href=#45 id=45 data-nosnippet>45</a>    <span class="kw">let </span>tajika_report = <span class="prelude-val">Some</span>(eon_vedic::analysis::report::TajikaReport::generate(
 <a href=#46 id=46 data-nosnippet>46</a>        <span class="kw-2">&amp;</span>annual_chart,
 <a href=#47 id=47 data-nosnippet>47</a>        chart.ascendant.rasi,
