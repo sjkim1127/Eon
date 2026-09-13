@@ -90,7 +90,7 @@ jobs:
       - name: Install Dioxus CLI
         uses: taiki-e/install-action@v2
         with:
-          tool: dioxus-cli@0.6.1
+          tool: dioxus-cli@0.6.3
       - name: Install WASI SDK
         run: |
           wget -q https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz

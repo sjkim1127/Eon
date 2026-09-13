@@ -147,7 +147,7 @@ The workspace members are declared in the root `Cargo.toml`. Add new Rust crates
 ```bash
 rustup toolchain install stable
 rustup target add wasm32-unknown-unknown
-cargo install dioxus-cli --version 0.6.1
+cargo install dioxus-cli --version 0.6.3
 ```
 
 ### Check the Workspace

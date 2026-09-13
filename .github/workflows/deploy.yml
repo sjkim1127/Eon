@@ -40,7 +40,7 @@ jobs:
       - name: Install Dioxus CLI
         uses: taiki-e/install-action@v2
         with:
-          tool: dioxus-cli@0.6.1
+          tool: dioxus-cli@0.6.3
 
       - name: Install WASI SDK
         run: |
