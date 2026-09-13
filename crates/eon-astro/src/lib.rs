@@ -425,7 +425,7 @@ impl AstroEngine {
         if !(0..=u8::MAX as i32).contains(&house_system)
             || !matches!(
                 house_system as u8,
-                b'A'..=b'K' | b'O' | b'P' | b'R' | b'S' | b'T' | b'W' | b'X'
+                b'A'..=b'K' | b'O' | b'P' | b'R' | b'S' | b'T' | b'V' | b'W' | b'X'
             )
         {
             return Err(AstroError::InvalidHouseSystem(house_system));
@@ -551,6 +551,7 @@ mod tests {
         }
 
         assert!(engine.get_houses(time, 90.0, 180.0, b'W' as i32).is_ok());
+        assert!(engine.get_houses(time, 0.0, 0.0, b'V' as i32).is_ok());
         assert_eq!(
             engine.get_houses(time, 0.0, 0.0, b'Z' as i32),
             Err(AstroError::InvalidHouseSystem(b'Z' as i32))
