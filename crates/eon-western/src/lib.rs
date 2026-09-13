@@ -1241,8 +1241,8 @@ pub fn calculate_secondary_progression(
 
     for pp in &progressed_chart.planets {
         for np in &birth_chart.planets {
-            let diff = (pp.longitude - np.longitude).abs();
-            let angle = if diff > 180.0 { 360.0 - diff } else { diff };
+            let signed_delta = (pp.longitude - np.longitude + 540.0).rem_euclid(360.0) - 180.0;
+            let angle = signed_delta.abs();
 
             for &asp in &aspect_types {
                 let target = asp.angle();
@@ -1254,7 +1254,7 @@ pub fn calculate_secondary_progression(
                         aspect_type: asp,
                         angle_diff: angle,
                         orb,
-                        dynamics: AspectDynamics::Applying,
+                        dynamics: aspect_dynamics(angle, target, signed_delta, pp.speed - np.speed),
                         is_major: asp.is_major(),
                     });
                 }

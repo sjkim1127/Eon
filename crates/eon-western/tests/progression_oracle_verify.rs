@@ -1,5 +1,5 @@
 use chrono::{TimeZone, Utc};
-use eon_western::calculate_secondary_progression;
+use eon_western::{calculate_secondary_progression, AspectDynamics};
 
 #[test]
 fn secondary_progression_uses_one_day_per_tropical_year() {
@@ -30,4 +30,8 @@ fn secondary_progression_uses_one_day_per_tropical_year() {
         );
     }
     assert!((result.progressed_age_years - 30.001984982580066).abs() < 1e-12);
+    assert!(result
+        .active_transit_aspects
+        .iter()
+        .any(|aspect| matches!(aspect.dynamics, AspectDynamics::Separating)));
 }
