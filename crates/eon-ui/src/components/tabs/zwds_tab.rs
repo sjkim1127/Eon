@@ -105,7 +105,7 @@ pub fn ZwdsTab() -> Element {
                         }
                         button {
                             class: "text-slate-400 hover:text-white transition-colors cursor-pointer text-xs font-bold px-1.5 py-0.5 hover:bg-slate-800 rounded-md",
-                            onclick: move |_| update_year(*target_year.read() - 1),
+                            onclick: move |_| update_year(target_year.read().saturating_sub(1)),
                             "◀"
                         }
                         span { class: "text-sm font-bold text-violet-400 font-mono min-w-[3.5rem] text-center",
@@ -113,7 +113,7 @@ pub fn ZwdsTab() -> Element {
                         }
                         button {
                             class: "text-slate-400 hover:text-white transition-colors cursor-pointer text-xs font-bold px-1.5 py-0.5 hover:bg-slate-800 rounded-md",
-                            onclick: move |_| update_year(*target_year.read() + 1),
+                            onclick: move |_| update_year(target_year.read().saturating_add(1)),
                             "▶"
                         }
                     }

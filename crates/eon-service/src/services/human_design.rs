@@ -83,7 +83,7 @@ pub fn calculate_return(
             let sun_data = engine
                 .get_planet_full(dt, 0, 256)
                 .map_err(|e| ServiceError::HumanDesign(e.to_string()))?;
-            let age_diff = target_year - dt.year();
+            let age_diff = i64::from(target_year) - i64::from(dt.year());
             (0, sun_data.0, age_diff as f64) // SE_SUN
         }
         eon_human_design::transit::ReturnType::Saturn => {

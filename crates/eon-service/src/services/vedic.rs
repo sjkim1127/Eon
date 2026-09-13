@@ -41,7 +41,7 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
         .calculate_solar_return(dt, input.base.lat, input.base.lon, target_year)
         .map_err(|e| ServiceError::Vedic(e.to_string()))?;
 
-    let age_years = (target_year - dt.year()).unsigned_abs();
+    let age_years = (i64::from(target_year) - i64::from(dt.year())).unsigned_abs() as u32;
     let tajika_report = Some(eon_vedic::analysis::report::TajikaReport::generate(
         &annual_chart,
         chart.ascendant.rasi,
