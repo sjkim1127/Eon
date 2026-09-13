@@ -75,15 +75,15 @@ impl AstroEngine {
 
     /// 특정 시점의 24절기 인덱스(0~23)를 산출합니다.
     /// 0: 입춘, 1: 우수, 2: 경칩 ... 23: 대한
-    pub fn get_solar_term_index(&self, datetime: DateTime<Utc>) -> u8 {
-        let sun_long = self.get_sun_longitude(datetime).unwrap_or(0.0);
+    pub fn get_solar_term_index(&self, datetime: DateTime<Utc>) -> Result<u8, AstroError> {
+        let sun_long = self.get_sun_longitude(datetime)?;
 
         // 입춘(315도)을 0으로 맞춤
         let adjusted = (sun_long - 315.0 + 360.0) % 360.0;
 
         // 15도마다 절기가 바뀜 (24절기)
         let index = (adjusted / 15.0).floor() as u8;
-        index % 24
+        Ok(index % 24)
     }
 
     /// 특정 황경(target_long)에 도달하는 정확한 시각을 추적합니다. (Root Finding)

@@ -186,7 +186,10 @@ impl MonthlyLuck {
         use eon_astro::AstroEngine;
 
         let engine = AstroEngine::new();
-        let term_24_idx = engine.get_solar_term_index(dt);
+        // Keep this legacy convenience API infallible; callers that need
+        // explicit astronomical error propagation should use the checked
+        // calculation entry points.
+        let term_24_idx = engine.get_solar_term_index(dt).unwrap_or(0);
         let term_12_idx = (term_24_idx / 2) as u32;
         let saju_month_ordinal = term_12_idx + 1;
 

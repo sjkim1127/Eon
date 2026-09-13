@@ -177,7 +177,7 @@ impl MajorLuckAnalysis {
         let birth_time = Utc.from_utc_datetime(&(dt_local - tz_offset));
 
         // 현재 24절기 인덱스 확인 (0: 입춘 ~ 23: 대한)
-        let term_idx = astro.get_solar_term_index(birth_time);
+        let term_idx = astro.get_solar_term_index(birth_time)?;
 
         // 대운은 '절기(Jieqi, 짝수 인덱스)'를 기준으로 함
         let target_term_idx = match direction {
