@@ -22,6 +22,9 @@ pub enum AstroError {
         "Invalid geographic coordinates: latitude must be [-90, 90] and longitude [-180, 180]"
     )]
     InvalidCoordinates,
+
+    #[error("Invalid Swiss Ephemeris house system code: {0}")]
+    InvalidHouseSystem(i32),
 }
 
 static ASTRO_LOCK: Mutex<()> = Mutex::new(());
@@ -417,6 +420,16 @@ impl AstroEngine {
         {
             return Err(AstroError::InvalidCoordinates);
         }
+        // Swiss Ephemeris accepts a one-byte house-system selector. Keep the
+        // public wrapper from passing arbitrary integers into the C API.
+        if !(0..=u8::MAX as i32).contains(&house_system)
+            || !matches!(
+                house_system as u8,
+                b'A'..=b'K' | b'O' | b'P' | b'R' | b'S' | b'T' | b'W' | b'X'
+            )
+        {
+            return Err(AstroError::InvalidHouseSystem(house_system));
+        }
         let julian_day = self.to_julian_day(datetime);
         let mut cusps = [0.0; 13]; // 1-based usually
         let mut ascmc = [0.0; 10]; // ASC, MC, ARMC, Vertex...
@@ -538,5 +551,9 @@ mod tests {
         }
 
         assert!(engine.get_houses(time, 90.0, 180.0, b'W' as i32).is_ok());
+        assert_eq!(
+            engine.get_houses(time, 0.0, 0.0, b'Z' as i32),
+            Err(AstroError::InvalidHouseSystem(b'Z' as i32))
+        );
     }
 }
