@@ -12,11 +12,9 @@ pub fn get_ayanamsa(astro: &AstroEngine, time: DateTime<Utc>, method: AyanamsaSy
         AyanamsaSystem::Krishnamurti => 5, // SE_SIDM_KRISHNAMURTI
     };
 
-    // t0=0, ayan_t0=0 for standard methods
-    astro.set_sidereal_mode(method_id, 0.0, 0.0);
-
-    // 2. Calculate
-    astro.get_ayanamsa_ut(time)
+    // Keep mode selection and calculation in one critical section because
+    // Swiss Ephemeris stores the sidereal mode process-wide.
+    astro.get_ayanamsa_ut_for_mode(time, method_id, 0.0, 0.0)
 }
 
 /// Helper for default Lahiri Ayanamsa

@@ -450,6 +450,23 @@ impl AstroEngine {
             swiss_eph::swe_set_sid_mode(method_id, t0, ayan_t0);
         }
     }
+
+    /// Set a sidereal mode and read its ayanamsa without allowing another
+    /// calculation to change Swiss Ephemeris' process-global mode in between.
+    pub fn get_ayanamsa_ut_for_mode(
+        &self,
+        datetime: DateTime<Utc>,
+        method_id: i32,
+        t0: f64,
+        ayan_t0: f64,
+    ) -> f64 {
+        let julian_day = self.to_julian_day(datetime);
+        let _lock = ASTRO_LOCK.lock().unwrap();
+        unsafe {
+            swiss_eph::swe_set_sid_mode(method_id, t0, ayan_t0);
+            swiss_eph::swe_get_ayanamsa_ut(julian_day)
+        }
+    }
 }
 
 impl Default for AstroEngine {
