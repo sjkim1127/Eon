@@ -75,16 +75,16 @@
 <a href=#75 id=75 data-nosnippet>75</a>
 <a href=#76 id=76 data-nosnippet>76</a>    <span class="doccomment">/// 특정 시점의 24절기 인덱스(0~23)를 산출합니다.
 <a href=#77 id=77 data-nosnippet>77</a>    /// 0: 입춘, 1: 우수, 2: 경칩 ... 23: 대한
-<a href=#78 id=78 data-nosnippet>78</a>    </span><span class="kw">pub fn </span>get_solar_term_index(<span class="kw-2">&amp;</span><span class="self">self</span>, datetime: DateTime&lt;Utc&gt;) -&gt; u8 {
-<a href=#79 id=79 data-nosnippet>79</a>        <span class="kw">let </span>sun_long = <span class="self">self</span>.get_sun_longitude(datetime).unwrap_or(<span class="number">0.0</span>);
+<a href=#78 id=78 data-nosnippet>78</a>    </span><span class="kw">pub fn </span>get_solar_term_index(<span class="kw-2">&amp;</span><span class="self">self</span>, datetime: DateTime&lt;Utc&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;u8, AstroError&gt; {
+<a href=#79 id=79 data-nosnippet>79</a>        <span class="kw">let </span>sun_long = <span class="self">self</span>.get_sun_longitude(datetime)<span class="question-mark">?</span>;
 <a href=#80 id=80 data-nosnippet>80</a>
 <a href=#81 id=81 data-nosnippet>81</a>        <span class="comment">// 입춘(315도)을 0으로 맞춤
 <a href=#82 id=82 data-nosnippet>82</a>        </span><span class="kw">let </span>adjusted = (sun_long - <span class="number">315.0 </span>+ <span class="number">360.0</span>) % <span class="number">360.0</span>;
 <a href=#83 id=83 data-nosnippet>83</a>
 <a href=#84 id=84 data-nosnippet>84</a>        <span class="comment">// 15도마다 절기가 바뀜 (24절기)
 <a href=#85 id=85 data-nosnippet>85</a>        </span><span class="kw">let </span>index = (adjusted / <span class="number">15.0</span>).floor() <span class="kw">as </span>u8;
-<a href=#86 id=86 data-nosnippet>86</a>        index % <span class="number">24
-<a href=#87 id=87 data-nosnippet>87</a>    </span>}
+<a href=#86 id=86 data-nosnippet>86</a>        <span class="prelude-val">Ok</span>(index % <span class="number">24</span>)
+<a href=#87 id=87 data-nosnippet>87</a>    }
 <a href=#88 id=88 data-nosnippet>88</a>
 <a href=#89 id=89 data-nosnippet>89</a>    <span class="doccomment">/// 특정 황경(target_long)에 도달하는 정확한 시각을 추적합니다. (Root Finding)
 <a href=#90 id=90 data-nosnippet>90</a>    </span><span class="kw">pub fn </span>find_time_for_longitude(
