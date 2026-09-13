@@ -196,23 +196,27 @@
 <a href=#196 id=196 data-nosnippet>196</a>
 <a href=#197 id=197 data-nosnippet>197</a>    <span class="doccomment">/// Calculate nakshatra (1..27) and pada (1..4) from sidereal longitude (0..360)
 <a href=#198 id=198 data-nosnippet>198</a>    </span><span class="kw">pub fn </span>nakshatra_and_pada(longitude: f64) -&gt; (u8, u8) {
-<a href=#199 id=199 data-nosnippet>199</a>        <span class="kw">let </span>deg = (longitude % <span class="number">360.0 </span>+ <span class="number">360.0</span>) % <span class="number">360.0</span>;
-<a href=#200 id=200 data-nosnippet>200</a>        <span class="kw">let </span>nak_pos = deg / (<span class="number">360.0 </span>/ <span class="number">27.0</span>);
-<a href=#201 id=201 data-nosnippet>201</a>        <span class="kw">let </span>nakshatra = (nak_pos.floor() <span class="kw">as </span>u8).saturating_add(<span class="number">1</span>).min(<span class="number">27</span>);
-<a href=#202 id=202 data-nosnippet>202</a>        <span class="kw">let </span>pada_pos = (deg % (<span class="number">360.0 </span>/ <span class="number">27.0</span>)) / (<span class="number">360.0 </span>/ <span class="number">108.0</span>);
-<a href=#203 id=203 data-nosnippet>203</a>        <span class="kw">let </span>pada = (pada_pos.floor() <span class="kw">as </span>u8).saturating_add(<span class="number">1</span>).min(<span class="number">4</span>);
-<a href=#204 id=204 data-nosnippet>204</a>        (nakshatra, pada)
-<a href=#205 id=205 data-nosnippet>205</a>    }
-<a href=#206 id=206 data-nosnippet>206</a>
-<a href=#207 id=207 data-nosnippet>207</a>    <span class="doccomment">/// Detailed Nakshatra info for a planet
-<a href=#208 id=208 data-nosnippet>208</a>    </span><span class="kw">pub fn </span>get_pada_description(pada: u8) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
-<a href=#209 id=209 data-nosnippet>209</a>        <span class="kw">match </span>pada {
-<a href=#210 id=210 data-nosnippet>210</a>            <span class="number">1 </span>=&gt; <span class="string">"Dharma Pada (Fire/Aries quality)"</span>,
-<a href=#211 id=211 data-nosnippet>211</a>            <span class="number">2 </span>=&gt; <span class="string">"Artha Pada (Earth/Taurus quality)"</span>,
-<a href=#212 id=212 data-nosnippet>212</a>            <span class="number">3 </span>=&gt; <span class="string">"Kama Pada (Air/Gemini quality)"</span>,
-<a href=#213 id=213 data-nosnippet>213</a>            <span class="number">4 </span>=&gt; <span class="string">"Moksha Pada (Water/Cancer quality)"</span>,
-<a href=#214 id=214 data-nosnippet>214</a>            <span class="kw">_ </span>=&gt; <span class="string">"Unknown"</span>,
-<a href=#215 id=215 data-nosnippet>215</a>        }
-<a href=#216 id=216 data-nosnippet>216</a>    }
-<a href=#217 id=217 data-nosnippet>217</a>}
+<a href=#199 id=199 data-nosnippet>199</a>        <span class="kw">let </span>deg = <span class="kw">if </span>longitude.is_finite() {
+<a href=#200 id=200 data-nosnippet>200</a>            longitude.rem_euclid(<span class="number">360.0</span>)
+<a href=#201 id=201 data-nosnippet>201</a>        } <span class="kw">else </span>{
+<a href=#202 id=202 data-nosnippet>202</a>            <span class="number">0.0
+<a href=#203 id=203 data-nosnippet>203</a>        </span>};
+<a href=#204 id=204 data-nosnippet>204</a>        <span class="kw">let </span>nak_pos = deg / (<span class="number">360.0 </span>/ <span class="number">27.0</span>);
+<a href=#205 id=205 data-nosnippet>205</a>        <span class="kw">let </span>nakshatra = (nak_pos.floor() <span class="kw">as </span>u8).saturating_add(<span class="number">1</span>).min(<span class="number">27</span>);
+<a href=#206 id=206 data-nosnippet>206</a>        <span class="kw">let </span>pada_pos = (deg % (<span class="number">360.0 </span>/ <span class="number">27.0</span>)) / (<span class="number">360.0 </span>/ <span class="number">108.0</span>);
+<a href=#207 id=207 data-nosnippet>207</a>        <span class="kw">let </span>pada = (pada_pos.floor() <span class="kw">as </span>u8).saturating_add(<span class="number">1</span>).min(<span class="number">4</span>);
+<a href=#208 id=208 data-nosnippet>208</a>        (nakshatra, pada)
+<a href=#209 id=209 data-nosnippet>209</a>    }
+<a href=#210 id=210 data-nosnippet>210</a>
+<a href=#211 id=211 data-nosnippet>211</a>    <span class="doccomment">/// Detailed Nakshatra info for a planet
+<a href=#212 id=212 data-nosnippet>212</a>    </span><span class="kw">pub fn </span>get_pada_description(pada: u8) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+<a href=#213 id=213 data-nosnippet>213</a>        <span class="kw">match </span>pada {
+<a href=#214 id=214 data-nosnippet>214</a>            <span class="number">1 </span>=&gt; <span class="string">"Dharma Pada (Fire/Aries quality)"</span>,
+<a href=#215 id=215 data-nosnippet>215</a>            <span class="number">2 </span>=&gt; <span class="string">"Artha Pada (Earth/Taurus quality)"</span>,
+<a href=#216 id=216 data-nosnippet>216</a>            <span class="number">3 </span>=&gt; <span class="string">"Kama Pada (Air/Gemini quality)"</span>,
+<a href=#217 id=217 data-nosnippet>217</a>            <span class="number">4 </span>=&gt; <span class="string">"Moksha Pada (Water/Cancer quality)"</span>,
+<a href=#218 id=218 data-nosnippet>218</a>            <span class="kw">_ </span>=&gt; <span class="string">"Unknown"</span>,
+<a href=#219 id=219 data-nosnippet>219</a>        }
+<a href=#220 id=220 data-nosnippet>220</a>    }
+<a href=#221 id=221 data-nosnippet>221</a>}
 </code></pre></div></section></main></body></html>
