@@ -474,4 +474,38 @@
 <a href=#474 id=474 data-nosnippet>474</a>        <span class="self">Self</span>::new()
 <a href=#475 id=475 data-nosnippet>475</a>    }
 <a href=#476 id=476 data-nosnippet>476</a>}
+<a href=#477 id=477 data-nosnippet>477</a>
+<a href=#478 id=478 data-nosnippet>478</a><span class="attr">#[cfg(test)]
+<a href=#479 id=479 data-nosnippet>479</a></span><span class="kw">mod </span>tests {
+<a href=#480 id=480 data-nosnippet>480</a>    <span class="kw">use </span><span class="kw">super</span>::AstroEngine;
+<a href=#481 id=481 data-nosnippet>481</a>    <span class="kw">use </span>chrono::{TimeZone, Utc};
+<a href=#482 id=482 data-nosnippet>482</a>    <span class="kw">use </span>std::thread;
+<a href=#483 id=483 data-nosnippet>483</a>
+<a href=#484 id=484 data-nosnippet>484</a>    <span class="attr">#[test]
+<a href=#485 id=485 data-nosnippet>485</a>    </span><span class="kw">fn </span>sidereal_mode_and_ayanamsa_are_atomic_across_threads() {
+<a href=#486 id=486 data-nosnippet>486</a>        <span class="kw">let </span>time = Utc.with_ymd_and_hms(<span class="number">2020</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap();
+<a href=#487 id=487 data-nosnippet>487</a>        <span class="kw">let </span>expected_lahiri = AstroEngine::new().get_ayanamsa_ut_for_mode(time, <span class="number">1</span>, <span class="number">0.0</span>, <span class="number">0.0</span>);
+<a href=#488 id=488 data-nosnippet>488</a>        <span class="kw">let </span>expected_raman = AstroEngine::new().get_ayanamsa_ut_for_mode(time, <span class="number">3</span>, <span class="number">0.0</span>, <span class="number">0.0</span>);
+<a href=#489 id=489 data-nosnippet>489</a>
+<a href=#490 id=490 data-nosnippet>490</a>        <span class="kw">let </span>handles = (<span class="number">0</span>..<span class="number">16</span>)
+<a href=#491 id=491 data-nosnippet>491</a>            .map(|i| {
+<a href=#492 id=492 data-nosnippet>492</a>                thread::spawn(<span class="kw">move </span>|| {
+<a href=#493 id=493 data-nosnippet>493</a>                    <span class="kw">let </span>engine = AstroEngine::new();
+<a href=#494 id=494 data-nosnippet>494</a>                    <span class="kw">let </span>method = <span class="kw">if </span>i % <span class="number">2 </span>== <span class="number">0 </span>{ <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">3 </span>};
+<a href=#495 id=495 data-nosnippet>495</a>                    <span class="kw">let </span>actual = engine.get_ayanamsa_ut_for_mode(time, method, <span class="number">0.0</span>, <span class="number">0.0</span>);
+<a href=#496 id=496 data-nosnippet>496</a>                    <span class="kw">let </span>expected = <span class="kw">if </span>method == <span class="number">1 </span>{
+<a href=#497 id=497 data-nosnippet>497</a>                        expected_lahiri
+<a href=#498 id=498 data-nosnippet>498</a>                    } <span class="kw">else </span>{
+<a href=#499 id=499 data-nosnippet>499</a>                        expected_raman
+<a href=#500 id=500 data-nosnippet>500</a>                    };
+<a href=#501 id=501 data-nosnippet>501</a>                    <span class="macro">assert!</span>((actual - expected).abs() &lt; <span class="number">1e-12</span>);
+<a href=#502 id=502 data-nosnippet>502</a>                })
+<a href=#503 id=503 data-nosnippet>503</a>            })
+<a href=#504 id=504 data-nosnippet>504</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+<a href=#505 id=505 data-nosnippet>505</a>
+<a href=#506 id=506 data-nosnippet>506</a>        <span class="kw">for </span>handle <span class="kw">in </span>handles {
+<a href=#507 id=507 data-nosnippet>507</a>            handle.join().unwrap();
+<a href=#508 id=508 data-nosnippet>508</a>        }
+<a href=#509 id=509 data-nosnippet>509</a>    }
+<a href=#510 id=510 data-nosnippet>510</a>}
 </code></pre></div></section></main></body></html>
