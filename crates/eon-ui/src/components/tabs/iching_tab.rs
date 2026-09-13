@@ -3,6 +3,7 @@ use crate::components::shared::birth_form::BirthForm;
 use crate::i18n::iching_db::{get_hexagram_info, get_yao_description, get_yao_name};
 use crate::i18n::{t, Locale, TK};
 use crate::store::{AnalysisState, TaskStatus};
+use chrono::Datelike;
 use dioxus::prelude::*;
 use eon_saju::core::element::ElementRelation;
 use eon_service::dto::SajuAnalysisInput;
@@ -50,7 +51,8 @@ pub fn IChingTab() -> Element {
                             selected_yao.set(Some((true, yd)));
 
                             // 현재 만나이 계산하여 초기 나이 설정
-                            let current_age = (2026 - form.year).max(1) as u32;
+                            let current_age =
+                                (chrono::Local::now().year() - form.year).max(1) as u32;
                             selected_age.set(current_age.min(100));
                         }
                     }
@@ -64,7 +66,7 @@ pub fn IChingTab() -> Element {
     });
 
     let form_year = state.form.read().year;
-    let current_age = (2026 - form_year).max(0) as u32;
+    let current_age = (chrono::Local::now().year() - form_year).max(0) as u32;
 
     rsx! {
         div { class: "space-y-6 animate-in fade-in duration-700",

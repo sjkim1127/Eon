@@ -2,6 +2,7 @@
 use crate::dto::{ReportTheme, SajuAnalysisOutput, ThemedReportInput, ThemedReportOutput};
 use crate::error::ServiceError;
 use crate::services::saju;
+use chrono::Datelike;
 use eon_saju::core::branch::EarthlyBranch;
 use eon_saju::core::element::Element;
 use eon_saju::core::stem::HeavenlyStem;
@@ -190,26 +191,29 @@ fn generate_love_report(saju: &SajuAnalysisOutput, name: &str, is_male: bool) ->
     // Section 3: 인연이 들어오는 시기 (Twelve Stages)
     s.push_str("### 3. 인연을 만나는 타이밍 & 결혼 적기\n\n");
     s.push_str("향후 5년간 애정의 활력이 가장 크게 상승하는 대운/세운 흐름을 기반으로 분석한 인연 유입 타이밍입니다.\n\n");
-    s.push_str("| 연도 | 세운 간지 | 십이운성 활력도 | 연애/인연운 종합 추천도 |\n");
+    s.push_str("| 연도 | 세운 간지 | 분석 단계 | 연애/인연운 종합 추천도 |\n");
     s.push_str("| --- | --- | --- | --- |\n");
 
-    // 예시용 향후 5년 가이드라인
-    let years = vec![2026, 2027, 2028, 2029, 2030];
+    let current_year = chrono::Utc::now().year();
+    let years = (current_year..current_year.saturating_add(5)).collect::<Vec<_>>();
     for (i, yr) in years.into_iter().enumerate() {
-        let (ganzi, stage, score) = match i {
-            0 => ("丙午 (병오)", "태(胎)", "★★★☆☆ - 호기심 가득한 인연 출현"),
-            1 => ("丁未 (정미)", "양(養)", "★★★★☆ - 안정감 있는 만남 지속"),
-            2 => (
-                "戊申 (무신)",
-                "장생(長生)",
-                "★★★★★ - 평생의 인연이 나타나는 적기",
-            ),
-            3 => (
-                "己酉 (기유)",
-                "목욕(沐浴)",
-                "★★★★☆ - 연애의 화려함과 매력 상승",
-            ),
-            _ => ("庚戌 (경술)", "관대(冠帶)", "★★★☆☆ - 책임감 있는 관계 정립"),
+        let ganzi_value = eon_saju::core::ganzi::GanZi::from_year(yr);
+        let ganzi = format!(
+            "{}{} ({}{})",
+            HeavenlyStem::HANJA[ganzi_value.stem.index() as usize],
+            EarthlyBranch::HANJA[ganzi_value.branch.index() as usize],
+            HeavenlyStem::HANGUL[ganzi_value.stem.index() as usize],
+            EarthlyBranch::HANGUL[ganzi_value.branch.index() as usize]
+        );
+        let stage =
+            eon_saju::core::twelve_stages::calculate_twelve_stage(day_stem, ganzi_value.branch)
+                .hangul();
+        let score = match i {
+            0 => "★★★☆☆ - 호기심 가득한 인연 출현",
+            1 => "★★★★☆ - 안정감 있는 만남 지속",
+            2 => "★★★★★ - 평생의 인연이 나타나는 적기",
+            3 => "★★★★☆ - 연애의 화려함과 매력 상승",
+            _ => "★★★☆☆ - 책임감 있는 관계 정립",
         };
         s.push_str(&format!(
             "| {}년 | {} | {} | {} |\n",

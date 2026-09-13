@@ -2,6 +2,7 @@ use crate::components::shared::birth_form::BirthForm;
 use crate::components::tabs::composite_bodygraph::CompositeBodyGraph;
 use crate::i18n::{t, TK};
 use crate::store::{AnalysisState, TaskStatus};
+use chrono::Datelike;
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 use eon_human_design::transit::ReturnType;
@@ -75,7 +76,9 @@ pub fn HdTransitTab() -> Element {
                 let base_input = form1.to_analysis_input();
                 let hd_input = HumanDesignAnalysisInput::new(base_input);
 
-                let year = year_str.parse::<i32>().unwrap_or(2026);
+                let year = year_str
+                    .parse::<i32>()
+                    .unwrap_or_else(|_| chrono::Local::now().year());
 
                 match facade::analyze_hd_return(hd_input, r_type, year) {
                     Ok(res) => {
