@@ -189,13 +189,10 @@ impl AstroEngine {
         let target_long = (315.0 + (term_idx as f64) * 15.0) % 360.0;
         let current_long = self.get_sun_longitude(birth_time)?;
 
-        let mut diff = target_long - current_long;
-        while diff > 180.0 {
-            diff -= 360.0;
-        }
-        while diff < -180.0 {
-            diff += 360.0;
-        }
+        // A solar-term lookup is a forward lookup from the supplied instant.
+        // Using the shortest angular distance would return the previous year's
+        // crossing for terms more than 180° ahead (e.g. LiChun -> Liqiu).
+        let diff = (target_long - current_long).rem_euclid(360.0);
 
         // 대략적인 시각 산출 (1도 = 1일로 계산)
         use chrono::Duration;
@@ -556,5 +553,26 @@ mod tests {
             engine.get_houses(time, 0.0, 0.0, b'Z' as i32),
             Err(AstroError::InvalidHouseSystem(b'Z' as i32))
         );
+    }
+
+    #[test]
+    fn solar_term_crossings_match_swiss_ephemeris_oracle() {
+        let engine = AstroEngine::new();
+        let year_start = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
+        let expected = [
+            Utc.with_ymd_and_hms(2024, 2, 4, 8, 27, 8).unwrap(),
+            Utc.with_ymd_and_hms(2024, 5, 5, 0, 10, 4).unwrap(),
+            Utc.with_ymd_and_hms(2024, 8, 7, 0, 9, 15).unwrap(),
+            Utc.with_ymd_and_hms(2024, 11, 6, 22, 20, 5).unwrap(),
+        ];
+
+        for (term_idx, expected_time) in [0u8, 6, 12, 18].into_iter().zip(expected) {
+            let actual = engine.find_solar_term_time(year_start, term_idx).unwrap();
+            assert!(
+                (actual - expected_time).num_seconds().abs() <= 2,
+                "term {term_idx} differs by {} seconds",
+                (actual - expected_time).num_seconds()
+            );
+        }
     }
 }
