@@ -233,6 +233,9 @@ impl GocharaEngine {
     }
 
     pub fn calculate_sade_sati(natal_moon: u8, saturn_transit: u8) -> SadeSatiPhase {
+        if !(1..=12).contains(&natal_moon) || !(1..=12).contains(&saturn_transit) {
+            return SadeSatiPhase::None;
+        }
         // Moon's 12th is (Moon - 1)
         // Sign index 1-12
         let prev = if natal_moon == 1 { 12 } else { natal_moon - 1 };
@@ -400,6 +403,14 @@ mod tests {
         // Saturn in Taurus (2) -> None
         assert_eq!(
             GocharaEngine::calculate_sade_sati(moon_pisces, 2),
+            SadeSatiPhase::None
+        );
+        assert_eq!(
+            GocharaEngine::calculate_sade_sati(0, 1),
+            SadeSatiPhase::None
+        );
+        assert_eq!(
+            GocharaEngine::calculate_sade_sati(12, 13),
             SadeSatiPhase::None
         );
     }
