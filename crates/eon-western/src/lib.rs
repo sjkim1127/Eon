@@ -1106,7 +1106,7 @@ pub fn calculate_composite(
                 name: pa.name.clone(),
                 longitude: mid_long,
                 speed: (pa.speed + pb.speed) / 2.0,
-                is_retrograde: pa.is_retrograde,
+                is_retrograde: (pa.speed + pb.speed) / 2.0 < 0.0,
                 sign_index,
                 degree_in_sign,
                 house_number: 1, // Will be re-assigned below
