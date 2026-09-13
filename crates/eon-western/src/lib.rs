@@ -1026,8 +1026,8 @@ pub fn calculate_synastry(
 
     for pa in &chart_a.planets {
         for pb in &chart_b.planets {
-            let diff = (pa.longitude - pb.longitude).abs();
-            let angle = if diff > 180.0 { 360.0 - diff } else { diff };
+            let signed_delta = (pa.longitude - pb.longitude + 540.0).rem_euclid(360.0) - 180.0;
+            let angle = signed_delta.abs();
 
             for &asp in &aspect_types {
                 let target = asp.angle();
@@ -1039,7 +1039,7 @@ pub fn calculate_synastry(
                         aspect_type: asp,
                         angle_diff: angle,
                         orb,
-                        dynamics: AspectDynamics::Exact,
+                        dynamics: aspect_dynamics(angle, target, signed_delta, pa.speed - pb.speed),
                         is_major: asp.is_major(),
                     });
                 }

@@ -94,6 +94,12 @@ fn test_western_synastry_composite_progression() {
     let syn = calculate_synastry(&res_a, &res_b, "Person A", "Person B");
     assert!(syn.harmony_score >= 0.0 && syn.harmony_score <= 100.0);
     assert!(!syn.summary.is_empty());
+    assert!(syn.inter_aspects.iter().any(|aspect| {
+        matches!(
+            aspect.dynamics,
+            AspectDynamics::Applying | AspectDynamics::Separating
+        )
+    }));
 
     // 2. Composite test
     let comp = calculate_composite(&res_a, &res_b).unwrap();
