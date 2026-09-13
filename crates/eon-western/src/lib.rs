@@ -1319,4 +1319,33 @@ mod tests {
         assert!(result.ascendant >= 0.0 && result.ascendant < 360.0);
         assert!(result.midheaven >= 0.0 && result.midheaven < 360.0);
     }
+
+    #[test]
+    fn arabian_parts_use_day_night_formulas_across_zero() {
+        let planet = |name: &str, longitude: f64| WesternPlanetData {
+            id: 0,
+            name: name.to_string(),
+            longitude,
+            speed: 0.0,
+            is_retrograde: false,
+            sign_index: (longitude / 30.0).floor() as usize,
+            degree_in_sign: longitude % 30.0,
+            house_number: 1,
+        };
+        let planets = vec![
+            planet("Sun", 10.0),
+            planet("Moon", 20.0),
+            planet("Venus", 30.0),
+        ];
+
+        let day = calculate_arabian_parts(350.0, &planets, &[], true);
+        assert_eq!(day[0].longitude, 0.0); // ASC + Moon - Sun
+        assert_eq!(day[1].longitude, 340.0); // ASC + Sun - Moon
+        assert_eq!(day[2].longitude, 40.0); // ASC + Venus - Spirit
+
+        let night = calculate_arabian_parts(350.0, &planets, &[], false);
+        assert_eq!(night[0].longitude, 340.0); // ASC + Sun - Moon
+        assert_eq!(night[1].longitude, 0.0); // ASC + Moon - Sun
+        assert_eq!(night[2].longitude, 320.0); // ASC + Spirit - Venus
+    }
 }
