@@ -50,7 +50,12 @@ impl Vimshottari {
         year_type: VedicYearType,
     ) -> Vec<DashaPeriod> {
         let nak_len = 360.0 / 27.0;
-        let nak_pos_val = moon_longitude / nak_len;
+        let normalized_moon = if moon_longitude.is_finite() {
+            moon_longitude.rem_euclid(360.0)
+        } else {
+            0.0
+        };
+        let nak_pos_val = normalized_moon / nak_len;
         let nak_idx = nak_pos_val.floor() as usize; // 0..26
         let nakshatra = (nak_idx + 1) as u8;
 
@@ -252,7 +257,12 @@ impl Yogini {
         year_type: VedicYearType,
     ) -> Vec<DashaPeriod> {
         let nak_len = 360.0 / 27.0;
-        let nak_pos_val = moon_longitude / nak_len;
+        let normalized_moon = if moon_longitude.is_finite() {
+            moon_longitude.rem_euclid(360.0)
+        } else {
+            0.0
+        };
+        let nak_pos_val = normalized_moon / nak_len;
         let nak_idx = nak_pos_val.floor() as usize; // 0..26
         let nakshatra = (nak_idx + 1) as u8;
 
@@ -425,5 +435,14 @@ mod tests {
         let end_greg = Vimshottari::add_years(birth, 10.0, VedicYearType::Gregorian);
         let diff_greg = end_greg.signed_duration_since(birth).num_days();
         assert!((3652..=3653).contains(&diff_greg));
+    }
+
+    #[test]
+    fn test_dasha_normalizes_moon_longitude_boundaries() {
+        let birth = Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap();
+        for longitude in [0.0, 360.0, -360.0, -0.001, f64::NAN, f64::INFINITY] {
+            let dashas = Vimshottari::calculate(longitude, birth, 1, VedicYearType::Gregorian);
+            assert!(!dashas.is_empty());
+        }
     }
 }

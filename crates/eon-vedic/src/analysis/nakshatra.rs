@@ -196,7 +196,11 @@ impl NakshatraEngine {
 
     /// Calculate nakshatra (1..27) and pada (1..4) from sidereal longitude (0..360)
     pub fn nakshatra_and_pada(longitude: f64) -> (u8, u8) {
-        let deg = (longitude % 360.0 + 360.0) % 360.0;
+        let deg = if longitude.is_finite() {
+            longitude.rem_euclid(360.0)
+        } else {
+            0.0
+        };
         let nak_pos = deg / (360.0 / 27.0);
         let nakshatra = (nak_pos.floor() as u8).saturating_add(1).min(27);
         let pada_pos = (deg % (360.0 / 27.0)) / (360.0 / 108.0);
