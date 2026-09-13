@@ -74,6 +74,14 @@ fn get_dagdha_rashis(tithi: u8) -> Vec<u8> {
 
 pub struct PanchangaEngine;
 
+fn normalize_degrees(degrees: f64) -> f64 {
+    if degrees.is_finite() {
+        degrees.rem_euclid(360.0)
+    } else {
+        0.0
+    }
+}
+
 impl PanchangaEngine {
     pub fn calculate(
         sun_deg: f64,
@@ -82,8 +90,8 @@ impl PanchangaEngine {
         latitude: f64,
         longitude: f64,
     ) -> Panchanga {
-        let sun = sun_deg;
-        let moon = moon_deg;
+        let sun = normalize_degrees(sun_deg);
+        let moon = normalize_degrees(moon_deg);
 
         // 1. Fetch sunrise/sunset for the current LOCAL date
         let local_offset_mins = (longitude * 4.0) as i64;
@@ -144,7 +152,7 @@ impl PanchangaEngine {
         let daily_parts = Self::calculate_tribhaga_lords(day_lord); // Simplified for Tribhaga
 
         // 4. Tithi (Moon - Sun) / 12
-        let tithi_deg = (moon - sun + 360.0) % 360.0;
+        let tithi_deg = normalize_degrees(moon - sun);
         let tithi = (tithi_deg / 12.0).floor() as u8 + 1;
         let tithi_name = Self::get_tithi_name(tithi);
 
@@ -152,7 +160,7 @@ impl PanchangaEngine {
         let nakshatra = (moon / (360.0 / 27.0)).floor() as u8 + 1;
 
         // 6. Yoga (Sun + Moon) / 13.333
-        let yoga_deg = (sun + moon) % 360.0;
+        let yoga_deg = normalize_degrees(sun + moon);
         let yoga = (yoga_deg / (360.0 / 27.0)).floor() as u8 + 1;
 
         // 7. Karana (Tithi_deg / 6)
@@ -161,11 +169,11 @@ impl PanchangaEngine {
         let karana_name = Self::get_karana_name(karana_idx);
 
         // Yogi, Avayogi & Dagdha Rashi
-        let yogi_point = (sun + moon + 93.3333333) % 360.0;
+        let yogi_point = normalize_degrees(sun + moon + 93.3333333);
         let yogi_nak = (yogi_point / (360.0 / 27.0)).floor() as u8 + 1;
         let yogi_planet = get_nakshatra_lord(yogi_nak);
 
-        let avayogi_point = (yogi_point + 186.6666667) % 360.0;
+        let avayogi_point = normalize_degrees(yogi_point + 186.6666667);
         let avayogi_nak = (avayogi_point / (360.0 / 27.0)).floor() as u8 + 1;
         let avayogi_planet = get_nakshatra_lord(avayogi_nak);
 
@@ -500,5 +508,25 @@ impl PanchangaEngine {
         ];
         let m_idx = ((idx.saturating_sub(2)) % 7) as usize;
         movables[m_idx].to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::PanchangaEngine;
+    use chrono::{TimeZone, Utc};
+
+    #[test]
+    fn normalize_out_of_range_angles_before_panchanga_rules() {
+        let time = Utc.with_ymd_and_hms(2024, 4, 15, 12, 0, 0).unwrap();
+        let normalized = PanchangaEngine::calculate(0.0, 0.0, time, 37.5, 126.9);
+        let out_of_range = PanchangaEngine::calculate(720.0, -360.0, time, 37.5, 126.9);
+
+        assert_eq!(out_of_range.tithi, normalized.tithi);
+        assert_eq!(out_of_range.nakshatra, normalized.nakshatra);
+        assert_eq!(out_of_range.yoga, normalized.yoga);
+        assert_eq!(out_of_range.karana, normalized.karana);
+        assert_eq!(out_of_range.yogi_planet, normalized.yogi_planet);
+        assert_eq!(out_of_range.avayogi_planet, normalized.avayogi_planet);
     }
 }
