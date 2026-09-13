@@ -425,7 +425,7 @@
 <a href=#425 id=425 data-nosnippet>425</a>        </span><span class="kw">if </span>!(<span class="number">0</span>..=u8::MAX <span class="kw">as </span>i32).contains(<span class="kw-2">&amp;</span>house_system)
 <a href=#426 id=426 data-nosnippet>426</a>            || !<span class="macro">matches!</span>(
 <a href=#427 id=427 data-nosnippet>427</a>                house_system <span class="kw">as </span>u8,
-<a href=#428 id=428 data-nosnippet>428</a>                <span class="string">b'A'</span>..=<span class="string">b'K' </span>| <span class="string">b'O' </span>| <span class="string">b'P' </span>| <span class="string">b'R' </span>| <span class="string">b'S' </span>| <span class="string">b'T' </span>| <span class="string">b'W' </span>| <span class="string">b'X'
+<a href=#428 id=428 data-nosnippet>428</a>                <span class="string">b'A'</span>..=<span class="string">b'K' </span>| <span class="string">b'O' </span>| <span class="string">b'P' </span>| <span class="string">b'R' </span>| <span class="string">b'S' </span>| <span class="string">b'T' </span>| <span class="string">b'V' </span>| <span class="string">b'W' </span>| <span class="string">b'X'
 <a href=#429 id=429 data-nosnippet>429</a>            </span>)
 <a href=#430 id=430 data-nosnippet>430</a>        {
 <a href=#431 id=431 data-nosnippet>431</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(AstroError::InvalidHouseSystem(house_system));
@@ -551,10 +551,11 @@
 <a href=#551 id=551 data-nosnippet>551</a>        }
 <a href=#552 id=552 data-nosnippet>552</a>
 <a href=#553 id=553 data-nosnippet>553</a>        <span class="macro">assert!</span>(engine.get_houses(time, <span class="number">90.0</span>, <span class="number">180.0</span>, <span class="string">b'W' </span><span class="kw">as </span>i32).is_ok());
-<a href=#554 id=554 data-nosnippet>554</a>        <span class="macro">assert_eq!</span>(
-<a href=#555 id=555 data-nosnippet>555</a>            engine.get_houses(time, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="string">b'Z' </span><span class="kw">as </span>i32),
-<a href=#556 id=556 data-nosnippet>556</a>            <span class="prelude-val">Err</span>(AstroError::InvalidHouseSystem(<span class="string">b'Z' </span><span class="kw">as </span>i32))
-<a href=#557 id=557 data-nosnippet>557</a>        );
-<a href=#558 id=558 data-nosnippet>558</a>    }
-<a href=#559 id=559 data-nosnippet>559</a>}
+<a href=#554 id=554 data-nosnippet>554</a>        <span class="macro">assert!</span>(engine.get_houses(time, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="string">b'V' </span><span class="kw">as </span>i32).is_ok());
+<a href=#555 id=555 data-nosnippet>555</a>        <span class="macro">assert_eq!</span>(
+<a href=#556 id=556 data-nosnippet>556</a>            engine.get_houses(time, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="string">b'Z' </span><span class="kw">as </span>i32),
+<a href=#557 id=557 data-nosnippet>557</a>            <span class="prelude-val">Err</span>(AstroError::InvalidHouseSystem(<span class="string">b'Z' </span><span class="kw">as </span>i32))
+<a href=#558 id=558 data-nosnippet>558</a>        );
+<a href=#559 id=559 data-nosnippet>559</a>    }
+<a href=#560 id=560 data-nosnippet>560</a>}
 </code></pre></div></section></main></body></html>
