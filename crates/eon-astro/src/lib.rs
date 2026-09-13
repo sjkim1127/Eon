@@ -474,3 +474,37 @@ impl Default for AstroEngine {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::AstroEngine;
+    use chrono::{TimeZone, Utc};
+    use std::thread;
+
+    #[test]
+    fn sidereal_mode_and_ayanamsa_are_atomic_across_threads() {
+        let time = Utc.with_ymd_and_hms(2020, 1, 1, 0, 0, 0).unwrap();
+        let expected_lahiri = AstroEngine::new().get_ayanamsa_ut_for_mode(time, 1, 0.0, 0.0);
+        let expected_raman = AstroEngine::new().get_ayanamsa_ut_for_mode(time, 3, 0.0, 0.0);
+
+        let handles = (0..16)
+            .map(|i| {
+                thread::spawn(move || {
+                    let engine = AstroEngine::new();
+                    let method = if i % 2 == 0 { 1 } else { 3 };
+                    let actual = engine.get_ayanamsa_ut_for_mode(time, method, 0.0, 0.0);
+                    let expected = if method == 1 {
+                        expected_lahiri
+                    } else {
+                        expected_raman
+                    };
+                    assert!((actual - expected).abs() < 1e-12);
+                })
+            })
+            .collect::<Vec<_>>();
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
+    }
+}
