@@ -17,3 +17,34 @@ fn panchanga_rules_match_external_swiss_positions() {
     assert_eq!(chart.panchanga.yoga, 7);
     assert_eq!(chart.panchanga.karana, 8); // sequential half-tithi 15 -> Vishti
 }
+
+#[test]
+fn panchanga_rules_hold_for_historical_and_future_oracles() {
+    for (time, lat, lon, expected) in [
+        (
+            Utc.with_ymd_and_hms(1988, 3, 14, 15, 0, 0).unwrap(),
+            37.5665,
+            126.978,
+            (26, 22, 19, 3), // half-tithi 52 maps to the rotating Karana type 3
+        ),
+        (
+            Utc.with_ymd_and_hms(2050, 6, 21, 0, 0, 0).unwrap(),
+            -33.8688,
+            151.2093,
+            (2, 7, 12, 4),
+        ),
+    ] {
+        let chart = VedicChartCalculator::default()
+            .calculate(time, lat, lon)
+            .unwrap();
+        assert_eq!(
+            (
+                chart.panchanga.tithi,
+                chart.panchanga.nakshatra,
+                chart.panchanga.yoga,
+                chart.panchanga.karana,
+            ),
+            expected
+        );
+    }
+}
