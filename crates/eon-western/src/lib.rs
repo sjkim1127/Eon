@@ -274,6 +274,32 @@ pub fn is_angle_between(target: f64, start: f64, end: f64) -> bool {
     t < e
 }
 
+fn aspect_dynamics(
+    angle: f64,
+    target: f64,
+    signed_delta: f64,
+    relative_speed: f64,
+) -> AspectDynamics {
+    let orb = (angle - target).abs();
+    if orb < 0.01 {
+        return AspectDynamics::Exact;
+    }
+
+    // signed_delta is the shortest directed separation in (-180, 180].
+    // Its sign determines whether relative motion increases or decreases the
+    // displayed (unsigned) separation.
+    let angle_rate = if signed_delta >= 0.0 {
+        relative_speed
+    } else {
+        -relative_speed
+    };
+    if (angle - target) * angle_rate < 0.0 {
+        AspectDynamics::Applying
+    } else {
+        AspectDynamics::Separating
+    }
+}
+
 /// Essential Dignity (고전 위계) 점수 계산
 pub fn calculate_essential_dignities(planets: &[WesternPlanetData]) -> Vec<EssentialDignityInfo> {
     // Domicile / Exaltation / Detriment / Fall 규칙
@@ -836,8 +862,8 @@ pub fn calculate_western(
             let (ref name_a, long_a, speed_a) = aspect_bodies[i];
             let (ref name_b, long_b, speed_b) = aspect_bodies[j];
 
-            let diff = (long_a - long_b).abs();
-            let angle = if diff > 180.0 { 360.0 - diff } else { diff };
+            let signed_delta = (long_a - long_b + 540.0).rem_euclid(360.0) - 180.0;
+            let angle = signed_delta.abs();
 
             for &asp in &aspect_types {
                 let target = asp.angle();
@@ -845,15 +871,7 @@ pub fn calculate_western(
                 if orb <= asp.standard_orb() {
                     // Applying / Separating 동역학 계산
                     let rel_speed = speed_a - speed_b;
-                    let dynamics = if orb < 0.01 {
-                        AspectDynamics::Exact
-                    } else if (angle > target && rel_speed > 0.0)
-                        || (angle < target && rel_speed < 0.0)
-                    {
-                        AspectDynamics::Separating
-                    } else {
-                        AspectDynamics::Applying
-                    };
+                    let dynamics = aspect_dynamics(angle, target, signed_delta, rel_speed);
 
                     aspects.push(WesternAspectData {
                         body_a_name: name_a.clone(),
@@ -1261,6 +1279,26 @@ mod tests {
         assert!(is_angle_between(15.0, 0.0, 30.0));
         assert!(is_angle_between(350.0, 340.0, 10.0));
         assert!(!is_angle_between(20.0, 30.0, 10.0));
+    }
+
+    #[test]
+    fn aspect_dynamics_respects_wrapped_direction() {
+        assert_eq!(
+            aspect_dynamics(10.0, 0.0, 10.0, -1.0),
+            AspectDynamics::Applying
+        );
+        assert_eq!(
+            aspect_dynamics(10.0, 0.0, -10.0, 1.0),
+            AspectDynamics::Applying
+        );
+        assert_eq!(
+            aspect_dynamics(10.0, 0.0, -10.0, -1.0),
+            AspectDynamics::Separating
+        );
+        assert_eq!(
+            aspect_dynamics(0.005, 0.0, 0.005, 1.0),
+            AspectDynamics::Exact
+        );
     }
 
     #[test]
