@@ -747,7 +747,7 @@ pub fn calculate_western(
     ];
 
     let mut planets = Vec::new();
-    let flag = 4; // SEFLG_MOEPH (Moshier Wasm compatible)
+    let flag = 4 | 256; // SEFLG_MOEPH | SEFLG_SPEED
 
     for (id, name) in bodies {
         let (long, speed) = match engine.get_planet_full(datetime, id, flag) {
