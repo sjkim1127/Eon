@@ -1,7 +1,10 @@
 use crate::dto::AnalysisInput;
 use crate::error::ServiceError;
 use chrono::Datelike;
+use chrono::NaiveDate;
+use chrono_tz::Tz;
 use eon_core::{standard_meridian_from_tz, BirthInfo, Gender, Location};
+use std::str::FromStr;
 
 pub struct PreparedBirthContext {
     pub birth_info: BirthInfo,
@@ -21,6 +24,8 @@ pub fn prepare_birth_context(
     gender: Option<Gender>,
     apply_tst: bool,
 ) -> Result<PreparedBirthContext, ServiceError> {
+    validate_analysis_input(input)?;
+
     let location = Location::new(
         "출생지",
         input.lat,
@@ -82,4 +87,91 @@ pub fn prepare_birth_context(
         corrected_time_string,
         input_time_string,
     })
+}
+
+fn validate_analysis_input(input: &AnalysisInput) -> Result<(), ServiceError> {
+    if !input.lat.is_finite() || !(-90.0..=90.0).contains(&input.lat) {
+        return Err(ServiceError::InvalidInput(format!(
+            "위도는 -90도에서 90도 사이의 유한한 값이어야 합니다: {}",
+            input.lat
+        )));
+    }
+    if !input.lon.is_finite() || !(-180.0..=180.0).contains(&input.lon) {
+        return Err(ServiceError::InvalidInput(format!(
+            "경도는 -180도에서 180도 사이의 유한한 값이어야 합니다: {}",
+            input.lon
+        )));
+    }
+    if input.hour > 23 || input.minute > 59 {
+        return Err(ServiceError::InvalidInput(format!(
+            "출생 시각이 올바르지 않습니다: {:02}:{:02}",
+            input.hour, input.minute
+        )));
+    }
+    if !input.is_lunar && NaiveDate::from_ymd_opt(input.year, input.month, input.day).is_none() {
+        return Err(ServiceError::InvalidInput(format!(
+            "양력 날짜가 올바르지 않습니다: {:04}-{:02}-{:02}",
+            input.year, input.month, input.day
+        )));
+    }
+    Tz::from_str(&input.timezone).map_err(|_| {
+        ServiceError::InvalidInput(format!(
+            "유효하지 않은 IANA 타임존입니다: {}",
+            input.timezone
+        ))
+    })?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn input() -> AnalysisInput {
+        AnalysisInput {
+            year: 1990,
+            month: 1,
+            day: 1,
+            hour: 12,
+            minute: 0,
+            is_lunar: false,
+            is_leap_month: false,
+            lat: 37.5665,
+            lon: 126.978,
+            timezone: "Asia/Seoul".into(),
+        }
+    }
+
+    #[test]
+    fn rejects_coordinates_outside_swiss_contract() {
+        let mut bad = input();
+        bad.lat = 90.0001;
+        assert!(matches!(
+            prepare_birth_context(&bad, None, false),
+            Err(ServiceError::InvalidInput(_))
+        ));
+
+        bad = input();
+        bad.lon = f64::NAN;
+        assert!(matches!(
+            prepare_birth_context(&bad, None, false),
+            Err(ServiceError::InvalidInput(_))
+        ));
+    }
+
+    #[test]
+    fn rejects_invalid_calendar_time_and_timezone() {
+        let mut bad = input();
+        bad.day = 31;
+        bad.month = 2;
+        assert!(prepare_birth_context(&bad, None, false).is_err());
+
+        bad = input();
+        bad.hour = 24;
+        assert!(prepare_birth_context(&bad, None, false).is_err());
+
+        bad = input();
+        bad.timezone = "Not/A_Timezone".into();
+        assert!(prepare_birth_context(&bad, None, false).is_err());
+    }
 }
