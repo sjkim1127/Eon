@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct VimshopakaScore {
     pub shadvarga_score: f64,           // Out of 20
-    pub shodashavarga_score: f64,       // Out of 20 (Simple average for now)
+    pub shodashavarga_score: f64,       // Out of 20 (BPHS weighted scheme)
     pub details: Vec<(VargaType, f64)>, // Score per Varga
 }
 
@@ -51,34 +51,36 @@ impl VimshopakaEngine {
         // We usually scale it back to 20.
         let shadvarga_final = shadvarga_sum / 20.0;
 
-        // 2. Shodashavarga (All 16) - Simplified Average for now
-        // Or we can just use the Shadvarga score as the primary metric.
-        // Let's calculate a simple average of dignity points across all implemented vargas for "Shodashavarga".
-        let all_vargas = [
-            VargaType::D1,
-            VargaType::D2,
-            VargaType::D3,
-            VargaType::D4,
-            VargaType::D7,
-            VargaType::D9,
-            VargaType::D10,
-            VargaType::D12,
-            VargaType::D16,
-            VargaType::D20,
-            VargaType::D24,
-            VargaType::D27,
-            VargaType::D30,
-            VargaType::D40,
-            VargaType::D45,
-            VargaType::D60,
+        // 2. Shodashavarga (BPHS): Varga Vishwa weights sum to 20.
+        // D1=3.5, D2/D3/D30=1, D9=3, D16=2, D60=4; the remaining
+        // nine divisions each contribute 0.5.
+        let shodashavarga_weights = [
+            (VargaType::D1, 3.5),
+            (VargaType::D2, 1.0),
+            (VargaType::D3, 1.0),
+            (VargaType::D4, 0.5),
+            (VargaType::D7, 0.5),
+            (VargaType::D9, 3.0),
+            (VargaType::D10, 0.5),
+            (VargaType::D12, 0.5),
+            (VargaType::D16, 2.0),
+            (VargaType::D20, 0.5),
+            (VargaType::D24, 0.5),
+            (VargaType::D27, 0.5),
+            (VargaType::D30, 1.0),
+            (VargaType::D40, 0.5),
+            (VargaType::D45, 0.5),
+            (VargaType::D60, 4.0),
         ];
 
-        let mut total_points = 0.0;
-        for v in &all_vargas {
-            let rasi = Self::get_varga_rasi(pos, *v);
-            total_points += Self::get_dignity_point(pos.planet, rasi, chart);
-        }
-        let shodashavarga_final = total_points / all_vargas.len() as f64;
+        let shodashavarga_sum = shodashavarga_weights
+            .iter()
+            .map(|(varga, weight)| {
+                let rasi = Self::get_varga_rasi(pos, *varga);
+                Self::get_dignity_point(pos.planet, rasi, chart) * weight
+            })
+            .sum::<f64>();
+        let shodashavarga_final = shodashavarga_sum / 20.0;
 
         VimshopakaScore {
             shadvarga_score: shadvarga_final,
