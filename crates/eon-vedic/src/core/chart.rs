@@ -118,6 +118,11 @@ impl VedicChartCalculator {
     }
 
     fn calculate_nakshatra_and_pada(sidereal: f64) -> (u8, u8) {
+        let sidereal = if sidereal.is_finite() {
+            sidereal.rem_euclid(360.0)
+        } else {
+            0.0
+        };
         let nak_pos = sidereal / (360.0 / 27.0);
         let nakshatra = (nak_pos.floor() as u8) + 1;
 
@@ -523,5 +528,21 @@ mod tests {
         let (nak_after, pada_after) = VedicChartCalculator::calculate_nakshatra_and_pada(segment);
         assert_eq!(nak_after, 2);
         assert_eq!(pada_after, 1);
+    }
+
+    #[test]
+    fn nakshatra_and_pada_normalizes_wrapped_angles() {
+        assert_eq!(
+            VedicChartCalculator::calculate_nakshatra_and_pada(360.0),
+            VedicChartCalculator::calculate_nakshatra_and_pada(0.0)
+        );
+        assert_eq!(
+            VedicChartCalculator::calculate_nakshatra_and_pada(-0.001),
+            VedicChartCalculator::calculate_nakshatra_and_pada(359.999)
+        );
+        assert_eq!(
+            VedicChartCalculator::calculate_nakshatra_and_pada(f64::NAN),
+            (1, 1)
+        );
     }
 }
