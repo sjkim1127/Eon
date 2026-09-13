@@ -1,7 +1,7 @@
 //! eon-western: 서양 점성술 명리 연산 엔진
 //!
-//! eon-astro의 Swiss Ephemeris FFI를 활용하여 10대 행성, Chiron, True Node, South Node,
-//! Black Moon Lilith, 4대 소행성(Ceres, Pallas, Juno, Vesta) 및 Placidus, Koch, Whole Sign, Equal House 등의 Cusp 좌표,
+//! eon-astro의 Swiss Ephemeris FFI를 활용하여 10대 행성, True Node, South Node,
+//! Black Moon Lilith 및 Placidus, Koch, Whole Sign, Equal House 등의 Cusp 좌표,
 //! 메이저/마이너 아스펙트(어플라잉/세퍼레이팅), Essential Dignities, 하우스 룰러십 네트워크, 아라비안 파트(Lot of Fortune/Spirit/Eros),
 //! 기하학적 아스펙트 패턴(Grand Trine, T-Square, Grand Cross, Yod, Kite), Synastry, Composite, Secondary Progressions를 정밀 분석합니다.
 
@@ -696,9 +696,10 @@ pub fn calculate_western(
         }
     }
 
-    // 2. 16대 천체 및 노드 위치 조회
+    // 2. 표준 천체 및 노드 위치 조회
     // 0: Sun, 1: Moon, 2: Mercury, 3: Venus, 4: Mars, 5: Jupiter, 6: Saturn, 7: Uranus, 8: Neptune, 9: Pluto
-    // 11: True Node (North Node), 12: Lilith, 15: Chiron, 17: Ceres, 18: Pallas, 19: Juno, 20: Vesta
+    // 11: True Node (North Node), 12: Lilith. Chiron/asteroids are optional
+    // and require external Swiss Ephemeris asteroid files.
     let bodies = vec![
         (0, "Sun"),
         (1, "Moon"),
@@ -723,9 +724,14 @@ pub fn calculate_western(
     let flag = 4; // SEFLG_MOEPH (Moshier Wasm compatible)
 
     for (id, name) in bodies {
-        let (long, speed) = engine
-            .get_planet_full(datetime, id, flag)
-            .unwrap_or((0.0, 0.0));
+        let (long, speed) = match engine.get_planet_full(datetime, id, flag) {
+            Ok(position) => position,
+            // Chiron and the asteroids require optional Swiss Ephemeris files
+            // that are not bundled with the Wasm/Moshier runtime. Do not turn
+            // an unavailable optional body into a fake zero-degree planet.
+            Err(_) if id >= 15 => continue,
+            Err(error) => return Err(error.into()),
+        };
         let sign_index = (long / 30.0).floor() as usize;
         let degree_in_sign = long % 30.0;
         let is_retrograde = speed < 0.0;
@@ -1267,7 +1273,7 @@ mod tests {
         assert!(res.is_ok());
         let result = res.unwrap();
 
-        assert_eq!(result.planets.len(), 18); // 10 planets + True Node + South Node + Lilith + Chiron + 4 Asteroids
+        assert_eq!(result.planets.len(), 13); // 10 planets + True Node + South Node + Lilith; optional asteroids require ephemeris files
         assert_eq!(result.houses.len(), 12);
         assert_eq!(result.arabian_parts.len(), 3);
         assert_eq!(result.house_rulerships.len(), 12);

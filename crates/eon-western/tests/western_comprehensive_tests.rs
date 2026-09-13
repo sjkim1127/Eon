@@ -97,12 +97,12 @@ fn test_western_synastry_composite_progression() {
 
     // 2. Composite test
     let comp = calculate_composite(&res_a, &res_b).unwrap();
-    assert_eq!(comp.composite_chart.planets.len(), 18);
+    assert_eq!(comp.composite_chart.planets.len(), 13);
     assert_eq!(comp.composite_chart.houses.len(), 12);
 
     // 3. Progression test (Age ~ 30 years later)
     let target_date = get_test_date(2020, 5, 15, 10);
     let prog = calculate_secondary_progression(date_a, lat, lon, target_date, 'P').unwrap();
     assert!((prog.progressed_age_years - 30.0).abs() < 0.5);
-    assert_eq!(prog.progressed_chart.planets.len(), 18);
+    assert_eq!(prog.progressed_chart.planets.len(), 13);
 }
