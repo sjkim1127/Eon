@@ -3,6 +3,14 @@ use crate::planets::VedicPlanet;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
+fn normalize_moon_longitude(longitude: f64) -> f64 {
+    if longitude.is_finite() {
+        longitude.rem_euclid(360.0)
+    } else {
+        0.0
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DashaPeriod {
@@ -42,6 +50,7 @@ impl VimshottariDasha {
     ) -> Vec<DashaPeriod> {
         // Moon Nakshatra range is 13°20' (13.3333...)
         let nak_duration = 360.0 / 27.0;
+        let moon_long = normalize_moon_longitude(moon_long);
         let nak_index_0 = (moon_long / nak_duration).floor() as usize;
         let start_lord_index = nak_index_0 % 9;
 
@@ -393,6 +402,7 @@ impl YoginiDasha {
 
     pub fn calculate_timeline(birth_time: DateTime<Utc>, moon_long: f64) -> Vec<DashaPeriod> {
         let nak_duration = 360.0 / 27.0;
+        let moon_long = normalize_moon_longitude(moon_long);
         let nak_index_1 = (moon_long / nak_duration).floor() as usize + 1;
         let mut start_idx = (nak_index_1 + 3) % 8;
         if start_idx == 0 {
@@ -431,5 +441,24 @@ impl YoginiDasha {
             }
         }
         timeline
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{VimshottariDasha, YoginiDasha};
+    use crate::planets::VedicPlanet;
+    use chrono::{TimeZone, Utc};
+
+    #[test]
+    fn dasha_timelines_normalize_boundary_longitudes() {
+        let birth = Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap();
+        for longitude in [0.0, 360.0, -360.0, f64::NAN, f64::INFINITY] {
+            let vimshottari = VimshottariDasha::calculate_timeline(birth, longitude, 1);
+            let yogini = YoginiDasha::calculate_timeline(birth, longitude);
+            assert!(!vimshottari.is_empty());
+            assert!(!yogini.is_empty());
+            assert_eq!(vimshottari[0].lord, VedicPlanet::Ketu);
+        }
     }
 }
