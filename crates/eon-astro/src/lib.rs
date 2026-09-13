@@ -17,6 +17,11 @@ pub enum AstroError {
 
     #[error("Failed to calculate houses")]
     HouseCalculationError,
+
+    #[error(
+        "Invalid geographic coordinates: latitude must be [-90, 90] and longitude [-180, 180]"
+    )]
+    InvalidCoordinates,
 }
 
 static ASTRO_LOCK: Mutex<()> = Mutex::new(());
@@ -405,6 +410,13 @@ impl AstroEngine {
         longitude: f64,
         house_system: i32, // 'P' as char as i32, etc.
     ) -> Result<(Vec<f64>, [f64; 10]), AstroError> {
+        if !latitude.is_finite()
+            || !longitude.is_finite()
+            || !(-90.0..=90.0).contains(&latitude)
+            || !(-180.0..=180.0).contains(&longitude)
+        {
+            return Err(AstroError::InvalidCoordinates);
+        }
         let julian_day = self.to_julian_day(datetime);
         let mut cusps = [0.0; 13]; // 1-based usually
         let mut ascmc = [0.0; 10]; // ASC, MC, ARMC, Vertex...
@@ -477,7 +489,7 @@ impl Default for AstroEngine {
 
 #[cfg(test)]
 mod tests {
-    use super::AstroEngine;
+    use super::{AstroEngine, AstroError};
     use chrono::{TimeZone, Utc};
     use std::thread;
 
@@ -506,5 +518,25 @@ mod tests {
         for handle in handles {
             handle.join().unwrap();
         }
+    }
+
+    #[test]
+    fn houses_reject_non_finite_or_out_of_range_coordinates() {
+        let engine = AstroEngine::new();
+        let time = Utc.with_ymd_and_hms(2024, 4, 15, 12, 0, 0).unwrap();
+
+        for (lat, lon) in [
+            (90.0001, 0.0),
+            (-90.0001, 0.0),
+            (0.0, 180.0001),
+            (0.0, f64::NAN),
+        ] {
+            assert_eq!(
+                engine.get_houses(time, lat, lon, b'W' as i32),
+                Err(AstroError::InvalidCoordinates)
+            );
+        }
+
+        assert!(engine.get_houses(time, 90.0, 180.0, b'W' as i32).is_ok());
     }
 }
