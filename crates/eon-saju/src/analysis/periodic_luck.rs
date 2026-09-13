@@ -155,16 +155,19 @@ impl MonthlyLuck {
     }
 
     /// 특정 시점(DateTime<Utc>)의 정밀 월운 계산
-    pub fn calculate_at_datetime(dt: chrono::DateTime<chrono::Utc>, pillars: &FourPillars) -> Self {
+    pub fn calculate_at_datetime(
+        dt: chrono::DateTime<chrono::Utc>,
+        pillars: &FourPillars,
+    ) -> Result<Self, eon_astro::AstroError> {
         use chrono::Datelike;
-        let ganzi = Self::month_ganzi_at(dt);
+        let ganzi = Self::try_month_ganzi_at(dt)?;
         let day_master = pillars.day_master();
 
         let influence = Some(DynamicLuckAnalysis::get_influence(ganzi, "월운", pillars));
         let special_events =
             crate::analysis::shinsal::ShinsalAnalysis::calculate_for_luck(ganzi, pillars);
 
-        Self {
+        Ok(Self {
             year: dt.year(),
             month: dt.month(),
             ganzi,
@@ -177,19 +180,18 @@ impl MonthlyLuck {
                     .hangul()
                     .to_string(),
             ),
-        }
+        })
     }
 
     /// 특정 시점(DateTime<Utc>)의 천문학적 절입 시각 기준 정밀 월간지 계산
-    pub fn month_ganzi_at(dt: chrono::DateTime<chrono::Utc>) -> GanZi {
+    pub fn try_month_ganzi_at(
+        dt: chrono::DateTime<chrono::Utc>,
+    ) -> Result<GanZi, eon_astro::AstroError> {
         use chrono::Datelike;
         use eon_astro::AstroEngine;
 
         let engine = AstroEngine::new();
-        // Keep this legacy convenience API infallible; callers that need
-        // explicit astronomical error propagation should use the checked
-        // calculation entry points.
-        let term_24_idx = engine.get_solar_term_index(dt).unwrap_or(0);
+        let term_24_idx = engine.get_solar_term_index(dt)?;
         let term_12_idx = (term_24_idx / 2) as u32;
         let saju_month_ordinal = term_12_idx + 1;
 
@@ -204,16 +206,13 @@ impl MonthlyLuck {
         // XiaoHan entry, and before LiChun), saju_year must be evaluated as dt_year - 1.
         let saju_year = if dt.month() == 1 {
             dt_year - 1
-        } else if let Ok(lichun) = engine.find_solar_term_time(year_start, 0) {
+        } else {
+            let lichun = engine.find_solar_term_time(year_start, 0)?;
             if dt < lichun {
                 dt_year - 1
             } else {
                 dt_year
             }
-        } else if dt.month() == 2 && dt.day() < 4 {
-            dt_year - 1
-        } else {
-            dt_year
         };
 
         let saju_year_stem_idx = GanZi::from_year(saju_year).stem.index();
@@ -229,10 +228,15 @@ impl MonthlyLuck {
         let month_stem_idx = (first_month_stem_idx + (saju_month_ordinal - 1)) % 10;
         let month_branch_idx = (saju_month_ordinal + 1) % 12;
 
-        GanZi::new(
+        Ok(GanZi::new(
             HeavenlyStem::from_index(month_stem_idx as i32),
             crate::core::branch::EarthlyBranch::from_index(month_branch_idx as i32),
-        )
+        ))
+    }
+
+    /// Legacy infallible wrapper. New callers should prefer `try_month_ganzi_at`.
+    pub fn month_ganzi_at(dt: chrono::DateTime<chrono::Utc>) -> GanZi {
+        Self::try_month_ganzi_at(dt).unwrap_or_else(|_| GanZi::from_year(dt.year()))
     }
 
     /// 연월(양력) 기준 천문 절기 기반 월간지 계산 (해당 월의 15일 12:00 UTC 기준)
