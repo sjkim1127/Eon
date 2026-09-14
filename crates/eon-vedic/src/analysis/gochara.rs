@@ -95,14 +95,7 @@ impl GocharaEngine {
                 .iter()
                 .find(|p| p.planet == VedicPlanet::Moon);
             let murti = if let Some(m) = current_moon {
-                let moon_house = Self::house_from_moon(natal_moon_rasi, m.rasi);
-                match moon_house {
-                    1 | 6 | 11 => MurtiType::Gold,
-                    2 | 5 | 9 => MurtiType::Silver,
-                    3 | 7 | 10 => MurtiType::Copper,
-                    4 | 8 | 12 => MurtiType::Iron,
-                    _ => MurtiType::Unknown,
-                }
+                Self::calculate_murti(natal_moon_rasi, m.rasi)
             } else {
                 MurtiType::Unknown
             };
@@ -241,6 +234,23 @@ impl GocharaEngine {
 
     fn house_from_moon(natal_moon_rasi: u8, transit_rasi: u8) -> u8 {
         ((transit_rasi + 12 - natal_moon_rasi) % 12) + 1
+    }
+
+    /// Calculates the Murti for a transit snapshot from the transit Moon's
+    /// sign. Classical sign-entry readings should pass the Moon sign at the
+    /// transit planet's sign-entry time rather than an arbitrary snapshot.
+    pub fn calculate_murti(natal_moon_rasi: u8, transit_moon_rasi: u8) -> MurtiType {
+        if !(1..=12).contains(&natal_moon_rasi) || !(1..=12).contains(&transit_moon_rasi) {
+            return MurtiType::Unknown;
+        }
+
+        match Self::house_from_moon(natal_moon_rasi, transit_moon_rasi) {
+            1 | 6 | 11 => MurtiType::Gold,
+            2 | 5 | 9 => MurtiType::Silver,
+            3 | 7 | 10 => MurtiType::Copper,
+            4 | 8 | 12 => MurtiType::Iron,
+            _ => MurtiType::Unknown,
+        }
     }
 
     pub fn calculate_sade_sati(natal_moon: u8, saturn_transit: u8) -> SadeSatiPhase {
@@ -426,6 +436,16 @@ mod tests {
             GocharaEngine::calculate_sade_sati(12, 13),
             SadeSatiPhase::None
         );
+    }
+
+    #[test]
+    fn murti_uses_inclusive_moon_sign_count() {
+        assert_eq!(GocharaEngine::calculate_murti(1, 1), MurtiType::Gold);
+        assert_eq!(GocharaEngine::calculate_murti(1, 6), MurtiType::Gold);
+        assert_eq!(GocharaEngine::calculate_murti(1, 2), MurtiType::Silver);
+        assert_eq!(GocharaEngine::calculate_murti(1, 3), MurtiType::Copper);
+        assert_eq!(GocharaEngine::calculate_murti(1, 4), MurtiType::Iron);
+        assert_eq!(GocharaEngine::calculate_murti(0, 1), MurtiType::Unknown);
     }
 
     #[test]
