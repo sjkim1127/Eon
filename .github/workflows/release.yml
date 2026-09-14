@@ -96,6 +96,8 @@ jobs:
           CFLAGS: "-matomics -mbulk-memory"
           CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
           "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
+          CFLAGS_wasm32_wasi: "-matomics -mbulk-memory"
+          "CFLAGS_wasm32-wasi": "-matomics -mbulk-memory"
         run: dx build --release --trace
       - name: Prepare and validate static web distribution
         run: bash scripts/prepare_web_dist.sh target/dx/eon-ui/release/web/public
