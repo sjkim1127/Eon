@@ -336,7 +336,7 @@ impl GocharaEngine {
                 9 => Some(6),
                 8 => Some(1),
                 1 => Some(8),
-                10 => Some(7),
+                10 => Some(8),
                 7 => Some(10),
                 11 => Some(12),
                 12 => Some(11),
@@ -357,14 +357,14 @@ impl GocharaEngine {
             },
             VedicPlanet::Venus => match house {
                 1 => Some(8),
-                8 => Some(1),
+                8 => Some(5),
                 2 => Some(7),
                 7 => Some(2),
                 3 => Some(1),
                 4 => Some(10),
                 10 => Some(4),
                 5 => Some(9),
-                9 => Some(5),
+                9 => Some(11),
                 11 => Some(6),
                 6 => Some(11),
                 12 => Some(3),
@@ -424,5 +424,48 @@ mod tests {
             GocharaEngine::calculate_sade_sati(12, 13),
             SadeSatiPhase::None
         );
+    }
+
+    #[test]
+    fn vedha_pairs_match_phaladeepika_crosswalk() {
+        let expected = [
+            (VedicPlanet::Sun, 3, 9),
+            (VedicPlanet::Sun, 6, 12),
+            (VedicPlanet::Sun, 10, 4),
+            (VedicPlanet::Sun, 11, 5),
+            (VedicPlanet::Moon, 1, 5),
+            (VedicPlanet::Moon, 3, 9),
+            (VedicPlanet::Moon, 6, 12),
+            (VedicPlanet::Moon, 7, 2),
+            (VedicPlanet::Moon, 10, 4),
+            (VedicPlanet::Moon, 11, 8),
+            (VedicPlanet::Mars, 3, 12),
+            (VedicPlanet::Mars, 6, 9),
+            (VedicPlanet::Mars, 11, 5),
+            (VedicPlanet::Mercury, 2, 5),
+            (VedicPlanet::Mercury, 4, 3),
+            (VedicPlanet::Mercury, 6, 9),
+            (VedicPlanet::Mercury, 8, 1),
+            (VedicPlanet::Mercury, 10, 8),
+            (VedicPlanet::Mercury, 11, 12),
+            (VedicPlanet::Jupiter, 2, 12),
+            (VedicPlanet::Jupiter, 5, 4),
+            (VedicPlanet::Jupiter, 7, 3),
+            (VedicPlanet::Jupiter, 9, 10),
+            (VedicPlanet::Jupiter, 11, 8),
+            (VedicPlanet::Venus, 1, 8),
+            (VedicPlanet::Venus, 2, 7),
+            (VedicPlanet::Venus, 3, 1),
+            (VedicPlanet::Venus, 4, 10),
+            (VedicPlanet::Venus, 5, 9),
+            (VedicPlanet::Venus, 8, 5),
+            (VedicPlanet::Venus, 9, 11),
+            (VedicPlanet::Venus, 11, 6),
+            (VedicPlanet::Venus, 12, 3),
+        ];
+
+        for (planet, house, vedha) in expected {
+            assert_eq!(GocharaEngine::get_vedha_house(planet, house), Some(vedha));
+        }
     }
 }
