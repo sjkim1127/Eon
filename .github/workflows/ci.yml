@@ -97,7 +97,6 @@ jobs:
           sudo tar xf wasi-sdk-24.0-x86_64-linux.tar.gz -C /opt
           sudo ln -sf /opt/wasi-sdk-24.0-x86_64-linux /opt/wasi-sdk
       - name: Build Web App (Dioxus Release)
-        working-directory: ./crates/eon-ui
         env:
           CARGO_BUILD_JOBS: 1
           CC_wasm32_unknown_unknown: clang
@@ -108,7 +107,7 @@ jobs:
           "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
           CFLAGS_wasm32_wasi: "-matomics -mbulk-memory"
           "CFLAGS_wasm32-wasi": "-matomics -mbulk-memory"
-        run: dx build --release --trace
+        run: dx build --release --trace --package eon-ui
       - name: Prepare and validate static web distribution
         id: prepare_web
         continue-on-error: true
