@@ -732,24 +732,36 @@
 <a href=#732 id=732 data-nosnippet>732</a>    }
 <a href=#733 id=733 data-nosnippet>733</a>
 <a href=#734 id=734 data-nosnippet>734</a>    <span class="attr">#[test]
-<a href=#735 id=735 data-nosnippet>735</a>    </span><span class="kw">fn </span>solar_term_crossings_match_swiss_ephemeris_oracle() {
+<a href=#735 id=735 data-nosnippet>735</a>    </span><span class="kw">fn </span>rejects_non_finite_sidereal_ayanamsa() {
 <a href=#736 id=736 data-nosnippet>736</a>        <span class="kw">let </span>engine = AstroEngine::new();
-<a href=#737 id=737 data-nosnippet>737</a>        <span class="kw">let </span>year_start = Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap();
-<a href=#738 id=738 data-nosnippet>738</a>        <span class="kw">let </span>expected = [
-<a href=#739 id=739 data-nosnippet>739</a>            Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">8</span>, <span class="number">27</span>, <span class="number">8</span>).unwrap(),
-<a href=#740 id=740 data-nosnippet>740</a>            Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">4</span>).unwrap(),
-<a href=#741 id=741 data-nosnippet>741</a>            Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">8</span>, <span class="number">7</span>, <span class="number">0</span>, <span class="number">9</span>, <span class="number">15</span>).unwrap(),
-<a href=#742 id=742 data-nosnippet>742</a>            Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">11</span>, <span class="number">6</span>, <span class="number">22</span>, <span class="number">20</span>, <span class="number">5</span>).unwrap(),
-<a href=#743 id=743 data-nosnippet>743</a>        ];
-<a href=#744 id=744 data-nosnippet>744</a>
-<a href=#745 id=745 data-nosnippet>745</a>        <span class="kw">for </span>(term_idx, expected_time) <span class="kw">in </span>[<span class="number">0u8</span>, <span class="number">6</span>, <span class="number">12</span>, <span class="number">18</span>].into_iter().zip(expected) {
-<a href=#746 id=746 data-nosnippet>746</a>            <span class="kw">let </span>actual = engine.find_solar_term_time(year_start, term_idx).unwrap();
-<a href=#747 id=747 data-nosnippet>747</a>            <span class="macro">assert!</span>(
-<a href=#748 id=748 data-nosnippet>748</a>                (actual - expected_time).num_seconds().abs() &lt;= <span class="number">2</span>,
-<a href=#749 id=749 data-nosnippet>749</a>                <span class="string">"term {term_idx} differs by {} seconds"</span>,
-<a href=#750 id=750 data-nosnippet>750</a>                (actual - expected_time).num_seconds()
-<a href=#751 id=751 data-nosnippet>751</a>            );
-<a href=#752 id=752 data-nosnippet>752</a>        }
-<a href=#753 id=753 data-nosnippet>753</a>    }
-<a href=#754 id=754 data-nosnippet>754</a>}
+<a href=#737 id=737 data-nosnippet>737</a>        <span class="kw">let </span>time = Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap();
+<a href=#738 id=738 data-nosnippet>738</a>
+<a href=#739 id=739 data-nosnippet>739</a>        <span class="kw">for </span>ayanamsa <span class="kw">in </span>[f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+<a href=#740 id=740 data-nosnippet>740</a>            <span class="macro">assert!</span>(engine
+<a href=#741 id=741 data-nosnippet>741</a>                .find_previous_planet_sidereal_sign_entry(time, <span class="number">0</span>, ayanamsa)
+<a href=#742 id=742 data-nosnippet>742</a>                .is_err());
+<a href=#743 id=743 data-nosnippet>743</a>        }
+<a href=#744 id=744 data-nosnippet>744</a>    }
+<a href=#745 id=745 data-nosnippet>745</a>
+<a href=#746 id=746 data-nosnippet>746</a>    <span class="attr">#[test]
+<a href=#747 id=747 data-nosnippet>747</a>    </span><span class="kw">fn </span>solar_term_crossings_match_swiss_ephemeris_oracle() {
+<a href=#748 id=748 data-nosnippet>748</a>        <span class="kw">let </span>engine = AstroEngine::new();
+<a href=#749 id=749 data-nosnippet>749</a>        <span class="kw">let </span>year_start = Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap();
+<a href=#750 id=750 data-nosnippet>750</a>        <span class="kw">let </span>expected = [
+<a href=#751 id=751 data-nosnippet>751</a>            Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">8</span>, <span class="number">27</span>, <span class="number">8</span>).unwrap(),
+<a href=#752 id=752 data-nosnippet>752</a>            Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">0</span>, <span class="number">10</span>, <span class="number">4</span>).unwrap(),
+<a href=#753 id=753 data-nosnippet>753</a>            Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">8</span>, <span class="number">7</span>, <span class="number">0</span>, <span class="number">9</span>, <span class="number">15</span>).unwrap(),
+<a href=#754 id=754 data-nosnippet>754</a>            Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">11</span>, <span class="number">6</span>, <span class="number">22</span>, <span class="number">20</span>, <span class="number">5</span>).unwrap(),
+<a href=#755 id=755 data-nosnippet>755</a>        ];
+<a href=#756 id=756 data-nosnippet>756</a>
+<a href=#757 id=757 data-nosnippet>757</a>        <span class="kw">for </span>(term_idx, expected_time) <span class="kw">in </span>[<span class="number">0u8</span>, <span class="number">6</span>, <span class="number">12</span>, <span class="number">18</span>].into_iter().zip(expected) {
+<a href=#758 id=758 data-nosnippet>758</a>            <span class="kw">let </span>actual = engine.find_solar_term_time(year_start, term_idx).unwrap();
+<a href=#759 id=759 data-nosnippet>759</a>            <span class="macro">assert!</span>(
+<a href=#760 id=760 data-nosnippet>760</a>                (actual - expected_time).num_seconds().abs() &lt;= <span class="number">2</span>,
+<a href=#761 id=761 data-nosnippet>761</a>                <span class="string">"term {term_idx} differs by {} seconds"</span>,
+<a href=#762 id=762 data-nosnippet>762</a>                (actual - expected_time).num_seconds()
+<a href=#763 id=763 data-nosnippet>763</a>            );
+<a href=#764 id=764 data-nosnippet>764</a>        }
+<a href=#765 id=765 data-nosnippet>765</a>    }
+<a href=#766 id=766 data-nosnippet>766</a>}
 </code></pre></div></section></main></body></html>
