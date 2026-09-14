@@ -150,10 +150,10 @@ pub fn translate(key: TK) -> &'static str {
         TK::IchingVoid => "🕳️ Пустота",
 
         TK::QimenError => "⚠️ Ошибка анализа",
-        TK::QimenScaffolding => "В разработке",
+        TK::QimenScaffolding => "Рассчитано",
         TK::QimenTitle => "Ци Мэнь Дунь Цзя",
         TK::QimenAnalyzing => "Анализ карты Ци Мэнь...",
-        TK::QimenPlaceholder => "Вкладка Ци Мэнь находится в разработке.",
+        TK::QimenPlaceholder => "Рассчитанная карта девяти дворцов, восьми врат, девяти звезд и восьми божеств.",
         TK::QimenPalaceKan1 => "Кань 1 (Север)",
         TK::QimenPalaceKun2 => "Кунь 2 (ЮЗ)",
         TK::QimenPalaceZhen3 => "Чжэнь 3 (Восток)",

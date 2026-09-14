@@ -158,10 +158,10 @@ pub fn translate(key: TK) -> &'static str {
         TK::IchingVoid => "🕳️ 空亡",
 
         TK::QimenError => "⚠️ 分析错误",
-        TK::QimenScaffolding => "开发中 (Scaffolding)",
+        TK::QimenScaffolding => "计算完成",
         TK::QimenTitle => "奇门遁甲",
         TK::QimenAnalyzing => "正在分析奇门遁甲命盘...",
-        TK::QimenPlaceholder => "当前奇门遁甲为脚手架状态，九宫八门等UI即将渲染。",
+        TK::QimenPlaceholder => "已计算九宫、八门、九星和八神盘。",
         TK::QimenPalaceKan1 => "坎一宫",
         TK::QimenPalaceKun2 => "坤二宫",
         TK::QimenPalaceZhen3 => "震三宫",

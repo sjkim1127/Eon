@@ -150,10 +150,10 @@ pub fn translate(key: TK) -> &'static str {
         TK::IchingVoid => "🕳️ Void",
 
         TK::QimenError => "⚠️ Analysis Error",
-        TK::QimenScaffolding => "In Development (Scaffolding)",
+        TK::QimenScaffolding => "Calculated",
         TK::QimenTitle => "Qimen Dunjia",
         TK::QimenAnalyzing => "Analyzing Qimen Dunjia chart...",
-        TK::QimenPlaceholder => "The Qimen Dunjia tab is currently a scaffold. The 9-palace, 8-door UI will be rendered here.",
+        TK::QimenPlaceholder => "Computed 9-palace, 8-door, 9-star, and 8-deity chart.",
         TK::QimenPalaceKan1 => "Kan 1 (North)",
         TK::QimenPalaceKun2 => "Kun 2 (SW)",
         TK::QimenPalaceZhen3 => "Zhen 3 (East)",

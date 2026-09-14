@@ -150,10 +150,10 @@ pub fn translate(key: TK) -> &'static str {
         TK::IchingVoid => "🕳️ 공망",
 
         TK::QimenError => "⚠️ 분석 오류",
-        TK::QimenScaffolding => "개발 진행 중 (Scaffolding)",
+        TK::QimenScaffolding => "계산 완료",
         TK::QimenTitle => "기문둔갑 (Qimen Dunjia)",
         TK::QimenAnalyzing => "기문둔갑 명반을 분석하고 있습니다...",
-        TK::QimenPlaceholder => "현재 기문둔갑 탭은 스캐폴딩 상태이며, 9궁 8문 천반 지반 포국 UI가 추후 여기에 렌더링될 예정입니다.",
+        TK::QimenPlaceholder => "9궁·8문·9성·8신 포국 결과입니다.",
         TK::QimenPalaceKan1 => "감1궁",
         TK::QimenPalaceKun2 => "곤2궁",
         TK::QimenPalaceZhen3 => "진3궁",
