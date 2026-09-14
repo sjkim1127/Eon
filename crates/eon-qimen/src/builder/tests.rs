@@ -67,3 +67,10 @@ fn pan_changes_direction_between_yang_and_yin_deities() {
         .collect::<Vec<_>>();
     assert_ne!(yang_positions, yin_positions);
 }
+
+#[test]
+fn center_xun_head_uses_tian_qin_as_value_chief() {
+    let pan = sample_pan(false, 5);
+    assert_eq!(pan.value_chief_star, Some(crate::core::Star::Qin));
+    assert_eq!(pan.value_envoy_door, Some(crate::core::Door::Si));
+}

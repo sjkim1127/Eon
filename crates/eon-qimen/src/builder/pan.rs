@@ -140,8 +140,14 @@ pub fn build_qimen_pan(
         xun_shou_palace
     };
 
-    let value_chief_star = get_base_star(base_palace_for_chief);
-    let value_envoy_door = get_base_door(base_palace_for_chief);
+    // 中宫寄坤时，值符仍取中宫天禽；值使取中宫寄宫的死门。
+    // 将值符直接当作坤二宫天芮会把“旬首落中宫”的盘误判。
+    let value_chief_star = if xun_shou_palace == 5 {
+        Star::Qin
+    } else {
+        get_base_star(base_palace_for_chief)
+    };
+    let value_envoy_door = get_base_door(xun_shou_palace);
 
     // 3. 천반(Heaven Plate) 및 구성(Star Plate) 포국
     // 직부(Star)는 시간(Hour Stem)이 지반에 있는 궁으로 이동한다. (단, 시간이 甲이면 순수와 같으므로 직부 궁에 그대로)
