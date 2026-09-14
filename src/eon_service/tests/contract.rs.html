@@ -121,5 +121,51 @@
 <a href=#121 id=121 data-nosnippet>121</a>            <span class="string">"Should follow camelCase"
 <a href=#122 id=122 data-nosnippet>122</a>        </span>);
 <a href=#123 id=123 data-nosnippet>123</a>    }
-<a href=#124 id=124 data-nosnippet>124</a>}
+<a href=#124 id=124 data-nosnippet>124</a>
+<a href=#125 id=125 data-nosnippet>125</a>    <span class="attr">#[test]
+<a href=#126 id=126 data-nosnippet>126</a>    </span><span class="kw">fn </span>gochara_murti_uses_sign_entry_not_current_snapshot() {
+<a href=#127 id=127 data-nosnippet>127</a>        <span class="kw">let </span>birth = AnalysisInput {
+<a href=#128 id=128 data-nosnippet>128</a>            year: <span class="number">1985</span>,
+<a href=#129 id=129 data-nosnippet>129</a>            month: <span class="number">11</span>,
+<a href=#130 id=130 data-nosnippet>130</a>            day: <span class="number">27</span>,
+<a href=#131 id=131 data-nosnippet>131</a>            hour: <span class="number">14</span>,
+<a href=#132 id=132 data-nosnippet>132</a>            minute: <span class="number">30</span>,
+<a href=#133 id=133 data-nosnippet>133</a>            is_lunar: <span class="bool-val">false</span>,
+<a href=#134 id=134 data-nosnippet>134</a>            is_leap_month: <span class="bool-val">false</span>,
+<a href=#135 id=135 data-nosnippet>135</a>            lat: <span class="number">37.5665</span>,
+<a href=#136 id=136 data-nosnippet>136</a>            lon: <span class="number">126.9780</span>,
+<a href=#137 id=137 data-nosnippet>137</a>            timezone: <span class="string">"Asia/Seoul"</span>.to_string(),
+<a href=#138 id=138 data-nosnippet>138</a>        };
+<a href=#139 id=139 data-nosnippet>139</a>        <span class="kw">let </span>now = Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap();
+<a href=#140 id=140 data-nosnippet>140</a>        <span class="kw">let </span>result = facade::analyze_vedic(VedicAnalysisInput::new(birth, <span class="prelude-val">Some</span>(<span class="bool-val">false</span>), <span class="prelude-val">Some</span>(now)))
+<a href=#141 id=141 data-nosnippet>141</a>            .expect(<span class="string">"Vedic analysis failed"</span>);
+<a href=#142 id=142 data-nosnippet>142</a>        <span class="kw">let </span>natal_moon = result
+<a href=#143 id=143 data-nosnippet>143</a>            .chart
+<a href=#144 id=144 data-nosnippet>144</a>            .planets
+<a href=#145 id=145 data-nosnippet>145</a>            .iter()
+<a href=#146 id=146 data-nosnippet>146</a>            .find(|position| position.planet == eon_vedic::core::planets::VedicPlanet::Moon)
+<a href=#147 id=147 data-nosnippet>147</a>            .expect(<span class="string">"natal Moon must exist"</span>);
+<a href=#148 id=148 data-nosnippet>148</a>        <span class="kw">let </span>current_moon_rasi = result
+<a href=#149 id=149 data-nosnippet>149</a>            .gochara
+<a href=#150 id=150 data-nosnippet>150</a>            .transits
+<a href=#151 id=151 data-nosnippet>151</a>            .iter()
+<a href=#152 id=152 data-nosnippet>152</a>            .find(|transit| transit.planet == eon_vedic::core::planets::VedicPlanet::Moon)
+<a href=#153 id=153 data-nosnippet>153</a>            .expect(<span class="string">"transit Moon must exist"</span>)
+<a href=#154 id=154 data-nosnippet>154</a>            .current_rasi;
+<a href=#155 id=155 data-nosnippet>155</a>        <span class="kw">let </span>snapshot_murti = eon_vedic::analysis::gochara::GocharaEngine::calculate_murti(
+<a href=#156 id=156 data-nosnippet>156</a>            natal_moon.rasi,
+<a href=#157 id=157 data-nosnippet>157</a>            current_moon_rasi,
+<a href=#158 id=158 data-nosnippet>158</a>        );
+<a href=#159 id=159 data-nosnippet>159</a>
+<a href=#160 id=160 data-nosnippet>160</a>        <span class="macro">assert!</span>(result
+<a href=#161 id=161 data-nosnippet>161</a>            .gochara
+<a href=#162 id=162 data-nosnippet>162</a>            .transits
+<a href=#163 id=163 data-nosnippet>163</a>            .iter()
+<a href=#164 id=164 data-nosnippet>164</a>            .filter(|transit| !<span class="macro">matches!</span>(
+<a href=#165 id=165 data-nosnippet>165</a>                transit.planet,
+<a href=#166 id=166 data-nosnippet>166</a>                eon_vedic::core::planets::VedicPlanet::Moon
+<a href=#167 id=167 data-nosnippet>167</a>            ))
+<a href=#168 id=168 data-nosnippet>168</a>            .any(|transit| transit.murti != snapshot_murti));
+<a href=#169 id=169 data-nosnippet>169</a>    }
+<a href=#170 id=170 data-nosnippet>170</a>}
 </code></pre></div></section></main></body></html>
