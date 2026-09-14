@@ -2,6 +2,7 @@ use crate::dto::{
     DestinyComponent, DomainTier, SajuAnalysisOutput, ScoreResult, TierGrade, TierResult,
     TransitAnalysisOutput, VedicAnalysisOutput,
 };
+use chrono::Duration;
 use eon_vedic::analysis::avasthas::BaladiAvastha;
 use eon_vedic::analysis::gochara::SadeSatiPhase;
 use eon_vedic::analysis::yogas::YogaQuality;
@@ -1106,32 +1107,23 @@ fn compute_temporal_tier_trajectory(
 /// Returns a favorability score (0..100) for the Dasha period active at a given age
 fn compute_dasha_bonus_for_age(
     timeline: &[eon_vedic::analysis::dasha::DashaPeriod],
-    _age: u32,
+    age: u32,
 ) -> f32 {
-    // Try to find the Dasha period that covers this age by checking year offsets
+    let Some(first) = timeline.first() else {
+        return 60.0;
+    };
+    let target = first.start_time + Duration::seconds((age as f64 * 365.2425 * 86_400.0) as i64);
     for (i, period) in timeline.iter().enumerate() {
-        let start_year = period
-            .start_time
-            .format("%Y")
-            .to_string()
-            .parse::<i32>()
-            .unwrap_or(0);
-        let end_year = period
-            .end_time
-            .format("%Y")
-            .to_string()
-            .parse::<i32>()
-            .unwrap_or(0);
-        let _duration_years = end_year - start_year;
-
-        // Use the period's is_favorable flag if available
-        if let Some(favorable) = period.is_favorable {
-            if favorable {
-                // Stagger scores slightly by period index for variety
-                return (75.0 + (i as f32 * 2.0) % 20.0).min(95.0);
-            } else {
-                return (35.0 + (i as f32 * 3.0) % 15.0).min(50.0);
+        if target >= period.start_time && target < period.end_time {
+            if let Some(favorable) = period.is_favorable {
+                if favorable {
+                    // Stagger scores slightly by period index for variety
+                    return (75.0 + (i as f32 * 2.0) % 20.0).min(95.0);
+                } else {
+                    return (35.0 + (i as f32 * 3.0) % 15.0).min(50.0);
+                }
             }
+            return 60.0;
         }
     }
     // Neutral default
@@ -1141,13 +1133,15 @@ fn compute_dasha_bonus_for_age(
 /// Returns the name of the Dasha lord active at a given age
 fn find_dasha_lord_at_age(
     timeline: &[eon_vedic::analysis::dasha::DashaPeriod],
-    _age: u32,
+    age: u32,
 ) -> String {
-    // Return the lord of the first period as a fallback — ideally we'd
-    // match by birth_date + age, but the timeline order is chronological
-    if let Some(first) = timeline.first() {
-        format!("{:?}", first.lord)
-    } else {
-        "N/A".to_string()
-    }
+    let Some(first) = timeline.first() else {
+        return "N/A".to_string();
+    };
+    let target = first.start_time + Duration::seconds((age as f64 * 365.2425 * 86_400.0) as i64);
+    timeline
+        .iter()
+        .find(|period| target >= period.start_time && target < period.end_time)
+        .map(|period| format!("{:?}", period.lord))
+        .unwrap_or_else(|| format!("{:?}", first.lord))
 }
