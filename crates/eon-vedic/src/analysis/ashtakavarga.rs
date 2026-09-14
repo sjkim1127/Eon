@@ -53,60 +53,29 @@ impl AshtakavargaEngine {
         let mut points = [0u8; 12];
         let mut pav = [[false; 8]; 12];
 
-        let sun_pos = chart
-            .planets
-            .iter()
-            .find(|p| p.planet == VedicPlanet::Sun)
-            .unwrap()
-            .rasi;
-        let moon_pos = chart
-            .planets
-            .iter()
-            .find(|p| p.planet == VedicPlanet::Moon)
-            .unwrap()
-            .rasi;
-        let mars_pos = chart
-            .planets
-            .iter()
-            .find(|p| p.planet == VedicPlanet::Mars)
-            .unwrap()
-            .rasi;
-        let merc_pos = chart
-            .planets
-            .iter()
-            .find(|p| p.planet == VedicPlanet::Mercury)
-            .unwrap()
-            .rasi;
-        let jup_pos = chart
-            .planets
-            .iter()
-            .find(|p| p.planet == VedicPlanet::Jupiter)
-            .unwrap()
-            .rasi;
-        let ven_pos = chart
-            .planets
-            .iter()
-            .find(|p| p.planet == VedicPlanet::Venus)
-            .unwrap()
-            .rasi;
-        let sat_pos = chart
-            .planets
-            .iter()
-            .find(|p| p.planet == VedicPlanet::Saturn)
-            .unwrap()
-            .rasi;
-        let lagna_pos = chart.ascendant.rasi;
-
-        let refs = [
-            (VedicPlanet::Sun, sun_pos),
-            (VedicPlanet::Moon, moon_pos),
-            (VedicPlanet::Mars, mars_pos),
-            (VedicPlanet::Mercury, merc_pos),
-            (VedicPlanet::Jupiter, jup_pos),
-            (VedicPlanet::Venus, ven_pos),
-            (VedicPlanet::Saturn, sat_pos),
-            (VedicPlanet::Ascendant, lagna_pos),
-        ];
+        let refs: Vec<_> = [
+            VedicPlanet::Sun,
+            VedicPlanet::Moon,
+            VedicPlanet::Mars,
+            VedicPlanet::Mercury,
+            VedicPlanet::Jupiter,
+            VedicPlanet::Venus,
+            VedicPlanet::Saturn,
+        ]
+        .into_iter()
+        .filter_map(|planet| {
+            chart
+                .planets
+                .iter()
+                .find(|p| p.planet == planet && (1..=12).contains(&p.rasi))
+                .map(|p| (planet, p.rasi))
+        })
+        .chain(
+            (1..=12)
+                .contains(&chart.ascendant.rasi)
+                .then_some((VedicPlanet::Ascendant, chart.ascendant.rasi)),
+        )
+        .collect();
 
         for (ref_planet, ref_rasi) in refs {
             let kakshya_idx = match ref_planet {
@@ -494,5 +463,14 @@ mod tests {
         let reduced = AshtakavargaEngine::apply_ekadhipatya_reduction(points, &chart);
         assert_eq!(reduced[0], 3);
         assert_eq!(reduced[7], 3);
+    }
+
+    #[test]
+    fn bav_handles_partial_charts_without_panicking() {
+        let chart = dummy_chart(vec![]);
+        let bav = AshtakavargaEngine::calculate_bav(VedicPlanet::Jupiter, &chart);
+
+        assert!(bav.points.iter().any(|&points| points > 0));
+        assert!(bav.pav.iter().flatten().any(|&has_bindu| has_bindu));
     }
 }
