@@ -2,9 +2,18 @@ use crate::dto::{
     AnalysisMeta, BirthTimePrecision, NumerologyAnalysisInput, NumerologyAnalysisOutput,
 };
 use crate::error::ServiceError;
-use chrono::Datelike;
+use chrono::{Datelike, NaiveDate};
 
 pub fn analyze(input: NumerologyAnalysisInput) -> Result<NumerologyAnalysisOutput, ServiceError> {
+    NaiveDate::from_ymd_opt(input.base.year, input.base.month, input.base.day).ok_or_else(
+        || {
+            ServiceError::InvalidInput(format!(
+                "유효하지 않은 양력 날짜입니다: {:04}-{:02}-{:02}",
+                input.base.year, input.base.month, input.base.day
+            ))
+        },
+    )?;
+
     let year = input.base.year as u32;
     let month = input.base.month;
     let day = input.base.day;
@@ -62,5 +71,27 @@ mod tests {
         assert_eq!(output.meta.input_time, "1990-05-28T00:00:00Z");
         assert_eq!(output.meta.analysis_timezone, "Asia/Seoul");
         assert_ne!(output.result.core.expression, 0);
+    }
+
+    #[test]
+    fn analyze_rejects_invalid_gregorian_date() {
+        let input = NumerologyAnalysisInput::new(
+            AnalysisInput {
+                year: 2026,
+                month: 2,
+                day: 30,
+                hour: 0,
+                minute: 0,
+                is_lunar: false,
+                is_leap_month: false,
+                lat: 0.0,
+                lon: 0.0,
+                timezone: "UTC".to_string(),
+            },
+            None,
+            Some(2026),
+        );
+
+        assert!(matches!(analyze(input), Err(ServiceError::InvalidInput(_))));
     }
 }
