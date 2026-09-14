@@ -1402,6 +1402,9 @@ pub fn VedicTab() -> Element {
                                                         div { "시간 지배성 (Hora Lord): "
                                                             span { class: "text-yellow-400 font-bold", "{planet_name_kr(data.chart.panchanga.hour_lord)}" }
                                                         }
+                                                        div { "삼분 지배성 (Tribhaga Lord): "
+                                                            span { class: "text-cyan-400 font-bold", "{planet_name_kr(data.chart.panchanga.tribhaga_lord)}" }
+                                                        }
                                                         div { "{rahu_lbl}: "
                                                             span { class: "text-red-400 font-bold", "{formatted_rahu}" }
                                                         }
