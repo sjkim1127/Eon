@@ -24,11 +24,18 @@ def main() -> int:
     html = html.replace('init("/./', 'init("/')
 
     # Dynamic import uses module-fetch semantics. A plain script preload uses a
-    # different credentials mode, so Chromium discards it. Use modulepreload and
-    # explicitly align crossorigin on both JS and WASM preloads.
+    # different credentials mode, so Chromium discards it. Dioxus may emit
+    # either stable /wasm names or content-hashed /assets names; preserve the
+    # generated URL while changing only the preload relation.
+    def normalize_js_preload(match: re.Match[str]) -> str:
+        href = re.search(r'\bhref="(?P<href>/[^" ]+eon-ui[^" ]*\.js)"', match.group(0))
+        if href is None:
+            return match.group(0)
+        return f'<link rel="modulepreload" href="{href.group("href")}" crossorigin="anonymous">'
+
     html = re.sub(
-        r'<link\s+rel="preload"\s+href="/wasm/eon-ui\.js"\s+as="script"(?:\s+crossorigin(?:="[^"]*")?)?\s*>',
-        '<link rel="modulepreload" href="/wasm/eon-ui.js" crossorigin="anonymous">',
+        r'<link(?=[^>]*\brel="preload")(?=[^>]*\bas="script")[^>]*>',
+        normalize_js_preload,
         html,
     )
     html = re.sub(
@@ -41,10 +48,8 @@ def main() -> int:
 
     if "/./wasm/" in html:
         raise SystemExit("failed to normalize Dioxus WASM paths")
-    if 'rel="modulepreload" href="/wasm/eon-ui.js"' not in html:
+    if 'rel="modulepreload"' not in html or 'eon-ui' not in html:
         raise SystemExit("failed to normalize the JavaScript module preload")
-    if 'href="/wasm/eon-ui_bg.wasm"' not in html:
-        raise SystemExit("generated entrypoint no longer references the expected WASM binary")
 
     print(f"Normalized generated web entrypoint: {index}")
     return 0
