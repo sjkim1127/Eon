@@ -429,11 +429,19 @@ impl VedicChartCalculator {
         }
         chart.shadbalas = shadbalas;
 
-        chart.analysis_report = Some(crate::analysis::report::VedicAnalysisReport::generate(
-            &chart,
-            time,
-            chart.ascendant.rasi,
-        ));
+        let year_days = match self.config.year_type {
+            crate::core::config::VedicYearType::Savana => 360.0,
+            crate::core::config::VedicYearType::Sidereal => 365.256363,
+            crate::core::config::VedicYearType::Gregorian => 365.2425,
+        };
+        chart.analysis_report = Some(
+            crate::analysis::report::VedicAnalysisReport::generate_with_year_days(
+                &chart,
+                time,
+                chart.ascendant.rasi,
+                year_days,
+            ),
+        );
 
         Ok(chart)
     }
@@ -494,12 +502,19 @@ impl VedicChartCalculator {
         let mut annual_chart = self.calculate(current_guess, latitude, longitude)?;
 
         // Overwrite report with correct birth lagna context and correct return time
-        annual_chart.analysis_report =
-            Some(crate::analysis::report::VedicAnalysisReport::generate(
+        let year_days = match self.config.year_type {
+            crate::core::config::VedicYearType::Savana => 360.0,
+            crate::core::config::VedicYearType::Sidereal => 365.256363,
+            crate::core::config::VedicYearType::Gregorian => 365.2425,
+        };
+        annual_chart.analysis_report = Some(
+            crate::analysis::report::VedicAnalysisReport::generate_with_year_days(
                 &annual_chart,
                 current_guess,
                 birth_chart.ascendant.rasi,
-            ));
+                year_days,
+            ),
+        );
 
         Ok(annual_chart)
     }

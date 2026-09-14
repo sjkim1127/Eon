@@ -48,6 +48,15 @@ impl VimshottariDasha {
         moon_long: f64,
         levels: u8,
     ) -> Vec<DashaPeriod> {
+        Self::calculate_timeline_with_year_days(birth_time, moon_long, levels, 365.2425)
+    }
+
+    pub fn calculate_timeline_with_year_days(
+        birth_time: DateTime<Utc>,
+        moon_long: f64,
+        levels: u8,
+        year_days: f64,
+    ) -> Vec<DashaPeriod> {
         // Moon Nakshatra range is 13°20' (13.3333...)
         let nak_duration = 360.0 / 27.0;
         let moon_long = normalize_moon_longitude(moon_long);
@@ -66,8 +75,12 @@ impl VimshottariDasha {
         let (first_lord, full_years) = Self::CYCLE[start_lord_index];
         let remaining_years = full_years * portion_remaining;
 
-        // Approximate years to seconds (365.2425 days per year)
-        let years_to_secs = |y: f64| (y * 365.2425 * 24.0 * 60.0 * 60.0) as i64;
+        let year_days = if year_days.is_finite() && year_days > 0.0 {
+            year_days
+        } else {
+            365.2425
+        };
+        let years_to_secs = |y: f64| (y * year_days * 24.0 * 60.0 * 60.0) as i64;
 
         let first_end = current_start + Duration::seconds(years_to_secs(remaining_years));
 

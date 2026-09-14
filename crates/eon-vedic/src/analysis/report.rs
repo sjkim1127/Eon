@@ -111,6 +111,15 @@ impl VedicAnalysisReport {
         birth_time: chrono::DateTime<Utc>,
         _birth_lagna_rasi: u8,
     ) -> Self {
+        Self::generate_with_year_days(chart, birth_time, _birth_lagna_rasi, 365.2425)
+    }
+
+    pub fn generate_with_year_days(
+        chart: &VedicChart,
+        birth_time: chrono::DateTime<Utc>,
+        _birth_lagna_rasi: u8,
+        year_days: f64,
+    ) -> Self {
         let get_karaka = |role: crate::analysis::jaimini::JaiminiKarakaRole| {
             chart
                 .karakas
@@ -176,11 +185,13 @@ impl VedicAnalysisReport {
         // Calculate Dasha Focus (Vimshottari)
         let moon_pos = chart.planets.iter().find(|p| p.planet == VedicPlanet::Moon);
         let (dasha_focus, dasha_timeline) = if let Some(m) = moon_pos {
-            let mut timeline = crate::analysis::dasha::VimshottariDasha::calculate_timeline(
-                birth_time,
-                m.sidereal_deg,
-                3, // Maha + Antar + Pratyantar
-            );
+            let mut timeline =
+                crate::analysis::dasha::VimshottariDasha::calculate_timeline_with_year_days(
+                    birth_time,
+                    m.sidereal_deg,
+                    3,
+                    year_days,
+                );
             crate::analysis::dasha::VimshottariDasha::attach_interpretations(&mut timeline, chart);
             let current_time = chrono::Utc::now();
             let focus = if let Some(current_dasha) = timeline
