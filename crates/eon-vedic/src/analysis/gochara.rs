@@ -65,22 +65,26 @@ impl GocharaEngine {
     /// let transit_chart = calculator.calculate(current_time, lat, lon);
     /// let transits = GocharaEngine::analyze(&natal_chart, &transit_chart);
     pub fn analyze(natal_chart: &VedicChart, current_chart: &VedicChart) -> GocharaSummary {
-        let natal_moon = natal_chart
+        let Some(natal_moon) = natal_chart
             .planets
             .iter()
-            .find(|p| p.planet == VedicPlanet::Moon)
-            .unwrap();
+            .find(|p| p.planet == VedicPlanet::Moon && (1..=12).contains(&p.rasi))
+        else {
+            return GocharaSummary {
+                transits: Vec::new(),
+                sade_sati: SadeSatiPhase::None,
+            };
+        };
         let natal_moon_rasi = natal_moon.rasi;
 
         let mut transits = Vec::new();
         let mut sade_sati = SadeSatiPhase::None;
 
         for pos in &current_chart.planets {
-            let house_from_moon = if pos.rasi >= natal_moon_rasi {
-                pos.rasi - natal_moon_rasi + 1
-            } else {
-                (12 - natal_moon_rasi) + pos.rasi + 1
-            };
+            if !(1..=12).contains(&pos.rasi) {
+                continue;
+            }
+            let house_from_moon = Self::house_from_moon(natal_moon_rasi, pos.rasi);
 
             let is_benefic = Self::check_benefic_transit(pos.planet, house_from_moon);
 
@@ -91,11 +95,7 @@ impl GocharaEngine {
                 .iter()
                 .find(|p| p.planet == VedicPlanet::Moon);
             let murti = if let Some(m) = current_moon {
-                let moon_house = if m.rasi >= natal_moon_rasi {
-                    m.rasi - natal_moon_rasi + 1
-                } else {
-                    (12 - natal_moon_rasi) + m.rasi + 1
-                };
+                let moon_house = Self::house_from_moon(natal_moon_rasi, m.rasi);
                 match moon_house {
                     1 | 6 | 11 => MurtiType::Gold,
                     2 | 5 | 9 => MurtiType::Silver,
@@ -111,10 +111,11 @@ impl GocharaEngine {
             if let Some(vedha_house) = Self::get_vedha_house(pos.planet, house_from_moon) {
                 // Check if any planet is in the vedha_house (relative to moon)
                 for other in &current_chart.planets {
-                    let other_house = if other.rasi >= natal_moon_rasi {
-                        other.rasi - natal_moon_rasi + 1
-                    } else {
-                        (12 - natal_moon_rasi) + other.rasi + 1
+                    let Some(other_house) = (1..=12)
+                        .contains(&other.rasi)
+                        .then(|| Self::house_from_moon(natal_moon_rasi, other.rasi))
+                    else {
+                        continue;
                     };
 
                     if other_house == vedha_house {
@@ -180,7 +181,11 @@ impl GocharaEngine {
 
             // 5. Kakshya Analysis
             // Find Kakshya Lord based on degree in sign (0 to 30)
-            let deg_in_sign = pos.sidereal_deg % 30.0;
+            let deg_in_sign = if pos.sidereal_deg.is_finite() {
+                pos.sidereal_deg.rem_euclid(30.0)
+            } else {
+                0.0
+            };
             let kakshya_idx = (deg_in_sign / 3.75).floor() as u8;
             let kakshya_idx = kakshya_idx.min(7); // clamp to 0-7 just in case
 
@@ -203,7 +208,9 @@ impl GocharaEngine {
                 .bav
                 .iter()
                 .find(|b| b.planet == pos.planet)
-                .map(|b| b.pav[(pos.rasi - 1) as usize][kakshya_idx as usize])
+                .and_then(|b| b.pav.get((pos.rasi - 1) as usize))
+                .and_then(|row| row.get(kakshya_idx as usize))
+                .copied()
                 .unwrap_or(false);
 
             let kakshya = KakshyaTransit {
@@ -230,6 +237,10 @@ impl GocharaEngine {
             transits,
             sade_sati,
         }
+    }
+
+    fn house_from_moon(natal_moon_rasi: u8, transit_rasi: u8) -> u8 {
+        ((transit_rasi + 12 - natal_moon_rasi) % 12) + 1
     }
 
     pub fn calculate_sade_sati(natal_moon: u8, saturn_transit: u8) -> SadeSatiPhase {
