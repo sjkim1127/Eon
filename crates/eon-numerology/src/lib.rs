@@ -118,21 +118,28 @@ pub fn calculate_numerology(
     };
 
     // 4. 4 Pinnacles & Challenges
-    // Pinnacle 1: Month + Day
-    let p1 = reduce_number(month + day, true);
-    let c1 = reduce_number((month as i32 - day as i32).unsigned_abs(), false);
+    // The cycle calculations use the reduced birth-date components. This is
+    // the convention used by the Pythagorean pinnacle/challenge references;
+    // using raw 28/1990 values produces different, non-canonical challenges.
+    let m_base = reduce_number(month, false) as u32;
+    let d_base = reduce_number(day, false) as u32;
+    let y_base = reduce_number(year, false) as u32;
 
-    // Pinnacle 2: Day + Year
-    let p2 = reduce_number(day + year, true);
-    let c2 = reduce_number((day as i32 - year as i32).unsigned_abs(), false);
+    // Pinnacle 1: reduced month + reduced day
+    let p1 = reduce_number(m_base + d_base, true);
+    let c1 = reduce_number(m_base.abs_diff(d_base), false);
+
+    // Pinnacle 2: reduced day + reduced year
+    let p2 = reduce_number(d_base + y_base, true);
+    let c2 = reduce_number(d_base.abs_diff(y_base), false);
 
     // Pinnacle 3: P1 + P2
     let p3 = reduce_number(p1 as u32 + p2 as u32, true);
     let c3 = reduce_number((c1 as i32 - c2 as i32).unsigned_abs(), false);
 
-    // Pinnacle 4: Month + Year
-    let p4 = reduce_number(month + year, true);
-    let c4 = reduce_number((month as i32 - year as i32).unsigned_abs(), false);
+    // Pinnacle 4: reduced month + reduced year
+    let p4 = reduce_number(m_base + y_base, true);
+    let c4 = reduce_number(m_base.abs_diff(y_base), false);
 
     // Base pinnacle transition age: 36 - Life Path (single digit base)
     let lp_base = reduce_number(life_path as u32, false) as u32;
@@ -223,5 +230,19 @@ mod tests {
         assert!(res.core.life_path >= 1);
         assert_eq!(res.pinnacles.len(), 4);
         assert!(res.personal_year >= 1 && res.personal_year <= 9);
+    }
+
+    #[test]
+    fn pinnacle_and_challenge_cycles_reduce_date_components_first() {
+        let res = calculate_numerology(1990, 5, 28, None, 2026);
+
+        // Month=5, day=28->1, year=1990->1.
+        assert_eq!(res.pinnacles[0].pinnacle_number, 6);
+        assert_eq!(res.pinnacles[0].challenge_number, 4);
+        assert_eq!(res.pinnacles[1].pinnacle_number, 2);
+        assert_eq!(res.pinnacles[1].challenge_number, 0);
+        assert_eq!(res.pinnacles[2].challenge_number, 4);
+        assert_eq!(res.pinnacles[3].pinnacle_number, 6);
+        assert_eq!(res.pinnacles[3].challenge_number, 4);
     }
 }
