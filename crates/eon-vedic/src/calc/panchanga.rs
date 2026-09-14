@@ -113,7 +113,7 @@ impl PanchangaEngine {
             polar_day = prev_polar_day;
         }
 
-        let (next_sunrise, _, _) = Self::calculate_sunrise_sunset(
+        let (mut next_sunrise, _, _) = Self::calculate_sunrise_sunset(
             sunrise + chrono::Duration::days(1),
             latitude,
             longitude,
@@ -131,6 +131,7 @@ impl PanchangaEngine {
                 sunrise = day_start;
                 sunset = day_start;
             }
+            next_sunrise = day_start + chrono::Duration::days(1);
         }
 
         // 2. Vara (Weekday) - Vedic Day starts at Sunrise
@@ -554,6 +555,10 @@ mod tests {
         assert_eq!(panchanga.sunrise, panchanga.sunset);
         assert!(!panchanga.is_day_birth);
         assert!(panchanga.is_night_birth);
+        assert_eq!(
+            panchanga.next_sunrise - panchanga.sunrise,
+            chrono::Duration::days(1)
+        );
     }
 
     #[test]
@@ -567,5 +572,9 @@ mod tests {
         );
         assert!(panchanga.is_day_birth);
         assert!(!panchanga.is_night_birth);
+        assert_eq!(
+            panchanga.next_sunrise - panchanga.sunrise,
+            chrono::Duration::days(1)
+        );
     }
 }
