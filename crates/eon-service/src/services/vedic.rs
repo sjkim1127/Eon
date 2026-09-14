@@ -4,6 +4,7 @@ use crate::error::ServiceError;
 use chrono::Datelike;
 use eon_vedic::analysis::report::VedicAnalysisReport;
 use eon_vedic::core::chart::VedicChartCalculator;
+use eon_vedic::core::planets::VedicPlanet;
 
 pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, ServiceError> {
     let birth_ctx = prepare_birth_context(&input.base, None, false)?;
@@ -21,7 +22,20 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
     let transit_chart = calculator
         .calculate(input.current.now_utc, input.base.lat, input.base.lon)
         .map_err(|e| ServiceError::Vedic(e.to_string()))?;
-    let gochara = eon_vedic::analysis::gochara::GocharaEngine::analyze(&chart, &transit_chart);
+    let mut gochara = eon_vedic::analysis::gochara::GocharaEngine::analyze(&chart, &transit_chart);
+    apply_sign_entry_murti(
+        &calculator,
+        chart
+            .planets
+            .iter()
+            .find(|position| position.planet == VedicPlanet::Moon)
+            .map(|position| position.rasi)
+            .unwrap_or(0),
+        &mut gochara,
+        input.current.now_utc,
+        input.base.lat,
+        input.base.lon,
+    )?;
 
     let report = {
         let mut r = VedicAnalysisReport::generate(&chart, dt, chart.ascendant.rasi);
@@ -77,6 +91,42 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
         varga_nakshatra_reports,
         kp_analysis,
     })
+}
+
+fn apply_sign_entry_murti(
+    calculator: &VedicChartCalculator,
+    natal_moon_rasi: u8,
+    gochara: &mut eon_vedic::analysis::gochara::GocharaSummary,
+    now: chrono::DateTime<chrono::Utc>,
+    latitude: f64,
+    longitude: f64,
+) -> Result<(), ServiceError> {
+    for transit in &mut gochara.transits {
+        // Swiss Ephemeris uses the same body id for Rahu and Ketu; Ketu's
+        // 180-degree offset needs a dedicated entry search before enabling it.
+        if matches!(transit.planet, VedicPlanet::Rahu | VedicPlanet::Ketu) {
+            continue;
+        }
+
+        let entry = calculator
+            .engine()
+            .find_previous_planet_sign_entry(now, transit.planet.se_id())
+            .map_err(|e| ServiceError::Vedic(e.to_string()))?;
+        let entry_chart = calculator
+            .calculate(entry, latitude, longitude)
+            .map_err(|e| ServiceError::Vedic(e.to_string()))?;
+        if let Some(entry_moon) = entry_chart
+            .planets
+            .iter()
+            .find(|position| position.planet == VedicPlanet::Moon)
+        {
+            transit.murti = eon_vedic::analysis::gochara::GocharaEngine::calculate_murti(
+                natal_moon_rasi,
+                entry_moon.rasi,
+            );
+        }
+    }
+    Ok(())
 }
 
 pub fn analyze_compatibility(
