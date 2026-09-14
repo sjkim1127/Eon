@@ -611,6 +611,23 @@ mod tests {
     }
 
     #[test]
+    fn finds_next_lunar_rasi_entry() {
+        let engine = AstroEngine::new();
+        let start = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
+        let entry = engine.find_next_planet_sign_entry(start, 1).unwrap();
+
+        assert!(entry > start);
+        assert!(entry <= start + chrono::Duration::days(4));
+        let before = engine
+            .get_planet_position(entry - chrono::Duration::seconds(2), 1, 256)
+            .unwrap();
+        let after = engine
+            .get_planet_position(entry + chrono::Duration::seconds(2), 1, 256)
+            .unwrap();
+        assert_ne!((before / 30.0).floor(), (after / 30.0).floor());
+    }
+
+    #[test]
     fn solar_term_crossings_match_swiss_ephemeris_oracle() {
         let engine = AstroEngine::new();
         let year_start = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
