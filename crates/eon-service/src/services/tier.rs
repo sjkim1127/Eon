@@ -1145,3 +1145,42 @@ fn find_dasha_lord_at_age(
         .map(|period| format!("{:?}", period.lord))
         .unwrap_or_else(|| format!("{:?}", first.lord))
 }
+
+#[cfg(test)]
+mod dasha_trajectory_tests {
+    use super::{compute_dasha_bonus_for_age, find_dasha_lord_at_age};
+    use chrono::{Duration, TimeZone, Utc};
+    use eon_vedic::analysis::dasha::DashaPeriod;
+    use eon_vedic::planets::VedicPlanet;
+
+    #[test]
+    fn selects_period_by_age_instead_of_always_using_first_period() {
+        let birth = Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap();
+        let first_end = birth + Duration::days(7 * 365);
+        let second_end = first_end + Duration::days(20 * 365);
+        let timeline = vec![
+            DashaPeriod {
+                lord: VedicPlanet::Ketu,
+                start_time: birth,
+                end_time: first_end,
+                sub_dashas: vec![],
+                name: None,
+                interpretation: None,
+                is_favorable: Some(false),
+            },
+            DashaPeriod {
+                lord: VedicPlanet::Venus,
+                start_time: first_end,
+                end_time: second_end,
+                sub_dashas: vec![],
+                name: None,
+                interpretation: None,
+                is_favorable: Some(true),
+            },
+        ];
+
+        assert_eq!(find_dasha_lord_at_age(&timeline, 1), "Ketu");
+        assert_eq!(find_dasha_lord_at_age(&timeline, 10), "Venus");
+        assert!(compute_dasha_bonus_for_age(&timeline, 10) > 70.0);
+    }
+}
