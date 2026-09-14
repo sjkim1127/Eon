@@ -1450,6 +1450,7 @@ mod tests {
                 yoga: 1,
                 day_lord: VedicPlanet::Sun,
                 hour_lord: VedicPlanet::Sun,
+                tribhaga_lord: VedicPlanet::Mercury,
                 sunrise: chrono::DateTime::from_timestamp(21600, 0)
                     .unwrap()
                     .with_timezone(&chrono::Utc),

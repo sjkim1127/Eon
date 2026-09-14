@@ -21,6 +21,8 @@ pub struct Panchanga {
     pub is_day_birth: bool,
     pub day_lord: VedicPlanet,
     pub hour_lord: VedicPlanet,
+    /// The planet receiving Tribhaga Bala for the birth-time third.
+    pub tribhaga_lord: VedicPlanet,
     pub daily_parts: [VedicPlanet; 8], // Tribhaga lords (Day: 3, Night: 3, Total usually handled as 8 yamas or parts)
     pub is_night_birth: bool,
 
@@ -165,7 +167,9 @@ impl PanchangaEngine {
 
         // 3. Hourly Lord (Hora)
         let hour_lord = Self::calculate_hora(time, sunrise, sunset, next_sunrise, day_lord);
-        let daily_parts = Self::calculate_tribhaga_lords(day_lord); // Simplified for Tribhaga
+        let daily_parts = Self::calculate_tribhaga_lords(day_lord);
+        let tribhaga_lord =
+            Self::calculate_tribhaga_lord(time, sunrise, sunset, next_sunrise, is_day_birth);
 
         // 4. Tithi (Moon - Sun) / 12
         let tithi_deg = normalize_degrees(moon - sun);
@@ -258,6 +262,7 @@ impl PanchangaEngine {
             is_night_birth,
             day_lord,
             hour_lord,
+            tribhaga_lord,
             daily_parts,
             yogi_point,
             yogi_planet,
@@ -347,6 +352,37 @@ impl PanchangaEngine {
             day_lord,
             day_lord,
         ]
+    }
+
+    fn calculate_tribhaga_lord(
+        time: DateTime<Utc>,
+        sunrise: DateTime<Utc>,
+        sunset: DateTime<Utc>,
+        next_sunrise: DateTime<Utc>,
+        is_day: bool,
+    ) -> VedicPlanet {
+        let (start, end, lords) = if is_day {
+            (
+                sunrise,
+                sunset,
+                [VedicPlanet::Mercury, VedicPlanet::Sun, VedicPlanet::Saturn],
+            )
+        } else {
+            (
+                sunset,
+                next_sunrise,
+                [VedicPlanet::Moon, VedicPlanet::Venus, VedicPlanet::Mars],
+            )
+        };
+        let duration = end.signed_duration_since(start).num_milliseconds();
+        if duration <= 0 {
+            return lords[0];
+        }
+        let elapsed = time
+            .signed_duration_since(start)
+            .num_milliseconds()
+            .clamp(0, duration.saturating_sub(1));
+        lords[((elapsed * 3) / duration) as usize]
     }
 
     /// NOAA Sunrise/Sunset Algorithm (Simplified)
@@ -530,7 +566,7 @@ impl PanchangaEngine {
 
 #[cfg(test)]
 mod tests {
-    use super::PanchangaEngine;
+    use super::{PanchangaEngine, VedicPlanet};
     use chrono::{TimeZone, Utc};
 
     #[test]
@@ -575,6 +611,44 @@ mod tests {
         assert_eq!(
             panchanga.next_sunrise - panchanga.sunrise,
             chrono::Duration::days(1)
+        );
+    }
+
+    #[test]
+    fn tribhaga_lord_follows_day_and_night_thirds() {
+        let sunrise = Utc.with_ymd_and_hms(2024, 1, 1, 6, 0, 0).unwrap();
+        let sunset = Utc.with_ymd_and_hms(2024, 1, 1, 18, 0, 0).unwrap();
+        let next_sunrise = sunrise + chrono::Duration::days(1);
+
+        assert_eq!(
+            PanchangaEngine::calculate_tribhaga_lord(
+                sunrise + chrono::Duration::hours(1),
+                sunrise,
+                sunset,
+                next_sunrise,
+                true
+            ),
+            VedicPlanet::Mercury
+        );
+        assert_eq!(
+            PanchangaEngine::calculate_tribhaga_lord(
+                sunrise + chrono::Duration::hours(5),
+                sunrise,
+                sunset,
+                next_sunrise,
+                true
+            ),
+            VedicPlanet::Sun
+        );
+        assert_eq!(
+            PanchangaEngine::calculate_tribhaga_lord(
+                sunset + chrono::Duration::hours(5),
+                sunrise,
+                sunset,
+                next_sunrise,
+                false
+            ),
+            VedicPlanet::Venus
         );
     }
 }

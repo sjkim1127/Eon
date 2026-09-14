@@ -407,6 +407,7 @@ mod tests {
                 is_day_birth: true,
                 day_lord: VedicPlanet::Saturn,
                 hour_lord: VedicPlanet::Saturn,
+                tribhaga_lord: VedicPlanet::Mercury,
                 daily_parts: [
                     VedicPlanet::Sun,
                     VedicPlanet::Moon,
