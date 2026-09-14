@@ -102,15 +102,18 @@ fn apply_sign_entry_murti(
     longitude: f64,
 ) -> Result<(), ServiceError> {
     for transit in &mut gochara.transits {
-        // Swiss Ephemeris uses the same body id for Rahu and Ketu; Ketu's
-        // 180-degree offset needs a dedicated entry search before enabling it.
-        if matches!(transit.planet, VedicPlanet::Rahu | VedicPlanet::Ketu) {
-            continue;
-        }
+        // Swiss Ephemeris exposes the node pair through Rahu's body id.
+        // Ketu is exactly opposite Rahu, so both cross sign boundaries at
+        // the same instant and can share the entry search.
+        let entry_planet_id = if matches!(transit.planet, VedicPlanet::Rahu | VedicPlanet::Ketu) {
+            VedicPlanet::Rahu.se_id()
+        } else {
+            transit.planet.se_id()
+        };
 
         let entry = calculator
             .engine()
-            .find_previous_planet_sign_entry(now, transit.planet.se_id())
+            .find_previous_planet_sign_entry(now, entry_planet_id)
             .map_err(|e| ServiceError::Vedic(e.to_string()))?;
         let entry_chart = calculator
             .calculate(entry, latitude, longitude)
