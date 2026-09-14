@@ -11,5 +11,8 @@ rustflags = [
     "-C", "link-arg=--export=__heap_base"
 ]
 
+[env]
+CFLAGS_wasm32_wasi = { value = "-matomics -mbulk-memory", force = true }
+
 [unstable]
 build-std = ["panic_abort", "std"]
