@@ -65,6 +65,7 @@ inherits = "dev"
 
 [workspace.lints.rust]
 dead_code = "allow"
+unused_crate_dependencies = "allow"
 
 [workspace.lints.clippy]
 too_many_arguments = "allow"
