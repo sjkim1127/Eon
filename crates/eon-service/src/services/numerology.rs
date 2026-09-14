@@ -5,6 +5,12 @@ use crate::error::ServiceError;
 use chrono::{Datelike, NaiveDate};
 
 pub fn analyze(input: NumerologyAnalysisInput) -> Result<NumerologyAnalysisOutput, ServiceError> {
+    if input.base.is_lunar {
+        return Err(ServiceError::InvalidInput(
+            "Numerology 분석은 Gregorian 양력 날짜만 지원합니다".to_string(),
+        ));
+    }
+
     if input.base.year <= 0 {
         return Err(ServiceError::InvalidInput(format!(
             "출생 연도는 양수여야 합니다: {}",
@@ -137,5 +143,27 @@ mod tests {
             )),
             Err(ServiceError::InvalidInput(_))
         ));
+    }
+
+    #[test]
+    fn analyze_rejects_lunar_input_instead_of_silently_mislabeling_it() {
+        let input = NumerologyAnalysisInput::new(
+            AnalysisInput {
+                year: 2026,
+                month: 2,
+                day: 1,
+                hour: 0,
+                minute: 0,
+                is_lunar: true,
+                is_leap_month: false,
+                lat: 0.0,
+                lon: 0.0,
+                timezone: "UTC".to_string(),
+            },
+            None,
+            Some(2026),
+        );
+
+        assert!(matches!(analyze(input), Err(ServiceError::InvalidInput(_))));
     }
 }
