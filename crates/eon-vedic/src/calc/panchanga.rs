@@ -97,26 +97,41 @@ impl PanchangaEngine {
         let local_offset_mins = (longitude * 4.0) as i64;
         let local_time = time + chrono::Duration::minutes(local_offset_mins);
 
-        let (mut sunrise, mut sunset) =
+        let (mut sunrise, mut sunset, mut polar_day) =
             Self::calculate_sunrise_sunset(local_time, latitude, longitude);
 
         // If current time is before the sunrise of its local date,
         // the astrological day started at yesterday's sunrise
-        if time < sunrise {
-            let (prev_rise, prev_set) = Self::calculate_sunrise_sunset(
+        if polar_day.is_none() && time < sunrise {
+            let (prev_rise, prev_set, prev_polar_day) = Self::calculate_sunrise_sunset(
                 local_time - chrono::Duration::days(1),
                 latitude,
                 longitude,
             );
             sunrise = prev_rise;
             sunset = prev_set;
+            polar_day = prev_polar_day;
         }
 
-        let (next_sunrise, _) = Self::calculate_sunrise_sunset(
+        let (next_sunrise, _, _) = Self::calculate_sunrise_sunset(
             sunrise + chrono::Duration::days(1),
             latitude,
             longitude,
         );
+
+        // No sunrise/sunset exists during polar night/day. Keep the legacy
+        // DateTime fields usable, but use full-day boundaries rather than a
+        // clamped noon event, which would fabricate an 8-part daytime span.
+        if let Some(is_polar_day) = polar_day {
+            let day_start = sunrise.date_naive().and_hms_opt(0, 0, 0).unwrap().and_utc();
+            if is_polar_day {
+                sunrise = day_start;
+                sunset = day_start + chrono::Duration::days(1);
+            } else {
+                sunrise = day_start;
+                sunset = day_start;
+            }
+        }
 
         // 2. Vara (Weekday) - Vedic Day starts at Sunrise
         let is_day_birth = time >= sunrise && time < sunset;
@@ -338,7 +353,7 @@ impl PanchangaEngine {
         date: DateTime<Utc>,
         lat: f64,
         lon: f64,
-    ) -> (DateTime<Utc>, DateTime<Utc>) {
+    ) -> (DateTime<Utc>, DateTime<Utc>, Option<bool>) {
         // Convert date to Julian Day
         let timestamp = date.timestamp();
         let julian_day = (timestamp as f64 / 86400.0) + 2440587.5;
@@ -410,12 +425,12 @@ impl PanchangaEngine {
             - (lat.to_radians().tan() * sun_declin.tan());
 
         // Check for polar day/night (simplification: clamp)
-        let ha_deg = if cos_ha > 1.0 {
-            0.0
+        let (ha_deg, polar_day) = if cos_ha > 1.0 {
+            (0.0, Some(false))
         } else if cos_ha < -1.0 {
-            180.0
+            (180.0, Some(true))
         } else {
-            cos_ha.acos().to_degrees()
+            (cos_ha.acos().to_degrees(), None)
         };
 
         let solar_noon = 720.0 - 4.0 * lon - eq_of_time;
@@ -432,6 +447,7 @@ impl PanchangaEngine {
         (
             midnight + chrono::Duration::seconds(rise_secs),
             midnight + chrono::Duration::seconds(set_secs),
+            polar_day,
         )
     }
 
@@ -528,5 +544,28 @@ mod tests {
         assert_eq!(out_of_range.karana, normalized.karana);
         assert_eq!(out_of_range.yogi_planet, normalized.yogi_planet);
         assert_eq!(out_of_range.avayogi_planet, normalized.avayogi_planet);
+    }
+
+    #[test]
+    fn polar_night_does_not_fabricate_a_daytime_window() {
+        let time = Utc.with_ymd_and_hms(2024, 12, 21, 12, 0, 0).unwrap();
+        let panchanga = PanchangaEngine::calculate(270.0, 90.0, time, 80.0, 0.0);
+
+        assert_eq!(panchanga.sunrise, panchanga.sunset);
+        assert!(!panchanga.is_day_birth);
+        assert!(panchanga.is_night_birth);
+    }
+
+    #[test]
+    fn polar_day_uses_a_full_day_boundary() {
+        let time = Utc.with_ymd_and_hms(2024, 6, 21, 12, 0, 0).unwrap();
+        let panchanga = PanchangaEngine::calculate(90.0, 180.0, time, 80.0, 0.0);
+
+        assert_eq!(
+            panchanga.sunset - panchanga.sunrise,
+            chrono::Duration::days(1)
+        );
+        assert!(panchanga.is_day_birth);
+        assert!(!panchanga.is_night_birth);
     }
 }
