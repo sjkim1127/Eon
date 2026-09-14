@@ -319,15 +319,27 @@ fn calculate_yoni(male_nak: u8, female_nak: u8) -> f64 {
         return 0.0;
     }
 
-    // Same animal type = 4. Otherwise we simplify friendly vs neutral
-    let m_val = m_yoni as u8;
-    let f_val = f_yoni as u8;
-    if m_val == f_val {
+    // Same animal type = 4. Friendship must come from the traditional yoni
+    // relationship table; enum discriminants have no astrological meaning.
+    if std::mem::discriminant(&m_yoni) == std::mem::discriminant(&f_yoni) {
         4.0
-    } else if (m_val + f_val).is_multiple_of(2) {
-        3.0 // Friendly
     } else {
-        2.0 // Neutral
+        let is_friend = matches!(
+            (&m_yoni, &f_yoni),
+            (Horse, Elephant)
+                | (Elephant, Horse)
+                | (Elephant, Cow)
+                | (Cow, Elephant)
+                | (Cow, Buffalo)
+                | (Buffalo, Cow)
+                | (Buffalo, Sheep)
+                | (Sheep, Buffalo)
+        );
+        if is_friend {
+            3.0
+        } else {
+            2.0
+        }
     }
 }
 
