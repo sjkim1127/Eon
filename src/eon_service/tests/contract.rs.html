@@ -166,6 +166,11 @@
 <a href=#166 id=166 data-nosnippet>166</a>                eon_vedic::core::planets::VedicPlanet::Moon
 <a href=#167 id=167 data-nosnippet>167</a>            ))
 <a href=#168 id=168 data-nosnippet>168</a>            .any(|transit| transit.murti != snapshot_murti));
-<a href=#169 id=169 data-nosnippet>169</a>    }
-<a href=#170 id=170 data-nosnippet>170</a>}
+<a href=#169 id=169 data-nosnippet>169</a>        <span class="macro">assert!</span>(result
+<a href=#170 id=170 data-nosnippet>170</a>            .gochara
+<a href=#171 id=171 data-nosnippet>171</a>            .transits
+<a href=#172 id=172 data-nosnippet>172</a>            .iter()
+<a href=#173 id=173 data-nosnippet>173</a>            .all(|transit| transit.murti_entry_time.is_some()));
+<a href=#174 id=174 data-nosnippet>174</a>    }
+<a href=#175 id=175 data-nosnippet>175</a>}
 </code></pre></div></section></main></body></html>

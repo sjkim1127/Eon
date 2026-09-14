@@ -117,61 +117,62 @@
 <a href=#117 id=117 data-nosnippet>117</a>            .engine()
 <a href=#118 id=118 data-nosnippet>118</a>            .find_previous_planet_sidereal_sign_entry(now, entry_planet_id, ayanamsa)
 <a href=#119 id=119 data-nosnippet>119</a>            .map_err(|e| ServiceError::Vedic(e.to_string()))<span class="question-mark">?</span>;
-<a href=#120 id=120 data-nosnippet>120</a>        <span class="kw">let </span>entry_chart = calculator
-<a href=#121 id=121 data-nosnippet>121</a>            .calculate(entry, latitude, longitude)
-<a href=#122 id=122 data-nosnippet>122</a>            .map_err(|e| ServiceError::Vedic(e.to_string()))<span class="question-mark">?</span>;
-<a href=#123 id=123 data-nosnippet>123</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(entry_moon) = entry_chart
-<a href=#124 id=124 data-nosnippet>124</a>            .planets
-<a href=#125 id=125 data-nosnippet>125</a>            .iter()
-<a href=#126 id=126 data-nosnippet>126</a>            .find(|position| position.planet == VedicPlanet::Moon)
-<a href=#127 id=127 data-nosnippet>127</a>        {
-<a href=#128 id=128 data-nosnippet>128</a>            transit.murti = eon_vedic::analysis::gochara::GocharaEngine::calculate_murti(
-<a href=#129 id=129 data-nosnippet>129</a>                natal_moon_rasi,
-<a href=#130 id=130 data-nosnippet>130</a>                entry_moon.rasi,
-<a href=#131 id=131 data-nosnippet>131</a>            );
-<a href=#132 id=132 data-nosnippet>132</a>        }
-<a href=#133 id=133 data-nosnippet>133</a>    }
-<a href=#134 id=134 data-nosnippet>134</a>    <span class="prelude-val">Ok</span>(())
-<a href=#135 id=135 data-nosnippet>135</a>}
-<a href=#136 id=136 data-nosnippet>136</a>
-<a href=#137 id=137 data-nosnippet>137</a><span class="kw">pub fn </span>analyze_compatibility(
-<a href=#138 id=138 data-nosnippet>138</a>    input: <span class="kw">crate</span>::dto::VedicCompatibilityInput,
-<a href=#139 id=139 data-nosnippet>139</a>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::dto::VedicCompatibilityOutput, ServiceError&gt; {
-<a href=#140 id=140 data-nosnippet>140</a>    <span class="kw">let </span>male_ctx = prepare_birth_context(<span class="kw-2">&amp;</span>input.male, <span class="prelude-val">None</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
-<a href=#141 id=141 data-nosnippet>141</a>    <span class="kw">let </span>male_dt = male_ctx
-<a href=#142 id=142 data-nosnippet>142</a>        .birth_info
-<a href=#143 id=143 data-nosnippet>143</a>        .to_utc()
-<a href=#144 id=144 data-nosnippet>144</a>        .map_err(|e| ServiceError::BirthInfo(e.to_string()))<span class="question-mark">?</span>;
-<a href=#145 id=145 data-nosnippet>145</a>
-<a href=#146 id=146 data-nosnippet>146</a>    <span class="kw">let </span>female_ctx = prepare_birth_context(<span class="kw-2">&amp;</span>input.female, <span class="prelude-val">None</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
-<a href=#147 id=147 data-nosnippet>147</a>    <span class="kw">let </span>female_dt = female_ctx
-<a href=#148 id=148 data-nosnippet>148</a>        .birth_info
-<a href=#149 id=149 data-nosnippet>149</a>        .to_utc()
-<a href=#150 id=150 data-nosnippet>150</a>        .map_err(|e| ServiceError::BirthInfo(e.to_string()))<span class="question-mark">?</span>;
-<a href=#151 id=151 data-nosnippet>151</a>
-<a href=#152 id=152 data-nosnippet>152</a>    <span class="kw">let </span>calculator = VedicChartCalculator::new();
-<a href=#153 id=153 data-nosnippet>153</a>    <span class="kw">let </span>male_chart = calculator
-<a href=#154 id=154 data-nosnippet>154</a>        .calculate(male_dt, input.male.lat, input.male.lon)
-<a href=#155 id=155 data-nosnippet>155</a>        .map_err(|e| ServiceError::Vedic(e.to_string()))<span class="question-mark">?</span>;
-<a href=#156 id=156 data-nosnippet>156</a>    <span class="kw">let </span>female_chart = calculator
-<a href=#157 id=157 data-nosnippet>157</a>        .calculate(female_dt, input.female.lat, input.female.lon)
-<a href=#158 id=158 data-nosnippet>158</a>        .map_err(|e| ServiceError::Vedic(e.to_string()))<span class="question-mark">?</span>;
-<a href=#159 id=159 data-nosnippet>159</a>
-<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">let </span>report = eon_vedic::analysis::matching::MatchingEngine::calculate_compatibility(
-<a href=#161 id=161 data-nosnippet>161</a>        <span class="kw-2">&amp;</span>male_chart,
-<a href=#162 id=162 data-nosnippet>162</a>        <span class="kw-2">&amp;</span>female_chart,
-<a href=#163 id=163 data-nosnippet>163</a>    );
-<a href=#164 id=164 data-nosnippet>164</a>
-<a href=#165 id=165 data-nosnippet>165</a>    <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::dto::VedicCompatibilityOutput {
-<a href=#166 id=166 data-nosnippet>166</a>        meta: AnalysisMeta {
-<a href=#167 id=167 data-nosnippet>167</a>            precision: <span class="kw">crate</span>::dto::BirthTimePrecision::Exact,
-<a href=#168 id=168 data-nosnippet>168</a>            input_time: male_ctx.input_time_string,
-<a href=#169 id=169 data-nosnippet>169</a>            corrected_time: male_ctx.corrected_time_string,
-<a href=#170 id=170 data-nosnippet>170</a>            is_dst: male_ctx.is_dst,
-<a href=#171 id=171 data-nosnippet>171</a>            dst_offset_hours: male_ctx.dst_offset_hours,
-<a href=#172 id=172 data-nosnippet>172</a>            analysis_timezone: input.male.timezone,
-<a href=#173 id=173 data-nosnippet>173</a>        },
-<a href=#174 id=174 data-nosnippet>174</a>        report,
-<a href=#175 id=175 data-nosnippet>175</a>    })
-<a href=#176 id=176 data-nosnippet>176</a>}
+<a href=#120 id=120 data-nosnippet>120</a>        transit.murti_entry_time = <span class="prelude-val">Some</span>(entry);
+<a href=#121 id=121 data-nosnippet>121</a>        <span class="kw">let </span>entry_chart = calculator
+<a href=#122 id=122 data-nosnippet>122</a>            .calculate(entry, latitude, longitude)
+<a href=#123 id=123 data-nosnippet>123</a>            .map_err(|e| ServiceError::Vedic(e.to_string()))<span class="question-mark">?</span>;
+<a href=#124 id=124 data-nosnippet>124</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(entry_moon) = entry_chart
+<a href=#125 id=125 data-nosnippet>125</a>            .planets
+<a href=#126 id=126 data-nosnippet>126</a>            .iter()
+<a href=#127 id=127 data-nosnippet>127</a>            .find(|position| position.planet == VedicPlanet::Moon)
+<a href=#128 id=128 data-nosnippet>128</a>        {
+<a href=#129 id=129 data-nosnippet>129</a>            transit.murti = eon_vedic::analysis::gochara::GocharaEngine::calculate_murti(
+<a href=#130 id=130 data-nosnippet>130</a>                natal_moon_rasi,
+<a href=#131 id=131 data-nosnippet>131</a>                entry_moon.rasi,
+<a href=#132 id=132 data-nosnippet>132</a>            );
+<a href=#133 id=133 data-nosnippet>133</a>        }
+<a href=#134 id=134 data-nosnippet>134</a>    }
+<a href=#135 id=135 data-nosnippet>135</a>    <span class="prelude-val">Ok</span>(())
+<a href=#136 id=136 data-nosnippet>136</a>}
+<a href=#137 id=137 data-nosnippet>137</a>
+<a href=#138 id=138 data-nosnippet>138</a><span class="kw">pub fn </span>analyze_compatibility(
+<a href=#139 id=139 data-nosnippet>139</a>    input: <span class="kw">crate</span>::dto::VedicCompatibilityInput,
+<a href=#140 id=140 data-nosnippet>140</a>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::dto::VedicCompatibilityOutput, ServiceError&gt; {
+<a href=#141 id=141 data-nosnippet>141</a>    <span class="kw">let </span>male_ctx = prepare_birth_context(<span class="kw-2">&amp;</span>input.male, <span class="prelude-val">None</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
+<a href=#142 id=142 data-nosnippet>142</a>    <span class="kw">let </span>male_dt = male_ctx
+<a href=#143 id=143 data-nosnippet>143</a>        .birth_info
+<a href=#144 id=144 data-nosnippet>144</a>        .to_utc()
+<a href=#145 id=145 data-nosnippet>145</a>        .map_err(|e| ServiceError::BirthInfo(e.to_string()))<span class="question-mark">?</span>;
+<a href=#146 id=146 data-nosnippet>146</a>
+<a href=#147 id=147 data-nosnippet>147</a>    <span class="kw">let </span>female_ctx = prepare_birth_context(<span class="kw-2">&amp;</span>input.female, <span class="prelude-val">None</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
+<a href=#148 id=148 data-nosnippet>148</a>    <span class="kw">let </span>female_dt = female_ctx
+<a href=#149 id=149 data-nosnippet>149</a>        .birth_info
+<a href=#150 id=150 data-nosnippet>150</a>        .to_utc()
+<a href=#151 id=151 data-nosnippet>151</a>        .map_err(|e| ServiceError::BirthInfo(e.to_string()))<span class="question-mark">?</span>;
+<a href=#152 id=152 data-nosnippet>152</a>
+<a href=#153 id=153 data-nosnippet>153</a>    <span class="kw">let </span>calculator = VedicChartCalculator::new();
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="kw">let </span>male_chart = calculator
+<a href=#155 id=155 data-nosnippet>155</a>        .calculate(male_dt, input.male.lat, input.male.lon)
+<a href=#156 id=156 data-nosnippet>156</a>        .map_err(|e| ServiceError::Vedic(e.to_string()))<span class="question-mark">?</span>;
+<a href=#157 id=157 data-nosnippet>157</a>    <span class="kw">let </span>female_chart = calculator
+<a href=#158 id=158 data-nosnippet>158</a>        .calculate(female_dt, input.female.lat, input.female.lon)
+<a href=#159 id=159 data-nosnippet>159</a>        .map_err(|e| ServiceError::Vedic(e.to_string()))<span class="question-mark">?</span>;
+<a href=#160 id=160 data-nosnippet>160</a>
+<a href=#161 id=161 data-nosnippet>161</a>    <span class="kw">let </span>report = eon_vedic::analysis::matching::MatchingEngine::calculate_compatibility(
+<a href=#162 id=162 data-nosnippet>162</a>        <span class="kw-2">&amp;</span>male_chart,
+<a href=#163 id=163 data-nosnippet>163</a>        <span class="kw-2">&amp;</span>female_chart,
+<a href=#164 id=164 data-nosnippet>164</a>    );
+<a href=#165 id=165 data-nosnippet>165</a>
+<a href=#166 id=166 data-nosnippet>166</a>    <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::dto::VedicCompatibilityOutput {
+<a href=#167 id=167 data-nosnippet>167</a>        meta: AnalysisMeta {
+<a href=#168 id=168 data-nosnippet>168</a>            precision: <span class="kw">crate</span>::dto::BirthTimePrecision::Exact,
+<a href=#169 id=169 data-nosnippet>169</a>            input_time: male_ctx.input_time_string,
+<a href=#170 id=170 data-nosnippet>170</a>            corrected_time: male_ctx.corrected_time_string,
+<a href=#171 id=171 data-nosnippet>171</a>            is_dst: male_ctx.is_dst,
+<a href=#172 id=172 data-nosnippet>172</a>            dst_offset_hours: male_ctx.dst_offset_hours,
+<a href=#173 id=173 data-nosnippet>173</a>            analysis_timezone: input.male.timezone,
+<a href=#174 id=174 data-nosnippet>174</a>        },
+<a href=#175 id=175 data-nosnippet>175</a>        report,
+<a href=#176 id=176 data-nosnippet>176</a>    })
+<a href=#177 id=177 data-nosnippet>177</a>}
 </code></pre></div></section></main></body></html>
