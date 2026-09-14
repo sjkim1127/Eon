@@ -370,7 +370,7 @@ impl GocharaEngine {
                 12 => Some(3),
                 _ => None,
             },
-            VedicPlanet::Saturn | VedicPlanet::Rahu | VedicPlanet::Ketu => match house {
+            VedicPlanet::Saturn => match house {
                 3 => Some(12),
                 12 => Some(3),
                 6 => Some(9),
@@ -379,6 +379,8 @@ impl GocharaEngine {
                 5 => Some(11),
                 _ => None,
             },
+            // Classical references do not assign Vedha positions to the nodes.
+            VedicPlanet::Rahu | VedicPlanet::Ketu => None,
             _ => None,
         }
     }
@@ -466,6 +468,17 @@ mod tests {
 
         for (planet, house, vedha) in expected {
             assert_eq!(GocharaEngine::get_vedha_house(planet, house), Some(vedha));
+        }
+
+        for house in 1..=12 {
+            assert_eq!(
+                GocharaEngine::get_vedha_house(VedicPlanet::Rahu, house),
+                None
+            );
+            assert_eq!(
+                GocharaEngine::get_vedha_house(VedicPlanet::Ketu, house),
+                None
+            );
         }
     }
 }
