@@ -172,5 +172,28 @@
 <a href=#172 id=172 data-nosnippet>172</a>            .iter()
 <a href=#173 id=173 data-nosnippet>173</a>            .all(|transit| transit.murti_entry_time.is_some()));
 <a href=#174 id=174 data-nosnippet>174</a>    }
-<a href=#175 id=175 data-nosnippet>175</a>}
+<a href=#175 id=175 data-nosnippet>175</a>
+<a href=#176 id=176 data-nosnippet>176</a>    <span class="attr">#[test]
+<a href=#177 id=177 data-nosnippet>177</a>    </span><span class="kw">fn </span>rejects_unknown_vedic_year_type() {
+<a href=#178 id=178 data-nosnippet>178</a>        <span class="kw">let </span>base = AnalysisInput {
+<a href=#179 id=179 data-nosnippet>179</a>            year: <span class="number">1985</span>,
+<a href=#180 id=180 data-nosnippet>180</a>            month: <span class="number">11</span>,
+<a href=#181 id=181 data-nosnippet>181</a>            day: <span class="number">27</span>,
+<a href=#182 id=182 data-nosnippet>182</a>            hour: <span class="number">14</span>,
+<a href=#183 id=183 data-nosnippet>183</a>            minute: <span class="number">30</span>,
+<a href=#184 id=184 data-nosnippet>184</a>            is_lunar: <span class="bool-val">false</span>,
+<a href=#185 id=185 data-nosnippet>185</a>            is_leap_month: <span class="bool-val">false</span>,
+<a href=#186 id=186 data-nosnippet>186</a>            lat: <span class="number">37.5665</span>,
+<a href=#187 id=187 data-nosnippet>187</a>            lon: <span class="number">126.978</span>,
+<a href=#188 id=188 data-nosnippet>188</a>            timezone: <span class="string">"Asia/Seoul"</span>.to_string(),
+<a href=#189 id=189 data-nosnippet>189</a>        };
+<a href=#190 id=190 data-nosnippet>190</a>        <span class="kw">let </span>now = Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap();
+<a href=#191 id=191 data-nosnippet>191</a>        <span class="kw">let </span><span class="kw-2">mut </span>input = VedicAnalysisInput::new(base, <span class="prelude-val">Some</span>(<span class="bool-val">false</span>), <span class="prelude-val">Some</span>(now));
+<a href=#192 id=192 data-nosnippet>192</a>        input.year_type = <span class="prelude-val">Some</span>(<span class="string">"Julian"</span>.to_string());
+<a href=#193 id=193 data-nosnippet>193</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
+<a href=#194 id=194 data-nosnippet>194</a>            facade::analyze_vedic(input),
+<a href=#195 id=195 data-nosnippet>195</a>            <span class="prelude-val">Err</span>(<span class="kw">crate</span>::error::ServiceError::InvalidInput(<span class="kw">_</span>))
+<a href=#196 id=196 data-nosnippet>196</a>        ));
+<a href=#197 id=197 data-nosnippet>197</a>    }
+<a href=#198 id=198 data-nosnippet>198</a>}
 </code></pre></div></section></main></body></html>
