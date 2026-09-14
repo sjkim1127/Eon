@@ -172,4 +172,27 @@ mod tests {
             .iter()
             .all(|transit| transit.murti_entry_time.is_some()));
     }
+
+    #[test]
+    fn rejects_unknown_vedic_year_type() {
+        let base = AnalysisInput {
+            year: 1985,
+            month: 11,
+            day: 27,
+            hour: 14,
+            minute: 30,
+            is_lunar: false,
+            is_leap_month: false,
+            lat: 37.5665,
+            lon: 126.978,
+            timezone: "Asia/Seoul".to_string(),
+        };
+        let now = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
+        let mut input = VedicAnalysisInput::new(base, Some(false), Some(now));
+        input.year_type = Some("Julian".to_string());
+        assert!(matches!(
+            facade::analyze_vedic(input),
+            Err(crate::error::ServiceError::InvalidInput(_))
+        ));
+    }
 }

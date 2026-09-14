@@ -15,7 +15,15 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
         .to_utc()
         .map_err(|e| ServiceError::BirthInfo(e.to_string()))?;
 
-    let calculator = if let Some(year_type) = input.year_type.as_deref().and_then(parse_year_type) {
+    let year_type = match input.year_type.as_deref() {
+        Some(value) => Some(parse_year_type(value).ok_or_else(|| {
+            ServiceError::InvalidInput(format!(
+                "Invalid Vedic year_type: {value}. Expected Savana, Sidereal, or Gregorian"
+            ))
+        })?),
+        None => None,
+    };
+    let calculator = if let Some(year_type) = year_type {
         VedicChartCalculator::with_config(VedicConfig {
             year_type,
             ..VedicConfig::default()
