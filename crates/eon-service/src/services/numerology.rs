@@ -5,6 +5,19 @@ use crate::error::ServiceError;
 use chrono::{Datelike, NaiveDate};
 
 pub fn analyze(input: NumerologyAnalysisInput) -> Result<NumerologyAnalysisOutput, ServiceError> {
+    if input.base.year <= 0 {
+        return Err(ServiceError::InvalidInput(format!(
+            "출생 연도는 양수여야 합니다: {}",
+            input.base.year
+        )));
+    }
+
+    if matches!(input.target_year, Some(0)) {
+        return Err(ServiceError::InvalidInput(
+            "대상 연도는 양수여야 합니다".to_string(),
+        ));
+    }
+
     NaiveDate::from_ymd_opt(input.base.year, input.base.month, input.base.day).ok_or_else(
         || {
             ServiceError::InvalidInput(format!(
@@ -93,5 +106,36 @@ mod tests {
         );
 
         assert!(matches!(analyze(input), Err(ServiceError::InvalidInput(_))));
+    }
+
+    #[test]
+    fn analyze_rejects_non_positive_years() {
+        let base = AnalysisInput {
+            year: 0,
+            month: 1,
+            day: 1,
+            hour: 0,
+            minute: 0,
+            is_lunar: false,
+            is_leap_month: false,
+            lat: 0.0,
+            lon: 0.0,
+            timezone: "UTC".to_string(),
+        };
+        assert!(matches!(
+            analyze(NumerologyAnalysisInput::new(base.clone(), None, Some(2026))),
+            Err(ServiceError::InvalidInput(_))
+        ));
+
+        let mut target_year_input = base;
+        target_year_input.year = 2026;
+        assert!(matches!(
+            analyze(NumerologyAnalysisInput::new(
+                target_year_input,
+                None,
+                Some(0)
+            )),
+            Err(ServiceError::InvalidInput(_))
+        ));
     }
 }
