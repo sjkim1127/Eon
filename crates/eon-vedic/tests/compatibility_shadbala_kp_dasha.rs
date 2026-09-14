@@ -123,6 +123,26 @@ fn test_ashtakoota_vashya_attraction() {
 }
 
 #[test]
+fn test_ashtakoota_vashya_uses_split_sign_boundaries() {
+    // Sagittarius is Manushya in its first half and Chatushpada in its second.
+    let male = create_mock_chart(vec![create_mock_position(
+        VedicPlanet::Moon,
+        9,
+        1,
+        1,
+        8.0 * 30.0 + 10.0,
+    )]);
+    let female = create_mock_chart(vec![create_mock_position(VedicPlanet::Moon, 1, 1, 1, 10.0)]);
+    let report = MatchingEngine::calculate_compatibility(&male, &female);
+    let vashya = report
+        .kootas
+        .iter()
+        .find(|k| k.name.contains("Vashya"))
+        .unwrap();
+    assert_eq!(vashya.earned_points, 1.0);
+}
+
+#[test]
 fn test_ashtakoota_tara_destiny() {
     // Tara measures distance between Nakshatras.
     // Nakshatras: Male (1), Female (1) -> distance 1.

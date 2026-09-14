@@ -45,7 +45,7 @@ impl MatchingEngine {
         let varna_score = calculate_varna(male_moon.rasi, female_moon.rasi);
 
         // 2. Vashya (2 Gunas)
-        let vashya_score = calculate_vashya(male_moon.rasi, female_moon.rasi);
+        let vashya_score = calculate_vashya(male_moon.sidereal_deg, female_moon.sidereal_deg);
 
         // 3. Tara (3 Gunas)
         let tara_score = calculate_tara(male_moon.nakshatra, female_moon.nakshatra);
@@ -219,22 +219,27 @@ fn calculate_varna(male_rasi: u8, female_rasi: u8) -> f64 {
     }
 }
 
-fn get_vashya_type(rasi: u8) -> &'static str {
+fn get_vashya_type(sidereal_deg: f64) -> &'static str {
+    let normalized = sidereal_deg.rem_euclid(360.0);
+    let rasi = (normalized / 30.0).floor() as u8 + 1;
+    let degree_in_rasi = normalized.rem_euclid(30.0);
     match rasi {
         1 | 2 => "Chatushpada",
-        9 => "Manushya",   // 1st half Manushya, simplified
-        10 => "Jalachara", // 2nd half Jalachara, simplified
+        9 if degree_in_rasi < 15.0 => "Manushya",
+        9 => "Chatushpada",
         3 | 6 | 7 | 11 => "Manushya",
         4 | 12 => "Jalachara",
+        10 if degree_in_rasi < 15.0 => "Chatushpada",
+        10 => "Jalachara",
         5 => "Vanachara",
         8 => "Keeta",
         _ => "Manushya",
     }
 }
 
-fn calculate_vashya(male_rasi: u8, female_rasi: u8) -> f64 {
-    let m_type = get_vashya_type(male_rasi);
-    let f_type = get_vashya_type(female_rasi);
+fn calculate_vashya(male_sidereal_deg: f64, female_sidereal_deg: f64) -> f64 {
+    let m_type = get_vashya_type(male_sidereal_deg);
+    let f_type = get_vashya_type(female_sidereal_deg);
     if m_type == f_type {
         return 2.0;
     }
