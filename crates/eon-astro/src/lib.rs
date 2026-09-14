@@ -732,6 +732,18 @@ mod tests {
     }
 
     #[test]
+    fn rejects_non_finite_sidereal_ayanamsa() {
+        let engine = AstroEngine::new();
+        let time = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
+
+        for ayanamsa in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert!(engine
+                .find_previous_planet_sidereal_sign_entry(time, 0, ayanamsa)
+                .is_err());
+        }
+    }
+
+    #[test]
     fn solar_term_crossings_match_swiss_ephemeris_oracle() {
         let engine = AstroEngine::new();
         let year_start = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
