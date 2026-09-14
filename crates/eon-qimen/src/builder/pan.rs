@@ -68,7 +68,7 @@ pub fn get_base_star(palace: u8) -> Star {
         2 => Star::Rui,
         3 => Star::Chong,
         4 => Star::Fu,
-        5 => Star::Rui, // 중궁 기궁 (곤2궁)
+        5 => Star::Qin, // 중궁은 천금(天禽), 포국 시 곤2궁에 기탁
         6 => Star::Xin,
         7 => Star::Zhu,
         8 => Star::Ren,

@@ -74,3 +74,8 @@ fn center_xun_head_uses_tian_qin_as_value_chief() {
     assert_eq!(pan.value_chief_star, Some(crate::core::Star::Qin));
     assert_eq!(pan.value_envoy_door, Some(crate::core::Door::Si));
 }
+
+#[test]
+fn center_palace_base_star_is_tian_qin() {
+    assert_eq!(get_base_star(5), crate::core::Star::Qin);
+}
