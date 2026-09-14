@@ -33,7 +33,8 @@ pub struct ManseryukCache {
 impl ManseryukCache {
     /// 바이너리 데이터로부터 캐시 로드
     pub fn from_binary(bytes: &[u8]) -> Result<Self, crate::error::DataError> {
-        bincode::deserialize(bytes)
+        bincode::serde::decode_from_slice(bytes, bincode::config::legacy())
+            .map(|(cache, _)| cache)
             .map_err(|e| crate::error::DataError::Deserialization(e.to_string()))
     }
 

@@ -85,7 +85,8 @@ fn main() {
         }
     }
 
-    let binary = bincode::serialize(&cache).expect("Failed to serialize cache");
+    let binary = bincode::serde::encode_to_vec(&cache, bincode::config::legacy())
+        .expect("Failed to serialize cache");
     let mut file =
         File::create("crates/eon-data/src/manseryuk.bin").expect("Failed to create file");
     file.write_all(&binary).expect("Failed to write binary");

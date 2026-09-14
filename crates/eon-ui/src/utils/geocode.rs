@@ -15,7 +15,9 @@ const CITIES_BIN: &[u8] = include_bytes!("cities.bin");
 
 lazy_static::lazy_static! {
     static ref CITIES: Vec<CityRecord> = {
-        bincode::deserialize(CITIES_BIN).unwrap_or_default()
+        bincode::serde::decode_from_slice(CITIES_BIN, bincode::config::legacy())
+            .map(|(cities, _)| cities)
+            .unwrap_or_default()
     };
 }
 
