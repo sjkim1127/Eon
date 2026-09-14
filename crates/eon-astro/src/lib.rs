@@ -259,7 +259,7 @@ impl AstroEngine {
         let mut before_time = start_time;
         let mut before_sign = sign(self.get_planet_position(before_time, planet_id, 256)?);
 
-        for _ in 0..370 {
+        for _ in 0..1100 {
             let after_time = before_time + Duration::days(1);
             let after_sign = sign(self.get_planet_position(after_time, planet_id, 256)?);
             if after_sign != before_sign {
@@ -280,7 +280,7 @@ impl AstroEngine {
         }
 
         Err(AstroError::FfiError(
-            "No planetary sign entry found within 370 days".to_string(),
+            "No planetary sign entry found within 1100 days".to_string(),
         ))
     }
 
@@ -297,7 +297,7 @@ impl AstroEngine {
         let mut after_time = end_time;
         let mut after_sign = sign(self.get_planet_position(after_time, planet_id, 256)?);
 
-        for _ in 0..370 {
+        for _ in 0..1100 {
             let before_time = after_time - Duration::days(1);
             let before_sign = sign(self.get_planet_position(before_time, planet_id, 256)?);
             if before_sign != after_sign {
@@ -318,7 +318,50 @@ impl AstroEngine {
         }
 
         Err(AstroError::FfiError(
-            "No planetary sign entry found within 370 days".to_string(),
+            "No planetary sign entry found within 1100 days".to_string(),
+        ))
+    }
+
+    /// Finds the most recent sidereal rasi boundary, using the supplied
+    /// ayanamsa. Vedic sign-entry calculations must use this method.
+    pub fn find_previous_planet_sidereal_sign_entry(
+        &self,
+        end_time: DateTime<Utc>,
+        planet_id: i32,
+        ayanamsa: f64,
+    ) -> Result<DateTime<Utc>, AstroError> {
+        use chrono::Duration;
+
+        if !ayanamsa.is_finite() {
+            return Err(AstroError::FfiError("Non-finite ayanamsa".to_string()));
+        }
+        let sign =
+            |longitude: f64| ((longitude - ayanamsa).rem_euclid(360.0) / 30.0).floor() as i32;
+        let mut after_time = end_time;
+        let mut after_sign = sign(self.get_planet_position(after_time, planet_id, 256)?);
+
+        for _ in 0..1100 {
+            let before_time = after_time - Duration::days(1);
+            let before_sign = sign(self.get_planet_position(before_time, planet_id, 256)?);
+            if before_sign != after_sign {
+                let mut low = before_time;
+                let mut high = after_time;
+                while (high - low).num_seconds() > 1 {
+                    let mid = low + (high - low) / 2;
+                    if sign(self.get_planet_position(mid, planet_id, 256)?) == after_sign {
+                        high = mid;
+                    } else {
+                        low = mid;
+                    }
+                }
+                return Ok(high);
+            }
+            after_time = before_time;
+            after_sign = before_sign;
+        }
+
+        Err(AstroError::FfiError(
+            "No sidereal planetary sign entry found within 1100 days".to_string(),
         ))
     }
 
@@ -674,6 +717,18 @@ mod tests {
         assert!(entry >= Utc.with_ymd_and_hms(2024, 1, 19, 0, 0, 0).unwrap());
         assert!(entry <= Utc.with_ymd_and_hms(2024, 1, 22, 0, 0, 0).unwrap());
         assert!(entry < end);
+    }
+
+    #[test]
+    fn finds_previous_sidereal_solar_rasi_entry() {
+        let engine = AstroEngine::new();
+        let end = Utc.with_ymd_and_hms(2024, 3, 1, 0, 0, 0).unwrap();
+        let entry = engine
+            .find_previous_planet_sidereal_sign_entry(end, 0, 24.0)
+            .unwrap();
+
+        assert!(entry >= Utc.with_ymd_and_hms(2024, 2, 12, 0, 0, 0).unwrap());
+        assert!(entry <= Utc.with_ymd_and_hms(2024, 2, 16, 0, 0, 0).unwrap());
     }
 
     #[test]
