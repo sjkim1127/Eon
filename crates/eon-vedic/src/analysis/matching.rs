@@ -170,7 +170,9 @@ impl MatchingEngine {
         let mangal_dosha_cancelled = male_mangal && female_mangal; // Dosha Samya: Both having it cancels the negative effect
 
         let has_critical_dosha = (nadi_score == 0.0) || (bhakoot_score == 0.0);
-        let is_compatible = total >= 18.0 && (!has_critical_dosha || mangal_dosha_cancelled);
+        // Mangal Dosha is evaluated separately from Ashtakoota. Its
+        // cancellation cannot erase an independent Nadi/Bhakoot dosha.
+        let is_compatible = total >= 18.0 && !has_critical_dosha;
 
         let explanation = format!(
             "총 {}점 획득 (36점 만점). {}",
