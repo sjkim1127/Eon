@@ -69,6 +69,28 @@ fn test_omni_destiny_tier_synthesis() {
 }
 
 #[test]
+fn qimen_service_returns_a_populated_chart_report() {
+    let input = QimenAnalysisInput::new(create_sample_base_input(), true);
+    let output = facade::analyze_qimen(input).unwrap();
+
+    assert_eq!(output.report.pan.palaces.len(), 9);
+    assert!(output
+        .report
+        .pan
+        .palaces
+        .iter()
+        .any(|palace| palace.star.is_some()));
+    assert!(output
+        .report
+        .pan
+        .palaces
+        .iter()
+        .any(|palace| palace.door.is_some()));
+    assert!(output.report.summary.contains("기문둔갑"));
+    assert!(!output.report.summary.contains("스캐폴딩"));
+}
+
+#[test]
 fn test_omni_destiny_tier_female_case() {
     let base = create_sample_base_input();
 
