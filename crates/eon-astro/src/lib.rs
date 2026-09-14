@@ -744,6 +744,18 @@ mod tests {
     }
 
     #[test]
+    fn finds_previous_sidereal_saturn_rasi_entry() {
+        let engine = AstroEngine::new();
+        let end = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
+        let entry = engine
+            .find_previous_planet_sidereal_sign_entry(end, 6, 24.0)
+            .unwrap();
+
+        assert!(entry >= Utc.with_ymd_and_hms(2023, 1, 15, 0, 0, 0).unwrap());
+        assert!(entry <= Utc.with_ymd_and_hms(2023, 1, 20, 0, 0, 0).unwrap());
+    }
+
+    #[test]
     fn solar_term_crossings_match_swiss_ephemeris_oracle() {
         let engine = AstroEngine::new();
         let year_start = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
