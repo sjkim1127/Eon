@@ -31,6 +31,30 @@ fn test_xun_shou() {
 }
 
 #[test]
+fn xun_head_mapping_covers_the_complete_sixty_cycle() {
+    let expected = [
+        HeavenlyStem::Wu,
+        HeavenlyStem::Ji,
+        HeavenlyStem::Geng,
+        HeavenlyStem::Xin,
+        HeavenlyStem::Ren,
+        HeavenlyStem::Gui,
+    ];
+
+    for index in 0..60 {
+        let pillar = GanZi::from_index(index);
+        let xun = get_xun_shou(pillar);
+        assert!(expected.contains(&xun));
+        let decan_last = (index / 10) * 10 + 9;
+        assert_eq!(
+            get_xun_shou(GanZi::from_index(decan_last)),
+            xun,
+            "旬首 must remain constant within each ten-day period at index {index}"
+        );
+    }
+}
+
+#[test]
 fn pan_preserves_nine_palaces_and_eight_plate_permutations() {
     for is_yin_ju in [false, true] {
         let pan = sample_pan(is_yin_ju, 1);
