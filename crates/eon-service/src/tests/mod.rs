@@ -57,6 +57,7 @@ mod tests {
                 analysis_timezone: "Asia/Seoul".to_string(),
             },
             target_year: None,
+            year_type: None,
         };
 
         let vedic_res = facade::analyze_vedic(vedic_input).expect("Vedic analysis failed");
@@ -118,6 +119,7 @@ mod tests {
                     analysis_timezone: f.input.timezone.clone(),
                 },
                 target_year: None,
+                year_type: None,
             };
             let vedic_res = facade::analyze_vedic(vedic_input)
                 .unwrap_or_else(|_| panic!("Vedic failed for {}", f.id));

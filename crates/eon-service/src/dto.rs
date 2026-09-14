@@ -81,6 +81,8 @@ pub struct VedicAnalysisInput {
     pub precision: BirthTimePrecision,
     pub current: CurrentContext,
     pub target_year: Option<i32>,
+    #[serde(default)]
+    pub year_type: Option<String>,
 }
 
 impl VedicAnalysisInput {
@@ -106,6 +108,7 @@ impl VedicAnalysisInput {
                 analysis_timezone,
             },
             target_year: None,
+            year_type: None,
         }
     }
 }
@@ -490,6 +493,8 @@ pub struct VedicAnalysisRequest {
     pub base: AnalysisRequest,
     pub now_utc: Option<String>,
     pub target_year: Option<i32>,
+    #[serde(default)]
+    pub year_type: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -650,6 +655,7 @@ impl TryFrom<VedicAnalysisRequest> for VedicAnalysisInput {
                 analysis_timezone,
             },
             target_year: req.target_year,
+            year_type: req.year_type,
         })
     }
 }

@@ -4,6 +4,7 @@ use crate::error::ServiceError;
 use chrono::Datelike;
 use eon_vedic::analysis::report::VedicAnalysisReport;
 use eon_vedic::core::chart::VedicChartCalculator;
+use eon_vedic::core::config::{VedicConfig, VedicYearType};
 use eon_vedic::core::planets::VedicPlanet;
 
 pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, ServiceError> {
@@ -14,7 +15,14 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
         .to_utc()
         .map_err(|e| ServiceError::BirthInfo(e.to_string()))?;
 
-    let calculator = VedicChartCalculator::new();
+    let calculator = if let Some(year_type) = input.year_type.as_deref().and_then(parse_year_type) {
+        VedicChartCalculator::with_config(VedicConfig {
+            year_type,
+            ..VedicConfig::default()
+        })
+    } else {
+        VedicChartCalculator::new()
+    };
     let chart = calculator
         .calculate(dt, input.base.lat, input.base.lon)
         .map_err(|e| ServiceError::Vedic(e.to_string()))?;
@@ -92,6 +100,15 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
         varga_nakshatra_reports,
         kp_analysis,
     })
+}
+
+fn parse_year_type(value: &str) -> Option<VedicYearType> {
+    match value {
+        "Savana" | "savana" => Some(VedicYearType::Savana),
+        "Sidereal" | "sidereal" => Some(VedicYearType::Sidereal),
+        "Gregorian" | "gregorian" => Some(VedicYearType::Gregorian),
+        _ => None,
+    }
 }
 
 fn apply_sign_entry_murti(
