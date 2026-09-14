@@ -2744,6 +2744,9 @@ pub fn VedicTab() -> Element {
                                                     tbody { class: "divide-y divide-slate-800",
                                                         {data.gochara.transits.iter().map(|tr_pos| {
                                                             let color = planet_color(tr_pos.planet);
+                                                            let entry_time_label = tr_pos
+                                                                .murti_entry_time
+                                                                .map(|entry_time| entry_time.format("%Y-%m-%d %H:%M UTC").to_string());
                                                             let (murti_cls, murti_name) = match tr_pos.murti {
                                                                 eon_vedic::analysis::gochara::MurtiType::Gold => ("text-yellow-400 bg-yellow-950/30 border border-yellow-800/30", "황금 (Suvarna - 대길)"),
                                                                 eon_vedic::analysis::gochara::MurtiType::Silver => ("text-slate-200 bg-slate-800 border border-slate-700", "은 (Rajata - 길)"),
@@ -2758,6 +2761,9 @@ pub fn VedicTab() -> Element {
                                                                     td { class: "px-4 py-3.5 text-slate-400 font-mono text-xs whitespace-nowrap", "달 기준 {tr_pos.house_from_moon}하우스" }
                                                                     td { class: "px-4 py-3.5 whitespace-nowrap",
                                                                         span { class: "px-2.5 py-0.5 rounded-full text-xs font-bold {murti_cls}", "{murti_name}" }
+                                                                        if let Some(entry_time) = entry_time_label {
+                                                                            span { class: "block text-[10px] text-slate-500 font-mono mt-1", "진입 {entry_time}" }
+                                                                        }
                                                                     }
                                                                     td { class: "px-4 py-3.5 text-center whitespace-nowrap space-x-1.5",
                                                                         if tr_pos.is_benefic_transit {
