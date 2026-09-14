@@ -246,6 +246,44 @@ impl AstroEngine {
             .map(|(long, _)| long)
     }
 
+    /// Finds the next rasi (30-degree sign) boundary crossed by a planet.
+    /// The scan is direction-agnostic, so retrograde planets are handled too.
+    pub fn find_next_planet_sign_entry(
+        &self,
+        start_time: DateTime<Utc>,
+        planet_id: i32,
+    ) -> Result<DateTime<Utc>, AstroError> {
+        use chrono::Duration;
+
+        let sign = |longitude: f64| (longitude.rem_euclid(360.0) / 30.0).floor() as i32;
+        let mut before_time = start_time;
+        let mut before_sign = sign(self.get_planet_position(before_time, planet_id, 256)?);
+
+        for _ in 0..370 {
+            let after_time = before_time + Duration::days(1);
+            let after_sign = sign(self.get_planet_position(after_time, planet_id, 256)?);
+            if after_sign != before_sign {
+                let mut low = before_time;
+                let mut high = after_time;
+                while (high - low).num_seconds() > 1 {
+                    let mid = low + (high - low) / 2;
+                    if sign(self.get_planet_position(mid, planet_id, 256)?) == before_sign {
+                        low = mid;
+                    } else {
+                        high = mid;
+                    }
+                }
+                return Ok(high);
+            }
+            before_time = after_time;
+            before_sign = after_sign;
+        }
+
+        Err(AstroError::FfiError(
+            "No planetary sign entry found within 370 days".to_string(),
+        ))
+    }
+
     /// 적도 좌표계 (Equatorial) 데이터 (RA, Declination) 계산
     pub fn get_planet_equatorial(
         &self,
@@ -553,6 +591,23 @@ mod tests {
             engine.get_houses(time, 0.0, 0.0, b'Z' as i32),
             Err(AstroError::InvalidHouseSystem(b'Z' as i32))
         );
+    }
+
+    #[test]
+    fn finds_next_solar_rasi_entry() {
+        let engine = AstroEngine::new();
+        let start = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
+        let entry = engine.find_next_planet_sign_entry(start, 0).unwrap();
+
+        assert!(entry >= Utc.with_ymd_and_hms(2024, 1, 19, 0, 0, 0).unwrap());
+        assert!(entry <= Utc.with_ymd_and_hms(2024, 1, 22, 0, 0, 0).unwrap());
+        let before = engine
+            .get_planet_position(entry - chrono::Duration::seconds(2), 0, 256)
+            .unwrap();
+        let after = engine
+            .get_planet_position(entry + chrono::Duration::seconds(2), 0, 256)
+            .unwrap();
+        assert_ne!((before / 30.0).floor(), (after / 30.0).floor());
     }
 
     #[test]
