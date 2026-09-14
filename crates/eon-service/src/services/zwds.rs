@@ -51,10 +51,8 @@ pub fn analyze(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceEr
         .iter()
         .find(|d| age >= d.age_start && age <= d.age_end)
         .cloned()
-        .unwrap_or_else(|| {
-            // 매핑되지 않으면 첫 번째 대한 리턴
-            chart.daxian.first().cloned().expect("대한 목록이 비어있음")
-        });
+        .or_else(|| chart.daxian.first().cloned())
+        .ok_or_else(|| ServiceError::Zwds("대한 목록이 비어있음".to_string()))?;
 
     Ok(ZwdsAnalysisOutput {
         meta: AnalysisMeta {
