@@ -1,5 +1,6 @@
 use crate::chart::VedicChart;
 use crate::planets::VedicPlanet;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize}; // We might need Ayanamsa from chart or engine
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -35,11 +36,12 @@ pub struct KakshyaTransit {
 pub struct TransitPosition {
     pub planet: VedicPlanet,
     pub current_rasi: u8,
-    pub house_from_moon: u8,             // 1~12
-    pub is_benefic_transit: bool,        // Simple check based on Gochara rules
-    pub is_blocked: bool,                // Blocked by Vedha (obstruction)
-    pub murti: MurtiType,                // Murti Nirnaya
-    pub kakshya: Option<KakshyaTransit>, // Kakshya Transit Data
+    pub house_from_moon: u8,                     // 1~12
+    pub is_benefic_transit: bool,                // Simple check based on Gochara rules
+    pub is_blocked: bool,                        // Blocked by Vedha (obstruction)
+    pub murti: MurtiType,                        // Murti Nirnaya
+    pub murti_entry_time: Option<DateTime<Utc>>, // Sign-entry basis for Murti
+    pub kakshya: Option<KakshyaTransit>,         // Kakshya Transit Data
     pub summary: String,
     pub description: String,
     pub reasons: Vec<String>,
@@ -219,6 +221,7 @@ impl GocharaEngine {
                 is_benefic_transit: is_benefic,
                 is_blocked,
                 murti,
+                murti_entry_time: None,
                 kakshya: Some(kakshya),
                 summary: summary.to_string(),
                 description: description.to_string(),

@@ -117,6 +117,7 @@ fn apply_sign_entry_murti(
             .engine()
             .find_previous_planet_sidereal_sign_entry(now, entry_planet_id, ayanamsa)
             .map_err(|e| ServiceError::Vedic(e.to_string()))?;
+        transit.murti_entry_time = Some(entry);
         let entry_chart = calculator
             .calculate(entry, latitude, longitude)
             .map_err(|e| ServiceError::Vedic(e.to_string()))?;

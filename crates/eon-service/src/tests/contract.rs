@@ -166,5 +166,10 @@ mod tests {
                 eon_vedic::core::planets::VedicPlanet::Moon
             ))
             .any(|transit| transit.murti != snapshot_murti));
+        assert!(result
+            .gochara
+            .transits
+            .iter()
+            .all(|transit| transit.murti_entry_time.is_some()));
     }
 }
