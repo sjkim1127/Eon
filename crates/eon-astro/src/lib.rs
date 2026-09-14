@@ -284,6 +284,44 @@ impl AstroEngine {
         ))
     }
 
+    /// Finds the most recent rasi boundary crossed by a planet before the
+    /// supplied time. This is useful for sign-entry-based transit readings.
+    pub fn find_previous_planet_sign_entry(
+        &self,
+        end_time: DateTime<Utc>,
+        planet_id: i32,
+    ) -> Result<DateTime<Utc>, AstroError> {
+        use chrono::Duration;
+
+        let sign = |longitude: f64| (longitude.rem_euclid(360.0) / 30.0).floor() as i32;
+        let mut after_time = end_time;
+        let mut after_sign = sign(self.get_planet_position(after_time, planet_id, 256)?);
+
+        for _ in 0..370 {
+            let before_time = after_time - Duration::days(1);
+            let before_sign = sign(self.get_planet_position(before_time, planet_id, 256)?);
+            if before_sign != after_sign {
+                let mut low = before_time;
+                let mut high = after_time;
+                while (high - low).num_seconds() > 1 {
+                    let mid = low + (high - low) / 2;
+                    if sign(self.get_planet_position(mid, planet_id, 256)?) == after_sign {
+                        high = mid;
+                    } else {
+                        low = mid;
+                    }
+                }
+                return Ok(high);
+            }
+            after_time = before_time;
+            after_sign = before_sign;
+        }
+
+        Err(AstroError::FfiError(
+            "No planetary sign entry found within 370 days".to_string(),
+        ))
+    }
+
     /// 적도 좌표계 (Equatorial) 데이터 (RA, Declination) 계산
     pub fn get_planet_equatorial(
         &self,
@@ -625,6 +663,17 @@ mod tests {
             .get_planet_position(entry + chrono::Duration::seconds(2), 1, 256)
             .unwrap();
         assert_ne!((before / 30.0).floor(), (after / 30.0).floor());
+    }
+
+    #[test]
+    fn finds_previous_solar_rasi_entry() {
+        let engine = AstroEngine::new();
+        let end = Utc.with_ymd_and_hms(2024, 2, 1, 0, 0, 0).unwrap();
+        let entry = engine.find_previous_planet_sign_entry(end, 0).unwrap();
+
+        assert!(entry >= Utc.with_ymd_and_hms(2024, 1, 19, 0, 0, 0).unwrap());
+        assert!(entry <= Utc.with_ymd_and_hms(2024, 1, 22, 0, 0, 0).unwrap());
+        assert!(entry < end);
     }
 
     #[test]
