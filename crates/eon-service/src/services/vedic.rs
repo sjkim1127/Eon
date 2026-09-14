@@ -31,6 +31,7 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
             .find(|position| position.planet == VedicPlanet::Moon)
             .map(|position| position.rasi)
             .unwrap_or(0),
+        chart.ayanamsa,
         &mut gochara,
         input.current.now_utc,
         input.base.lat,
@@ -96,6 +97,7 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
 fn apply_sign_entry_murti(
     calculator: &VedicChartCalculator,
     natal_moon_rasi: u8,
+    ayanamsa: f64,
     gochara: &mut eon_vedic::analysis::gochara::GocharaSummary,
     now: chrono::DateTime<chrono::Utc>,
     latitude: f64,
@@ -113,7 +115,7 @@ fn apply_sign_entry_murti(
 
         let entry = calculator
             .engine()
-            .find_previous_planet_sign_entry(now, entry_planet_id)
+            .find_previous_planet_sidereal_sign_entry(now, entry_planet_id, ayanamsa)
             .map_err(|e| ServiceError::Vedic(e.to_string()))?;
         let entry_chart = calculator
             .calculate(entry, latitude, longitude)
