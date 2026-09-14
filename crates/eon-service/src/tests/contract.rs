@@ -121,4 +121,50 @@ mod tests {
             "Should follow camelCase"
         );
     }
+
+    #[test]
+    fn gochara_murti_uses_sign_entry_not_current_snapshot() {
+        let birth = AnalysisInput {
+            year: 1985,
+            month: 11,
+            day: 27,
+            hour: 14,
+            minute: 30,
+            is_lunar: false,
+            is_leap_month: false,
+            lat: 37.5665,
+            lon: 126.9780,
+            timezone: "Asia/Seoul".to_string(),
+        };
+        let now = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
+        let result = facade::analyze_vedic(VedicAnalysisInput::new(birth, Some(false), Some(now)))
+            .expect("Vedic analysis failed");
+        let natal_moon = result
+            .chart
+            .planets
+            .iter()
+            .find(|position| position.planet == eon_vedic::core::planets::VedicPlanet::Moon)
+            .expect("natal Moon must exist");
+        let current_moon_rasi = result
+            .gochara
+            .transits
+            .iter()
+            .find(|transit| transit.planet == eon_vedic::core::planets::VedicPlanet::Moon)
+            .expect("transit Moon must exist")
+            .current_rasi;
+        let snapshot_murti = eon_vedic::analysis::gochara::GocharaEngine::calculate_murti(
+            natal_moon.rasi,
+            current_moon_rasi,
+        );
+
+        assert!(result
+            .gochara
+            .transits
+            .iter()
+            .filter(|transit| !matches!(
+                transit.planet,
+                eon_vedic::core::planets::VedicPlanet::Moon
+            ))
+            .any(|transit| transit.murti != snapshot_murti));
+    }
 }
