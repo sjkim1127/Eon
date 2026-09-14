@@ -523,6 +523,8 @@ impl VedicChartCalculator {
 #[cfg(test)]
 mod tests {
     use super::VedicChartCalculator;
+    use crate::core::config::{VedicConfig, VedicYearType};
+    use chrono::{TimeZone, Utc};
 
     #[test]
     fn nakshatra_and_pada_start_boundary_is_correct() {
@@ -559,5 +561,34 @@ mod tests {
             VedicChartCalculator::calculate_nakshatra_and_pada(f64::NAN),
             (1, 1)
         );
+    }
+
+    #[test]
+    fn configured_dasha_year_type_changes_report_timeline() {
+        let birth = Utc.with_ymd_and_hms(1990, 5, 15, 10, 30, 0).unwrap();
+        let mut savana = VedicConfig::default();
+        savana.year_type = VedicYearType::Savana;
+        let gregorian = VedicConfig::default();
+
+        let savana_chart = VedicChartCalculator::with_config(savana)
+            .calculate(birth, 37.5665, 126.978)
+            .unwrap();
+        let gregorian_chart = VedicChartCalculator::with_config(gregorian)
+            .calculate(birth, 37.5665, 126.978)
+            .unwrap();
+        let savana_end = savana_chart
+            .analysis_report
+            .as_ref()
+            .unwrap()
+            .dasha_timeline[0]
+            .end_time;
+        let gregorian_end = gregorian_chart
+            .analysis_report
+            .as_ref()
+            .unwrap()
+            .dasha_timeline[0]
+            .end_time;
+
+        assert!(savana_end < gregorian_end);
     }
 }
