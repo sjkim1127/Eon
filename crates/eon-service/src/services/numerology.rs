@@ -31,3 +31,36 @@ pub fn analyze(input: NumerologyAnalysisInput) -> Result<NumerologyAnalysisOutpu
 
     Ok(NumerologyAnalysisOutput { meta, result: res })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::dto::{AnalysisInput, NumerologyAnalysisInput};
+
+    #[test]
+    fn analyze_preserves_name_target_year_and_reduced_cycles() {
+        let input = NumerologyAnalysisInput::new(
+            AnalysisInput {
+                year: 1990,
+                month: 5,
+                day: 28,
+                hour: 0,
+                minute: 0,
+                is_lunar: false,
+                is_leap_month: false,
+                lat: 37.5665,
+                lon: 126.978,
+                timezone: "Asia/Seoul".to_string(),
+            },
+            Some("John Doe".to_string()),
+            Some(2026),
+        );
+
+        let output = analyze(input).expect("numerology service analysis should succeed");
+        assert_eq!(output.result.personal_year, 7);
+        assert_eq!(output.result.pinnacles[0].challenge_number, 4);
+        assert_eq!(output.meta.input_time, "1990-05-28T00:00:00Z");
+        assert_eq!(output.meta.analysis_timezone, "Asia/Seoul");
+        assert_ne!(output.result.core.expression, 0);
+    }
+}
