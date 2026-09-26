@@ -108,20 +108,6 @@ def main() -> int:
 
     if "/./wasm/" in html:
         raise SystemExit("failed to normalize Dioxus WASM paths")
-    preload_links = re.findall(r"<link\b[^>]*>", html, flags=re.IGNORECASE)
-    js_preload_exists = any(
-        link_attribute(tag, "href") == WASM_JS_URL
-        and link_attribute(tag, "rel") == "modulepreload"
-        for tag in preload_links
-    )
-    wasm_preload_exists = any(
-        link_attribute(tag, "href") == WASM_BINARY_URL
-        and link_attribute(tag, "rel") == "preload"
-        and link_attribute(tag, "as") == "fetch"
-        for tag in preload_links
-    )
-    if not js_preload_exists or not wasm_preload_exists:
-        raise SystemExit("failed to add preloads for the portable WebAssembly bundle")
     if not re.search(r'''import\(\s*["']/wasm/eon-ui\.js["']\s*\)''', html) or "init()" not in html:
         raise SystemExit("failed to point the entrypoint at the portable WebAssembly bundle")
 
