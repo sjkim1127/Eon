@@ -41,6 +41,28 @@ def point_entrypoint_at_complete_wasm_bundle(html: str) -> str:
     return html
 
 
+def set_link_attribute(tag: str, name: str, value: str) -> str:
+    attribute = re.compile(
+        rf'''\b{re.escape(name)}\b(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?''',
+        re.IGNORECASE,
+    )
+    replacement = f'{name}="{value}"'
+    if attribute.search(tag):
+        return attribute.sub(replacement, tag, count=1)
+    return f"{tag[:-1].rstrip()} {replacement}>"
+
+
+def link_attribute(tag: str, name: str) -> str | None:
+    match = re.search(
+        rf'''\b{re.escape(name)}\s*=\s*(?:"(?P<double>[^"]*)"|'(?P<single>[^']*)')''',
+        tag,
+        re.IGNORECASE,
+    )
+    if match is None:
+        return None
+    return match.group("double") if match.group("double") is not None else match.group("single")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("index", type=Path)
@@ -65,34 +87,42 @@ def main() -> int:
     html = html.replace('import("/./', 'import("/')
     html = html.replace('init("/./', 'init("/')
 
-    # Dynamic import uses module-fetch semantics. A plain script preload uses a
-    # different credentials mode, so Chromium discards it. Dioxus may emit
-    # either stable /wasm names or content-hashed /assets names; preserve the
-    # generated URL while changing only the preload relation.
-    def normalize_js_preload(match: re.Match[str]) -> str:
-        href = re.search(r'\bhref="(?P<href>/[^" ]+eon-ui[^" ]*\.js)"', match.group(0))
-        if href is None:
-            return match.group(0)
-        return f'<link rel="modulepreload" href="{href.group("href")}" crossorigin="anonymous">'
+    # Keep the JavaScript preload's credentials mode aligned with dynamic
+    # import, and preserve a fetch preload for the shared WebAssembly binary.
+    def normalize_link(match: re.Match[str]) -> str:
+        tag = match.group(0)
+        href = link_attribute(tag, "href")
+        if href == WASM_JS_URL:
+            tag = set_link_attribute(tag, "rel", "modulepreload")
+            return set_link_attribute(tag, "crossorigin", "anonymous")
+        if href == WASM_BINARY_URL:
+            tag = set_link_attribute(tag, "rel", "preload")
+            tag = set_link_attribute(tag, "as", "fetch")
+            tag = set_link_attribute(tag, "type", "application/wasm")
+            return set_link_attribute(tag, "crossorigin", "anonymous")
+        return tag
 
-    html = re.sub(
-        r'<link(?=[^>]*\brel="preload")(?=[^>]*\bas="script")[^>]*>',
-        normalize_js_preload,
-        html,
-    )
-    html = re.sub(
-        r'(<link\s+rel="preload"\s+href="/wasm/eon-ui_bg\.wasm"\s+as="fetch"\s+type="application/wasm")\s+crossorigin(?:="[^"]*")?\s*>',
-        r'\1 crossorigin="anonymous">',
-        html,
-    )
+    html = re.sub(r"<link\b[^>]*>", normalize_link, html, flags=re.IGNORECASE)
 
     index.write_text(html, encoding="utf-8")
 
     if "/./wasm/" in html:
         raise SystemExit("failed to normalize Dioxus WASM paths")
-    if f'href="{WASM_JS_URL}"' not in html or f'href="{WASM_BINARY_URL}"' not in html:
-        raise SystemExit("failed to point the preloads at the portable WebAssembly bundle")
-    if 'import("/wasm/eon-ui.js")' not in html or "init()" not in html:
+    preload_links = re.findall(r"<link\b[^>]*>", html, flags=re.IGNORECASE)
+    js_preload_exists = any(
+        link_attribute(tag, "href") == WASM_JS_URL
+        and link_attribute(tag, "rel") == "modulepreload"
+        for tag in preload_links
+    )
+    wasm_preload_exists = any(
+        link_attribute(tag, "href") == WASM_BINARY_URL
+        and link_attribute(tag, "rel") == "preload"
+        and link_attribute(tag, "as") == "fetch"
+        for tag in preload_links
+    )
+    if not js_preload_exists or not wasm_preload_exists:
+        raise SystemExit("failed to add preloads for the portable WebAssembly bundle")
+    if not re.search(r'''import\(\s*["']/wasm/eon-ui\.js["']\s*\)''', html) or "init()" not in html:
         raise SystemExit("failed to point the entrypoint at the portable WebAssembly bundle")
 
     print(f"Normalized generated web entrypoint: {index}")
