@@ -5,30 +5,37 @@ from __future__ import annotations
 
 import argparse
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from urllib.parse import urlsplit
 
 WASM_JS_URL = "/wasm/eon-ui.js"
 WASM_BINARY_URL = "/wasm/eon-ui_bg.wasm"
+ASSET_RE = re.compile(
+    r'''["'](?P<url>(?:/|\./|\.\./)?[^"'<>\s]+\.(?:js|mjs|wasm|css)(?:\?[^"']*)?)["']''',
+    re.IGNORECASE,
+)
 
 
-def point_entrypoint_at_complete_wasm_bundle(html: str) -> str:
+def point_entrypoint_at_complete_wasm_bundle(html: str) -> tuple[str, int, int]:
     # `dx build` also emits a hashed JS bundle that can embed the absolute
     # wasm-bindgen output directory from the build runner. The deployment
     # preparation step regenerates a portable wasm-bindgen bundle under /wasm;
     # load that bundle so its snippets and worker module resolve relative to it.
-    entry_js = re.compile(
-        r'''(?P<quote>["'])(?:/|\./)?(?:assets/)?eon-ui(?:-[^/"']+)?\.js(?P=quote)'''
-    )
-    entry_wasm = re.compile(
-        r'''(?P<quote>["'])(?:/|\./)?(?:assets/)?eon-ui_bg(?:-[^/"']+)?\.wasm(?P=quote)'''
-    )
+    rewritten = {"js": 0, "wasm": 0}
 
-    def stable_url(match: re.Match[str], url: str) -> str:
-        quote = match.group("quote")
-        return f"{quote}{url}{quote}"
+    def stable_url(match: re.Match[str]) -> str:
+        raw_url = match.group("url")
+        filename = PurePosixPath(urlsplit(raw_url).path).name
+        quote = match.group(0)[0]
+        if re.fullmatch(r"eon-ui(?:-[^.]+)?\.js", filename, re.IGNORECASE):
+            rewritten["js"] += 1
+            return f"{quote}{WASM_JS_URL}{quote}"
+        if re.fullmatch(r"eon-ui_bg(?:-[^.]+)?\.wasm", filename, re.IGNORECASE):
+            rewritten["wasm"] += 1
+            return f"{quote}{WASM_BINARY_URL}{quote}"
+        return match.group(0)
 
-    html = entry_js.sub(lambda match: stable_url(match, WASM_JS_URL), html)
-    html = entry_wasm.sub(lambda match: stable_url(match, WASM_BINARY_URL), html)
+    html = ASSET_RE.sub(stable_url, html)
 
     # The generated wasm-bindgen initializer derives the binary URL from
     # import.meta.url when called without arguments. Passing a string is
@@ -38,7 +45,7 @@ def point_entrypoint_at_complete_wasm_bundle(html: str) -> str:
         "init()",
         html,
     )
-    return html
+    return html, rewritten["js"], rewritten["wasm"]
 
 
 def set_link_attribute(tag: str, name: str, value: str) -> str:
@@ -78,7 +85,7 @@ def main() -> int:
             f"expected {wasm_js} and {wasm_binary}"
         )
 
-    html = point_entrypoint_at_complete_wasm_bundle(html)
+    html, rewritten_js, rewritten_wasm = point_entrypoint_at_complete_wasm_bundle(html)
 
     # Dioxus 0.6 emits `/./wasm/...` when no base path is configured. It is
     # technically resolvable in a browser, but normalizing it avoids cache and
@@ -106,7 +113,10 @@ def main() -> int:
 
     index.write_text(html, encoding="utf-8")
 
-    print(f"Normalized generated web entrypoint: {index}")
+    print(
+        f"Normalized generated web entrypoint: {index} "
+        f"(rewrote {rewritten_js} JavaScript and {rewritten_wasm} WebAssembly URL(s))"
+    )
     return 0
 
 
