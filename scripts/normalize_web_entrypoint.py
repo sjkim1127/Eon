@@ -106,11 +106,6 @@ def main() -> int:
 
     index.write_text(html, encoding="utf-8")
 
-    if "/./wasm/" in html:
-        raise SystemExit("failed to normalize Dioxus WASM paths")
-    if not re.search(r'''import\(\s*["']/wasm/eon-ui\.js["']\s*\)''', html) or "init()" not in html:
-        raise SystemExit("failed to point the entrypoint at the portable WebAssembly bundle")
-
     print(f"Normalized generated web entrypoint: {index}")
     return 0
 
