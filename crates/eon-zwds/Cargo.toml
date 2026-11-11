@@ -15,7 +15,6 @@ eon-saju  = { workspace = true }
 chrono.workspace   = true
 serde.workspace    = true
 thiserror.workspace = true
-anyhow.workspace   = true
 
 [dev-dependencies]
 # no extra dev deps needed

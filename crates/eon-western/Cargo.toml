@@ -8,7 +8,6 @@ description = "Eon: Western Astrology Engine — 서양 점성술 명리 엔진"
 repository.workspace = true
 
 [dependencies]
-eon-core = { workspace = true }
 eon-astro = { workspace = true }
 chrono = { workspace = true }
 serde = { workspace = true }

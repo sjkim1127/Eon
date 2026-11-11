@@ -4,9 +4,10 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+description = "Eon: Pythagorean Numerology Engine"
+repository.workspace = true
 
 [dependencies]
-chrono = { workspace = true }
 serde = { workspace = true }
 
 [lints]

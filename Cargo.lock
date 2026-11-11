@@ -233,7 +233,6 @@ name = "eon-astro"
 version = "0.1.2"
 dependencies = [
  "chrono",
- "eon-core",
  "serde",
  "swisseph-rs",
  "thiserror",
@@ -244,20 +243,9 @@ name = "eon-cli"
 version = "0.1.2"
 dependencies = [
  "anyhow",
- "chrono",
- "chrono-tz",
  "clap",
- "eon-astro",
  "eon-core",
- "eon-data",
- "eon-human-design",
- "eon-numerology",
- "eon-qimen",
- "eon-saju",
  "eon-service",
- "eon-vedic",
- "eon-western",
- "eon-zwds",
  "serde",
  "serde_json",
 ]
@@ -279,9 +267,7 @@ dependencies = [
  "bincode",
  "chrono",
  "eon-astro",
- "eon-core",
  "serde",
- "serde_json",
  "thiserror",
 ]
 
@@ -291,7 +277,6 @@ version = "0.1.2"
 dependencies = [
  "chrono",
  "eon-astro",
- "eon-core",
  "serde",
  "thiserror",
 ]
@@ -300,7 +285,6 @@ dependencies = [
 name = "eon-numerology"
 version = "0.1.2"
 dependencies = [
- "chrono",
  "serde",
 ]
 
@@ -308,10 +292,8 @@ dependencies = [
 name = "eon-qimen"
 version = "0.1.2"
 dependencies = [
- "anyhow",
  "chrono",
  "eon-astro",
- "eon-core",
  "eon-saju",
  "serde",
 ]
@@ -370,7 +352,6 @@ version = "0.1.2"
 dependencies = [
  "chrono",
  "eon-astro",
- "eon-core",
  "serde",
  "thiserror",
 ]
@@ -379,7 +360,6 @@ dependencies = [
 name = "eon-zwds"
 version = "0.1.2"
 dependencies = [
- "anyhow",
  "chrono",
  "eon-core",
  "eon-data",

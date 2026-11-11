@@ -8,7 +8,6 @@ description = "High-precision astronomical engine for Eon"
 repository.workspace = true
 
 [dependencies]
-eon-core = { workspace = true }
 swisseph.workspace = true
 chrono.workspace = true
 serde.workspace = true
