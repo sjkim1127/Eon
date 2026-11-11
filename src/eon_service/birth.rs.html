@@ -27,20 +27,20 @@
 <a href=#27 id=27 data-nosnippet>27</a>    validate_analysis_input(input)<span class="question-mark">?</span>;
 <a href=#28 id=28 data-nosnippet>28</a>
 <a href=#29 id=29 data-nosnippet>29</a>    <span class="kw">let </span>location = Location::new(
-<a href=#30 id=30 data-nosnippet>30</a>        <span class="string">"출생지"</span>,
+<a href=#30 id=30 data-nosnippet>30</a>        <span class="string">"Birth Location"</span>,
 <a href=#31 id=31 data-nosnippet>31</a>        input.lat,
 <a href=#32 id=32 data-nosnippet>32</a>        input.lon,
 <a href=#33 id=33 data-nosnippet>33</a>        standard_meridian_from_tz(<span class="kw-2">&amp;</span>input.timezone),
 <a href=#34 id=34 data-nosnippet>34</a>    );
 <a href=#35 id=35 data-nosnippet>35</a>
 <a href=#36 id=36 data-nosnippet>36</a>    <span class="kw">let </span><span class="kw-2">mut </span>birth_info = <span class="kw">if </span>input.is_lunar {
-<a href=#37 id=37 data-nosnippet>37</a>        <span class="comment">// 음력인 경우 eon_data를 이용해 양력으로 변환한 뒤 BirthInfo에 등록합니다.
+<a href=#37 id=37 data-nosnippet>37</a>        <span class="comment">// If lunar calendar, convert to solar date via eon_data and register in BirthInfo.
 <a href=#38 id=38 data-nosnippet>38</a>        </span><span class="kw">use </span>eon_data::LunarCalendar;
 <a href=#39 id=39 data-nosnippet>39</a>        <span class="kw">let </span>solar_date =
 <a href=#40 id=40 data-nosnippet>40</a>            LunarCalendar::to_solar(input.year, input.month, input.day, input.is_leap_month)
 <a href=#41 id=41 data-nosnippet>41</a>                .map_err(|e| {
 <a href=#42 id=42 data-nosnippet>42</a>                    ServiceError::BirthInfo(<span class="macro">format!</span>(
-<a href=#43 id=43 data-nosnippet>43</a>                        <span class="string">"음력 날짜를 양력으로 변환할 수 없습니다: {}"</span>,
+<a href=#43 id=43 data-nosnippet>43</a>                        <span class="string">"Cannot convert lunar date to solar date: {}"</span>,
 <a href=#44 id=44 data-nosnippet>44</a>                        e
 <a href=#45 id=45 data-nosnippet>45</a>                    ))
 <a href=#46 id=46 data-nosnippet>46</a>                })<span class="question-mark">?</span>;
@@ -92,87 +92,84 @@
 <a href=#92 id=92 data-nosnippet>92</a><span class="kw">fn </span>validate_analysis_input(input: <span class="kw-2">&amp;</span>AnalysisInput) -&gt; <span class="prelude-ty">Result</span>&lt;(), ServiceError&gt; {
 <a href=#93 id=93 data-nosnippet>93</a>    <span class="kw">if </span>!input.lat.is_finite() || !(-<span class="number">90.0</span>..=<span class="number">90.0</span>).contains(<span class="kw-2">&amp;</span>input.lat) {
 <a href=#94 id=94 data-nosnippet>94</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ServiceError::InvalidInput(<span class="macro">format!</span>(
-<a href=#95 id=95 data-nosnippet>95</a>            <span class="string">"위도는 -90도에서 90도 사이의 유한한 값이어야 합니다: {}"</span>,
+<a href=#95 id=95 data-nosnippet>95</a>            <span class="string">"Latitude must be a finite number between -90 and 90 degrees: {}"</span>,
 <a href=#96 id=96 data-nosnippet>96</a>            input.lat
 <a href=#97 id=97 data-nosnippet>97</a>        )));
 <a href=#98 id=98 data-nosnippet>98</a>    }
 <a href=#99 id=99 data-nosnippet>99</a>    <span class="kw">if </span>!input.lon.is_finite() || !(-<span class="number">180.0</span>..=<span class="number">180.0</span>).contains(<span class="kw-2">&amp;</span>input.lon) {
 <a href=#100 id=100 data-nosnippet>100</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ServiceError::InvalidInput(<span class="macro">format!</span>(
-<a href=#101 id=101 data-nosnippet>101</a>            <span class="string">"경도는 -180도에서 180도 사이의 유한한 값이어야 합니다: {}"</span>,
+<a href=#101 id=101 data-nosnippet>101</a>            <span class="string">"Longitude must be a finite number between -180 and 180 degrees: {}"</span>,
 <a href=#102 id=102 data-nosnippet>102</a>            input.lon
 <a href=#103 id=103 data-nosnippet>103</a>        )));
 <a href=#104 id=104 data-nosnippet>104</a>    }
 <a href=#105 id=105 data-nosnippet>105</a>    <span class="kw">if </span>input.hour &gt; <span class="number">23 </span>|| input.minute &gt; <span class="number">59 </span>{
 <a href=#106 id=106 data-nosnippet>106</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ServiceError::InvalidInput(<span class="macro">format!</span>(
-<a href=#107 id=107 data-nosnippet>107</a>            <span class="string">"출생 시각이 올바르지 않습니다: {:02}:{:02}"</span>,
+<a href=#107 id=107 data-nosnippet>107</a>            <span class="string">"Invalid birth time: {:02}:{:02}"</span>,
 <a href=#108 id=108 data-nosnippet>108</a>            input.hour, input.minute
 <a href=#109 id=109 data-nosnippet>109</a>        )));
 <a href=#110 id=110 data-nosnippet>110</a>    }
 <a href=#111 id=111 data-nosnippet>111</a>    <span class="kw">if </span>!input.is_lunar &amp;&amp; NaiveDate::from_ymd_opt(input.year, input.month, input.day).is_none() {
 <a href=#112 id=112 data-nosnippet>112</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ServiceError::InvalidInput(<span class="macro">format!</span>(
-<a href=#113 id=113 data-nosnippet>113</a>            <span class="string">"양력 날짜가 올바르지 않습니다: {:04}-{:02}-{:02}"</span>,
+<a href=#113 id=113 data-nosnippet>113</a>            <span class="string">"Invalid solar calendar date: {:04}-{:02}-{:02}"</span>,
 <a href=#114 id=114 data-nosnippet>114</a>            input.year, input.month, input.day
 <a href=#115 id=115 data-nosnippet>115</a>        )));
 <a href=#116 id=116 data-nosnippet>116</a>    }
 <a href=#117 id=117 data-nosnippet>117</a>    Tz::from_str(<span class="kw-2">&amp;</span>input.timezone).map_err(|<span class="kw">_</span>| {
-<a href=#118 id=118 data-nosnippet>118</a>        ServiceError::InvalidInput(<span class="macro">format!</span>(
-<a href=#119 id=119 data-nosnippet>119</a>            <span class="string">"유효하지 않은 IANA 타임존입니다: {}"</span>,
-<a href=#120 id=120 data-nosnippet>120</a>            input.timezone
-<a href=#121 id=121 data-nosnippet>121</a>        ))
-<a href=#122 id=122 data-nosnippet>122</a>    })<span class="question-mark">?</span>;
-<a href=#123 id=123 data-nosnippet>123</a>    <span class="prelude-val">Ok</span>(())
-<a href=#124 id=124 data-nosnippet>124</a>}
-<a href=#125 id=125 data-nosnippet>125</a>
-<a href=#126 id=126 data-nosnippet>126</a><span class="attr">#[cfg(test)]
-<a href=#127 id=127 data-nosnippet>127</a></span><span class="kw">mod </span>tests {
-<a href=#128 id=128 data-nosnippet>128</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-<a href=#129 id=129 data-nosnippet>129</a>
-<a href=#130 id=130 data-nosnippet>130</a>    <span class="kw">fn </span>input() -&gt; AnalysisInput {
-<a href=#131 id=131 data-nosnippet>131</a>        AnalysisInput {
-<a href=#132 id=132 data-nosnippet>132</a>            year: <span class="number">1990</span>,
-<a href=#133 id=133 data-nosnippet>133</a>            month: <span class="number">1</span>,
-<a href=#134 id=134 data-nosnippet>134</a>            day: <span class="number">1</span>,
-<a href=#135 id=135 data-nosnippet>135</a>            hour: <span class="number">12</span>,
-<a href=#136 id=136 data-nosnippet>136</a>            minute: <span class="number">0</span>,
-<a href=#137 id=137 data-nosnippet>137</a>            is_lunar: <span class="bool-val">false</span>,
-<a href=#138 id=138 data-nosnippet>138</a>            is_leap_month: <span class="bool-val">false</span>,
-<a href=#139 id=139 data-nosnippet>139</a>            lat: <span class="number">37.5665</span>,
-<a href=#140 id=140 data-nosnippet>140</a>            lon: <span class="number">126.978</span>,
-<a href=#141 id=141 data-nosnippet>141</a>            timezone: <span class="string">"Asia/Seoul"</span>.into(),
-<a href=#142 id=142 data-nosnippet>142</a>        }
-<a href=#143 id=143 data-nosnippet>143</a>    }
-<a href=#144 id=144 data-nosnippet>144</a>
-<a href=#145 id=145 data-nosnippet>145</a>    <span class="attr">#[test]
-<a href=#146 id=146 data-nosnippet>146</a>    </span><span class="kw">fn </span>rejects_coordinates_outside_swiss_contract() {
-<a href=#147 id=147 data-nosnippet>147</a>        <span class="kw">let </span><span class="kw-2">mut </span>bad = input();
-<a href=#148 id=148 data-nosnippet>148</a>        bad.lat = <span class="number">90.0001</span>;
-<a href=#149 id=149 data-nosnippet>149</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-<a href=#150 id=150 data-nosnippet>150</a>            prepare_birth_context(<span class="kw-2">&amp;</span>bad, <span class="prelude-val">None</span>, <span class="bool-val">false</span>),
-<a href=#151 id=151 data-nosnippet>151</a>            <span class="prelude-val">Err</span>(ServiceError::InvalidInput(<span class="kw">_</span>))
-<a href=#152 id=152 data-nosnippet>152</a>        ));
-<a href=#153 id=153 data-nosnippet>153</a>
-<a href=#154 id=154 data-nosnippet>154</a>        bad = input();
-<a href=#155 id=155 data-nosnippet>155</a>        bad.lon = f64::NAN;
-<a href=#156 id=156 data-nosnippet>156</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-<a href=#157 id=157 data-nosnippet>157</a>            prepare_birth_context(<span class="kw-2">&amp;</span>bad, <span class="prelude-val">None</span>, <span class="bool-val">false</span>),
-<a href=#158 id=158 data-nosnippet>158</a>            <span class="prelude-val">Err</span>(ServiceError::InvalidInput(<span class="kw">_</span>))
-<a href=#159 id=159 data-nosnippet>159</a>        ));
-<a href=#160 id=160 data-nosnippet>160</a>    }
-<a href=#161 id=161 data-nosnippet>161</a>
-<a href=#162 id=162 data-nosnippet>162</a>    <span class="attr">#[test]
-<a href=#163 id=163 data-nosnippet>163</a>    </span><span class="kw">fn </span>rejects_invalid_calendar_time_and_timezone() {
-<a href=#164 id=164 data-nosnippet>164</a>        <span class="kw">let </span><span class="kw-2">mut </span>bad = input();
-<a href=#165 id=165 data-nosnippet>165</a>        bad.day = <span class="number">31</span>;
-<a href=#166 id=166 data-nosnippet>166</a>        bad.month = <span class="number">2</span>;
-<a href=#167 id=167 data-nosnippet>167</a>        <span class="macro">assert!</span>(prepare_birth_context(<span class="kw-2">&amp;</span>bad, <span class="prelude-val">None</span>, <span class="bool-val">false</span>).is_err());
-<a href=#168 id=168 data-nosnippet>168</a>
-<a href=#169 id=169 data-nosnippet>169</a>        bad = input();
-<a href=#170 id=170 data-nosnippet>170</a>        bad.hour = <span class="number">24</span>;
-<a href=#171 id=171 data-nosnippet>171</a>        <span class="macro">assert!</span>(prepare_birth_context(<span class="kw-2">&amp;</span>bad, <span class="prelude-val">None</span>, <span class="bool-val">false</span>).is_err());
-<a href=#172 id=172 data-nosnippet>172</a>
-<a href=#173 id=173 data-nosnippet>173</a>        bad = input();
-<a href=#174 id=174 data-nosnippet>174</a>        bad.timezone = <span class="string">"Not/A_Timezone"</span>.into();
-<a href=#175 id=175 data-nosnippet>175</a>        <span class="macro">assert!</span>(prepare_birth_context(<span class="kw-2">&amp;</span>bad, <span class="prelude-val">None</span>, <span class="bool-val">false</span>).is_err());
-<a href=#176 id=176 data-nosnippet>176</a>    }
-<a href=#177 id=177 data-nosnippet>177</a>}
+<a href=#118 id=118 data-nosnippet>118</a>        ServiceError::InvalidInput(<span class="macro">format!</span>(<span class="string">"Invalid IANA timezone: {}"</span>, input.timezone))
+<a href=#119 id=119 data-nosnippet>119</a>    })<span class="question-mark">?</span>;
+<a href=#120 id=120 data-nosnippet>120</a>    <span class="prelude-val">Ok</span>(())
+<a href=#121 id=121 data-nosnippet>121</a>}
+<a href=#122 id=122 data-nosnippet>122</a>
+<a href=#123 id=123 data-nosnippet>123</a><span class="attr">#[cfg(test)]
+<a href=#124 id=124 data-nosnippet>124</a></span><span class="kw">mod </span>tests {
+<a href=#125 id=125 data-nosnippet>125</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#126 id=126 data-nosnippet>126</a>
+<a href=#127 id=127 data-nosnippet>127</a>    <span class="kw">fn </span>input() -&gt; AnalysisInput {
+<a href=#128 id=128 data-nosnippet>128</a>        AnalysisInput {
+<a href=#129 id=129 data-nosnippet>129</a>            year: <span class="number">1990</span>,
+<a href=#130 id=130 data-nosnippet>130</a>            month: <span class="number">1</span>,
+<a href=#131 id=131 data-nosnippet>131</a>            day: <span class="number">1</span>,
+<a href=#132 id=132 data-nosnippet>132</a>            hour: <span class="number">12</span>,
+<a href=#133 id=133 data-nosnippet>133</a>            minute: <span class="number">0</span>,
+<a href=#134 id=134 data-nosnippet>134</a>            is_lunar: <span class="bool-val">false</span>,
+<a href=#135 id=135 data-nosnippet>135</a>            is_leap_month: <span class="bool-val">false</span>,
+<a href=#136 id=136 data-nosnippet>136</a>            lat: <span class="number">37.5665</span>,
+<a href=#137 id=137 data-nosnippet>137</a>            lon: <span class="number">126.978</span>,
+<a href=#138 id=138 data-nosnippet>138</a>            timezone: <span class="string">"Asia/Seoul"</span>.into(),
+<a href=#139 id=139 data-nosnippet>139</a>        }
+<a href=#140 id=140 data-nosnippet>140</a>    }
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a>    <span class="attr">#[test]
+<a href=#143 id=143 data-nosnippet>143</a>    </span><span class="kw">fn </span>rejects_coordinates_outside_swiss_contract() {
+<a href=#144 id=144 data-nosnippet>144</a>        <span class="kw">let </span><span class="kw-2">mut </span>bad = input();
+<a href=#145 id=145 data-nosnippet>145</a>        bad.lat = <span class="number">90.0001</span>;
+<a href=#146 id=146 data-nosnippet>146</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
+<a href=#147 id=147 data-nosnippet>147</a>            prepare_birth_context(<span class="kw-2">&amp;</span>bad, <span class="prelude-val">None</span>, <span class="bool-val">false</span>),
+<a href=#148 id=148 data-nosnippet>148</a>            <span class="prelude-val">Err</span>(ServiceError::InvalidInput(<span class="kw">_</span>))
+<a href=#149 id=149 data-nosnippet>149</a>        ));
+<a href=#150 id=150 data-nosnippet>150</a>
+<a href=#151 id=151 data-nosnippet>151</a>        bad = input();
+<a href=#152 id=152 data-nosnippet>152</a>        bad.lon = f64::NAN;
+<a href=#153 id=153 data-nosnippet>153</a>        <span class="macro">assert!</span>(<span class="macro">matches!</span>(
+<a href=#154 id=154 data-nosnippet>154</a>            prepare_birth_context(<span class="kw-2">&amp;</span>bad, <span class="prelude-val">None</span>, <span class="bool-val">false</span>),
+<a href=#155 id=155 data-nosnippet>155</a>            <span class="prelude-val">Err</span>(ServiceError::InvalidInput(<span class="kw">_</span>))
+<a href=#156 id=156 data-nosnippet>156</a>        ));
+<a href=#157 id=157 data-nosnippet>157</a>    }
+<a href=#158 id=158 data-nosnippet>158</a>
+<a href=#159 id=159 data-nosnippet>159</a>    <span class="attr">#[test]
+<a href=#160 id=160 data-nosnippet>160</a>    </span><span class="kw">fn </span>rejects_invalid_calendar_time_and_timezone() {
+<a href=#161 id=161 data-nosnippet>161</a>        <span class="kw">let </span><span class="kw-2">mut </span>bad = input();
+<a href=#162 id=162 data-nosnippet>162</a>        bad.day = <span class="number">31</span>;
+<a href=#163 id=163 data-nosnippet>163</a>        bad.month = <span class="number">2</span>;
+<a href=#164 id=164 data-nosnippet>164</a>        <span class="macro">assert!</span>(prepare_birth_context(<span class="kw-2">&amp;</span>bad, <span class="prelude-val">None</span>, <span class="bool-val">false</span>).is_err());
+<a href=#165 id=165 data-nosnippet>165</a>
+<a href=#166 id=166 data-nosnippet>166</a>        bad = input();
+<a href=#167 id=167 data-nosnippet>167</a>        bad.hour = <span class="number">24</span>;
+<a href=#168 id=168 data-nosnippet>168</a>        <span class="macro">assert!</span>(prepare_birth_context(<span class="kw-2">&amp;</span>bad, <span class="prelude-val">None</span>, <span class="bool-val">false</span>).is_err());
+<a href=#169 id=169 data-nosnippet>169</a>
+<a href=#170 id=170 data-nosnippet>170</a>        bad = input();
+<a href=#171 id=171 data-nosnippet>171</a>        bad.timezone = <span class="string">"Not/A_Timezone"</span>.into();
+<a href=#172 id=172 data-nosnippet>172</a>        <span class="macro">assert!</span>(prepare_birth_context(<span class="kw-2">&amp;</span>bad, <span class="prelude-val">None</span>, <span class="bool-val">false</span>).is_err());
+<a href=#173 id=173 data-nosnippet>173</a>    }
+<a href=#174 id=174 data-nosnippet>174</a>}
 </code></pre></div></section></main></body></html>

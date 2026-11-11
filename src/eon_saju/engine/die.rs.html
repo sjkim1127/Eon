@@ -115,14 +115,17 @@
 <a href=#115 id=115 data-nosnippet>115</a>        )<span class="question-mark">?</span>;
 <a href=#116 id=116 data-nosnippet>116</a>
 <a href=#117 id=117 data-nosnippet>117</a>        <span class="kw">if </span><span class="self">self</span>.is_packed {
-<a href=#118 id=118 data-nosnippet>118</a>            <span class="macro">writeln!</span>(f, <span class="string">"* Packer   : ⚠️ DETECTED!"</span>)<span class="question-mark">?</span>;
+<a href=#118 id=118 data-nosnippet>118</a>            <span class="macro">writeln!</span>(f, <span class="string">"* Packer   : [!] DETECTED"</span>)<span class="question-mark">?</span>;
 <a href=#119 id=119 data-nosnippet>119</a>            <span class="macro">writeln!</span>(f, <span class="string">"  └─ Info  : {}"</span>, <span class="self">self</span>.packer_name.as_ref().unwrap())<span class="question-mark">?</span>;
-<a href=#120 id=120 data-nosnippet>120</a>            <span class="macro">writeln!</span>(f, <span class="string">"  └─ Status: 에너지가 강력하게 압축(Packed)되어 분석 및 발현이 지연될 수 있습니다."</span>)<span class="question-mark">?</span>;
-<a href=#121 id=121 data-nosnippet>121</a>        } <span class="kw">else </span>{
-<a href=#122 id=122 data-nosnippet>122</a>            <span class="macro">writeln!</span>(f, <span class="string">"* Packer   : None (Raw Binary)"</span>)<span class="question-mark">?</span>;
-<a href=#123 id=123 data-nosnippet>123</a>        }
-<a href=#124 id=124 data-nosnippet>124</a>
-<a href=#125 id=125 data-nosnippet>125</a>        <span class="prelude-val">Ok</span>(())
-<a href=#126 id=126 data-nosnippet>126</a>    }
-<a href=#127 id=127 data-nosnippet>127</a>}
+<a href=#120 id=120 data-nosnippet>120</a>            <span class="macro">writeln!</span>(
+<a href=#121 id=121 data-nosnippet>121</a>                f,
+<a href=#122 id=122 data-nosnippet>122</a>                <span class="string">"  └─ Status: Energy is tightly packed, which may delay manifest expression."
+<a href=#123 id=123 data-nosnippet>123</a>            </span>)<span class="question-mark">?</span>;
+<a href=#124 id=124 data-nosnippet>124</a>        } <span class="kw">else </span>{
+<a href=#125 id=125 data-nosnippet>125</a>            <span class="macro">writeln!</span>(f, <span class="string">"* Packer   : None (Raw Binary)"</span>)<span class="question-mark">?</span>;
+<a href=#126 id=126 data-nosnippet>126</a>        }
+<a href=#127 id=127 data-nosnippet>127</a>
+<a href=#128 id=128 data-nosnippet>128</a>        <span class="prelude-val">Ok</span>(())
+<a href=#129 id=129 data-nosnippet>129</a>    }
+<a href=#130 id=130 data-nosnippet>130</a>}
 </code></pre></div></section></main></body></html>

@@ -26,15 +26,15 @@
 <a href=#26 id=26 data-nosnippet>26</a>    .with_night_rat_hour(input.use_night_rat_hour);
 <a href=#27 id=27 data-nosnippet>27</a>
 <a href=#28 id=28 data-nosnippet>28</a>    <span class="kw">let </span>pillars = FourPillars::calculate(<span class="kw-2">&amp;</span>saju_input)
-<a href=#29 id=29 data-nosnippet>29</a>        .map_err(|e| ServiceError::Saju(<span class="macro">format!</span>(<span class="string">"사주 계산 실패: {}"</span>, e)))<span class="question-mark">?</span>;
+<a href=#29 id=29 data-nosnippet>29</a>        .map_err(|e| ServiceError::Saju(<span class="macro">format!</span>(<span class="string">"Four Pillars calculation failed: {}"</span>, e)))<span class="question-mark">?</span>;
 <a href=#30 id=30 data-nosnippet>30</a>
 <a href=#31 id=31 data-nosnippet>31</a>    <span class="kw">let </span>emulator = LifePathEmulator::new(pillars.clone(), gender, birth_ctx.corrected_year);
 <a href=#32 id=32 data-nosnippet>32</a>    <span class="kw">let </span>life_report = emulator
 <a href=#33 id=33 data-nosnippet>33</a>        .emulate()
-<a href=#34 id=34 data-nosnippet>34</a>        .map_err(|e| ServiceError::AiAudit(<span class="macro">format!</span>(<span class="string">"에뮬레이션 실패: {}"</span>, e)))<span class="question-mark">?</span>;
+<a href=#34 id=34 data-nosnippet>34</a>        .map_err(|e| ServiceError::AiAudit(<span class="macro">format!</span>(<span class="string">"Life path emulation failed: {}"</span>, e)))<span class="question-mark">?</span>;
 <a href=#35 id=35 data-nosnippet>35</a>
 <a href=#36 id=36 data-nosnippet>36</a>    <span class="kw">let </span>context_dump = DestinyAIAuditor::build_agent_prompt(<span class="kw-2">&amp;</span>pillars)
-<a href=#37 id=37 data-nosnippet>37</a>        .map_err(|e| ServiceError::AiAudit(<span class="macro">format!</span>(<span class="string">"프롬프트 생성 실패: {}"</span>, e)))<span class="question-mark">?
+<a href=#37 id=37 data-nosnippet>37</a>        .map_err(|e| ServiceError::AiAudit(<span class="macro">format!</span>(<span class="string">"Prompt generation failed: {}"</span>, e)))<span class="question-mark">?
 <a href=#38 id=38 data-nosnippet>38</a>        </span>+ <span class="string">"\n\n=== CORE DUMP ===\n"
 <a href=#39 id=39 data-nosnippet>39</a>        </span>+ <span class="kw-2">&amp;</span>DestinyAIAuditor::generate_context(<span class="kw-2">&amp;</span>pillars, <span class="kw-2">&amp;</span>life_report);
 <a href=#40 id=40 data-nosnippet>40</a>

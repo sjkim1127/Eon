@@ -98,10 +98,10 @@
 <a href=#98 id=98 data-nosnippet>98</a>        <span class="macro">writeln!</span>(f, <span class="string">"Entropy Score : {:.3} (DIE Standard)"</span>, <span class="self">self</span>.score)<span class="question-mark">?</span>;
 <a href=#99 id=99 data-nosnippet>99</a>
 <a href=#100 id=100 data-nosnippet>100</a>        <span class="kw">let </span>level_str = <span class="kw">match </span><span class="self">self</span>.level {
-<a href=#101 id=101 data-nosnippet>101</a>            ObfuscationLevel::Plaintext =&gt; <span class="string">"🟢 Plaintext (해석 용이)"</span>,
-<a href=#102 id=102 data-nosnippet>102</a>            ObfuscationLevel::Standard =&gt; <span class="string">"🔵 Standard (일반)"</span>,
-<a href=#103 id=103 data-nosnippet>103</a>            ObfuscationLevel::Packed =&gt; <span class="string">"🟡 Packed (압축/은폐)"</span>,
-<a href=#104 id=104 data-nosnippet>104</a>            ObfuscationLevel::Encrypted =&gt; <span class="string">"🔴 Encrypted (난독화/난해)"</span>,
+<a href=#101 id=101 data-nosnippet>101</a>            ObfuscationLevel::Plaintext =&gt; <span class="string">"Plaintext (High transparency)"</span>,
+<a href=#102 id=102 data-nosnippet>102</a>            ObfuscationLevel::Standard =&gt; <span class="string">"Standard (Normal equilibrium)"</span>,
+<a href=#103 id=103 data-nosnippet>103</a>            ObfuscationLevel::Packed =&gt; <span class="string">"Packed (Compressed/Concealed)"</span>,
+<a href=#104 id=104 data-nosnippet>104</a>            ObfuscationLevel::Encrypted =&gt; <span class="string">"Encrypted (High complexity)"</span>,
 <a href=#105 id=105 data-nosnippet>105</a>        };
 <a href=#106 id=106 data-nosnippet>106</a>        <span class="macro">writeln!</span>(f, <span class="string">"Analysis Level: {}"</span>, level_str)<span class="question-mark">?</span>;
 <a href=#107 id=107 data-nosnippet>107</a>        <span class="macro">writeln!</span>(f, <span class="string">"Description   : {}"</span>, <span class="self">self</span>.description)<span class="question-mark">?</span>;
@@ -109,8 +109,8 @@
 <a href=#109 id=109 data-nosnippet>109</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(up) = <span class="self">self</span>.unpacker_element {
 <a href=#110 id=110 data-nosnippet>110</a>            <span class="macro">writeln!</span>(
 <a href=#111 id=111 data-nosnippet>111</a>                f,
-<a href=#112 id=112 data-nosnippet>112</a>                <span class="string">"Unpacker Hint : '{}' 에너지가 유입될 때 인생의 압축이 해제(Unpacking)됩니다."</span>,
-<a href=#113 id=113 data-nosnippet>113</a>                up.hangul()
+<a href=#112 id=112 data-nosnippet>112</a>                <span class="string">"Unpacker Hint : Unpacking is triggered when '{:?}' element energy enters the cycle."</span>,
+<a href=#113 id=113 data-nosnippet>113</a>                up
 <a href=#114 id=114 data-nosnippet>114</a>            )<span class="question-mark">?</span>;
 <a href=#115 id=115 data-nosnippet>115</a>        }
 <a href=#116 id=116 data-nosnippet>116</a>        <span class="prelude-val">Ok</span>(())

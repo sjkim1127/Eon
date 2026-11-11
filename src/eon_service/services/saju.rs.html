@@ -35,9 +35,9 @@
 <a href=#35 id=35 data-nosnippet>35</a>    .with_night_rat_hour(input.use_night_rat_hour);
 <a href=#36 id=36 data-nosnippet>36</a>
 <a href=#37 id=37 data-nosnippet>37</a>    <span class="kw">let </span>pillars = FourPillars::calculate(<span class="kw-2">&amp;</span>saju_input)
-<a href=#38 id=38 data-nosnippet>38</a>        .map_err(|e| ServiceError::Saju(<span class="macro">format!</span>(<span class="string">"사주 계산 실패: {}"</span>, e)))<span class="question-mark">?</span>;
+<a href=#38 id=38 data-nosnippet>38</a>        .map_err(|e| ServiceError::Saju(<span class="macro">format!</span>(<span class="string">"Four Pillars calculation failed: {}"</span>, e)))<span class="question-mark">?</span>;
 <a href=#39 id=39 data-nosnippet>39</a>
-<a href=#40 id=40 data-nosnippet>40</a>    <span class="comment">// 정적 엔진 계산
+<a href=#40 id=40 data-nosnippet>40</a>    <span class="comment">// Static engine calculations
 <a href=#41 id=41 data-nosnippet>41</a>    </span><span class="kw">let </span>lints = DestinyLinter::lint(<span class="kw-2">&amp;</span>pillars);
 <a href=#42 id=42 data-nosnippet>42</a>    <span class="kw">let </span>entropy = DestinyEntropy::analyze(<span class="kw-2">&amp;</span>pillars);
 <a href=#43 id=43 data-nosnippet>43</a>    <span class="kw">let </span>qi_topology = QiTopology::analyze(<span class="kw-2">&amp;</span>pillars);

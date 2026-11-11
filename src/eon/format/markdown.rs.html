@@ -14,14 +14,14 @@
 <a href=#14 id=14 data-nosnippet>14</a>) -&gt; String {
 <a href=#15 id=15 data-nosnippet>15</a>    <span class="kw">let </span><span class="kw-2">mut </span>md = String::new();
 <a href=#16 id=16 data-nosnippet>16</a>
-<a href=#17 id=17 data-nosnippet>17</a>    md.push_str(<span class="string">"# 🌌 Eon: 8-Engine Destiny Intelligence Report\n\n"</span>);
+<a href=#17 id=17 data-nosnippet>17</a>    md.push_str(<span class="string">"# Eon: 8-Engine Destiny Intelligence Report\n\n"</span>);
 <a href=#18 id=18 data-nosnippet>18</a>    md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#19 id=19 data-nosnippet>19</a>        <span class="string">"**Analysis Timestamp**: {:04}-{:02}-{:02} {:02}:{:02} | **Timezone**: {} | **Coordinates**: ({:.4}, {:.4})\n\n"</span>,
 <a href=#20 id=20 data-nosnippet>20</a>        input.year, input.month, input.day, input.hour, input.minute, input.timezone, input.lat, input.lon
 <a href=#21 id=21 data-nosnippet>21</a>    ));
 <a href=#22 id=22 data-nosnippet>22</a>
 <a href=#23 id=23 data-nosnippet>23</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = tier {
-<a href=#24 id=24 data-nosnippet>24</a>        md.push_str(<span class="string">"## 👑 Omni Destiny Tier 7.0 Summary\n"</span>);
+<a href=#24 id=24 data-nosnippet>24</a>        md.push_str(<span class="string">"## Omni Destiny Tier 7.0 Summary\n"</span>);
 <a href=#25 id=25 data-nosnippet>25</a>        md.push_str(<span class="string">"| Metric | Score / Grade |\n|---|---|\n"</span>);
 <a href=#26 id=26 data-nosnippet>26</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#27 id=27 data-nosnippet>27</a>            <span class="string">"| **Overall Destiny Tier** | **{}** ({:.1} pts) |\n"</span>,
@@ -60,9 +60,9 @@
 <a href=#60 id=60 data-nosnippet>60</a>        }
 <a href=#61 id=61 data-nosnippet>61</a>
 <a href=#62 id=62 data-nosnippet>62</a>        <span class="kw">if </span>!t.quantum_synergies.is_empty() {
-<a href=#63 id=63 data-nosnippet>63</a>            md.push_str(<span class="string">"### ⚛️ 8D Quantum Cross Synergies\n"</span>);
+<a href=#63 id=63 data-nosnippet>63</a>            md.push_str(<span class="string">"### 8D Quantum Cross Synergies\n"</span>);
 <a href=#64 id=64 data-nosnippet>64</a>            <span class="kw">for </span>s <span class="kw">in </span><span class="kw-2">&amp;</span>t.quantum_synergies {
-<a href=#65 id=65 data-nosnippet>65</a>                <span class="kw">let </span>badge = <span class="kw">if </span>s.score_delta &gt;= <span class="number">0.0 </span>{ <span class="string">"🟢" </span>} <span class="kw">else </span>{ <span class="string">"🔴" </span>};
+<a href=#65 id=65 data-nosnippet>65</a>                <span class="kw">let </span>badge = <span class="kw">if </span>s.score_delta &gt;= <span class="number">0.0 </span>{ <span class="string">"[+]" </span>} <span class="kw">else </span>{ <span class="string">"[-]" </span>};
 <a href=#66 id=66 data-nosnippet>66</a>                md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#67 id=67 data-nosnippet>67</a>                    <span class="string">"- {} **{}** ({:+.0}pt): {}\n"</span>,
 <a href=#68 id=68 data-nosnippet>68</a>                    badge, s.title, s.score_delta, s.description
@@ -73,22 +73,22 @@
 <a href=#73 id=73 data-nosnippet>73</a>    }
 <a href=#74 id=74 data-nosnippet>74</a>
 <a href=#75 id=75 data-nosnippet>75</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(s) = saju {
-<a href=#76 id=76 data-nosnippet>76</a>        md.push_str(<span class="string">"## 📜 1. Four Pillars of Destiny (Saju / BaZi)\n"</span>);
+<a href=#76 id=76 data-nosnippet>76</a>        md.push_str(<span class="string">"## 1. Four Pillars of Destiny (Saju / BaZi)\n"</span>);
 <a href=#77 id=77 data-nosnippet>77</a>        <span class="kw">let </span>p = <span class="kw-2">&amp;</span>s.report.pillars;
 <a href=#78 id=78 data-nosnippet>78</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#79 id=79 data-nosnippet>79</a>            <span class="string">"- **Chart**: Year: {}({}-{}) / Month: {}({}-{}) / Day: {}({}-{}) / Hour: {}({}-{})\n"</span>,
+<a href=#79 id=79 data-nosnippet>79</a>            <span class="string">"- **Chart**: Year: {} ({:?}-{:?}) / Month: {} ({:?}-{:?}) / Day: {} ({:?}-{:?}) / Hour: {} ({:?}-{:?})\n"</span>,
 <a href=#80 id=80 data-nosnippet>80</a>            p.year,
-<a href=#81 id=81 data-nosnippet>81</a>            p.year.stem.hangul(),
-<a href=#82 id=82 data-nosnippet>82</a>            p.year.branch.hangul(),
+<a href=#81 id=81 data-nosnippet>81</a>            p.year.stem,
+<a href=#82 id=82 data-nosnippet>82</a>            p.year.branch,
 <a href=#83 id=83 data-nosnippet>83</a>            p.month,
-<a href=#84 id=84 data-nosnippet>84</a>            p.month.stem.hangul(),
-<a href=#85 id=85 data-nosnippet>85</a>            p.month.branch.hangul(),
+<a href=#84 id=84 data-nosnippet>84</a>            p.month.stem,
+<a href=#85 id=85 data-nosnippet>85</a>            p.month.branch,
 <a href=#86 id=86 data-nosnippet>86</a>            p.day,
-<a href=#87 id=87 data-nosnippet>87</a>            p.day.stem.hangul(),
-<a href=#88 id=88 data-nosnippet>88</a>            p.day.branch.hangul(),
+<a href=#87 id=87 data-nosnippet>87</a>            p.day.stem,
+<a href=#88 id=88 data-nosnippet>88</a>            p.day.branch,
 <a href=#89 id=89 data-nosnippet>89</a>            p.hour,
-<a href=#90 id=90 data-nosnippet>90</a>            p.hour.stem.hangul(),
-<a href=#91 id=91 data-nosnippet>91</a>            p.hour.branch.hangul()
+<a href=#90 id=90 data-nosnippet>90</a>            p.hour.stem,
+<a href=#91 id=91 data-nosnippet>91</a>            p.hour.branch
 <a href=#92 id=92 data-nosnippet>92</a>        ));
 <a href=#93 id=93 data-nosnippet>93</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#94 id=94 data-nosnippet>94</a>            <span class="string">"- **Strength**: {:?} (Score: {:.1})\n"</span>,
@@ -101,7 +101,7 @@
 <a href=#101 id=101 data-nosnippet>101</a>    }
 <a href=#102 id=102 data-nosnippet>102</a>
 <a href=#103 id=103 data-nosnippet>103</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = vedic {
-<a href=#104 id=104 data-nosnippet>104</a>        md.push_str(<span class="string">"## 🕉️ 2. Vedic Astrology (Jyotish)\n"</span>);
+<a href=#104 id=104 data-nosnippet>104</a>        md.push_str(<span class="string">"## 2. Vedic Astrology (Jyotish)\n"</span>);
 <a href=#105 id=105 data-nosnippet>105</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#106 id=106 data-nosnippet>106</a>            <span class="string">"- **Ascendant (Lagna)**: {:?}\n"</span>,
 <a href=#107 id=107 data-nosnippet>107</a>            v.chart.ascendant
@@ -117,7 +117,7 @@
 <a href=#117 id=117 data-nosnippet>117</a>    }
 <a href=#118 id=118 data-nosnippet>118</a>
 <a href=#119 id=119 data-nosnippet>119</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(w) = western {
-<a href=#120 id=120 data-nosnippet>120</a>        md.push_str(<span class="string">"## ♈ 3. Western Astrology\n"</span>);
+<a href=#120 id=120 data-nosnippet>120</a>        md.push_str(<span class="string">"## 3. Western Astrology\n"</span>);
 <a href=#121 id=121 data-nosnippet>121</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#122 id=122 data-nosnippet>122</a>            <span class="string">"- **Planets**: {} | **Aspects**: {}\n"</span>,
 <a href=#123 id=123 data-nosnippet>123</a>            w.result.planets.len(),
@@ -130,9 +130,9 @@
 <a href=#130 id=130 data-nosnippet>130</a>    }
 <a href=#131 id=131 data-nosnippet>131</a>
 <a href=#132 id=132 data-nosnippet>132</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(z) = zwds {
-<a href=#133 id=133 data-nosnippet>133</a>        md.push_str(<span class="string">"## 🔮 4. Zi Wei Dou Shu\n"</span>);
+<a href=#133 id=133 data-nosnippet>133</a>        md.push_str(<span class="string">"## 4. Zi Wei Dou Shu\n"</span>);
 <a href=#134 id=134 data-nosnippet>134</a>        <span class="kw">let </span>soul = <span class="kw-2">&amp;</span>z.chart.palaces[z.chart.soul_idx];
-<a href=#135 id=135 data-nosnippet>135</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- **Soul Palace**: {}\n"</span>, soul.name.korean()));
+<a href=#135 id=135 data-nosnippet>135</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- **Soul Palace**: {}\n"</span>, soul.name.english()));
 <a href=#136 id=136 data-nosnippet>136</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#137 id=137 data-nosnippet>137</a>            <span class="string">"- **Stars in Soul Palace**: {}\n\n"</span>,
 <a href=#138 id=138 data-nosnippet>138</a>            soul.stars.len()
@@ -140,7 +140,7 @@
 <a href=#140 id=140 data-nosnippet>140</a>    }
 <a href=#141 id=141 data-nosnippet>141</a>
 <a href=#142 id=142 data-nosnippet>142</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(h) = hd {
-<a href=#143 id=143 data-nosnippet>143</a>        md.push_str(<span class="string">"## 🧬 5. Human Design\n"</span>);
+<a href=#143 id=143 data-nosnippet>143</a>        md.push_str(<span class="string">"## 5. Human Design\n"</span>);
 <a href=#144 id=144 data-nosnippet>144</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#145 id=145 data-nosnippet>145</a>            <span class="string">"- **Chart Type**: {} | **Profile**: {}\n"</span>,
 <a href=#146 id=146 data-nosnippet>146</a>            h.result.chart_type, h.result.profile
@@ -152,7 +152,7 @@
 <a href=#152 id=152 data-nosnippet>152</a>    }
 <a href=#153 id=153 data-nosnippet>153</a>
 <a href=#154 id=154 data-nosnippet>154</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(q) = qimen {
-<a href=#155 id=155 data-nosnippet>155</a>        md.push_str(<span class="string">"## 🧭 6. QiMen DunJia\n"</span>);
+<a href=#155 id=155 data-nosnippet>155</a>        md.push_str(<span class="string">"## 6. QiMen DunJia\n"</span>);
 <a href=#156 id=156 data-nosnippet>156</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#157 id=157 data-nosnippet>157</a>            <span class="string">"- **Chart**: {} Ju {} (9 Palaces Deployed)\n\n"</span>,
 <a href=#158 id=158 data-nosnippet>158</a>            <span class="kw">if </span>q.report.pan.is_yin_ju {
@@ -165,12 +165,12 @@
 <a href=#165 id=165 data-nosnippet>165</a>    }
 <a href=#166 id=166 data-nosnippet>166</a>
 <a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(n) = num {
-<a href=#168 id=168 data-nosnippet>168</a>        md.push_str(<span class="string">"## 🔢 7. Pythagorean Numerology\n"</span>);
+<a href=#168 id=168 data-nosnippet>168</a>        md.push_str(<span class="string">"## 7. Pythagorean Numerology\n"</span>);
 <a href=#169 id=169 data-nosnippet>169</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#170 id=170 data-nosnippet>170</a>            <span class="string">"- **Life Path Number**: **{}**{}\n"</span>,
 <a href=#171 id=171 data-nosnippet>171</a>            n.result.core.life_path,
 <a href=#172 id=172 data-nosnippet>172</a>            <span class="kw">if </span>n.result.is_master_life_path {
-<a href=#173 id=173 data-nosnippet>173</a>                <span class="string">" (🌟 Master Number)"
+<a href=#173 id=173 data-nosnippet>173</a>                <span class="string">" (Master Number)"
 <a href=#174 id=174 data-nosnippet>174</a>            </span>} <span class="kw">else </span>{
 <a href=#175 id=175 data-nosnippet>175</a>                <span class="string">""
 <a href=#176 id=176 data-nosnippet>176</a>            </span>}

@@ -110,19 +110,19 @@
 <a href=#110 id=110 data-nosnippet>110</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(bn) = <span class="self">self</span>.bottleneck {
 <a href=#111 id=111 data-nosnippet>111</a>            <span class="macro">writeln!</span>(
 <a href=#112 id=112 data-nosnippet>112</a>                f,
-<a href=#113 id=113 data-nosnippet>113</a>                <span class="string">"Bottleneck: {} Node (Bandwidth Limitation Detected)"</span>,
-<a href=#114 id=114 data-nosnippet>114</a>                bn.hangul()
+<a href=#113 id=113 data-nosnippet>113</a>                <span class="string">"Bottleneck: {:?} Node (Bandwidth Limitation Detected)"</span>,
+<a href=#114 id=114 data-nosnippet>114</a>                bn
 <a href=#115 id=115 data-nosnippet>115</a>            )<span class="question-mark">?</span>;
 <a href=#116 id=116 data-nosnippet>116</a>        }
 <a href=#117 id=117 data-nosnippet>117</a>
 <a href=#118 id=118 data-nosnippet>118</a>        <span class="macro">writeln!</span>(f, <span class="string">"Node Traffic Status:"</span>)<span class="question-mark">?</span>;
 <a href=#119 id=119 data-nosnippet>119</a>        <span class="kw">for </span>node <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.nodes {
 <a href=#120 id=120 data-nosnippet>120</a>            <span class="kw">let </span>bar_len = (node.output / <span class="number">2.0</span>) <span class="kw">as </span>usize;
-<a href=#121 id=121 data-nosnippet>121</a>            <span class="kw">let </span>bar = <span class="string">"⚡"</span>.repeat(bar_len);
+<a href=#121 id=121 data-nosnippet>121</a>            <span class="kw">let </span>bar = <span class="string">"#"</span>.repeat(bar_len);
 <a href=#122 id=122 data-nosnippet>122</a>            <span class="macro">writeln!</span>(
 <a href=#123 id=123 data-nosnippet>123</a>                f,
-<a href=#124 id=124 data-nosnippet>124</a>                <span class="string">"  {:&lt;4}: {:&lt;15} (Output: {:.1})"</span>,
-<a href=#125 id=125 data-nosnippet>125</a>                node.element.hangul(),
+<a href=#124 id=124 data-nosnippet>124</a>                <span class="string">"  {:&lt;6}: {:&lt;15} (Output: {:.1})"</span>,
+<a href=#125 id=125 data-nosnippet>125</a>                <span class="macro">format!</span>(<span class="string">"{:?}"</span>, node.element),
 <a href=#126 id=126 data-nosnippet>126</a>                bar,
 <a href=#127 id=127 data-nosnippet>127</a>                node.output
 <a href=#128 id=128 data-nosnippet>128</a>            )<span class="question-mark">?</span>;

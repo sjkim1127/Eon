@@ -14,14 +14,14 @@
 <a href=#14 id=14 data-nosnippet>14</a>        Gender::Female
 <a href=#15 id=15 data-nosnippet>15</a>    };
 <a href=#16 id=16 data-nosnippet>16</a>
-<a href=#17 id=17 data-nosnippet>17</a>    <span class="comment">// 1. 탄생 컨텍스트(진태양시 보정 등) 생성
+<a href=#17 id=17 data-nosnippet>17</a>    <span class="comment">// 1. Prepare birth context (True Solar Time correction, etc.)
 <a href=#18 id=18 data-nosnippet>18</a>    </span><span class="kw">let </span>birth_ctx = prepare_birth_context(<span class="kw-2">&amp;</span>input.base, <span class="prelude-val">Some</span>(gender), <span class="bool-val">true</span>)<span class="question-mark">?</span>;
 <a href=#19 id=19 data-nosnippet>19</a>    <span class="kw">let </span>dt = birth_ctx
 <a href=#20 id=20 data-nosnippet>20</a>        .birth_info
 <a href=#21 id=21 data-nosnippet>21</a>        .to_utc()
 <a href=#22 id=22 data-nosnippet>22</a>        .map_err(|e| ServiceError::InvalidInput(e.to_string()))<span class="question-mark">?</span>;
 <a href=#23 id=23 data-nosnippet>23</a>
-<a href=#24 id=24 data-nosnippet>24</a>    <span class="comment">// 2. 사주 명식(Four Pillars) 계산
+<a href=#24 id=24 data-nosnippet>24</a>    <span class="comment">// 2. Calculate Four Pillars
 <a href=#25 id=25 data-nosnippet>25</a>    </span><span class="kw">let </span>saju_input = SajuInput::new_solar(
 <a href=#26 id=26 data-nosnippet>26</a>        birth_ctx.corrected_year,
 <a href=#27 id=27 data-nosnippet>27</a>        birth_ctx.corrected_month,
@@ -33,13 +33,13 @@
 <a href=#33 id=33 data-nosnippet>33</a>    .with_night_rat_hour(input.use_night_rat_hour);
 <a href=#34 id=34 data-nosnippet>34</a>
 <a href=#35 id=35 data-nosnippet>35</a>    <span class="kw">let </span>pillars = FourPillars::calculate(<span class="kw-2">&amp;</span>saju_input)
-<a href=#36 id=36 data-nosnippet>36</a>        .map_err(|e| ServiceError::Saju(<span class="macro">format!</span>(<span class="string">"사주 계산 실패: {}"</span>, e)))<span class="question-mark">?</span>;
+<a href=#36 id=36 data-nosnippet>36</a>        .map_err(|e| ServiceError::Saju(<span class="macro">format!</span>(<span class="string">"Four Pillars calculation failed: {}"</span>, e)))<span class="question-mark">?</span>;
 <a href=#37 id=37 data-nosnippet>37</a>
-<a href=#38 id=38 data-nosnippet>38</a>    <span class="comment">// 3. 기문둔갑 국수(Ju Number) 및 음양둔 산출
+<a href=#38 id=38 data-nosnippet>38</a>    <span class="comment">// 3. Determine QiMen Ju number and Yin/Yang Dun mode
 <a href=#39 id=39 data-nosnippet>39</a>    </span><span class="kw">let </span>(is_yin_ju, ju_number) = calculate_ju(dt, pillars.day)
-<a href=#40 id=40 data-nosnippet>40</a>        .map_err(|e| ServiceError::InvalidInput(<span class="macro">format!</span>(<span class="string">"기문둔갑 국수 계산 실패: {}"</span>, e)))<span class="question-mark">?</span>;
+<a href=#40 id=40 data-nosnippet>40</a>        .map_err(|e| ServiceError::InvalidInput(<span class="macro">format!</span>(<span class="string">"QiMen Ju calculation failed: {}"</span>, e)))<span class="question-mark">?</span>;
 <a href=#41 id=41 data-nosnippet>41</a>
-<a href=#42 id=42 data-nosnippet>42</a>    <span class="comment">// 4. 기문둔갑 포국(Pan Building) 알고리즘 실행
+<a href=#42 id=42 data-nosnippet>42</a>    <span class="comment">// 4. Execute QiMen Pan building algorithm
 <a href=#43 id=43 data-nosnippet>43</a>    </span><span class="kw">let </span>pan = build_qimen_pan(
 <a href=#44 id=44 data-nosnippet>44</a>        dt,
 <a href=#45 id=45 data-nosnippet>45</a>        pillars.year,
@@ -50,7 +50,7 @@
 <a href=#50 id=50 data-nosnippet>50</a>        ju_number,
 <a href=#51 id=51 data-nosnippet>51</a>    );
 <a href=#52 id=52 data-nosnippet>52</a>
-<a href=#53 id=53 data-nosnippet>53</a>    <span class="comment">// 5. 분석 리포트 생성
+<a href=#53 id=53 data-nosnippet>53</a>    <span class="comment">// 5. Generate analysis report
 <a href=#54 id=54 data-nosnippet>54</a>    </span><span class="kw">let </span>report = QimenAnalysisReport::generate(pan);
 <a href=#55 id=55 data-nosnippet>55</a>
 <a href=#56 id=56 data-nosnippet>56</a>    <span class="kw">let </span>meta = AnalysisMeta {

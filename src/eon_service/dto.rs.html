@@ -227,7 +227,7 @@
 <a href=#227 id=227 data-nosnippet>227</a></span><span class="kw">pub struct </span>WesternAnalysisInput {
 <a href=#228 id=228 data-nosnippet>228</a>    <span class="attr">#[serde(flatten)]
 <a href=#229 id=229 data-nosnippet>229</a>    </span><span class="kw">pub </span>base: AnalysisInput,
-<a href=#230 id=230 data-nosnippet>230</a>    <span class="kw">pub </span>house_system: String, <span class="comment">// "P", "K", "W", "E" 등
+<a href=#230 id=230 data-nosnippet>230</a>    <span class="kw">pub </span>house_system: String, <span class="comment">// "P", "K", "W", "E", etc.
 <a href=#231 id=231 data-nosnippet>231</a></span>}
 <a href=#232 id=232 data-nosnippet>232</a>
 <a href=#233 id=233 data-nosnippet>233</a><span class="kw">impl </span>WesternAnalysisInput {
@@ -434,7 +434,7 @@
 <a href=#434 id=434 data-nosnippet>434</a>    <span class="kw">pub </span>risk_level: String,
 <a href=#435 id=435 data-nosnippet>435</a>    <span class="kw">pub </span>profile: String,
 <a href=#436 id=436 data-nosnippet>436</a>    <span class="kw">pub </span>version: String,
-<a href=#437 id=437 data-nosnippet>437</a>    <span class="comment">// --- 확장된 티어 모델 필드 ---
+<a href=#437 id=437 data-nosnippet>437</a>    <span class="comment">// --- Extended Tier Model Fields ---
 <a href=#438 id=438 data-nosnippet>438</a>    </span><span class="kw">pub </span>destiny_raw_score: f32,
 <a href=#439 id=439 data-nosnippet>439</a>    <span class="kw">pub </span>destiny_tier_score: f32,
 <a href=#440 id=440 data-nosnippet>440</a>    <span class="kw">pub </span>detailed_components: Vec&lt;DestinyComponent&gt;,
@@ -663,9 +663,9 @@
 <a href=#663 id=663 data-nosnippet>663</a><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 <a href=#664 id=664 data-nosnippet>664</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
 <a href=#665 id=665 data-nosnippet>665</a></span><span class="kw">pub enum </span>ReportTheme {
-<a href=#666 id=666 data-nosnippet>666</a>    WealthAndCareer,   <span class="comment">// 재물 및 커리어 테마
-<a href=#667 id=667 data-nosnippet>667</a>    </span>LoveAndMarriage,   <span class="comment">// 연애 및 결혼 테마
-<a href=#668 id=668 data-nosnippet>668</a>    </span>HealthAndVitality, <span class="comment">// 건강 및 마음 치유 테마
+<a href=#666 id=666 data-nosnippet>666</a>    WealthAndCareer,   <span class="comment">// Wealth and career theme
+<a href=#667 id=667 data-nosnippet>667</a>    </span>LoveAndMarriage,   <span class="comment">// Relationship and marriage theme
+<a href=#668 id=668 data-nosnippet>668</a>    </span>HealthAndVitality, <span class="comment">// Health and wellness theme
 <a href=#669 id=669 data-nosnippet>669</a></span>}
 <a href=#670 id=670 data-nosnippet>670</a>
 <a href=#671 id=671 data-nosnippet>671</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]

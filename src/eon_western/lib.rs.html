@@ -1,9 +1,9 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-western/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1f5a765c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="eon_western" data-themes="" data-resource-suffix="" data-rustdoc-version="1.102.0-nightly (9c5648833 2026-11-10)" data-channel="nightly" data-search-js="search-69faa2c4.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-9b351432.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-419f3a3f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-101b5a15.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_western/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! eon-western: 서양 점성술 명리 연산 엔진
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-western/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1f5a765c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="eon_western" data-themes="" data-resource-suffix="" data-rustdoc-version="1.102.0-nightly (9c5648833 2026-11-10)" data-channel="nightly" data-search-js="search-69faa2c4.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-9b351432.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-419f3a3f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-101b5a15.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_western/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! eon-western: Western Astrology Engine
 <a href=#2 id=2 data-nosnippet>2</a>//!
-<a href=#3 id=3 data-nosnippet>3</a>//! eon-astro의 Swiss Ephemeris FFI를 활용하여 10대 행성, True Node, South Node,
-<a href=#4 id=4 data-nosnippet>4</a>//! Black Moon Lilith 및 Placidus, Koch, Whole Sign, Equal House 등의 Cusp 좌표,
-<a href=#5 id=5 data-nosnippet>5</a>//! 메이저/마이너 아스펙트(어플라잉/세퍼레이팅), Essential Dignities, 하우스 룰러십 네트워크, 아라비안 파트(Lot of Fortune/Spirit/Eros),
-<a href=#6 id=6 data-nosnippet>6</a>//! 기하학적 아스펙트 패턴(Grand Trine, T-Square, Grand Cross, Yod, Kite), Synastry, Composite, Secondary Progressions를 정밀 분석합니다.
+<a href=#3 id=3 data-nosnippet>3</a>//! Utilizes Swiss Ephemeris FFI from eon-astro to calculate 10 major planetary bodies, True Node, South Node,
+<a href=#4 id=4 data-nosnippet>4</a>//! Black Moon Lilith, and House Cusps (Placidus, Koch, Whole Sign, Equal House, etc.),
+<a href=#5 id=5 data-nosnippet>5</a>//! major/minor aspects (applying/separating), Essential Dignities, House Rulership networks, Arabian Parts (Lot of Fortune/Spirit/Eros),
+<a href=#6 id=6 data-nosnippet>6</a>//! geometric aspect patterns (Grand Trine, T-Square, Grand Cross, Yod, Kite), Synastry, Composite, and Secondary Progressions.
 <a href=#7 id=7 data-nosnippet>7</a>
 <a href=#8 id=8 data-nosnippet>8</a></span><span class="kw">use </span>chrono::{DateTime, Utc};
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>eon_astro::{AstroEngine, AstroError};
@@ -37,17 +37,17 @@
 <a href=#37 id=37 data-nosnippet>37</a>
 <a href=#38 id=38 data-nosnippet>38</a><span class="attr">#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 <a href=#39 id=39 data-nosnippet>39</a></span><span class="kw">pub enum </span>AspectType {
-<a href=#40 id=40 data-nosnippet>40</a>    Conjunction,    <span class="comment">// 0도 (Major)
-<a href=#41 id=41 data-nosnippet>41</a>    </span>Sextile,        <span class="comment">// 60도 (Major)
-<a href=#42 id=42 data-nosnippet>42</a>    </span>Square,         <span class="comment">// 90도 (Major)
-<a href=#43 id=43 data-nosnippet>43</a>    </span>Trine,          <span class="comment">// 120도 (Major)
-<a href=#44 id=44 data-nosnippet>44</a>    </span>Opposition,     <span class="comment">// 180도 (Major)
-<a href=#45 id=45 data-nosnippet>45</a>    </span>Semisextile,    <span class="comment">// 30도 (Minor)
-<a href=#46 id=46 data-nosnippet>46</a>    </span>Quincunx,       <span class="comment">// 150도 / Inconjunct (Minor)
-<a href=#47 id=47 data-nosnippet>47</a>    </span>Semisquare,     <span class="comment">// 45도 (Minor)
-<a href=#48 id=48 data-nosnippet>48</a>    </span>Sesquiquadrate, <span class="comment">// 135도 (Minor)
-<a href=#49 id=49 data-nosnippet>49</a>    </span>Quintile,       <span class="comment">// 72도 (Minor)
-<a href=#50 id=50 data-nosnippet>50</a>    </span>Biquintile,     <span class="comment">// 144도 (Minor)
+<a href=#40 id=40 data-nosnippet>40</a>    Conjunction,    <span class="comment">// 0 deg (Major)
+<a href=#41 id=41 data-nosnippet>41</a>    </span>Sextile,        <span class="comment">// 60 deg (Major)
+<a href=#42 id=42 data-nosnippet>42</a>    </span>Square,         <span class="comment">// 90 deg (Major)
+<a href=#43 id=43 data-nosnippet>43</a>    </span>Trine,          <span class="comment">// 120 deg (Major)
+<a href=#44 id=44 data-nosnippet>44</a>    </span>Opposition,     <span class="comment">// 180 deg (Major)
+<a href=#45 id=45 data-nosnippet>45</a>    </span>Semisextile,    <span class="comment">// 30 deg (Minor)
+<a href=#46 id=46 data-nosnippet>46</a>    </span>Quincunx,       <span class="comment">// 150 deg / Inconjunct (Minor)
+<a href=#47 id=47 data-nosnippet>47</a>    </span>Semisquare,     <span class="comment">// 45 deg (Minor)
+<a href=#48 id=48 data-nosnippet>48</a>    </span>Sesquiquadrate, <span class="comment">// 135 deg (Minor)
+<a href=#49 id=49 data-nosnippet>49</a>    </span>Quintile,       <span class="comment">// 72 deg (Minor)
+<a href=#50 id=50 data-nosnippet>50</a>    </span>Biquintile,     <span class="comment">// 144 deg (Minor)
 <a href=#51 id=51 data-nosnippet>51</a></span>}
 <a href=#52 id=52 data-nosnippet>52</a>
 <a href=#53 id=53 data-nosnippet>53</a><span class="kw">impl </span>AspectType {
@@ -97,9 +97,9 @@
 <a href=#97 id=97 data-nosnippet>97</a>
 <a href=#98 id=98 data-nosnippet>98</a><span class="attr">#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 <a href=#99 id=99 data-nosnippet>99</a></span><span class="kw">pub enum </span>AspectDynamics {
-<a href=#100 id=100 data-nosnippet>100</a>    Applying,   <span class="comment">// 접근 (에너지 강화)
-<a href=#101 id=101 data-nosnippet>101</a>    </span>Separating, <span class="comment">// 이탈 (에너지 약화)
-<a href=#102 id=102 data-nosnippet>102</a>    </span>Exact,      <span class="comment">// 일치
+<a href=#100 id=100 data-nosnippet>100</a>    Applying,   <span class="comment">// Applying (strengthening energy)
+<a href=#101 id=101 data-nosnippet>101</a>    </span>Separating, <span class="comment">// Separating (waning energy)
+<a href=#102 id=102 data-nosnippet>102</a>    </span>Exact,      <span class="comment">// Exact alignment
 <a href=#103 id=103 data-nosnippet>103</a></span>}
 <a href=#104 id=104 data-nosnippet>104</a>
 <a href=#105 id=105 data-nosnippet>105</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -267,7 +267,7 @@
 <a href=#267 id=267 data-nosnippet>267</a>    }
 <a href=#268 id=268 data-nosnippet>268</a>}
 <a href=#269 id=269 data-nosnippet>269</a>
-<a href=#270 id=270 data-nosnippet>270</a><span class="doccomment">/// 특정 각도가 start와 end의 섹터 구간 안에 속하는지 판정 (각도 wrap-around 360도 대응)
+<a href=#270 id=270 data-nosnippet>270</a><span class="doccomment">/// Determines whether target angle lies within [start, end) sector with 360-degree wrap-around.
 <a href=#271 id=271 data-nosnippet>271</a></span><span class="kw">pub fn </span>is_angle_between(target: f64, start: f64, end: f64) -&gt; bool {
 <a href=#272 id=272 data-nosnippet>272</a>    <span class="kw">let </span>t = (target - start + <span class="number">360.0</span>) % <span class="number">360.0</span>;
 <a href=#273 id=273 data-nosnippet>273</a>    <span class="kw">let </span>e = (end - start + <span class="number">360.0</span>) % <span class="number">360.0</span>;
@@ -300,9 +300,9 @@
 <a href=#300 id=300 data-nosnippet>300</a>    }
 <a href=#301 id=301 data-nosnippet>301</a>}
 <a href=#302 id=302 data-nosnippet>302</a>
-<a href=#303 id=303 data-nosnippet>303</a><span class="doccomment">/// Essential Dignity (고전 위계) 점수 계산
+<a href=#303 id=303 data-nosnippet>303</a><span class="doccomment">/// Calculate classical Essential Dignities score
 <a href=#304 id=304 data-nosnippet>304</a></span><span class="kw">pub fn </span>calculate_essential_dignities(planets: <span class="kw-2">&amp;</span>[WesternPlanetData]) -&gt; Vec&lt;EssentialDignityInfo&gt; {
-<a href=#305 id=305 data-nosnippet>305</a>    <span class="comment">// Domicile / Exaltation / Detriment / Fall 규칙
+<a href=#305 id=305 data-nosnippet>305</a>    <span class="comment">// Domicile / Exaltation / Detriment / Fall rules
 <a href=#306 id=306 data-nosnippet>306</a>    // Sun: Domicile Leo(4), Exaltation Aries(0), Detriment Aquarius(10), Fall Libra(6)
 <a href=#307 id=307 data-nosnippet>307</a>    // Moon: Domicile Cancer(3), Exaltation Taurus(1), Detriment Capricorn(9), Fall Scorpio(7)
 <a href=#308 id=308 data-nosnippet>308</a>    // Mercury: Domicile Gemini(2)/Virgo(5), Exaltation Virgo(5), Detriment Sag(8)/Pisces(11), Fall Pisces(11)
@@ -418,7 +418,7 @@
 <a href=#418 id=418 data-nosnippet>418</a>            summaries.push(<span class="string">"Peregrine (0)"</span>);
 <a href=#419 id=419 data-nosnippet>419</a>        }
 <a href=#420 id=420 data-nosnippet>420</a>
-<a href=#421 id=421 data-nosnippet>421</a>        <span class="kw">let </span>status_summary = <span class="macro">format!</span>(<span class="string">"점수 {}pt ({})"</span>, score, summaries.join(<span class="string">", "</span>));
+<a href=#421 id=421 data-nosnippet>421</a>        <span class="kw">let </span>status_summary = <span class="macro">format!</span>(<span class="string">"Score {}pt ({})"</span>, score, summaries.join(<span class="string">", "</span>));
 <a href=#422 id=422 data-nosnippet>422</a>
 <a href=#423 id=423 data-nosnippet>423</a>        result.push(EssentialDignityInfo {
 <a href=#424 id=424 data-nosnippet>424</a>            planet_name: p.name.clone(),
@@ -434,7 +434,7 @@
 <a href=#434 id=434 data-nosnippet>434</a>    result
 <a href=#435 id=435 data-nosnippet>435</a>}
 <a href=#436 id=436 data-nosnippet>436</a>
-<a href=#437 id=437 data-nosnippet>437</a><span class="doccomment">/// 하우스 룰러 입주 하우스 연계 네트워크 산출
+<a href=#437 id=437 data-nosnippet>437</a><span class="doccomment">/// Calculate House Rulership Network
 <a href=#438 id=438 data-nosnippet>438</a></span><span class="kw">pub fn </span>calculate_house_rulerships(
 <a href=#439 id=439 data-nosnippet>439</a>    houses: <span class="kw-2">&amp;</span>[WesternHouseData],
 <a href=#440 id=440 data-nosnippet>440</a>    planets: <span class="kw-2">&amp;</span>[WesternPlanetData],
@@ -446,10 +446,10 @@
 <a href=#446 id=446 data-nosnippet>446</a>        <span class="kw">let </span>ruler_planet = planets.iter().find(|p| p.name == ruler);
 <a href=#447 id=447 data-nosnippet>447</a>
 <a href=#448 id=448 data-nosnippet>448</a>        <span class="kw">let </span>ruler_in_house = ruler_planet.map(|p| p.house_number).unwrap_or(<span class="number">1</span>);
-<a href=#449 id=449 data-nosnippet>449</a>        <span class="kw">let </span>sign_name = SIGN_NAMES_KR[h.sign_index];
+<a href=#449 id=449 data-nosnippet>449</a>        <span class="kw">let </span>sign_name = SIGN_NAMES[h.sign_index];
 <a href=#450 id=450 data-nosnippet>450</a>
 <a href=#451 id=451 data-nosnippet>451</a>        <span class="kw">let </span>interpretation = <span class="macro">format!</span>(
-<a href=#452 id=452 data-nosnippet>452</a>            <span class="string">"{}하우스 Cusp(성좌: {})의 주행성인 {}이(가) {}하우스에 위치하여, {}하우스 에너지가 {}하우스 영역으로 확장됩니다."</span>,
+<a href=#452 id=452 data-nosnippet>452</a>            <span class="string">"House {} Cusp ({}) ruler {} is placed in House {}, channeling House {} themes into House {}."</span>,
 <a href=#453 id=453 data-nosnippet>453</a>            h.house_number, sign_name, ruler, ruler_in_house, h.house_number, ruler_in_house
 <a href=#454 id=454 data-nosnippet>454</a>        );
 <a href=#455 id=455 data-nosnippet>455</a>
@@ -465,7 +465,7 @@
 <a href=#465 id=465 data-nosnippet>465</a>    result
 <a href=#466 id=466 data-nosnippet>466</a>}
 <a href=#467 id=467 data-nosnippet>467</a>
-<a href=#468 id=468 data-nosnippet>468</a><span class="doccomment">/// 아라비안 파트 (Lots) 산출
+<a href=#468 id=468 data-nosnippet>468</a><span class="doccomment">/// Calculate Arabian Parts (Lots)
 <a href=#469 id=469 data-nosnippet>469</a></span><span class="kw">pub fn </span>calculate_arabian_parts(
 <a href=#470 id=470 data-nosnippet>470</a>    asc: f64,
 <a href=#471 id=471 data-nosnippet>471</a>    planets: <span class="kw-2">&amp;</span>[WesternPlanetData],
@@ -537,7 +537,7 @@
 <a href=#537 id=537 data-nosnippet>537</a>    <span class="macro">vec!</span>[
 <a href=#538 id=538 data-nosnippet>538</a>        calculate_part_info(
 <a href=#539 id=539 data-nosnippet>539</a>            <span class="string">"Part of Fortune"</span>,
-<a href=#540 id=540 data-nosnippet>540</a>            <span class="string">"행운의 지점 (Part of Fortune / Lot of Fortune)"</span>,
+<a href=#540 id=540 data-nosnippet>540</a>            <span class="string">"Part of Fortune (Lot of Fortune)"</span>,
 <a href=#541 id=541 data-nosnippet>541</a>            pof_long,
 <a href=#542 id=542 data-nosnippet>542</a>            <span class="kw">if </span>is_day_birth {
 <a href=#543 id=543 data-nosnippet>543</a>                <span class="string">"ASC + Moon - Sun (Day)"
@@ -547,7 +547,7 @@
 <a href=#547 id=547 data-nosnippet>547</a>        ),
 <a href=#548 id=548 data-nosnippet>548</a>        calculate_part_info(
 <a href=#549 id=549 data-nosnippet>549</a>            <span class="string">"Part of Spirit"</span>,
-<a href=#550 id=550 data-nosnippet>550</a>            <span class="string">"영혼의 지점 (Part of Spirit / Lot of Spirit)"</span>,
+<a href=#550 id=550 data-nosnippet>550</a>            <span class="string">"Part of Spirit (Lot of Spirit)"</span>,
 <a href=#551 id=551 data-nosnippet>551</a>            pos_long,
 <a href=#552 id=552 data-nosnippet>552</a>            <span class="kw">if </span>is_day_birth {
 <a href=#553 id=553 data-nosnippet>553</a>                <span class="string">"ASC + Sun - Moon (Day)"
@@ -557,7 +557,7 @@
 <a href=#557 id=557 data-nosnippet>557</a>        ),
 <a href=#558 id=558 data-nosnippet>558</a>        calculate_part_info(
 <a href=#559 id=559 data-nosnippet>559</a>            <span class="string">"Part of Eros"</span>,
-<a href=#560 id=560 data-nosnippet>560</a>            <span class="string">"애정의 지점 (Part of Eros / Lot of Eros)"</span>,
+<a href=#560 id=560 data-nosnippet>560</a>            <span class="string">"Part of Eros (Lot of Eros)"</span>,
 <a href=#561 id=561 data-nosnippet>561</a>            eros_long,
 <a href=#562 id=562 data-nosnippet>562</a>            <span class="kw">if </span>is_day_birth {
 <a href=#563 id=563 data-nosnippet>563</a>                <span class="string">"ASC + Venus - Spirit (Day)"
@@ -568,7 +568,7 @@
 <a href=#568 id=568 data-nosnippet>568</a>    ]
 <a href=#569 id=569 data-nosnippet>569</a>}
 <a href=#570 id=570 data-nosnippet>570</a>
-<a href=#571 id=571 data-nosnippet>571</a><span class="doccomment">/// 기하학적 아스펙트 패턴 (Aspect Geometries) 자동 검출기
+<a href=#571 id=571 data-nosnippet>571</a><span class="doccomment">/// Geometric Aspect Pattern Detection Engine
 <a href=#572 id=572 data-nosnippet>572</a></span><span class="kw">pub fn </span>detect_aspect_patterns(
 <a href=#573 id=573 data-nosnippet>573</a>    planets: <span class="kw-2">&amp;</span>[WesternPlanetData],
 <a href=#574 id=574 data-nosnippet>574</a>    aspects: <span class="kw-2">&amp;</span>[WesternAspectData],
@@ -603,10 +603,10 @@
 <a href=#603 id=603 data-nosnippet>603</a>                    patterns.push(AspectPatternData {
 <a href=#604 id=604 data-nosnippet>604</a>                        pattern_type: AspectPatternType::GrandTrine,
 <a href=#605 id=605 data-nosnippet>605</a>                        name: <span class="string">"Grand Trine"</span>.to_string(),
-<a href=#606 id=606 data-nosnippet>606</a>                        name_kr: <span class="string">"그랜드 트라인 (대삼각 패턴)"</span>.to_string(),
+<a href=#606 id=606 data-nosnippet>606</a>                        name_kr: <span class="string">"Grand Trine (Harmonious Flow)"</span>.to_string(),
 <a href=#607 id=607 data-nosnippet>607</a>                        planets: <span class="macro">vec!</span>[p1.clone(), p2.clone(), p3.clone()],
 <a href=#608 id=608 data-nosnippet>608</a>                        interpretation: <span class="macro">format!</span>(
-<a href=#609 id=609 data-nosnippet>609</a>                            <span class="string">"{} - {} - {} 세 행성이 조화로운 120도 대삼각을 형성하여 창의성과 재능의 원활한 흐름을 가져옵니다."</span>,
+<a href=#609 id=609 data-nosnippet>609</a>                            <span class="string">"{} - {} - {} form a 120-degree grand trine, promoting harmonious creative flow and natural talents."</span>,
 <a href=#610 id=610 data-nosnippet>610</a>                            p1, p2, p3
 <a href=#611 id=611 data-nosnippet>611</a>                        ),
 <a href=#612 id=612 data-nosnippet>612</a>                    });
@@ -642,10 +642,10 @@
 <a href=#642 id=642 data-nosnippet>642</a>                    patterns.push(AspectPatternData {
 <a href=#643 id=643 data-nosnippet>643</a>                        pattern_type: AspectPatternType::TSquare,
 <a href=#644 id=644 data-nosnippet>644</a>                        name: <span class="string">"T-Square"</span>.to_string(),
-<a href=#645 id=645 data-nosnippet>645</a>                        name_kr: <span class="string">"T-스퀘어 (직각 삼각 갈등 패턴)"</span>.to_string(),
+<a href=#645 id=645 data-nosnippet>645</a>                        name_kr: <span class="string">"T-Square (Dynamic Tension)"</span>.to_string(),
 <a href=#646 id=646 data-nosnippet>646</a>                        planets: <span class="macro">vec!</span>[p1.clone(), p2.clone(), p3.clone()],
 <a href=#647 id=647 data-nosnippet>647</a>                        interpretation: <span class="macro">format!</span>(
-<a href=#648 id=648 data-nosnippet>648</a>                            <span class="string">"{}와(과) {}의 대립(Opposition) 속에서 Apex 행성 {}이(가) 스퀘어 직각 자극을 주어 강력한 추진력과 긴장을 유발합니다."</span>,
+<a href=#648 id=648 data-nosnippet>648</a>                            <span class="string">"In opposition between {} and {}, Apex planet {} introduces square tension driving intense ambition and dynamic breakthrough."</span>,
 <a href=#649 id=649 data-nosnippet>649</a>                            p1, p2, p3
 <a href=#650 id=650 data-nosnippet>650</a>                        ),
 <a href=#651 id=651 data-nosnippet>651</a>                    });
@@ -681,10 +681,10 @@
 <a href=#681 id=681 data-nosnippet>681</a>                    patterns.push(AspectPatternData {
 <a href=#682 id=682 data-nosnippet>682</a>                        pattern_type: AspectPatternType::Yod,
 <a href=#683 id=683 data-nosnippet>683</a>                        name: <span class="string">"Yod"</span>.to_string(),
-<a href=#684 id=684 data-nosnippet>684</a>                        name_kr: <span class="string">"요드 (Yod - 신의 손가락 운명 패턴)"</span>.to_string(),
+<a href=#684 id=684 data-nosnippet>684</a>                        name_kr: <span class="string">"Yod (Finger of Fate)"</span>.to_string(),
 <a href=#685 id=685 data-nosnippet>685</a>                        planets: <span class="macro">vec!</span>[p1.clone(), p2.clone(), p3.clone()],
 <a href=#686 id=686 data-nosnippet>686</a>                        interpretation: <span class="macro">format!</span>(
-<a href=#687 id=687 data-nosnippet>687</a>                            <span class="string">"{}와(과) {}의 60도 육각형 받침대에서 Apex 행성 {}이(가) 150도 퀸컹스 조정을 통해 명확한 소명과 숙명을 형성합니다."</span>,
+<a href=#687 id=687 data-nosnippet>687</a>                            <span class="string">"With {} and {} forming a 60-degree sextile base, Apex planet {} directs 150-degree quincunx adjustments toward a distinct destined calling."</span>,
 <a href=#688 id=688 data-nosnippet>688</a>                            p1, p2, p3
 <a href=#689 id=689 data-nosnippet>689</a>                        ),
 <a href=#690 id=690 data-nosnippet>690</a>                    });
@@ -700,11 +700,11 @@
 <a href=#700 id=700 data-nosnippet>700</a>    datetime: DateTime&lt;Utc&gt;,
 <a href=#701 id=701 data-nosnippet>701</a>    latitude: f64,
 <a href=#702 id=702 data-nosnippet>702</a>    longitude: f64,
-<a href=#703 id=703 data-nosnippet>703</a>    house_system_char: char, <span class="comment">// 'P', 'K', 'W', 'E' 등
+<a href=#703 id=703 data-nosnippet>703</a>    house_system_char: char, <span class="comment">// 'P', 'K', 'W', 'E', etc.
 <a href=#704 id=704 data-nosnippet>704</a></span>) -&gt; <span class="prelude-ty">Result</span>&lt;WesternResult, WesternError&gt; {
 <a href=#705 id=705 data-nosnippet>705</a>    <span class="kw">let </span>engine = AstroEngine::new();
 <a href=#706 id=706 data-nosnippet>706</a>
-<a href=#707 id=707 data-nosnippet>707</a>    <span class="comment">// 1. 하우스 Cusp 좌표 및 ASC/MC 계산
+<a href=#707 id=707 data-nosnippet>707</a>    <span class="comment">// 1. House Cusp coordinates and ASC/MC calculation
 <a href=#708 id=708 data-nosnippet>708</a>    </span><span class="kw">let </span>house_sys_byte = house_system_char <span class="kw">as </span>i32;
 <a href=#709 id=709 data-nosnippet>709</a>    <span class="kw">let </span>(<span class="kw-2">mut </span>cusps, ascmc) = engine.get_houses(datetime, latitude, longitude, house_sys_byte)<span class="question-mark">?</span>;
 <a href=#710 id=710 data-nosnippet>710</a>
@@ -722,7 +722,7 @@
 <a href=#722 id=722 data-nosnippet>722</a>        }
 <a href=#723 id=723 data-nosnippet>723</a>    }
 <a href=#724 id=724 data-nosnippet>724</a>
-<a href=#725 id=725 data-nosnippet>725</a>    <span class="comment">// 2. 표준 천체 및 노드 위치 조회
+<a href=#725 id=725 data-nosnippet>725</a>    <span class="comment">// 2. Standard celestial bodies and node positions
 <a href=#726 id=726 data-nosnippet>726</a>    // 0: Sun, 1: Moon, 2: Mercury, 3: Venus, 4: Mars, 5: Jupiter, 6: Saturn, 7: Uranus, 8: Neptune, 9: Pluto
 <a href=#727 id=727 data-nosnippet>727</a>    // 11: True Node (North Node), 12: Lilith. Chiron/asteroids are optional
 <a href=#728 id=728 data-nosnippet>728</a>    // and require external Swiss Ephemeris asteroid files.
@@ -784,7 +784,7 @@
 <a href=#784 id=784 data-nosnippet>784</a>        });
 <a href=#785 id=785 data-nosnippet>785</a>    }
 <a href=#786 id=786 data-nosnippet>786</a>
-<a href=#787 id=787 data-nosnippet>787</a>    <span class="comment">// South Node (180도 반대점 파생)
+<a href=#787 id=787 data-nosnippet>787</a>    <span class="comment">// South Node (derived 180-degree opposition point)
 <a href=#788 id=788 data-nosnippet>788</a>    </span><span class="kw">let </span>node_long = planets
 <a href=#789 id=789 data-nosnippet>789</a>        .iter()
 <a href=#790 id=790 data-nosnippet>790</a>        .find(|p| p.name == <span class="string">"True Node"</span>)
@@ -820,7 +820,7 @@
 <a href=#820 id=820 data-nosnippet>820</a>        house_number: sn_house_number,
 <a href=#821 id=821 data-nosnippet>821</a>    });
 <a href=#822 id=822 data-nosnippet>822</a>
-<a href=#823 id=823 data-nosnippet>823</a>    <span class="comment">// 3. 12 하우스 데이터 리스트 조립
+<a href=#823 id=823 data-nosnippet>823</a>    <span class="comment">// 3. Assemble 12 House data list
 <a href=#824 id=824 data-nosnippet>824</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>houses = Vec::new();
 <a href=#825 id=825 data-nosnippet>825</a>    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">12 </span>{
 <a href=#826 id=826 data-nosnippet>826</a>        <span class="kw">let </span>cusp = cusps[i];
@@ -834,7 +834,7 @@
 <a href=#834 id=834 data-nosnippet>834</a>        });
 <a href=#835 id=835 data-nosnippet>835</a>    }
 <a href=#836 id=836 data-nosnippet>836</a>
-<a href=#837 id=837 data-nosnippet>837</a>    <span class="comment">// 4. 메이저/마이너 아스펙트 및 어플라잉/세퍼레이팅 계산
+<a href=#837 id=837 data-nosnippet>837</a>    <span class="comment">// 4. Calculate Major/Minor Aspects and Applying/Separating dynamics
 <a href=#838 id=838 data-nosnippet>838</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>aspects = Vec::new();
 <a href=#839 id=839 data-nosnippet>839</a>    <span class="kw">let </span>aspect_types = <span class="macro">vec!</span>[
 <a href=#840 id=840 data-nosnippet>840</a>        AspectType::Conjunction,
@@ -869,7 +869,7 @@
 <a href=#869 id=869 data-nosnippet>869</a>                <span class="kw">let </span>target = asp.angle();
 <a href=#870 id=870 data-nosnippet>870</a>                <span class="kw">let </span>orb = (angle - target).abs();
 <a href=#871 id=871 data-nosnippet>871</a>                <span class="kw">if </span>orb &lt;= asp.standard_orb() {
-<a href=#872 id=872 data-nosnippet>872</a>                    <span class="comment">// Applying / Separating 동역학 계산
+<a href=#872 id=872 data-nosnippet>872</a>                    <span class="comment">// Calculate Applying / Separating dynamics
 <a href=#873 id=873 data-nosnippet>873</a>                    </span><span class="kw">let </span>rel_speed = speed_a - speed_b;
 <a href=#874 id=874 data-nosnippet>874</a>                    <span class="kw">let </span>dynamics = aspect_dynamics(angle, target, signed_delta, rel_speed);
 <a href=#875 id=875 data-nosnippet>875</a>
@@ -887,7 +887,7 @@
 <a href=#887 id=887 data-nosnippet>887</a>        }
 <a href=#888 id=888 data-nosnippet>888</a>    }
 <a href=#889 id=889 data-nosnippet>889</a>
-<a href=#890 id=890 data-nosnippet>890</a>    <span class="comment">// 5. 원소 및 모달리티 분포 점수
+<a href=#890 id=890 data-nosnippet>890</a>    <span class="comment">// 5. Elemental and modality distribution scoring
 <a href=#891 id=891 data-nosnippet>891</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>elements = ElementDistribution::default();
 <a href=#892 id=892 data-nosnippet>892</a>    <span class="kw">let </span><span class="kw-2">mut </span>modalities = ModalityDistribution::default();
 <a href=#893 id=893 data-nosnippet>893</a>
@@ -975,7 +975,7 @@
 <a href=#975 id=975 data-nosnippet>975</a>    <span class="kw">let </span>asc_sign = (asc / <span class="number">30.0</span>).floor() <span class="kw">as </span>usize;
 <a href=#976 id=976 data-nosnippet>976</a>    <span class="kw">let </span>chart_ruler = get_sign_ruler(asc_sign).to_string();
 <a href=#977 id=977 data-nosnippet>977</a>
-<a href=#978 id=978 data-nosnippet>978</a>    <span class="comment">// 주야간(Day/Night birth) 구분
+<a href=#978 id=978 data-nosnippet>978</a>    <span class="comment">// Day/Night birth determination
 <a href=#979 id=979 data-nosnippet>979</a>    </span><span class="kw">let </span>sun_house = planets
 <a href=#980 id=980 data-nosnippet>980</a>        .iter()
 <a href=#981 id=981 data-nosnippet>981</a>        .find(|p| p.name == <span class="string">"Sun"</span>)
@@ -983,7 +983,7 @@
 <a href=#983 id=983 data-nosnippet>983</a>        .unwrap_or(<span class="number">1</span>);
 <a href=#984 id=984 data-nosnippet>984</a>    <span class="kw">let </span>is_day_birth = (<span class="number">7</span>..=<span class="number">12</span>).contains(<span class="kw-2">&amp;</span>sun_house);
 <a href=#985 id=985 data-nosnippet>985</a>
-<a href=#986 id=986 data-nosnippet>986</a>    <span class="comment">// 6. Dignities, House Rulerships, Arabian Parts, Aspect Patterns 연산
+<a href=#986 id=986 data-nosnippet>986</a>    <span class="comment">// 6. Calculate Dignities, House Rulerships, Arabian Parts, Aspect Patterns
 <a href=#987 id=987 data-nosnippet>987</a>    </span><span class="kw">let </span>dignities = calculate_essential_dignities(<span class="kw-2">&amp;</span>planets);
 <a href=#988 id=988 data-nosnippet>988</a>    <span class="kw">let </span>house_rulerships = calculate_house_rulerships(<span class="kw-2">&amp;</span>houses, <span class="kw-2">&amp;</span>planets);
 <a href=#989 id=989 data-nosnippet>989</a>    <span class="kw">let </span>arabian_parts = calculate_arabian_parts(asc, <span class="kw-2">&amp;</span>planets, <span class="kw-2">&amp;</span>houses, is_day_birth);
@@ -1008,7 +1008,7 @@
 <a href=#1008 id=1008 data-nosnippet>1008</a>    })
 <a href=#1009 id=1009 data-nosnippet>1009</a>}
 <a href=#1010 id=1010 data-nosnippet>1010</a>
-<a href=#1011 id=1011 data-nosnippet>1011</a><span class="doccomment">/// Synastry (두 인물 간 교차 궁합 아스펙트 연산)
+<a href=#1011 id=1011 data-nosnippet>1011</a><span class="doccomment">/// Synastry (Cross-chart aspect compatibility analysis between two individuals)
 <a href=#1012 id=1012 data-nosnippet>1012</a></span><span class="kw">pub fn </span>calculate_synastry(
 <a href=#1013 id=1013 data-nosnippet>1013</a>    chart_a: <span class="kw-2">&amp;</span>WesternResult,
 <a href=#1014 id=1014 data-nosnippet>1014</a>    chart_b: <span class="kw-2">&amp;</span>WesternResult,
@@ -1034,8 +1034,8 @@
 <a href=#1034 id=1034 data-nosnippet>1034</a>                <span class="kw">let </span>orb = (angle - target).abs();
 <a href=#1035 id=1035 data-nosnippet>1035</a>                <span class="kw">if </span>orb &lt;= asp.standard_orb() {
 <a href=#1036 id=1036 data-nosnippet>1036</a>                    inter_aspects.push(WesternAspectData {
-<a href=#1037 id=1037 data-nosnippet>1037</a>                        body_a_name: <span class="macro">format!</span>(<span class="string">"{}의 {}"</span>, person_a_name, pa.name),
-<a href=#1038 id=1038 data-nosnippet>1038</a>                        body_b_name: <span class="macro">format!</span>(<span class="string">"{}의 {}"</span>, person_b_name, pb.name),
+<a href=#1037 id=1037 data-nosnippet>1037</a>                        body_a_name: <span class="macro">format!</span>(<span class="string">"{}'s {}"</span>, person_a_name, pa.name),
+<a href=#1038 id=1038 data-nosnippet>1038</a>                        body_b_name: <span class="macro">format!</span>(<span class="string">"{}'s {}"</span>, person_b_name, pb.name),
 <a href=#1039 id=1039 data-nosnippet>1039</a>                        aspect_type: asp,
 <a href=#1040 id=1040 data-nosnippet>1040</a>                        angle_diff: angle,
 <a href=#1041 id=1041 data-nosnippet>1041</a>                        orb,
@@ -1060,7 +1060,7 @@
 <a href=#1060 id=1060 data-nosnippet>1060</a>    harmony_score = harmony_score.clamp(<span class="number">0.0</span>, <span class="number">100.0</span>);
 <a href=#1061 id=1061 data-nosnippet>1061</a>
 <a href=#1062 id=1062 data-nosnippet>1062</a>    <span class="kw">let </span>summary = <span class="macro">format!</span>(
-<a href=#1063 id=1063 data-nosnippet>1063</a>        <span class="string">"{}와(과) {}의 시나스트리 궁합 조화도 점수는 {:.1}점이며, 총 {}개의 교차 아스펙트가 형성됩니다."</span>,
+<a href=#1063 id=1063 data-nosnippet>1063</a>        <span class="string">"Synastry compatibility score between {} and {} is {:.1} / 100 with {} cross aspects."</span>,
 <a href=#1064 id=1064 data-nosnippet>1064</a>        person_a_name,
 <a href=#1065 id=1065 data-nosnippet>1065</a>        person_b_name,
 <a href=#1066 id=1066 data-nosnippet>1066</a>        harmony_score,
@@ -1076,12 +1076,12 @@
 <a href=#1076 id=1076 data-nosnippet>1076</a>    }
 <a href=#1077 id=1077 data-nosnippet>1077</a>}
 <a href=#1078 id=1078 data-nosnippet>1078</a>
-<a href=#1079 id=1079 data-nosnippet>1079</a><span class="doccomment">/// Composite Chart (두 차트 간 미드포인트 합성 차트 생성)
+<a href=#1079 id=1079 data-nosnippet>1079</a><span class="doccomment">/// Composite Chart (Generates midpoint composite chart between two natal charts)
 <a href=#1080 id=1080 data-nosnippet>1080</a></span><span class="kw">pub fn </span>calculate_composite(
 <a href=#1081 id=1081 data-nosnippet>1081</a>    chart_a: <span class="kw-2">&amp;</span>WesternResult,
 <a href=#1082 id=1082 data-nosnippet>1082</a>    chart_b: <span class="kw-2">&amp;</span>WesternResult,
 <a href=#1083 id=1083 data-nosnippet>1083</a>) -&gt; <span class="prelude-ty">Result</span>&lt;CompositeResult, WesternError&gt; {
-<a href=#1084 id=1084 data-nosnippet>1084</a>    <span class="comment">// 360도 미드포인트 연산
+<a href=#1084 id=1084 data-nosnippet>1084</a>    <span class="comment">// 360-degree midpoint calculation
 <a href=#1085 id=1085 data-nosnippet>1085</a>    </span><span class="kw">let </span>midpoint = |l1: f64, l2: f64| -&gt; f64 {
 <a href=#1086 id=1086 data-nosnippet>1086</a>        <span class="kw">let </span>diff = (l1 - l2).abs();
 <a href=#1087 id=1087 data-nosnippet>1087</a>        <span class="kw">if </span>diff &lt;= <span class="number">180.0 </span>{
@@ -1199,154 +1199,153 @@
 <a href=#1199 id=1199 data-nosnippet>1199</a>        is_day_birth: <span class="bool-val">true</span>,
 <a href=#1200 id=1200 data-nosnippet>1200</a>    };
 <a href=#1201 id=1201 data-nosnippet>1201</a>
-<a href=#1202 id=1202 data-nosnippet>1202</a>    <span class="kw">let </span>summary = <span class="string">"두 사람의 차트를 360도 미드포인트로 합성한 컴포지트 차트 연산이 완료되었습니다."
-<a href=#1203 id=1203 data-nosnippet>1203</a>        </span>.to_string();
-<a href=#1204 id=1204 data-nosnippet>1204</a>
-<a href=#1205 id=1205 data-nosnippet>1205</a>    <span class="prelude-val">Ok</span>(CompositeResult {
-<a href=#1206 id=1206 data-nosnippet>1206</a>        composite_chart: comp_result,
-<a href=#1207 id=1207 data-nosnippet>1207</a>        summary,
-<a href=#1208 id=1208 data-nosnippet>1208</a>    })
-<a href=#1209 id=1209 data-nosnippet>1209</a>}
-<a href=#1210 id=1210 data-nosnippet>1210</a>
-<a href=#1211 id=1211 data-nosnippet>1211</a><span class="doccomment">/// Secondary Progressions (1일 = 1년 주천 세컨더리 프로그레션 연산)
-<a href=#1212 id=1212 data-nosnippet>1212</a></span><span class="kw">pub fn </span>calculate_secondary_progression(
-<a href=#1213 id=1213 data-nosnippet>1213</a>    birth_time: DateTime&lt;Utc&gt;,
-<a href=#1214 id=1214 data-nosnippet>1214</a>    lat: f64,
-<a href=#1215 id=1215 data-nosnippet>1215</a>    lon: f64,
-<a href=#1216 id=1216 data-nosnippet>1216</a>    target_time: DateTime&lt;Utc&gt;,
-<a href=#1217 id=1217 data-nosnippet>1217</a>    house_sys: char,
-<a href=#1218 id=1218 data-nosnippet>1218</a>) -&gt; <span class="prelude-ty">Result</span>&lt;ProgressionResult, WesternError&gt; {
-<a href=#1219 id=1219 data-nosnippet>1219</a>    <span class="kw">let </span>birth_chart = calculate_western(birth_time, lat, lon, house_sys)<span class="question-mark">?</span>;
-<a href=#1220 id=1220 data-nosnippet>1220</a>
-<a href=#1221 id=1221 data-nosnippet>1221</a>    <span class="comment">// 1년 = 1일 (365.2425일 per 1sec progression)
-<a href=#1222 id=1222 data-nosnippet>1222</a>    </span><span class="kw">let </span>duration_days = (target_time - birth_time).num_seconds() <span class="kw">as </span>f64 / <span class="number">86400.0</span>;
-<a href=#1223 id=1223 data-nosnippet>1223</a>    <span class="kw">let </span>progressed_years = duration_days / <span class="number">365.2425</span>;
-<a href=#1224 id=1224 data-nosnippet>1224</a>
-<a href=#1225 id=1225 data-nosnippet>1225</a>    <span class="comment">// Progressed time = birth_time + progressed_years * 1 day
-<a href=#1226 id=1226 data-nosnippet>1226</a>    </span><span class="kw">use </span>chrono::Duration;
-<a href=#1227 id=1227 data-nosnippet>1227</a>    <span class="kw">let </span>prog_seconds = (progressed_years * <span class="number">86400.0</span>) <span class="kw">as </span>i64;
-<a href=#1228 id=1228 data-nosnippet>1228</a>    <span class="kw">let </span>prog_time = birth_time + Duration::seconds(prog_seconds);
-<a href=#1229 id=1229 data-nosnippet>1229</a>
-<a href=#1230 id=1230 data-nosnippet>1230</a>    <span class="kw">let </span>progressed_chart = calculate_western(prog_time, lat, lon, house_sys)<span class="question-mark">?</span>;
-<a href=#1231 id=1231 data-nosnippet>1231</a>
-<a href=#1232 id=1232 data-nosnippet>1232</a>    <span class="comment">// Transit Aspects: Progressed Planets vs Natal Planets
-<a href=#1233 id=1233 data-nosnippet>1233</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>active_transit_aspects = Vec::new();
-<a href=#1234 id=1234 data-nosnippet>1234</a>    <span class="kw">let </span>aspect_types = <span class="macro">vec!</span>[
-<a href=#1235 id=1235 data-nosnippet>1235</a>        AspectType::Conjunction,
-<a href=#1236 id=1236 data-nosnippet>1236</a>        AspectType::Sextile,
-<a href=#1237 id=1237 data-nosnippet>1237</a>        AspectType::Square,
-<a href=#1238 id=1238 data-nosnippet>1238</a>        AspectType::Trine,
-<a href=#1239 id=1239 data-nosnippet>1239</a>        AspectType::Opposition,
-<a href=#1240 id=1240 data-nosnippet>1240</a>    ];
-<a href=#1241 id=1241 data-nosnippet>1241</a>
-<a href=#1242 id=1242 data-nosnippet>1242</a>    <span class="kw">for </span>pp <span class="kw">in </span><span class="kw-2">&amp;</span>progressed_chart.planets {
-<a href=#1243 id=1243 data-nosnippet>1243</a>        <span class="kw">for </span>np <span class="kw">in </span><span class="kw-2">&amp;</span>birth_chart.planets {
-<a href=#1244 id=1244 data-nosnippet>1244</a>            <span class="kw">let </span>signed_delta = (pp.longitude - np.longitude + <span class="number">540.0</span>).rem_euclid(<span class="number">360.0</span>) - <span class="number">180.0</span>;
-<a href=#1245 id=1245 data-nosnippet>1245</a>            <span class="kw">let </span>angle = signed_delta.abs();
-<a href=#1246 id=1246 data-nosnippet>1246</a>
-<a href=#1247 id=1247 data-nosnippet>1247</a>            <span class="kw">for </span><span class="kw-2">&amp;</span>asp <span class="kw">in </span><span class="kw-2">&amp;</span>aspect_types {
-<a href=#1248 id=1248 data-nosnippet>1248</a>                <span class="kw">let </span>target = asp.angle();
-<a href=#1249 id=1249 data-nosnippet>1249</a>                <span class="kw">let </span>orb = (angle - target).abs();
-<a href=#1250 id=1250 data-nosnippet>1250</a>                <span class="kw">if </span>orb &lt;= asp.standard_orb() {
-<a href=#1251 id=1251 data-nosnippet>1251</a>                    active_transit_aspects.push(WesternAspectData {
-<a href=#1252 id=1252 data-nosnippet>1252</a>                        body_a_name: <span class="macro">format!</span>(<span class="string">"Prog {}"</span>, pp.name),
-<a href=#1253 id=1253 data-nosnippet>1253</a>                        body_b_name: <span class="macro">format!</span>(<span class="string">"Natal {}"</span>, np.name),
-<a href=#1254 id=1254 data-nosnippet>1254</a>                        aspect_type: asp,
-<a href=#1255 id=1255 data-nosnippet>1255</a>                        angle_diff: angle,
-<a href=#1256 id=1256 data-nosnippet>1256</a>                        orb,
-<a href=#1257 id=1257 data-nosnippet>1257</a>                        dynamics: aspect_dynamics(angle, target, signed_delta, pp.speed - np.speed),
-<a href=#1258 id=1258 data-nosnippet>1258</a>                        is_major: asp.is_major(),
-<a href=#1259 id=1259 data-nosnippet>1259</a>                    });
-<a href=#1260 id=1260 data-nosnippet>1260</a>                }
-<a href=#1261 id=1261 data-nosnippet>1261</a>            }
-<a href=#1262 id=1262 data-nosnippet>1262</a>        }
-<a href=#1263 id=1263 data-nosnippet>1263</a>    }
-<a href=#1264 id=1264 data-nosnippet>1264</a>
-<a href=#1265 id=1265 data-nosnippet>1265</a>    <span class="prelude-val">Ok</span>(ProgressionResult {
-<a href=#1266 id=1266 data-nosnippet>1266</a>        birth_chart,
-<a href=#1267 id=1267 data-nosnippet>1267</a>        progressed_chart,
-<a href=#1268 id=1268 data-nosnippet>1268</a>        progressed_age_years: progressed_years,
-<a href=#1269 id=1269 data-nosnippet>1269</a>        active_transit_aspects,
-<a href=#1270 id=1270 data-nosnippet>1270</a>    })
-<a href=#1271 id=1271 data-nosnippet>1271</a>}
-<a href=#1272 id=1272 data-nosnippet>1272</a>
-<a href=#1273 id=1273 data-nosnippet>1273</a><span class="attr">#[cfg(test)]
-<a href=#1274 id=1274 data-nosnippet>1274</a></span><span class="kw">mod </span>tests {
-<a href=#1275 id=1275 data-nosnippet>1275</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-<a href=#1276 id=1276 data-nosnippet>1276</a>
-<a href=#1277 id=1277 data-nosnippet>1277</a>    <span class="attr">#[test]
-<a href=#1278 id=1278 data-nosnippet>1278</a>    </span><span class="kw">fn </span>test_angle_between() {
-<a href=#1279 id=1279 data-nosnippet>1279</a>        <span class="macro">assert!</span>(is_angle_between(<span class="number">15.0</span>, <span class="number">0.0</span>, <span class="number">30.0</span>));
-<a href=#1280 id=1280 data-nosnippet>1280</a>        <span class="macro">assert!</span>(is_angle_between(<span class="number">350.0</span>, <span class="number">340.0</span>, <span class="number">10.0</span>));
-<a href=#1281 id=1281 data-nosnippet>1281</a>        <span class="macro">assert!</span>(!is_angle_between(<span class="number">20.0</span>, <span class="number">30.0</span>, <span class="number">10.0</span>));
-<a href=#1282 id=1282 data-nosnippet>1282</a>    }
-<a href=#1283 id=1283 data-nosnippet>1283</a>
-<a href=#1284 id=1284 data-nosnippet>1284</a>    <span class="attr">#[test]
-<a href=#1285 id=1285 data-nosnippet>1285</a>    </span><span class="kw">fn </span>aspect_dynamics_respects_wrapped_direction() {
-<a href=#1286 id=1286 data-nosnippet>1286</a>        <span class="macro">assert_eq!</span>(
-<a href=#1287 id=1287 data-nosnippet>1287</a>            aspect_dynamics(<span class="number">10.0</span>, <span class="number">0.0</span>, <span class="number">10.0</span>, -<span class="number">1.0</span>),
-<a href=#1288 id=1288 data-nosnippet>1288</a>            AspectDynamics::Applying
-<a href=#1289 id=1289 data-nosnippet>1289</a>        );
-<a href=#1290 id=1290 data-nosnippet>1290</a>        <span class="macro">assert_eq!</span>(
-<a href=#1291 id=1291 data-nosnippet>1291</a>            aspect_dynamics(<span class="number">10.0</span>, <span class="number">0.0</span>, -<span class="number">10.0</span>, <span class="number">1.0</span>),
-<a href=#1292 id=1292 data-nosnippet>1292</a>            AspectDynamics::Applying
-<a href=#1293 id=1293 data-nosnippet>1293</a>        );
-<a href=#1294 id=1294 data-nosnippet>1294</a>        <span class="macro">assert_eq!</span>(
-<a href=#1295 id=1295 data-nosnippet>1295</a>            aspect_dynamics(<span class="number">10.0</span>, <span class="number">0.0</span>, -<span class="number">10.0</span>, -<span class="number">1.0</span>),
-<a href=#1296 id=1296 data-nosnippet>1296</a>            AspectDynamics::Separating
-<a href=#1297 id=1297 data-nosnippet>1297</a>        );
-<a href=#1298 id=1298 data-nosnippet>1298</a>        <span class="macro">assert_eq!</span>(
-<a href=#1299 id=1299 data-nosnippet>1299</a>            aspect_dynamics(<span class="number">0.005</span>, <span class="number">0.0</span>, <span class="number">0.005</span>, <span class="number">1.0</span>),
-<a href=#1300 id=1300 data-nosnippet>1300</a>            AspectDynamics::Exact
-<a href=#1301 id=1301 data-nosnippet>1301</a>        );
-<a href=#1302 id=1302 data-nosnippet>1302</a>    }
-<a href=#1303 id=1303 data-nosnippet>1303</a>
-<a href=#1304 id=1304 data-nosnippet>1304</a>    <span class="attr">#[test]
-<a href=#1305 id=1305 data-nosnippet>1305</a>    </span><span class="kw">fn </span>test_calculate_western_basic() {
-<a href=#1306 id=1306 data-nosnippet>1306</a>        <span class="kw">let </span>utc_birth = <span class="string">"1990-05-15T10:00:00Z"</span>.parse::&lt;DateTime&lt;Utc&gt;&gt;().unwrap();
-<a href=#1307 id=1307 data-nosnippet>1307</a>        <span class="kw">let </span>lat = <span class="number">37.5665</span>;
-<a href=#1308 id=1308 data-nosnippet>1308</a>        <span class="kw">let </span>lon = <span class="number">126.9780</span>;
-<a href=#1309 id=1309 data-nosnippet>1309</a>
-<a href=#1310 id=1310 data-nosnippet>1310</a>        <span class="kw">let </span>res = calculate_western(utc_birth, lat, lon, <span class="string">'P'</span>);
-<a href=#1311 id=1311 data-nosnippet>1311</a>        <span class="macro">assert!</span>(res.is_ok());
-<a href=#1312 id=1312 data-nosnippet>1312</a>        <span class="kw">let </span>result = res.unwrap();
-<a href=#1313 id=1313 data-nosnippet>1313</a>
-<a href=#1314 id=1314 data-nosnippet>1314</a>        <span class="macro">assert_eq!</span>(result.planets.len(), <span class="number">13</span>); <span class="comment">// 10 planets + True Node + South Node + Lilith; optional asteroids require ephemeris files
-<a href=#1315 id=1315 data-nosnippet>1315</a>        </span><span class="macro">assert_eq!</span>(result.houses.len(), <span class="number">12</span>);
-<a href=#1316 id=1316 data-nosnippet>1316</a>        <span class="macro">assert_eq!</span>(result.arabian_parts.len(), <span class="number">3</span>);
-<a href=#1317 id=1317 data-nosnippet>1317</a>        <span class="macro">assert_eq!</span>(result.house_rulerships.len(), <span class="number">12</span>);
-<a href=#1318 id=1318 data-nosnippet>1318</a>
-<a href=#1319 id=1319 data-nosnippet>1319</a>        <span class="macro">assert!</span>(result.ascendant &gt;= <span class="number">0.0 </span>&amp;&amp; result.ascendant &lt; <span class="number">360.0</span>);
-<a href=#1320 id=1320 data-nosnippet>1320</a>        <span class="macro">assert!</span>(result.midheaven &gt;= <span class="number">0.0 </span>&amp;&amp; result.midheaven &lt; <span class="number">360.0</span>);
-<a href=#1321 id=1321 data-nosnippet>1321</a>    }
-<a href=#1322 id=1322 data-nosnippet>1322</a>
-<a href=#1323 id=1323 data-nosnippet>1323</a>    <span class="attr">#[test]
-<a href=#1324 id=1324 data-nosnippet>1324</a>    </span><span class="kw">fn </span>arabian_parts_use_day_night_formulas_across_zero() {
-<a href=#1325 id=1325 data-nosnippet>1325</a>        <span class="kw">let </span>planet = |name: <span class="kw-2">&amp;</span>str, longitude: f64| WesternPlanetData {
-<a href=#1326 id=1326 data-nosnippet>1326</a>            id: <span class="number">0</span>,
-<a href=#1327 id=1327 data-nosnippet>1327</a>            name: name.to_string(),
-<a href=#1328 id=1328 data-nosnippet>1328</a>            longitude,
-<a href=#1329 id=1329 data-nosnippet>1329</a>            speed: <span class="number">0.0</span>,
-<a href=#1330 id=1330 data-nosnippet>1330</a>            is_retrograde: <span class="bool-val">false</span>,
-<a href=#1331 id=1331 data-nosnippet>1331</a>            sign_index: (longitude / <span class="number">30.0</span>).floor() <span class="kw">as </span>usize,
-<a href=#1332 id=1332 data-nosnippet>1332</a>            degree_in_sign: longitude % <span class="number">30.0</span>,
-<a href=#1333 id=1333 data-nosnippet>1333</a>            house_number: <span class="number">1</span>,
-<a href=#1334 id=1334 data-nosnippet>1334</a>        };
-<a href=#1335 id=1335 data-nosnippet>1335</a>        <span class="kw">let </span>planets = <span class="macro">vec!</span>[
-<a href=#1336 id=1336 data-nosnippet>1336</a>            planet(<span class="string">"Sun"</span>, <span class="number">10.0</span>),
-<a href=#1337 id=1337 data-nosnippet>1337</a>            planet(<span class="string">"Moon"</span>, <span class="number">20.0</span>),
-<a href=#1338 id=1338 data-nosnippet>1338</a>            planet(<span class="string">"Venus"</span>, <span class="number">30.0</span>),
-<a href=#1339 id=1339 data-nosnippet>1339</a>        ];
-<a href=#1340 id=1340 data-nosnippet>1340</a>
-<a href=#1341 id=1341 data-nosnippet>1341</a>        <span class="kw">let </span>day = calculate_arabian_parts(<span class="number">350.0</span>, <span class="kw-2">&amp;</span>planets, <span class="kw-2">&amp;</span>[], <span class="bool-val">true</span>);
-<a href=#1342 id=1342 data-nosnippet>1342</a>        <span class="macro">assert_eq!</span>(day[<span class="number">0</span>].longitude, <span class="number">0.0</span>); <span class="comment">// ASC + Moon - Sun
-<a href=#1343 id=1343 data-nosnippet>1343</a>        </span><span class="macro">assert_eq!</span>(day[<span class="number">1</span>].longitude, <span class="number">340.0</span>); <span class="comment">// ASC + Sun - Moon
-<a href=#1344 id=1344 data-nosnippet>1344</a>        </span><span class="macro">assert_eq!</span>(day[<span class="number">2</span>].longitude, <span class="number">40.0</span>); <span class="comment">// ASC + Venus - Spirit
-<a href=#1345 id=1345 data-nosnippet>1345</a>
-<a href=#1346 id=1346 data-nosnippet>1346</a>        </span><span class="kw">let </span>night = calculate_arabian_parts(<span class="number">350.0</span>, <span class="kw-2">&amp;</span>planets, <span class="kw-2">&amp;</span>[], <span class="bool-val">false</span>);
-<a href=#1347 id=1347 data-nosnippet>1347</a>        <span class="macro">assert_eq!</span>(night[<span class="number">0</span>].longitude, <span class="number">340.0</span>); <span class="comment">// ASC + Sun - Moon
-<a href=#1348 id=1348 data-nosnippet>1348</a>        </span><span class="macro">assert_eq!</span>(night[<span class="number">1</span>].longitude, <span class="number">0.0</span>); <span class="comment">// ASC + Moon - Sun
-<a href=#1349 id=1349 data-nosnippet>1349</a>        </span><span class="macro">assert_eq!</span>(night[<span class="number">2</span>].longitude, <span class="number">320.0</span>); <span class="comment">// ASC + Spirit - Venus
-<a href=#1350 id=1350 data-nosnippet>1350</a>    </span>}
-<a href=#1351 id=1351 data-nosnippet>1351</a>}
+<a href=#1202 id=1202 data-nosnippet>1202</a>    <span class="kw">let </span>summary = <span class="string">"Calculated 360-degree midpoint composite chart between both charts."</span>.to_string();
+<a href=#1203 id=1203 data-nosnippet>1203</a>
+<a href=#1204 id=1204 data-nosnippet>1204</a>    <span class="prelude-val">Ok</span>(CompositeResult {
+<a href=#1205 id=1205 data-nosnippet>1205</a>        composite_chart: comp_result,
+<a href=#1206 id=1206 data-nosnippet>1206</a>        summary,
+<a href=#1207 id=1207 data-nosnippet>1207</a>    })
+<a href=#1208 id=1208 data-nosnippet>1208</a>}
+<a href=#1209 id=1209 data-nosnippet>1209</a>
+<a href=#1210 id=1210 data-nosnippet>1210</a><span class="doccomment">/// Secondary Progressions (1 day = 1 year progression calculation)
+<a href=#1211 id=1211 data-nosnippet>1211</a></span><span class="kw">pub fn </span>calculate_secondary_progression(
+<a href=#1212 id=1212 data-nosnippet>1212</a>    birth_time: DateTime&lt;Utc&gt;,
+<a href=#1213 id=1213 data-nosnippet>1213</a>    lat: f64,
+<a href=#1214 id=1214 data-nosnippet>1214</a>    lon: f64,
+<a href=#1215 id=1215 data-nosnippet>1215</a>    target_time: DateTime&lt;Utc&gt;,
+<a href=#1216 id=1216 data-nosnippet>1216</a>    house_sys: char,
+<a href=#1217 id=1217 data-nosnippet>1217</a>) -&gt; <span class="prelude-ty">Result</span>&lt;ProgressionResult, WesternError&gt; {
+<a href=#1218 id=1218 data-nosnippet>1218</a>    <span class="kw">let </span>birth_chart = calculate_western(birth_time, lat, lon, house_sys)<span class="question-mark">?</span>;
+<a href=#1219 id=1219 data-nosnippet>1219</a>
+<a href=#1220 id=1220 data-nosnippet>1220</a>    <span class="comment">// 1 year = 1 day (365.2425 days per 1-day progression)
+<a href=#1221 id=1221 data-nosnippet>1221</a>    </span><span class="kw">let </span>duration_days = (target_time - birth_time).num_seconds() <span class="kw">as </span>f64 / <span class="number">86400.0</span>;
+<a href=#1222 id=1222 data-nosnippet>1222</a>    <span class="kw">let </span>progressed_years = duration_days / <span class="number">365.2425</span>;
+<a href=#1223 id=1223 data-nosnippet>1223</a>
+<a href=#1224 id=1224 data-nosnippet>1224</a>    <span class="comment">// Progressed time = birth_time + progressed_years * 1 day
+<a href=#1225 id=1225 data-nosnippet>1225</a>    </span><span class="kw">use </span>chrono::Duration;
+<a href=#1226 id=1226 data-nosnippet>1226</a>    <span class="kw">let </span>prog_seconds = (progressed_years * <span class="number">86400.0</span>) <span class="kw">as </span>i64;
+<a href=#1227 id=1227 data-nosnippet>1227</a>    <span class="kw">let </span>prog_time = birth_time + Duration::seconds(prog_seconds);
+<a href=#1228 id=1228 data-nosnippet>1228</a>
+<a href=#1229 id=1229 data-nosnippet>1229</a>    <span class="kw">let </span>progressed_chart = calculate_western(prog_time, lat, lon, house_sys)<span class="question-mark">?</span>;
+<a href=#1230 id=1230 data-nosnippet>1230</a>
+<a href=#1231 id=1231 data-nosnippet>1231</a>    <span class="comment">// Transit Aspects: Progressed Planets vs Natal Planets
+<a href=#1232 id=1232 data-nosnippet>1232</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>active_transit_aspects = Vec::new();
+<a href=#1233 id=1233 data-nosnippet>1233</a>    <span class="kw">let </span>aspect_types = <span class="macro">vec!</span>[
+<a href=#1234 id=1234 data-nosnippet>1234</a>        AspectType::Conjunction,
+<a href=#1235 id=1235 data-nosnippet>1235</a>        AspectType::Sextile,
+<a href=#1236 id=1236 data-nosnippet>1236</a>        AspectType::Square,
+<a href=#1237 id=1237 data-nosnippet>1237</a>        AspectType::Trine,
+<a href=#1238 id=1238 data-nosnippet>1238</a>        AspectType::Opposition,
+<a href=#1239 id=1239 data-nosnippet>1239</a>    ];
+<a href=#1240 id=1240 data-nosnippet>1240</a>
+<a href=#1241 id=1241 data-nosnippet>1241</a>    <span class="kw">for </span>pp <span class="kw">in </span><span class="kw-2">&amp;</span>progressed_chart.planets {
+<a href=#1242 id=1242 data-nosnippet>1242</a>        <span class="kw">for </span>np <span class="kw">in </span><span class="kw-2">&amp;</span>birth_chart.planets {
+<a href=#1243 id=1243 data-nosnippet>1243</a>            <span class="kw">let </span>signed_delta = (pp.longitude - np.longitude + <span class="number">540.0</span>).rem_euclid(<span class="number">360.0</span>) - <span class="number">180.0</span>;
+<a href=#1244 id=1244 data-nosnippet>1244</a>            <span class="kw">let </span>angle = signed_delta.abs();
+<a href=#1245 id=1245 data-nosnippet>1245</a>
+<a href=#1246 id=1246 data-nosnippet>1246</a>            <span class="kw">for </span><span class="kw-2">&amp;</span>asp <span class="kw">in </span><span class="kw-2">&amp;</span>aspect_types {
+<a href=#1247 id=1247 data-nosnippet>1247</a>                <span class="kw">let </span>target = asp.angle();
+<a href=#1248 id=1248 data-nosnippet>1248</a>                <span class="kw">let </span>orb = (angle - target).abs();
+<a href=#1249 id=1249 data-nosnippet>1249</a>                <span class="kw">if </span>orb &lt;= asp.standard_orb() {
+<a href=#1250 id=1250 data-nosnippet>1250</a>                    active_transit_aspects.push(WesternAspectData {
+<a href=#1251 id=1251 data-nosnippet>1251</a>                        body_a_name: <span class="macro">format!</span>(<span class="string">"Prog {}"</span>, pp.name),
+<a href=#1252 id=1252 data-nosnippet>1252</a>                        body_b_name: <span class="macro">format!</span>(<span class="string">"Natal {}"</span>, np.name),
+<a href=#1253 id=1253 data-nosnippet>1253</a>                        aspect_type: asp,
+<a href=#1254 id=1254 data-nosnippet>1254</a>                        angle_diff: angle,
+<a href=#1255 id=1255 data-nosnippet>1255</a>                        orb,
+<a href=#1256 id=1256 data-nosnippet>1256</a>                        dynamics: aspect_dynamics(angle, target, signed_delta, pp.speed - np.speed),
+<a href=#1257 id=1257 data-nosnippet>1257</a>                        is_major: asp.is_major(),
+<a href=#1258 id=1258 data-nosnippet>1258</a>                    });
+<a href=#1259 id=1259 data-nosnippet>1259</a>                }
+<a href=#1260 id=1260 data-nosnippet>1260</a>            }
+<a href=#1261 id=1261 data-nosnippet>1261</a>        }
+<a href=#1262 id=1262 data-nosnippet>1262</a>    }
+<a href=#1263 id=1263 data-nosnippet>1263</a>
+<a href=#1264 id=1264 data-nosnippet>1264</a>    <span class="prelude-val">Ok</span>(ProgressionResult {
+<a href=#1265 id=1265 data-nosnippet>1265</a>        birth_chart,
+<a href=#1266 id=1266 data-nosnippet>1266</a>        progressed_chart,
+<a href=#1267 id=1267 data-nosnippet>1267</a>        progressed_age_years: progressed_years,
+<a href=#1268 id=1268 data-nosnippet>1268</a>        active_transit_aspects,
+<a href=#1269 id=1269 data-nosnippet>1269</a>    })
+<a href=#1270 id=1270 data-nosnippet>1270</a>}
+<a href=#1271 id=1271 data-nosnippet>1271</a>
+<a href=#1272 id=1272 data-nosnippet>1272</a><span class="attr">#[cfg(test)]
+<a href=#1273 id=1273 data-nosnippet>1273</a></span><span class="kw">mod </span>tests {
+<a href=#1274 id=1274 data-nosnippet>1274</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#1275 id=1275 data-nosnippet>1275</a>
+<a href=#1276 id=1276 data-nosnippet>1276</a>    <span class="attr">#[test]
+<a href=#1277 id=1277 data-nosnippet>1277</a>    </span><span class="kw">fn </span>test_angle_between() {
+<a href=#1278 id=1278 data-nosnippet>1278</a>        <span class="macro">assert!</span>(is_angle_between(<span class="number">15.0</span>, <span class="number">0.0</span>, <span class="number">30.0</span>));
+<a href=#1279 id=1279 data-nosnippet>1279</a>        <span class="macro">assert!</span>(is_angle_between(<span class="number">350.0</span>, <span class="number">340.0</span>, <span class="number">10.0</span>));
+<a href=#1280 id=1280 data-nosnippet>1280</a>        <span class="macro">assert!</span>(!is_angle_between(<span class="number">20.0</span>, <span class="number">30.0</span>, <span class="number">10.0</span>));
+<a href=#1281 id=1281 data-nosnippet>1281</a>    }
+<a href=#1282 id=1282 data-nosnippet>1282</a>
+<a href=#1283 id=1283 data-nosnippet>1283</a>    <span class="attr">#[test]
+<a href=#1284 id=1284 data-nosnippet>1284</a>    </span><span class="kw">fn </span>aspect_dynamics_respects_wrapped_direction() {
+<a href=#1285 id=1285 data-nosnippet>1285</a>        <span class="macro">assert_eq!</span>(
+<a href=#1286 id=1286 data-nosnippet>1286</a>            aspect_dynamics(<span class="number">10.0</span>, <span class="number">0.0</span>, <span class="number">10.0</span>, -<span class="number">1.0</span>),
+<a href=#1287 id=1287 data-nosnippet>1287</a>            AspectDynamics::Applying
+<a href=#1288 id=1288 data-nosnippet>1288</a>        );
+<a href=#1289 id=1289 data-nosnippet>1289</a>        <span class="macro">assert_eq!</span>(
+<a href=#1290 id=1290 data-nosnippet>1290</a>            aspect_dynamics(<span class="number">10.0</span>, <span class="number">0.0</span>, -<span class="number">10.0</span>, <span class="number">1.0</span>),
+<a href=#1291 id=1291 data-nosnippet>1291</a>            AspectDynamics::Applying
+<a href=#1292 id=1292 data-nosnippet>1292</a>        );
+<a href=#1293 id=1293 data-nosnippet>1293</a>        <span class="macro">assert_eq!</span>(
+<a href=#1294 id=1294 data-nosnippet>1294</a>            aspect_dynamics(<span class="number">10.0</span>, <span class="number">0.0</span>, -<span class="number">10.0</span>, -<span class="number">1.0</span>),
+<a href=#1295 id=1295 data-nosnippet>1295</a>            AspectDynamics::Separating
+<a href=#1296 id=1296 data-nosnippet>1296</a>        );
+<a href=#1297 id=1297 data-nosnippet>1297</a>        <span class="macro">assert_eq!</span>(
+<a href=#1298 id=1298 data-nosnippet>1298</a>            aspect_dynamics(<span class="number">0.005</span>, <span class="number">0.0</span>, <span class="number">0.005</span>, <span class="number">1.0</span>),
+<a href=#1299 id=1299 data-nosnippet>1299</a>            AspectDynamics::Exact
+<a href=#1300 id=1300 data-nosnippet>1300</a>        );
+<a href=#1301 id=1301 data-nosnippet>1301</a>    }
+<a href=#1302 id=1302 data-nosnippet>1302</a>
+<a href=#1303 id=1303 data-nosnippet>1303</a>    <span class="attr">#[test]
+<a href=#1304 id=1304 data-nosnippet>1304</a>    </span><span class="kw">fn </span>test_calculate_western_basic() {
+<a href=#1305 id=1305 data-nosnippet>1305</a>        <span class="kw">let </span>utc_birth = <span class="string">"1990-05-15T10:00:00Z"</span>.parse::&lt;DateTime&lt;Utc&gt;&gt;().unwrap();
+<a href=#1306 id=1306 data-nosnippet>1306</a>        <span class="kw">let </span>lat = <span class="number">37.5665</span>;
+<a href=#1307 id=1307 data-nosnippet>1307</a>        <span class="kw">let </span>lon = <span class="number">126.9780</span>;
+<a href=#1308 id=1308 data-nosnippet>1308</a>
+<a href=#1309 id=1309 data-nosnippet>1309</a>        <span class="kw">let </span>res = calculate_western(utc_birth, lat, lon, <span class="string">'P'</span>);
+<a href=#1310 id=1310 data-nosnippet>1310</a>        <span class="macro">assert!</span>(res.is_ok());
+<a href=#1311 id=1311 data-nosnippet>1311</a>        <span class="kw">let </span>result = res.unwrap();
+<a href=#1312 id=1312 data-nosnippet>1312</a>
+<a href=#1313 id=1313 data-nosnippet>1313</a>        <span class="macro">assert_eq!</span>(result.planets.len(), <span class="number">13</span>); <span class="comment">// 10 planets + True Node + South Node + Lilith; optional asteroids require ephemeris files
+<a href=#1314 id=1314 data-nosnippet>1314</a>        </span><span class="macro">assert_eq!</span>(result.houses.len(), <span class="number">12</span>);
+<a href=#1315 id=1315 data-nosnippet>1315</a>        <span class="macro">assert_eq!</span>(result.arabian_parts.len(), <span class="number">3</span>);
+<a href=#1316 id=1316 data-nosnippet>1316</a>        <span class="macro">assert_eq!</span>(result.house_rulerships.len(), <span class="number">12</span>);
+<a href=#1317 id=1317 data-nosnippet>1317</a>
+<a href=#1318 id=1318 data-nosnippet>1318</a>        <span class="macro">assert!</span>(result.ascendant &gt;= <span class="number">0.0 </span>&amp;&amp; result.ascendant &lt; <span class="number">360.0</span>);
+<a href=#1319 id=1319 data-nosnippet>1319</a>        <span class="macro">assert!</span>(result.midheaven &gt;= <span class="number">0.0 </span>&amp;&amp; result.midheaven &lt; <span class="number">360.0</span>);
+<a href=#1320 id=1320 data-nosnippet>1320</a>    }
+<a href=#1321 id=1321 data-nosnippet>1321</a>
+<a href=#1322 id=1322 data-nosnippet>1322</a>    <span class="attr">#[test]
+<a href=#1323 id=1323 data-nosnippet>1323</a>    </span><span class="kw">fn </span>arabian_parts_use_day_night_formulas_across_zero() {
+<a href=#1324 id=1324 data-nosnippet>1324</a>        <span class="kw">let </span>planet = |name: <span class="kw-2">&amp;</span>str, longitude: f64| WesternPlanetData {
+<a href=#1325 id=1325 data-nosnippet>1325</a>            id: <span class="number">0</span>,
+<a href=#1326 id=1326 data-nosnippet>1326</a>            name: name.to_string(),
+<a href=#1327 id=1327 data-nosnippet>1327</a>            longitude,
+<a href=#1328 id=1328 data-nosnippet>1328</a>            speed: <span class="number">0.0</span>,
+<a href=#1329 id=1329 data-nosnippet>1329</a>            is_retrograde: <span class="bool-val">false</span>,
+<a href=#1330 id=1330 data-nosnippet>1330</a>            sign_index: (longitude / <span class="number">30.0</span>).floor() <span class="kw">as </span>usize,
+<a href=#1331 id=1331 data-nosnippet>1331</a>            degree_in_sign: longitude % <span class="number">30.0</span>,
+<a href=#1332 id=1332 data-nosnippet>1332</a>            house_number: <span class="number">1</span>,
+<a href=#1333 id=1333 data-nosnippet>1333</a>        };
+<a href=#1334 id=1334 data-nosnippet>1334</a>        <span class="kw">let </span>planets = <span class="macro">vec!</span>[
+<a href=#1335 id=1335 data-nosnippet>1335</a>            planet(<span class="string">"Sun"</span>, <span class="number">10.0</span>),
+<a href=#1336 id=1336 data-nosnippet>1336</a>            planet(<span class="string">"Moon"</span>, <span class="number">20.0</span>),
+<a href=#1337 id=1337 data-nosnippet>1337</a>            planet(<span class="string">"Venus"</span>, <span class="number">30.0</span>),
+<a href=#1338 id=1338 data-nosnippet>1338</a>        ];
+<a href=#1339 id=1339 data-nosnippet>1339</a>
+<a href=#1340 id=1340 data-nosnippet>1340</a>        <span class="kw">let </span>day = calculate_arabian_parts(<span class="number">350.0</span>, <span class="kw-2">&amp;</span>planets, <span class="kw-2">&amp;</span>[], <span class="bool-val">true</span>);
+<a href=#1341 id=1341 data-nosnippet>1341</a>        <span class="macro">assert_eq!</span>(day[<span class="number">0</span>].longitude, <span class="number">0.0</span>); <span class="comment">// ASC + Moon - Sun
+<a href=#1342 id=1342 data-nosnippet>1342</a>        </span><span class="macro">assert_eq!</span>(day[<span class="number">1</span>].longitude, <span class="number">340.0</span>); <span class="comment">// ASC + Sun - Moon
+<a href=#1343 id=1343 data-nosnippet>1343</a>        </span><span class="macro">assert_eq!</span>(day[<span class="number">2</span>].longitude, <span class="number">40.0</span>); <span class="comment">// ASC + Venus - Spirit
+<a href=#1344 id=1344 data-nosnippet>1344</a>
+<a href=#1345 id=1345 data-nosnippet>1345</a>        </span><span class="kw">let </span>night = calculate_arabian_parts(<span class="number">350.0</span>, <span class="kw-2">&amp;</span>planets, <span class="kw-2">&amp;</span>[], <span class="bool-val">false</span>);
+<a href=#1346 id=1346 data-nosnippet>1346</a>        <span class="macro">assert_eq!</span>(night[<span class="number">0</span>].longitude, <span class="number">340.0</span>); <span class="comment">// ASC + Sun - Moon
+<a href=#1347 id=1347 data-nosnippet>1347</a>        </span><span class="macro">assert_eq!</span>(night[<span class="number">1</span>].longitude, <span class="number">0.0</span>); <span class="comment">// ASC + Moon - Sun
+<a href=#1348 id=1348 data-nosnippet>1348</a>        </span><span class="macro">assert_eq!</span>(night[<span class="number">2</span>].longitude, <span class="number">320.0</span>); <span class="comment">// ASC + Spirit - Venus
+<a href=#1349 id=1349 data-nosnippet>1349</a>    </span>}
+<a href=#1350 id=1350 data-nosnippet>1350</a>}
 </code></pre></div></section></main></body></html>

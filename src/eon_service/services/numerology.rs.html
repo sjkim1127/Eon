@@ -7,27 +7,27 @@
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">pub fn </span>analyze(input: NumerologyAnalysisInput) -&gt; <span class="prelude-ty">Result</span>&lt;NumerologyAnalysisOutput, ServiceError&gt; {
 <a href=#8 id=8 data-nosnippet>8</a>    <span class="kw">if </span>input.base.is_lunar {
 <a href=#9 id=9 data-nosnippet>9</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ServiceError::InvalidInput(
-<a href=#10 id=10 data-nosnippet>10</a>            <span class="string">"Numerology 분석은 Gregorian 양력 날짜만 지원합니다"</span>.to_string(),
+<a href=#10 id=10 data-nosnippet>10</a>            <span class="string">"Numerology analysis only supports Gregorian calendar solar dates"</span>.to_string(),
 <a href=#11 id=11 data-nosnippet>11</a>        ));
 <a href=#12 id=12 data-nosnippet>12</a>    }
 <a href=#13 id=13 data-nosnippet>13</a>
 <a href=#14 id=14 data-nosnippet>14</a>    <span class="kw">if </span>input.base.year &lt;= <span class="number">0 </span>{
 <a href=#15 id=15 data-nosnippet>15</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ServiceError::InvalidInput(<span class="macro">format!</span>(
-<a href=#16 id=16 data-nosnippet>16</a>            <span class="string">"출생 연도는 양수여야 합니다: {}"</span>,
+<a href=#16 id=16 data-nosnippet>16</a>            <span class="string">"Birth year must be positive: {}"</span>,
 <a href=#17 id=17 data-nosnippet>17</a>            input.base.year
 <a href=#18 id=18 data-nosnippet>18</a>        )));
 <a href=#19 id=19 data-nosnippet>19</a>    }
 <a href=#20 id=20 data-nosnippet>20</a>
 <a href=#21 id=21 data-nosnippet>21</a>    <span class="kw">if </span><span class="macro">matches!</span>(input.target_year, <span class="prelude-val">Some</span>(<span class="number">0</span>)) {
 <a href=#22 id=22 data-nosnippet>22</a>        <span class="kw">return </span><span class="prelude-val">Err</span>(ServiceError::InvalidInput(
-<a href=#23 id=23 data-nosnippet>23</a>            <span class="string">"대상 연도는 양수여야 합니다"</span>.to_string(),
+<a href=#23 id=23 data-nosnippet>23</a>            <span class="string">"Target year must be positive"</span>.to_string(),
 <a href=#24 id=24 data-nosnippet>24</a>        ));
 <a href=#25 id=25 data-nosnippet>25</a>    }
 <a href=#26 id=26 data-nosnippet>26</a>
 <a href=#27 id=27 data-nosnippet>27</a>    NaiveDate::from_ymd_opt(input.base.year, input.base.month, input.base.day).ok_or_else(
 <a href=#28 id=28 data-nosnippet>28</a>        || {
 <a href=#29 id=29 data-nosnippet>29</a>            ServiceError::InvalidInput(<span class="macro">format!</span>(
-<a href=#30 id=30 data-nosnippet>30</a>                <span class="string">"유효하지 않은 양력 날짜입니다: {:04}-{:02}-{:02}"</span>,
+<a href=#30 id=30 data-nosnippet>30</a>                <span class="string">"Invalid solar calendar date: {:04}-{:02}-{:02}"</span>,
 <a href=#31 id=31 data-nosnippet>31</a>                input.base.year, input.base.month, input.base.day
 <a href=#32 id=32 data-nosnippet>32</a>            ))
 <a href=#33 id=33 data-nosnippet>33</a>        },

@@ -381,7 +381,7 @@
 <a href=#381 id=381 data-nosnippet>381</a>        <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
 <a href=#382 id=382 data-nosnippet>382</a>        s.push_str(<span class="string">"# Vedic Chart Analysis Summary\n\n"</span>);
 <a href=#383 id=383 data-nosnippet>383</a>
-<a href=#384 id=384 data-nosnippet>384</a>        s.push_str(<span class="string">"## 💠 Key Indicators (Jaimini Karakas)\n"</span>);
+<a href=#384 id=384 data-nosnippet>384</a>        s.push_str(<span class="string">"## Key Indicators (Jaimini Karakas)\n"</span>);
 <a href=#385 id=385 data-nosnippet>385</a>        s.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#386 id=386 data-nosnippet>386</a>            <span class="string">"- **Atmakaraka (Self)**: {:?}\n"</span>,
 <a href=#387 id=387 data-nosnippet>387</a>            <span class="self">self</span>.primary_karakas.atmakaraka
@@ -411,7 +411,7 @@
 <a href=#411 id=411 data-nosnippet>411</a>        ));
 <a href=#412 id=412 data-nosnippet>412</a>        s.push(<span class="string">'\n'</span>);
 <a href=#413 id=413 data-nosnippet>413</a>
-<a href=#414 id=414 data-nosnippet>414</a>        s.push_str(<span class="string">"## 🧭 Jaimini Indicators\n"</span>);
+<a href=#414 id=414 data-nosnippet>414</a>        s.push_str(<span class="string">"## Jaimini Indicators\n"</span>);
 <a href=#415 id=415 data-nosnippet>415</a>        <span class="kw">if </span><span class="self">self</span>.arudha_lagna &gt; <span class="number">0 </span>{
 <a href=#416 id=416 data-nosnippet>416</a>            s.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#417 id=417 data-nosnippet>417</a>                <span class="string">"- **Arudha Lagna (AL)**: Sign {}\n"</span>,
@@ -447,7 +447,7 @@
 <a href=#447 id=447 data-nosnippet>447</a>        }
 <a href=#448 id=448 data-nosnippet>448</a>        s.push(<span class="string">'\n'</span>);
 <a href=#449 id=449 data-nosnippet>449</a>
-<a href=#450 id=450 data-nosnippet>450</a>        s.push_str(<span class="string">"## 🏠 House Capacities\n"</span>);
+<a href=#450 id=450 data-nosnippet>450</a>        s.push_str(<span class="string">"## House Capacities\n"</span>);
 <a href=#451 id=451 data-nosnippet>451</a>        <span class="kw">let </span><span class="kw-2">mut </span>strong_houses: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">self
 <a href=#452 id=452 data-nosnippet>452</a>            </span>.house_summary
 <a href=#453 id=453 data-nosnippet>453</a>            .iter()
@@ -471,7 +471,7 @@
 <a href=#471 id=471 data-nosnippet>471</a>        }
 <a href=#472 id=472 data-nosnippet>472</a>        s.push(<span class="string">'\n'</span>);
 <a href=#473 id=473 data-nosnippet>473</a>
-<a href=#474 id=474 data-nosnippet>474</a>        s.push_str(<span class="string">"## 💍 Marriage &amp; Career Insights (Divisional Charts)\n"</span>);
+<a href=#474 id=474 data-nosnippet>474</a>        s.push_str(<span class="string">"## Marriage &amp; Career Insights (Divisional Charts)\n"</span>);
 <a href=#475 id=475 data-nosnippet>475</a>        s.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#476 id=476 data-nosnippet>476</a>            <span class="string">"- **D9 Navamsa**: {}\n"</span>,
 <a href=#477 id=477 data-nosnippet>477</a>            <span class="self">self</span>.d9_marriage_analysis
@@ -481,7 +481,7 @@
 <a href=#481 id=481 data-nosnippet>481</a>            <span class="self">self</span>.d10_career_analysis
 <a href=#482 id=482 data-nosnippet>482</a>        ));
 <a href=#483 id=483 data-nosnippet>483</a>
-<a href=#484 id=484 data-nosnippet>484</a>        s.push_str(<span class="string">"## 🚀 Special Status (Vargottama / Pushkar)\n"</span>);
+<a href=#484 id=484 data-nosnippet>484</a>        s.push_str(<span class="string">"## Special Status (Vargottama / Pushkar)\n"</span>);
 <a href=#485 id=485 data-nosnippet>485</a>        <span class="kw">let </span>special_planets: Vec&lt;String&gt; = <span class="self">self
 <a href=#486 id=486 data-nosnippet>486</a>            </span>.varga_interpretations
 <a href=#487 id=487 data-nosnippet>487</a>            .iter()
@@ -504,7 +504,7 @@
 <a href=#504 id=504 data-nosnippet>504</a>        }
 <a href=#505 id=505 data-nosnippet>505</a>        s.push(<span class="string">'\n'</span>);
 <a href=#506 id=506 data-nosnippet>506</a>
-<a href=#507 id=507 data-nosnippet>507</a>        s.push_str(<span class="string">"## 🪐 Transit Alerts &amp; Gochara\n"</span>);
+<a href=#507 id=507 data-nosnippet>507</a>        s.push_str(<span class="string">"## Transit Alerts &amp; Gochara\n"</span>);
 <a href=#508 id=508 data-nosnippet>508</a>        <span class="comment">// Sade Sati
 <a href=#509 id=509 data-nosnippet>509</a>        </span><span class="kw">match </span><span class="self">self</span>.sade_sati {
 <a href=#510 id=510 data-nosnippet>510</a>            <span class="kw">crate</span>::analysis::gochara::SadeSatiPhase::Rising =&gt; s.push_str(<span class="string">"- **Sade Sati (Rising)**: Saturn has entered the 12th from Moon. A period of internal shifts begins.\n"</span>),
@@ -516,7 +516,7 @@
 <a href=#516 id=516 data-nosnippet>516</a>        s.push_str(<span class="string">"Detailed planetary transits including Murti Nirnaya and Vedha obstructions are available in the interactive dashboard.\n\n"</span>);
 <a href=#517 id=517 data-nosnippet>517</a>
 <a href=#518 id=518 data-nosnippet>518</a>        s.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#519 id=519 data-nosnippet>519</a>            <span class="string">"## 📊 Overall Chart Strength: {:.1}/600\n"</span>,
+<a href=#519 id=519 data-nosnippet>519</a>            <span class="string">"## Overall Chart Strength: {:.1}/600\n"</span>,
 <a href=#520 id=520 data-nosnippet>520</a>            <span class="self">self</span>.overall_strength_score
 <a href=#521 id=521 data-nosnippet>521</a>        ));
 <a href=#522 id=522 data-nosnippet>522</a>
