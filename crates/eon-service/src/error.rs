@@ -1,10 +1,8 @@
 use serde::Serialize;
 use thiserror::Error;
-use ts_rs::TS;
 
-#[derive(Debug, Error, Serialize, TS)]
+#[derive(Debug, Error, Serialize)]
 #[serde(tag = "type", content = "message", rename_all = "camelCase")]
-#[ts(export)]
 pub enum ServiceError {
     #[error("invalid input: {0}")]
     InvalidInput(String),

@@ -2,7 +2,6 @@ use crate::error::ServiceError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use ts_rs::TS;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -370,35 +369,31 @@ pub struct TransitAnalysisOutput {
     pub nearby_diagnostics: Vec<eon_saju::engine::load_balancer::LoadBalanceDiagnostic>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct TierGrade {
     pub grade: String,
     pub label: String,
     pub desc: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct DomainTier {
     pub house: u8,
     pub domain: String,
     pub tier: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct ScoreResult {
     pub score: f32,
     pub highlights: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct DestinyComponent {
     pub key: String,
     pub label: String,
@@ -407,9 +402,8 @@ pub struct DestinyComponent {
     pub reasons: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct QuantumSynergyItem {
     pub title: String,
     pub engines: Vec<String>,
@@ -418,9 +412,8 @@ pub struct QuantumSynergyItem {
     pub description: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct DomainRadarTier {
     pub domain_key: String,
     pub domain_name: String,
@@ -429,9 +422,8 @@ pub struct DomainRadarTier {
     pub key_factors: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct TemporalTierPoint {
     pub age: u32,
     pub score: f32,
@@ -439,9 +431,8 @@ pub struct TemporalTierPoint {
     pub note: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct TierResult {
     pub natal_score: f32,
     pub current_score: f32,
@@ -469,9 +460,8 @@ pub struct TierResult {
     pub tier_trajectory: Vec<TemporalTierPoint>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct AnalysisRequest {
     pub year: i32,
     pub month: u32,
@@ -486,35 +476,29 @@ pub struct AnalysisRequest {
     pub unknown_time: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct SajuAnalysisRequest {
     #[serde(flatten)]
-    #[ts(flatten)]
     pub base: AnalysisRequest,
     pub is_male: bool,
     pub use_night_rat_hour: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct QimenAnalysisRequest {
     #[serde(flatten)]
-    #[ts(flatten)]
     pub base: AnalysisRequest,
     pub is_male: bool,
     #[serde(default)]
     pub use_night_rat_hour: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct VedicAnalysisRequest {
     #[serde(flatten)]
-    #[ts(flatten)]
     pub base: AnalysisRequest,
     pub now_utc: Option<String>,
     pub target_year: Option<i32>,
@@ -522,47 +506,32 @@ pub struct VedicAnalysisRequest {
     pub year_type: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct TransitAnalysisRequest {
     #[serde(flatten)]
-    #[ts(flatten)]
     pub base: SajuAnalysisRequest,
     pub now_utc: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct DestinyTierRequest {
-    #[ts(type = "any")]
     pub saju: SajuAnalysisOutput,
-    #[ts(type = "any")]
     pub vedic: VedicAnalysisOutput,
-    #[ts(type = "any")]
     pub transit: Option<TransitAnalysisOutput>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct OmniDestinyTierInput {
-    #[ts(type = "any")]
     pub saju: SajuAnalysisOutput,
-    #[ts(type = "any")]
     pub vedic: VedicAnalysisOutput,
-    #[ts(type = "any")]
     pub western: Option<WesternAnalysisOutput>,
-    #[ts(type = "any")]
     pub zwds: Option<ZwdsAnalysisOutput>,
-    #[ts(type = "any")]
     pub human_design: Option<HumanDesignAnalysisOutput>,
-    #[ts(type = "any")]
     pub qimen: Option<QimenAnalysisOutput>,
-    #[ts(type = "any")]
     pub numerology: Option<NumerologyAnalysisOutput>,
-    #[ts(type = "any")]
     pub transit: Option<TransitAnalysisOutput>,
 }
 
