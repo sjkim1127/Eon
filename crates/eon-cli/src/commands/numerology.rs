@@ -30,9 +30,9 @@ pub fn run(cmd: NumerologyCommand) -> Result<()> {
         }
         _ => {
             let core = &res.result.core;
-            println!("== 피타고라스 수비학 (Pythagorean Numerology) ==");
+            println!("== Pythagorean Numerology ==");
             println!(
-                "생애여정수 (Life Path): {}{}",
+                "Life Path Number: {}{}",
                 core.life_path,
                 if res.result.is_master_life_path {
                     " (🌟 Master Number)"
@@ -40,12 +40,12 @@ pub fn run(cmd: NumerologyCommand) -> Result<()> {
                     ""
                 }
             );
-            println!("표현수 (Expression): {}", core.expression);
-            println!("영혼수 (Soul Urge): {}", core.soul_urge);
-            println!("인격수 (Personality): {}", core.personality);
-            println!("생일수 (Birthday): {}", core.birthday);
-            println!("개인 연운수 (Personal Year): {}", res.result.personal_year);
-            println!("4대 정점 주기:");
+            println!("Expression Number: {}", core.expression);
+            println!("Soul Urge Number: {}", core.soul_urge);
+            println!("Personality Number: {}", core.personality);
+            println!("Birthday Number: {}", core.birthday);
+            println!("Personal Year Vibration: {}", res.result.personal_year);
+            println!("Four Pinnacle Cycles:");
             for p in &res.result.pinnacles {
                 println!("- {}", p.description_ko);
             }

@@ -27,19 +27,22 @@ pub fn run(cmd: ZwdsCommand) -> Result<()> {
         }
         _ => {
             let soul = &res.chart.palaces[res.chart.soul_idx];
-            println!("== 자미두수 (Zi Wei Dou Shu) ==");
+            println!("== Zi Wei Dou Shu (Purple Star Astrology) ==");
             println!(
-                "명궁: {} | 신궁: {}",
+                "Life Palace: {} | Body Palace: {}",
                 soul.name.korean(),
                 res.chart.palaces[res.chart.body_idx].name.korean()
             );
-            println!("오행국: {:?}", res.chart.five_elements);
-            println!("명궁 주성:");
+            println!("Five Elements Bureau: {:?}", res.chart.five_elements);
+            println!("Stars in Life Palace:");
             for s in &soul.stars {
                 println!("- {} ({:?})", s.star.korean(), s.brightness);
             }
             if !res.chart.destiny_patterns.is_empty() {
-                println!("성반 주요 격국: {}개", res.chart.destiny_patterns.len());
+                println!(
+                    "Key Destiny Formations (Total {}):",
+                    res.chart.destiny_patterns.len()
+                );
                 for p in &res.chart.destiny_patterns {
                     println!("- {}: {}", p.name_korean, p.description_korean);
                 }

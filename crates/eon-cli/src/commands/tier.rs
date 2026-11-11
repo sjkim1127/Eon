@@ -55,19 +55,19 @@ pub fn run(cmd: TierCommand) -> Result<()> {
         _ => {
             println!("== Destiny Tier 7.0 (8-Engine Omni Synthesis) ==");
             println!(
-                "종합 운명 티어: {} ({:.1}점)",
+                "Overall Destiny Tier: {} ({:.1} pts)",
                 tier_res.destiny_tier.grade, tier_res.destiny_tier_score
             );
             println!(
-                "선천 원국 잠재력: {} ({:.1}점)",
+                "Birth Chart Potential: {} ({:.1} pts)",
                 tier_res.potential_tier.grade, tier_res.potential_score
             );
             println!(
-                "성장 갭: +{:.1}점 | 프로필: {}",
+                "Growth Gap: +{:.1} pts | Profile: {}",
                 tier_res.growth_gap, tier_res.profile
             );
             println!(
-                "8D 퀀텀 시너지 항목: {}개",
+                "8D Quantum Synergies (Total {}):",
                 tier_res.quantum_synergies.len()
             );
             for s in &tier_res.quantum_synergies {

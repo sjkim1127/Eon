@@ -25,12 +25,15 @@ pub fn run(cmd: VedicCommand) -> Result<()> {
             println!("{}", serde_json::to_string_pretty(&res)?);
         }
         _ => {
-            println!("== 베딕 점성학 (Jyotish) ==");
-            println!("상승궁 (Ascendant): {:?}", res.chart.ascendant);
-            println!("달 Nakshatra 정보: {}", res.report.nakshatra_info);
-            println!("사데 사티 (Sade Sati): {:?}", res.report.sade_sati);
-            println!("하우스 종합 강도: {}", res.report.overall_strength_score);
-            println!("감지된 요가 (총 {}개):", res.report.yogas.len());
+            println!("== Vedic Astrology (Jyotish) ==");
+            println!("Ascendant (Lagna): {:?}", res.chart.ascendant);
+            println!("Moon Nakshatra Info: {}", res.report.nakshatra_info);
+            println!("Sade Sati: {:?}", res.report.sade_sati);
+            println!(
+                "Overall House Strength: {}",
+                res.report.overall_strength_score
+            );
+            println!("Detected Yogas (Total {}):", res.report.yogas.len());
             for y in res.report.yogas.iter().take(5) {
                 println!("- {} ({:?}): {}", y.name, y.quality, y.description);
             }

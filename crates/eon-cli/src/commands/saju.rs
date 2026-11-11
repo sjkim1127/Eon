@@ -10,7 +10,7 @@ pub struct SajuCommand {
     #[command(flatten)]
     pub birth: BirthArgs,
 
-    /// Night rat hour option (야자시 사용 여부)
+    /// Night rat hour option (Zi hour split)
     #[arg(long)]
     pub night_rat: bool,
 
@@ -32,9 +32,9 @@ pub fn run(cmd: SajuCommand) -> Result<()> {
         }
         _ => {
             let p = &res.report.pillars;
-            println!("== 사주 명리학 원국 ==");
+            println!("== Four Pillars of Destiny (Saju / BaZi) ==");
             println!(
-                "년주: {}({}{}) | 월주: {}({}{}) | 일주: {}({}{}) | 시주: {}({}{})",
+                "Year: {}({}-{}) | Month: {}({}-{}) | Day: {}({}-{}) | Hour: {}({}-{})",
                 p.year,
                 p.year.stem.hangul(),
                 p.year.branch.hangul(),
@@ -49,15 +49,18 @@ pub fn run(cmd: SajuCommand) -> Result<()> {
                 p.hour.branch.hangul()
             );
             println!(
-                "신강약: {:?} (신강 지수: {:.1})",
+                "Day Master Strength: {:?} (Score: {:.1})",
                 res.report.strength.strength_type, res.report.strength.strength_score
             );
-            println!("격국: {:?}", res.report.structure.structure);
-            println!("용신(주용신): {:?}", res.report.yongshin.primary);
-            println!("오행 유통성: {:.1}%", res.qi_topology.throughput * 100.0);
+            println!("Structure: {:?}", res.report.structure.structure);
+            println!("Yongshin (Primary): {:?}", res.report.yongshin.primary);
+            println!(
+                "Five Elements Throughput: {:.1}%",
+                res.qi_topology.throughput * 100.0
+            );
             if let Some(gt) = &res.report.golden_time {
                 println!(
-                    "골든타임: {}~{}세 (평균 {:.1}점)",
+                    "Golden Period: Age {}~{} (Avg: {:.1} pts)",
                     gt.start_age, gt.end_age, gt.average_score
                 );
             }

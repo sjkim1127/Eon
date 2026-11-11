@@ -29,7 +29,7 @@ pub fn run(cmd: WesternCommand) -> Result<()> {
             println!("{}", serde_json::to_string_pretty(&res)?);
         }
         _ => {
-            println!("== 서양 점성학 (Western Astrology) ==");
+            println!("== Western Astrology ==");
             for p in &res.result.planets {
                 println!(
                     "- {:<8}: Sign {} {:05.2}° (House {})",
@@ -37,7 +37,7 @@ pub fn run(cmd: WesternCommand) -> Result<()> {
                 );
             }
             println!(
-                "아스펙트 수: {}개 | 아스펙트 패턴: {}개",
+                "Aspects: {} | Aspect Configurations: {}",
                 res.result.aspects.len(),
                 res.result.aspect_patterns.len()
             );

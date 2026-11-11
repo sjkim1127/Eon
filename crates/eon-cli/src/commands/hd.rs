@@ -25,18 +25,18 @@ pub fn run(cmd: HdCommand) -> Result<()> {
             println!("{}", serde_json::to_string_pretty(&res)?);
         }
         _ => {
-            println!("== 휴먼 디자인 (Human Design) ==");
+            println!("== Human Design ==");
             println!("Type: {}", res.result.chart_type);
             println!("Profile: {}", res.result.profile);
             println!("Strategy: {}", res.result.strategy);
             println!("Authority: {}", res.result.authority);
             println!(
-                "정의 센터: {}개 ({:?})",
+                "Defined Centers (Total {}): {:?}",
                 res.result.defined_centers.len(),
                 res.result.defined_centers
             );
             println!(
-                "활성 채널: {}개 ({:?})",
+                "Active Channels (Total {}): {:?}",
                 res.result.active_channels.len(),
                 res.result.active_channels
             );

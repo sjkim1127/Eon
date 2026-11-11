@@ -26,23 +26,23 @@ pub fn run(cmd: QimenCommand) -> Result<()> {
             println!("{}", serde_json::to_string_pretty(&res)?);
         }
         _ => {
-            println!("== 기문둔갑 (QiMen DunJia) ==");
+            println!("== QiMen DunJia ==");
             println!(
-                "국수: {} {}국",
+                "Ju (Structure): {} Ju {}",
                 if res.report.pan.is_yin_ju {
-                    "음둔"
+                    "Yin Dun (陰遁)"
                 } else {
-                    "양둔"
+                    "Yang Dun (陽遁)"
                 },
                 res.report.pan.ju_number
             );
             if let Some(chief) = &res.report.pan.value_chief_star {
-                println!("직부성: {:?}", chief);
+                println!("Chief Star (Zhi Fu): {:?}", chief);
             }
             if let Some(envoy) = &res.report.pan.value_envoy_door {
-                println!("직사문: {:?}", envoy);
+                println!("Envoy Door (Zhi Shi): {:?}", envoy);
             }
-            println!("궁 배치 수: {}개 궁", res.report.pan.palaces.len());
+            println!("Palaces Deployed: {} palaces", res.report.pan.palaces.len());
         }
     }
 
