@@ -1,8 +1,7 @@
 """
 Eon MCP Server — FastMCP 기반 사주 분석 도구 서버
 
-eon-ai Rust 크레이트의 Tool Manifest를 Python으로 재구현하여
-MCP 프로토콜로 노출합니다. AGY 에이전트가 Stdio Transport로 연결합니다.
+Eon 도메인 분석 도구를 FastMCP 프레임워크로 노출합니다. AGY 에이전트가 Stdio Transport로 연결합니다.
 """
 from __future__ import annotations
 

@@ -22,7 +22,6 @@ PUBLISHABLE_CRATES = (
     "eon-human-design",
     "eon-numerology",
     "eon-qimen",
-    "eon-ai",
     "eon-service",
 )
 WORKSPACE_CRATES = PUBLISHABLE_CRATES + ("eon-cli",)

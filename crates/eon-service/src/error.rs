@@ -24,9 +24,6 @@ pub enum ServiceError {
     #[error("compatibility analysis failed: {0}")]
     Compatibility(String),
 
-    #[error("ai audit failed: {0}")]
-    AiAudit(String),
-
     #[error("zwds analysis failed: {0}")]
     Zwds(String),
 

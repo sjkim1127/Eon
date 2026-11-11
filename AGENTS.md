@@ -57,7 +57,6 @@ Eon/
 │   ├── eon-human-design/        # Human Design (Type, Authority, Centers, Channels, Gates)
 │   ├── eon-qimen/               # QiMen DunJia (9 Palaces, 8 Doors, 9 Stars, 8 Deities)
 │   ├── eon-numerology/          # Pythagorean Numerology (Life Path, Expression, Soul Urge, Pinnacles)
-│   ├── eon-ai/                  # Heuristic linting, confidence auditing, and rule validation
 │   └── eon-service/             # Unified façade and DTO contract boundary (SSOT)
 │       ├── src/dto.rs           # AnalysisInput, OmniDestinyTierInput, output structures
 │       └── src/facade.rs        # analyze_saju, analyze_all_synthesized, etc.

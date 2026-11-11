@@ -16,7 +16,6 @@ CRATES=(
   eon-human-design
   eon-numerology
   eon-qimen
-  eon-ai
   eon-service
   eon-cli
 )
@@ -33,7 +32,6 @@ eon-western = { path = "$ROOT_DIR/crates/eon-western" }
 eon-human-design = { path = "$ROOT_DIR/crates/eon-human-design" }
 eon-numerology = { path = "$ROOT_DIR/crates/eon-numerology" }
 eon-qimen = { path = "$ROOT_DIR/crates/eon-qimen" }
-eon-ai = { path = "$ROOT_DIR/crates/eon-ai" }
 eon-service = { path = "$ROOT_DIR/crates/eon-service" }
 EOF
 

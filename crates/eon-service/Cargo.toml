@@ -22,7 +22,6 @@ eon-western = { workspace = true }
 eon-human-design = { workspace = true }
 eon-qimen = { workspace = true }
 eon-numerology = { workspace = true }
-eon-ai = { workspace = true }
 eon-astro = { workspace = true }
 eon-data = { workspace = true }
 ts-rs = { version = "10.1.0", features = ["chrono-impl"] }

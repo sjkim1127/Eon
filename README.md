@@ -67,8 +67,7 @@ eon-core (Shared Primitives, Birth Info, Locations)
         ├── eon-zwds (Zi Wei Dou Shu Engine)
         ├── eon-human-design (Human Design Engine)
         ├── eon-qimen (QiMen DunJia Engine)
-        ├── eon-numerology (Pythagorean Numerology Engine)
-        └── eon-ai (Audit, Validation & Heuristic Linters)
+        └── eon-numerology (Pythagorean Numerology Engine)
               │
               ▼
           eon-service (Unified Façade & Contract DTO Boundary)
@@ -95,7 +94,6 @@ eon-core (Shared Primitives, Birth Info, Locations)
 | [`crates/eon-human-design`](file:///Users/sjkim1127/Eon/crates/eon-human-design) | Human Design Engine | Type, authority, 9 centers, 36 channels, and 64 gates. |
 | [`crates/eon-qimen`](file:///Users/sjkim1127/Eon/crates/eon-qimen) | QiMen Engine | 9 Palaces, 8 Doors, 9 Stars, 8 Deities, and Value Chief/Envoy. |
 | [`crates/eon-numerology`](file:///Users/sjkim1127/Eon/crates/eon-numerology) | Numerology Engine | Life Path, Expression, Soul Urge, Birthday, and Pinnacle cycles. |
-| [`crates/eon-ai`](file:///Users/sjkim1127/Eon/crates/eon-ai) | Audit & Heuristics | Rule audits, confidence validation, and heuristic linters. |
 
 ---
 

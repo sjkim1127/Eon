@@ -11,7 +11,6 @@ members = [
     "crates/eon-human-design",
     "crates/eon-qimen",
     "crates/eon-numerology",
-    "crates/eon-ai",
     "crates/eon-service",
     "crates/eon-cli",
 ]
@@ -41,7 +40,6 @@ eon-astro = { path = "crates/eon-astro", version = "=0.1.2" }
 eon-saju = { path = "crates/eon-saju", version = "=0.1.2" }
 eon-vedic = { path = "crates/eon-vedic", version = "=0.1.2" }
 eon-zwds = { path = "crates/eon-zwds", version = "=0.1.2" }
-eon-ai = { path = "crates/eon-ai", version = "=0.1.2" }
 eon-western = { path = "crates/eon-western", version = "=0.1.2" }
 eon-human-design = { path = "crates/eon-human-design", version = "=0.1.2" }
 eon-qimen = { path = "crates/eon-qimen", version = "=0.1.2" }

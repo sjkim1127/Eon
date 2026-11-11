@@ -27,10 +27,6 @@ pub fn analyze_transit(input: TransitAnalysisInput) -> Result<TransitAnalysisOut
     crate::services::transit::analyze(input)
 }
 
-pub fn analyze_ai_audit(input: SajuAnalysisInput) -> Result<AiAuditOutput, ServiceError> {
-    crate::services::ai_audit::analyze(input)
-}
-
 pub fn analyze_destiny_tier(
     saju: SajuAnalysisOutput,
     vedic: VedicAnalysisOutput,

@@ -22,7 +22,7 @@
 
 - **Workspace Build & Test Status**:
   - `cargo check --workspace`: 0 errors, 0 warnings.
-  - `cargo test --workspace`: 100% pass across all workspace crates (`eon-saju`, `eon-service`, `eon-ui`, `eon-vedic`, `eon-zwds`, `eon-qimen`, `eon-ai`).
+  - `cargo test --workspace`: 100% pass across all workspace crates (`eon-saju`, `eon-service`, `eon-vedic`, `eon-zwds`, `eon-qimen`).
 
 ## 2. Logic Chain
 1. *VM Performance*: Previously `SajuVM::step` allocated dynamic `String` instances via `TraceTag::Custom(format!(...))` for tags on every step. By defining typed `TraceTag` enum variants populated with `&'static str`, `Cow<'static, str>`, and domain enums (`EarthlyBranch`, `HeavenlyStem`, `StructureType`), tags are constructed on the stack with zero heap allocation during VM steps while maintaining verbatim display outputs.

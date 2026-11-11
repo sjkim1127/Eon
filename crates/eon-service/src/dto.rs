@@ -370,15 +370,6 @@ pub struct TransitAnalysisOutput {
     pub nearby_diagnostics: Vec<eon_saju::engine::load_balancer::LoadBalanceDiagnostic>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AiAuditOutput {
-    pub meta: AnalysisMeta,
-    pub context_dump: String,
-    pub peak_age: u32,
-    pub valley_age: u32,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]

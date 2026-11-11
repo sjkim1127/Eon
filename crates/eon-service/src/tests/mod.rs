@@ -36,14 +36,6 @@ mod tests {
             !transit_res.monthly_lucks.is_empty(),
             "Should have multiple monthly lucks"
         );
-
-        // 3. AI Audit
-        let ai_audit_res = facade::analyze_ai_audit(saju_input).expect("AI Audit failed");
-        assert_eq!(ai_audit_res.meta.precision, BirthTimePrecision::Exact);
-        assert!(
-            !ai_audit_res.context_dump.is_empty(),
-            "Context dump should not be empty"
-        );
     }
 
     #[test]

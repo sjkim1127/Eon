@@ -15,7 +15,6 @@ CRATES=(
   eon-human-design
   eon-numerology
   eon-qimen
-  eon-ai
   eon-service
   eon-cli
 )
