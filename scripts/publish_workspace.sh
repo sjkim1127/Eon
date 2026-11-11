@@ -13,9 +13,11 @@ CRATES=(
   eon-zwds
   eon-western
   eon-human-design
+  eon-numerology
   eon-qimen
   eon-ai
   eon-service
+  eon-cli
 )
 
 CRATES_IO_API="https://crates.io/api/v1/crates"

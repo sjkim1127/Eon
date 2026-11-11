@@ -18,6 +18,7 @@ CRATES=(
   eon-qimen
   eon-ai
   eon-service
+  eon-cli
 )
 
 cat > "$CONFIG_FILE" <<EOF
@@ -33,6 +34,7 @@ eon-human-design = { path = "$ROOT_DIR/crates/eon-human-design" }
 eon-numerology = { path = "$ROOT_DIR/crates/eon-numerology" }
 eon-qimen = { path = "$ROOT_DIR/crates/eon-qimen" }
 eon-ai = { path = "$ROOT_DIR/crates/eon-ai" }
+eon-service = { path = "$ROOT_DIR/crates/eon-service" }
 EOF
 
 cd "$ROOT_DIR"

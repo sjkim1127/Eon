@@ -64,55 +64,28 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: bash scripts/publish_workspace.sh
 
-  deploy-vercel:
-    name: Deploy to Vercel (Production)
+  build-cli:
+    name: Build CLI Binaries
     runs-on: ubuntu-latest
     needs: test
     steps:
       - uses: actions/checkout@v7
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
-      - name: Install Rust (nightly + wasm target)
-        uses: dtolnay/rust-toolchain@nightly
+      - name: Build Eon CLI (Release)
+        run: cargo build --release --bin eon
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v4
         with:
-          targets: wasm32-unknown-unknown
-          components: rust-src
-      - name: Install Dioxus CLI
-        uses: taiki-e/install-action@v2
-        with:
-          tool: dioxus-cli@0.6.3
-      - name: Install WASI SDK
-        run: |
-          wget -q https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz
-          sudo tar xf wasi-sdk-24.0-x86_64-linux.tar.gz -C /opt
-          sudo ln -sf /opt/wasi-sdk-24.0-x86_64-linux /opt/wasi-sdk
-      - name: Build Dioxus Web App
-        env:
-          CARGO_BUILD_JOBS: 1
-          CC_wasm32_unknown_unknown: clang
-          AR_wasm32_unknown_unknown: llvm-ar
-          WASI_SDK_PATH: /opt/wasi-sdk
-          CFLAGS: "-matomics -mbulk-memory"
-          CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
-          "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
-          CFLAGS_wasm32_wasi: "-matomics -mbulk-memory"
-          "CFLAGS_wasm32-wasi": "-matomics -mbulk-memory"
-        run: dx build --release --trace --package eon-ui
-      - name: Prepare and validate static web distribution
-        run: bash scripts/prepare_web_dist.sh target/dx/eon-ui/release/web/public
-      - name: Deploy to Vercel (Production)
-        uses: amondnet/vercel-action@v42
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./target/dx/eon-ui/release/web/public
-          vercel-args: '--prod'
+          name: eon-cli-linux-x86_64
+          path: target/release/eon
 
   github-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [publish-crates, deploy-vercel]
+    needs: [publish-crates, build-cli]
     steps:
       - uses: actions/checkout@v7
         with:

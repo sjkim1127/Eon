@@ -4,18 +4,15 @@
 
 # Eon
 
-Eon은 사주 명리학, 베딕 점성학, 자미두수, 서양 점성술, 휴먼디자인, 기문 분석을 하나의 Rust 워크스페이스에서 다루는 운명 분석 플랫폼입니다.
-이 저장소는 프론트엔드와 분석 엔진을 모두 Rust로 유지하며, Dioxus Web UI가 브라우저 Wasm에서 `eon-service` façade를 직접 호출합니다.
-문서는 구현 상태를 설명하는 것을 목표로 하며, 분석 결과를 결정론적 진단이나 보장된 예측으로 과장하지 않습니다.
+Eon은 사주 명리학, 베딕 점성학, 서양 점성술, 자미두수, 휴먼 디자인, 기문둔갑, 피타고라스 수비학을 하나의 고성능 Rust 워크스페이스에서 다루는 차세대 운명 분석 플랫폼입니다.
+AI 에이전트 및 대규모 언어 모델(LLM)이 직접 호출하고 해석할 수 있도록 설계된 **초고속 네이티브 CLI 및 MCP(Model Context Protocol) 서버(`crates/eon-cli`)**를 제공합니다.
 
 [![CI](https://github.com/sjkim1127/Eon/actions/workflows/ci.yml/badge.svg)](https://github.com/sjkim1127/Eon/actions/workflows/ci.yml)
-[![Deploy](https://github.com/sjkim1127/Eon/actions/workflows/deploy.yml/badge.svg)](https://github.com/sjkim1127/Eon/actions/workflows/deploy.yml)
 
-- Live demo: [eon-one.vercel.app](https://eon-one.vercel.app)
-- Primary language: Rust 2021
-- UI: Dioxus Web, WebAssembly, Tailwind CSS
+- Primary language: Rust 2021 (100% Native Rust)
+- Interface: Native CLI (`eon`), LLM Agent Context Prompt Formatter, JSON-RPC 2.0 MCP Server
 - Service boundary: `crates/eon-service` DTO and façade
-- Deployment target: Vercel static hosting
+- Supported traditions: 8 Metaphysical Engines + Destiny Tier 7.0 Synthesis
 
 > Eon treats traditional analysis systems as structured rule engines. The codebase favors explicit data models, reproducible calculations, and a thin integration layer over opaque generated output.
 
@@ -25,33 +22,11 @@ Eon은 사주 명리학, 베딕 점성학, 자미두수, 서양 점성술, 휴�
 - [Current Architecture](#current-architecture)
 - [Repository Map](#repository-map)
 - [Quick Start](#quick-start)
-- [Local Development](#local-development)
+- [CLI Commands & Usage](#cli-commands--usage)
+- [MCP Server for AI Agents](#mcp-server-for-ai-agents)
 - [Workspace Crates](#workspace-crates)
 - [Service Facade](#service-facade)
-- [Frontend Architecture](#frontend-architecture)
-- [State Management](#state-management)
-- [DTO Construction](#dto-construction)
-- [Async UI Calls](#async-ui-calls)
-- [Domain Engines](#domain-engines)
-- [Build and Deployment](#build-and-deployment)
 - [Testing Strategy](#testing-strategy)
-- [Data and Time Handling](#data-and-time-handling)
-- [Internationalization](#internationalization)
-- [AI Audit Surface](#ai-audit-surface)
-- [Developer Guidelines](#developer-guidelines)
-- [Contribution Checklist](#contribution-checklist)
-- [Operational Notes](#operational-notes)
-- [Roadmap](#roadmap)
-- [Glossary](#glossary)
-- [Appendix A - Command Reference](#appendix-a-command-reference)
-- [Appendix B - Crate Inventory](#appendix-b-crate-inventory)
-- [Appendix C - Service Contract Notes](#appendix-c-service-contract-notes)
-- [Appendix D - UI Maintenance Notes](#appendix-d-ui-maintenance-notes)
-- [Appendix E - Domain Notes](#appendix-e-domain-notes)
-- [Appendix F - Release Notes Template](#appendix-f-release-notes-template)
-- [Appendix G - Troubleshooting](#appendix-g-troubleshooting)
-- [Appendix H - File Ownership Guide](#appendix-h-file-ownership-guide)
-- [Appendix I - Review Checklist](#appendix-i-review-checklist)
 - [License](#license)
 
 ## Project Scope
@@ -59,12 +34,8 @@ Eon은 사주 명리학, 베딕 점성학, 자미두수, 서양 점성술, 휴�
 - Eon is a Rust monorepo for experimenting with multiple symbolic analysis traditions through typed, testable modules.
 - The project is not a medical, legal, financial, or psychological decision system.
 - It does not claim that any tradition represented here is scientifically predictive.
-- It is useful as an engineering workspace for deterministic calculation, rule comparison, report generation, and UI exploration.
-- The current product surface is a browser SPA compiled from Rust to WebAssembly.
-- The current backend surface is not a separate web server; the Dioxus app calls Rust service code directly in the Wasm bundle.
-- Python files under `api/` are auxiliary integration surfaces and are not the main product path.
-- TypeScript binding files under `crates/eon-service/bindings` exist for compatibility and contract inspection, but the active UI path is Rust.
-- Older React, Tauri, and npm assumptions should not be reintroduced.
+- It is useful as an engineering workspace for deterministic calculation, rule comparison, report generation, and AI agent integration.
+- The primary product surface is the native `eon` CLI and MCP server.
 
 ## Current Architecture
 
@@ -80,13 +51,14 @@ eon-core
   +-- eon-western
   +-- eon-human-design
   +-- eon-qimen
+  +-- eon-numerology
   +-- eon-ai
         |
         v
-    eon-service
+    eon-service (Façade & DTO SSOT)
         |
         v
-    eon-ui (Dioxus Web / Wasm)
+    eon-cli (Native CLI, LLM Context Prompts, MCP Server)
 ```
 
 | Layer | Responsibility | Notes |
@@ -94,11 +66,9 @@ eon-core
 | `eon-core` | Shared primitives | Birth data, locations, common error types. |
 | `eon-data` | Calendar data | Binary manseryuk cache and related lookup helpers. |
 | `eon-astro` | Astronomical calculations | Swiss Ephemeris oriented wrappers and position calculations. |
-| Domain crates | Analysis engines | Saju, Vedic, ZWDS, Western, Human Design, Qimen, AI audit. |
+| Domain crates | Analysis engines | Saju, Vedic, ZWDS, Western, Human Design, Qimen, Numerology, AI audit. |
 | `eon-service` | Contract boundary | DTOs, constructors, façade functions, result types. |
-| `eon-ui` | User interface | Dioxus components, global signal state, tab workflows. |
-
-The architecture intentionally keeps UI concerns outside the domain crates. UI components should gather input, call service façade functions asynchronously, and render returned DTOs.
+| `eon-cli` | User & Agent interface | Clap CLI, Agent markdown prompt formatter, JSON-RPC 2.0 MCP server. |
 
 ## Repository Map
 
@@ -110,19 +80,17 @@ Eon/
 ├── AGENTS.md
 ├── assets/
 │   └── eon-logo.svg
-├── api/
-│   ├── ai_audit.py
-│   └── mcp/
 ├── crates/
 │   ├── eon-ai/
 │   ├── eon-astro/
+│   ├── eon-cli/
 │   ├── eon-core/
 │   ├── eon-data/
 │   ├── eon-human-design/
+│   ├── eon-numerology/
 │   ├── eon-qimen/
 │   ├── eon-saju/
 │   ├── eon-service/
-│   ├── eon-ui/
 │   ├── eon-vedic/
 │   ├── eon-western/
 │   └── eon-zwds/
@@ -131,32 +99,34 @@ Eon/
 └── .github/workflows/
 ```
 
-The workspace members are declared in the root `Cargo.toml`. Add new Rust crates there before expecting workspace commands to see them.
-
 ## Quick Start
 
-
-### Prerequisites
-
-- Rust stable toolchain
-- `wasm32-unknown-unknown` target for web builds
-- Dioxus CLI 0.6.1 for the current CI path
-- A C toolchain capable of building native dependencies
-- WASI SDK when reproducing the Linux CI Wasm build path exactly
+### Installation
 
 ```bash
-rustup toolchain install stable
-rustup target add wasm32-unknown-unknown
-cargo install dioxus-cli --version 0.6.3
+# Build and install eon CLI locally
+cargo install --path crates/eon-cli
+
+# Verify installation
+eon --version
+eon --help
 ```
 
-### Check the Workspace
+### Basic CLI Usage
 
 ```bash
-cargo check --workspace
-```
+# 8-Engine Full Synthesis Analysis (JSON output)
+eon analyze --birth "1990-05-15 10:30" --gender m -f json
 
-### Run Focused Engine Tests
+# 8-Engine Full Markdown Report
+eon analyze --birth "1990-05-15 10:30" --gender m -f markdown
+
+# Generate Prompt for LLM / AI Agent
+eon prompt --birth "1990-05-15 10:30" --gender m --system
+
+# Run stdio MCP Server for AI Agent tooling
+eon mcp
+```
 
 ```bash
 cargo test --package eon-saju

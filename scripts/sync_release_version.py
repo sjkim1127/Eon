@@ -20,11 +20,12 @@ PUBLISHABLE_CRATES = (
     "eon-zwds",
     "eon-western",
     "eon-human-design",
+    "eon-numerology",
     "eon-qimen",
     "eon-ai",
     "eon-service",
 )
-WORKSPACE_CRATES = PUBLISHABLE_CRATES + ("eon-ui",)
+WORKSPACE_CRATES = PUBLISHABLE_CRATES + ("eon-cli",)
 
 SEMVER_RE = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"

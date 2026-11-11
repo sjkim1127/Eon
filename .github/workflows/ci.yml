@@ -59,13 +59,9 @@ jobs:
         run: |
           bash -n \
             scripts/package_workspace.sh \
-            scripts/publish_workspace.sh \
-            scripts/ensure_web_wasm_bundle.sh \
-            scripts/prepare_web_dist.sh
+            scripts/publish_workspace.sh
           python3 -m py_compile \
-            scripts/sync_release_version.py \
-            scripts/normalize_web_entrypoint.py \
-            scripts/verify_web_dist.py
+            scripts/sync_release_version.py
       - name: Validate lockstep versions
         run: python3 scripts/sync_release_version.py --check
       - name: Validate Cargo.lock
@@ -75,61 +71,20 @@ jobs:
       - name: Package publishable workspace crates
         run: bash scripts/package_workspace.sh
 
-  wasm-build:
-    name: WASM Build & Size Monitor
+  cli-build:
+    name: CLI Build & Smoke Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Install Rust (nightly + wasm target)
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          targets: wasm32-unknown-unknown
-          components: rust-src
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
-      - name: Install Dioxus CLI
-        uses: taiki-e/install-action@v2
-        with:
-          tool: dioxus-cli@0.6.3
-      - name: Install WASI SDK
+      - name: Build Eon CLI (Release)
+        run: cargo build --release --bin eon
+      - name: Smoke Test Eon CLI
         run: |
-          wget -q https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz
-          sudo tar xf wasi-sdk-24.0-x86_64-linux.tar.gz -C /opt
-          sudo ln -sf /opt/wasi-sdk-24.0-x86_64-linux /opt/wasi-sdk
-      - name: Build Web App (Dioxus Release)
-        env:
-          CARGO_BUILD_JOBS: 1
-          CC_wasm32_unknown_unknown: clang
-          AR_wasm32_unknown_unknown: llvm-ar
-          WASI_SDK_PATH: /opt/wasi-sdk
-          CFLAGS: "-matomics -mbulk-memory"
-          CFLAGS_wasm32_unknown_unknown: "-matomics -mbulk-memory"
-          "CFLAGS_wasm32-unknown-unknown": "-matomics -mbulk-memory"
-          CFLAGS_wasm32_wasi: "-matomics -mbulk-memory"
-          "CFLAGS_wasm32-wasi": "-matomics -mbulk-memory"
-        run: dx build --release --trace --package eon-ui
-      - name: Prepare and validate static web distribution
-        id: prepare_web
-        continue-on-error: true
-        run: |
-          set -o pipefail
-          bash scripts/prepare_web_dist.sh target/dx/eon-ui/release/web/public 2>&1 | tee web-prepare.log
-      - name: Upload web build diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: eon-web-build
-          path: |
-            target/dx/eon-ui/release/web/public
-            wasm-bindgen.log
-            web-prepare.log
-          if-no-files-found: warn
-      - name: Fail when web distribution preparation failed
-        if: steps.prepare_web.outcome != 'success'
-        run: exit 1
-      - name: Measure & Report WASM File Size
-        run: |
-          echo "### WebAssembly Binary Sizes 📊" >> $GITHUB_STEP_SUMMARY
-          echo "| File Path | Size |" >> $GITHUB_STEP_SUMMARY
-          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
-          find target/dx/eon-ui/release/web/public -name "*.wasm" -exec ls -lh {} \; | awk '{print "| `" $9 "` | **" $5 "** |"}' >> $GITHUB_STEP_SUMMARY
+          ./target/release/eon --version
+          ./target/release/eon --help
+          ./target/release/eon analyze --birth "1990-05-15 10:30" --gender m
+          ./target/release/eon prompt --birth "1990-05-15 10:30" --system

@@ -13,7 +13,7 @@ members = [
     "crates/eon-numerology",
     "crates/eon-ai",
     "crates/eon-service",
-    "crates/eon-ui",
+    "crates/eon-cli",
 ]
 
 [workspace.package]
@@ -33,6 +33,7 @@ serde_json = "1.0"
 thiserror = "2.0"
 swiss-eph = "0.2"
 bincode = { version = "2", features = ["serde"] }
+clap = { version = "4.5", features = ["derive", "env"] }
 
 eon-core = { path = "crates/eon-core", version = "=0.1.2" }
 eon-data = { path = "crates/eon-data", version = "=0.1.2" }

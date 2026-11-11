@@ -1,0 +1,31 @@
+[package]
+name = "eon-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Eon: High-Performance CLI & AI Agent Interface for the 8-Engine Destiny Platform"
+
+[[bin]]
+name = "eon"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+chrono-tz = { workspace = true }
+anyhow = { workspace = true }
+
+eon-core = { workspace = true }
+eon-astro = { workspace = true }
+eon-data = { workspace = true }
+eon-saju = { workspace = true }
+eon-vedic = { workspace = true }
+eon-western = { workspace = true }
+eon-zwds = { workspace = true }
+eon-human-design = { workspace = true }
+eon-qimen = { workspace = true }
+eon-numerology = { workspace = true }
+eon-service = { workspace = true }
