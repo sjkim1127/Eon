@@ -535,6 +535,20 @@ pub struct OmniDestinyTierInput {
     pub transit: Option<TransitAnalysisOutput>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SynthesizedOmniAnalysis {
+    pub input: AnalysisInput,
+    pub tier: TierResult,
+    pub saju: SajuAnalysisOutput,
+    pub vedic: VedicAnalysisOutput,
+    pub western: Option<WesternAnalysisOutput>,
+    pub zwds: Option<ZwdsAnalysisOutput>,
+    pub human_design: Option<HumanDesignAnalysisOutput>,
+    pub qimen: Option<QimenAnalysisOutput>,
+    pub numerology: Option<NumerologyAnalysisOutput>,
+}
+
 impl TryFrom<SajuAnalysisRequest> for SajuAnalysisInput {
     type Error = ServiceError;
 

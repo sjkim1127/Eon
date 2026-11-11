@@ -1,6 +1,5 @@
 use anyhow::Result;
 use clap::Args;
-use eon_service::dto::*;
 use eon_service::facade;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -186,85 +185,56 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                     match birth_args.to_analysis_input() {
                         Ok(input) => {
                             let is_male = birth_args.is_male();
-                            let saju_in =
-                                SajuAnalysisInput::new(input.clone(), is_male, false, Some(false));
-                            let vedic_in =
-                                VedicAnalysisInput::new(input.clone(), Some(false), None);
-                            let western_in =
-                                WesternAnalysisInput::new(input.clone(), "Placidus".to_string());
-                            let zwds_in = ZwdsAnalysisInput::new(input.clone(), is_male, None);
-                            let hd_in = HumanDesignAnalysisInput::new(input.clone());
-                            let qimen_in = QimenAnalysisInput::new(input.clone(), is_male);
-                            let num_in = NumerologyAnalysisInput::new(
-                                input.clone(),
+                            match facade::analyze_all_synthesized(
+                                input,
+                                is_male,
                                 birth_args.name.clone(),
-                                None,
-                            );
+                            ) {
+                                Ok(omni) => {
+                                    let content_text = if format_str == "json" {
+                                        serde_json::to_string_pretty(&omni)?
+                                    } else {
+                                        format_agent_context(
+                                            &omni.input,
+                                            Some(&omni.saju),
+                                            Some(&omni.vedic),
+                                            omni.western.as_ref(),
+                                            omni.zwds.as_ref(),
+                                            omni.human_design.as_ref(),
+                                            omni.qimen.as_ref(),
+                                            omni.numerology.as_ref(),
+                                            Some(&omni.tier),
+                                        )
+                                    };
 
-                            let saju_res = facade::analyze_saju(saju_in).ok();
-                            let vedic_res = facade::analyze_vedic(vedic_in).ok();
-                            let western_res = facade::analyze_western(western_in).ok();
-                            let zwds_res = facade::analyze_zwds(zwds_in).ok();
-                            let hd_res = facade::analyze_human_design(hd_in).ok();
-                            let qimen_res = facade::analyze_qimen(qimen_in).ok();
-                            let num_res = facade::analyze_numerology(num_in).ok();
-
-                            let tier_res = if let (Some(s), Some(v)) = (&saju_res, &vedic_res) {
-                                let omni_input = OmniDestinyTierInput {
-                                    saju: s.clone(),
-                                    vedic: v.clone(),
-                                    western: western_res.clone(),
-                                    zwds: zwds_res.clone(),
-                                    human_design: hd_res.clone(),
-                                    qimen: qimen_res.clone(),
-                                    numerology: num_res.clone(),
-                                    transit: None,
-                                };
-                                facade::analyze_destiny_tier_omni(omni_input).ok()
-                            } else {
-                                None
-                            };
-
-                            let content_text = if format_str == "json" {
-                                json!({
-                                    "saju": saju_res,
-                                    "vedic": vedic_res,
-                                    "western": western_res,
-                                    "zwds": zwds_res,
-                                    "human_design": hd_res,
-                                    "qimen": qimen_res,
-                                    "numerology": num_res,
-                                    "tier": tier_res,
-                                })
-                                .to_string()
-                            } else {
-                                format_agent_context(
-                                    &input,
-                                    saju_res.as_ref(),
-                                    vedic_res.as_ref(),
-                                    western_res.as_ref(),
-                                    zwds_res.as_ref(),
-                                    hd_res.as_ref(),
-                                    qimen_res.as_ref(),
-                                    num_res.as_ref(),
-                                    tier_res.as_ref(),
-                                )
-                            };
-
-                            let res = JsonRpcResponse {
-                                jsonrpc: "2.0",
-                                id: req_id,
-                                result: Some(json!({
-                                    "content": [
-                                        {
-                                            "type": "text",
-                                            "text": content_text
-                                        }
-                                    ]
-                                })),
-                                error: None,
-                            };
-                            writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
+                                    let res = JsonRpcResponse {
+                                        jsonrpc: "2.0",
+                                        id: req_id,
+                                        result: Some(json!({
+                                            "content": [
+                                                {
+                                                    "type": "text",
+                                                    "text": content_text
+                                                }
+                                            ]
+                                        })),
+                                        error: None,
+                                    };
+                                    writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
+                                }
+                                Err(err) => {
+                                    let res = JsonRpcResponse {
+                                        jsonrpc: "2.0",
+                                        id: req_id,
+                                        result: None,
+                                        error: Some(json!({
+                                            "code": -32603,
+                                            "message": format!("Analysis failed: {}", err),
+                                        })),
+                                    };
+                                    writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
+                                }
+                            }
                         }
                         Err(e) => {
                             let res = JsonRpcResponse {

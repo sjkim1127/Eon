@@ -41,6 +41,73 @@ pub fn analyze_destiny_tier_omni(
     Ok(crate::services::tier::analyze_omni(input))
 }
 
+pub fn analyze_all_synthesized(
+    input: AnalysisInput,
+    is_male: bool,
+    name: Option<String>,
+) -> Result<SynthesizedOmniAnalysis, ServiceError> {
+    let saju_in = SajuAnalysisInput::new(input.clone(), is_male, false, Some(false));
+    let vedic_in = VedicAnalysisInput::new(input.clone(), Some(false), None);
+    let western_in = WesternAnalysisInput::new(input.clone(), "Placidus".to_string());
+    let zwds_in = ZwdsAnalysisInput::new(input.clone(), is_male, None);
+    let hd_in = HumanDesignAnalysisInput::new(input.clone());
+    let qimen_in = QimenAnalysisInput::new(input.clone(), is_male);
+    let num_in = NumerologyAnalysisInput::new(input.clone(), name, None);
+
+    let (saju_res, vedic_res, western_res, zwds_res, hd_res, qimen_res, num_res) =
+        std::thread::scope(|s| {
+            let saju_handle = s.spawn(|| analyze_saju(saju_in));
+            let vedic_handle = s.spawn(|| analyze_vedic(vedic_in));
+            let western_handle = s.spawn(|| analyze_western(western_in).ok());
+            let zwds_handle = s.spawn(|| analyze_zwds(zwds_in).ok());
+            let hd_handle = s.spawn(|| analyze_human_design(hd_in).ok());
+            let qimen_handle = s.spawn(|| analyze_qimen(qimen_in).ok());
+            let num_handle = s.spawn(|| analyze_numerology(num_in).ok());
+
+            let saju = saju_handle
+                .join()
+                .unwrap_or_else(|_| Err(ServiceError::Saju("thread panicked".to_string())));
+            let vedic = vedic_handle
+                .join()
+                .unwrap_or_else(|_| Err(ServiceError::Vedic("thread panicked".to_string())));
+            let western = western_handle.join().unwrap_or(None);
+            let zwds = zwds_handle.join().unwrap_or(None);
+            let hd = hd_handle.join().unwrap_or(None);
+            let qimen = qimen_handle.join().unwrap_or(None);
+            let num = num_handle.join().unwrap_or(None);
+
+            (saju, vedic, western, zwds, hd, qimen, num)
+        });
+
+    let saju = saju_res?;
+    let vedic = vedic_res?;
+
+    let omni_input = OmniDestinyTierInput {
+        saju: saju.clone(),
+        vedic: vedic.clone(),
+        western: western_res.clone(),
+        zwds: zwds_res.clone(),
+        human_design: hd_res.clone(),
+        qimen: qimen_res.clone(),
+        numerology: num_res.clone(),
+        transit: None,
+    };
+
+    let tier = analyze_destiny_tier_omni(omni_input)?;
+
+    Ok(SynthesizedOmniAnalysis {
+        input,
+        tier,
+        saju,
+        vedic,
+        western: western_res,
+        zwds: zwds_res,
+        human_design: hd_res,
+        qimen: qimen_res,
+        numerology: num_res,
+    })
+}
+
 pub fn analyze_iching(input: SajuAnalysisInput) -> Result<IChingAnalysisOutput, ServiceError> {
     let saju_res = analyze_saju(input.clone())?;
     let pillars = &saju_res.report.pillars;

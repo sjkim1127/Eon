@@ -47,20 +47,11 @@ eon-numerology = { path = "crates/eon-numerology", version = "=0.1.2" }
 eon-service = { path = "crates/eon-service", version = "=0.1.2" }
 
 [profile.release]
-opt-level = 'z'     # Optimize for size
-lto = true          # Enable Link Time Optimization
-codegen-units = 1   # Reduce parallel code generation units for better optimization
-panic = 'abort'     # Abort on panic instead of unwinding (reduces size)
-
-[profile.wasm-dev]
-inherits = "dev"
-opt-level = 1
-
-[profile.server-dev]
-inherits = "dev"
-
-[profile.android-dev]
-inherits = "dev"
+opt-level = 3         # Maximum speed optimization
+lto = true            # Link-Time Optimization across all crates
+codegen-units = 1     # Single code generation unit for maximum inlining and vectorization
+panic = 'abort'       # Eliminate unwinding landing pads to reduce binary size
+strip = true          # Strip all debug symbols and symbol tables from release binary
 
 [workspace.lints.rust]
 dead_code = "allow"
