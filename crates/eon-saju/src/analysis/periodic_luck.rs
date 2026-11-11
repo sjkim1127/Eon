@@ -100,7 +100,7 @@ impl std::fmt::Display for YearlyLuck {
             }
         }
         for event in &self.special_events {
-            write!(f, " | ⚠️ {}", event)?;
+            write!(f, " | [!] {}", event)?;
         }
 
         Ok(())

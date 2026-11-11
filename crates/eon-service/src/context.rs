@@ -42,7 +42,7 @@ pub fn calculate_current_age(
 
     let mut age = (cy - birth_year).max(0) as u32;
 
-    // 생일이 지났는지 확인 (만 나이 기준)
+    // Check whether birthday has passed (international age)
     if cm < birth_month || (cm == birth_month && cd < birth_day) {
         age = age.saturating_sub(1);
     }

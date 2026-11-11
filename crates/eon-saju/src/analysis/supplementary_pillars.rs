@@ -102,9 +102,9 @@ impl SupplementaryPillars {
                 results.push(SupplementaryInterpretation {
                     pillar_name: display_name.to_string(),
                     level: InterpretationLevel::Auspicious,
-                    summary: "✨ 길조(吉兆)".to_string(),
+                    summary: "Auspicious Blessing".to_string(),
                     description:
-                        "축복받은 기운이 함께하며 위기 상황에서 뜻밖의 도움을 얻게 됩니다."
+                        "Auspicious energy is present, bringing timely support in critical moments."
                             .to_string(),
                     reasons,
                 });
@@ -112,8 +112,10 @@ impl SupplementaryPillars {
                 results.push(SupplementaryInterpretation {
                     pillar_name: display_name.to_string(),
                     level: InterpretationLevel::Caution,
-                    summary: "⚠️ 주의(注意)".to_string(),
-                    description: "해당 기둥의 기운이 다소 예민하거나 복잡하게 얽혀 있어 신중한 접근이 필요합니다.".to_string(),
+                    summary: "Caution Required".to_string(),
+                    description:
+                        "Complex or sensitive energy configurations require prudent consideration."
+                            .to_string(),
                     reasons,
                 });
             } else {

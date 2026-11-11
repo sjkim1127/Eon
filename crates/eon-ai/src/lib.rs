@@ -9,7 +9,7 @@ pub mod tools;
 pub use error::AiError;
 pub use tools::EonToolbox;
 
-/// AI 기반 운명 보안 감사 리포트 구조
+/// AI-based Destiny Security Audit Report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIAuditReport {
     pub system_id: String,
@@ -23,7 +23,7 @@ pub struct AIAuditReport {
 pub struct DestinyAIAuditor;
 
 impl DestinyAIAuditor {
-    /// 모든 CS 엔진의 출력을 수집하여 LLM용 컨텍스트 데이터 생성
+    /// Collects all CS engine outputs to generate LLM context data
     pub fn generate_context(
         pillars: &eon_saju::FourPillars,
         life_report: &LifePathReport,
@@ -40,12 +40,12 @@ impl DestinyAIAuditor {
         let vm = eon_saju::SajuVM::new(pillars.clone());
         let fuzzer = DestinyFuzzer::new(vm);
 
-        // 현재 원국의 월주를 기준으로 기본 정적 감사 수행 (대운 컨텍스트 없이 세운만 60개 퍼징)
+        // Perform baseline static audit against current natal month pillar (60-year fuzzing without major luck)
         let fuzz_report = fuzzer.audit(pillars.month);
 
-        // TTD Backtrace (예시로 가장 낮은 지점 분석)
+        // TTD Backtrace (analyze valley trough)
         let valley_age = life_report.valley_age;
-        let root_cause = DestinyDebugger::backtrace(life_report, valley_age, "기신");
+        let root_cause = DestinyDebugger::backtrace(life_report, valley_age, "");
 
         let mut context = String::new();
         context.push_str("=== [DESTINY SYSTEM CORE DUMP] ===\n");

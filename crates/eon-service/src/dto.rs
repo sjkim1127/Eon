@@ -227,7 +227,7 @@ pub struct IChingAnalysisOutput {
 pub struct WesternAnalysisInput {
     #[serde(flatten)]
     pub base: AnalysisInput,
-    pub house_system: String, // "P", "K", "W", "E" 등
+    pub house_system: String, // "P", "K", "W", "E", etc.
 }
 
 impl WesternAnalysisInput {
@@ -434,7 +434,7 @@ pub struct TierResult {
     pub risk_level: String,
     pub profile: String,
     pub version: String,
-    // --- 확장된 티어 모델 필드 ---
+    // --- Extended Tier Model Fields ---
     pub destiny_raw_score: f32,
     pub destiny_tier_score: f32,
     pub detailed_components: Vec<DestinyComponent>,
@@ -663,9 +663,9 @@ impl TryFrom<VedicAnalysisRequest> for VedicAnalysisInput {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ReportTheme {
-    WealthAndCareer,   // 재물 및 커리어 테마
-    LoveAndMarriage,   // 연애 및 결혼 테마
-    HealthAndVitality, // 건강 및 마음 치유 테마
+    WealthAndCareer,   // Wealth and career theme
+    LoveAndMarriage,   // Relationship and marriage theme
+    HealthAndVitality, // Health and wellness theme
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

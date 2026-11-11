@@ -35,7 +35,7 @@ pub fn run(cmd: NumerologyCommand) -> Result<()> {
                 "Life Path Number: {}{}",
                 core.life_path,
                 if res.result.is_master_life_path {
-                    " (🌟 Master Number)"
+                    " (Master Number)"
                 } else {
                     ""
                 }
@@ -47,7 +47,7 @@ pub fn run(cmd: NumerologyCommand) -> Result<()> {
             println!("Personal Year Vibration: {}", res.result.personal_year);
             println!("Four Pinnacle Cycles:");
             for p in &res.result.pinnacles {
-                println!("- {}", p.description_ko);
+                println!("- {}", p.description_en);
             }
         }
     }

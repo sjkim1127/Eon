@@ -98,10 +98,10 @@ impl std::fmt::Display for EntropyAnalysis {
         writeln!(f, "Entropy Score : {:.3} (DIE Standard)", self.score)?;
 
         let level_str = match self.level {
-            ObfuscationLevel::Plaintext => "🟢 Plaintext (해석 용이)",
-            ObfuscationLevel::Standard => "🔵 Standard (일반)",
-            ObfuscationLevel::Packed => "🟡 Packed (압축/은폐)",
-            ObfuscationLevel::Encrypted => "🔴 Encrypted (난독화/난해)",
+            ObfuscationLevel::Plaintext => "Plaintext (High transparency)",
+            ObfuscationLevel::Standard => "Standard (Normal equilibrium)",
+            ObfuscationLevel::Packed => "Packed (Compressed/Concealed)",
+            ObfuscationLevel::Encrypted => "Encrypted (High complexity)",
         };
         writeln!(f, "Analysis Level: {}", level_str)?;
         writeln!(f, "Description   : {}", self.description)?;
@@ -109,8 +109,8 @@ impl std::fmt::Display for EntropyAnalysis {
         if let Some(up) = self.unpacker_element {
             writeln!(
                 f,
-                "Unpacker Hint : '{}' 에너지가 유입될 때 인생의 압축이 해제(Unpacking)됩니다.",
-                up.hangul()
+                "Unpacker Hint : Unpacking is triggered when '{:?}' element energy enters the cycle.",
+                up
             )?;
         }
         Ok(())

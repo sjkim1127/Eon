@@ -14,14 +14,14 @@ pub fn format_markdown_report(
 ) -> String {
     let mut md = String::new();
 
-    md.push_str("# 🌌 Eon: 8-Engine Destiny Intelligence Report\n\n");
+    md.push_str("# Eon: 8-Engine Destiny Intelligence Report\n\n");
     md.push_str(&format!(
         "**Analysis Timestamp**: {:04}-{:02}-{:02} {:02}:{:02} | **Timezone**: {} | **Coordinates**: ({:.4}, {:.4})\n\n",
         input.year, input.month, input.day, input.hour, input.minute, input.timezone, input.lat, input.lon
     ));
 
     if let Some(t) = tier {
-        md.push_str("## 👑 Omni Destiny Tier 7.0 Summary\n");
+        md.push_str("## Omni Destiny Tier 7.0 Summary\n");
         md.push_str("| Metric | Score / Grade |\n|---|---|\n");
         md.push_str(&format!(
             "| **Overall Destiny Tier** | **{}** ({:.1} pts) |\n",
@@ -60,9 +60,9 @@ pub fn format_markdown_report(
         }
 
         if !t.quantum_synergies.is_empty() {
-            md.push_str("### ⚛️ 8D Quantum Cross Synergies\n");
+            md.push_str("### 8D Quantum Cross Synergies\n");
             for s in &t.quantum_synergies {
-                let badge = if s.score_delta >= 0.0 { "🟢" } else { "🔴" };
+                let badge = if s.score_delta >= 0.0 { "[+]" } else { "[-]" };
                 md.push_str(&format!(
                     "- {} **{}** ({:+.0}pt): {}\n",
                     badge, s.title, s.score_delta, s.description
@@ -73,22 +73,22 @@ pub fn format_markdown_report(
     }
 
     if let Some(s) = saju {
-        md.push_str("## 📜 1. Four Pillars of Destiny (Saju / BaZi)\n");
+        md.push_str("## 1. Four Pillars of Destiny (Saju / BaZi)\n");
         let p = &s.report.pillars;
         md.push_str(&format!(
-            "- **Chart**: Year: {}({}-{}) / Month: {}({}-{}) / Day: {}({}-{}) / Hour: {}({}-{})\n",
+            "- **Chart**: Year: {} ({:?}-{:?}) / Month: {} ({:?}-{:?}) / Day: {} ({:?}-{:?}) / Hour: {} ({:?}-{:?})\n",
             p.year,
-            p.year.stem.hangul(),
-            p.year.branch.hangul(),
+            p.year.stem,
+            p.year.branch,
             p.month,
-            p.month.stem.hangul(),
-            p.month.branch.hangul(),
+            p.month.stem,
+            p.month.branch,
             p.day,
-            p.day.stem.hangul(),
-            p.day.branch.hangul(),
+            p.day.stem,
+            p.day.branch,
             p.hour,
-            p.hour.stem.hangul(),
-            p.hour.branch.hangul()
+            p.hour.stem,
+            p.hour.branch
         ));
         md.push_str(&format!(
             "- **Strength**: {:?} (Score: {:.1})\n",
@@ -101,7 +101,7 @@ pub fn format_markdown_report(
     }
 
     if let Some(v) = vedic {
-        md.push_str("## 🕉️ 2. Vedic Astrology (Jyotish)\n");
+        md.push_str("## 2. Vedic Astrology (Jyotish)\n");
         md.push_str(&format!(
             "- **Ascendant (Lagna)**: {:?}\n",
             v.chart.ascendant
@@ -117,7 +117,7 @@ pub fn format_markdown_report(
     }
 
     if let Some(w) = western {
-        md.push_str("## ♈ 3. Western Astrology\n");
+        md.push_str("## 3. Western Astrology\n");
         md.push_str(&format!(
             "- **Planets**: {} | **Aspects**: {}\n",
             w.result.planets.len(),
@@ -130,9 +130,9 @@ pub fn format_markdown_report(
     }
 
     if let Some(z) = zwds {
-        md.push_str("## 🔮 4. Zi Wei Dou Shu\n");
+        md.push_str("## 4. Zi Wei Dou Shu\n");
         let soul = &z.chart.palaces[z.chart.soul_idx];
-        md.push_str(&format!("- **Soul Palace**: {}\n", soul.name.korean()));
+        md.push_str(&format!("- **Soul Palace**: {}\n", soul.name.english()));
         md.push_str(&format!(
             "- **Stars in Soul Palace**: {}\n\n",
             soul.stars.len()
@@ -140,7 +140,7 @@ pub fn format_markdown_report(
     }
 
     if let Some(h) = hd {
-        md.push_str("## 🧬 5. Human Design\n");
+        md.push_str("## 5. Human Design\n");
         md.push_str(&format!(
             "- **Chart Type**: {} | **Profile**: {}\n",
             h.result.chart_type, h.result.profile
@@ -152,7 +152,7 @@ pub fn format_markdown_report(
     }
 
     if let Some(q) = qimen {
-        md.push_str("## 🧭 6. QiMen DunJia\n");
+        md.push_str("## 6. QiMen DunJia\n");
         md.push_str(&format!(
             "- **Chart**: {} Ju {} (9 Palaces Deployed)\n\n",
             if q.report.pan.is_yin_ju {
@@ -165,12 +165,12 @@ pub fn format_markdown_report(
     }
 
     if let Some(n) = num {
-        md.push_str("## 🔢 7. Pythagorean Numerology\n");
+        md.push_str("## 7. Pythagorean Numerology\n");
         md.push_str(&format!(
             "- **Life Path Number**: **{}**{}\n",
             n.result.core.life_path,
             if n.result.is_master_life_path {
-                " (🌟 Master Number)"
+                " (Master Number)"
             } else {
                 ""
             }

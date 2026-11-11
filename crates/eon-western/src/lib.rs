@@ -1,9 +1,9 @@
-//! eon-western: 서양 점성술 명리 연산 엔진
+//! eon-western: Western Astrology Engine
 //!
-//! eon-astro의 Swiss Ephemeris FFI를 활용하여 10대 행성, True Node, South Node,
-//! Black Moon Lilith 및 Placidus, Koch, Whole Sign, Equal House 등의 Cusp 좌표,
-//! 메이저/마이너 아스펙트(어플라잉/세퍼레이팅), Essential Dignities, 하우스 룰러십 네트워크, 아라비안 파트(Lot of Fortune/Spirit/Eros),
-//! 기하학적 아스펙트 패턴(Grand Trine, T-Square, Grand Cross, Yod, Kite), Synastry, Composite, Secondary Progressions를 정밀 분석합니다.
+//! Utilizes Swiss Ephemeris FFI from eon-astro to calculate 10 major planetary bodies, True Node, South Node,
+//! Black Moon Lilith, and House Cusps (Placidus, Koch, Whole Sign, Equal House, etc.),
+//! major/minor aspects (applying/separating), Essential Dignities, House Rulership networks, Arabian Parts (Lot of Fortune/Spirit/Eros),
+//! geometric aspect patterns (Grand Trine, T-Square, Grand Cross, Yod, Kite), Synastry, Composite, and Secondary Progressions.
 
 use chrono::{DateTime, Utc};
 use eon_astro::{AstroEngine, AstroError};
@@ -37,17 +37,17 @@ pub struct WesternHouseData {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum AspectType {
-    Conjunction,    // 0도 (Major)
-    Sextile,        // 60도 (Major)
-    Square,         // 90도 (Major)
-    Trine,          // 120도 (Major)
-    Opposition,     // 180도 (Major)
-    Semisextile,    // 30도 (Minor)
-    Quincunx,       // 150도 / Inconjunct (Minor)
-    Semisquare,     // 45도 (Minor)
-    Sesquiquadrate, // 135도 (Minor)
-    Quintile,       // 72도 (Minor)
-    Biquintile,     // 144도 (Minor)
+    Conjunction,    // 0 deg (Major)
+    Sextile,        // 60 deg (Major)
+    Square,         // 90 deg (Major)
+    Trine,          // 120 deg (Major)
+    Opposition,     // 180 deg (Major)
+    Semisextile,    // 30 deg (Minor)
+    Quincunx,       // 150 deg / Inconjunct (Minor)
+    Semisquare,     // 45 deg (Minor)
+    Sesquiquadrate, // 135 deg (Minor)
+    Quintile,       // 72 deg (Minor)
+    Biquintile,     // 144 deg (Minor)
 }
 
 impl AspectType {
@@ -97,9 +97,9 @@ impl AspectType {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum AspectDynamics {
-    Applying,   // 접근 (에너지 강화)
-    Separating, // 이탈 (에너지 약화)
-    Exact,      // 일치
+    Applying,   // Applying (strengthening energy)
+    Separating, // Separating (waning energy)
+    Exact,      // Exact alignment
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -267,7 +267,7 @@ pub fn get_sign_ruler(sign_idx: usize) -> &'static str {
     }
 }
 
-/// 특정 각도가 start와 end의 섹터 구간 안에 속하는지 판정 (각도 wrap-around 360도 대응)
+/// Determines whether target angle lies within [start, end) sector with 360-degree wrap-around.
 pub fn is_angle_between(target: f64, start: f64, end: f64) -> bool {
     let t = (target - start + 360.0) % 360.0;
     let e = (end - start + 360.0) % 360.0;
@@ -300,9 +300,9 @@ fn aspect_dynamics(
     }
 }
 
-/// Essential Dignity (고전 위계) 점수 계산
+/// Calculate classical Essential Dignities score
 pub fn calculate_essential_dignities(planets: &[WesternPlanetData]) -> Vec<EssentialDignityInfo> {
-    // Domicile / Exaltation / Detriment / Fall 규칙
+    // Domicile / Exaltation / Detriment / Fall rules
     // Sun: Domicile Leo(4), Exaltation Aries(0), Detriment Aquarius(10), Fall Libra(6)
     // Moon: Domicile Cancer(3), Exaltation Taurus(1), Detriment Capricorn(9), Fall Scorpio(7)
     // Mercury: Domicile Gemini(2)/Virgo(5), Exaltation Virgo(5), Detriment Sag(8)/Pisces(11), Fall Pisces(11)
@@ -418,7 +418,7 @@ pub fn calculate_essential_dignities(planets: &[WesternPlanetData]) -> Vec<Essen
             summaries.push("Peregrine (0)");
         }
 
-        let status_summary = format!("점수 {}pt ({})", score, summaries.join(", "));
+        let status_summary = format!("Score {}pt ({})", score, summaries.join(", "));
 
         result.push(EssentialDignityInfo {
             planet_name: p.name.clone(),
@@ -434,7 +434,7 @@ pub fn calculate_essential_dignities(planets: &[WesternPlanetData]) -> Vec<Essen
     result
 }
 
-/// 하우스 룰러 입주 하우스 연계 네트워크 산출
+/// Calculate House Rulership Network
 pub fn calculate_house_rulerships(
     houses: &[WesternHouseData],
     planets: &[WesternPlanetData],
@@ -446,10 +446,10 @@ pub fn calculate_house_rulerships(
         let ruler_planet = planets.iter().find(|p| p.name == ruler);
 
         let ruler_in_house = ruler_planet.map(|p| p.house_number).unwrap_or(1);
-        let sign_name = SIGN_NAMES_KR[h.sign_index];
+        let sign_name = SIGN_NAMES[h.sign_index];
 
         let interpretation = format!(
-            "{}하우스 Cusp(성좌: {})의 주행성인 {}이(가) {}하우스에 위치하여, {}하우스 에너지가 {}하우스 영역으로 확장됩니다.",
+            "House {} Cusp ({}) ruler {} is placed in House {}, channeling House {} themes into House {}.",
             h.house_number, sign_name, ruler, ruler_in_house, h.house_number, ruler_in_house
         );
 
@@ -465,7 +465,7 @@ pub fn calculate_house_rulerships(
     result
 }
 
-/// 아라비안 파트 (Lots) 산출
+/// Calculate Arabian Parts (Lots)
 pub fn calculate_arabian_parts(
     asc: f64,
     planets: &[WesternPlanetData],
@@ -537,7 +537,7 @@ pub fn calculate_arabian_parts(
     vec![
         calculate_part_info(
             "Part of Fortune",
-            "행운의 지점 (Part of Fortune / Lot of Fortune)",
+            "Part of Fortune (Lot of Fortune)",
             pof_long,
             if is_day_birth {
                 "ASC + Moon - Sun (Day)"
@@ -547,7 +547,7 @@ pub fn calculate_arabian_parts(
         ),
         calculate_part_info(
             "Part of Spirit",
-            "영혼의 지점 (Part of Spirit / Lot of Spirit)",
+            "Part of Spirit (Lot of Spirit)",
             pos_long,
             if is_day_birth {
                 "ASC + Sun - Moon (Day)"
@@ -557,7 +557,7 @@ pub fn calculate_arabian_parts(
         ),
         calculate_part_info(
             "Part of Eros",
-            "애정의 지점 (Part of Eros / Lot of Eros)",
+            "Part of Eros (Lot of Eros)",
             eros_long,
             if is_day_birth {
                 "ASC + Venus - Spirit (Day)"
@@ -568,7 +568,7 @@ pub fn calculate_arabian_parts(
     ]
 }
 
-/// 기하학적 아스펙트 패턴 (Aspect Geometries) 자동 검출기
+/// Geometric Aspect Pattern Detection Engine
 pub fn detect_aspect_patterns(
     planets: &[WesternPlanetData],
     aspects: &[WesternAspectData],
@@ -603,10 +603,10 @@ pub fn detect_aspect_patterns(
                     patterns.push(AspectPatternData {
                         pattern_type: AspectPatternType::GrandTrine,
                         name: "Grand Trine".to_string(),
-                        name_kr: "그랜드 트라인 (대삼각 패턴)".to_string(),
+                        name_kr: "Grand Trine (Harmonious Flow)".to_string(),
                         planets: vec![p1.clone(), p2.clone(), p3.clone()],
                         interpretation: format!(
-                            "{} - {} - {} 세 행성이 조화로운 120도 대삼각을 형성하여 창의성과 재능의 원활한 흐름을 가져옵니다.",
+                            "{} - {} - {} form a 120-degree grand trine, promoting harmonious creative flow and natural talents.",
                             p1, p2, p3
                         ),
                     });
@@ -642,10 +642,10 @@ pub fn detect_aspect_patterns(
                     patterns.push(AspectPatternData {
                         pattern_type: AspectPatternType::TSquare,
                         name: "T-Square".to_string(),
-                        name_kr: "T-스퀘어 (직각 삼각 갈등 패턴)".to_string(),
+                        name_kr: "T-Square (Dynamic Tension)".to_string(),
                         planets: vec![p1.clone(), p2.clone(), p3.clone()],
                         interpretation: format!(
-                            "{}와(과) {}의 대립(Opposition) 속에서 Apex 행성 {}이(가) 스퀘어 직각 자극을 주어 강력한 추진력과 긴장을 유발합니다.",
+                            "In opposition between {} and {}, Apex planet {} introduces square tension driving intense ambition and dynamic breakthrough.",
                             p1, p2, p3
                         ),
                     });
@@ -681,10 +681,10 @@ pub fn detect_aspect_patterns(
                     patterns.push(AspectPatternData {
                         pattern_type: AspectPatternType::Yod,
                         name: "Yod".to_string(),
-                        name_kr: "요드 (Yod - 신의 손가락 운명 패턴)".to_string(),
+                        name_kr: "Yod (Finger of Fate)".to_string(),
                         planets: vec![p1.clone(), p2.clone(), p3.clone()],
                         interpretation: format!(
-                            "{}와(과) {}의 60도 육각형 받침대에서 Apex 행성 {}이(가) 150도 퀸컹스 조정을 통해 명확한 소명과 숙명을 형성합니다.",
+                            "With {} and {} forming a 60-degree sextile base, Apex planet {} directs 150-degree quincunx adjustments toward a distinct destined calling.",
                             p1, p2, p3
                         ),
                     });
@@ -700,11 +700,11 @@ pub fn calculate_western(
     datetime: DateTime<Utc>,
     latitude: f64,
     longitude: f64,
-    house_system_char: char, // 'P', 'K', 'W', 'E' 등
+    house_system_char: char, // 'P', 'K', 'W', 'E', etc.
 ) -> Result<WesternResult, WesternError> {
     let engine = AstroEngine::new();
 
-    // 1. 하우스 Cusp 좌표 및 ASC/MC 계산
+    // 1. House Cusp coordinates and ASC/MC calculation
     let house_sys_byte = house_system_char as i32;
     let (mut cusps, ascmc) = engine.get_houses(datetime, latitude, longitude, house_sys_byte)?;
 
@@ -722,7 +722,7 @@ pub fn calculate_western(
         }
     }
 
-    // 2. 표준 천체 및 노드 위치 조회
+    // 2. Standard celestial bodies and node positions
     // 0: Sun, 1: Moon, 2: Mercury, 3: Venus, 4: Mars, 5: Jupiter, 6: Saturn, 7: Uranus, 8: Neptune, 9: Pluto
     // 11: True Node (North Node), 12: Lilith. Chiron/asteroids are optional
     // and require external Swiss Ephemeris asteroid files.
@@ -784,7 +784,7 @@ pub fn calculate_western(
         });
     }
 
-    // South Node (180도 반대점 파생)
+    // South Node (derived 180-degree opposition point)
     let node_long = planets
         .iter()
         .find(|p| p.name == "True Node")
@@ -820,7 +820,7 @@ pub fn calculate_western(
         house_number: sn_house_number,
     });
 
-    // 3. 12 하우스 데이터 리스트 조립
+    // 3. Assemble 12 House data list
     let mut houses = Vec::new();
     for i in 0..12 {
         let cusp = cusps[i];
@@ -834,7 +834,7 @@ pub fn calculate_western(
         });
     }
 
-    // 4. 메이저/마이너 아스펙트 및 어플라잉/세퍼레이팅 계산
+    // 4. Calculate Major/Minor Aspects and Applying/Separating dynamics
     let mut aspects = Vec::new();
     let aspect_types = vec![
         AspectType::Conjunction,
@@ -869,7 +869,7 @@ pub fn calculate_western(
                 let target = asp.angle();
                 let orb = (angle - target).abs();
                 if orb <= asp.standard_orb() {
-                    // Applying / Separating 동역학 계산
+                    // Calculate Applying / Separating dynamics
                     let rel_speed = speed_a - speed_b;
                     let dynamics = aspect_dynamics(angle, target, signed_delta, rel_speed);
 
@@ -887,7 +887,7 @@ pub fn calculate_western(
         }
     }
 
-    // 5. 원소 및 모달리티 분포 점수
+    // 5. Elemental and modality distribution scoring
     let mut elements = ElementDistribution::default();
     let mut modalities = ModalityDistribution::default();
 
@@ -975,7 +975,7 @@ pub fn calculate_western(
     let asc_sign = (asc / 30.0).floor() as usize;
     let chart_ruler = get_sign_ruler(asc_sign).to_string();
 
-    // 주야간(Day/Night birth) 구분
+    // Day/Night birth determination
     let sun_house = planets
         .iter()
         .find(|p| p.name == "Sun")
@@ -983,7 +983,7 @@ pub fn calculate_western(
         .unwrap_or(1);
     let is_day_birth = (7..=12).contains(&sun_house);
 
-    // 6. Dignities, House Rulerships, Arabian Parts, Aspect Patterns 연산
+    // 6. Calculate Dignities, House Rulerships, Arabian Parts, Aspect Patterns
     let dignities = calculate_essential_dignities(&planets);
     let house_rulerships = calculate_house_rulerships(&houses, &planets);
     let arabian_parts = calculate_arabian_parts(asc, &planets, &houses, is_day_birth);
@@ -1008,7 +1008,7 @@ pub fn calculate_western(
     })
 }
 
-/// Synastry (두 인물 간 교차 궁합 아스펙트 연산)
+/// Synastry (Cross-chart aspect compatibility analysis between two individuals)
 pub fn calculate_synastry(
     chart_a: &WesternResult,
     chart_b: &WesternResult,
@@ -1034,8 +1034,8 @@ pub fn calculate_synastry(
                 let orb = (angle - target).abs();
                 if orb <= asp.standard_orb() {
                     inter_aspects.push(WesternAspectData {
-                        body_a_name: format!("{}의 {}", person_a_name, pa.name),
-                        body_b_name: format!("{}의 {}", person_b_name, pb.name),
+                        body_a_name: format!("{}'s {}", person_a_name, pa.name),
+                        body_b_name: format!("{}'s {}", person_b_name, pb.name),
                         aspect_type: asp,
                         angle_diff: angle,
                         orb,
@@ -1060,7 +1060,7 @@ pub fn calculate_synastry(
     harmony_score = harmony_score.clamp(0.0, 100.0);
 
     let summary = format!(
-        "{}와(과) {}의 시나스트리 궁합 조화도 점수는 {:.1}점이며, 총 {}개의 교차 아스펙트가 형성됩니다.",
+        "Synastry compatibility score between {} and {} is {:.1} / 100 with {} cross aspects.",
         person_a_name,
         person_b_name,
         harmony_score,
@@ -1076,12 +1076,12 @@ pub fn calculate_synastry(
     }
 }
 
-/// Composite Chart (두 차트 간 미드포인트 합성 차트 생성)
+/// Composite Chart (Generates midpoint composite chart between two natal charts)
 pub fn calculate_composite(
     chart_a: &WesternResult,
     chart_b: &WesternResult,
 ) -> Result<CompositeResult, WesternError> {
-    // 360도 미드포인트 연산
+    // 360-degree midpoint calculation
     let midpoint = |l1: f64, l2: f64| -> f64 {
         let diff = (l1 - l2).abs();
         if diff <= 180.0 {
@@ -1199,8 +1199,7 @@ pub fn calculate_composite(
         is_day_birth: true,
     };
 
-    let summary = "두 사람의 차트를 360도 미드포인트로 합성한 컴포지트 차트 연산이 완료되었습니다."
-        .to_string();
+    let summary = "Calculated 360-degree midpoint composite chart between both charts.".to_string();
 
     Ok(CompositeResult {
         composite_chart: comp_result,
@@ -1208,7 +1207,7 @@ pub fn calculate_composite(
     })
 }
 
-/// Secondary Progressions (1일 = 1년 주천 세컨더리 프로그레션 연산)
+/// Secondary Progressions (1 day = 1 year progression calculation)
 pub fn calculate_secondary_progression(
     birth_time: DateTime<Utc>,
     lat: f64,
@@ -1218,7 +1217,7 @@ pub fn calculate_secondary_progression(
 ) -> Result<ProgressionResult, WesternError> {
     let birth_chart = calculate_western(birth_time, lat, lon, house_sys)?;
 
-    // 1년 = 1일 (365.2425일 per 1sec progression)
+    // 1 year = 1 day (365.2425 days per 1-day progression)
     let duration_days = (target_time - birth_time).num_seconds() as f64 / 86400.0;
     let progressed_years = duration_days / 365.2425;
 

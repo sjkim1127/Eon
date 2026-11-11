@@ -175,14 +175,14 @@ impl MatchingEngine {
         let is_compatible = total >= 18.0 && !has_critical_dosha;
 
         let explanation = format!(
-            "총 {}점 획득 (36점 만점). {}",
+            "Total score: {} / 36. {}",
             total,
             if is_compatible {
-                "전반적으로 조화로운 매칭입니다. 추천합니다."
+                "Overall harmonious alignment. Highly recommended."
             } else if total >= 18.0 {
-                "점수는 높으나 주요 살(Nadi/Bhakoot Dosha)의 영향으로 신중한 주의가 필요합니다."
+                "Adequate score, but critical doshas (Nadi/Bhakoot) require careful evaluation and remedy."
             } else {
-                "성향적 차이가 커 상호 조율과 깊은 이해가 요구되는 상성입니다."
+                "Significant dispositional differences; requires conscious communication and mutual adaptation."
             }
         );
 

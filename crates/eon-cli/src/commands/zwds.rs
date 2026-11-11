@@ -27,16 +27,17 @@ pub fn run(cmd: ZwdsCommand) -> Result<()> {
         }
         _ => {
             let soul = &res.chart.palaces[res.chart.soul_idx];
+            let body = &res.chart.palaces[res.chart.body_idx];
             println!("== Zi Wei Dou Shu (Purple Star Astrology) ==");
             println!(
                 "Life Palace: {} | Body Palace: {}",
-                soul.name.korean(),
-                res.chart.palaces[res.chart.body_idx].name.korean()
+                soul.name.english(),
+                body.name.english()
             );
             println!("Five Elements Bureau: {:?}", res.chart.five_elements);
             println!("Stars in Life Palace:");
             for s in &soul.stars {
-                println!("- {} ({:?})", s.star.korean(), s.brightness);
+                println!("- {:?} ({:?})", s.star, s.brightness);
             }
             if !res.chart.destiny_patterns.is_empty() {
                 println!(
@@ -44,7 +45,7 @@ pub fn run(cmd: ZwdsCommand) -> Result<()> {
                     res.chart.destiny_patterns.len()
                 );
                 for p in &res.chart.destiny_patterns {
-                    println!("- {}: {}", p.name_korean, p.description_korean);
+                    println!("- {}: {}", p.name_english, p.description_english);
                 }
             }
         }

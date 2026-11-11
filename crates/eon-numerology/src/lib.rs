@@ -24,6 +24,7 @@ pub struct PinnaclePeriod {
     pub start_age: u32,
     pub end_age: u32,
     pub description_ko: String,
+    pub description_en: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -34,6 +35,7 @@ pub struct NumerologyResult {
     pub personal_year: u8,
     pub is_master_life_path: bool,
     pub summary_ko: String,
+    pub summary_en: String,
 }
 
 /// Reduces a number down to a single digit (1..=9) or Master Number (11, 22, 33)
@@ -155,6 +157,10 @@ pub fn calculate_numerology(
             start_age: 0,
             end_age: age1,
             description_ko: format!("제1정점: 기반 형성기 (정점수 {}, 과제수 {})", p1, c1),
+            description_en: format!(
+                "Pinnacle 1: Foundation Era (Pinnacle {}, Challenge {})",
+                p1, c1
+            ),
         },
         PinnaclePeriod {
             stage: 2,
@@ -163,6 +169,10 @@ pub fn calculate_numerology(
             start_age: age1,
             end_age: age2,
             description_ko: format!("제2정점: 개인적 도약기 (정점수 {}, 과제수 {})", p2, c2),
+            description_en: format!(
+                "Pinnacle 2: Expansion Era (Pinnacle {}, Challenge {})",
+                p2, c2
+            ),
         },
         PinnaclePeriod {
             stage: 3,
@@ -172,6 +182,10 @@ pub fn calculate_numerology(
             end_age: age3,
             description_ko: format!(
                 "제3정점: 성숙과 사회적 결실기 (정점수 {}, 과제수 {})",
+                p3, c3
+            ),
+            description_en: format!(
+                "Pinnacle 3: Maturation & Achievement Era (Pinnacle {}, Challenge {})",
                 p3, c3
             ),
         },
@@ -185,6 +199,10 @@ pub fn calculate_numerology(
                 "제4정점: 완성과 지혜의 통달기 (정점수 {}, 과제수 {})",
                 p4, c4
             ),
+            description_en: format!(
+                "Pinnacle 4: Completion & Wisdom Era (Pinnacle {}, Challenge {})",
+                p4, c4
+            ),
         },
     ];
 
@@ -193,6 +211,10 @@ pub fn calculate_numerology(
 
     let summary_ko = format!(
         "생애여정수: {}, 표현수: {}, 영혼수: {}, 개인 연운수: {} (피타고라스 수비 진동 분석 완료)",
+        life_path, expression, soul_urge, personal_year
+    );
+    let summary_en = format!(
+        "Life Path: {}, Expression: {}, Soul Urge: {}, Personal Year: {} (Pythagorean Numerology analysis complete)",
         life_path, expression, soul_urge, personal_year
     );
 
@@ -208,6 +230,7 @@ pub fn calculate_numerology(
         personal_year,
         is_master_life_path,
         summary_ko,
+        summary_en,
     }
 }
 

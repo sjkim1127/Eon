@@ -284,60 +284,74 @@ impl VimshottariDasha {
                 let is_own = VedicPlanet::get_ruler_of(pos.rasi) == maha_lord;
 
                 let (favorable, dignity_desc) = if is_exalted {
-                    (true, "고양(Exalted)되어 매우 강한 긍정적 힘을 발휘합니다.")
+                    (
+                        true,
+                        "Exalted, expressing exceptionally powerful auspicious energy.",
+                    )
                 } else if is_own {
                     (
                         true,
-                        "본연의 별자리(Own House)에 있어 안정적이고 긍정적입니다.",
+                        "In its own sign, granting stability and positive growth.",
                     )
                 } else if is_debilitated {
                     (
                         false,
-                        "쇠락(Debilitated)하여 에너지가 약화되고 도전 과제가 주어집니다.",
+                        "Debilitated, weakening planetary strength and introducing life challenges.",
                     )
                 } else {
-                    (true, "일반적인 상태로 본연의 역할을 수행합니다.")
+                    (
+                        true,
+                        "In a normal disposition, steadily fulfilling its natural significations.",
+                    )
                 };
 
                 let theme = match house {
-                    1 => "자아 성장, 건강, 새로운 시작",
-                    2 => "재물, 가족, 언어, 가치관",
-                    3 => "의지력, 형제, 짧은 여행, 취미",
-                    4 => "내면의 평화, 어머니, 부동산, 학위",
-                    5 => "창의성, 자녀, 투자, 로맨스",
-                    6 => "경쟁, 건강 관리, 부채 극복, 서비스",
-                    7 => "배우자, 동업자, 대인관계",
-                    8 => "비밀, 상속, 급격한 변화, 신비로움",
-                    9 => "행운, 고등 교육, 종교, 철학, 아버지",
-                    10 => "사회적 명성, 직업, 업적",
-                    11 => "소득, 인맥, 목표 달성",
-                    12 => "영성, 해외 연수, 지출, 은둔",
-                    _ => "해당 하우스",
+                    1 => "Self-development, vitality, new beginnings",
+                    2 => "Wealth, family assets, speech, core values",
+                    3 => "Courage, initiative, siblings, short journeys",
+                    4 => "Inner peace, mother, real estate, emotional security",
+                    5 => "Creativity, progeny, intellect, strategic investments",
+                    6 => "Overcoming competition, health discipline, service",
+                    7 => "Spouse, partnership, public relations",
+                    8 => "Transformation, occult studies, unexpected changes",
+                    9 => "Fortune, higher wisdom, dharma, spiritual guidance",
+                    10 => "Career achievements, public standing, authority",
+                    11 => "Income gains, influential networks, fulfillment of goals",
+                    12 => "Spiritual liberation, foreign travel, expenditures, solitude",
+                    _ => "House domain",
                 };
 
                 let lord_desc = match maha_lord {
-                    VedicPlanet::Sun => "자신감과 리더십의 발현기",
-                    VedicPlanet::Moon => "감정과 내면의 변화기",
-                    VedicPlanet::Mars => "투지와 행동력의 시기",
-                    VedicPlanet::Mercury => "지성과 소통, 상업의 시기",
-                    VedicPlanet::Jupiter => "지혜, 확장, 축복의 시기",
-                    VedicPlanet::Venus => "관계, 예술, 물질적 풍요의 시기",
-                    VedicPlanet::Saturn => "인내, 책임, 노력에 대한 결실의 시기",
-                    VedicPlanet::Rahu => "세속적 야망과 예기치 못한 확장의 시기",
-                    VedicPlanet::Ketu => "영적 통찰과 분리, 과거의 청산 시기",
+                    VedicPlanet::Sun => "Era of confidence, vitality, and executive leadership",
+                    VedicPlanet::Moon => "Era of emotional maturation and inner evolution",
+                    VedicPlanet::Mars => "Era of decisive courage, ambition, and dynamic action",
+                    VedicPlanet::Mercury => {
+                        "Era of intellect, commerce, and analytical communication"
+                    }
+                    VedicPlanet::Jupiter => "Era of wisdom, higher expansion, and divine blessings",
+                    VedicPlanet::Venus => {
+                        "Era of harmony, artistic creation, and material prosperity"
+                    }
+                    VedicPlanet::Saturn => "Era of perseverance, discipline, and karmic harvest",
+                    VedicPlanet::Rahu => {
+                        "Era of worldly ambition and intense unconventional expansion"
+                    }
+                    VedicPlanet::Ketu => {
+                        "Era of spiritual discernment, detachment, and karmic release"
+                    }
                     _ => "",
                 };
 
                 maha.is_favorable = Some(favorable);
                 maha.interpretation = Some(
                     format!(
-                        "[{}] 이 시기는 {}하우스의 테마({})가 두드러집니다. 행성이 {} {}",
+                        "[{}]: Focuses on House {} themes ({}). The planet is {}{}",
                         lord_desc,
                         house,
                         theme,
                         dignity_desc,
                         if !favorable {
-                            "어려움을 극복하는 지혜가 필요합니다."
+                            " Requires conscious patience and strategic resilience."
                         } else {
                             ""
                         }

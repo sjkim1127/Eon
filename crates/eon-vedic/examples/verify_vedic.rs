@@ -151,11 +151,11 @@ fn main() {
     for d in dashas.iter().take(5) {
         let nature = FunctionalNature::analyze(&chart, d.planet);
         let nature_icon = match nature {
-            FunctionalStatus::Yogakaraka => "🌟",
-            FunctionalStatus::FunctionalBenefic => "🟢",
-            FunctionalStatus::FunctionalMalefic => "🔴",
-            FunctionalStatus::Maraka => "💀",
-            _ => "⚪",
+            FunctionalStatus::Yogakaraka => "[Yogakaraka]",
+            FunctionalStatus::FunctionalBenefic => "[Benefic]",
+            FunctionalStatus::FunctionalMalefic => "[Malefic]",
+            FunctionalStatus::Maraka => "[Maraka]",
+            _ => "[-]",
         };
 
         println!(
@@ -242,12 +242,12 @@ fn main() {
                     format!("{:?}", t.planet),
                     t.house_from_moon,
                     if t.is_benefic_transit {
-                        "Benefic 🟢"
+                        "Benefic"
                     } else {
-                        "Malefic 🔴"
+                        "Malefic"
                     },
                     if t.is_blocked {
-                        " (Blocked by Vedha ⚡)"
+                        " (Blocked by Vedha)"
                     } else {
                         ""
                     },

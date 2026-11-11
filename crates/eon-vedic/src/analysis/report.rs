@@ -381,7 +381,7 @@ impl VedicAnalysisReport {
         let mut s = String::new();
         s.push_str("# Vedic Chart Analysis Summary\n\n");
 
-        s.push_str("## 💠 Key Indicators (Jaimini Karakas)\n");
+        s.push_str("## Key Indicators (Jaimini Karakas)\n");
         s.push_str(&format!(
             "- **Atmakaraka (Self)**: {:?}\n",
             self.primary_karakas.atmakaraka
@@ -411,7 +411,7 @@ impl VedicAnalysisReport {
         ));
         s.push('\n');
 
-        s.push_str("## 🧭 Jaimini Indicators\n");
+        s.push_str("## Jaimini Indicators\n");
         if self.arudha_lagna > 0 {
             s.push_str(&format!(
                 "- **Arudha Lagna (AL)**: Sign {}\n",
@@ -447,7 +447,7 @@ impl VedicAnalysisReport {
         }
         s.push('\n');
 
-        s.push_str("## 🏠 House Capacities\n");
+        s.push_str("## House Capacities\n");
         let mut strong_houses: Vec<_> = self
             .house_summary
             .iter()
@@ -471,7 +471,7 @@ impl VedicAnalysisReport {
         }
         s.push('\n');
 
-        s.push_str("## 💍 Marriage & Career Insights (Divisional Charts)\n");
+        s.push_str("## Marriage & Career Insights (Divisional Charts)\n");
         s.push_str(&format!(
             "- **D9 Navamsa**: {}\n",
             self.d9_marriage_analysis
@@ -481,7 +481,7 @@ impl VedicAnalysisReport {
             self.d10_career_analysis
         ));
 
-        s.push_str("## 🚀 Special Status (Vargottama / Pushkar)\n");
+        s.push_str("## Special Status (Vargottama / Pushkar)\n");
         let special_planets: Vec<String> = self
             .varga_interpretations
             .iter()
@@ -504,7 +504,7 @@ impl VedicAnalysisReport {
         }
         s.push('\n');
 
-        s.push_str("## 🪐 Transit Alerts & Gochara\n");
+        s.push_str("## Transit Alerts & Gochara\n");
         // Sade Sati
         match self.sade_sati {
             crate::analysis::gochara::SadeSatiPhase::Rising => s.push_str("- **Sade Sati (Rising)**: Saturn has entered the 12th from Moon. A period of internal shifts begins.\n"),
@@ -516,7 +516,7 @@ impl VedicAnalysisReport {
         s.push_str("Detailed planetary transits including Murti Nirnaya and Vedha obstructions are available in the interactive dashboard.\n\n");
 
         s.push_str(&format!(
-            "## 📊 Overall Chart Strength: {:.1}/600\n",
+            "## Overall Chart Strength: {:.1}/600\n",
             self.overall_strength_score
         ));
 

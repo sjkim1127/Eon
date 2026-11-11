@@ -80,10 +80,10 @@ fn test_arudha_padas_12_houses() {
     }
 
     let al = arudha_padas.iter().find(|p| p.house == 1).unwrap();
-    assert!(al.interpretation.contains("아루다 라그나(AL)"));
+    assert!(al.interpretation.contains("Arudha Lagna (AL)"));
 
     let ul = arudha_padas.iter().find(|p| p.house == 12).unwrap();
-    assert!(ul.interpretation.contains("우파파다 라그나(UL/A12)"));
+    assert!(ul.interpretation.contains("Upapada Lagna (UL/A12)"));
 }
 
 #[test]

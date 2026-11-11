@@ -87,54 +87,57 @@ impl TajikaEngine {
 
         let (summary, details) = match muntha_house {
             1 => (
-                "문타 1하우스(명궁): 활력 증진 및 주도적 발전".to_string(),
-                "신체적 활력이 넘치고 명예와 명성이 높아지며 새로운 일을 주도적으로 추진하기에 극히 유리합니다.".to_string(),
+                "Muntha in House 1 (Ascendant): Vitality Boost & Initiative".to_string(),
+                "Physical vitality peaks with rising honor and prominence; exceptionally favorable for initiating major endeavors.".to_string(),
             ),
             2 => (
-                "문타 2하우스(재백궁): 자산 증대 및 금전적 수확".to_string(),
-                "재물 축적이 원활하고 가정이 평안하며 금전적 수입 파이프라인이 다각화되는 해입니다.".to_string(),
+                "Muntha in House 2 (Wealth): Asset Accumulation & Financial Harvest".to_string(),
+                "Smooth wealth accumulation and domestic tranquility with diversification of income streams.".to_string(),
             ),
             3 => (
-                "문타 3하우스(형제궁): 용기와 과감한 결단, 단기 여행".to_string(),
-                "형제 및 동료의 도움이 크고, 과감한 결단력과 활발한 이동/여행을 통해 성과를 거둡니다.".to_string(),
+                "Muntha in House 3 (Courage/Siblings): Decisive Action & Short Journeys".to_string(),
+                "Strong support from peers and siblings; decisive action and active mobility yield solid achievements.".to_string(),
             ),
             4 => (
-                "문타 4하우스(전택궁): 주거/환경 변화 및 안정주의".to_string(),
-                "부동산이나 주거 환경의 변화가 나타나며, 내실을 기하고 정서적 안정을 도모해야 하는 시기입니다.".to_string(),
+                "Muntha in House 4 (Home/Mother): Domestic Changes & Inner Stability".to_string(),
+                "Changes in residence or property emerge; a period to build inner foundations and emotional security.".to_string(),
             ),
             5 => (
-                "문타 5하우스(자녀/창의궁): 지혜 발현 및 창작/투자 결실".to_string(),
-                "지능과 창의력이 최고조에 달하며, 자녀 경사나 긍정적인 투자/기획 성과를 기대할 수 있습니다.".to_string(),
+                "Muntha in House 5 (Wisdom/Creativity): Intellect Flourishing & Creative Returns".to_string(),
+                "Intellectual creativity reaches its height; auspicious for children, speculative gains, and strategic planning.".to_string(),
             ),
             6 => (
-                "문타 6하우스(질액/난관궁): 경쟁 승리 및 질환/스트레스 유의".to_string(),
-                "적이나 경쟁자를 제압하는 힘이 강해지나, 과로로 인한 건강 관리 및 스트레스 완화가 필수적입니다.".to_string(),
+                "Muntha in House 6 (Overcoming Obstacles): Victory over Competition & Health Discipline".to_string(),
+                "Overcomes adversaries and obstacles effectively; vigilant health management and stress balance are essential.".to_string(),
             ),
             7 => (
-                "문타 7하우스(처재/협력궁): 파트너십 및 대인관계 유동성".to_string(),
-                "사업상 협력이나 배우자 관계가 주요 화두가 되며, 대외 교류 및 대인관계 조율이 중요합니다.".to_string(),
+                "Muntha in House 7 (Partnership): Alliances & Relational Dynamic".to_string(),
+                "Business collaborations and marriage dynamics take center stage; careful interpersonal diplomacy is key.".to_string(),
             ),
             8 => (
-                "문타 8하우스(유산/변동궁): 신중한 리스크 관리 및 체질 개선".to_string(),
-                "갑작스러운 변화나 예기치 않은 지출이 발생할 수 있으므로, 무리한 확장을 피하고 인내해야 합니다.".to_string(),
+                "Muntha in House 8 (Transformation): Prudent Risk Management & Internal Overhaul".to_string(),
+                "Sudden shifts or unexpected expenditures may arise; avoid reckless expansion and cultivate patient endurance.".to_string(),
             ),
             9 => (
-                "문타 9하우스(운기/행운궁): 정신적 성찰, 장거리 이동 및 길운".to_string(),
-                "행운이 따르고 스승이나 귀인의 도움을 받으며, 정신적 성숙과 함께 학문/학술 분야에서 발전합니다.".to_string(),
+                "Muntha in House 9 (Fortune/Dharma): Spiritual Insight, Travel & Auspicious Guidance".to_string(),
+                "Fortune smiles through mentors and benefactors; notable growth in philosophical depth and higher learning.".to_string(),
             ),
             10 => (
-                "문타 10하우스(관록궁): 사회적 성취, 승진 및 지위 상승".to_string(),
-                "직장 및 사회적 커리어에서 괄목할 만한 성과를 이루고 권위와 명예가 상승하는 매우 길한 해입니다.".to_string(),
+                "Muntha in House 10 (Career/Karma): Professional Distinction & Elevated Status".to_string(),
+                "Remarkable achievements in career with rising authority, promotion, and professional recognition.".to_string(),
             ),
             11 => (
-                "문타 11하우스(성취/이익궁): 소원 성취 및 대규모 이익 획득".to_string(),
-                "오랜 목표가 달성되고 수입이 대폭 증가하며, 인적 네트워크를 통한 이익이 극대화됩니다.".to_string(),
+                "Muntha in House 11 (Gains/Aspirations): Manifestation of Goals & Major Profits".to_string(),
+                "Long-held aspirations are realized; substantial income surge fueled by influential networks.".to_string(),
             ),
             12 => (
-                "문타 12하우스(소모/재충전궁): 지출 증가 및 내면의 재충전".to_string(),
-                "불필요한 지출이나 마음의 불안이 생길 수 있으므로, 성찰과 명상을 통해 내면을 다지는 시기입니다.".to_string(),
+                "Muntha in House 12 (Recalibration/Rest): Outflow Management & Spiritual Retreat".to_string(),
+                "Elevated expenditures or inner restlessness call for mindful introspection, rest, and meditation.".to_string(),
             ),
-            _ => ("문타 배치 분석 완료".to_string(), "문타 위치에 따른 기본 해석입니다.".to_string()),
+            _ => (
+                "Muntha Alignment Calculated".to_string(),
+                "Standard interpretation based on Muntha house placement.".to_string(),
+            ),
         };
 
         MunthaAnalysis {

@@ -72,36 +72,36 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
     strengths.extend(vedic_res.highlights.iter().take(2).cloned());
     if let Some(w) = western {
         strengths.push(format!(
-            "서양점성학 아스펙트 패턴 {}개",
+            "Western Aspect Patterns: {} configurations",
             w.result.aspect_patterns.len()
         ));
     }
     if let Some(z) = zwds {
         strengths.push(format!(
-            "자미두수 명궁 {}",
-            z.chart.palaces[z.chart.soul_idx].name.korean()
+            "Zi Wei Dou Shu Life Palace: {}",
+            z.chart.palaces[z.chart.soul_idx].name.english()
         ));
     }
     if let Some(hd) = human_design {
         strengths.push(format!(
-            "휴먼디자인 Type: {}, Profile: {}",
+            "Human Design: Type {}, Profile {}",
             hd.result.chart_type, hd.result.profile
         ));
     }
     if let Some(qm) = qimen {
         strengths.push(format!(
-            "기문둔갑 {}국 ({})",
+            "QiMen DunJia: Ju {} ({})",
             qm.report.pan.ju_number,
             if qm.report.pan.is_yin_ju {
-                "음둔"
+                "Yin Dun"
             } else {
-                "양둔"
+                "Yang Dun"
             }
         ));
     }
     if let Some(num) = numerology {
         strengths.push(format!(
-            "피타고라스 수비학 생애여정수 {}, 표현수 {}",
+            "Pythagorean Numerology: Life Path {}, Expression {}",
             num.result.core.life_path, num.result.core.expression
         ));
     }
@@ -109,11 +109,11 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
     let mut weaknesses = Vec::new();
     if let Some(vr) = &saju.vulnerability_report {
         if vr.total_crashes > 30 {
-            weaknesses.push(format!("주의 시점 {}개", vr.total_crashes));
+            weaknesses.push(format!("Cautionary timing points: {}", vr.total_crashes));
         }
     }
     if matches!(vedic.report.sade_sati, SadeSatiPhase::Peak) {
-        weaknesses.push("사데사티 절정".to_string());
+        weaknesses.push("Sade Sati Peak Phase".to_string());
     }
 
     let mut profile = "balanced".to_string();
@@ -133,19 +133,19 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
             _ => "D",
         };
         let domain_name = match h.house {
-            1 => "자아·건강",
-            2 => "재물",
-            3 => "형제·용기",
-            4 => "가정·학업",
-            5 => "자녀·창작",
-            6 => "건강·노동",
-            7 => "관계·결혼",
-            8 => "변화·유산",
-            9 => "학문·행운",
-            10 => "직업·명예",
-            11 => "소원·수입",
-            12 => "영성·은둔",
-            _ => "기타",
+            1 => "Self & Vitality",
+            2 => "Wealth & Assets",
+            3 => "Courage & Siblings",
+            4 => "Home & Foundations",
+            5 => "Children & Creativity",
+            6 => "Health & Service",
+            7 => "Partnership & Marriage",
+            8 => "Transformation & Longevity",
+            9 => "Wisdom & Fortune",
+            10 => "Career & Status",
+            11 => "Aspirations & Gains",
+            12 => "Spirituality & Solitude",
+            _ => "General",
         };
         domain_tiers.push(DomainTier {
             house: h.house,
@@ -205,11 +205,11 @@ fn compute_omni_detailed_components(
     let saju_strength_score = saju.report.strength.strength_score.abs().min(50.0) * 2.0;
     components.push(DestinyComponent {
         key: "saju_strength".to_string(),
-        label: "사주 원국 신강약".to_string(),
+        label: "Saju Day Master Strength".to_string(),
         score: saju_strength_score,
         weight: 0.10,
         reasons: vec![format!(
-            "신강약 지수: {:.1}",
+            "Day Master strength index: {:.1}",
             saju.report.strength.strength_score
         )],
     });
@@ -217,11 +217,11 @@ fn compute_omni_detailed_components(
     // 2. Element Flow (Weight: 0.07)
     components.push(DestinyComponent {
         key: "element_flow".to_string(),
-        label: "오행 유통성".to_string(),
+        label: "Five Elements Flow Efficiency".to_string(),
         score: saju.qi_topology.throughput * 100.0,
         weight: 0.07,
         reasons: vec![format!(
-            "오행 흐름 효율: {:.1}%",
+            "Five Elements circulation efficiency: {:.1}%",
             saju.qi_topology.throughput * 100.0
         )],
     });
@@ -237,10 +237,10 @@ fn compute_omni_detailed_components(
     };
     components.push(DestinyComponent {
         key: "structure".to_string(),
-        label: "사주 격국 및 용신".to_string(),
+        label: "Saju Structure & Yongshin".to_string(),
         score: structure_score,
         weight: 0.08,
-        reasons: vec![format!("격국: {:?}", saju.report.structure.structure)],
+        reasons: vec![format!("Structure: {:?}", saju.report.structure.structure)],
     });
 
     // 4. Spirit Markers (Weight: 0.05)
@@ -248,11 +248,11 @@ fn compute_omni_detailed_components(
         - (saju.report.spirit_markers.inauspicious.len() as f32 * 10.0).max(0.0);
     components.push(DestinyComponent {
         key: "spirit_markers".to_string(),
-        label: "사주 길흉신 분포".to_string(),
+        label: "Saju Auspicious & Inauspicious Stars".to_string(),
         score: spirit_score.clamp(0.0, 100.0),
         weight: 0.05,
         reasons: vec![format!(
-            "길신 {}개, 흉신 {}개",
+            "{} auspicious, {} inauspicious stars",
             saju.report.spirit_markers.auspicious.len(),
             saju.report.spirit_markers.inauspicious.len()
         )],
@@ -262,10 +262,10 @@ fn compute_omni_detailed_components(
     let house_score = vedic.report.overall_strength_score as f32 / 6.0;
     components.push(DestinyComponent {
         key: "vedic_houses".to_string(),
-        label: "베딕 12하우스 역량".to_string(),
+        label: "Vedic 12 House Capacity".to_string(),
         score: house_score.clamp(0.0, 100.0),
         weight: 0.09,
-        reasons: vec![format!("하우스 평균 강도: {:.1}", house_score)],
+        reasons: vec![format!("House average strength: {:.1}", house_score)],
     });
 
     // 6. Vedic Yogas (Weight: 0.08)
@@ -279,11 +279,11 @@ fn compute_omni_detailed_components(
         .min(100.0);
     components.push(DestinyComponent {
         key: "vedic_yogas".to_string(),
-        label: "베딕 108대 요가".to_string(),
+        label: "Vedic Classical Yogas (108 Major)".to_string(),
         score: yoga_score,
         weight: 0.08,
         reasons: vec![format!(
-            "최상급 요가 {}개 감지",
+            "{} top-tier yogas detected",
             vedic
                 .report
                 .yogas
@@ -304,11 +304,11 @@ fn compute_omni_detailed_components(
         * 100.0;
     components.push(DestinyComponent {
         key: "planet_status".to_string(),
-        label: "베딕 행성 활성도".to_string(),
+        label: "Vedic Planetary Vitality (Avasthas)".to_string(),
         score: avastha_score.clamp(0.0, 100.0),
         weight: 0.05,
         reasons: vec![format!(
-            "활성 상태 행성 {}개",
+            "{} active state planets",
             vedic
                 .chart
                 .avasthas
@@ -328,17 +328,17 @@ fn compute_omni_detailed_components(
     };
     components.push(DestinyComponent {
         key: "western_astrology".to_string(),
-        label: "서양 점성학 아스펙트 및 디그니티".to_string(),
+        label: "Western Aspects & Essential Dignities".to_string(),
         score: west_score,
         weight: 0.09,
         reasons: vec![if let Some(w) = western {
             format!(
-                "아스펙트 {}개, 패턴 {}개 감지",
+                "{} aspects, {} aspect patterns detected",
                 w.result.aspects.len(),
                 w.result.aspect_patterns.len()
             )
         } else {
-            "기본 점성학 모듈 적용".to_string()
+            "Default Western astrology module applied".to_string()
         }],
     });
 
@@ -352,17 +352,17 @@ fn compute_omni_detailed_components(
     };
     components.push(DestinyComponent {
         key: "zwds_harmony".to_string(),
-        label: "자미두수 격국 및 3중 사화 충국".to_string(),
+        label: "ZWDS Formations & Flying SiHua Clashes".to_string(),
         score: zwds_score,
         weight: 0.09,
         reasons: vec![if let Some(z) = zwds {
             format!(
-                "길흉 격국 {}개, 사화 충국 {}개",
+                "{} destiny formations, {} SiHua collisions",
                 z.chart.destiny_patterns.len(),
                 z.chart.collisions.len()
             )
         } else {
-            "기본 자미두수 모듈 적용".to_string()
+            "Default Zi Wei Dou Shu module applied".to_string()
         }],
     });
 
@@ -376,18 +376,18 @@ fn compute_omni_detailed_components(
     };
     components.push(DestinyComponent {
         key: "human_design_dynamics".to_string(),
-        label: "휴먼디자인 에너지 정의 및 채널".to_string(),
+        label: "Human Design Centers & Active Channels".to_string(),
         score: hd_score,
         weight: 0.07,
         reasons: vec![if let Some(hd) = human_design {
             format!(
-                "정의 센터 {}개, 활성 채널 {}개, Type: {}",
+                "{} defined centers, {} active channels, Type: {}",
                 hd.result.defined_centers.len(),
                 hd.result.active_channels.len(),
                 hd.result.chart_type
             )
         } else {
-            "기본 휴먼디자인 모듈 적용".to_string()
+            "Default Human Design module applied".to_string()
         }],
     });
 
@@ -401,17 +401,17 @@ fn compute_omni_detailed_components(
     };
     components.push(DestinyComponent {
         key: "qimen_harmony".to_string(),
-        label: "기문둔갑 9궁 & 3길문/8신 공명".to_string(),
+        label: "QiMen 9 Palaces & Auspicious Doors".to_string(),
         score: qimen_score,
         weight: 0.06,
         reasons: vec![if let Some(qm) = qimen {
             format!(
-                "기문둔갑 {}국 ({}), 직부: {:?}, 직사: {:?}",
+                "QiMen DunJia Ju {} ({}), Value Chief: {:?}, Envoy Door: {:?}",
                 qm.report.pan.ju_number,
                 if qm.report.pan.is_yin_ju {
-                    "음둔"
+                    "Yin Dun"
                 } else {
-                    "양둔"
+                    "Yang Dun"
                 },
                 qm.report
                     .pan
@@ -427,7 +427,7 @@ fn compute_omni_detailed_components(
                     .unwrap_or_default()
             )
         } else {
-            "기본 기문둔갑 모듈 적용".to_string()
+            "Default QiMen DunJia module applied".to_string()
         }],
     });
 
@@ -445,16 +445,16 @@ fn compute_omni_detailed_components(
     };
     components.push(DestinyComponent {
         key: "numerology_vibration".to_string(),
-        label: "수비학 수비 진동 & 마스터 넘버".to_string(),
+        label: "Pythagorean Numerology Vibrations".to_string(),
         score: num_score,
         weight: 0.06,
         reasons: vec![if let Some(num) = numerology {
             format!(
-                "생애여정수: {}, 표현수: {}, 영혼수: {}",
+                "Life Path: {}, Expression: {}, Soul Urge: {}",
                 num.result.core.life_path, num.result.core.expression, num.result.core.soul_urge
             )
         } else {
-            "기본 수비학 모듈 적용".to_string()
+            "Default Numerology module applied".to_string()
         }],
     });
 
@@ -462,10 +462,10 @@ fn compute_omni_detailed_components(
     let luck_score = transit_res.score;
     components.push(DestinyComponent {
         key: "luck_cycle".to_string(),
-        label: "현재 트랜짓 운세 흐름".to_string(),
+        label: "Current Transit Dynamics".to_string(),
         score: luck_score,
         weight: 0.05,
-        reasons: vec![format!("트랜짓 종합 점수: {:.1}", luck_score)],
+        reasons: vec![format!("Transit composite score: {:.1}", luck_score)],
     });
 
     // 14. Stability & System Safety (Weight: 0.03)
@@ -479,11 +479,11 @@ fn compute_omni_detailed_components(
             .min(100.0);
     components.push(DestinyComponent {
         key: "stability".to_string(),
-        label: "운명 안정성 및 붕괴 예방".to_string(),
+        label: "Destiny Resilience & Risk Prevention".to_string(),
         score: risk_inv,
         weight: 0.03,
         reasons: vec![format!(
-            "취약점(Crash) 지수: {}",
+            "Vulnerability crash index: {}",
             saju.vulnerability_report
                 .as_ref()
                 .map(|v| v.total_crashes)
@@ -500,15 +500,15 @@ fn compute_omni_detailed_components(
         .unwrap_or(50.0);
     components.push(DestinyComponent {
         key: "golden_time".to_string(),
-        label: "인생 골든타임 수치".to_string(),
+        label: "Golden Era Timing Metric".to_string(),
         score: golden_score,
         weight: 0.03,
         reasons: vec![saju
             .report
             .golden_time
             .as_ref()
-            .map(|gt| format!("최상의 시기: {}~{}세", gt.start_age, gt.end_age))
-            .unwrap_or("골든타임 미정".to_string())],
+            .map(|gt| format!("Optimal golden era: ages {}~{}", gt.start_age, gt.end_age))
+            .unwrap_or_else(|| "Golden era undetermined".to_string())],
     });
 
     components
@@ -557,74 +557,78 @@ fn get_tier_from_score(score: f32) -> TierGrade {
     if s >= 97 {
         TierGrade {
             grade: "S+".to_string(),
-            label: "천기".to_string(),
-            desc: "하늘의 기틀이 잡힌 극귀(極貴)의 운명".to_string(),
+            label: "Celestial Sovereign".to_string(),
+            desc: "A destiny of supreme nobility anchored by celestial harmony.".to_string(),
         }
     } else if s >= 90 {
         TierGrade {
             grade: "S".to_string(),
-            label: "천운".to_string(),
-            desc: "하늘이 돕고 땅이 비추는 대귀(大貴)의 운명".to_string(),
+            label: "Heavenly Fortune".to_string(),
+            desc: "Great noble destiny blessed by heaven and illuminated by earth.".to_string(),
         }
     } else if s >= 83 {
         TierGrade {
             grade: "A+".to_string(),
-            label: "대길상".to_string(),
-            desc: "복이 넘치며 만인이 부러워할 기세의 운명".to_string(),
+            label: "Great Auspice".to_string(),
+            desc: "Abundant fortune and commanding momentum admired by all.".to_string(),
         }
     } else if s >= 75 {
         TierGrade {
             grade: "A".to_string(),
-            label: "대길".to_string(),
-            desc: "크게 길하며 성취가 확실한 운명".to_string(),
+            label: "High Auspice".to_string(),
+            desc: "Highly auspicious destiny destined for clear, sustained achievements."
+                .to_string(),
         }
     } else if s >= 67 {
         TierGrade {
             grade: "B+".to_string(),
-            label: "길상".to_string(),
-            desc: "순한 기세 속에서 재능을 펼치는 운명".to_string(),
+            label: "Favorable Auspice".to_string(),
+            desc: "Gentle momentum allowing talents to unfold smoothly.".to_string(),
         }
     } else if s >= 59 {
         TierGrade {
             grade: "B".to_string(),
-            label: "길".to_string(),
-            desc: "안정적이고 무난하게 번영할 운명".to_string(),
+            label: "Auspicious".to_string(),
+            desc: "Stable, well-grounded destiny with steady prosperity.".to_string(),
         }
     } else if s >= 51 {
         TierGrade {
             grade: "C+".to_string(),
-            label: "중상".to_string(),
-            desc: "보통 이상의 저력이 있으며 노력이 빛을 발함".to_string(),
+            label: "Moderate Auspice".to_string(),
+            desc: "Above-average resilience where diligent effort yields bright results."
+                .to_string(),
         }
     } else if s >= 43 {
         TierGrade {
             grade: "C".to_string(),
-            label: "중평".to_string(),
-            desc: "굴곡이 있으나 능히 헤쳐 나갈 수 있는 운명".to_string(),
+            label: "Moderate Equilibrium".to_string(),
+            desc: "Experiences life fluctuations but fully equipped to navigate through."
+                .to_string(),
         }
     } else if s >= 35 {
         TierGrade {
             grade: "D+".to_string(),
-            label: "중하".to_string(),
-            desc: "고비가 잦으나 인내로써 길을 열어야 함".to_string(),
+            label: "Moderate Caution".to_string(),
+            desc: "Frequent turning points requiring patience to carve out pathways.".to_string(),
         }
     } else if s >= 27 {
         TierGrade {
             grade: "D".to_string(),
-            label: "하평".to_string(),
-            desc: "많은 주의를 요하며 신중한 처세가 필요한 시기".to_string(),
+            label: "Cautionary".to_string(),
+            desc: "Demands careful attention, prudent conduct, and strategic timing.".to_string(),
         }
     } else if s >= 18 {
         TierGrade {
             grade: "E".to_string(),
-            label: "하하".to_string(),
-            desc: "크나큰 인고와 역경 뒤에 겨우 싹을 틔울 운명".to_string(),
+            label: "Perseverance".to_string(),
+            desc: "A journey of profound patience and endurance before blossoming.".to_string(),
         }
     } else {
         TierGrade {
             grade: "F".to_string(),
-            label: "난국".to_string(),
-            desc: "길이 험난하니 수양과 지혜로 화를 피해야 함".to_string(),
+            label: "Adversity".to_string(),
+            desc: "Rugged terrain requiring inner cultivation and wisdom to avert hardship."
+                .to_string(),
         }
     }
 }
@@ -683,7 +687,7 @@ fn compute_saju_score(saju: &SajuAnalysisOutput) -> ScoreResult {
     .count() as f32;
     score += acquired * 4.0;
     if acquired == 3.0 {
-        highlights.push("삼득(득령·득지·득시) 완성".to_string());
+        highlights.push("Triple Acquisition (Season, Position, Time) complete".to_string());
     }
 
     let support_pct = if st.deuk_se.support_ratio > 1.0 {
@@ -744,13 +748,13 @@ fn compute_vedic_score(vedic: &VedicAnalysisOutput) -> ScoreResult {
     score += 10.0_f32.min(ex_houses * 2.0);
 
     if ex_houses > 0.0 {
-        highlights.push(format!("Excellent 등급 하우스 {}개", ex_houses as u32));
+        highlights.push(format!("{} Excellent rating houses", ex_houses as u32));
     }
 
     if matches!(r.sade_sati, SadeSatiPhase::Peak) {
-        highlights.push("⚠️ 사데사티 절정기 진행 중".to_string());
+        highlights.push("Sade Sati Peak Phase active".to_string());
     } else if matches!(r.sade_sati, SadeSatiPhase::None) {
-        highlights.push("사데사티 영향 없음 (안정)".to_string());
+        highlights.push("Sade Sati inactive (Stable)".to_string());
     }
 
     ScoreResult {
@@ -815,22 +819,22 @@ fn compute_quantum_synergies(
         .count();
     if saju_ausp_count >= 2 && vedic_yoga_count >= 1 {
         items.push(crate::dto::QuantumSynergyItem {
-            title: "동서양 귀인/요가 조화 (Noble Synergy)".to_string(),
+            title: "Noble Alignment (East-West Auspicious Synergy)".to_string(),
             engines: vec!["Saju".to_string(), "Vedic".to_string()],
             score_delta: 12.0,
             is_positive: true,
-            description: "사주 원국의 길신과 베딕 점성학 최상급 요가가 교차 협력하여 강력한 천운 형성을 입증합니다.".to_string(),
+            description: "Saju auspicious spirit markers and top-tier Vedic yogas align in cross-engine synergy, confirming powerful celestial momentum.".to_string(),
         });
     }
 
     if let (Some(w), Some(z)) = (western, zwds) {
         if !w.result.aspect_patterns.is_empty() && !z.chart.destiny_patterns.is_empty() {
             items.push(crate::dto::QuantumSynergyItem {
-                title: "서양 기하학 & 자미두수 격국 공명 (Geometric Resonance)".to_string(),
+                title: "Geometric Resonance (Western Aspects & ZWDS Formations)".to_string(),
                 engines: vec!["Western".to_string(), "ZWDS".to_string()],
                 score_delta: 15.0,
                 is_positive: true,
-                description: "서양 점성학의 아스펙트 다이어그램과 자미두수 12궁 성반 주성 격국이 상호 공명하고 있습니다.".to_string(),
+                description: "Western planetary aspect geometry resonates directly with Zi Wei Dou Shu primary palace formations.".to_string(),
             });
         }
     }
@@ -838,11 +842,11 @@ fn compute_quantum_synergies(
     if let (Some(hd), Some(qm)) = (human_design, qimen) {
         if hd.result.defined_centers.len() >= 3 && qm.report.pan.ju_number > 0 {
             items.push(crate::dto::QuantumSynergyItem {
-                title: "휴먼디자인 센터 & 기문둔갑 9궁 공명 (Quantum Energy Alignment)".to_string(),
+                title: "Quantum Energy Alignment (Human Design Centers & QiMen 9 Palaces)".to_string(),
                 engines: vec!["Human Design".to_string(), "QiMen".to_string()],
                 score_delta: 14.0,
                 is_positive: true,
-                description: "휴먼디자인 정의 센터의 에너지 흐름과 기문둔갑 9궁 길문 배치가 정합하여 천시지리를 형성합니다.".to_string(),
+                description: "Human Design defined center flows align with QiMen DunJia Nine Palaces auspicious door layouts.".to_string(),
             });
         }
     }
@@ -850,11 +854,11 @@ fn compute_quantum_synergies(
     if let Some(num) = numerology {
         if num.result.is_master_life_path && (saju_ausp_count >= 1 || vedic_yoga_count >= 1) {
             items.push(crate::dto::QuantumSynergyItem {
-                title: "수비학 마스터 넘버 & 동서양 공명 (Master Number Resonance)".to_string(),
+                title: "Master Number Resonance (Pythagorean Vibration & Universal Blessing)".to_string(),
                 engines: vec!["Numerology".to_string(), "Saju/Vedic".to_string()],
                 score_delta: 16.0,
                 is_positive: true,
-                description: "피타고라스 수비학 마스터 넘버(11/22/33)의 고차원 진동과 동서양 귀인/요가 천운이 결합되었습니다.".to_string(),
+                description: "High-order vibrations of Pythagorean Master Numbers (11/22/33) unify with East-West noble auspicious markers.".to_string(),
             });
         }
     }
@@ -878,11 +882,11 @@ fn compute_quantum_synergies(
             .unwrap_or(false)
     {
         items.push(crate::dto::QuantumSynergyItem {
-            title: "전 8대 운명 엔진 천운 중첩 (8-Engine Universal Harmony)".to_string(),
+            title: "8-Engine Universal Harmony (Full Cross-Engine Alignment)".to_string(),
             engines: vec!["Saju".to_string(), "Vedic".to_string(), "Western".to_string(), "ZWDS".to_string(), "HD".to_string(), "QiMen".to_string(), "Numerology".to_string()],
             score_delta: 22.0,
             is_positive: true,
-            description: "사주, 베딕, 서양점성학, 자미두수, 휴먼디자인, 기문둔갑, 수비학 전 8대 엔진의 천운 조화가 입증되어 대귀(大貴)의 이치에 달했습니다.".to_string(),
+            description: "All 8 destiny engines (Saju, Vedic, Western, ZWDS, Human Design, QiMen, Numerology) harmonize in unanimous celestial alignment.".to_string(),
         });
     }
 
@@ -894,11 +898,11 @@ fn compute_quantum_synergies(
         > 20
     {
         items.push(crate::dto::QuantumSynergyItem {
-            title: "운명 변곡점 충돌 경보 (Collision Risk Warning)".to_string(),
+            title: "Inflection Point Collision Alert (Timing Risk Warning)".to_string(),
             engines: vec!["Saju VM".to_string()],
             score_delta: -10.0,
             is_positive: false,
-            description: "100년 생애 경로 에뮬레이션 과정에서 시기별 충/형 변곡점이 감지되어 신중한 관리가 필요합니다.".to_string(),
+            description: "Temporal simulation detects concentrated clash/punishment inflection points, advising strategic timing and caution.".to_string(),
         });
     }
 
@@ -918,36 +922,21 @@ fn compute_8d_domain_radar(
     let saju_str = saju.report.strength.strength_score.abs().min(50.0) * 2.0;
 
     let domain_defs: [(&str, &str, &[u8], f64); 8] = [
-        ("self_health", "자아·건강 (Self & Health)", &[1, 6], 0.15),
-        ("wealth_asset", "재물·자산 (Wealth & Asset)", &[2, 11], 0.15),
-        ("career_honor", "직업·명예 (Career & Honor)", &[10, 6], 0.15),
-        (
-            "knowledge_wisdom",
-            "학문·지혜 (Knowledge & Wisdom)",
-            &[9, 3],
-            0.10,
-        ),
+        ("self_health", "Self & Vitality", &[1, 6], 0.15),
+        ("wealth_asset", "Wealth & Assets", &[2, 11], 0.15),
+        ("career_honor", "Career & Honor", &[10, 6], 0.15),
+        ("knowledge_wisdom", "Knowledge & Wisdom", &[9, 3], 0.10),
         (
             "relationship_marriage",
-            "애정·결혼 (Relationship & Marriage)",
+            "Partnership & Marriage",
             &[7, 5],
             0.12,
         ),
-        (
-            "lineage_descendants",
-            "자녀·가문 (Lineage & Descendants)",
-            &[5, 4],
-            0.10,
-        ),
-        (
-            "network_social",
-            "인맥·사회 (Network & Influence)",
-            &[11, 3],
-            0.11,
-        ),
+        ("lineage_descendants", "Lineage & Children", &[5, 4], 0.10),
+        ("network_social", "Network & Influence", &[11, 3], 0.11),
         (
             "spirituality_intuition",
-            "영성·직관 (Spirituality & Intuition)",
+            "Spirituality & Intuition",
             &[12, 8],
             0.12,
         ),
@@ -1033,8 +1022,8 @@ fn compute_8d_domain_radar(
             score: final_score.round(),
             tier,
             key_factors: vec![
-                format!("베딕 {}하우스 평점: {}", primary_house, primary_rating),
-                format!("동양 오행 가중치: {:.1}%", weight * 100.0),
+                format!("Vedic House {} rating: {}", primary_house, primary_rating),
+                format!("Eastern Element weight: {:.1}%", weight * 100.0),
             ],
         });
     }
@@ -1063,18 +1052,15 @@ fn compute_temporal_tier_trajectory(
             let grade = get_tier_from_score(blended_score).grade;
             let dasha_lord_name = find_dasha_lord_at_age(dasha_timeline, frame.age);
             let note = if blended_score >= 80.0 {
-                format!(
-                    "최상급 대운 도래 시기 (Apex Era) — Dasha: {}",
-                    dasha_lord_name
-                )
+                format!("Apex Era (Peak Luck Phase) — Dasha: {}", dasha_lord_name)
             } else if blended_score >= 60.0 {
                 format!(
-                    "안정성 및 성취 누적 시기 (Growth Era) — Dasha: {}",
+                    "Growth Era (Accumulation & Expansion Phase) — Dasha: {}",
                     dasha_lord_name
                 )
             } else {
                 format!(
-                    "내면 축적 및 인고 시기 (Restoration Era) — Dasha: {}",
+                    "Restoration Era (Inner Cultivation Phase) — Dasha: {}",
                     dasha_lord_name
                 )
             };
@@ -1096,7 +1082,7 @@ fn compute_temporal_tier_trajectory(
                 age,
                 score: score.round(),
                 tier_grade: grade,
-                note: format!("Dasha 기반 추정: {}", lord),
+                note: format!("Dasha estimation: {}", lord),
             });
         }
     }

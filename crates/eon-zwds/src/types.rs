@@ -91,6 +91,23 @@ impl PalaceName {
             Self::Fumu => "부모궁",
         }
     }
+
+    pub fn english(&self) -> &'static str {
+        match self {
+            Self::Ming => "Life Palace",
+            Self::Xiongdi => "Siblings Palace",
+            Self::Fuqi => "Spouse Palace",
+            Self::Zinv => "Children Palace",
+            Self::Caibo => "Wealth Palace",
+            Self::Jie => "Health Palace",
+            Self::Qianyi => "Travel Palace",
+            Self::Nupao => "Friends Palace",
+            Self::Guanlu => "Career Palace",
+            Self::Tianzhai => "Property Palace",
+            Self::Fude => "Karma Palace",
+            Self::Fumu => "Parents Palace",
+        }
+    }
 }
 
 // ============================================================
@@ -612,6 +629,7 @@ pub struct BorrowedStarsInfo {
 pub struct DestinyPattern {
     pub name_hanja: String,
     pub name_korean: String,
+    pub name_english: String,
     pub is_auspicious: bool,
     pub description_korean: String,
     pub description_english: String,

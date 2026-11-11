@@ -149,15 +149,17 @@ impl SajuReport {
         if !self.supplementary_pillars.interpretations.is_empty() {
             md.push_str("\n#### Interpretations\n");
             for interp in &self.supplementary_pillars.interpretations {
-                let emoji = match interp.level {
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "✨",
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "⚠️",
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Danger => "🚨",
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "•",
+                let badge = match interp.level {
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => {
+                        "[+]"
+                    }
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "[!]",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Danger => "[x]",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "[-]",
                 };
                 md.push_str(&format!(
-                    "- **{} {}**: {}\n",
-                    emoji, interp.pillar_name, interp.description
+                    "- {} **{}**: {}\n",
+                    badge, interp.pillar_name, interp.description
                 ));
             }
         }
@@ -236,15 +238,17 @@ impl SajuReport {
             md.push_str("- None detected.\n");
         } else {
             for m in &self.spirit_markers.mapped_markers {
-                let emoji = match m.level {
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "✨",
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "⚠️",
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Danger => "🚨",
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "•",
+                let badge = match m.level {
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => {
+                        "[+]"
+                    }
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "[!]",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Danger => "[x]",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "[-]",
                 };
                 md.push_str(&format!(
                     "### {} {} ({})\n",
-                    emoji,
+                    badge,
                     m.marker.hangul(),
                     m.position.hangul()
                 ));
@@ -262,15 +266,17 @@ impl SajuReport {
             md.push_str("- No significant relationships detected.\n");
         } else {
             for rel in &self.relationships.mapped_relationships {
-                let emoji = match rel.level {
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => "🤝",
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "⚡",
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Danger => "🚨",
-                    crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "•",
+                let badge = match rel.level {
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Auspicious => {
+                        "[+]"
+                    }
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Caution => "[!]",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Danger => "[x]",
+                    crate::analysis::supplementary_pillars::InterpretationLevel::Neutral => "[-]",
                 };
                 md.push_str(&format!(
                     "### {} {} ({})\n",
-                    emoji,
+                    badge,
                     rel.name,
                     rel.positions.join(", ")
                 ));

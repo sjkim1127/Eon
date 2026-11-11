@@ -108,21 +108,21 @@ fn main() {
     println!("IPC Connection Score: {:.1}/100", audit.sync_score);
 
     if !audit.synergies.is_empty() {
-        println!("✅ Synergies (Shared Resources):");
+        println!("[+] Synergies (Shared Resources):");
         for s in &audit.synergies {
             println!("   - {}", s);
         }
     }
 
     if !audit.conflicts.is_empty() {
-        println!("⚠️ Conflicts (Race Conditions):");
+        println!("[!] Conflicts (Race Conditions):");
         for c in &audit.conflicts {
             println!("   - {}", c);
         }
     }
 
     if !audit.deadlocks.is_empty() {
-        println!("🚫 Deadlocks (Resource Locks):");
+        println!("[x] Deadlocks (Resource Locks):");
         for d in &audit.deadlocks {
             println!("   - {}", d);
         }

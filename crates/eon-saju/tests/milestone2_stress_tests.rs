@@ -1,4 +1,4 @@
-//! 🧪 Milestone 2 (R2) Wolwun Alignment, Dynamic Precedence, and Transformations Stress Tests
+//! Milestone 2 (R2) Wolwun Alignment, Dynamic Precedence, and Transformations Stress Tests
 //!
 //! Empirical adversarial test suite verifying:
 //! 1. Wolwun GanZi alignment at exact 1-minute before/after solar term entry boundaries.

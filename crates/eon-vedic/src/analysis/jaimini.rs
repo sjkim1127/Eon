@@ -217,18 +217,18 @@ impl JaiminiEngine {
     pub fn analyze_arudha_padas(chart: &VedicChart) -> Vec<ArudhaAnalysisInfo> {
         let padas = Self::calculate_arudha_padas(chart);
         let rasi_names = [
-            "양자리(Aries)",
-            "황소자리(Taurus)",
-            "쌍둥이자리(Gemini)",
-            "게자리(Cancer)",
-            "사자자리(Leo)",
-            "처녀자리(Virgo)",
-            "천칭자리(Libra)",
-            "전갈자리(Scorpio)",
-            "궁수자리(Sagittarius)",
-            "염소자리(Capricorn)",
-            "물병자리(Aquarius)",
-            "물고기자리(Pisces)",
+            "Aries",
+            "Taurus",
+            "Gemini",
+            "Cancer",
+            "Leo",
+            "Virgo",
+            "Libra",
+            "Scorpio",
+            "Sagittarius",
+            "Capricorn",
+            "Aquarius",
+            "Pisces",
         ];
 
         padas
@@ -237,16 +237,16 @@ impl JaiminiEngine {
                 let r_name = rasi_names.get(p.rasi as usize - 1).unwrap_or(&"Unknown");
                 let interp = match p.house {
                     1 => format!(
-                        "아루다 라그나(AL)가 {}에 위치합니다. 대외적 이미지, 사회적 위상, 타인이 보는 본인의 신분과 명성을 주도합니다.",
+                        "Arudha Lagna (AL) is placed in {}. Governs public image, social standing, and external reputation.",
                         r_name
                     ),
-                    2 => format!("Dhanapada(A2)가 {}에 위치합니다. 물질적 자산, 가족 재정 흐름 및 일상의 수입원을 다룹니다.", r_name),
-                    7 => format!("Darapada(A7)가 {}에 위치합니다. 대인 관계, 비즈니스 파트너십 및 사회적 교류 능력을 상징합니다.", r_name),
+                    2 => format!("Dhanapada (A2) is placed in {}. Governs material assets, financial stability, and sustained income streams.", r_name),
+                    7 => format!("Darapada (A7) is placed in {}. Signifies interpersonal alliances, business partnerships, and relational diplomacy.", r_name),
                     12 => format!(
-                        "우파파다 라그나(UL/A12)가 {}에 위치합니다. 배우자의 성향, 결혼의 내실과 유지력, 배우자 가문과의 인연을 나타냅니다.",
+                        "Upapada Lagna (UL/A12) is placed in {}. Signifies spouse characteristics, marital stability, and in-law connections.",
                         r_name
                     ),
-                    _ => format!("{}가 {}에 위치하여 해당 분야의 외형적 성과를 주도합니다.", p.name, r_name),
+                    _ => format!("{} is placed in {}, governing the outer manifestation of this domain.", p.name, r_name),
                 };
 
                 ArudhaAnalysisInfo {

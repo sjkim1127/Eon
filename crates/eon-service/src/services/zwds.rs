@@ -1,6 +1,6 @@
-//! 자미두수 분석 서비스 모듈
+//! Zi Wei Dou Shu analysis service module
 //!
-//! 입력된 데이터를 바탕으로 생년월일시 보정을 수행하고, 자미두수 엔진을 호출해 성반과 대한/유년을 연산합니다.
+//! Performs birth datetime adjustments and calls the ZWDS engine to compute chart, Decadal Luck (Daxian), and Annual Luck (Liunian).
 
 use crate::birth::prepare_birth_context;
 use crate::dto::{AnalysisMeta, BirthTimePrecision, ZwdsAnalysisInput, ZwdsAnalysisOutput};
@@ -10,7 +10,7 @@ use eon_core::Gender;
 use eon_zwds::annual::calculate_liunian;
 use eon_zwds::build_chart;
 
-/// 자미두수 분석을 수행합니다.
+/// Performs Zi Wei Dou Shu analysis.
 pub fn analyze(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceError> {
     let gender = if input.is_male {
         Gender::Male
@@ -18,33 +18,33 @@ pub fn analyze(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceEr
         Gender::Female
     };
 
-    // 자미두수는 통상적으로 경도 기반 진태양시 보정을 하지 않으므로 apply_tst = false
+    // ZWDS typically does not apply longitude True Solar Time correction: apply_tst = false
     let birth_ctx = prepare_birth_context(&input.base, Some(gender), false)?;
 
-    // 1. 성반 빌드
+    // 1. Build chart
     let mut chart = build_chart(&birth_ctx.birth_info)
-        .map_err(|e| ServiceError::Zwds(format!("자미두수 성반 생성 실패: {}", e)))?;
+        .map_err(|e| ServiceError::Zwds(format!("Failed to build ZWDS chart: {}", e)))?;
 
-    // 2. 대상 연도 지정 (기본값은 실행 시점의 현재 연도)
+    // 2. Determine target year (defaults to current year)
     let target_year = input
         .target_year
         .unwrap_or_else(|| chrono::Utc::now().year());
 
-    // 3. 대상 연도에 따른 유년(流年) 계산
+    // 3. Compute Annual Luck (Liunian) for target year
     let current_liu_nian = calculate_liunian(target_year);
 
-    // 성반 내 유년 궁 표시 업데이트
+    // Update Liunian palace marker in chart
     for palace in chart.palaces.iter_mut() {
         if palace.index == current_liu_nian.palace_idx {
             palace.is_current_liu_nian = true;
         }
     }
 
-    // 4. 나이 계산 및 현재 대한(大限) 식별
-    // 자미두수 대운(대한)은 태어난 해(1세)부터 시작해 만 나이/한국 나이가 아닌 오행국 나이(예: 2~11세) 기준입니다.
-    // 여기서는 간단하게 경과 연도(target_year - birth_year + 1)를 나이로 보고 현재 대한을 매핑합니다.
+    // 4. Calculate age and identify current Decadal Luck (Daxian)
+    // ZWDS Daxian starts from Bureau start age rather than Western age.
+    // Map current Daxian by elapsed years.
     let age =
-        (target_year.saturating_sub(birth_ctx.birth_info.year).max(0) as u32).saturating_add(1); // 세는 나이 기준
+        (target_year.saturating_sub(birth_ctx.birth_info.year).max(0) as u32).saturating_add(1);
 
     let current_daxian = chart
         .daxian
@@ -52,7 +52,7 @@ pub fn analyze(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceEr
         .find(|d| age >= d.age_start && age <= d.age_end)
         .cloned()
         .or_else(|| chart.daxian.first().cloned())
-        .ok_or_else(|| ServiceError::Zwds("대한 목록이 비어있음".to_string()))?;
+        .ok_or_else(|| ServiceError::Zwds("Daxian list is empty".to_string()))?;
 
     Ok(ZwdsAnalysisOutput {
         meta: AnalysisMeta {

@@ -1,4 +1,4 @@
-//! 궁간 자화(自化), 3중 사화 충국(Triple Sihua Collision), 차성기궁(Borrowed Stars) 분석 연산기
+//! Palace Self-Transformation (ZiHua), Triple SiHua Collision, and Borrowed Stars analysis engine
 
 use crate::transformations::get_sihua_stars;
 use crate::types::{
@@ -7,7 +7,7 @@ use crate::types::{
 };
 use eon_saju::core::stem::HeavenlyStem;
 
-/// 각 궁의 천간(宮幹)에 의해 자궁 내 주성에 발생하는 자화(自化)를 검출합니다.
+/// Detects Self-Transformation (ZiHua) triggered on resident stars by palace stems
 pub fn detect_zi_hua(palaces: &[PalaceData; 12]) -> Vec<ZiHuaInfo> {
     let mut results = Vec::new();
 
@@ -25,11 +25,11 @@ pub fn detect_zi_hua(palaces: &[PalaceData; 12]) -> Vec<ZiHuaInfo> {
                 if p.stars.iter().any(|st| st.star == s_star) {
                     let s_type = sihua_types[idx];
                     let desc = format!(
-                        "{}에서 궁간({}) 자화({}) 발생 — {} 별이 자화됨",
-                        p.name.korean(),
+                        "Self-Transformation ({:?}) triggered in {} via Palace Stem {} — affects star {:?}",
+                        s_type,
+                        p.name.english(),
                         p.heavenly_stem,
-                        s_type.korean(),
-                        s_star.korean()
+                        s_star
                     );
                     results.push(ZiHuaInfo {
                         palace_idx: p.index,
@@ -46,12 +46,12 @@ pub fn detect_zi_hua(palaces: &[PalaceData; 12]) -> Vec<ZiHuaInfo> {
     results
 }
 
-/// 주성이 없는 공궁(空宮)일 때 대궁(對宮)의 주성을 빌려오는 차성기궁(借星騎宮)을 검출합니다.
+/// Detects Borrowed Stars when a palace is empty of major stars (borrowing from opposite palace)
 pub fn detect_borrowed_stars(palaces: &[PalaceData; 12]) -> Vec<BorrowedStarsInfo> {
     let mut results = Vec::new();
 
     for p in palaces {
-        // 14 주성 존재 여부 체크
+        // Check for 14 major stars
         let has_major_star = p.stars.iter().any(|st| st.star.is_major());
         if !has_major_star {
             let opposite_idx = (p.index + 6) % 12;
@@ -77,7 +77,7 @@ pub fn detect_borrowed_stars(palaces: &[PalaceData; 12]) -> Vec<BorrowedStarsInf
     results
 }
 
-/// 생년 사화 + 대한 사화 + 유년 사화 간의 3중 충국 및 상충 패턴을 감지합니다.
+/// Detects Triple SiHua Collisions between natal, decadal, and annual mutagenic stars
 pub fn detect_triple_sihua_collisions(
     palaces: &[PalaceData; 12],
     daxian_list: &[DaXian],
@@ -147,11 +147,11 @@ pub fn detect_triple_sihua_collisions(
             collisions.push(TripleSihuaCollision {
                 palace_idx: p.index,
                 palace_name: p.name,
-                collision_type: "삼화기 (三化忌 — 3중 화기 중첩)".to_string(),
+                collision_type: "Triple HuaJi (三化忌)".to_string(),
                 severity: "Crisis".to_string(),
                 description: format!(
-                    "{}에 3중 화기(化忌)가 집결하여 극심한 변화 및 과제가 집중되는 연도/시기입니다.",
-                    p.name.korean()
+                    "Triple HuaJi (化忌) overlap in {}, concentrating profound transformations and testing challenges.",
+                    p.name.english()
                 ),
                 stars_involved: stars_involved.clone(),
             });
@@ -159,11 +159,11 @@ pub fn detect_triple_sihua_collisions(
             collisions.push(TripleSihuaCollision {
                 palace_idx: p.index,
                 palace_name: p.name,
-                collision_type: "쌍화기 (雙化忌 — 2중 화기 중첩)".to_string(),
+                collision_type: "Double HuaJi (雙化忌)".to_string(),
                 severity: "Caution".to_string(),
                 description: format!(
-                    "{}에 2중 화기(化忌)가 중첩하여 주의와 세심한 관리가 요구되는 시기입니다.",
-                    p.name.korean()
+                    "Double HuaJi (化忌) overlap in {}, calling for heightened caution and measured risk mitigation.",
+                    p.name.english()
                 ),
                 stars_involved: stars_involved.clone(),
             });
@@ -173,11 +173,11 @@ pub fn detect_triple_sihua_collisions(
             collisions.push(TripleSihuaCollision {
                 palace_idx: p.index,
                 palace_name: p.name,
-                collision_type: "쌍록 (雙祿 / 祿轉成福 — 2중 화록 중첩)".to_string(),
+                collision_type: "Double HuaLu (雙祿)".to_string(),
                 severity: "Opportunity".to_string(),
                 description: format!(
-                    "{}에 2중 화록(化祿)이 중첩하여 대단한 재물과 기회가 함께 도래하는 길시입니다.",
-                    p.name.korean()
+                    "Double HuaLu (化祿) overlap in {}, signaling significant financial expansion and auspicious fortune.",
+                    p.name.english()
                 ),
                 stars_involved: stars_involved.clone(),
             });
@@ -185,11 +185,11 @@ pub fn detect_triple_sihua_collisions(
             collisions.push(TripleSihuaCollision {
                 palace_idx: p.index,
                 palace_name: p.name,
-                collision_type: "록기상충 (祿忌相沖 — 기회와 위험 교차)".to_string(),
+                collision_type: "Lu-Ji Clash (祿忌相沖)".to_string(),
                 severity: "Caution".to_string(),
                 description: format!(
-                    "{}에 화록과 화기가 공존하여 큰 성과 뒤에 리스크 관리가 동시에 요구됩니다.",
-                    p.name.korean()
+                    "HuaLu and HuaJi coexist in {}, demanding proactive risk mitigation following major gains.",
+                    p.name.english()
                 ),
                 stars_involved,
             });

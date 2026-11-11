@@ -1,4 +1,4 @@
-//! 🧪 Challenger Stress Test Suite for Milestone 2 (R2) Remediation
+//! Challenger Stress Test Suite for Milestone 2 (R2) Remediation
 //!
 //! Empirical adversarial test harness verifying all 5 defects:
 //! 1. Wolwun Saju year calculation for early January dates before XiaoHan.

@@ -10,20 +10,20 @@ pub struct QimenAnalysisReport {
 
 impl QimenAnalysisReport {
     pub fn generate(pan: QimenPan) -> Self {
-        let mode = if pan.is_yin_ju { "음둔" } else { "양둔" };
+        let mode = if pan.is_yin_ju { "Yin Dun" } else { "Yang Dun" };
         let ju = pan.ju_number;
         let chief_star = pan
             .value_chief_star
-            .map(|star| format!("직부 {:?}", star))
-            .unwrap_or_else(|| "직부 미상".to_string());
+            .map(|star| format!("Chief Star {:?}", star))
+            .unwrap_or_else(|| "Chief Star Unknown".to_string());
         let envoy_door = pan
             .value_envoy_door
-            .map(|door| format!("직사 {:?}", door))
-            .unwrap_or_else(|| "직사 미상".to_string());
+            .map(|door| format!("Envoy Door {:?}", door))
+            .unwrap_or_else(|| "Envoy Door Unknown".to_string());
         Self {
             pan,
             summary: format!(
-                "기문둔갑 {} {}국 — {}, {}",
+                "QiMen DunJia {} Ju {} — {}, {}",
                 mode, ju, chief_star, envoy_door
             ),
         }

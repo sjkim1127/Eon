@@ -35,9 +35,9 @@ pub fn analyze(input: SajuAnalysisInput) -> Result<SajuAnalysisOutput, ServiceEr
     .with_night_rat_hour(input.use_night_rat_hour);
 
     let pillars = FourPillars::calculate(&saju_input)
-        .map_err(|e| ServiceError::Saju(format!("사주 계산 실패: {}", e)))?;
+        .map_err(|e| ServiceError::Saju(format!("Four Pillars calculation failed: {}", e)))?;
 
-    // 정적 엔진 계산
+    // Static engine calculations
     let lints = DestinyLinter::lint(&pillars);
     let entropy = DestinyEntropy::analyze(&pillars);
     let qi_topology = QiTopology::analyze(&pillars);

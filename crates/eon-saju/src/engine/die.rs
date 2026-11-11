@@ -115,9 +115,12 @@ impl std::fmt::Display for DieAnalysis {
         )?;
 
         if self.is_packed {
-            writeln!(f, "* Packer   : ⚠️ DETECTED!")?;
+            writeln!(f, "* Packer   : [!] DETECTED")?;
             writeln!(f, "  └─ Info  : {}", self.packer_name.as_ref().unwrap())?;
-            writeln!(f, "  └─ Status: 에너지가 강력하게 압축(Packed)되어 분석 및 발현이 지연될 수 있습니다.")?;
+            writeln!(
+                f,
+                "  └─ Status: Energy is tightly packed, which may delay manifest expression."
+            )?;
         } else {
             writeln!(f, "* Packer   : None (Raw Binary)")?;
         }

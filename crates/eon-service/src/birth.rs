@@ -27,20 +27,20 @@ pub fn prepare_birth_context(
     validate_analysis_input(input)?;
 
     let location = Location::new(
-        "출생지",
+        "Birth Location",
         input.lat,
         input.lon,
         standard_meridian_from_tz(&input.timezone),
     );
 
     let mut birth_info = if input.is_lunar {
-        // 음력인 경우 eon_data를 이용해 양력으로 변환한 뒤 BirthInfo에 등록합니다.
+        // If lunar calendar, convert to solar date via eon_data and register in BirthInfo.
         use eon_data::LunarCalendar;
         let solar_date =
             LunarCalendar::to_solar(input.year, input.month, input.day, input.is_leap_month)
                 .map_err(|e| {
                     ServiceError::BirthInfo(format!(
-                        "음력 날짜를 양력으로 변환할 수 없습니다: {}",
+                        "Cannot convert lunar date to solar date: {}",
                         e
                     ))
                 })?;
@@ -92,33 +92,30 @@ pub fn prepare_birth_context(
 fn validate_analysis_input(input: &AnalysisInput) -> Result<(), ServiceError> {
     if !input.lat.is_finite() || !(-90.0..=90.0).contains(&input.lat) {
         return Err(ServiceError::InvalidInput(format!(
-            "위도는 -90도에서 90도 사이의 유한한 값이어야 합니다: {}",
+            "Latitude must be a finite number between -90 and 90 degrees: {}",
             input.lat
         )));
     }
     if !input.lon.is_finite() || !(-180.0..=180.0).contains(&input.lon) {
         return Err(ServiceError::InvalidInput(format!(
-            "경도는 -180도에서 180도 사이의 유한한 값이어야 합니다: {}",
+            "Longitude must be a finite number between -180 and 180 degrees: {}",
             input.lon
         )));
     }
     if input.hour > 23 || input.minute > 59 {
         return Err(ServiceError::InvalidInput(format!(
-            "출생 시각이 올바르지 않습니다: {:02}:{:02}",
+            "Invalid birth time: {:02}:{:02}",
             input.hour, input.minute
         )));
     }
     if !input.is_lunar && NaiveDate::from_ymd_opt(input.year, input.month, input.day).is_none() {
         return Err(ServiceError::InvalidInput(format!(
-            "양력 날짜가 올바르지 않습니다: {:04}-{:02}-{:02}",
+            "Invalid solar calendar date: {:04}-{:02}-{:02}",
             input.year, input.month, input.day
         )));
     }
     Tz::from_str(&input.timezone).map_err(|_| {
-        ServiceError::InvalidInput(format!(
-            "유효하지 않은 IANA 타임존입니다: {}",
-            input.timezone
-        ))
+        ServiceError::InvalidInput(format!("Invalid IANA timezone: {}", input.timezone))
     })?;
     Ok(())
 }

@@ -110,19 +110,19 @@ impl std::fmt::Display for TopologyAnalysis {
         if let Some(bn) = self.bottleneck {
             writeln!(
                 f,
-                "Bottleneck: {} Node (Bandwidth Limitation Detected)",
-                bn.hangul()
+                "Bottleneck: {:?} Node (Bandwidth Limitation Detected)",
+                bn
             )?;
         }
 
         writeln!(f, "Node Traffic Status:")?;
         for node in &self.nodes {
             let bar_len = (node.output / 2.0) as usize;
-            let bar = "⚡".repeat(bar_len);
+            let bar = "#".repeat(bar_len);
             writeln!(
                 f,
-                "  {:<4}: {:<15} (Output: {:.1})",
-                node.element.hangul(),
+                "  {:<6}: {:<15} (Output: {:.1})",
+                format!("{:?}", node.element),
                 bar,
                 node.output
             )?;

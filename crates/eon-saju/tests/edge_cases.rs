@@ -1,4 +1,4 @@
-//! 🧪 고난이도 만세력 테스트 케이스 5선
+//! Advanced Manseryuk Calendar Test Cases (5 Edge Cases)
 //!
 //! Eon 엔진의 견고성(Robustness)을 검증합니다.
 

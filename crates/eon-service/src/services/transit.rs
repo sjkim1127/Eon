@@ -28,24 +28,24 @@ pub fn analyze(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, Ser
     .with_night_rat_hour(input.base.use_night_rat_hour);
 
     let pillars = FourPillars::calculate(&saju_input)
-        .map_err(|e| ServiceError::Saju(format!("사주 계산 실패: {}", e)))?;
+        .map_err(|e| ServiceError::Saju(format!("Four Pillars calculation failed: {}", e)))?;
 
-    // 분석 로컬 시각 결정
+    // Determine analysis local datetime
     let (cy, cm, cd, ch) = resolve_analysis_local_datetime(&input.current)?;
 
-    // 세운/월운 계산
+    // Calculate Yearly / Monthly Luck
     let yearly_luck = YearlyLuck::calculate(cy, &pillars);
     let monthly_luck = MonthlyLuck::calculate(cy, cm, &pillars);
     let monthly_lucks: Vec<MonthlyLuck> = (1..=12)
         .map(|m| MonthlyLuck::calculate(cy, m, &pillars))
         .collect();
 
-    // 일운/시운 계산
+    // Calculate Daily / Hourly Luck
     let daily_luck = eon_saju::analysis::periodic_luck::DailyLuck::calculate(cy, cm, cd, &pillars);
     let hourly_luck =
         eon_saju::analysis::periodic_luck::HourlyLuck::calculate(cy, cm, cd, ch, &pillars);
 
-    // 나이 계산
+    // Calculate age
     let current_age = calculate_current_age(
         birth_ctx.corrected_year,
         birth_ctx.corrected_month,
@@ -53,7 +53,7 @@ pub fn analyze(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, Ser
         &input.current,
     )?;
 
-    // 시뮬레이션 및 프레임 추출
+    // Simulation and frame extraction
     let vm = SajuVM::new(pillars.clone());
     let frames = vm.simulate_life(0, 105);
     let current_frame = frames.iter().find(|f| f.age == current_age).cloned();

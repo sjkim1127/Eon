@@ -1,4 +1,4 @@
-//! 🧪 Milestone 1 (R1) Yongsin & Gyeokguk Stress Tests
+//! Milestone 1 (R1) Yongsin & Gyeokguk Stress Tests
 //!
 //! Empirical adversarial test suite verifying:
 //! 1. Weak DM with heavy Caisheng (재다신약) -> Yongsin is BiGeop.

@@ -86,8 +86,8 @@ fn qimen_service_returns_a_populated_chart_report() {
         .palaces
         .iter()
         .any(|palace| palace.door.is_some()));
-    assert!(output.report.summary.contains("기문둔갑"));
-    assert!(!output.report.summary.contains("스캐폴딩"));
+    assert!(output.report.summary.contains("QiMen DunJia"));
+    assert!(!output.report.summary.contains("Scaffolding"));
 }
 
 #[test]

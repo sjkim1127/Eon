@@ -7,27 +7,27 @@ use chrono::{Datelike, NaiveDate};
 pub fn analyze(input: NumerologyAnalysisInput) -> Result<NumerologyAnalysisOutput, ServiceError> {
     if input.base.is_lunar {
         return Err(ServiceError::InvalidInput(
-            "Numerology 분석은 Gregorian 양력 날짜만 지원합니다".to_string(),
+            "Numerology analysis only supports Gregorian calendar solar dates".to_string(),
         ));
     }
 
     if input.base.year <= 0 {
         return Err(ServiceError::InvalidInput(format!(
-            "출생 연도는 양수여야 합니다: {}",
+            "Birth year must be positive: {}",
             input.base.year
         )));
     }
 
     if matches!(input.target_year, Some(0)) {
         return Err(ServiceError::InvalidInput(
-            "대상 연도는 양수여야 합니다".to_string(),
+            "Target year must be positive".to_string(),
         ));
     }
 
     NaiveDate::from_ymd_opt(input.base.year, input.base.month, input.base.day).ok_or_else(
         || {
             ServiceError::InvalidInput(format!(
-                "유효하지 않은 양력 날짜입니다: {:04}-{:02}-{:02}",
+                "Invalid solar calendar date: {:04}-{:02}-{:02}",
                 input.base.year, input.base.month, input.base.day
             ))
         },

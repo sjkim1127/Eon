@@ -133,9 +133,9 @@ fn main() {
     for diag in diagnostics.iter().take(5) {
         // 상위 5개 주요 변동 사항만 출력
         let icon = match diag.status {
-            eon_saju::TrafficStatus::Overloaded => "🔥",
-            eon_saju::TrafficStatus::SystemDown => "🚫",
-            _ => "ℹ️",
+            eon_saju::TrafficStatus::Overloaded => "[OVERLOAD]",
+            eon_saju::TrafficStatus::SystemDown => "[DOWN]",
+            _ => "[INFO]",
         };
         println!("{} [{}세] {}", icon, diag.age, diag.reason);
         println!("   └─ Strategy: {}", diag.strategy);
@@ -150,7 +150,7 @@ fn main() {
 
     // 1. Backtrace: 최저점(Valley)의 근본 원인 분석
     if let Some(rc) = DestinyDebugger::backtrace(&report, report.valley_age, "") {
-        println!("🔍 Backtrace (Valley Root Cause):");
+        println!("Backtrace (Valley Root Cause):");
         println!("   Target: {}세 (Critical State)", rc.target_age);
         println!(
             "   Origin: {}세 (Entry Point Identified)",
@@ -165,7 +165,7 @@ fn main() {
             .iter()
             .any(|s| s.severity == eon_saju::SignatureSeverity::Success)
     });
-    println!("\n📍 Hidden Breakpoints (Success Events):");
+    println!("\nHidden Breakpoints (Success Events):");
     println!("   Points: {:?}", breakpoints);
 
     // 3. Life Diff: 환경 변동에 따른 델타 분석 (시뮬레이션: 시간을 1시간 조정했을 때)
@@ -176,7 +176,7 @@ fn main() {
     let report_alt = emulator_alt.emulate().unwrap();
 
     let diffs = DestinyDebugger::diff(&report, &report_alt);
-    println!("\n⚖️ Life Path Diff (Timezone/Environment Correction):");
+    println!("\nLife Path Diff (Timezone/Environment Correction):");
     if diffs.is_empty() {
         println!("   No significant delta found.");
     } else {

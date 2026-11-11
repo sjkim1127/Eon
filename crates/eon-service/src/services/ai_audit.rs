@@ -26,15 +26,15 @@ pub fn analyze(input: SajuAnalysisInput) -> Result<AiAuditOutput, ServiceError> 
     .with_night_rat_hour(input.use_night_rat_hour);
 
     let pillars = FourPillars::calculate(&saju_input)
-        .map_err(|e| ServiceError::Saju(format!("사주 계산 실패: {}", e)))?;
+        .map_err(|e| ServiceError::Saju(format!("Four Pillars calculation failed: {}", e)))?;
 
     let emulator = LifePathEmulator::new(pillars.clone(), gender, birth_ctx.corrected_year);
     let life_report = emulator
         .emulate()
-        .map_err(|e| ServiceError::AiAudit(format!("에뮬레이션 실패: {}", e)))?;
+        .map_err(|e| ServiceError::AiAudit(format!("Life path emulation failed: {}", e)))?;
 
     let context_dump = DestinyAIAuditor::build_agent_prompt(&pillars)
-        .map_err(|e| ServiceError::AiAudit(format!("프롬프트 생성 실패: {}", e)))?
+        .map_err(|e| ServiceError::AiAudit(format!("Prompt generation failed: {}", e)))?
         + "\n\n=== CORE DUMP ===\n"
         + &DestinyAIAuditor::generate_context(&pillars, &life_report);
 

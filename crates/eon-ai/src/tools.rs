@@ -5,7 +5,7 @@ use eon_saju::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-/// AI 에이전트가 호출 가능한 도구 정의
+/// AI agent callable tool definition
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DestinyTool {
     pub name: String,
@@ -16,43 +16,45 @@ pub struct DestinyTool {
 pub struct EonToolbox;
 
 impl EonToolbox {
-    /// 사용 가능한 도구 목록 반환 (LLM Manifest용)
+    /// Returns available tools list (for LLM Tool Manifest)
     pub fn get_manifest() -> Vec<DestinyTool> {
         vec![
             DestinyTool {
                 name: "analyze_entropy".to_string(),
-                description: "사주의 에너지 난독화 등급 및 엔트로피 점수를 리턴합니다.".to_string(),
+                description: "Returns Four Pillars energy obfuscation tier and entropy score."
+                    .to_string(),
                 parameters: serde_json::json!({}),
             },
             DestinyTool {
                 name: "scan_topology".to_string(),
-                description: "오행 네트워크의 트래픽 흐름, 대역폭 및 병목 구간을 분석합니다."
-                    .to_string(),
+                description:
+                    "Analyzes Five Elements network traffic flow, bandwidth, and bottlenecks."
+                        .to_string(),
                 parameters: serde_json::json!({}),
             },
             DestinyTool {
                 name: "fuzz_luck_vulnerabilities".to_string(),
                 description:
-                    "특정 대운 컨텍스트에서 발생할 수 있는 시스템 크래시(취약점)를 탐색합니다."
+                    "Fuzzes system crash vulnerabilities and critical risks under specific Major Luck contexts."
                         .to_string(),
                 parameters: serde_json::json!({
-                    "major_ganzi_index": "0-59 사이의 정수 (대운 간지 인덱스)"
+                    "major_ganzi_index": "Integer between 0-59 (Major Luck Ganzhi index)"
                 }),
             },
             DestinyTool {
                 name: "backtrace_root_cause".to_string(),
                 description:
-                    "특정 나이의 특정 상태(예: '기신', '충')에 대한 근본 원인을 역추적합니다."
+                    "Backtraces root cause of an adverse state or event at a target age."
                         .to_string(),
                 parameters: serde_json::json!({
-                    "target_age": "분석할 나이",
-                    "target_tag": "추적할 태그명"
+                    "target_age": "Target age to analyze",
+                    "target_tag": "Target tag name or pattern to track"
                 }),
             },
         ]
     }
 
-    /// 도구 호출 실행 (Dispatch)
+    /// Execute tool invocation (Dispatch)
     pub fn call(
         pillars: &FourPillars,
         tool_name: &str,

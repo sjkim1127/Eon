@@ -1,4 +1,4 @@
-//! 🧪 Milestone 1 (R1) Part 2 Empirical Adversarial Stress Tests
+//! Milestone 1 (R1) Part 2 Empirical Adversarial Stress Tests
 //!
 //! Empirical adversarial test suite verifying:
 //! 1. Samjae calculation across 12 birth year branches for 입삼재, 눌삼재, 날삼재.

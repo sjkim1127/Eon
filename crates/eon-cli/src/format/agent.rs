@@ -32,7 +32,7 @@ pub fn format_agent_context(
 ) -> String {
     let mut out = String::new();
 
-    out.push_str("# 🔮 [DESTINY INTELLIGENCE PROFILE FOR AI AGENT]\n\n");
+    out.push_str("# [DESTINY INTELLIGENCE PROFILE FOR AI AGENT]\n\n");
     out.push_str(&format!(
         "> **Date of Birth**: {:04}-{:02}-{:02} {:02}:{:02} ({}, Lat: {:.4}, Lon: {:.4})\n\n",
         input.year,
@@ -47,7 +47,7 @@ pub fn format_agent_context(
 
     // 1. Omni Destiny Tier 7.0
     if let Some(t) = tier {
-        out.push_str("## 🌌 1. Omni Destiny Tier 7.0\n");
+        out.push_str("## 1. Omni Destiny Tier 7.0\n");
         out.push_str(&format!(
             "- **Overall Destiny Tier**: **{}** (Birth Chart Raw: {:.1}pt / Total Score: {:.1}pt / Potential: **{}** {:.1}pt)\n",
             t.destiny_tier.grade, t.destiny_raw_score, t.destiny_tier_score, t.potential_tier.grade, t.potential_score
@@ -58,7 +58,7 @@ pub fn format_agent_context(
         ));
 
         if !t.quantum_synergies.is_empty() {
-            out.push_str("- **⚛️ 8D Quantum Cross Synergies (Cross-Engine Resonance)**:\n");
+            out.push_str("- **8D Quantum Cross Synergies (Cross-Engine Resonance)**:\n");
             for s in &t.quantum_synergies {
                 let sign = if s.score_delta >= 0.0 { "+" } else { "" };
                 out.push_str(&format!(
@@ -85,22 +85,22 @@ pub fn format_agent_context(
 
     // 2. Four Pillars of Destiny (Saju / BaZi)
     if let Some(s) = saju {
-        out.push_str("## 📜 2. Four Pillars of Destiny (Saju / BaZi)\n");
+        out.push_str("## 2. Four Pillars of Destiny (Saju / BaZi)\n");
         let pillars = &s.report.pillars;
         out.push_str(&format!(
-            "- **Four Pillars**: Year: {}({}-{}) | Month: {}({}-{}) | Day: {}({}-{}) | Hour: {}({}-{})\n",
+            "- **Four Pillars**: Year: {} ({:?}-{:?}) | Month: {} ({:?}-{:?}) | Day: {} ({:?}-{:?}) | Hour: {} ({:?}-{:?})\n",
             pillars.year,
-            pillars.year.stem.hangul(),
-            pillars.year.branch.hangul(),
+            pillars.year.stem,
+            pillars.year.branch,
             pillars.month,
-            pillars.month.stem.hangul(),
-            pillars.month.branch.hangul(),
+            pillars.month.stem,
+            pillars.month.branch,
             pillars.day,
-            pillars.day.stem.hangul(),
-            pillars.day.branch.hangul(),
+            pillars.day.stem,
+            pillars.day.branch,
             pillars.hour,
-            pillars.hour.stem.hangul(),
-            pillars.hour.branch.hangul()
+            pillars.hour.stem,
+            pillars.hour.branch
         ));
         out.push_str(&format!(
             "- **Day Master Strength**: {:?} (Score: {:.1})\n",
@@ -125,7 +125,7 @@ pub fn format_agent_context(
 
     // 3. Vedic Astrology (Jyotish)
     if let Some(v) = vedic {
-        out.push_str("## 🕉️ 3. Vedic Astrology (Jyotish)\n");
+        out.push_str("## 3. Vedic Astrology (Jyotish)\n");
         out.push_str(&format!(
             "- **Ascendant (Lagna)**: {:?}\n",
             v.chart.ascendant
@@ -151,7 +151,7 @@ pub fn format_agent_context(
 
     // 4. Western Astrology
     if let Some(w) = western {
-        out.push_str("## ♈ 4. Western Astrology\n");
+        out.push_str("## 4. Western Astrology\n");
         let sun = w.result.planets.iter().find(|p| p.name == "Sun");
         let moon = w.result.planets.iter().find(|p| p.name == "Moon");
         let asc = w.result.houses.first();
@@ -183,16 +183,16 @@ pub fn format_agent_context(
 
     // 5. Zi Wei Dou Shu (Purple Star Astrology)
     if let Some(z) = zwds {
-        out.push_str("## 🔮 5. Zi Wei Dou Shu (Purple Star Astrology)\n");
+        out.push_str("## 5. Zi Wei Dou Shu (Purple Star Astrology)\n");
         let soul_palace = &z.chart.palaces[z.chart.soul_idx];
         let stars: Vec<String> = soul_palace
             .stars
             .iter()
-            .map(|s| s.star.korean().to_string())
+            .map(|s| format!("{:?}", s.star))
             .collect();
         out.push_str(&format!(
             "- **Life Palace**: {} (Major Stars: {})\n",
-            soul_palace.name.korean(),
+            soul_palace.name.english(),
             if stars.is_empty() {
                 "Empty Palace (No Major Stars)".to_string()
             } else {
@@ -204,7 +204,7 @@ pub fn format_agent_context(
                 .chart
                 .destiny_patterns
                 .iter()
-                .map(|p| p.name_korean.clone())
+                .map(|p| p.name_english.clone())
                 .collect();
             out.push_str(&format!(
                 "- **Key Formations (Destiny Patterns)**: {}\n",
@@ -216,7 +216,7 @@ pub fn format_agent_context(
 
     // 6. Human Design
     if let Some(h) = hd {
-        out.push_str("## 🧬 6. Human Design\n");
+        out.push_str("## 6. Human Design\n");
         out.push_str(&format!(
             "- **Type**: {} | **Profile**: {} | **Strategy**: {}\n",
             h.result.chart_type, h.result.profile, h.result.strategy
@@ -235,7 +235,7 @@ pub fn format_agent_context(
 
     // 7. QiMen DunJia
     if let Some(q) = qimen {
-        out.push_str("## 🧭 7. QiMen DunJia\n");
+        out.push_str("## 7. QiMen DunJia\n");
         out.push_str(&format!(
             "- **Structure (Ju)**: {} Ju {}\n",
             if q.report.pan.is_yin_ju {
@@ -256,13 +256,13 @@ pub fn format_agent_context(
 
     // 8. Pythagorean Numerology
     if let Some(n) = num {
-        out.push_str("## 🔢 8. Pythagorean Numerology\n");
+        out.push_str("## 8. Pythagorean Numerology\n");
         let core = &n.result.core;
         out.push_str(&format!(
             "- **Life Path Number**: **{}**{}\n",
             core.life_path,
             if n.result.is_master_life_path {
-                " (🌟 Master Number)"
+                " (Master Number)"
             } else {
                 ""
             }
@@ -279,7 +279,7 @@ pub fn format_agent_context(
     }
 
     out.push_str("---\n");
-    out.push_str("*💡 Instructions for AI Agent: Synthesize the cross-engine intelligence data above to provide deep, actionable, compassionate, and precise counseling regarding the client's destiny blueprint, core strengths, timing, and optimal life strategies.*\n");
+    out.push_str("*Instructions for AI Agent: Synthesize the cross-engine intelligence data above to provide deep, actionable, compassionate, and precise counseling regarding the client's destiny blueprint, core strengths, timing, and optimal life strategies.*\n");
 
     out
 }
