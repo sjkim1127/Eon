@@ -8,11 +8,11 @@
 <a href=#8 id=8 data-nosnippet>8</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
 <a href=#9 id=9 data-nosnippet>9</a></span><span class="kw">pub struct </span>PalaceState {
 <a href=#10 id=10 data-nosnippet>10</a>    <span class="kw">pub </span>palace: Palace,
-<a href=#11 id=11 data-nosnippet>11</a>    <span class="kw">pub </span>earth_stem: <span class="prelude-ty">Option</span>&lt;HeavenlyStem&gt;, <span class="comment">// 지반 (Earth Plate) 간
-<a href=#12 id=12 data-nosnippet>12</a>    </span><span class="kw">pub </span>heaven_stem: <span class="prelude-ty">Option</span>&lt;HeavenlyStem&gt;, <span class="comment">// 천반 (Heaven Plate) 간
-<a href=#13 id=13 data-nosnippet>13</a>    </span><span class="kw">pub </span>door: <span class="prelude-ty">Option</span>&lt;Door&gt;,               <span class="comment">// 8문
-<a href=#14 id=14 data-nosnippet>14</a>    </span><span class="kw">pub </span>star: <span class="prelude-ty">Option</span>&lt;Star&gt;,               <span class="comment">// 9성
-<a href=#15 id=15 data-nosnippet>15</a>    </span><span class="kw">pub </span>deity: <span class="prelude-ty">Option</span>&lt;Deity&gt;,             <span class="comment">// 8신
+<a href=#11 id=11 data-nosnippet>11</a>    <span class="kw">pub </span>earth_stem: <span class="prelude-ty">Option</span>&lt;HeavenlyStem&gt;,  <span class="comment">// Earth Plate Stem
+<a href=#12 id=12 data-nosnippet>12</a>    </span><span class="kw">pub </span>heaven_stem: <span class="prelude-ty">Option</span>&lt;HeavenlyStem&gt;, <span class="comment">// Heaven Plate Stem
+<a href=#13 id=13 data-nosnippet>13</a>    </span><span class="kw">pub </span>door: <span class="prelude-ty">Option</span>&lt;Door&gt;,                <span class="comment">// Eight Doors
+<a href=#14 id=14 data-nosnippet>14</a>    </span><span class="kw">pub </span>star: <span class="prelude-ty">Option</span>&lt;Star&gt;,                <span class="comment">// Nine Stars
+<a href=#15 id=15 data-nosnippet>15</a>    </span><span class="kw">pub </span>deity: <span class="prelude-ty">Option</span>&lt;Deity&gt;,              <span class="comment">// Eight Deities
 <a href=#16 id=16 data-nosnippet>16</a></span>}
 <a href=#17 id=17 data-nosnippet>17</a>
 <a href=#18 id=18 data-nosnippet>18</a><span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,10 +23,10 @@
 <a href=#23 id=23 data-nosnippet>23</a>    <span class="kw">pub </span>day_pillar: GanZi,
 <a href=#24 id=24 data-nosnippet>24</a>    <span class="kw">pub </span>month_pillar: GanZi,
 <a href=#25 id=25 data-nosnippet>25</a>    <span class="kw">pub </span>year_pillar: GanZi,
-<a href=#26 id=26 data-nosnippet>26</a>    <span class="kw">pub </span>is_yin_ju: bool,                <span class="comment">// 둔국 (Yin/Yang)
-<a href=#27 id=27 data-nosnippet>27</a>    </span><span class="kw">pub </span>ju_number: u8,                  <span class="comment">// 국수 (1~9)
-<a href=#28 id=28 data-nosnippet>28</a>    </span><span class="kw">pub </span>palaces: Vec&lt;PalaceState&gt;,      <span class="comment">// 1~9궁 (항상 9개)
-<a href=#29 id=29 data-nosnippet>29</a>    </span><span class="kw">pub </span>value_chief_star: <span class="prelude-ty">Option</span>&lt;Star&gt;, <span class="comment">// 직부 (Value Chief - Star)
-<a href=#30 id=30 data-nosnippet>30</a>    </span><span class="kw">pub </span>value_envoy_door: <span class="prelude-ty">Option</span>&lt;Door&gt;, <span class="comment">// 직사 (Value Envoy - Door)
+<a href=#26 id=26 data-nosnippet>26</a>    <span class="kw">pub </span>is_yin_ju: bool,                <span class="comment">// Dun pattern (Yin/Yang)
+<a href=#27 id=27 data-nosnippet>27</a>    </span><span class="kw">pub </span>ju_number: u8,                  <span class="comment">// Ju number (1~9)
+<a href=#28 id=28 data-nosnippet>28</a>    </span><span class="kw">pub </span>palaces: Vec&lt;PalaceState&gt;,      <span class="comment">// 1~9 Palaces (always 9)
+<a href=#29 id=29 data-nosnippet>29</a>    </span><span class="kw">pub </span>value_chief_star: <span class="prelude-ty">Option</span>&lt;Star&gt;, <span class="comment">// Zhi Fu (Value Chief - Star)
+<a href=#30 id=30 data-nosnippet>30</a>    </span><span class="kw">pub </span>value_envoy_door: <span class="prelude-ty">Option</span>&lt;Door&gt;, <span class="comment">// Zhi Shi (Value Envoy - Door)
 <a href=#31 id=31 data-nosnippet>31</a></span>}
 </code></pre></div></section></main></body></html>

@@ -75,7 +75,7 @@
 <a href=#75 id=75 data-nosnippet>75</a>    <span class="kw">pub </span>post_natal_hexagram: u8,
 <a href=#76 id=76 data-nosnippet>76</a>    <span class="kw">pub </span>yuan_dang_yao: u8,
 <a href=#77 id=77 data-nosnippet>77</a>    <span class="kw">pub </span>lifetime_cycles: Vec&lt;HeLuoCycle&gt;,
-<a href=#78 id=78 data-nosnippet>78</a>    <span class="comment">// 확장 필드
+<a href=#78 id=78 data-nosnippet>78</a>    <span class="comment">// Extended fields
 <a href=#79 id=79 data-nosnippet>79</a>    </span><span class="kw">pub </span>yuan_qi: bool,
 <a href=#80 id=80 data-nosnippet>80</a>    <span class="kw">pub </span>hua_gong: bool,
 <a href=#81 id=81 data-nosnippet>81</a>    <span class="kw">pub </span>se_yao: u8,
@@ -86,7 +86,7 @@
 <a href=#86 id=86 data-nosnippet>86</a>    <span class="kw">pub </span>yearly_hexagrams: Vec&lt;YearlyHexagramResult&gt;,
 <a href=#87 id=87 data-nosnippet>87</a>}
 <a href=#88 id=88 data-nosnippet>88</a>
-<a href=#89 id=89 data-nosnippet>89</a><span class="doccomment">/// 천간의 낙서 수리 배정 (후천팔괘 납갑수)
+<a href=#89 id=89 data-nosnippet>89</a><span class="doccomment">/// Luo Shu number assignment for Heavenly Stems (Later Heaven Bagua)
 <a href=#90 id=90 data-nosnippet>90</a></span><span class="kw">fn </span>stem_to_num(stem: HeavenlyStem) -&gt; u32 {
 <a href=#91 id=91 data-nosnippet>91</a>    <span class="kw">match </span>stem {
 <a href=#92 id=92 data-nosnippet>92</a>        HeavenlyStem::Jia =&gt; <span class="number">6</span>,  <span class="comment">// 乾
@@ -102,7 +102,7 @@
 <a href=#102 id=102 data-nosnippet>102</a>    </span>}
 <a href=#103 id=103 data-nosnippet>103</a>}
 <a href=#104 id=104 data-nosnippet>104</a>
-<a href=#105 id=105 data-nosnippet>105</a><span class="doccomment">/// 지지의 오행 배송 하도 수리 배정 (생수와 성수 쌍)
+<a href=#105 id=105 data-nosnippet>105</a><span class="doccomment">/// He Tu number assignment for Earthly Branches
 <a href=#106 id=106 data-nosnippet>106</a></span><span class="kw">fn </span>branch_to_nums(branch: EarthlyBranch) -&gt; Vec&lt;u32&gt; {
 <a href=#107 id=107 data-nosnippet>107</a>    <span class="kw">match </span>branch {
 <a href=#108 id=108 data-nosnippet>108</a>        EarthlyBranch::Zi | EarthlyBranch::Hai =&gt; <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">6</span>],
@@ -115,7 +115,7 @@
 <a href=#115 id=115 data-nosnippet>115</a>    }
 <a href=#116 id=116 data-nosnippet>116</a>}
 <a href=#117 id=117 data-nosnippet>117</a>
-<a href=#118 id=118 data-nosnippet>118</a><span class="doccomment">/// 5의 기궁(寄宮) 처리
+<a href=#118 id=118 data-nosnippet>118</a><span class="doccomment">/// Center 5 Gigung trigram assignment
 <a href=#119 id=119 data-nosnippet>119</a></span><span class="kw">fn </span>get_gigung_trigram(era: Era, is_male: bool, is_yang_male_or_yin_female: bool) -&gt; u8 {
 <a href=#120 id=120 data-nosnippet>120</a>    <span class="kw">match </span>era {
 <a href=#121 id=121 data-nosnippet>121</a>        Era::SangWon =&gt; {
@@ -123,21 +123,21 @@
 <a href=#123 id=123 data-nosnippet>123</a>                <span class="number">8
 <a href=#124 id=124 data-nosnippet>124</a>            </span>} <span class="kw">else </span>{
 <a href=#125 id=125 data-nosnippet>125</a>                <span class="number">2
-<a href=#126 id=126 data-nosnippet>126</a>            </span>} <span class="comment">// 남기간(8), 여기관(2)
+<a href=#126 id=126 data-nosnippet>126</a>            </span>} <span class="comment">// Male Gen (8), Female Kun (2)
 <a href=#127 id=127 data-nosnippet>127</a>        </span>}
 <a href=#128 id=128 data-nosnippet>128</a>        Era::JungWon =&gt; {
 <a href=#129 id=129 data-nosnippet>129</a>            <span class="kw">if </span>is_yang_male_or_yin_female {
 <a href=#130 id=130 data-nosnippet>130</a>                <span class="number">8
 <a href=#131 id=131 data-nosnippet>131</a>            </span>} <span class="kw">else </span>{
 <a href=#132 id=132 data-nosnippet>132</a>                <span class="number">2
-<a href=#133 id=133 data-nosnippet>133</a>            </span>} <span class="comment">// 양남음녀기간(8), 음남양녀기관(2)
+<a href=#133 id=133 data-nosnippet>133</a>            </span>} <span class="comment">// Yang Male / Yin Female Gen (8), Yin Male / Yang Female Kun (2)
 <a href=#134 id=134 data-nosnippet>134</a>        </span>}
 <a href=#135 id=135 data-nosnippet>135</a>        Era::HaWon =&gt; {
 <a href=#136 id=136 data-nosnippet>136</a>            <span class="kw">if </span>is_male {
 <a href=#137 id=137 data-nosnippet>137</a>                <span class="number">9
 <a href=#138 id=138 data-nosnippet>138</a>            </span>} <span class="kw">else </span>{
 <a href=#139 id=139 data-nosnippet>139</a>                <span class="number">7
-<a href=#140 id=140 data-nosnippet>140</a>            </span>} <span class="comment">// 남기리(9), 여기태(7)
+<a href=#140 id=140 data-nosnippet>140</a>            </span>} <span class="comment">// Male Li (9), Female Dui (7)
 <a href=#141 id=141 data-nosnippet>141</a>        </span>}
 <a href=#142 id=142 data-nosnippet>142</a>    }
 <a href=#143 id=143 data-nosnippet>143</a>}
@@ -151,7 +151,7 @@
 <a href=#151 id=151 data-nosnippet>151</a>        remainder = <span class="number">25</span>;
 <a href=#152 id=152 data-nosnippet>152</a>    }
 <a href=#153 id=153 data-nosnippet>153</a>
-<a href=#154 id=154 data-nosnippet>154</a>    <span class="comment">// 去十不用 (십의 자리는 버림)
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="comment">// Drop tens place
 <a href=#155 id=155 data-nosnippet>155</a>    </span><span class="kw">let </span>val = <span class="kw">if </span>remainder == <span class="number">10 </span>{
 <a href=#156 id=156 data-nosnippet>156</a>        <span class="number">1
 <a href=#157 id=157 data-nosnippet>157</a>    </span>} <span class="kw">else if </span>remainder == <span class="number">20 </span>{
@@ -176,7 +176,7 @@
 <a href=#176 id=176 data-nosnippet>176</a>        remainder = <span class="number">30</span>;
 <a href=#177 id=177 data-nosnippet>177</a>    }
 <a href=#178 id=178 data-nosnippet>178</a>
-<a href=#179 id=179 data-nosnippet>179</a>    <span class="comment">// 去十不用 (십의 자리는 버림)
+<a href=#179 id=179 data-nosnippet>179</a>    <span class="comment">// Drop tens place
 <a href=#180 id=180 data-nosnippet>180</a>    </span><span class="kw">let </span>val = <span class="kw">if </span>remainder == <span class="number">10 </span>{
 <a href=#181 id=181 data-nosnippet>181</a>        <span class="number">1
 <a href=#182 id=182 data-nosnippet>182</a>    </span>} <span class="kw">else if </span>remainder == <span class="number">20 </span>{
@@ -222,7 +222,7 @@
 <a href=#222 id=222 data-nosnippet>222</a>        </span>(<span class="number">6</span>, <span class="number">7</span>) =&gt; <span class="number">10</span>, <span class="comment">// 履
 <a href=#223 id=223 data-nosnippet>223</a>        </span>(<span class="number">2</span>, <span class="number">6</span>) =&gt; <span class="number">11</span>, <span class="comment">// 泰
 <a href=#224 id=224 data-nosnippet>224</a>        </span>(<span class="number">6</span>, <span class="number">2</span>) =&gt; <span class="number">12</span>, <span class="comment">// 否
-<a href=#225 id=225 data-nosnippet>225</a>        </span>(<span class="number">6</span>, <span class="number">9</span>) =&gt; <span class="number">13</span>, <span class="comment">// 同인
+<a href=#225 id=225 data-nosnippet>225</a>        </span>(<span class="number">6</span>, <span class="number">9</span>) =&gt; <span class="number">13</span>, <span class="comment">// TongRen
 <a href=#226 id=226 data-nosnippet>226</a>        </span>(<span class="number">9</span>, <span class="number">6</span>) =&gt; <span class="number">14</span>, <span class="comment">// 大有
 <a href=#227 id=227 data-nosnippet>227</a>        </span>(<span class="number">2</span>, <span class="number">8</span>) =&gt; <span class="number">15</span>, <span class="comment">// 謙
 <a href=#228 id=228 data-nosnippet>228</a>        </span>(<span class="number">3</span>, <span class="number">2</span>) =&gt; <span class="number">16</span>, <span class="comment">// 豫
@@ -288,7 +288,7 @@
 <a href=#288 id=288 data-nosnippet>288</a>) -&gt; HeLuoResult {
 <a href=#289 id=289 data-nosnippet>289</a>    <span class="kw">let </span>era = Era::from_year(birth_year);
 <a href=#290 id=290 data-nosnippet>290</a>
-<a href=#291 id=291 data-nosnippet>291</a>    <span class="comment">// 1. 천간 수리 치환 및 합산
+<a href=#291 id=291 data-nosnippet>291</a>    <span class="comment">// 1. Map stems to numbers and sum
 <a href=#292 id=292 data-nosnippet>292</a>    </span><span class="kw">let </span>stem_nums = <span class="macro">vec!</span>[
 <a href=#293 id=293 data-nosnippet>293</a>        stem_to_num(year_ganzi.stem),
 <a href=#294 id=294 data-nosnippet>294</a>        stem_to_num(month_ganzi.stem),
@@ -296,7 +296,7 @@
 <a href=#296 id=296 data-nosnippet>296</a>        stem_to_num(hour_ganzi.stem),
 <a href=#297 id=297 data-nosnippet>297</a>    ];
 <a href=#298 id=298 data-nosnippet>298</a>
-<a href=#299 id=299 data-nosnippet>299</a>    <span class="comment">// 2. 지지 수리 치환 및 합산
+<a href=#299 id=299 data-nosnippet>299</a>    <span class="comment">// 2. Map branches to numbers and sum
 <a href=#300 id=300 data-nosnippet>300</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>branch_nums = Vec::new();
 <a href=#301 id=301 data-nosnippet>301</a>    branch_nums.extend(branch_to_nums(year_ganzi.branch));
 <a href=#302 id=302 data-nosnippet>302</a>    branch_nums.extend(branch_to_nums(month_ganzi.branch));
@@ -307,7 +307,7 @@
 <a href=#307 id=307 data-nosnippet>307</a>    all_nums.extend(stem_nums);
 <a href=#308 id=308 data-nosnippet>308</a>    all_nums.extend(branch_nums);
 <a href=#309 id=309 data-nosnippet>309</a>
-<a href=#310 id=310 data-nosnippet>310</a>    <span class="comment">// 천수(홀수) 및 지수(짝수) 분류 및 합산
+<a href=#310 id=310 data-nosnippet>310</a>    <span class="comment">// Classify odd (Heaven) and even (Earth) numbers
 <a href=#311 id=311 data-nosnippet>311</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>sum_odd = <span class="number">0</span>;
 <a href=#312 id=312 data-nosnippet>312</a>    <span class="kw">let </span><span class="kw-2">mut </span>sum_even = <span class="number">0</span>;
 <a href=#313 id=313 data-nosnippet>313</a>    <span class="kw">for </span>num <span class="kw">in </span>all_nums {
@@ -318,7 +318,7 @@
 <a href=#318 id=318 data-nosnippet>318</a>        }
 <a href=#319 id=319 data-nosnippet>319</a>    }
 <a href=#320 id=320 data-nosnippet>320</a>
-<a href=#321 id=321 data-nosnippet>321</a>    <span class="comment">// 양남음녀 판단
+<a href=#321 id=321 data-nosnippet>321</a>    <span class="comment">// Determine Yang Male / Yin Female
 <a href=#322 id=322 data-nosnippet>322</a>    </span><span class="kw">let </span>is_year_yang = <span class="macro">matches!</span>(
 <a href=#323 id=323 data-nosnippet>323</a>        year_ganzi.stem,
 <a href=#324 id=324 data-nosnippet>324</a>        HeavenlyStem::Jia
@@ -329,7 +329,7 @@
 <a href=#329 id=329 data-nosnippet>329</a>    );
 <a href=#330 id=330 data-nosnippet>330</a>    <span class="kw">let </span>is_yang_male_or_yin_female = (is_year_yang &amp;&amp; is_male) || (!is_year_yang &amp;&amp; !is_male);
 <a href=#331 id=331 data-nosnippet>331</a>
-<a href=#332 id=332 data-nosnippet>332</a>    <span class="comment">// 상괘 / 하괘 번호 도출
+<a href=#332 id=332 data-nosnippet>332</a>    <span class="comment">// Derive Upper and Lower trigram numbers
 <a href=#333 id=333 data-nosnippet>333</a>    </span><span class="kw">let </span>odd_trigram_num = reduce_heaven(sum_odd, is_male, is_yang_male_or_yin_female, era);
 <a href=#334 id=334 data-nosnippet>334</a>    <span class="kw">let </span>even_trigram_num = reduce_earth(sum_even, is_male, is_yang_male_or_yin_female, era);
 <a href=#335 id=335 data-nosnippet>335</a>
@@ -341,23 +341,23 @@
 <a href=#341 id=341 data-nosnippet>341</a>
 <a href=#342 id=342 data-nosnippet>342</a>    <span class="kw">let </span>pre_natal_hexagram = get_king_wen_index(pre_upper, pre_lower);
 <a href=#343 id=343 data-nosnippet>343</a>
-<a href=#344 id=344 data-nosnippet>344</a>    <span class="comment">// 선천괘의 6효 구조 만들기
+<a href=#344 id=344 data-nosnippet>344</a>    <span class="comment">// Construct 6 lines of Pre-natal hexagram
 <a href=#345 id=345 data-nosnippet>345</a>    </span><span class="kw">let </span>upper_lines = get_trigram_lines(pre_upper);
 <a href=#346 id=346 data-nosnippet>346</a>    <span class="kw">let </span>lower_lines = get_trigram_lines(pre_lower);
 <a href=#347 id=347 data-nosnippet>347</a>    <span class="kw">let </span><span class="kw-2">mut </span>pre_lines = [<span class="bool-val">false</span>; <span class="number">6</span>];
-<a href=#348 id=348 data-nosnippet>348</a>    pre_lines[<span class="number">0</span>] = lower_lines[<span class="number">0</span>]; <span class="comment">// 초효
-<a href=#349 id=349 data-nosnippet>349</a>    </span>pre_lines[<span class="number">1</span>] = lower_lines[<span class="number">1</span>]; <span class="comment">// 2효
-<a href=#350 id=350 data-nosnippet>350</a>    </span>pre_lines[<span class="number">2</span>] = lower_lines[<span class="number">2</span>]; <span class="comment">// 3효
-<a href=#351 id=351 data-nosnippet>351</a>    </span>pre_lines[<span class="number">3</span>] = upper_lines[<span class="number">0</span>]; <span class="comment">// 4효
-<a href=#352 id=352 data-nosnippet>352</a>    </span>pre_lines[<span class="number">4</span>] = upper_lines[<span class="number">1</span>]; <span class="comment">// 5효
-<a href=#353 id=353 data-nosnippet>353</a>    </span>pre_lines[<span class="number">5</span>] = upper_lines[<span class="number">2</span>]; <span class="comment">// 상효
+<a href=#348 id=348 data-nosnippet>348</a>    pre_lines[<span class="number">0</span>] = lower_lines[<span class="number">0</span>]; <span class="comment">// Line 1
+<a href=#349 id=349 data-nosnippet>349</a>    </span>pre_lines[<span class="number">1</span>] = lower_lines[<span class="number">1</span>]; <span class="comment">// Line 2
+<a href=#350 id=350 data-nosnippet>350</a>    </span>pre_lines[<span class="number">2</span>] = lower_lines[<span class="number">2</span>]; <span class="comment">// Line 3
+<a href=#351 id=351 data-nosnippet>351</a>    </span>pre_lines[<span class="number">3</span>] = upper_lines[<span class="number">0</span>]; <span class="comment">// Line 4
+<a href=#352 id=352 data-nosnippet>352</a>    </span>pre_lines[<span class="number">4</span>] = upper_lines[<span class="number">1</span>]; <span class="comment">// Line 5
+<a href=#353 id=353 data-nosnippet>353</a>    </span>pre_lines[<span class="number">5</span>] = upper_lines[<span class="number">2</span>]; <span class="comment">// Line 6
 <a href=#354 id=354 data-nosnippet>354</a>
-<a href=#355 id=355 data-nosnippet>355</a>    // 태어난 시의 음양 및 인덱스 (자~사=양시(0..5), 오~해=음시(6..11))
+<a href=#355 id=355 data-nosnippet>355</a>    // Hour polarity and index (Zi..Si = Yang hour (0..5), Wu..Hai = Yin hour (6..11))
 <a href=#356 id=356 data-nosnippet>356</a>    </span><span class="kw">let </span>hour_branch_idx = hour_ganzi.branch.index() <span class="kw">as </span>usize;
 <a href=#357 id=357 data-nosnippet>357</a>    <span class="kw">let </span>is_yang_hour = hour_branch_idx &lt;= <span class="number">5</span>;
 <a href=#358 id=358 data-nosnippet>358</a>    <span class="kw">let </span>hi = hour_branch_idx % <span class="number">6</span>;
 <a href=#359 id=359 data-nosnippet>359</a>
-<a href=#360 id=360 data-nosnippet>360</a>    <span class="comment">// 원당효 계산을 위해 매칭/타겟 라인 분리
+<a href=#360 id=360 data-nosnippet>360</a>    <span class="comment">// Separate matching/target lines for Yuan Dang Yao calculation
 <a href=#361 id=361 data-nosnippet>361</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>matching_indices = Vec::new();
 <a href=#362 id=362 data-nosnippet>362</a>    <span class="kw">let </span><span class="kw-2">mut </span>other_indices = Vec::new();
 <a href=#363 id=363 data-nosnippet>363</a>    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">6 </span>{
@@ -370,7 +370,7 @@
 <a href=#370 id=370 data-nosnippet>370</a>
 <a href=#371 id=371 data-nosnippet>371</a>    <span class="kw">let </span>k = matching_indices.len();
 <a href=#372 id=372 data-nosnippet>372</a>    <span class="kw">let </span>yuan_dang_idx = <span class="kw">if </span>k == <span class="number">0 </span>|| k == <span class="number">6 </span>{
-<a href=#373 id=373 data-nosnippet>373</a>        <span class="comment">// 순수 괘상(전부 양이거나 전부 음)일 때의 순수 원당 규칙
+<a href=#373 id=373 data-nosnippet>373</a>        <span class="comment">// Pure hexagram (all Yang or all Yin) Yuan Dang rules
 <a href=#374 id=374 data-nosnippet>374</a>        </span><span class="kw">let </span>base_line = <span class="kw">if </span>is_yang_hour {
 <a href=#375 id=375 data-nosnippet>375</a>            (hi % <span class="number">3</span>) + <span class="number">1
 <a href=#376 id=376 data-nosnippet>376</a>        </span>} <span class="kw">else </span>{
@@ -397,7 +397,7 @@
 <a href=#397 id=397 data-nosnippet>397</a>            base_line - <span class="number">1
 <a href=#398 id=398 data-nosnippet>398</a>        </span>}
 <a href=#399 id=399 data-nosnippet>399</a>    } <span class="kw">else </span>{
-<a href=#400 id=400 data-nosnippet>400</a>        <span class="comment">// 일반적인 괘상
+<a href=#400 id=400 data-nosnippet>400</a>        <span class="comment">// Standard hexagrams
 <a href=#401 id=401 data-nosnippet>401</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>slots = Vec::new();
 <a href=#402 id=402 data-nosnippet>402</a>        <span class="kw">if </span>k &lt;= <span class="number">3 </span>{
 <a href=#403 id=403 data-nosnippet>403</a>            slots.extend(<span class="kw-2">&amp;</span>matching_indices);
@@ -412,31 +412,31 @@
 <a href=#412 id=412 data-nosnippet>412</a>
 <a href=#413 id=413 data-nosnippet>413</a>    <span class="kw">let </span>yuan_dang_yao = (yuan_dang_idx + <span class="number">1</span>) <span class="kw">as </span>u8;
 <a href=#414 id=414 data-nosnippet>414</a>
-<a href=#415 id=415 data-nosnippet>415</a>    <span class="comment">// 후천괘 만들기
+<a href=#415 id=415 data-nosnippet>415</a>    <span class="comment">// Construct Post-natal hexagram
 <a href=#416 id=416 data-nosnippet>416</a>    </span><span class="kw">let </span>is_yang_ling = month_ganzi.branch.index() &lt;= <span class="number">5</span>;
 <a href=#417 id=417 data-nosnippet>417</a>
-<a href=#418 id=418 data-nosnippet>418</a>    <span class="comment">// 삼지존괘 (坎 29, 屯 3, 蹇 39) 조건 체크
+<a href=#418 id=418 data-nosnippet>418</a>    <span class="comment">// Three Supreme Hexagrams (Kan 29, Chun 3, Jian 39) condition check
 <a href=#419 id=419 data-nosnippet>419</a>    </span><span class="kw">let </span>is_three_sovereign =
 <a href=#420 id=420 data-nosnippet>420</a>        pre_natal_hexagram == <span class="number">29 </span>|| pre_natal_hexagram == <span class="number">3 </span>|| pre_natal_hexagram == <span class="number">39</span>;
 <a href=#421 id=421 data-nosnippet>421</a>    <span class="kw">let </span>is_special_sovereign_case = is_three_sovereign
 <a href=#422 id=422 data-nosnippet>422</a>        &amp;&amp; (
-<a href=#423 id=423 data-nosnippet>423</a>            (yuan_dang_yao == <span class="number">5 </span>&amp;&amp; !is_yang_ling) || <span class="comment">// 9五 이며 음령일 때
+<a href=#423 id=423 data-nosnippet>423</a>            (yuan_dang_yao == <span class="number">5 </span>&amp;&amp; !is_yang_ling) || <span class="comment">// 9-5 and Yin Ling
 <a href=#424 id=424 data-nosnippet>424</a>        </span>(yuan_dang_yao == <span class="number">6 </span>&amp;&amp; is_yang_ling)
-<a href=#425 id=425 data-nosnippet>425</a>            <span class="comment">// 上六 이며 양령일 때
+<a href=#425 id=425 data-nosnippet>425</a>            <span class="comment">// Top-6 and Yang Ling
 <a href=#426 id=426 data-nosnippet>426</a>        </span>);
 <a href=#427 id=427 data-nosnippet>427</a>
 <a href=#428 id=428 data-nosnippet>428</a>    <span class="kw">let </span><span class="kw-2">mut </span>post_lines = pre_lines;
 <a href=#429 id=429 data-nosnippet>429</a>    post_lines[yuan_dang_idx] = !pre_lines[yuan_dang_idx];
 <a href=#430 id=430 data-nosnippet>430</a>
 <a href=#431 id=431 data-nosnippet>431</a>    <span class="kw">let </span>(post_upper, post_lower, post_yuan_dang_idx) = <span class="kw">if </span>is_special_sovereign_case {
-<a href=#432 id=432 data-nosnippet>432</a>        <span class="comment">// 변이불이 (변하되 바뀌지 않음): 내외괘(상하괘)를 서로 교환하지 않음, 원당효 위치 유지
+<a href=#432 id=432 data-nosnippet>432</a>        <span class="comment">// Change without exchange: do not swap upper/lower trigrams, retain line index
 <a href=#433 id=433 data-nosnippet>433</a>        </span><span class="kw">let </span>post_lower_lines = [post_lines[<span class="number">0</span>], post_lines[<span class="number">1</span>], post_lines[<span class="number">2</span>]];
 <a href=#434 id=434 data-nosnippet>434</a>        <span class="kw">let </span>post_upper_lines = [post_lines[<span class="number">3</span>], post_lines[<span class="number">4</span>], post_lines[<span class="number">5</span>]];
 <a href=#435 id=435 data-nosnippet>435</a>        <span class="kw">let </span>pl = lines_to_trigram_num(post_lower_lines);
 <a href=#436 id=436 data-nosnippet>436</a>        <span class="kw">let </span>pu = lines_to_trigram_num(post_upper_lines);
 <a href=#437 id=437 data-nosnippet>437</a>        (pu, pl, yuan_dang_idx)
 <a href=#438 id=438 data-nosnippet>438</a>    } <span class="kw">else </span>{
-<a href=#439 id=439 data-nosnippet>439</a>        <span class="comment">// 일반 케이스: 내외괘(상하괘) 교환 및 원당효 위치 3칸 시프트
+<a href=#439 id=439 data-nosnippet>439</a>        <span class="comment">// Standard case: swap upper/lower trigrams and shift Yuan Dang line by 3
 <a href=#440 id=440 data-nosnippet>440</a>        </span><span class="kw">let </span>post_lower_lines = [post_lines[<span class="number">3</span>], post_lines[<span class="number">4</span>], post_lines[<span class="number">5</span>]];
 <a href=#441 id=441 data-nosnippet>441</a>        <span class="kw">let </span>post_upper_lines = [post_lines[<span class="number">0</span>], post_lines[<span class="number">1</span>], post_lines[<span class="number">2</span>]];
 <a href=#442 id=442 data-nosnippet>442</a>        <span class="kw">let </span>pl = lines_to_trigram_num(post_lower_lines);
@@ -453,11 +453,11 @@
 <a href=#453 id=453 data-nosnippet>453</a>
 <a href=#454 id=454 data-nosnippet>454</a>    <span class="kw">let </span>post_natal_hexagram = get_king_wen_index(post_upper, post_lower);
 <a href=#455 id=455 data-nosnippet>455</a>
-<a href=#456 id=456 data-nosnippet>456</a>    <span class="comment">// 평생 대운 타임라인 생성
+<a href=#456 id=456 data-nosnippet>456</a>    <span class="comment">// Generate lifelong cycles timeline
 <a href=#457 id=457 data-nosnippet>457</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>lifetime_cycles = Vec::new();
 <a href=#458 id=458 data-nosnippet>458</a>    <span class="kw">let </span><span class="kw-2">mut </span>current_age = <span class="number">1</span>;
 <a href=#459 id=459 data-nosnippet>459</a>
-<a href=#460 id=460 data-nosnippet>460</a>    <span class="comment">// 1. 선천괘 주기 (원당효부터 항상 위로 순행)
+<a href=#460 id=460 data-nosnippet>460</a>    <span class="comment">// 1. Pre-natal hexagram cycles (forward from Yuan Dang line)
 <a href=#461 id=461 data-nosnippet>461</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>line_ptr = yuan_dang_idx;
 <a href=#462 id=462 data-nosnippet>462</a>    <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">6 </span>{
 <a href=#463 id=463 data-nosnippet>463</a>        <span class="kw">let </span>is_yang = pre_lines[line_ptr];
@@ -473,10 +473,10 @@
 <a href=#473 id=473 data-nosnippet>473</a>        });
 <a href=#474 id=474 data-nosnippet>474</a>
 <a href=#475 id=475 data-nosnippet>475</a>        current_age += duration;
-<a href=#476 id=476 data-nosnippet>476</a>        line_ptr = (line_ptr + <span class="number">1</span>) % <span class="number">6</span>; <span class="comment">// 항상 위쪽 방향(초-&gt;상)으로 진행
+<a href=#476 id=476 data-nosnippet>476</a>        line_ptr = (line_ptr + <span class="number">1</span>) % <span class="number">6</span>; <span class="comment">// Progress upward (line 1 -&gt; 6)
 <a href=#477 id=477 data-nosnippet>477</a>    </span>}
 <a href=#478 id=478 data-nosnippet>478</a>
-<a href=#479 id=479 data-nosnippet>479</a>    <span class="comment">// 2. 후천괘 주기 (후천괘 원당효부터 항상 위로 순행)
+<a href=#479 id=479 data-nosnippet>479</a>    <span class="comment">// 2. Post-natal hexagram cycles (forward from post-natal Yuan Dang line)
 <a href=#480 id=480 data-nosnippet>480</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>post_line_ptr = post_yuan_dang_idx;
 <a href=#481 id=481 data-nosnippet>481</a>    <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">6 </span>{
 <a href=#482 id=482 data-nosnippet>482</a>        <span class="kw">let </span>is_yang = post_lines[post_line_ptr];
@@ -492,21 +492,21 @@
 <a href=#492 id=492 data-nosnippet>492</a>        });
 <a href=#493 id=493 data-nosnippet>493</a>
 <a href=#494 id=494 data-nosnippet>494</a>        current_age += duration;
-<a href=#495 id=495 data-nosnippet>495</a>        post_line_ptr = (post_line_ptr + <span class="number">1</span>) % <span class="number">6</span>; <span class="comment">// 항상 위쪽 방향으로 진행
+<a href=#495 id=495 data-nosnippet>495</a>        post_line_ptr = (post_line_ptr + <span class="number">1</span>) % <span class="number">6</span>; <span class="comment">// Progress upward
 <a href=#496 id=496 data-nosnippet>496</a>    </span>}
 <a href=#497 id=497 data-nosnippet>497</a>
-<a href=#498 id=498 data-nosnippet>498</a>    <span class="comment">// 확장 필드 연산
+<a href=#498 id=498 data-nosnippet>498</a>    <span class="comment">// Extended field calculation
 <a href=#499 id=499 data-nosnippet>499</a>    </span><span class="kw">let </span>(se_yao, ying_yao) = get_se_ying_yao(pre_natal_hexagram);
 <a href=#500 id=500 data-nosnippet>500</a>    <span class="kw">let </span>ti_yong = analyze_ti_yong(pre_upper, pre_lower, yuan_dang_yao);
 <a href=#501 id=501 data-nosnippet>501</a>
-<a href=#502 id=502 data-nosnippet>502</a>    <span class="comment">// 납갑(NaJia) 6효 계산
+<a href=#502 id=502 data-nosnippet>502</a>    <span class="comment">// Calculate 6-line NaJia
 <a href=#503 id=503 data-nosnippet>503</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>najia_lines = Vec::new();
 <a href=#504 id=504 data-nosnippet>504</a>    <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..=<span class="number">6 </span>{
 <a href=#505 id=505 data-nosnippet>505</a>        <span class="kw">let </span>(stem, branch) = get_najia_for_line(pre_upper, pre_lower, i);
 <a href=#506 id=506 data-nosnippet>506</a>        najia_lines.push(NaJiaYao { stem, branch });
 <a href=#507 id=507 data-nosnippet>507</a>    }
 <a href=#508 id=508 data-nosnippet>508</a>
-<a href=#509 id=509 data-nosnippet>509</a>    <span class="comment">// 신살(Shinsal) 6효 계산
+<a href=#509 id=509 data-nosnippet>509</a>    <span class="comment">// Calculate 6-line Shinsal
 <a href=#510 id=510 data-nosnippet>510</a>    </span><span class="kw">let </span>(void_branches, <span class="kw">_</span>) = <span class="kw">crate</span>::analysis::void::calculate_void_branches(<span class="kw-2">*</span>day_ganzi);
 <a href=#511 id=511 data-nosnippet>511</a>    <span class="kw">let </span><span class="kw-2">mut </span>shinsal_lines = Vec::new();
 <a href=#512 id=512 data-nosnippet>512</a>    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">6 </span>{
@@ -563,7 +563,7 @@
 <a href=#563 id=563 data-nosnippet>563</a>        });
 <a href=#564 id=564 data-nosnippet>564</a>    }
 <a href=#565 id=565 data-nosnippet>565</a>
-<a href=#566 id=566 data-nosnippet>566</a>    <span class="comment">// 원기(YuanQi) / 화공(HuaGong) 판정
+<a href=#566 id=566 data-nosnippet>566</a>    <span class="comment">// Determine YuanQi and HuaGong
 <a href=#567 id=567 data-nosnippet>567</a>    </span><span class="kw">let </span>yd_idx = (yuan_dang_yao - <span class="number">1</span>) <span class="kw">as </span>usize;
 <a href=#568 id=568 data-nosnippet>568</a>    <span class="kw">let </span>yd_branch = najia_lines[yd_idx].branch;
 <a href=#569 id=569 data-nosnippet>569</a>    <span class="kw">let </span>yd_element = yd_branch.element();
@@ -823,8 +823,8 @@
 <a href=#823 id=823 data-nosnippet>823</a>
 <a href=#824 id=824 data-nosnippet>824</a>    <span class="attr">#[test]
 <a href=#825 id=825 data-nosnippet>825</a>    </span><span class="kw">fn </span>test_heluo_case_1964_04_18() {
-<a href=#826 id=826 data-nosnippet>826</a>        <span class="comment">// 1964년 음력 3월 7일 巳시 (양력 1964년 4월 18일)
-<a href=#827 id=827 data-nosnippet>827</a>        // 갑진년 무진월 정유일 을사시 (시두법 상 정일 기사시가 아닌 을사시가 맞음)
+<a href=#826 id=826 data-nosnippet>826</a>        <span class="comment">// 1964 Lunar Mar 7 Si hour (Solar 1964-04-18)
+<a href=#827 id=827 data-nosnippet>827</a>        // JiaChen, WuChen, DingYou, YiSi
 <a href=#828 id=828 data-nosnippet>828</a>        </span><span class="kw">let </span>year_gz = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Chen);
 <a href=#829 id=829 data-nosnippet>829</a>        <span class="kw">let </span>month_gz = GanZi::new(HeavenlyStem::Wu, EarthlyBranch::Chen);
 <a href=#830 id=830 data-nosnippet>830</a>        <span class="kw">let </span>day_gz = GanZi::new(HeavenlyStem::Ding, EarthlyBranch::You);
@@ -832,14 +832,14 @@
 <a href=#832 id=832 data-nosnippet>832</a>
 <a href=#833 id=833 data-nosnippet>833</a>        <span class="kw">let </span>res = calculate_heluo(<span class="number">1964</span>, <span class="bool-val">true</span>, <span class="kw-2">&amp;</span>year_gz, <span class="kw-2">&amp;</span>month_gz, <span class="kw-2">&amp;</span>day_gz, <span class="kw-2">&amp;</span>hour_gz);
 <a href=#834 id=834 data-nosnippet>834</a>
-<a href=#835 id=835 data-nosnippet>835</a>        <span class="comment">// 선천괘와 후천괘 출력
+<a href=#835 id=835 data-nosnippet>835</a>        <span class="comment">// Output pre-natal and post-natal hexagrams
 <a href=#836 id=836 data-nosnippet>836</a>        </span><span class="macro">println!</span>(
 <a href=#837 id=837 data-nosnippet>837</a>            <span class="string">"1964-04-18 Pre-natal: {}, Post-natal: {}, Yuan Dang: {}"</span>,
 <a href=#838 id=838 data-nosnippet>838</a>            res.pre_natal_hexagram, res.post_natal_hexagram, res.yuan_dang_yao
 <a href=#839 id=839 data-nosnippet>839</a>        );
 <a href=#840 id=840 data-nosnippet>840</a>
-<a href=#841 id=841 data-nosnippet>841</a>        <span class="macro">assert_eq!</span>(res.pre_natal_hexagram, <span class="number">50</span>); <span class="comment">// 화풍정 (火風鼎)
-<a href=#842 id=842 data-nosnippet>842</a>        </span><span class="macro">assert_eq!</span>(res.post_natal_hexagram, <span class="number">9</span>); <span class="comment">// 풍천소축 (風天小畜)
+<a href=#841 id=841 data-nosnippet>841</a>        <span class="macro">assert_eq!</span>(res.pre_natal_hexagram, <span class="number">50</span>); <span class="comment">// Ding (火風鼎)
+<a href=#842 id=842 data-nosnippet>842</a>        </span><span class="macro">assert_eq!</span>(res.post_natal_hexagram, <span class="number">9</span>); <span class="comment">// XiaoChu (風天小畜)
 <a href=#843 id=843 data-nosnippet>843</a>        </span><span class="macro">assert_eq!</span>(res.yuan_dang_yao, <span class="number">5</span>);
 <a href=#844 id=844 data-nosnippet>844</a>    }
 <a href=#845 id=845 data-nosnippet>845</a>}

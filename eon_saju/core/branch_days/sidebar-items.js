@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["SaryeongAnalysis"]};
+window.SIDEBAR_ITEMS = {"fn":["calculate_saryeong"],"struct":["SaryeongAnalysis"]};

@@ -471,21 +471,21 @@
 <a href=#471 id=471 data-nosnippet>471</a>        <span class="kw">use </span><span class="kw">crate</span>::core::constants::<span class="kw-2">*</span>;
 <a href=#472 id=472 data-nosnippet>472</a>
 <a href=#473 id=473 data-nosnippet>473</a>        <span class="comment">// Sun: BPHS Ayana-based Chesta Bala
-<a href=#474 id=474 data-nosnippet>474</a>        // 기본: 적위(declination)로 0~60 범위 산출
-<a href=#475 id=475 data-nosnippet>475</a>        //   - 하지(+23.45°) = 60, 동지(-23.45°) = 0
-<a href=#476 id=476 data-nosnippet>476</a>        // 방향 보정(Uttarayana/Dakshinayana):
-<a href=#477 id=477 data-nosnippet>477</a>        //   - 동일 적위라도 북진(Uttarayana) 중인 태양이 더 강함
-<a href=#478 id=478 data-nosnippet>478</a>        //   - 사이드리얼 기준: 마카라(270°)~미투나(90°) = Uttarayana → +5
-<a href=#479 id=479 data-nosnippet>479</a>        //   - 카르카(90°)~다누(270°) = Dakshinayana → 0
+<a href=#474 id=474 data-nosnippet>474</a>        // Base: Declination produces 0~60 range
+<a href=#475 id=475 data-nosnippet>475</a>        //   - Summer solstice (+23.45 deg) = 60, Winter solstice (-23.45 deg) = 0
+<a href=#476 id=476 data-nosnippet>476</a>        // Directional correction (Uttarayana/Dakshinayana):
+<a href=#477 id=477 data-nosnippet>477</a>        //   - Even with identical declination, northward-moving Sun (Uttarayana) is stronger
+<a href=#478 id=478 data-nosnippet>478</a>        //   - Sidereal reference: Makara (270 deg) ~ Mithuna (90 deg) = Uttarayana -&gt; +5
+<a href=#479 id=479 data-nosnippet>479</a>        //   - Karka (90 deg) ~ Dhanu (270 deg) = Dakshinayana -&gt; 0
 <a href=#480 id=480 data-nosnippet>480</a>        </span><span class="kw">if </span>pos.planet == VedicPlanet::Sun {
 <a href=#481 id=481 data-nosnippet>481</a>            <span class="kw">let </span>dec = pos.declination;
 <a href=#482 id=482 data-nosnippet>482</a>            <span class="kw">let </span>lon = pos.sidereal_deg;
 <a href=#483 id=483 data-nosnippet>483</a>
-<a href=#484 id=484 data-nosnippet>484</a>            <span class="comment">// 기본 Ayana Chesta Bala (순수 적위 비율)
+<a href=#484 id=484 data-nosnippet>484</a>            <span class="comment">// Base Ayana Chesta Bala (pure declination proportion)
 <a href=#485 id=485 data-nosnippet>485</a>            </span><span class="kw">let </span>base = ((dec + ECLIPTIC_OBLIQUITY) / (<span class="number">2.0 </span>* ECLIPTIC_OBLIQUITY)) * <span class="number">60.0</span>;
 <a href=#486 id=486 data-nosnippet>486</a>
-<a href=#487 id=487 data-nosnippet>487</a>            <span class="comment">// Uttarayana 방향 보정: 동지점(마카라 270°)→하지점(미투나 90°)
-<a href=#488 id=488 data-nosnippet>488</a>            // 동일 적위에서 북진 중인 태양에 추가 강도를 부여
+<a href=#487 id=487 data-nosnippet>487</a>            <span class="comment">// Uttarayana directional bonus: Winter Solstice (Makara 270) -&gt; Summer Solstice (Mithuna 90)
+<a href=#488 id=488 data-nosnippet>488</a>            // Grants additional strength to Sun moving northward
 <a href=#489 id=489 data-nosnippet>489</a>            </span><span class="kw">let </span>is_uttarayana = !(<span class="number">90.0</span>..<span class="number">270.0</span>).contains(<span class="kw-2">&amp;</span>lon);
 <a href=#490 id=490 data-nosnippet>490</a>            <span class="kw">let </span>direction_bonus = <span class="kw">if </span>is_uttarayana { <span class="number">5.0 </span>} <span class="kw">else </span>{ <span class="number">0.0 </span>};
 <a href=#491 id=491 data-nosnippet>491</a>

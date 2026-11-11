@@ -66,7 +66,7 @@
 <a href=#66 id=66 data-nosnippet>66</a><span class="kw">impl </span>BirthArgs {
 <a href=#67 id=67 data-nosnippet>67</a>    <span class="kw">pub fn </span>is_male(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
 <a href=#68 id=68 data-nosnippet>68</a>        <span class="kw">let </span>g = <span class="self">self</span>.gender.trim().to_lowercase();
-<a href=#69 id=69 data-nosnippet>69</a>        !<span class="macro">matches!</span>(g.as_str(), <span class="string">"f" </span>| <span class="string">"female" </span>| <span class="string">"여" </span>| <span class="string">"여자" </span>| <span class="string">"2" </span>| <span class="string">"4"</span>)
+<a href=#69 id=69 data-nosnippet>69</a>        !<span class="macro">matches!</span>(g.as_str(), <span class="string">"f" </span>| <span class="string">"female" </span>| <span class="string">"2" </span>| <span class="string">"4"</span>)
 <a href=#70 id=70 data-nosnippet>70</a>    }
 <a href=#71 id=71 data-nosnippet>71</a>
 <a href=#72 id=72 data-nosnippet>72</a>    <span class="kw">pub fn </span>to_analysis_input(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;AnalysisInput&gt; {

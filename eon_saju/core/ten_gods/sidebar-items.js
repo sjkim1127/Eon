@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["TenGod"],"struct":["TenGodAnalysis"]};
+window.SIDEBAR_ITEMS = {"enum":["TenGod","TenGodGroup"],"struct":["TenGodAnalysis"]};

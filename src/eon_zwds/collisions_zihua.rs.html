@@ -89,7 +89,7 @@
 <a href=#89 id=89 data-nosnippet>89</a>        <span class="kw">return </span>collisions;
 <a href=#90 id=90 data-nosnippet>90</a>    }
 <a href=#91 id=91 data-nosnippet>91</a>
-<a href=#92 id=92 data-nosnippet>92</a>    <span class="comment">// 대표 대한 사화 추출 (첫번째 대한 기준 또는 지정 대한)
+<a href=#92 id=92 data-nosnippet>92</a>    <span class="comment">// Extract active decadal Si Hua
 <a href=#93 id=93 data-nosnippet>93</a>    </span><span class="kw">let </span>active_daxian = <span class="kw-2">&amp;</span>daxian_list[<span class="number">0</span>];
 <a href=#94 id=94 data-nosnippet>94</a>    <span class="kw">let </span>daxian_stem = parse_stem(<span class="kw-2">&amp;</span>active_daxian.stem_hanja).ok();
 <a href=#95 id=95 data-nosnippet>95</a>
@@ -98,7 +98,7 @@
 <a href=#98 id=98 data-nosnippet>98</a>        <span class="kw">let </span><span class="kw-2">mut </span>hualu_count = <span class="number">0</span>;
 <a href=#99 id=99 data-nosnippet>99</a>        <span class="kw">let </span><span class="kw-2">mut </span>stars_involved = Vec::new();
 <a href=#100 id=100 data-nosnippet>100</a>
-<a href=#101 id=101 data-nosnippet>101</a>        <span class="comment">// 1. 생년 사화 체크
+<a href=#101 id=101 data-nosnippet>101</a>        <span class="comment">// 1. Check natal Si Hua
 <a href=#102 id=102 data-nosnippet>102</a>        </span><span class="kw">for </span>st <span class="kw">in </span><span class="kw-2">&amp;</span>p.stars {
 <a href=#103 id=103 data-nosnippet>103</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(s_type) = st.si_hua {
 <a href=#104 id=104 data-nosnippet>104</a>                <span class="kw">match </span>s_type {
@@ -115,7 +115,7 @@
 <a href=#115 id=115 data-nosnippet>115</a>            }
 <a href=#116 id=116 data-nosnippet>116</a>        }
 <a href=#117 id=117 data-nosnippet>117</a>
-<a href=#118 id=118 data-nosnippet>118</a>        <span class="comment">// 2. 대한 사화 체크
+<a href=#118 id=118 data-nosnippet>118</a>        <span class="comment">// 2. Check decadal Si Hua
 <a href=#119 id=119 data-nosnippet>119</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(d_stem) = daxian_stem {
 <a href=#120 id=120 data-nosnippet>120</a>            <span class="kw">let </span>d_sihua = get_sihua_stars(d_stem);
 <a href=#121 id=121 data-nosnippet>121</a>            <span class="kw">if </span>p.stars.iter().any(|st| st.star == d_sihua[<span class="number">3</span>]) {
@@ -128,7 +128,7 @@
 <a href=#128 id=128 data-nosnippet>128</a>            }
 <a href=#129 id=129 data-nosnippet>129</a>        }
 <a href=#130 id=130 data-nosnippet>130</a>
-<a href=#131 id=131 data-nosnippet>131</a>        <span class="comment">// 3. 유년 사화 체크
+<a href=#131 id=131 data-nosnippet>131</a>        <span class="comment">// 3. Check annual Si Hua
 <a href=#132 id=132 data-nosnippet>132</a>        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(ln) = current_liunian {
 <a href=#133 id=133 data-nosnippet>133</a>            <span class="kw">if </span>p.stars.iter().any(|st| st.star == ln.si_hua[<span class="number">3</span>]) {
 <a href=#134 id=134 data-nosnippet>134</a>                huaji_count += <span class="number">1</span>;
@@ -201,16 +201,16 @@
 <a href=#201 id=201 data-nosnippet>201</a>
 <a href=#202 id=202 data-nosnippet>202</a><span class="kw">fn </span>parse_stem(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;HeavenlyStem, ()&gt; {
 <a href=#203 id=203 data-nosnippet>203</a>    <span class="kw">match </span>s {
-<a href=#204 id=204 data-nosnippet>204</a>        <span class="string">"甲" </span>| <span class="string">"갑" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Jia),
-<a href=#205 id=205 data-nosnippet>205</a>        <span class="string">"乙" </span>| <span class="string">"을" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Yi),
-<a href=#206 id=206 data-nosnippet>206</a>        <span class="string">"丙" </span>| <span class="string">"병" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Bing),
-<a href=#207 id=207 data-nosnippet>207</a>        <span class="string">"丁" </span>| <span class="string">"정" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Ding),
-<a href=#208 id=208 data-nosnippet>208</a>        <span class="string">"戊" </span>| <span class="string">"무" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Wu),
-<a href=#209 id=209 data-nosnippet>209</a>        <span class="string">"己" </span>| <span class="string">"기" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Ji),
-<a href=#210 id=210 data-nosnippet>210</a>        <span class="string">"庚" </span>| <span class="string">"경" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Geng),
-<a href=#211 id=211 data-nosnippet>211</a>        <span class="string">"辛" </span>| <span class="string">"신" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Xin),
-<a href=#212 id=212 data-nosnippet>212</a>        <span class="string">"壬" </span>| <span class="string">"임" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Ren),
-<a href=#213 id=213 data-nosnippet>213</a>        <span class="string">"癸" </span>| <span class="string">"계" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Gui),
+<a href=#204 id=204 data-nosnippet>204</a>        <span class="string">"甲" </span>| <span class="string">"Jia" </span>| <span class="string">"jia" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Jia),
+<a href=#205 id=205 data-nosnippet>205</a>        <span class="string">"乙" </span>| <span class="string">"Yi" </span>| <span class="string">"yi" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Yi),
+<a href=#206 id=206 data-nosnippet>206</a>        <span class="string">"丙" </span>| <span class="string">"Bing" </span>| <span class="string">"bing" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Bing),
+<a href=#207 id=207 data-nosnippet>207</a>        <span class="string">"丁" </span>| <span class="string">"Ding" </span>| <span class="string">"ding" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Ding),
+<a href=#208 id=208 data-nosnippet>208</a>        <span class="string">"戊" </span>| <span class="string">"Wu" </span>| <span class="string">"wu" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Wu),
+<a href=#209 id=209 data-nosnippet>209</a>        <span class="string">"己" </span>| <span class="string">"Ji" </span>| <span class="string">"ji" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Ji),
+<a href=#210 id=210 data-nosnippet>210</a>        <span class="string">"庚" </span>| <span class="string">"Geng" </span>| <span class="string">"geng" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Geng),
+<a href=#211 id=211 data-nosnippet>211</a>        <span class="string">"辛" </span>| <span class="string">"Xin" </span>| <span class="string">"xin" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Xin),
+<a href=#212 id=212 data-nosnippet>212</a>        <span class="string">"壬" </span>| <span class="string">"Ren" </span>| <span class="string">"ren" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Ren),
+<a href=#213 id=213 data-nosnippet>213</a>        <span class="string">"癸" </span>| <span class="string">"Gui" </span>| <span class="string">"gui" </span>=&gt; <span class="prelude-val">Ok</span>(HeavenlyStem::Gui),
 <a href=#214 id=214 data-nosnippet>214</a>        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(()),
 <a href=#215 id=215 data-nosnippet>215</a>    }
 <a href=#216 id=216 data-nosnippet>216</a>}

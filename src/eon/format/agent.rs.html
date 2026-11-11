@@ -304,7 +304,7 @@
 <a href=#304 id=304 data-nosnippet>304</a>
 <a href=#305 id=305 data-nosnippet>305</a>    <span class="comment">// 9. Domain Interpretation Handbook &amp; Archetypal Decoder
 <a href=#306 id=306 data-nosnippet>306</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(hb) = handbook {
-<a href=#307 id=307 data-nosnippet>307</a>        out.push_str(<span class="string">"## 9. Domain Interpretation Handbook &amp; Archetypal Decoder (고전 해설집 및 원형 디코더)\n\n"</span>);
+<a href=#307 id=307 data-nosnippet>307</a>        out.push_str(<span class="string">"## 9. Domain Interpretation Handbook &amp; Archetypal Decoder\n\n"</span>);
 <a href=#308 id=308 data-nosnippet>308</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#309 id=309 data-nosnippet>309</a>            <span class="string">"&gt; **Archetypal Persona**: {}\n"</span>,
 <a href=#310 id=310 data-nosnippet>310</a>            hb.archetypal_persona
@@ -316,7 +316,7 @@
 <a href=#316 id=316 data-nosnippet>316</a>
 <a href=#317 id=317 data-nosnippet>317</a>        <span class="kw">if </span>!hb.symbols.is_empty() {
 <a href=#318 id=318 data-nosnippet>318</a>            out.push_str(<span class="string">"### [A. Pinpoint Classical Symbol Decoders]\n"</span>);
-<a href=#319 id=319 data-nosnippet>319</a>            out.push_str(<span class="string">"*Verified classical grounding (자평진전, 궁통보감, BPHS, 자미두수전서, 기문비급 등) decoded into modern executive psychology:*\n\n"</span>);
+<a href=#319 id=319 data-nosnippet>319</a>            out.push_str(<span class="string">"*Verified classical grounding (ZiPing ZhenQuan, BPHS, ZWDS Treatises, QiMen Treatises, etc.) decoded into modern executive psychology:*\n\n"</span>);
 <a href=#320 id=320 data-nosnippet>320</a>            <span class="kw">for </span>s <span class="kw">in </span><span class="kw-2">&amp;</span>hb.symbols {
 <a href=#321 id=321 data-nosnippet>321</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"#### {} [{}]\n"</span>, s.symbol, s.engine));
 <a href=#322 id=322 data-nosnippet>322</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
@@ -348,13 +348,13 @@
 <a href=#348 id=348 data-nosnippet>348</a>        }
 <a href=#349 id=349 data-nosnippet>349</a>
 <a href=#350 id=350 data-nosnippet>350</a>        out.push_str(<span class="string">"### [C. Tactical Directives]\n"</span>);
-<a href=#351 id=351 data-nosnippet>351</a>        out.push_str(<span class="string">"#### DO (강력 권장):\n"</span>);
+<a href=#351 id=351 data-nosnippet>351</a>        out.push_str(<span class="string">"#### DO (Recommended Strategic Actions):\n"</span>);
 <a href=#352 id=352 data-nosnippet>352</a>        <span class="kw">for </span>d <span class="kw">in </span><span class="kw-2">&amp;</span>hb.tactical_dos {
 <a href=#353 id=353 data-nosnippet>353</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- [x] {}\n"</span>, d));
 <a href=#354 id=354 data-nosnippet>354</a>        }
 <a href=#355 id=355 data-nosnippet>355</a>        out.push(<span class="string">'\n'</span>);
 <a href=#356 id=356 data-nosnippet>356</a>
-<a href=#357 id=357 data-nosnippet>357</a>        out.push_str(<span class="string">"#### DON'T (절대 주의):\n"</span>);
+<a href=#357 id=357 data-nosnippet>357</a>        out.push_str(<span class="string">"#### DON'T (Critical Hazards to Avoid):\n"</span>);
 <a href=#358 id=358 data-nosnippet>358</a>        <span class="kw">for </span>d <span class="kw">in </span><span class="kw-2">&amp;</span>hb.tactical_donts {
 <a href=#359 id=359 data-nosnippet>359</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- [ ] {}\n"</span>, d));
 <a href=#360 id=360 data-nosnippet>360</a>        }

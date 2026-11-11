@@ -67,7 +67,7 @@
 <a href=#67 id=67 data-nosnippet>67</a>            <span class="kw-2">&amp;</span>pillars, <span class="kw-2">&amp;</span>config,
 <a href=#68 id=68 data-nosnippet>68</a>        ));
 <a href=#69 id=69 data-nosnippet>69</a>
-<a href=#70 id=70 data-nosnippet>70</a>        <span class="comment">// 하위 호환성 및 SSOT를 위해 신살 정보를 명시적으로 전달하여 해석 생성
+<a href=#70 id=70 data-nosnippet>70</a>        <span class="comment">// Pass shinsal markers explicitly for interpretations and SSOT consistency
 <a href=#71 id=71 data-nosnippet>71</a>        </span>supplementary_pillars.analyze_interpretations(<span class="kw-2">&amp;</span>spirit_markers.aux_shinsals);
 <a href=#72 id=72 data-nosnippet>72</a>
 <a href=#73 id=73 data-nosnippet>73</a>        <span class="self">Self </span>{
@@ -328,7 +328,7 @@
 <a href=#328 id=328 data-nosnippet>328</a>            md.push_str(<span class="string">"| Age | Year | Score | Wood | Fire | Earth | Metal | Water |\n"</span>);
 <a href=#329 id=329 data-nosnippet>329</a>            md.push_str(<span class="string">"|---|---|---|---|---|---|---|---|\n"</span>);
 <a href=#330 id=330 data-nosnippet>330</a>
-<a href=#331 id=331 data-nosnippet>331</a>            <span class="comment">// 10년 단위로 요약 출력
+<a href=#331 id=331 data-nosnippet>331</a>            <span class="comment">// Summarize every 10 years
 <a href=#332 id=332 data-nosnippet>332</a>            </span><span class="kw">for </span>frame <span class="kw">in </span><span class="self">self</span>.simulation_frames.iter().step_by(<span class="number">10</span>) {
 <a href=#333 id=333 data-nosnippet>333</a>                <span class="kw">let </span>r = <span class="kw-2">&amp;</span>frame.register_state;
 <a href=#334 id=334 data-nosnippet>334</a>                md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
@@ -345,7 +345,7 @@
 <a href=#345 id=345 data-nosnippet>345</a>            }
 <a href=#346 id=346 data-nosnippet>346</a>
 <a href=#347 id=347 data-nosnippet>347</a>            md.push_str(<span class="string">"\n### 8.2 Key Life Events (ESIL Trace Summary)\n"</span>);
-<a href=#348 id=348 data-nosnippet>348</a>            <span class="comment">// 큰 변화가 있거나 상위 5개 프레임 추출
+<a href=#348 id=348 data-nosnippet>348</a>            <span class="comment">// Extract top 5 key event frames
 <a href=#349 id=349 data-nosnippet>349</a>            </span><span class="kw">let </span><span class="kw-2">mut </span>key_frames: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.simulation_frames.iter().collect();
 <a href=#350 id=350 data-nosnippet>350</a>            key_frames.sort_by(|a, b| {
 <a href=#351 id=351 data-nosnippet>351</a>                b.score

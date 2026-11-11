@@ -369,36 +369,36 @@
 <a href=#369 id=369 data-nosnippet>369</a>                            (a_pos.house_index <span class="kw">as </span>i32 - pos.house_index <span class="kw">as </span>i32).rem_euclid(<span class="number">12</span>) + <span class="number">1</span>;
 <a href=#370 id=370 data-nosnippet>370</a>
 <a href=#371 id=371 data-nosnippet>371</a>                        <span class="kw">let </span>(a_favorable, rel_desc) = <span class="kw">match </span>diff {
-<a href=#372 id=372 data-nosnippet>372</a>                            <span class="number">1 </span>| <span class="number">5 </span>| <span class="number">9 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"대운과 소운 행성이 1/5/9 트리콘(Trikona) 조화로운 관계에 있어 발전과 행운이 따릅니다."</span>),
-<a href=#373 id=373 data-nosnippet>373</a>                            <span class="number">3 </span>| <span class="number">11 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"노력에 따른 성과와 인맥 확장이 이루어집니다."</span>),
-<a href=#374 id=374 data-nosnippet>374</a>                            <span class="number">4 </span>| <span class="number">10 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"안정과 성취, 사회적 기틀을 다지는 켄드라(Kendra) 시기입니다."</span>),
-<a href=#375 id=375 data-nosnippet>375</a>                            <span class="number">2 </span>| <span class="number">12 </span>=&gt; (<span class="bool-val">false</span>, <span class="string">"수입과 지출, 혹은 가족과 단절의 이슈가 교차하는 시기입니다."</span>),
-<a href=#376 id=376 data-nosnippet>376</a>                            <span class="number">6 </span>| <span class="number">8 </span>=&gt; (<span class="bool-val">false</span>, <span class="string">"대운 행성과 6/8 축을 형성하여 갑작스러운 변동, 갈등, 건강 이슈 등 시련을 통해 배우는 시기입니다."</span>),
-<a href=#377 id=377 data-nosnippet>377</a>                            <span class="number">7 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"대인관계나 파트너십을 통한 전환점이 발생합니다."</span>),
-<a href=#378 id=378 data-nosnippet>378</a>                            <span class="kw">_ </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"무난한 흐름입니다."</span>),
+<a href=#372 id=372 data-nosnippet>372</a>                            <span class="number">1 </span>| <span class="number">5 </span>| <span class="number">9 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"Major and sub-period lords form a harmonious 1/5/9 Trikona relationship, fostering growth, fortune, and alignment."</span>),
+<a href=#373 id=373 data-nosnippet>373</a>                            <span class="number">3 </span>| <span class="number">11 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"Efforts yield tangible accomplishments and expansive social connections."</span>),
+<a href=#374 id=374 data-nosnippet>374</a>                            <span class="number">4 </span>| <span class="number">10 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"A Kendra period providing stability, public achievement, and solid foundational progress."</span>),
+<a href=#375 id=375 data-nosnippet>375</a>                            <span class="number">2 </span>| <span class="number">12 </span>=&gt; (<span class="bool-val">false</span>, <span class="string">"A mixed period highlighting income vs. expenditure cycles and family dynamics."</span>),
+<a href=#376 id=376 data-nosnippet>376</a>                            <span class="number">6 </span>| <span class="number">8 </span>=&gt; (<span class="bool-val">false</span>, <span class="string">"Forms a difficult 6/8 Shadashtaka axis with the major lord, bringing unexpected shifts, conflicts, and endurance tests."</span>),
+<a href=#377 id=377 data-nosnippet>377</a>                            <span class="number">7 </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"A pivotal turning point unfolding through partnerships and interpersonal connections."</span>),
+<a href=#378 id=378 data-nosnippet>378</a>                            <span class="kw">_ </span>=&gt; (<span class="bool-val">true</span>, <span class="string">"A steady, balanced developmental flow."</span>),
 <a href=#379 id=379 data-nosnippet>379</a>                        };
 <a href=#380 id=380 data-nosnippet>380</a>
 <a href=#381 id=381 data-nosnippet>381</a>                        <span class="kw">let </span>a_lord_desc = <span class="kw">match </span>antar_lord {
-<a href=#382 id=382 data-nosnippet>382</a>                            VedicPlanet::Sun =&gt; <span class="string">"자아 실현"</span>,
-<a href=#383 id=383 data-nosnippet>383</a>                            VedicPlanet::Moon =&gt; <span class="string">"감정적 교류"</span>,
-<a href=#384 id=384 data-nosnippet>384</a>                            VedicPlanet::Mars =&gt; <span class="string">"추진력"</span>,
-<a href=#385 id=385 data-nosnippet>385</a>                            VedicPlanet::Mercury =&gt; <span class="string">"지적 활동"</span>,
-<a href=#386 id=386 data-nosnippet>386</a>                            VedicPlanet::Jupiter =&gt; <span class="string">"긍정적 확장"</span>,
-<a href=#387 id=387 data-nosnippet>387</a>                            VedicPlanet::Venus =&gt; <span class="string">"관계와 즐거움"</span>,
-<a href=#388 id=388 data-nosnippet>388</a>                            VedicPlanet::Saturn =&gt; <span class="string">"책임과 인내"</span>,
-<a href=#389 id=389 data-nosnippet>389</a>                            VedicPlanet::Rahu =&gt; <span class="string">"세속적 성취욕"</span>,
-<a href=#390 id=390 data-nosnippet>390</a>                            VedicPlanet::Ketu =&gt; <span class="string">"영적 통찰"</span>,
+<a href=#382 id=382 data-nosnippet>382</a>                            VedicPlanet::Sun =&gt; <span class="string">"Self-actualization and authority"</span>,
+<a href=#383 id=383 data-nosnippet>383</a>                            VedicPlanet::Moon =&gt; <span class="string">"Emotional receptivity and mind"</span>,
+<a href=#384 id=384 data-nosnippet>384</a>                            VedicPlanet::Mars =&gt; <span class="string">"Drive, courage, and initiative"</span>,
+<a href=#385 id=385 data-nosnippet>385</a>                            VedicPlanet::Mercury =&gt; <span class="string">"Intellectual inquiry and commerce"</span>,
+<a href=#386 id=386 data-nosnippet>386</a>                            VedicPlanet::Jupiter =&gt; <span class="string">"Expansive wisdom and benefic guidance"</span>,
+<a href=#387 id=387 data-nosnippet>387</a>                            VedicPlanet::Venus =&gt; <span class="string">"Creative harmony, romance, and luxury"</span>,
+<a href=#388 id=388 data-nosnippet>388</a>                            VedicPlanet::Saturn =&gt; <span class="string">"Discipline, perseverance, and structure"</span>,
+<a href=#389 id=389 data-nosnippet>389</a>                            VedicPlanet::Rahu =&gt; <span class="string">"Material ambition and breakthrough exploration"</span>,
+<a href=#390 id=390 data-nosnippet>390</a>                            VedicPlanet::Ketu =&gt; <span class="string">"Spiritual introspection and detachment"</span>,
 <a href=#391 id=391 data-nosnippet>391</a>                            <span class="kw">_ </span>=&gt; <span class="string">""</span>,
 <a href=#392 id=392 data-nosnippet>392</a>                        };
 <a href=#393 id=393 data-nosnippet>393</a>
 <a href=#394 id=394 data-nosnippet>394</a>                        antar.is_favorable = <span class="prelude-val">Some</span>(favorable &amp;&amp; a_favorable);
 <a href=#395 id=395 data-nosnippet>395</a>                        antar.interpretation = <span class="prelude-val">Some</span>(
 <a href=#396 id=396 data-nosnippet>396</a>                            <span class="macro">format!</span>(
-<a href=#397 id=397 data-nosnippet>397</a>                                <span class="string">"{}의 분위기 속에서 {}. {}"</span>,
+<a href=#397 id=397 data-nosnippet>397</a>                                <span class="string">"Focusing on {}: {}. {}"</span>,
 <a href=#398 id=398 data-nosnippet>398</a>                                a_lord_desc,
 <a href=#399 id=399 data-nosnippet>399</a>                                rel_desc,
 <a href=#400 id=400 data-nosnippet>400</a>                                <span class="kw">if </span>!a_favorable {
-<a href=#401 id=401 data-nosnippet>401</a>                                    <span class="string">"돌발적인 변화에 대비하고 무리한 확장을 자제하는 것이 좋습니다."
+<a href=#401 id=401 data-nosnippet>401</a>                                    <span class="string">"Caution advised against over-expansion and unexpected turbulence."
 <a href=#402 id=402 data-nosnippet>402</a>                                </span>} <span class="kw">else </span>{
 <a href=#403 id=403 data-nosnippet>403</a>                                    <span class="string">""
 <a href=#404 id=404 data-nosnippet>404</a>                                </span>}
