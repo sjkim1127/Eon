@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Location"]};
+window.SIDEBAR_ITEMS = {"fn":["lookup_city"],"static":["BUILTIN_CITIES"],"struct":["CityInfo","Location"]};

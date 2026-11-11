@@ -216,36 +216,25 @@
 <a href=#216 id=216 data-nosnippet>216</a>    }
 <a href=#217 id=217 data-nosnippet>217</a>
 <a href=#218 id=218 data-nosnippet>218</a>    <span class="kw">fn </span>setup_test_inputs() -&gt; (AnalysisInput, SajuAnalysisInput, TransitAnalysisInput) {
-<a href=#219 id=219 data-nosnippet>219</a>        <span class="kw">let </span>birth = AnalysisInput {
-<a href=#220 id=220 data-nosnippet>220</a>            year: <span class="number">1995</span>,
-<a href=#221 id=221 data-nosnippet>221</a>            month: <span class="number">11</span>,
-<a href=#222 id=222 data-nosnippet>222</a>            day: <span class="number">27</span>,
-<a href=#223 id=223 data-nosnippet>223</a>            hour: <span class="number">11</span>,
-<a href=#224 id=224 data-nosnippet>224</a>            minute: <span class="number">30</span>,
-<a href=#225 id=225 data-nosnippet>225</a>            is_lunar: <span class="bool-val">false</span>,
-<a href=#226 id=226 data-nosnippet>226</a>            is_leap_month: <span class="bool-val">false</span>,
-<a href=#227 id=227 data-nosnippet>227</a>            lat: <span class="number">37.5665</span>,
-<a href=#228 id=228 data-nosnippet>228</a>            lon: <span class="number">126.9780</span>,
-<a href=#229 id=229 data-nosnippet>229</a>            timezone: <span class="string">"Asia/Seoul"</span>.to_string(),
-<a href=#230 id=230 data-nosnippet>230</a>        };
-<a href=#231 id=231 data-nosnippet>231</a>
-<a href=#232 id=232 data-nosnippet>232</a>        <span class="kw">let </span>saju_input = SajuAnalysisInput {
-<a href=#233 id=233 data-nosnippet>233</a>            base: birth.clone(),
-<a href=#234 id=234 data-nosnippet>234</a>            is_male: <span class="bool-val">true</span>,
-<a href=#235 id=235 data-nosnippet>235</a>            use_night_rat_hour: <span class="bool-val">false</span>,
-<a href=#236 id=236 data-nosnippet>236</a>            precision: BirthTimePrecision::Exact,
-<a href=#237 id=237 data-nosnippet>237</a>        };
-<a href=#238 id=238 data-nosnippet>238</a>
-<a href=#239 id=239 data-nosnippet>239</a>        <span class="kw">let </span>now_utc = Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap();
-<a href=#240 id=240 data-nosnippet>240</a>        <span class="kw">let </span>transit_input = TransitAnalysisInput {
-<a href=#241 id=241 data-nosnippet>241</a>            base: saju_input.clone(),
-<a href=#242 id=242 data-nosnippet>242</a>            current: CurrentContext {
-<a href=#243 id=243 data-nosnippet>243</a>                now_utc,
-<a href=#244 id=244 data-nosnippet>244</a>                analysis_timezone: <span class="string">"Asia/Seoul"</span>.to_string(),
-<a href=#245 id=245 data-nosnippet>245</a>            },
-<a href=#246 id=246 data-nosnippet>246</a>        };
-<a href=#247 id=247 data-nosnippet>247</a>
-<a href=#248 id=248 data-nosnippet>248</a>        (birth, saju_input, transit_input)
-<a href=#249 id=249 data-nosnippet>249</a>    }
-<a href=#250 id=250 data-nosnippet>250</a>}
+<a href=#219 id=219 data-nosnippet>219</a>        <span class="kw">let </span>birth = AnalysisInput::new(<span class="number">1995</span>, <span class="number">11</span>, <span class="number">27</span>, <span class="number">11</span>, <span class="number">30</span>, <span class="string">"Asia/Seoul"</span>, <span class="number">37.5665</span>, <span class="number">126.9780</span>);
+<a href=#220 id=220 data-nosnippet>220</a>
+<a href=#221 id=221 data-nosnippet>221</a>        <span class="kw">let </span>saju_input = SajuAnalysisInput {
+<a href=#222 id=222 data-nosnippet>222</a>            base: birth.clone(),
+<a href=#223 id=223 data-nosnippet>223</a>            is_male: <span class="bool-val">true</span>,
+<a href=#224 id=224 data-nosnippet>224</a>            use_night_rat_hour: <span class="bool-val">false</span>,
+<a href=#225 id=225 data-nosnippet>225</a>            precision: BirthTimePrecision::Exact,
+<a href=#226 id=226 data-nosnippet>226</a>        };
+<a href=#227 id=227 data-nosnippet>227</a>
+<a href=#228 id=228 data-nosnippet>228</a>        <span class="kw">let </span>now_utc = Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap();
+<a href=#229 id=229 data-nosnippet>229</a>        <span class="kw">let </span>transit_input = TransitAnalysisInput {
+<a href=#230 id=230 data-nosnippet>230</a>            base: saju_input.clone(),
+<a href=#231 id=231 data-nosnippet>231</a>            current: CurrentContext {
+<a href=#232 id=232 data-nosnippet>232</a>                now_utc,
+<a href=#233 id=233 data-nosnippet>233</a>                analysis_timezone: <span class="string">"Asia/Seoul"</span>.to_string(),
+<a href=#234 id=234 data-nosnippet>234</a>            },
+<a href=#235 id=235 data-nosnippet>235</a>        };
+<a href=#236 id=236 data-nosnippet>236</a>
+<a href=#237 id=237 data-nosnippet>237</a>        (birth, saju_input, transit_input)
+<a href=#238 id=238 data-nosnippet>238</a>    }
+<a href=#239 id=239 data-nosnippet>239</a>}
 </code></pre></div></section></main></body></html>
