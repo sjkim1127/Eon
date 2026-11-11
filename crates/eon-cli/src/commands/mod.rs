@@ -33,17 +33,22 @@ pub struct BirthArgs {
     #[arg(short, long, default_value = "m")]
     pub gender: String,
 
-    /// Latitude (default: 37.5665 for Seoul)
-    #[arg(long, default_value = "37.5665")]
-    pub lat: f64,
+    /// Birth city or region (e.g. 'seoul', 'busan', 'tokyo', 'new york', 'la', 'london')
+    /// Automatically resolves latitude, longitude, and timezone.
+    #[arg(short, long)]
+    pub city: Option<String>,
 
-    /// Longitude (default: 126.9780 for Seoul)
-    #[arg(long, default_value = "126.9780")]
-    pub lon: f64,
+    /// Latitude (default: 37.5665 for Seoul, or automatically resolved from --city)
+    #[arg(long)]
+    pub lat: Option<f64>,
 
-    /// Timezone (default: Asia/Seoul)
-    #[arg(long, default_value = "Asia/Seoul")]
-    pub tz: String,
+    /// Longitude (default: 126.9780 for Seoul, or automatically resolved from --city)
+    #[arg(long)]
+    pub lon: Option<f64>,
+
+    /// Timezone (default: Asia/Seoul, or automatically resolved from --city)
+    #[arg(long)]
+    pub tz: Option<String>,
 
     /// Whether the birth date is Lunar calendar
     #[arg(long)]
@@ -101,6 +106,33 @@ impl BirthArgs {
         let hour: u32 = time_parts.first().unwrap_or(&"12").parse().unwrap_or(12);
         let minute: u32 = time_parts.get(1).unwrap_or(&"0").parse().unwrap_or(0);
 
+        let (lat, lon, tz, resolved_city) = if let Some(ref city_query) = self.city {
+            match eon_core::lookup_city(city_query) {
+                Some(info) => {
+                    let lat = self.lat.unwrap_or(info.latitude);
+                    let lon = self.lon.unwrap_or(info.longitude);
+                    let tz = self.tz.clone().unwrap_or_else(|| info.timezone.to_string());
+                    (lat, lon, tz, Some(info.name.to_string()))
+                }
+                None => {
+                    if let (Some(lat), Some(lon)) = (self.lat, self.lon) {
+                        let tz = self.tz.clone().unwrap_or_else(|| "Asia/Seoul".to_string());
+                        (lat, lon, tz, Some(city_query.clone()))
+                    } else {
+                        return Err(anyhow!(
+                            "Unknown city '{}'. Please provide a recognized city (e.g. 'Seoul', 'Busan', 'Tokyo', 'New York', 'London') or specify explicit coordinates with --lat and --lon.",
+                            city_query
+                        ));
+                    }
+                }
+            }
+        } else {
+            let lat = self.lat.unwrap_or(37.5665);
+            let lon = self.lon.unwrap_or(126.9780);
+            let tz = self.tz.clone().unwrap_or_else(|| "Asia/Seoul".to_string());
+            (lat, lon, tz, None)
+        };
+
         Ok(AnalysisInput {
             year,
             month,
@@ -109,9 +141,10 @@ impl BirthArgs {
             minute,
             is_lunar: self.lunar,
             is_leap_month: self.leap,
-            lat: self.lat,
-            lon: self.lon,
-            timezone: self.tz.clone(),
+            lat,
+            lon,
+            timezone: tz,
+            city: resolved_city,
         })
     }
 }

@@ -17,6 +17,40 @@ pub struct AnalysisInput {
     pub lat: f64,
     pub lon: f64,
     pub timezone: String,
+    #[serde(default)]
+    pub city: Option<String>,
+}
+
+impl AnalysisInput {
+    pub fn new(
+        year: i32,
+        month: u32,
+        day: u32,
+        hour: u32,
+        minute: u32,
+        timezone: impl Into<String>,
+        lat: f64,
+        lon: f64,
+    ) -> Self {
+        Self {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            is_lunar: false,
+            is_leap_month: false,
+            lat,
+            lon,
+            timezone: timezone.into(),
+            city: None,
+        }
+    }
+
+    pub fn with_city(mut self, city: impl Into<String>) -> Self {
+        self.city = Some(city.into());
+        self
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -563,6 +597,7 @@ impl TryFrom<SajuAnalysisRequest> for SajuAnalysisInput {
                 lat: req.base.lat,
                 lon: req.base.lon,
                 timezone: req.base.timezone,
+                city: None,
             },
             is_male: req.is_male,
             use_night_rat_hour: req.use_night_rat_hour.unwrap_or(false),
@@ -587,6 +622,7 @@ impl TryFrom<QimenAnalysisRequest> for QimenAnalysisInput {
                 lat: req.base.lat,
                 lon: req.base.lon,
                 timezone: req.base.timezone,
+                city: None,
             },
             is_male: req.is_male,
             use_night_rat_hour: req.use_night_rat_hour.unwrap_or(false),
@@ -648,6 +684,7 @@ impl TryFrom<VedicAnalysisRequest> for VedicAnalysisInput {
                 lat: req.base.lat,
                 lon: req.base.lon,
                 timezone: req.base.timezone,
+                city: None,
             },
             precision,
             current: CurrentContext {

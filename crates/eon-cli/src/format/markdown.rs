@@ -15,9 +15,39 @@ pub fn format_markdown_report(
     let mut md = String::new();
 
     md.push_str("# Eon: 8-Engine Destiny Intelligence Report\n\n");
+    let loc_str = if let Some(ref c) = input.city {
+        format!(
+            "**Location**: {c} (Lat: {:.4}, Lon: {:.4})",
+            input.lat, input.lon
+        )
+    } else {
+        format!("**Coordinates**: ({:.4}, {:.4})", input.lat, input.lon)
+    };
+
+    let std_meridian = eon_core::standard_meridian_from_tz(&input.timezone);
+    let offset_mins = ((input.lon - std_meridian) * 4.0).round() as i32;
+    let sign = if offset_mins >= 0 { "+" } else { "" };
+
+    let solar_str = if let Some(s) = saju {
+        let dst_str = if s.meta.is_dst { ", DST: Active" } else { "" };
+        format!(
+            "**True Solar Time**: {} ({}{}m{})",
+            s.meta.corrected_time, sign, offset_mins, dst_str
+        )
+    } else {
+        format!("**Solar Time Offset**: {}{}m", sign, offset_mins)
+    };
+
     md.push_str(&format!(
-        "**Analysis Timestamp**: {:04}-{:02}-{:02} {:02}:{:02} | **Timezone**: {} | **Coordinates**: ({:.4}, {:.4})\n\n",
-        input.year, input.month, input.day, input.hour, input.minute, input.timezone, input.lat, input.lon
+        "**Birth**: {:04}-{:02}-{:02} {:02}:{:02} | **Timezone**: {} | {} | {}\n\n",
+        input.year,
+        input.month,
+        input.day,
+        input.hour,
+        input.minute,
+        input.timezone,
+        loc_str,
+        solar_str
     ));
 
     if let Some(t) = tier {

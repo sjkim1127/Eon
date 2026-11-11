@@ -26,8 +26,9 @@ pub fn prepare_birth_context(
 ) -> Result<PreparedBirthContext, ServiceError> {
     validate_analysis_input(input)?;
 
+    let location_name = input.city.as_deref().unwrap_or("Birth Location");
     let location = Location::new(
-        "Birth Location",
+        location_name,
         input.lat,
         input.lon,
         standard_meridian_from_tz(&input.timezone),
@@ -125,18 +126,7 @@ mod tests {
     use super::*;
 
     fn input() -> AnalysisInput {
-        AnalysisInput {
-            year: 1990,
-            month: 1,
-            day: 1,
-            hour: 12,
-            minute: 0,
-            is_lunar: false,
-            is_leap_month: false,
-            lat: 37.5665,
-            lon: 126.978,
-            timezone: "Asia/Seoul".into(),
-        }
+        AnalysisInput::new(1990, 1, 1, 12, 0, "Asia/Seoul", 37.5665, 126.978)
     }
 
     #[test]

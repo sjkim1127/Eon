@@ -173,6 +173,7 @@ eon tier --birth "1990-05-15 10:30" --gender m -f text
 
 ### Common Flags & Options
 - `--birth <YYYY-MM-DD [HH:MM]>`: Birth date and optional time (default time: `12:00`).
+- `-c, --city <NAME>`: Birth city for 100% offline resolution of coordinates and timezone (e.g. `seoul`, `busan`, `tokyo`, `new york`, `london`, `paris`, `서울`, `부산`).
 - `--gender <m|f>`: Gender (`m` for male, `f` for female; default: `m`).
 - `--lat <f64>`: Latitude (default: `37.5665` for Seoul).
 - `--lon <f64>`: Longitude (default: `126.9780` for Seoul).
@@ -194,19 +195,19 @@ eon prompt --birth "1990-05-15 10:30" --system | llm -m gemini-2.0-pro "Synthesi
 
 Sample output snippet from `eon prompt`:
 ```markdown
-# 🔮 [DESTINY INTELLIGENCE PROFILE FOR AI AGENT]
+# [DESTINY INTELLIGENCE PROFILE FOR AI AGENT]
 
-> **Date of Birth**: 1990-05-15 10:30 (Asia/Seoul, Lat: 37.5665, Lon: 126.9780)
+> **Birth**: 1990-05-15 10:30 (Asia/Seoul) | Location: Busan (Lat: 35.1796, Lon: 129.0756) | True Solar Time: 1990-05-15 10:06 (-24m)
 
-## 🌌 1. Omni Destiny Tier 7.0
+## 1. Omni Destiny Tier 7.0
 - **Overall Destiny Tier**: **S** (Birth Chart Raw: 95.0pt / Total Score: 96.0pt / Potential: **A** 78.0pt)
 - **Profile Type**: growth | **Growth Gap**: +-18.0pt
-- **⚛️ 8D Quantum Cross Synergies (Cross-Engine Resonance)**:
-  * [Western Aspect & ZWDS Resonance] +15pt — Western geometry aligns with ZWDS Life Palace structure.
-  * [Human Design Center & QiMen 9 Palaces] +14pt — Defined center throughput mirrors QiMen auspicious gates.
+- **8D Quantum Cross Synergies (Cross-Engine Resonance)**:
+  * [Geometric Resonance (Western Aspects & ZWDS Formations)] +15pt — Western planetary aspect geometry resonates directly with Zi Wei Dou Shu primary palace formations.
+  * [Quantum Energy Alignment (Human Design Centers & QiMen 9 Palaces)] +14pt — Human Design defined center flows align with QiMen DunJia Nine Palaces auspicious door layouts.
 
-## 📜 2. Four Pillars of Destiny (Saju / BaZi)
-- **Four Pillars**: Year: 庚午(gyeong-o) | Month: 辛巳(sin-sa) | Day: 庚辰(gyeong-jin) | Hour: 辛巳(sin-sa)
+## 2. Four Pillars of Destiny (Saju / BaZi)
+- **Four Pillars**: Year: 庚午 (Geng-Wu) | Month: 辛巳 (Xin-Si) | Day: 庚辰 (Geng-Chen) | Hour: 辛巳 (Xin-Si)
 - **Day Master Strength**: Strong (Score: 39.7)
 - **Structure & Yongshin**: Structure: PianGuan, Primary Yongshin: Water
 ...

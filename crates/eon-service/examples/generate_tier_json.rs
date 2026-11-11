@@ -3,18 +3,7 @@ use eon_service::dto::*;
 use eon_service::facade;
 
 fn main() {
-    let birth = AnalysisInput {
-        year: 1985,
-        month: 11,
-        day: 27,
-        hour: 14,
-        minute: 30,
-        is_lunar: false,
-        is_leap_month: false,
-        lat: 37.5665,
-        lon: 126.9780,
-        timezone: "Asia/Seoul".to_string(),
-    };
+    let birth = AnalysisInput::new(1985, 11, 27, 14, 30, "Asia/Seoul", 37.5665, 126.9780);
 
     let saju_input = SajuAnalysisInput {
         base: birth.clone(),

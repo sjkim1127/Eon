@@ -105,6 +105,22 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                                             "description": "Gender: 'm' for male, 'f' for female",
                                             "default": "m"
                                         },
+                                        "city": {
+                                            "type": "string",
+                                            "description": "Birth city or region for automatic coordinate and timezone resolution (e.g. 'Seoul', 'Busan', 'Tokyo', 'New York', 'London', 'LA')"
+                                        },
+                                        "lat": {
+                                            "type": "number",
+                                            "description": "Optional latitude (-90.0 to 90.0)"
+                                        },
+                                        "lon": {
+                                            "type": "number",
+                                            "description": "Optional longitude (-180.0 to 180.0)"
+                                        },
+                                        "timezone": {
+                                            "type": "string",
+                                            "description": "Optional IANA timezone (e.g. 'Asia/Seoul', 'America/New_York', 'Europe/London')"
+                                        },
                                         "name": {
                                             "type": "string",
                                             "description": "Optional English name for Numerology (e.g. 'John Doe')"
@@ -143,12 +159,25 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                         .and_then(|v| v.as_str())
                         .unwrap_or("agent");
 
+                    let city_str = args
+                        .get("city")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string());
+                    let lat_val = args.get("lat").and_then(|v| v.as_f64());
+                    let lon_val = args.get("lon").and_then(|v| v.as_f64());
+                    let tz_str = args
+                        .get("timezone")
+                        .or_else(|| args.get("tz"))
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string());
+
                     let birth_args = crate::commands::BirthArgs {
                         birth: birth_str.to_string(),
                         gender: gender_str.to_string(),
-                        lat: 37.5665,
-                        lon: 126.9780,
-                        tz: "Asia/Seoul".to_string(),
+                        city: city_str,
+                        lat: lat_val,
+                        lon: lon_val,
+                        tz: tz_str,
                         lunar: false,
                         leap: false,
                         name: name_str,

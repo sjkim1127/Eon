@@ -6,18 +6,7 @@ use crate::dto::{
 use crate::facade;
 
 fn create_sample_base_input() -> AnalysisInput {
-    AnalysisInput {
-        year: 1990,
-        month: 5,
-        day: 15,
-        hour: 10,
-        minute: 30,
-        is_lunar: false,
-        is_leap_month: false,
-        lat: 37.5665,
-        lon: 126.9780,
-        timezone: "Asia/Seoul".to_string(),
-    }
+    AnalysisInput::new(1990, 5, 15, 10, 30, "Asia/Seoul", 37.5665, 126.9780)
 }
 
 #[test]

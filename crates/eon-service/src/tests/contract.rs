@@ -7,18 +7,7 @@ mod tests {
     #[test]
     fn test_tier_v3_contract_snapshot() {
         // 1. Setup a stable input
-        let birth = AnalysisInput {
-            year: 1985,
-            month: 11,
-            day: 27,
-            hour: 14,
-            minute: 30,
-            is_lunar: false,
-            is_leap_month: false,
-            lat: 37.5665,
-            lon: 126.9780,
-            timezone: "Asia/Seoul".to_string(),
-        };
+        let birth = AnalysisInput::new(1985, 11, 27, 14, 30, "Asia/Seoul", 37.5665, 126.9780);
 
         let saju_input = SajuAnalysisInput {
             base: birth.clone(),
@@ -65,18 +54,7 @@ mod tests {
 
     #[test]
     fn test_vedic_contract_snapshot() {
-        let birth = AnalysisInput {
-            year: 1985,
-            month: 11,
-            day: 27,
-            hour: 14,
-            minute: 30,
-            is_lunar: false,
-            is_leap_month: false,
-            lat: 37.5665,
-            lon: 126.9780,
-            timezone: "Asia/Seoul".to_string(),
-        };
+        let birth = AnalysisInput::new(1985, 11, 27, 14, 30, "Asia/Seoul", 37.5665, 126.9780);
 
         let now = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
         let vedic_input = VedicAnalysisInput::new(birth.clone(), Some(false), Some(now));
@@ -124,18 +102,7 @@ mod tests {
 
     #[test]
     fn gochara_murti_uses_sign_entry_not_current_snapshot() {
-        let birth = AnalysisInput {
-            year: 1985,
-            month: 11,
-            day: 27,
-            hour: 14,
-            minute: 30,
-            is_lunar: false,
-            is_leap_month: false,
-            lat: 37.5665,
-            lon: 126.9780,
-            timezone: "Asia/Seoul".to_string(),
-        };
+        let birth = AnalysisInput::new(1985, 11, 27, 14, 30, "Asia/Seoul", 37.5665, 126.9780);
         let now = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
         let result = facade::analyze_vedic(VedicAnalysisInput::new(birth, Some(false), Some(now)))
             .expect("Vedic analysis failed");
@@ -175,18 +142,7 @@ mod tests {
 
     #[test]
     fn rejects_unknown_vedic_year_type() {
-        let base = AnalysisInput {
-            year: 1985,
-            month: 11,
-            day: 27,
-            hour: 14,
-            minute: 30,
-            is_lunar: false,
-            is_leap_month: false,
-            lat: 37.5665,
-            lon: 126.978,
-            timezone: "Asia/Seoul".to_string(),
-        };
+        let base = AnalysisInput::new(1985, 11, 27, 14, 30, "Asia/Seoul", 37.5665, 126.978);
         let now = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
         let mut input = VedicAnalysisInput::new(base, Some(false), Some(now));
         input.year_type = Some("Julian".to_string());

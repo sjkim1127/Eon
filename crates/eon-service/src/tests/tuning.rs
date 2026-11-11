@@ -26,18 +26,16 @@ mod tests {
             let lon = 126.978 + (i as f64 * 0.001);
             let lat = 37.566 + (i as f64 * 0.001);
 
-            let birth = AnalysisInput {
+            let birth = AnalysisInput::new(
                 year,
-                month: month as u32,
-                day: day as u32,
-                hour: hour as u32,
-                minute: 0,
-                is_lunar: false,
-                is_leap_month: false,
+                month as u32,
+                day as u32,
+                hour as u32,
+                0,
+                "Asia/Seoul",
                 lat,
                 lon,
-                timezone: "Asia/Seoul".to_string(),
-            };
+            );
 
             let saju_input = SajuAnalysisInput {
                 base: birth.clone(),

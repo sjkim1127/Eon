@@ -2,18 +2,7 @@ use eon_service::dto::{AnalysisInput, VedicAnalysisInput};
 use eon_service::facade;
 
 fn main() {
-    let base = AnalysisInput {
-        year: 1990,
-        month: 5,
-        day: 15,
-        hour: 10,
-        minute: 0,
-        is_lunar: false,
-        is_leap_month: false,
-        lat: 37.5665,
-        lon: 126.9780,
-        timezone: "Asia/Seoul".to_string(),
-    };
+    let base = AnalysisInput::new(1990, 5, 15, 10, 0, "Asia/Seoul", 37.5665, 126.9780);
 
     let input = VedicAnalysisInput::new(base, Some(false), None);
 

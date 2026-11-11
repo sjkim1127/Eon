@@ -18,6 +18,7 @@ pub fn get_v1_fixtures() -> Vec<OracleFixture> {
                 lat: 37.5665,
                 lon: 126.9780,
                 timezone: "Asia/Seoul".to_string(),
+                city: None,
             },
             is_male: true,
             expected_saju: ExpectedSaju {
@@ -53,6 +54,7 @@ pub fn get_v1_fixtures() -> Vec<OracleFixture> {
                 lat: 37.5665,
                 lon: 126.9780,
                 timezone: "Asia/Seoul".to_string(),
+                city: None,
             },
             is_male: true,
             expected_saju: ExpectedSaju {
@@ -87,6 +89,7 @@ pub fn get_v1_fixtures() -> Vec<OracleFixture> {
                 lat: 40.7128,
                 lon: -74.0060,
                 timezone: "America/New_York".to_string(),
+                city: None,
             },
             is_male: false,
             expected_saju: ExpectedSaju {

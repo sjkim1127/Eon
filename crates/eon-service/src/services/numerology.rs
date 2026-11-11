@@ -68,18 +68,7 @@ mod tests {
     #[test]
     fn analyze_preserves_name_target_year_and_reduced_cycles() {
         let input = NumerologyAnalysisInput::new(
-            AnalysisInput {
-                year: 1990,
-                month: 5,
-                day: 28,
-                hour: 0,
-                minute: 0,
-                is_lunar: false,
-                is_leap_month: false,
-                lat: 37.5665,
-                lon: 126.978,
-                timezone: "Asia/Seoul".to_string(),
-            },
+            AnalysisInput::new(1990, 5, 28, 0, 0, "Asia/Seoul", 37.5665, 126.978),
             Some("John Doe".to_string()),
             Some(2026),
         );
@@ -94,40 +83,15 @@ mod tests {
 
     #[test]
     fn analyze_rejects_invalid_gregorian_date() {
-        let input = NumerologyAnalysisInput::new(
-            AnalysisInput {
-                year: 2026,
-                month: 2,
-                day: 30,
-                hour: 0,
-                minute: 0,
-                is_lunar: false,
-                is_leap_month: false,
-                lat: 0.0,
-                lon: 0.0,
-                timezone: "UTC".to_string(),
-            },
-            None,
-            Some(2026),
-        );
+        let base = AnalysisInput::new(2026, 2, 30, 0, 0, "UTC", 0.0, 0.0);
+        let input = NumerologyAnalysisInput::new(base, None, Some(2026));
 
         assert!(matches!(analyze(input), Err(ServiceError::InvalidInput(_))));
     }
 
     #[test]
     fn analyze_rejects_non_positive_years() {
-        let base = AnalysisInput {
-            year: 0,
-            month: 1,
-            day: 1,
-            hour: 0,
-            minute: 0,
-            is_lunar: false,
-            is_leap_month: false,
-            lat: 0.0,
-            lon: 0.0,
-            timezone: "UTC".to_string(),
-        };
+        let base = AnalysisInput::new(0, 1, 1, 0, 0, "UTC", 0.0, 0.0);
         assert!(matches!(
             analyze(NumerologyAnalysisInput::new(base.clone(), None, Some(2026))),
             Err(ServiceError::InvalidInput(_))
@@ -147,22 +111,9 @@ mod tests {
 
     #[test]
     fn analyze_rejects_lunar_input_instead_of_silently_mislabeling_it() {
-        let input = NumerologyAnalysisInput::new(
-            AnalysisInput {
-                year: 2026,
-                month: 2,
-                day: 1,
-                hour: 0,
-                minute: 0,
-                is_lunar: true,
-                is_leap_month: false,
-                lat: 0.0,
-                lon: 0.0,
-                timezone: "UTC".to_string(),
-            },
-            None,
-            Some(2026),
-        );
+        let mut base = AnalysisInput::new(2026, 2, 1, 0, 0, "UTC", 0.0, 0.0);
+        base.is_lunar = true;
+        let input = NumerologyAnalysisInput::new(base, None, Some(2026));
 
         assert!(matches!(analyze(input), Err(ServiceError::InvalidInput(_))));
     }
