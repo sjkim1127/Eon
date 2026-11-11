@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["AnalyzeCommand","FullOmniResult"]};
+window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["AnalyzeCommand"]};
