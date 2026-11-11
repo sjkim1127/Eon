@@ -59,7 +59,7 @@ Eon uses a modular Rust monorepo where all analysis engines feed into a single u
 ```text
 eon-core (Shared Primitives, Birth Info, Locations)
   ├── eon-data (Calendar Data & Binary Manseryuk Cache)
-  └── eon-astro (Swiss Ephemeris FFI & Astronomy Wrappers)
+  └── eon-astro (Pure-Rust Swiss Ephemeris Engine)
         │
         ├── eon-saju (Four Pillars of Destiny Engine)
         ├── eon-vedic (Vedic Astrology / Jyotish Engine)
@@ -87,7 +87,7 @@ eon-core (Shared Primitives, Birth Info, Locations)
 | [`crates/eon-service`](file:///Users/sjkim1127/Eon/crates/eon-service) | Service Façade (SSOT) | Unified DTOs, constructors, and façade methods integrating all 8 engines. |
 | [`crates/eon-core`](file:///Users/sjkim1127/Eon/crates/eon-core) | Primitives | Core types (`HeavenlyStem`, `EarthlyBranch`, `BirthInfo`, timezone, coordinates). |
 | [`crates/eon-data`](file:///Users/sjkim1127/Eon/crates/eon-data) | Calendar & Cache | Binary manseryuk data and lunar-solar conversion cache. |
-| [`crates/eon-astro`](file:///Users/sjkim1127/Eon/crates/eon-astro) | Ephemeris FFI | Swiss Ephemeris FFI bindings and planetary longitude calculations. |
+| [`crates/eon-astro`](file:///Users/sjkim1127/Eon/crates/eon-astro) | Astronomical Engine | Pure-Rust Swiss Ephemeris (`swisseph-rs`) planetary and house calculations. |
 | [`crates/eon-saju`](file:///Users/sjkim1127/Eon/crates/eon-saju) | Saju Engine | Four pillars, strength analysis, Gyeokguk, Yongshin, and Shinsal. |
 | [`crates/eon-vedic`](file:///Users/sjkim1127/Eon/crates/eon-vedic) | Vedic Engine | Sidereal rasis, nakshatras, Shadbala, Ashtakavarga, and Yogas. |
 | [`crates/eon-western`](file:///Users/sjkim1127/Eon/crates/eon-western) | Western Engine | Tropical planets, houses (Placidus/Koch/Equal), and aspect configurations. |

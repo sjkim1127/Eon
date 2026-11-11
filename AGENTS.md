@@ -49,7 +49,7 @@ Eon/
 │   │   └── Cargo.toml
 │   ├── eon-core/                # Shared primitives (HeavenlyStem, EarthlyBranch, BirthInfo)
 │   ├── eon-data/                # Manseryuk calendar binary data and cache
-│   ├── eon-astro/               # Swiss Ephemeris FFI bindings & astronomical algorithms
+│   ├── eon-astro/               # Pure-Rust Swiss Ephemeris astronomical algorithms (swisseph-rs)
 │   ├── eon-saju/                # Four Pillars engine (Pillars, Shinsal, Gyeokguk, Yongshin, Daewun)
 │   ├── eon-vedic/               # Vedic engine (Shadbala, Ashtakavarga, Dasha, Yogas)
 │   ├── eon-western/             # Western astrology (Planets, Houses, Aspects, Patterns)
@@ -127,5 +127,5 @@ python3 scripts/sync_release_version.py --check
 ## 5. Strict Prohibitions for AI Agents
 
 1. **Never Revert to Web or GUI Stacks**: Do NOT re-introduce Dioxus, React, Tauri, Wasm web bundles, `package.json`, `app/`, `dx.toml`, or npm dependencies. Eon is strictly a native CLI and agent tool.
-2. **Never Add Unsanctioned Heavy Runtimes**: Keep the codebase pure Rust with Swiss Ephemeris FFI. Do not introduce extraneous C/C++ runtimes or heavy unvetted dynamic libraries.
+2. **Never Add Unsanctioned Heavy Runtimes**: Keep the codebase 100% pure Rust (utilizing `swisseph-rs` in-memory astronomical algorithms). Do not introduce extraneous C/C++ runtimes or heavy unvetted dynamic libraries.
 3. **Preserve Deterministic Calculation Purity**: All metaphysical calculations must remain completely pure and deterministic. Given identical birth input parameters, every engine must consistently return identical results.

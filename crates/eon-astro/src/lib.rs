@@ -1,9 +1,13 @@
-//! eon-astro: 초정밀 천문 연산 엔진
+//! eon-astro: 초정밀 순수 Rust 천문 연산 엔진 (High-precision pure-Rust astronomical engine)
 //!
-//! Swiss Ephemeris C API를 직접 활용하여 초정밀 천문 연상을 수행합니다.
+//! `swisseph-rs`(Swiss Ephemeris의 순수 Rust 포팅)를 기반으로 하여, 외부 C/FFI 컴파일 없이
+//! 메모리 내 Moshier 분석 천문 알고리즘을 100% Rust로 실행합니다.
 
 use chrono::{DateTime, Datelike, Timelike, Utc};
-use std::sync::Mutex;
+use std::sync::LazyLock;
+use swisseph::{
+    date::julday, Body, CalcFlags, CalendarType, Ephemeris, EphemerisConfig, HouseSystem,
+};
 
 /// Astronomical calculation errors
 #[derive(Debug, thiserror::Error, serde::Serialize, Clone, PartialEq, Eq)]
@@ -12,7 +16,7 @@ pub enum AstroError {
     #[error("Mutex lock poisoned")]
     LockPoisoned,
 
-    #[error("Swiss Ephemeris FFI error: {0}")]
+    #[error("Swiss Ephemeris error: {0}")]
     FfiError(String),
 
     #[error("Failed to calculate houses")]
@@ -27,50 +31,67 @@ pub enum AstroError {
     InvalidHouseSystem(i32),
 }
 
-static ASTRO_LOCK: Mutex<()> = Mutex::new(());
+static GLOBAL_EPH: LazyLock<Ephemeris> = LazyLock::new(|| {
+    Ephemeris::new(EphemerisConfig::default()).expect("failed to initialize swisseph ephemeris")
+});
 
+fn planet_id_to_body(planet_id: i32) -> Result<Body, AstroError> {
+    match planet_id {
+        0 => Ok(Body::Sun),
+        1 => Ok(Body::Moon),
+        2 => Ok(Body::Mercury),
+        3 => Ok(Body::Venus),
+        4 => Ok(Body::Mars),
+        5 => Ok(Body::Jupiter),
+        6 => Ok(Body::Saturn),
+        7 => Ok(Body::Uranus),
+        8 => Ok(Body::Neptune),
+        9 => Ok(Body::Pluto),
+        10 => Ok(Body::MeanNode),
+        11 => Ok(Body::TrueNode),
+        12 => Ok(Body::MeanApogee), // Black Moon Lilith (mean apogee)
+        13 => Ok(Body::OscuApogee),
+        14 => Ok(Body::Earth),
+        15 => Ok(Body::Chiron),
+        16 => Ok(Body::Pholus),
+        17 => Ok(Body::Ceres),
+        18 => Ok(Body::Pallas),
+        19 => Ok(Body::Juno),
+        20 => Ok(Body::Vesta),
+        _ => Err(AstroError::FfiError(format!(
+            "Unsupported planet ID: {planet_id}"
+        ))),
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
 pub struct AstroEngine;
 
 impl AstroEngine {
     pub fn new() -> Self {
-        let _lock = ASTRO_LOCK.lock().unwrap();
-        // 경로 설정 (필요시)
-        unsafe {
-            swiss_eph::swe_set_ephe_path(std::ptr::null());
-        }
         Self
+    }
+
+    /// Chrono DateTime을 Julian Day로 변환
+    fn to_julian_day(self, dt: DateTime<Utc>) -> f64 {
+        let year = dt.year();
+        let month = dt.month() as i32;
+        let day = dt.day() as i32;
+        let hour = dt.hour() as f64
+            + (dt.minute() as f64 / 60.0)
+            + (dt.second() as f64 / 3600.0)
+            + (dt.timestamp_subsec_nanos() as f64 / 3_600_000_000_000.0);
+
+        julday(year, month, day, hour, CalendarType::Gregorian)
     }
 
     /// 특정 시점의 태양 황경(Tropical Longitude)을 계산합니다.
     pub fn get_sun_longitude(&self, datetime: DateTime<Utc>) -> Result<f64, AstroError> {
         let julian_day = self.to_julian_day(datetime);
-
-        // SE_SUN = 0, SEFLG_SPEED = 256 (보통)
-        // 실제 상수는 swiss_eph에서 제공하는지 확인 필요
-        let mut results = [0.0; 6];
-        let mut error = [0; 256];
-
-        let _lock = ASTRO_LOCK.lock().map_err(|_| AstroError::LockPoisoned)?;
-        unsafe {
-            // Body::Sun = 0
-            // Flag::SPEED = 256
-            let ret = swiss_eph::swe_calc_ut(
-                julian_day,
-                0,       // SE_SUN
-                256 | 4, // SEFLG_SPEED | SEFLG_MOEPH
-                results.as_mut_ptr(),
-                error.as_mut_ptr() as *mut i8,
-            );
-
-            if ret < 0 {
-                let err_msg = std::ffi::CStr::from_ptr(error.as_ptr() as *const i8)
-                    .to_string_lossy()
-                    .into_owned();
-                Err(AstroError::FfiError(err_msg))
-            } else {
-                Ok(results[0]) // Longitude
-            }
-        }
+        let res = GLOBAL_EPH
+            .calc_ut(julian_day, Body::Sun, CalcFlags::SPEED | CalcFlags::MOSEPH)
+            .map_err(|e| AstroError::FfiError(e.to_string()))?;
+        Ok(res.data[0])
     }
 
     /// 특정 시점의 24절기 인덱스(0~23)를 산출합니다.
@@ -137,7 +158,6 @@ impl AstroEngine {
 
         // 최대 20회 반복
         for _ in 0..20 {
-            // SEFLG_SPEED = 256
             let (current_long, speed) = self.get_planet_full(current_time, planet_id, 256)?;
 
             // 각도 차이 계산 (360도 보정)
@@ -160,8 +180,7 @@ impl AstroEngine {
                 safe_speed = if safe_speed >= 0.0 { 0.001 } else { -0.001 };
             }
 
-            // speed는 일(Day) 당 이동 각도.
-            // 초 단위 이동으로 환산.
+            // speed는 일(Day) 당 이동 각도. 초 단위 이동으로 환산.
             let seconds_to_move = (diff / safe_speed) * 86400.0;
 
             // 한 번에 너무 큰 점프를 방지 (예: 최대 30일)
@@ -189,12 +208,8 @@ impl AstroEngine {
         let target_long = (315.0 + (term_idx as f64) * 15.0) % 360.0;
         let current_long = self.get_sun_longitude(birth_time)?;
 
-        // A solar-term lookup is a forward lookup from the supplied instant.
-        // Using the shortest angular distance would return the previous year's
-        // crossing for terms more than 180° ahead (e.g. LiChun -> Liqiu).
         let diff = (target_long - current_long).rem_euclid(360.0);
 
-        // 대략적인 시각 산출 (1도 = 1일로 계산)
         use chrono::Duration;
         let approx_time = birth_time + Duration::seconds((diff * 86400.0 / 0.9856) as i64);
 
@@ -209,30 +224,30 @@ impl AstroEngine {
         flag: i32,
     ) -> Result<(f64, f64), AstroError> {
         let julian_day = self.to_julian_day(datetime);
-        let mut results = [0.0; 6];
-        let mut error = [0; 256];
+        let body = planet_id_to_body(planet_id)?;
 
-        let _lock = ASTRO_LOCK.lock().map_err(|_| AstroError::LockPoisoned)?;
-        unsafe {
-            // 강제로 Moshier Ephemeris 모드 활성화 (파일 시스템 미사용 - Wasm용)
-            let safe_flag = (flag & !2) | 4; // Clear SEFLG_SWIEPH (2), Set SEFLG_MOEPH (4)
-            let ret = swiss_eph::swe_calc_ut(
-                julian_day,
-                planet_id,
-                safe_flag,
-                results.as_mut_ptr(),
-                error.as_mut_ptr() as *mut i8,
-            );
-
-            if ret < 0 {
-                let err_msg = std::ffi::CStr::from_ptr(error.as_ptr() as *const i8)
-                    .to_string_lossy()
-                    .into_owned();
-                Err(AstroError::FfiError(err_msg))
-            } else {
-                Ok((results[0], results[3])) // Longitude, Speed
-            }
+        let mut flags = CalcFlags::MOSEPH;
+        if flag & 256 != 0 {
+            flags |= CalcFlags::SPEED;
         }
+        if flag & 2048 != 0 {
+            flags |= CalcFlags::EQUATORIAL;
+        }
+        if flag & 16 != 0 {
+            flags |= CalcFlags::TRUEPOS;
+        }
+        if flag & 8 != 0 {
+            flags |= CalcFlags::HELCTR;
+        }
+        if flag & 65536 != 0 {
+            flags |= CalcFlags::SIDEREAL;
+        }
+
+        let res = GLOBAL_EPH
+            .calc_ut(julian_day, body, flags)
+            .map_err(|e| AstroError::FfiError(e.to_string()))?;
+
+        Ok((res.data[0], res.data[3])) // Longitude, Speed
     }
 
     /// 행성, 달, 노드의 위치 계산 (Vedic 점성술 지원용)
@@ -372,43 +387,13 @@ impl AstroEngine {
         planet_id: i32,
     ) -> Result<(f64, f64), AstroError> {
         let julian_day = self.to_julian_day(datetime);
-        let mut results = [0.0; 6];
-        let mut error = [0; 256];
-        let flag = 2048 | 4; // SEFLG_EQUATORIAL | SEFLG_MOEPH
+        let body = planet_id_to_body(planet_id)?;
 
-        let _lock = ASTRO_LOCK.lock().map_err(|_| AstroError::LockPoisoned)?;
-        unsafe {
-            let ret = swiss_eph::swe_calc_ut(
-                julian_day,
-                planet_id,
-                flag,
-                results.as_mut_ptr(),
-                error.as_mut_ptr() as *mut i8,
-            );
+        let res = GLOBAL_EPH
+            .calc_ut(julian_day, body, CalcFlags::EQUATORIAL | CalcFlags::MOSEPH)
+            .map_err(|e| AstroError::FfiError(e.to_string()))?;
 
-            if ret < 0 {
-                let err_msg = std::ffi::CStr::from_ptr(error.as_ptr() as *const i8)
-                    .to_string_lossy()
-                    .into_owned();
-                Err(AstroError::FfiError(err_msg))
-            } else {
-                Ok((results[0], results[1])) // RA, Declination
-            }
-        }
-    }
-
-    /// Chrono DateTime을 Julian Day로 변환
-    fn to_julian_day(&self, dt: DateTime<Utc>) -> f64 {
-        let year = dt.year();
-        let month = dt.month() as i32;
-        let day = dt.day() as i32;
-        let hour = dt.hour() as f64 + (dt.minute() as f64 / 60.0) + (dt.second() as f64 / 3600.0);
-
-        let _lock = ASTRO_LOCK.lock().unwrap();
-        unsafe {
-            // Gregorian = 1
-            swiss_eph::swe_julday(year, month, day, hour, 1)
-        }
+        Ok((res.data[0], res.data[1])) // RA, Declination
     }
 
     /// 특정 시점 이전 혹은 포함된 가장 가까운 합삭(New Moon) 시각을 찾습니다.
@@ -521,6 +506,7 @@ impl AstroEngine {
         }
         Ok(t)
     }
+
     /// 특정 시점, 위치에서의 하우스(1~12) 및 ASC/MC를 계산합니다.
     pub fn get_houses(
         &self,
@@ -536,64 +522,42 @@ impl AstroEngine {
         {
             return Err(AstroError::InvalidCoordinates);
         }
-        // Swiss Ephemeris accepts a one-byte house-system selector. Keep the
-        // public wrapper from passing arbitrary integers into the C API.
-        if !(0..=u8::MAX as i32).contains(&house_system)
-            || !matches!(
-                house_system as u8,
-                b'A'..=b'K' | b'O' | b'P' | b'R' | b'S' | b'T' | b'V' | b'W' | b'X'
-            )
-        {
+        if !(0..=u8::MAX as i32).contains(&house_system) {
             return Err(AstroError::InvalidHouseSystem(house_system));
         }
+
+        let Ok(hsys) = HouseSystem::try_from(house_system as u8) else {
+            return Err(AstroError::InvalidHouseSystem(house_system));
+        };
+
         let julian_day = self.to_julian_day(datetime);
-        let mut cusps = [0.0; 13]; // 1-based usually
-        let mut ascmc = [0.0; 10]; // ASC, MC, ARMC, Vertex...
+        let res = GLOBAL_EPH
+            .houses_ex(julian_day, CalcFlags::MOSEPH, latitude, longitude, hsys)
+            .map_err(|_| AstroError::HouseCalculationError)?;
 
-        let _lock = ASTRO_LOCK.lock().map_err(|_| AstroError::LockPoisoned)?;
-        unsafe {
-            // 'P' as i32 for Placidus, 'W' for Whole Sign if supported,
-            // but SE typically takes char byte.
-            // swe_houses_ex(tjd_ut, iflag, lat, lon, hsys, cusps, ascmc)
-            let ret = swiss_eph::swe_houses_ex(
-                julian_day,
-                4, // SEFLG_MOEPH
-                latitude,
-                longitude,
-                house_system,
-                cusps.as_mut_ptr(),
-                ascmc.as_mut_ptr(),
-            );
+        let cusps_vec = res.cusps[1..=12].to_vec();
+        let mut ascmc = [0.0; 10];
+        ascmc[0] = res.ascmc.ascendant;
+        ascmc[1] = res.ascmc.mc;
+        ascmc[2] = res.ascmc.armc;
+        ascmc[3] = res.ascmc.vertex;
+        ascmc[4] = res.ascmc.equatorial_ascendant;
+        ascmc[5] = res.ascmc.coascendant_koch;
+        ascmc[6] = res.ascmc.coascendant_munkasey;
+        ascmc[7] = res.ascmc.polar_ascendant;
 
-            if ret < 0 {
-                Err(AstroError::HouseCalculationError)
-            } else {
-                // Convert cusps to Vec (1..13) ignoring index 0
-                let cusps_vec = cusps[1..13].to_vec();
-                Ok((cusps_vec, ascmc))
-            }
-        }
+        Ok((cusps_vec, ascmc))
     }
 
-    /// 특정 시점의 아야남사(Ayanamsa) 값을 계산합니다.
-    /// flag: SE_SIDBIT_ELEM_PLAN (8) 등 옵션 설정 가능. 보통 0.
+    /// 특정 시점의 아야남사(Ayanamsa) 값을 계산합니다 (기본: Lahiri).
     pub fn get_ayanamsa_ut(&self, datetime: DateTime<Utc>) -> f64 {
-        let julian_day = self.to_julian_day(datetime);
-        let _lock = ASTRO_LOCK.lock().unwrap();
-        unsafe { swiss_eph::swe_get_ayanamsa_ut(julian_day) }
+        self.get_ayanamsa_ut_for_mode(datetime, 1, 0.0, 0.0)
     }
 
-    /// 아야남사 모드 설정 (예: Lahiri, Raman 등)
-    /// method_id: SE_SIDM_LAHIRI (1), SE_SIDM_RAMAN (3) 등
-    pub fn set_sidereal_mode(&self, method_id: i32, t0: f64, ayan_t0: f64) {
-        let _lock = ASTRO_LOCK.lock().unwrap();
-        unsafe {
-            swiss_eph::swe_set_sid_mode(method_id, t0, ayan_t0);
-        }
-    }
+    /// 아야남사 모드 설정 (스탯리스 엔진에서는 get_ayanamsa_ut_for_mode 권장)
+    pub fn set_sidereal_mode(&self, _method_id: i32, _t0: f64, _ayan_t0: f64) {}
 
-    /// Set a sidereal mode and read its ayanamsa without allowing another
-    /// calculation to change Swiss Ephemeris' process-global mode in between.
+    /// Set a sidereal mode and read its ayanamsa statelessly (thread-safe, zero locks).
     pub fn get_ayanamsa_ut_for_mode(
         &self,
         datetime: DateTime<Utc>,
@@ -602,17 +566,13 @@ impl AstroEngine {
         ayan_t0: f64,
     ) -> f64 {
         let julian_day = self.to_julian_day(datetime);
-        let _lock = ASTRO_LOCK.lock().unwrap();
-        unsafe {
-            swiss_eph::swe_set_sid_mode(method_id, t0, ayan_t0);
-            swiss_eph::swe_get_ayanamsa_ut(julian_day)
-        }
-    }
-}
+        let mut config = GLOBAL_EPH.config().clone();
+        config.set_sidereal_mode(method_id, t0, ayan_t0);
 
-impl Default for AstroEngine {
-    fn default() -> Self {
-        Self::new()
+        let dt = swisseph::deltat::calc_deltat(julian_day, &config);
+        GLOBAL_EPH
+            .get_ayanamsa_ex_with_config(julian_day + dt, CalcFlags::empty(), &config)
+            .unwrap_or(0.0)
     }
 }
 

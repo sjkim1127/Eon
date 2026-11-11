@@ -9,15 +9,13 @@ repository.workspace = true
 
 [dependencies]
 eon-core = { workspace = true }
-swiss-eph.workspace = true
+swisseph.workspace = true
 chrono.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 
 [features]
-default = ["embedded-ephe"]
-embedded-ephe = ["swiss-eph/embedded-ephe"]
-swiss-eph-data = ["swiss-eph/swiss-eph-data"]
+default = []
 
 
 [lints]

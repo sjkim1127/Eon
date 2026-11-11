@@ -105,6 +105,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "bitflags"
+version = "2.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06"
+
+[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -254,7 +260,7 @@ dependencies = [
  "chrono",
  "eon-core",
  "serde",
- "swiss-eph",
+ "swisseph-rs",
  "thiserror",
 ]
 
@@ -753,21 +759,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
-name = "swiss-eph"
-version = "0.2.0"
+name = "swisseph-rs"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3decb4374b795018910b19c0b3b1a3831a657359c174dfa8af2f04b03656311d"
+checksum = "e239c926e3b5b64b53e4529c07f6e2fa5b475798f0fa5efbcb0fadecd8b138ec"
 dependencies = [
- "cc",
- "swiss-eph-data",
- "wasm-bindgen",
+ "bitflags",
 ]
-
-[[package]]
-name = "swiss-eph-data"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb966b21334d32c965c891087bf507453f2c9d87e9e8bd834e0aef4621adbf94"
 
 [[package]]
 name = "syn"
