@@ -1,12 +1,12 @@
-//! 자미두수 격국(Destiny Patterns) 감지 모듈
+//! Zi Wei Dou Shu Destiny Patterns detection module.
 //!
-//! 명반의 삼방사정(본궁, 대궁, 재백궁, 관록궁)을 연산하고,
-//! 주요 6대 전통 길흉 격국을 감지하여 반환합니다.
+//! Evaluates the three-party and four-direction alignments (Life, Travel, Wealth, Career)
+//! and detects traditional auspicious and challenging destiny formations.
 
 use crate::types::{DestinyPattern, PalaceData, SiHuaType, ZwdsStar};
 use std::collections::HashMap;
 
-/// 명궁의 삼방사정을 분석하여 길격/흉격 격국 리스트를 반환합니다.
+/// Analyze three-party and four-direction to return detected destiny patterns.
 pub fn analyze_destiny_patterns(
     soul_idx: usize,
     star_positions: &HashMap<ZwdsStar, usize>,
@@ -14,12 +14,12 @@ pub fn analyze_destiny_patterns(
 ) -> Vec<DestinyPattern> {
     let mut patterns = Vec::new();
 
-    // 삼방사정 (본궁, 대궁/천이궁, 재백궁, 관록궁) 구하기
-    // ZWDS 좌표계: 0=寅, 1=卯, ..., 11=丑 (반시계 방향)
+    // Identify three-party and four-direction (Life, Travel, Wealth, Career)
+    // ZWDS coordinate system: 0=Yin, 1=Mao, ..., 11=Chou (counter-clockwise)
     // Ming = soul_idx
-    // Caibo = (soul_idx + 4) % 12 (재백)
-    // Qianyi = (soul_idx + 6) % 12 (천이/대궁)
-    // Guanlu = (soul_idx + 8) % 12 (관록)
+    // Caibo = (soul_idx + 4) % 12 (Wealth)
+    // Qianyi = (soul_idx + 6) % 12 (Travel / Opposite)
+    // Guanlu = (soul_idx + 8) % 12 (Career)
     let ming_idx = soul_idx;
     let qianyi_idx = (soul_idx + 6) % 12;
     let caibo_idx = (soul_idx + 4) % 12;
@@ -41,25 +41,25 @@ pub fn analyze_destiny_patterns(
         star_positions.get(&star) == Some(&palace_idx)
     };
 
-    // 1. 자부조원격 (紫府朝垣格)
-    // 조건: 자미(ZiWei)와 천부(TianFu)가 삼방사정(명궁, 재백궁, 관록궁, 천이궁)에 모두 있으면서, 둘 다 명궁(Ming)에 있지 않은 경우.
+    // 1.  (紫府朝垣格)
+    // : (ZiWei) (TianFu) (, , , )  ,   (Ming)   .
     if has_star_in_three_four(ZwdsStar::ZiWei) && has_star_in_three_four(ZwdsStar::TianFu) {
         let both_in_ming = has_star_in_palace(ZwdsStar::ZiWei, ming_idx)
             && has_star_in_palace(ZwdsStar::TianFu, ming_idx);
         if !both_in_ming {
             patterns.push(DestinyPattern {
                 name_hanja: "紫府朝垣".to_string(),
-                name_korean: "자부조원격".to_string(),
+                name_korean: "Zi Fu Chao Yuan (Emperor & Treasury Alignment)".to_string(),
                 name_english: "Zi Fu Chao Yuan (Emperor & Treasury Alignment)".to_string(),
                 is_auspicious: true,
-                description_korean: "명궁의 삼방사정에서 자미성과 천부성을 모두 비추어, 평생 물질적 풍요와 높은 명예를 누리는 대표적인 길격입니다.".to_string(),
+                description_korean: "The Emperor (Ziwei) and Treasury (Tianfu) both shine on the Life Palace from the three-party and four-direction, indicating lifelong wealth and high social status.".to_string(),
                 description_english: "The Emperor (Ziwei) and Treasury (Tianfu) both shine on the Life Palace from the three-party and four-direction, indicating lifelong wealth and high social status.".to_string(),
             });
         }
     }
 
-    // 2. 삼기조명격 (三奇加會格 / 三奇朝命格)
-    // 조건: 명궁의 삼방사정에서 화록(HuaLu), 화권(HuaQuan), 화과(HuaKe)를 모두 보는 경우.
+    // 2.  (三奇加會格 / 三奇朝命格)
+    // :   (HuaLu), (HuaQuan), (HuaKe)   .
     let mut has_lu = false;
     let mut has_quan = false;
     let mut has_ke = false;
@@ -78,16 +78,16 @@ pub fn analyze_destiny_patterns(
     if has_lu && has_quan && has_ke {
         patterns.push(DestinyPattern {
             name_hanja: "三奇加會".to_string(),
-            name_korean: "삼기조명격".to_string(),
+            name_korean: "San Qi Jia Hui (Three Wonders Conjunction)".to_string(),
             name_english: "San Qi Jia Hui (Three Wonders Conjunction)".to_string(),
             is_auspicious: true,
-            description_korean: "명궁의 삼방사정에서 화록, 화권, 화과를 모두 만나 학문적 성취, 권력, 재물을 크게 이루며 사회적으로 대성하는 길격입니다.".to_string(),
+            description_korean: "The three transformations Hua Lu, Hua Quan, and Hua Ke meet in the three-party and four-direction, leading to outstanding achievements, authority, and prosperity.".to_string(),
             description_english: "The three transformations Hua Lu, Hua Quan, and Hua Ke meet in the three-party and four-direction, leading to outstanding achievements, authority, and prosperity.".to_string(),
         });
     }
 
-    // 3. 양량창록격 (陽梁昌祿格)
-    // 조건: 태양(TaiYang), 천량(TianLiang), 문창(WenChang), 록존(LuCun) 또는 화록(HuaLu)이 삼방사정에서 모두 만나는 경우.
+    // 3.  (陽梁昌祿格)
+    // : (TaiYang), (TianLiang), (WenChang), (LuCun)  (HuaLu)    .
     if has_star_in_three_four(ZwdsStar::TaiYang)
         && has_star_in_three_four(ZwdsStar::TianLiang)
         && has_star_in_three_four(ZwdsStar::WenChang)
@@ -96,17 +96,17 @@ pub fn analyze_destiny_patterns(
         if has_lu_or_lucun {
             patterns.push(DestinyPattern {
                 name_hanja: "陽梁昌祿".to_string(),
-                name_korean: "양량창록격".to_string(),
+                name_korean: "Yang Liang Chang Lu (Academic Excellence & Civil Honor)".to_string(),
                 name_english: "Yang Liang Chang Lu (Academic Excellence & Civil Honor)".to_string(),
                 is_auspicious: true,
-                description_korean: "태양, 천량, 문창, 록존(혹은 화록)이 삼방사정에서 결합하여 시험에서 우수한 성적을 거두거나 학술적, 공직 분야에서 크게 이름을 떨치는 길격입니다.".to_string(),
+                description_korean: "The Sun (Taiyang), Blessing (Tianliang), Intellect (Wenchang), and wealth (Lucun/Hua Lu) combine in the three-party and four-direction, indicating exceptional academic success and official honors.".to_string(),
                 description_english: "The Sun (Taiyang), Blessing (Tianliang), Intellect (Wenchang), and wealth (Lucun/Hua Lu) combine in the three-party and four-direction, indicating exceptional academic success and official honors.".to_string(),
             });
         }
     }
 
-    // 4. 극향리명격 (極向離明格)
-    // 조건: 자미(ZiWei)가 午宮(index 4)에 단독으로 배치되고, 이 午宮이 명궁(Ming Palace)인 경우.
+    // 4.  (極向離明格)
+    // : (ZiWei) 午宮(index 4)  ,  午宮 (Ming Palace) .
     if ming_idx == 4 && has_star_in_palace(ZwdsStar::ZiWei, 4) {
         let mut main_stars_in_wu = 0;
         for star_in_p in &palaces[4].stars {
@@ -117,45 +117,45 @@ pub fn analyze_destiny_patterns(
         if main_stars_in_wu == 1 {
             patterns.push(DestinyPattern {
                 name_hanja: "極向離明".to_string(),
-                name_korean: "극향리명격".to_string(),
+                name_korean: "Ji Xiang Li Ming (Imperial Radiance Facing South)".to_string(),
                 name_english: "Ji Xiang Li Ming (Imperial Radiance Facing South)".to_string(),
                 is_auspicious: true,
-                description_korean: "자미성이 남쪽인 오궁(午宮)에서 제왕의 자리에 앉아 명궁이 되는 격국으로, 뛰어난 통솔력과 고귀한 지위를 얻게 되는 길격입니다.".to_string(),
+                description_korean: "The Emperor (Ziwei) sits alone in the South (Wu Palace) as the Life Palace, symbolizing a king in his high court, representing strong leadership and noble status.".to_string(),
                 description_english: "The Emperor (Ziwei) sits alone in the South (Wu Palace) as the Life Palace, symbolizing a king in his high court, representing strong leadership and noble status.".to_string(),
             });
         }
     }
 
-    // 5. 석중은옥격 (石中隱玉格)
-    // 조건: 거문(JuMen)이 子宮(index 10) 또는 午宮(index 4)에 있으며 명궁인 경우.
+    // 5.  (石中隱玉格)
+    // : (JuMen) 子宮(index 10)  午宮(index 4)   .
     if (ming_idx == 10 || ming_idx == 4) && has_star_in_palace(ZwdsStar::JuMen, ming_idx) {
         patterns.push(DestinyPattern {
             name_hanja: "石中隱玉".to_string(),
-            name_korean: "석중은옥격".to_string(),
+            name_korean: "Shi Zhong Yin Yu (Jade Hidden in Stone)".to_string(),
             name_english: "Shi Zhong Yin Yu (Jade Hidden in Stone)".to_string(),
             is_auspicious: true,
-            description_korean: "거문성이 자궁이나 오궁의 명궁에 임하여 돌 속에 옥이 감추어져 있는 것처럼, 처음에는 고생을 겪으나 결국 재능을 발현하여 크게 성공하는 길격입니다.".to_string(),
+            description_korean: "The Gate (Jumen) resides in the Child (Zi) or Sun (Wu) Palace as the Life Palace. Like a jade hidden inside a stone, talents are revealed over time, leading to great success.".to_string(),
             description_english: "The Gate (Jumen) resides in the Child (Zi) or Sun (Wu) Palace as the Life Palace. Like a jade hidden inside a stone, talents are revealed over time, leading to great success.".to_string(),
         });
     }
 
-    // 6. 살공겁조격 (殺拱劫照格)
-    // 조건: 명궁 삼방사정에 칠살(QiSha)이 있고, 지공(DiKong)이나 지겁(DiJie) 중 하나 이상이 명궁 혹은 삼방사정에 있는 경우.
+    // 6.  (殺拱劫照格)
+    // :   (QiSha) , (DiKong) (DiJie)        .
     if has_star_in_three_four(ZwdsStar::QiSha)
         && (has_star_in_three_four(ZwdsStar::DiKong) || has_star_in_three_four(ZwdsStar::DiJie))
     {
         patterns.push(DestinyPattern {
             name_hanja: "殺拱劫照".to_string(),
-            name_korean: "살공겁조격".to_string(),
+            name_korean: "Sha Gong Jie Zhao (Destruction & Calamity Clash)".to_string(),
             name_english: "Sha Gong Jie Zhao (Destruction & Calamity Clash)".to_string(),
             is_auspicious: false,
-            description_korean: "칠살의 파괴력과 지공·지겁의 공허함이 결합하여, 재물의 기복이 크고 삶에 풍파와 급격한 하락을 겪기 쉬운 대표적인 흉격입니다.".to_string(),
+            description_korean: "The unstable General (Qisha) meets Void (Dikong) or Robbery (Dijie) in the three-party and four-direction, indicating volatile fortune, sudden drops, and life challenges.".to_string(),
             description_english: "The unstable General (Qisha) meets Void (Dikong) or Robbery (Dijie) in the three-party and four-direction, indicating volatile fortune, sudden drops, and life challenges.".to_string(),
         });
     }
 
-    // 7. 기월동량격 (機月同梁格)
-    // 조건: 명궁에 천기/태음/천동/천량 중 하나가 있고, 삼방사정에 이 네 별이 모두 모이는 격국.
+    // 7.  (機月同梁格)
+    // :  ///   ,       .
     let is_ming_gi_wol_dong_ryang = [
         ZwdsStar::TianJi,
         ZwdsStar::TaiYin,
@@ -175,16 +175,16 @@ pub fn analyze_destiny_patterns(
     if is_ming_gi_wol_dong_ryang && has_all_four_gi_wol_dong_ryang {
         patterns.push(DestinyPattern {
             name_hanja: "機月同梁".to_string(),
-            name_korean: "기월동량격".to_string(),
+            name_korean: "Ji Yue Tong Liang (Civil Bureaucrat & Strategic Assembly)".to_string(),
             name_english: "Ji Yue Tong Liang (Civil Bureaucrat & Strategic Assembly)".to_string(),
             is_auspicious: true,
-            description_korean: "천기, 태음, 천동, 천량이 삼방사정에서 회조하여, 공직이나 학술, 대기업 등 안정적인 조직에서 기획력과 행정력으로 성공을 거두는 전형적인 샐러리맨/참모형 길격입니다.".to_string(),
+            description_korean: "Plan (Tianji), Moon (Taiyin), Harmony (Tiantong), and Blessing (Tianliang) gather in the three-party, representing a highly successful administrative or advisory career with stable growth.".to_string(),
             description_english: "Plan (Tianji), Moon (Taiyin), Harmony (Tiantong), and Blessing (Tianliang) gather in the three-party, representing a highly successful administrative or advisory career with stable growth.".to_string(),
         });
     }
 
-    // 8. 자부염무상격 (紫府廉武相格)
-    // 조건: 명궁에 자미/천부/염정/무곡/천상 중 하나가 있고, 삼방사정에 이 다섯 별이 모두 모이는 격국.
+    // 8.  (紫府廉武相格)
+    // :  ////   ,       .
     let is_ming_zi_fu_lian_wu_xiang = [
         ZwdsStar::ZiWei,
         ZwdsStar::TianFu,
@@ -206,48 +206,48 @@ pub fn analyze_destiny_patterns(
     if is_ming_zi_fu_lian_wu_xiang && has_all_five_zi_fu_lian_wu_xiang {
         patterns.push(DestinyPattern {
             name_hanja: "紫府廉武相".to_string(),
-            name_korean: "자부염무상격".to_string(),
+            name_korean: "Zi Fu Lian Wu Xiang (Leadership Sovereign Coalition)".to_string(),
             name_english: "Zi Fu Lian Wu Xiang (Leadership Sovereign Coalition)".to_string(),
             is_auspicious: true,
-            description_korean: "자미, 천부, 염정, 무곡, 천상이 삼방사정에서 강력한 세력을 이루어, 뛰어난 사회적 지위, 강력한 리더십, 풍부한 재정적 결실을 거두는 최상위 길격 중 하나입니다.".to_string(),
+            description_korean: "The Emperor, Treasury, Judge, Soldier, and Minister align in the three-party, generating high-class status, leadership potential, and outstanding material wealth.".to_string(),
             description_english: "The Emperor, Treasury, Judge, Soldier, and Minister align in the three-party, generating high-class status, leadership potential, and outstanding material wealth.".to_string(),
         });
     }
 
-    // 9. 거일동궁격 (巨日同宮格)
-    // 조건: 태양과 거문이 寅궁(0)이나 申궁(6)에 동궁하며 명궁이 되는 격국.
+    // 9.  (巨日同宮格)
+    // :   寅(0) 申(6)    .
     if (ming_idx == 0 || ming_idx == 6)
         && has_star_in_palace(ZwdsStar::TaiYang, ming_idx)
         && has_star_in_palace(ZwdsStar::JuMen, ming_idx)
     {
         patterns.push(DestinyPattern {
             name_hanja: "巨日同宮".to_string(),
-            name_korean: "거일동궁격".to_string(),
+            name_korean: "Ju Ri Tong Gong (Sun & Gate Conjunction)".to_string(),
             name_english: "Ju Ri Tong Gong (Sun & Gate Conjunction)".to_string(),
             is_auspicious: true,
-            description_korean: "태양의 양광이 거문의 어두움을 걷어내는 격국으로, 주로 언론, 학술, 교육, 외교 등 말과 재능을 펼치는 분야나 외국과의 교류에서 대성하는 길격입니다.".to_string(),
+            description_korean: "The Sun and Gate occupy the same Palace (Yin/Shen) as the Life Palace, scattering dark clouds with bright light, symbolizing great success in communication, diplomacy, or academic fields.".to_string(),
             description_english: "The Sun and Gate occupy the same Palace (Yin/Shen) as the Life Palace, scattering dark clouds with bright light, symbolizing great success in communication, diplomacy, or academic fields.".to_string(),
         });
     }
 
-    // 10. 일월동궁격 (日月同宮格)
-    // 조건: 태양과 태음이 丑궁(11)이나 未궁(5)에 동궁하며 명궁이 되는 격국.
+    // 10.  (日月同宮格)
+    // :   丑(11) 未(5)    .
     if (ming_idx == 5 || ming_idx == 11)
         && has_star_in_palace(ZwdsStar::TaiYang, ming_idx)
         && has_star_in_palace(ZwdsStar::TaiYin, ming_idx)
     {
         patterns.push(DestinyPattern {
             name_hanja: "日月同宮".to_string(),
-            name_korean: "일월동궁격".to_string(),
+            name_korean: "Ri Yue Tong Gong (Sun & Moon Conjunction)".to_string(),
             name_english: "Ri Yue Tong Gong (Sun & Moon Conjunction)".to_string(),
             is_auspicious: true,
-            description_korean: "태양(해)과 태음(달)이 동궁하여 명궁을 비추는 격국으로, 성격이 다재다능하고 지혜로우며 공직이나 연구 분야 등에서 점진적인 명예와 성취를 거둡니다.".to_string(),
+            description_korean: "The Sun and Moon occupy the same Palace (Chou/Wei) as the Life Palace, granting deep wisdom, versatile talents, and steady success in official or scholarly careers.".to_string(),
             description_english: "The Sun and Moon occupy the same Palace (Chou/Wei) as the Life Palace, granting deep wisdom, versatile talents, and steady success in official or scholarly careers.".to_string(),
         });
     }
 
-    // 11. 일월협명격 (日月夾命格)
-    // 조건: 명궁의 양 옆 궁에 태양과 태음이 나란히 배치되어 명궁을 협하는 격국.
+    // 11.  (日月夾命格)
+    // :           .
     let adj1 = (ming_idx + 1) % 12;
     let adj2 = (ming_idx + 11) % 12;
     let has_sun_yin_adj = (has_star_in_palace(ZwdsStar::TaiYang, adj1)
@@ -257,16 +257,16 @@ pub fn analyze_destiny_patterns(
     if has_sun_yin_adj {
         patterns.push(DestinyPattern {
             name_hanja: "日月夾命".to_string(),
-            name_korean: "일월협명격".to_string(),
+            name_korean: "Ri Yue Jia Ming (Sun & Moon Flanking Life Palace)".to_string(),
             name_english: "Ri Yue Jia Ming (Sun & Moon Flanking Life Palace)".to_string(),
             is_auspicious: true,
-            description_korean: "명궁이 태양과 태음 사이에 자리하여 양옆의 은혜로운 빛을 입는 격국으로, 귀인의 전폭적인 도움이나 상사의 후원을 받아 평생 귀한 신분으로 순조롭게 출세하는 길격입니다.".to_string(),
+            description_korean: "The Sun and Moon sandwich the Life Palace, bestowing light and support, resulting in strong helpers, high prestige, and an exceptionally smooth career path.".to_string(),
             description_english: "The Sun and Moon sandwich the Life Palace, bestowing light and support, resulting in strong helpers, high prestige, and an exceptionally smooth career path.".to_string(),
         });
     }
 
-    // 12. 쌍록조원격 (雙祿朝垣格)
-    // 조건: 록존과 화록이 명궁 삼방사정에 배치되나, 둘 다 명궁(Ming) 자체에는 없는 경우.
+    // 12.  (雙祿朝垣格)
+    // :     ,   (Ming)   .
     let mut has_hua_lu_in_three_directions = false;
     for &p_idx in &[qianyi_idx, caibo_idx, guanlu_idx] {
         for star_in_p in &palaces[p_idx].stars {
@@ -281,16 +281,16 @@ pub fn analyze_destiny_patterns(
     if has_hua_lu_in_three_directions && has_lucun_in_three_directions {
         patterns.push(DestinyPattern {
             name_hanja: "雙祿朝垣".to_string(),
-            name_korean: "쌍록조원격".to_string(),
+            name_korean: "Shuang Lu Chao Yuan (Dual Wealth Stars Alignment)".to_string(),
             name_english: "Shuang Lu Chao Yuan (Dual Wealth Stars Alignment)".to_string(),
             is_auspicious: true,
-            description_korean: "록존과 화록이 삼방사정에서 명궁을 든든하게 비추어 도와주는 격국으로, 일생 재무적 기회가 끊이지 않으며 자수성가하여 큰 부를 축적하는 대표적인 부유 격국입니다.".to_string(),
+            description_korean: "Lucun and Hua Lu both shine on the Life Palace from the three-party (excluding the Life Palace itself), bringing abundant financial fortunes and successful self-made wealth.".to_string(),
             description_english: "Lucun and Hua Lu both shine on the Life Palace from the three-party (excluding the Life Palace itself), bringing abundant financial fortunes and successful self-made wealth.".to_string(),
         });
     }
 
-    // 13. 백관조공격 (百官朝拱格)
-    // 조건: 명궁에 자미가 있고, 좌보/우필/천괴/천월/문창/문곡 중 4개 이상의 보좌성이 삼방사정에 있는 경우.
+    // 13.  (百官朝拱格)
+    // :   , /////  4     .
     if has_star_in_palace(ZwdsStar::ZiWei, ming_idx) {
         let assistants = [
             ZwdsStar::ZuoFu,
@@ -307,17 +307,17 @@ pub fn analyze_destiny_patterns(
         if assistant_count >= 4 {
             patterns.push(DestinyPattern {
                 name_hanja: "百官朝拱".to_string(),
-                name_korean: "백관조공격".to_string(),
+                name_korean: "Bai Guan Chao Gong (Hundred Officials Homage)".to_string(),
                 name_english: "Bai Guan Chao Gong (Hundred Officials Homage)".to_string(),
                 is_auspicious: true,
-                description_korean: "제왕인 자미성이 명궁에 자리하고 여러 보좌길성(신하)들이 주위를 둘러싸고 옹위하는 형국으로, 막강한 권력, 강한 조력자, 높은 지위에 오르게 되는 제왕의 명조입니다.".to_string(),
+                description_korean: "The Emperor (Ziwei) sits in the Life Palace surrounded by at least 4 major assistant stars (ministers), signifying great authority, social status, and supreme support.".to_string(),
                 description_english: "The Emperor (Ziwei) sits in the Life Palace surrounded by at least 4 major assistant stars (ministers), signifying great authority, social status, and supreme support.".to_string(),
             });
         }
     }
 
-    // 14. 령창타무격 (鈴昌陀武格)
-    // 조건: 영성(LingXing), 문창(WenChang), 타라(TuoLuo), 무곡(WuQu)이 삼방사정에서 모두 모이는 흉격.
+    // 14.  (鈴昌陀武格)
+    // : (LingXing), (WenChang), (TuoLuo), (WuQu)    .
     let has_ling_chang_tuo_wu = [
         ZwdsStar::LingXing,
         ZwdsStar::WenChang,
@@ -329,16 +329,16 @@ pub fn analyze_destiny_patterns(
     if has_ling_chang_tuo_wu {
         patterns.push(DestinyPattern {
             name_hanja: "鈴昌陀武".to_string(),
-            name_korean: "령창타무격".to_string(),
+            name_korean: "Ling Chang Tuo Wu (Catastrophic Collision Formation)".to_string(),
             name_english: "Ling Chang Tuo Wu (Catastrophic Collision Formation)".to_string(),
             is_auspicious: false,
-            description_korean: "무곡의 금기운에 영성, 타라, 문창의 수살이 결합하여 갑작스러운 재난, 금융상의 대패, 혹은 중대한 실패를 암시하므로 일생 투자와 건강에 극도로 신중해야 하는 흉격입니다.".to_string(),
+            description_korean: "Wuqu, Wenchang, Tuoluo, and Lingxing gather in the three-party, representing a risky astrological configuration that warns against sudden downfalls, legal issues, or financial collapses.".to_string(),
             description_english: "Wuqu, Wenchang, Tuoluo, and Lingxing gather in the three-party, representing a risky astrological configuration that warns against sudden downfalls, legal issues, or financial collapses.".to_string(),
         });
     }
 
-    // 15. 형기협인격 (刑忌夾印格)
-    // 조건: 천상(TianXiang, 印)이 명궁이고, 인접한 두 궁에 각각 화기(또는 거문화기 등)와 천형(또는 경양/타라)이 배치되어 협하는 흉격.
+    // 15.  (刑忌夾印格)
+    // : (TianXiang, 印) ,     (  ) ( /)   .
     if has_star_in_palace(ZwdsStar::TianXiang, ming_idx) {
         let adj_palaces = [(ming_idx + 1) % 12, (ming_idx + 11) % 12];
         let mut has_ji = false;
@@ -359,46 +359,46 @@ pub fn analyze_destiny_patterns(
         if has_ji && has_xing_or_yang {
             patterns.push(DestinyPattern {
                 name_hanja: "刑忌夾印".to_string(),
-                name_korean: "형기협인격".to_string(),
+                name_korean: "Xing Ji Jia Yin (Seal Trapped by Punishment & Clash)".to_string(),
                 name_english: "Xing Ji Jia Yin (Seal Trapped by Punishment & Clash)".to_string(),
                 is_auspicious: false,
-                description_korean: "관인(도장)인 천상성이 형성(경양/천형)과 기성(화기) 사이에 협여 억압받는 격국으로, 송사, 배신, 감금, 또는 예상치 못한 재난에 휘말리기 쉬우며 문서나 계약 시 각별한 주의가 필요합니다.".to_string(),
+                description_korean: "The Minister (Tianxiang) in the Life Palace is sandwiched by punishment (Xing/Qingyang) and jealousy (Ji), warning of legal disputes, document traps, or unexpected betrayals.".to_string(),
                 description_english: "The Minister (Tianxiang) in the Life Palace is sandwiched by punishment (Xing/Qingyang) and jealousy (Ji), warning of legal disputes, document traps, or unexpected betrayals.".to_string(),
             });
         }
     }
 
-    // 16. 마두대검격 (馬頭帶劍格)
-    // 조건: 경양이 午宮(4)에 있고, 오궁이 명궁이면서 동시에 천동이나 태음과 동궁하는 격국.
+    // 16.  (馬頭帶劍格)
+    // :  午宮(4) ,       .
     if ming_idx == 4
         && has_star_in_palace(ZwdsStar::QingYang, 4)
         && (has_star_in_palace(ZwdsStar::TianTong, 4) || has_star_in_palace(ZwdsStar::TaiYin, 4))
     {
         patterns.push(DestinyPattern {
             name_hanja: "馬頭帶劍".to_string(),
-            name_korean: "마두대검격".to_string(),
+            name_korean: "Ma Tou Dai Jian (Horse Head Carrying Sword)".to_string(),
             name_english: "Ma Tou Dai Jian (Horse Head Carrying Sword)".to_string(),
-            is_auspicious: false, // 흉격 성향이 강하나, 난세의 영웅격
-            description_korean: "칼에 해당하는 경양이 남쪽 오궁에서 칼날을 치켜세우는 형국으로, 삶의 기복과 고난이 대단히 격렬하지만 군인, 경찰, 외과 의사 등 개척적인 특수 직업군에서 큰 권력을 장악하기도 합니다.".to_string(),
+            is_auspicious: false, // Challenging pattern, formidable hero in turbulent times
+            description_korean: "Qingyang resides in the Wu Palace (South) as the Life Palace with Tiantong or Taiyin, representing a high-risk but high-reward destiny of military authority or major breakthroughs through hardships.".to_string(),
             description_english: "Qingyang resides in the Wu Palace (South) as the Life Palace with Tiantong or Taiyin, representing a high-risk but high-reward destiny of military authority or major breakthroughs through hardships.".to_string(),
         });
     }
 
-    // 17. 범수도화격 (泛水桃花格)
-    // 조건: 탐랑(TanLang)이 子宮(10)의 명궁에 있는 격국.
+    // 17.  (泛水桃花格)
+    // : (TanLang) 子宮(10)   .
     if ming_idx == 10 && has_star_in_palace(ZwdsStar::TanLang, 10) {
         patterns.push(DestinyPattern {
             name_hanja: "泛水桃花".to_string(),
-            name_korean: "범수도화격".to_string(),
+            name_korean: "Fan Shui Tao Hua (Peach Blossom Floating on Water)".to_string(),
             name_english: "Fan Shui Tao Hua (Peach Blossom Floating on Water)".to_string(),
             is_auspicious: false,
-            description_korean: "도화의 별인 탐랑이 물(子궁)을 만나 도화 기운이 넘쳐흐르는 격국으로, 매력이 뛰어나 예체능이나 인기 업종에서 주목을 받을 수 있으나, 이성 관계나 주색으로 인한 낭패와 풍파를 경계해야 합니다.".to_string(),
+            description_korean: "The Wolf (Tanlang) resides in the Child (Zi Palace - Water) as the Life Palace, amplifying natural charm and emotional entanglements, which requires self-discipline to prevent personal scanadals.".to_string(),
             description_english: "The Wolf (Tanlang) resides in the Child (Zi Palace - Water) as the Life Palace, amplifying natural charm and emotional entanglements, which requires self-discipline to prevent personal scanadals.".to_string(),
         });
     }
 
-    // 18. 양타협기격 (羊陀夾忌格)
-    // 조건: 화기(HuaJi)가 들어 있는 궁의 양 옆 궁(left/right)에 경양(QingYang)과 타라(TuoLuo)가 배치되는 격국.
+    // 18.  (羊陀夾忌格)
+    // : (HuaJi)      (left/right) (QingYang) (TuoLuo)  .
     let left_of_ming = (ming_idx + 11) % 12;
     let right_of_ming = (ming_idx + 1) % 12;
     let ming_has_huaji = palaces[ming_idx]
@@ -413,15 +413,15 @@ pub fn analyze_destiny_patterns(
     {
         patterns.push(DestinyPattern {
             name_hanja: "羊陀夾忌".to_string(),
-            name_korean: "양타협기격".to_string(),
+            name_korean: "Yang Tuo Jia Ji (Blade & Armor Trapping Clash)".to_string(),
             name_english: "Yang Tuo Jia Ji (Blade & Armor Trapping Clash)".to_string(),
             is_auspicious: false,
-            description_korean: "화기가 든 명궁 양쪽을 살성인 경양과 타라가 겹겹이 고립시키는 극단적 억압 격국으로, 사업상의 위협이나 대인관계 시련에 부딪히기 쉬우므로 방어적 경영과 내면 관리가 필수적입니다.".to_string(),
+            description_korean: "The Life Palace with HuaJi is sandwiched between Qingyang and Tuoluo, creating an oppressive environment that requires defensive strategy and inner resilience.".to_string(),
             description_english: "The Life Palace with HuaJi is sandwiched between Qingyang and Tuoluo, creating an oppressive environment that requires defensive strategy and inner resilience.".to_string(),
         });
     }
 
-    // 19. 화령협명격 (火鈴夾命格)
+    // 19.  (火鈴夾命格)
     if (has_star_in_palace(ZwdsStar::HuoXing, left_of_ming)
         && has_star_in_palace(ZwdsStar::LingXing, right_of_ming))
         || (has_star_in_palace(ZwdsStar::LingXing, left_of_ming)
@@ -429,15 +429,15 @@ pub fn analyze_destiny_patterns(
     {
         patterns.push(DestinyPattern {
             name_hanja: "火鈴夾命".to_string(),
-            name_korean: "화령협명격".to_string(),
+            name_korean: "Huo Ling Jia Ming (Fiery Stars Flanking Life Palace)".to_string(),
             name_english: "Huo Ling Jia Ming (Fiery Stars Flanking Life Palace)".to_string(),
             is_auspicious: false,
-            description_korean: "화성과 령성 두 화기 살성이 명궁 양옆에서 압박하는 격국으로, 성품이 조급하거나 주위 환경의 돌발 돌풍을 겪을 수 있으나 굳은 결단력으로 장애를 뚫고 나아갈 수 있습니다.".to_string(),
+            description_korean: "The Life Palace is sandwiched by Huoxing and Lingxing, indicating environmental friction and abrupt shifts requiring emotional control.".to_string(),
             description_english: "The Life Palace is sandwiched by Huoxing and Lingxing, indicating environmental friction and abrupt shifts requiring emotional control.".to_string(),
         });
     }
 
-    // 20. 공겁협명격 (空劫夾命格)
+    // 20.  (空劫夾命格)
     if (has_star_in_palace(ZwdsStar::DiKong, left_of_ming)
         && has_star_in_palace(ZwdsStar::DiJie, right_of_ming))
         || (has_star_in_palace(ZwdsStar::DiJie, left_of_ming)
@@ -445,15 +445,15 @@ pub fn analyze_destiny_patterns(
     {
         patterns.push(DestinyPattern {
             name_hanja: "空劫夾命".to_string(),
-            name_korean: "공겁협명격".to_string(),
+            name_korean: "Kong Jie Jia Ming (Void Stars Flanking Life Palace)".to_string(),
             name_english: "Kong Jie Jia Ming (Void Stars Flanking Life Palace)".to_string(),
             is_auspicious: false,
-            description_korean: "지공과 지겁이 명궁 양옆을 감싸는 격국으로, 재물이나 비전의 일시적 공허함을 느낄 수 있으나 정신적·철학적 성찰이나 기술 전문 분야에서 남다른 독창성을 발휘할 수 있습니다.".to_string(),
+            description_korean: "The Life Palace is flanked by Dikong and Dijie, fostering spiritual depth and artistic or technical genius despite worldly fluctuations.".to_string(),
             description_english: "The Life Palace is flanked by Dikong and Dijie, fostering spiritual depth and artistic or technical genius despite worldly fluctuations.".to_string(),
         });
     }
 
-    // 21. 쌍록수명격 (雙祿守命格)
+    // 21.  (雙祿守命格)
     let ming_has_lu = palaces[ming_idx]
         .stars
         .iter()
@@ -465,10 +465,10 @@ pub fn analyze_destiny_patterns(
     if ming_has_lu && qianyi_has_lu {
         patterns.push(DestinyPattern {
             name_hanja: "雙祿守命".to_string(),
-            name_korean: "쌍록수명격".to_string(),
+            name_korean: "Shuang Lu Shou Ming (Dual Wealth Anchoring Life Palace)".to_string(),
             name_english: "Shuang Lu Shou Ming (Dual Wealth Anchoring Life Palace)".to_string(),
             is_auspicious: true,
-            description_korean: "명궁과 대궁(천이궁)에 화록과 록존이 차례로 모여드는 대부 길격으로, 평생 재물운이 풍부하고 주변 사람들과 사업적 호응을 이루며 평안함을 누리는 좋은 명조입니다.".to_string(),
+            description_korean: "HuaLu and LuCun align across the Life and Travel Palaces, indicating exceptional wealth luck and financial harmony.".to_string(),
             description_english: "HuaLu and LuCun align across the Life and Travel Palaces, indicating exceptional wealth luck and financial harmony.".to_string(),
         });
     }
@@ -483,7 +483,7 @@ mod tests {
 
     #[test]
     fn test_ji_xiang_li_ming() {
-        // 극향리명격: 자미가 오궁(index 4)에 있고 오궁이 명궁인 경우.
+        // :  (index 4)    .
         let soul_idx = 4;
         let mut star_positions = HashMap::new();
         star_positions.insert(ZwdsStar::ZiWei, 4);
@@ -516,12 +516,12 @@ mod tests {
 
     #[test]
     fn test_sal_gong_geob_jo() {
-        // 살공겁조격: 삼방사정에 칠살과 지공/지겁이 있는 경우.
-        // 명궁=0(寅), 삼방사정 = 0, 6(대궁), 4(재백), 8(관록)
+        // :   /  .
+        // =0(寅),  = 0, 6(), 4(), 8()
         let soul_idx = 0;
         let mut star_positions = HashMap::new();
-        star_positions.insert(ZwdsStar::QiSha, 6); // 대궁에 칠살
-        star_positions.insert(ZwdsStar::DiKong, 4); // 재백에 지공
+        star_positions.insert(ZwdsStar::QiSha, 6); // QiSha in opposite palace
+        star_positions.insert(ZwdsStar::DiKong, 4); // DiKong in wealth palace
 
         let mut palaces = vec![];
         for i in 0..12 {
@@ -543,13 +543,12 @@ mod tests {
 
     #[test]
     fn test_gi_wol_dong_ryang() {
-        // 기월동량격: 명궁에 천기가 있고 삼방사정에 천기, 태음, 천동, 천량이 모두 있는 경우.
         let soul_idx = 0;
         let mut star_positions = HashMap::new();
-        star_positions.insert(ZwdsStar::TianJi, 0); // 본궁에 천기
-        star_positions.insert(ZwdsStar::TaiYin, 6); // 대궁에 태음
-        star_positions.insert(ZwdsStar::TianTong, 4); // 재백에 천동
-        star_positions.insert(ZwdsStar::TianLiang, 8); // 관록에 천량
+        star_positions.insert(ZwdsStar::TianJi, 0); // TianJi in Ming
+        star_positions.insert(ZwdsStar::TaiYin, 6); // TaiYin in opposite
+        star_positions.insert(ZwdsStar::TianTong, 4); // TianTong in wealth
+        star_positions.insert(ZwdsStar::TianLiang, 8); // TianLiang in career
 
         let mut palaces = vec![];
         for i in 0..12 {
@@ -571,14 +570,13 @@ mod tests {
 
     #[test]
     fn test_zi_fu_lian_wu_xiang() {
-        // 자부염무상격: 명궁에 자미가 있고 삼방사정에 자미, 천부, 염정, 무곡, 천상이 모두 있는 경우.
         let soul_idx = 0;
         let mut star_positions = HashMap::new();
-        star_positions.insert(ZwdsStar::ZiWei, 0); // 본궁 자미
-        star_positions.insert(ZwdsStar::TianFu, 6); // 대궁 천부
-        star_positions.insert(ZwdsStar::LianZhen, 4); // 재백 염정
-        star_positions.insert(ZwdsStar::WuQu, 8); // 관록 무곡
-        star_positions.insert(ZwdsStar::TianXiang, 0); // 본궁 천상 (동궁 가능)
+        star_positions.insert(ZwdsStar::ZiWei, 0); // ZiWei in Ming
+        star_positions.insert(ZwdsStar::TianFu, 6); // TianFu in opposite
+        star_positions.insert(ZwdsStar::LianZhen, 4); // LianZhen in wealth
+        star_positions.insert(ZwdsStar::WuQu, 8); // WuQu in career
+        star_positions.insert(ZwdsStar::TianXiang, 0); // TianXiang in Ming
 
         let mut palaces = vec![];
         for i in 0..12 {
@@ -600,7 +598,7 @@ mod tests {
 
     #[test]
     fn test_ge_ri_dong_gong() {
-        // 거일동궁격: 명궁이 寅궁(0)이고 거문과 태양이 명궁에 동궁하는 경우.
+        // :  寅(0)     .
         let soul_idx = 0;
         let mut star_positions = HashMap::new();
         star_positions.insert(ZwdsStar::JuMen, 0);
@@ -626,7 +624,7 @@ mod tests {
 
     #[test]
     fn test_beom_su_dohwa() {
-        // 범수도화격: 명궁이 子궁(10)이고 탐랑이 명궁에 있는 경우.
+        // :  子(10)    .
         let soul_idx = 10;
         let mut star_positions = HashMap::new();
         star_positions.insert(ZwdsStar::TanLang, 10);

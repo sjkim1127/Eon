@@ -60,13 +60,13 @@ let run_compatibility = move |_| {
 At line 2141 onwards, the scorecard and overall decisions are rendered using hardcoded Korean labels:
 ```rust
 // Line 2143-2144
-h3 { class: "font-semibold text-slate-200", "아쉬타쿠타(Ashtakoota) 세부 매칭 평점표" }
+h3 { class: "font-semibold text-slate-200", "Ashtakoota   " }
 ...
 // Line 2150-2153
-th { class: "px-4 py-3 text-left font-medium", "매칭 요인 (Koota)" }
-th { class: "px-4 py-3 text-center font-medium", "가중치 (Max)" }
-th { class: "px-4 py-3 text-center font-medium", "획득 점수" }
-th { class: "px-4 py-3 text-left font-medium", "설명" }
+th { class: "px-4 py-3 text-left font-medium", "  (Koota)" }
+th { class: "px-4 py-3 text-center font-medium", " (Max)" }
+th { class: "px-4 py-3 text-center font-medium", " " }
+th { class: "px-4 py-3 text-left font-medium", "" }
 ```
 
 ---
@@ -149,25 +149,25 @@ Define new translation keys in `mod.rs` and update translations in `ko.rs`, `en.
 Add these keys to `TK` enum in `crates/eon-ui/src/i18n/mod.rs`:
 ```rust
     // Compatibility sub-tab
-    CompatPartnerTitle,      // "상대방 출생 정보 입력"
-    CompatLatitude,          // "위도 (Latitude)"
-    CompatLongitude,         // "경도 (Longitude)"
-    CompatCalculating,       // "궁합 연산 중..."
-    CompatErrorPrefix,       // "오류: "
-    CompatOverallJudgement,  // "종합 매칭 판정"
-    CompatScorePrefix,       // "호환성 점수: "
-    CompatMaleManglik,       // "남성 화성살 (Male Mangal Dosha)"
-    CompatFemaleManglik,     // "여성 화성살 (Female Mangal Dosha)"
-    CompatManglikDetected,   // "🔥 화성살(Manglik) 감지"
-    CompatManglikNone,       // "✓ 해당 없음 (양호)"
-    CompatManglikCancelled,  // "ℹ️ 상호 화성살 상쇄(Dosha Samya)가 성립되어 화성살의 부정적 영향이 소멸되었습니다."
-    CompatAshtakootaTableTitle, // "아쉬타쿠타(Ashtakoota) 세부 매칭 평점표"
-    CompatColKoota,          // "매칭 요인 (Koota)"
-    CompatColMax,            // "가중치 (Max)"
-    CompatColScore,          // "획득 점수"
-    CompatColDesc,           // "설명"
-    CompatPass,              // "✓ 상성 우수"
-    CompatFail,              // "⚠️ 신중함 요구"
+    CompatPartnerTitle,      // "Enter Partner Birth Information"
+    CompatLatitude,          // " (Latitude)"
+    CompatLongitude,         // " (Longitude)"
+    CompatCalculating,       // "Compatibility  ..."
+    CompatErrorPrefix,       // ": "
+    CompatOverallJudgement,  // "  "
+    CompatScorePrefix,       // " : "
+    CompatMaleManglik,       // "  (Male Mangal Dosha)"
+    CompatFemaleManglik,     // "  (Female Mangal Dosha)"
+    CompatManglikDetected,   // "🔥 (Manglik) "
+    CompatManglikNone,       // "✓   ()"
+    CompatManglikCancelled,  // "ℹ️   (Dosha Samya)     ."
+    CompatAshtakootaTableTitle, // "Ashtakoota   "
+    CompatColKoota,          // "  (Koota)"
+    CompatColMax,            // " (Max)"
+    CompatColScore,          // " "
+    CompatColDesc,           // ""
+    CompatPass,              // "✓  "
+    CompatFail,              // "⚠️  "
 
     // Kootas
     KootaVarnaName,
@@ -278,50 +278,50 @@ Provide the translation mappings for `en.rs`, `ko.rs`, `zh.rs`, and `ru.rs` as l
 
 #### Korean Mappings (`ko.rs`)
 ```rust
-        TK::CompatPartnerTitle => "상대방 출생 정보 입력",
-        TK::CompatLatitude => "위도 (Latitude)",
-        TK::CompatLongitude => "경도 (Longitude)",
-        TK::CompatCalculating => "궁합 연산 중...",
-        TK::CompatErrorPrefix => "오류: ",
-        TK::CompatOverallJudgement => "종합 매칭 판정",
-        TK::CompatScorePrefix => "호환성 점수: ",
-        TK::CompatMaleManglik => "남성 화성살 (Male Mangal Dosha)",
-        TK::CompatFemaleManglik => "여성 화성살 (Female Mangal Dosha)",
-        TK::CompatManglikDetected => "🔥 화성살(Manglik) 감지",
-        TK::CompatManglikNone => "✓ 해당 없음 (양호)",
-        TK::CompatManglikCancelled => "ℹ️ 상호 화성살 상쇄(Dosha Samya)가 성립되어 화성살의 부정적 영향이 소멸되었습니다.",
-        TK::CompatAshtakootaTableTitle => "아쉬타쿠타(Ashtakoota) 세부 매칭 평점표",
-        TK::CompatColKoota => "매칭 요인 (Koota)",
-        TK::CompatColMax => "가중치 (Max)",
-        TK::CompatColScore => "획득 점수",
-        TK::CompatColDesc => "설명",
-        TK::CompatPass => "✓ 상성 우수",
-        TK::CompatFail => "⚠️ 신중함 요구",
-        TK::KootaVarnaName => "바르나 (직업적/기질적 성향 - Varna)",
-        TK::KootaVarnaDescGood => "정신적/직업적 기질의 조화가 우수합니다.",
-        TK::KootaVarnaDescBad => "서로의 직업적 성향이나 내적 의무감에 차이가 있습니다.",
-        TK::KootaVashyaName => "바시야 (상호 끌림과 통제력 - Vashya)",
-        TK::KootaVashyaDescPattern => "상호 매력 및 관계 지배력 점수: {}/2.0",
-        TK::KootaTaraName => "타라 (운명적 친밀도/건강 - Tara)",
-        TK::KootaTaraDescGood => "최고의 건강과 운명적 흐름의 조화를 이룹니다.",
-        TK::KootaTaraDescMedium => "보통의 건강 궁합을 가집니다.",
-        TK::KootaTaraDescBad => "건강 및 장수 측면에서 다소의 위협 요소가 존재합니다 (타라 도샤).",
-        TK::KootaYoniName => "요니 (생물학적/성적 궁합 - Yoni)",
-        TK::KootaYoniDescPattern => "신체 및 성향적 합치도: {}/4.0",
-        TK::KootaGrahaMaitriName => "그라하 마이트리 (행성 간 우호성/정신적 화합 - Graha Maitri)",
-        TK::KootaGrahaMaitriDescGood => "깊은 내면의 소통과 정신적인 대화가 매우 잘 통합니다.",
-        TK::KootaGrahaMaitriDescMedium => "평범한 대화와 보통의 정신적 공감대를 가집니다.",
-        TK::KootaGrahaMaitriDescBad => "생각의 차이와 불통으로 마찰이 잦을 수 있습니다.",
-        TK::KootaGanaName => "가나 (기질과 성향 - Gana)",
-        TK::KootaGanaDescGood => "서로 조화를 이루는 성격과 성향을 지니고 있습니다.",
-        TK::KootaGanaDescMedium => "서로 기질적 격차가 있어 양보가 다소 필요합니다.",
-        TK::KootaGanaDescBad => "서로의 강한 에고와 다른 성향으로 충돌이 잦습니다 (가나 도샤).",
-        TK::KootaBhakootName => "바쿠트 (감정선/가정의 화합 - Bhakoot)",
-        TK::KootaBhakootDescGood => "정서적 결속력이 끈끈하며 흔들림 없는 안정을 이룹니다.",
-        TK::KootaBhakootDescBad => "불필요한 감정 소모와 갈등이 발생하기 쉽습니다 (바쿠트 도샤).",
-        TK::KootaNadiName => "나디 (유전학적 궁합/장래 - Nadi)",
-        TK::KootaNadiDescGood => "유전학적 보완 및 후대 생산에 훌륭한 조화를 이룹니다.",
-        TK::KootaNadiDescBad => "서로 과하게 비슷한 기운으로 불균형이 올 수 있습니다 (나디 도샤).",
+        TK::CompatPartnerTitle => "Enter Partner Birth Information",
+        TK::CompatLatitude => " (Latitude)",
+        TK::CompatLongitude => " (Longitude)",
+        TK::CompatCalculating => "Compatibility  ...",
+        TK::CompatErrorPrefix => ": ",
+        TK::CompatOverallJudgement => "  ",
+        TK::CompatScorePrefix => " : ",
+        TK::CompatMaleManglik => "  (Male Mangal Dosha)",
+        TK::CompatFemaleManglik => "  (Female Mangal Dosha)",
+        TK::CompatManglikDetected => "🔥 (Manglik) ",
+        TK::CompatManglikNone => "✓   ()",
+        TK::CompatManglikCancelled => "ℹ️   (Dosha Samya)     .",
+        TK::CompatAshtakootaTableTitle => "Ashtakoota   ",
+        TK::CompatColKoota => "  (Koota)",
+        TK::CompatColMax => " (Max)",
+        TK::CompatColScore => " ",
+        TK::CompatColDesc => "",
+        TK::CompatPass => "✓  ",
+        TK::CompatFail => "⚠️  ",
+        TK::KootaVarnaName => " (/  - Varna)",
+        TK::KootaVarnaDescGood => "/   .",
+        TK::KootaVarnaDescBad => "      .",
+        TK::KootaVashyaName => " (   - Vashya)",
+        TK::KootaVashyaDescPattern => "     : {}/2.0",
+        TK::KootaTaraName => " ( / - Tara)",
+        TK::KootaTaraDescGood => "     .",
+        TK::KootaTaraDescMedium => "  Compatibility .",
+        TK::KootaTaraDescBad => "        ( ).",
+        TK::KootaYoniName => " (/ Compatibility - Yoni)",
+        TK::KootaYoniDescPattern => "   : {}/4.0",
+        TK::KootaGrahaMaitriName => "  (  /  - Graha Maitri)",
+        TK::KootaGrahaMaitriDescGood => "       .",
+        TK::KootaGrahaMaitriDescMedium => "     .",
+        TK::KootaGrahaMaitriDescBad => "      .",
+        TK::KootaGanaName => " (  - Gana)",
+        TK::KootaGanaDescGood => "      .",
+        TK::KootaGanaDescMedium => "      .",
+        TK::KootaGanaDescBad => "       ( ).",
+        TK::KootaBhakootName => " (/  - Bhakoot)",
+        TK::KootaBhakootDescGood => "      .",
+        TK::KootaBhakootDescBad => "      ( ).",
+        TK::KootaNadiName => " ( Compatibility/ - Nadi)",
+        TK::KootaNadiDescGood => "       .",
+        TK::KootaNadiDescBad => "        ( ).",
 ```
 
 #### English Mappings (`en.rs`)

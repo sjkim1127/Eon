@@ -1,8 +1,8 @@
-//! ESIL 에뮬레이션 및 초정밀 전수 조사 엔진 테스트
+//! ESIL Emulation & Precision Full-Spectrum Timeline Audit Test
 //!
-//! 100년치 인생 경로의 모든 이벤트를 전수 조사하고,
-//! 특정 시점의 ESIL 트레이스를 리버싱 관점에서 분석합니다.
-//! 또한 두 시스템 간의 IPC(궁합) 감사를 수행합니다.
+//! Audits all events across a 100-year life path,
+//! analyzes ESIL traces at specific timestamps from a reverse-engineering perspective,
+//! and performs Inter-Process Compatibility (IPC / Gunghap) audits between two systems.
 
 use eon_core::{BirthInfo, Gender};
 use eon_saju::{CompatibilityAuditor, DestinyFuzzer, FourPillars, SajuInput, SajuVM};
@@ -12,7 +12,7 @@ fn main() {
     println!("║       Eon Advanced Security Audit: ESIL & IPC         ║");
     println!("╚═══════════════════════════════════════════════════════╝\n");
 
-    // 1. 대상 A: 김성주님 (2004년생)
+    // 1. Target A: Kim Sung-ju (born 2004)
     let birth_a = BirthInfo::solar(2004, 11, 27, 22, 0).with_gender(Gender::Male);
     let (y_a, m_a, d_a, h_a) = birth_a.for_saju();
     let pillars_a = FourPillars::calculate(&SajuInput::new_solar(y_a, m_a, d_a, h_a, 0)).unwrap();
@@ -21,19 +21,19 @@ fn main() {
     println!("【Subject A System Info】");
     println!("System Architecture: {}\n", pillars_a.hangul());
 
-    // 2. 단계 1 테스트: ESIL Trace 분석
+    // 2. Step 1 Test: ESIL Trace Analysis
     println!("【Step 1: ESIL Trace Analysis (Reversing)】");
-    // 2026년 丙午년 1월(庚寅) 11일(乙丑) 10시(辛巳)의 기운 유입 분석
+    // Energy inflow analysis for 2026 Bing-Wu year, month 1 (Geng-Yin), day 11 (Yi-Chou), hour 10 (Xin-Si)
     use eon_saju::{EarthlyBranch, GanZi, HeavenlyStem};
     let major = pillars_a
         .major_luck(Gender::Male, 2004, 11, 27, 13, 0)
         .unwrap()
         .cycles[2]
-        .ganzi; // 戊寅 대운
-    let yearly = GanZi::new(HeavenlyStem::Bing, EarthlyBranch::Wu); // 丙午년
-    let monthly = GanZi::new(HeavenlyStem::Geng, EarthlyBranch::Yin); // 庚寅월
-    let daily = GanZi::new(HeavenlyStem::Yi, EarthlyBranch::Chou); // 乙丑일
-    let hourly = GanZi::new(HeavenlyStem::Xin, EarthlyBranch::Si); // 辛巳시
+        .ganzi; // Wu-Yin major luck
+    let yearly = GanZi::new(HeavenlyStem::Bing, EarthlyBranch::Wu); // Bing-Wu year
+    let monthly = GanZi::new(HeavenlyStem::Geng, EarthlyBranch::Yin); // Geng-Yin month
+    let daily = GanZi::new(HeavenlyStem::Yi, EarthlyBranch::Chou); // Yi-Chou day
+    let hourly = GanZi::new(HeavenlyStem::Xin, EarthlyBranch::Si); // Xin-Si hour
 
     let frame = vm_a.step(22, major, yearly, Some(monthly), Some(daily), Some(hourly));
 
@@ -48,9 +48,9 @@ fn main() {
     println!("Final Register State: {:?}", frame.register_state);
     println!("System Stability Score: {:.1}\n", frame.score);
 
-    // 2-2. 인터럽트 테스트: 2024년 甲辰년 (백호대살 예외 발생)
+    // 2-2. Interrupt test: 2024 Jia-Chen year (Baihu exception)
     println!("【Step 1-2: Interrupt Vector Table (IVT) Test】");
-    let yearly_2024 = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Chen); // 甲辰년 (백호살)
+    let yearly_2024 = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Chen); // Jia-Chen year (Baihu)
     let frame_2024 = vm_a.step(20, major, yearly_2024, None, None, None);
 
     println!("Target Event: 2024 Jia-Chen (Baihu Interuupt)");
@@ -66,7 +66,7 @@ fn main() {
     );
     println!("Impact Score: {:.1}\n", frame_2024.score);
 
-    // 3. 단계 2 테스트: 100년 전수 조사 (Full Spectrum Audit)
+    // 3. Step 2 Test: 100-year full spectrum audit
     println!("【Step 2: Full Spectrum Timeline Audit (100 Years)】");
     let fuzzer = DestinyFuzzer::new(vm_a.clone());
     let luck_all = pillars_a
@@ -96,9 +96,9 @@ fn main() {
     }
     println!();
 
-    // 4. 단계 3 테스트: IPC 궁합 감사 (Inter-Process Compatibility)
+    // 4. Step 3 Test: IPC Compatibility Audit
     println!("【Step 3: Inter-Process Compatibility (IPC) Audit】");
-    // 가상의 상대방 B (2005년생 여성)
+    // Simulated Counterpart B (Female born 2005)
     let pillars_b = FourPillars::calculate(&SajuInput::new_solar(2005, 5, 15, 10, 0)).unwrap();
     let vm_b = SajuVM::new(pillars_b);
 

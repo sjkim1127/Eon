@@ -1,165 +1,161 @@
-//! 지장간 일수 (월령분금, Won-ryeong-bun-geum) 분석
+//! Hidden Stem Command Days (月令分金, Saryeong) Analysis
 //!
-//! 월지(月支) 내 지장간 중 현재 시점에 어떤 기운이 주도하는지(사령, 司令) 분석합니다.
+//! Analyzes which hidden stem of the month branch currently commands (司令) energy.
 
 use crate::core::branch::EarthlyBranch;
 use crate::core::calendar::{get_solar_term_time, SolarTerm};
-use crate::core::pillars::FourPillars;
-use crate::core::pillars::SajuError;
+use crate::core::pillars::{FourPillars, SajuError};
 use crate::core::stem::HeavenlyStem;
 use serde::{Deserialize, Serialize};
 
-/// 지장간 사령(司令) 정보
+/// Hidden Stem Command Information (司令)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaryeongAnalysis {
-    /// 월지
+    /// Month Branch
     pub month_branch: EarthlyBranch,
-    /// 절기 진입 후 경과 일수
+    /// Days elapsed since solar term entry
     pub days_passed: u32,
-    /// 현재 사령하고 있는 천간
+    /// Currently commanding Heavenly Stem
     pub commanding_stem: HeavenlyStem,
-    /// 해당 천간의 주도 기간 (일)
-    pub duration: u32,
-    /// 해당 천간이 지장간 중 어느 부분인지 (여기, 중기, 정기)
+    /// Duration of commanding period (days)
+    pub duration_days: u32,
+    /// Part of hidden stems (Remnant, Middle, Main)
     pub part: String,
 }
 
 impl SaryeongAnalysis {
-    /// 사주 팔자로부터 사령 분석
+    /// Analyze commanding stem from Four Pillars
     pub fn from_pillars(pillars: &FourPillars) -> Result<Self, SajuError> {
-        let branch = pillars.month.branch;
+        let month_branch = pillars.month.branch;
+        let start_term = SolarTerm::from_month_branch_index(month_branch.index());
+        let term_time = get_solar_term_time(pillars.birth_time, start_term)?;
 
-        // 해당 월의 시작 절기 찾기
-        let term = SolarTerm::from_month_branch_index(branch.index());
+        let duration = pillars.birth_time.signed_duration_since(term_time);
+        let seconds = duration.num_seconds();
+        let days_passed = if seconds < 0 {
+            1
+        } else {
+            (seconds / 86400) as u32 + 1
+        };
 
-        // 해당 절기의 정확한 시작 시각 계산
-        let term_time = get_solar_term_time(pillars.birth_time, term)?;
-
-        // 경과 일수 계산 (실제 시간차 기준)
-        let diff = pillars.birth_time - term_time;
-        let diff_seconds = diff.num_seconds().abs();
-
-        // 1일 = 86400초. 0.5일 이상이면 올림하는 방식이 아닌, 단순히 며칠째인지 계산 (1일차부터 시작)
-        let days_passed = (diff_seconds as f64 / 86400.0) as u32 + 1;
-
-        let (stem, duration, part) = get_saryeong_data(branch, days_passed);
+        let (stem, duration_days, part) = calculate_saryeong(month_branch, days_passed);
 
         Ok(Self {
-            month_branch: branch,
+            month_branch,
             days_passed,
             commanding_stem: stem,
-            duration,
+            duration_days,
             part,
         })
     }
 }
 
-/// 월지와 경과 일수에 따른 사령 천간 산출
-fn get_saryeong_data(branch: EarthlyBranch, days: u32) -> (HeavenlyStem, u32, String) {
+/// Calculate commanding stem based on month branch and elapsed days
+pub fn calculate_saryeong(branch: EarthlyBranch, days: u32) -> (HeavenlyStem, u32, String) {
     use EarthlyBranch as B;
     use HeavenlyStem as S;
 
     match branch {
         B::Yin => {
             if days <= 7 {
-                (S::Wu, 7, "여기(餘氣)".to_string())
+                (S::Wu, 7, "Remnant (餘氣)".to_string())
             } else if days <= 14 {
-                (S::Bing, 7, "중기(中氣)".to_string())
+                (S::Bing, 7, "Middle (中氣)".to_string())
             } else {
-                (S::Jia, 16, "정기(正氣)".to_string())
+                (S::Jia, 16, "Main (正氣)".to_string())
             }
         }
         B::Mao => {
             if days <= 10 {
-                (S::Jia, 10, "여기(餘氣)".to_string())
+                (S::Jia, 10, "Remnant (餘氣)".to_string())
             } else {
-                (S::Yi, 20, "정기(正氣)".to_string())
+                (S::Yi, 20, "Main (正氣)".to_string())
             }
         }
         B::Chen => {
             if days <= 9 {
-                (S::Yi, 9, "여기(餘氣)".to_string())
+                (S::Yi, 9, "Remnant (餘氣)".to_string())
             } else if days <= 12 {
-                (S::Gui, 3, "중기(中氣)".to_string())
+                (S::Gui, 3, "Middle (中氣)".to_string())
             } else {
-                (S::Wu, 18, "정기(正氣)".to_string())
+                (S::Wu, 18, "Main (正氣)".to_string())
             }
         }
         B::Si => {
             if days <= 7 {
-                (S::Wu, 7, "여기(餘氣)".to_string())
+                (S::Wu, 7, "Remnant (餘氣)".to_string())
             } else if days <= 14 {
-                (S::Geng, 7, "중기(中氣)".to_string())
+                (S::Geng, 7, "Middle (中氣)".to_string())
             } else {
-                (S::Bing, 16, "정기(正氣)".to_string())
+                (S::Bing, 16, "Main (正氣)".to_string())
             }
         }
         B::Wu => {
             if days <= 10 {
-                (S::Bing, 10, "여기(餘氣)".to_string())
+                (S::Bing, 10, "Remnant (餘氣)".to_string())
             } else if days <= 19 {
-                (S::Ji, 9, "중기(中氣)".to_string())
+                (S::Ji, 9, "Middle (中氣)".to_string())
             } else {
-                (S::Ding, 11, "정기(正氣)".to_string())
+                (S::Ding, 11, "Main (正氣)".to_string())
             }
         }
         B::Wei => {
             if days <= 9 {
-                (S::Ding, 9, "여기(餘氣)".to_string())
+                (S::Ding, 9, "Remnant (餘氣)".to_string())
             } else if days <= 12 {
-                (S::Yi, 3, "중기(中氣)".to_string())
+                (S::Yi, 3, "Middle (中氣)".to_string())
             } else {
-                (S::Ji, 18, "정기(正氣)".to_string())
+                (S::Ji, 18, "Main (正氣)".to_string())
             }
         }
         B::Shen => {
             if days <= 7 {
-                (S::Wu, 7, "여기(餘氣)".to_string())
+                (S::Wu, 7, "Remnant (餘氣)".to_string())
             } else if days <= 14 {
-                (S::Ren, 7, "중기(中氣)".to_string())
+                (S::Ren, 7, "Middle (中氣)".to_string())
             } else {
-                (S::Geng, 16, "정기(正氣)".to_string())
+                (S::Geng, 16, "Main (正氣)".to_string())
             }
         }
         B::You => {
             if days <= 10 {
-                (S::Geng, 10, "여기(餘氣)".to_string())
+                (S::Geng, 10, "Remnant (餘氣)".to_string())
             } else {
-                (S::Xin, 20, "정기(正氣)".to_string())
+                (S::Xin, 20, "Main (正氣)".to_string())
             }
         }
         B::Xu => {
             if days <= 9 {
-                (S::Xin, 9, "여기(餘氣)".to_string())
+                (S::Xin, 9, "Remnant (餘氣)".to_string())
             } else if days <= 12 {
-                (S::Ding, 3, "중기(中氣)".to_string())
+                (S::Ding, 3, "Middle (中氣)".to_string())
             } else {
-                (S::Wu, 18, "정기(正氣)".to_string())
+                (S::Wu, 18, "Main (正氣)".to_string())
             }
         }
         B::Hai => {
             if days <= 7 {
-                (S::Wu, 7, "여기(餘氣)".to_string())
+                (S::Wu, 7, "Remnant (餘氣)".to_string())
             } else if days <= 14 {
-                (S::Jia, 7, "중기(中氣)".to_string())
+                (S::Jia, 7, "Middle (中氣)".to_string())
             } else {
-                (S::Ren, 16, "정기(正氣)".to_string())
+                (S::Ren, 16, "Main (正氣)".to_string())
             }
         }
         B::Zi => {
             if days <= 10 {
-                (S::Ren, 10, "여기(餘氣)".to_string())
+                (S::Ren, 10, "Remnant (餘氣)".to_string())
             } else {
-                (S::Gui, 20, "정기(正氣)".to_string())
+                (S::Gui, 20, "Main (正氣)".to_string())
             }
         }
         B::Chou => {
             if days <= 9 {
-                (S::Gui, 9, "여기(餘氣)".to_string())
+                (S::Gui, 9, "Remnant (餘氣)".to_string())
             } else if days <= 12 {
-                (S::Xin, 3, "중기(中氣)".to_string())
+                (S::Xin, 3, "Middle (中氣)".to_string())
             } else {
-                (S::Ji, 18, "정기(正氣)".to_string())
+                (S::Ji, 18, "Main (正氣)".to_string())
             }
         }
     }
@@ -167,29 +163,32 @@ fn get_saryeong_data(branch: EarthlyBranch, days: u32) -> (HeavenlyStem, u32, St
 
 impl std::fmt::Display for SaryeongAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "【월령분금(사령) 분석】")?;
+        writeln!(f, "【Commanding Hidden Stem (司令) Analysis】")?;
         writeln!(f, "─────────────────────────────────")?;
         writeln!(
             f,
-            "월지: {} ({})",
+            "Month Branch: {} ({})",
             self.month_branch.hangul(),
             self.month_branch.hanja()
         )?;
-        writeln!(f, "경과 일수: {}일", self.days_passed)?;
+        writeln!(f, "Days Elapsed: {} days", self.days_passed)?;
         writeln!(
             f,
-            "▶ 현재 사령: {} ({}) - {}",
+            "▶ Current Command: {} ({}) - {}",
             self.commanding_stem.hangul(),
             self.commanding_stem.hanja(),
             self.part
         )?;
-        writeln!(f, "  (해당 기운이 이 기간의 주도권을 가짐)")?;
+        writeln!(
+            f,
+            "  (This energy commands seasonal authority in this window)"
+        )?;
         Ok(())
     }
 }
 
 impl FourPillars {
-    /// 월령분금(사령) 분석
+    /// Command (Saryeong) Analysis
     pub fn saryeong(&self) -> Result<SaryeongAnalysis, SajuError> {
         SaryeongAnalysis::from_pillars(self)
     }

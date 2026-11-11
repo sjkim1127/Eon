@@ -1,7 +1,7 @@
-//! 공망(空亡, Void/Emptiness) 분석
+//! Void / Emptiness (空亡) Analysis
 //!
-//! 일주(日柱)를 기준으로 천간 10자와 지지 12자의 짝을 맞출 때
-//! 남게 되는 두 개의 지지를 분석합니다.
+//! Analyzes the two remaining earthly branches when pairing 10 stems with 12 branches
+//! using the Day Pillar as reference.
 
 use crate::core::branch::EarthlyBranch;
 use crate::core::ganzi::GanZi;
@@ -9,19 +9,19 @@ use crate::core::pillars::FourPillars;
 use crate::core::ten_gods::TenGod;
 use serde::{Deserialize, Serialize};
 
-/// 공망 분석 결과
+/// Void Analysis Result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VoidAnalysis {
-    /// 해당 사주의 공망 지지 (2개)
+    /// The two void branches for this chart
     pub void_branches: [EarthlyBranch; 2],
-    /// 공망이 발생한 위치 (년, 월, 시)
+    /// Positions where void occurs (Year, Month, Hour)
     pub void_positions: Vec<String>,
-    /// 공망된 십성 목록
+    /// Ten Gods associated with void branches
     pub void_ten_gods: Vec<TenGod>,
-    /// 공망 그룹 이름 (예: 갑자순)
+    /// 10-day Xun group name (e.g. JiaZi Xun)
     pub xun_group: String,
-    /// 상세 해석 (Explainable DTO)
+    /// Detailed explainable DTOs
     pub mapped_voids: Vec<VoidDetail>,
 }
 
@@ -42,7 +42,7 @@ pub struct VoidDetail {
 }
 
 impl VoidAnalysis {
-    /// 사주 팔자로부터 공망 분석
+    /// Analyze void branches from Four Pillars
     pub fn from_pillars(pillars: &FourPillars) -> Self {
         let day_pillar = pillars.day;
         let (void_branches, xun_group) = calculate_void_branches(day_pillar);
@@ -52,9 +52,9 @@ impl VoidAnalysis {
         let mut mapped_voids = Vec::new();
 
         let checks = [
-            ("년주", pillars.year),
-            ("월주", pillars.month),
-            ("시주", pillars.hour),
+            ("Year", pillars.year),
+            ("Month", pillars.month),
+            ("Hour", pillars.hour),
         ];
 
         let dm = pillars.day_master();
@@ -65,7 +65,6 @@ impl VoidAnalysis {
                 void_positions.push(pos.to_string());
                 void_ten_gods.push(tg);
 
-                // 공망해충/공망해합 (해소) 여부 검사
                 let dissolution = check_void_dissolution(ganzi.branch, pos, pillars);
                 let (is_dissolved, dissolution_reason) = match dissolution {
                     Some((diss, msg)) => (diss, Some(msg)),
@@ -73,30 +72,34 @@ impl VoidAnalysis {
                 };
 
                 let mut reasons = vec![
-                    format!("일주 기준 공망: {}", ganzi.branch.hangul()),
-                    format!("{} 위치 중복", pos),
+                    format!("Day Pillar Void: {}", ganzi.branch.hangul()),
+                    format!("{} position match", pos),
                 ];
 
                 let (summary, level, desc_extra) = if is_dissolved {
                     let reason_str = dissolution_reason.clone().unwrap_or_default();
                     reasons.push(reason_str.clone());
                     (
-                        format!("{}에 위치한 {} 공망 (해충/해합 해소)", pos, tg.hangul()),
+                        format!(
+                            "{} {} Void (Dissolved via Clash/Combination)",
+                            pos,
+                            tg.hangul()
+                        ),
                         crate::analysis::supplementary_pillars::InterpretationLevel::Neutral,
-                        format!(" (단, {}에 의해 공망이 해소/구원되었습니다.)", reason_str),
+                        format!(" (Rescued/resolved by {}.)", reason_str),
                     )
                 } else {
                     (
-                        format!("{}에 위치한 {} 공망", pos, tg.hangul()),
+                        format!("{} {} Void", pos, tg.hangul()),
                         crate::analysis::supplementary_pillars::InterpretationLevel::Caution,
                         "".to_string(),
                     )
                 };
 
                 let description = match pos {
-                    "년주" => "선조나 국가적 혜택이 약하거나, 어린 시절의 근간이 흔들릴 수 있음을 의미합니다.",
-                    "월주" => "부모/형제운이 약하거나 직업적 정착에 더 많은 노력이 필요할 수 있습니다.",
-                    "시주" => "자녀나 말년의 결실이 예상보다 늦게 나타나거나 허망함이 있을 수 있습니다.",
+                    "Year" => "Indicates weaker ancestral support or an unsettled early foundation in childhood.",
+                    "Month" => "Indicates career foundation requires extra diligence or independent effort away from family.",
+                    "Hour" => "Indicates late-life achievements or progeny fruits manifest later than expected.",
                     _ => "",
                 };
 
@@ -124,17 +127,17 @@ impl VoidAnalysis {
     }
 }
 
-/// 공망 해충 / 공망 해합 여부 판정
+/// Determine whether void branch is dissolved via clash or combination
 fn check_void_dissolution(
     target_branch: EarthlyBranch,
     target_pos: &str,
     pillars: &FourPillars,
 ) -> Option<(bool, String)> {
     let other_branches = [
-        ("년주", pillars.year.branch),
-        ("월주", pillars.month.branch),
-        ("일주", pillars.day.branch),
-        ("시주", pillars.hour.branch),
+        ("Year", pillars.year.branch),
+        ("Month", pillars.month.branch),
+        ("Day", pillars.day.branch),
+        ("Hour", pillars.hour.branch),
     ];
     let all_branches = [
         pillars.year.branch,
@@ -150,14 +153,14 @@ fn check_void_dissolution(
         if crate::analysis::relationships::BranchClash::check(target_branch, b).is_some() {
             return Some((
                 true,
-                format!("{} {}와 충(沖)하여 공망 해소 (공망해충)", pos, b.hangul()),
+                format!("Resolved by Clash (沖) with {} {}", pos, b.hangul()),
             ));
         }
         if crate::analysis::relationships::SixCombination::check(target_branch, b).is_some() {
             return Some((
                 true,
                 format!(
-                    "{} {}와 육합(六合)하여 공망 해소 (공망해합)",
+                    "Resolved by Six Combination (六合) with {} {}",
                     pos,
                     b.hangul()
                 ),
@@ -172,7 +175,7 @@ fn check_void_dissolution(
     {
         return Some((
             true,
-            "원국 삼합(三合) 성국으로 공망 해소 (공망해합)".to_string(),
+            "Resolved by chart Triple Combination (三合) formation".to_string(),
         ));
     }
     let seasonals = crate::analysis::relationships::SeasonalCombination::check(&all_branches);
@@ -182,32 +185,30 @@ fn check_void_dissolution(
     {
         return Some((
             true,
-            "원국 방합(方合) 성국으로 공망 해소 (공망해합)".to_string(),
+            "Resolved by chart Seasonal Combination (方合) formation".to_string(),
         ));
     }
 
     None
 }
 
-/// 특정 간지의 공망 지지와 순(旬) 그룹 산출
+/// Calculate void branches and Xun group for given GanZi
 pub fn calculate_void_branches(ganzi: GanZi) -> ([EarthlyBranch; 2], String) {
     let s_idx = ganzi.stem.index() as i32;
     let b_idx = ganzi.branch.index() as i32;
 
-    // 순(旬)의 시작점 계산
     let xun_start_idx = (b_idx - s_idx).rem_euclid(12);
 
     let xun_name = match xun_start_idx {
-        0 => "갑자순(甲子旬)",
-        10 => "갑술순(甲戌旬)",
-        8 => "갑신순(甲申旬)",
-        6 => "갑오순(甲午旬)",
-        4 => "갑진순(甲辰旬)",
-        2 => "갑인순(甲寅旬)",
-        _ => "기타",
+        0 => "JiaZi Xun (甲子旬)",
+        10 => "JiaXu Xun (甲戌旬)",
+        8 => "JiaShen Xun (甲申旬)",
+        6 => "JiaWu Xun (甲午旬)",
+        4 => "JiaChen Xun (甲辰旬)",
+        2 => "JiaYin Xun (甲寅旬)",
+        _ => "Other",
     };
 
-    // 공망은 순의 시작점에서 2개 앞 (역순)
     let v1_idx = (xun_start_idx - 2).rem_euclid(12);
     let v2_idx = (xun_start_idx - 1).rem_euclid(12);
 
@@ -219,12 +220,12 @@ pub fn calculate_void_branches(ganzi: GanZi) -> ([EarthlyBranch; 2], String) {
 
 impl std::fmt::Display for VoidAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "【공망(空亡) 분석】")?;
+        writeln!(f, "【Void (空亡) Analysis】")?;
         writeln!(f, "─────────────────────────────────")?;
-        writeln!(f, "일주 기준: {}", self.xun_group)?;
+        writeln!(f, "Day Pillar Basis: {}", self.xun_group)?;
         writeln!(
             f,
-            "공망 지지: {} ({}), {} ({})",
+            "Void Branches: {} ({}), {} ({})",
             self.void_branches[0].hangul(),
             self.void_branches[0].hanja(),
             self.void_branches[1].hangul(),
@@ -232,19 +233,19 @@ impl std::fmt::Display for VoidAnalysis {
         )?;
 
         if self.void_positions.is_empty() {
-            writeln!(f, "▶ 원국(사주) 내에 공망이 없습니다.")?;
+            writeln!(f, "▶ No void branches found in natal chart.")?;
         } else {
             for (idx, pos) in self.void_positions.iter().enumerate() {
                 writeln!(
                     f,
-                    "▶ {}에 공망 발생 (십성: {})",
+                    "▶ Void manifested in {} (Ten God: {})",
                     pos,
                     self.void_ten_gods[idx].hangul()
                 )?;
             }
             writeln!(
                 f,
-                "  * 해당 육친이나 사회적 기운의 실효성이 낮아질 수 있습니다."
+                "  * Effectiveness of this social/relational energy may be attenuated."
             )?;
         }
         Ok(())
@@ -252,7 +253,7 @@ impl std::fmt::Display for VoidAnalysis {
 }
 
 impl FourPillars {
-    /// 공망 분석
+    /// Void Analysis
     pub fn void_analysis(&self) -> VoidAnalysis {
         VoidAnalysis::from_pillars(self)
     }

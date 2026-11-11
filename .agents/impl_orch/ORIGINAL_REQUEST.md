@@ -24,9 +24,9 @@ Please follow the Project Pattern instructions:
 You are the Implementation Orchestrator (Generation 4). Your working directory is `/Users/sjkim1127/Eon/.agents/impl_orch`.
 Your mission is to coordinate and implement the Vedic Astrology enhancements.
 
-The previous orchestrator generation completed Milestone M2 (R1. Ashtakoota Guna Milan 상세 고도화) but crashed due to model capacity limits (503).
+The previous orchestrator generation completed Milestone M2 (R1. Ashtakoota Guna Milan Detailed Refinement) but crashed due to model capacity limits (503).
 Your job is to:
-1. Resume work starting from Milestone M3 (R2. Shadbala & Bhava Bala 6대 강도 세부 수치 시각화).
+1. Resume work starting from Milestone M3 (R2. Shadbala & Bhava Bala 6-Fold Strength   ).
 2. Read the global project plan at `/Users/sjkim1127/Eon/PROJECT.md` and requirements in `/Users/sjkim1127/Eon/ORIGINAL_REQUEST.md`.
 3. For each remaining milestone (M3, M4, M5), run the Explorer -> Worker -> Reviewer -> Challenger -> Auditor cycle.
 4. Implement changes in `crates/eon-vedic`, `crates/eon-service`, and `crates/eon-ui` as requested.

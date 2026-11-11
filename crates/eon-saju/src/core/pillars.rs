@@ -1,6 +1,6 @@
-//! 사주 팔자(四柱八字) 계산
+//! Four Pillars of Destiny (四柱八字) Calculation
 //!
-//! 생년월일시로부터 년주, 월주, 일주, 시주를 계산합니다.
+//! Calculates Year, Month, Day, and Hour pillars from date, time, and location.
 
 use crate::core::branch::EarthlyBranch;
 use crate::core::element::Element;
@@ -10,42 +10,42 @@ use chrono::{DateTime, Datelike, Duration, NaiveDate, TimeZone, Timelike, Utc};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-/// 사주 계산 입력
+/// Saju Calculation Input
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SajuInput {
-    /// 년도 (양력)
+    /// Year (Solar)
     pub year: i32,
-    /// 월 (1-12)
+    /// Month (1-12)
     pub month: u32,
-    /// 일 (1-31)
+    /// Day (1-31)
     pub day: u32,
-    /// 시 (0-23)
+    /// Hour (0-23)
     pub hour: u32,
-    /// 분 (0-59, 선택적)
+    /// Minute (0-59, optional)
     pub minute: u32,
-    /// 음력 여부
+    /// Whether date is Lunar
     pub is_lunar: bool,
-    /// 윤달 여부 (음력인 경우에만 유효)
+    /// Whether leap month (only valid if is_lunar is true)
     pub is_leap_month: bool,
-    /// 경도 시차 (분 단위, 예: 안산 -33)
+    /// Longitude offset in minutes (e.g., Ansan -33)
     pub longitude_offset_m: i32,
-    /// 경도 (Longitude, 진태양시 계산용, 예: 서울 127.0)
+    /// Longitude in degrees (for True Solar Time calculation, e.g., Seoul 127.0)
     pub longitude: Option<f64>,
-    /// 위도 (Latitude, 조후 보정용)
+    /// Latitude in degrees (for climate adjustment)
     pub latitude: Option<f64>,
-    /// 시간대 오프셋 (시간 단위, 예: KST = 9.0)
+    /// Timezone offset in hours (e.g., KST = 9.0)
     pub timezone_offset_h: f32,
-    /// 야자시(夜子時) 적용 여부
-    /// - true: 23:00~24:00를 당일의 야자시로 인정 (일주 유지)
-    /// - false: 23:00~24:00를 다음 날의 자시(명자시)로 간주 (일주 변경) - 기본값
+    /// Whether to apply Night Rat Hour (夜子時)
+    /// - true: 23:00~24:00 treated as night rat hour of the current day (preserves Day pillar)
+    /// - false: 23:00~24:00 treated as next day's early rat hour (advances Day pillar) - Default
     pub use_night_rat_hour: bool,
-    /// 성별 (대운 순역 방향 결정용)
+    /// Gender (used for Major Luck progression direction)
     pub gender: eon_core::Gender,
 }
 
 impl SajuInput {
-    /// 양력 생년월일시로 입력 생성
+    /// Creates solar date/time input
     pub fn new_solar(year: i32, month: u32, day: u32, hour: u32, minute: u32) -> Self {
         Self {
             year,
@@ -58,13 +58,13 @@ impl SajuInput {
             longitude_offset_m: 0,
             longitude: None,
             latitude: None,
-            timezone_offset_h: 9.0,         // 기본값 KST
-            use_night_rat_hour: false,      // 기본적으로 자시=새날 적용
-            gender: eon_core::Gender::Male, // 기본값 남성
+            timezone_offset_h: 9.0,         // Default KST
+            use_night_rat_hour: false,      // Default next day early rat hour
+            gender: eon_core::Gender::Male, // Default Male
         }
     }
 
-    /// 경도와 위도를 포함한 입력 생성 (진태양시 보정용)
+    /// Creates input with geographical coordinates (for True Solar Time correction)
     pub fn new_solar_at(
         year: i32,
         month: u32,
@@ -91,7 +91,7 @@ impl SajuInput {
         }
     }
 
-    /// 지역 시차를 포함한 양력 입력 생성
+    /// Creates solar input with regional time offset in minutes
     pub fn new_solar_with_offset(
         year: i32,
         month: u32,
@@ -111,14 +111,14 @@ impl SajuInput {
             longitude_offset_m: offset_m,
             longitude: None,
             latitude: None,
-            timezone_offset_h: 9.0, // 기본값 KST
+            timezone_offset_h: 9.0, // Default KST
             use_night_rat_hour: false,
             gender: eon_core::Gender::Male,
         }
     }
 
-    /// 인성적인 경도 기반 시차(분) 반환
-    /// 한국 표준시(135도) 기준, 서울(127도)은 -8도 차이 -> -32분
+    /// Returns longitude-based time correction in minutes.
+    /// Baseline Korea Standard Time (135°E), Seoul (127°E) is -8° -> -32 min.
     pub fn get_longitude_correction_minutes(&self) -> i32 {
         if let Some(lon) = self.longitude {
             let std_meridian = self.timezone_offset_h as f64 * 15.0;
@@ -128,7 +128,7 @@ impl SajuInput {
         }
     }
 
-    /// 음력 생년월일시로 입력 생성
+    /// Creates lunar date/time input
     pub fn new_lunar(
         year: i32,
         month: u32,
@@ -148,67 +148,67 @@ impl SajuInput {
             longitude_offset_m: 0,
             longitude: None,
             latitude: None,
-            timezone_offset_h: 9.0, // 기본값 KST
+            timezone_offset_h: 9.0, // Default KST
             use_night_rat_hour: false,
             gender: eon_core::Gender::Male,
         }
     }
 
-    /// 성별 설정
+    /// Sets gender
     pub fn with_gender(mut self, gender: eon_core::Gender) -> Self {
         self.gender = gender;
         self
     }
 
-    /// 야자시 옵션 설정
+    /// Sets night rat hour option
     pub fn with_night_rat_hour(mut self, use_night_rat: bool) -> Self {
         self.use_night_rat_hour = use_night_rat;
         self
     }
 }
 
-/// 사주 팔자(四柱八字)
+/// Four Pillars of Destiny (四柱八字)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FourPillars {
-    /// 년주(年柱)
+    /// Year Pillar (年柱)
     pub year: GanZi,
-    /// 월주(月柱)
+    /// Month Pillar (月柱)
     pub month: GanZi,
-    /// 일주(日柱)
+    /// Day Pillar (日柱)
     pub day: GanZi,
-    /// 시주(時柱)
+    /// Hour Pillar (時柱)
     pub hour: GanZi,
-    /// 기준 시각 (UTC)
+    /// Reference UTC timestamp
     pub birth_time: DateTime<Utc>,
-    /// 성별
+    /// Gender
     pub gender: eon_core::Gender,
-    /// 원시 입력 데이터 (운세 재계산용)
+    /// Raw input data (for recomputation)
     pub raw_input: SajuInput,
-    /// 보조 기둥 분석 결과
+    /// Supplementary pillars analysis
     pub supplementary_pillars: crate::analysis::supplementary_pillars::SupplementaryPillars,
 }
 
-/// 년주 계산용 기준 연도 (4년 = 甲子년)
+/// Reference year for Year pillar calculation (Year 4 = Jia-Zi year)
 const GANZI_BASE_YEAR: i32 = 4;
 
 impl FourPillars {
-    /// 사주 입력으로부터 사주 계산
+    /// Calculates Four Pillars from Saju input
     pub fn calculate(input: &SajuInput) -> Result<Self, SajuError> {
-        // 음력인 경우 양력으로 변환
+        // Convert lunar to solar if required
         let (solar_year, solar_month, solar_day) = if input.is_lunar {
             use eon_data::LunarCalendar;
             let solar_date =
                 LunarCalendar::to_solar(input.year, input.month, input.day, input.is_leap_month)
                     .map_err(|e| {
-                        SajuError::CalculationError(format!("음력 변환에 실패했습니다: {}", e))
+                        SajuError::CalculationError(format!("Lunar date conversion failed: {}", e))
                     })?;
             (solar_date.year(), solar_date.month(), solar_date.day())
         } else {
             (input.year, input.month, input.day)
         };
 
-        // 입력 유효성 검사 (변환된 양력 기준)
+        // Validate solar month
         if !(1..=12).contains(&solar_month) {
             return Err(SajuError::InvalidDateTime(format!(
                 "Invalid month: {}",
@@ -216,7 +216,7 @@ impl FourPillars {
             )));
         }
 
-        // 1. 절기 계산용 UTC (보정 없는 실제 시간)
+        // 1. UTC timestamp for solar term calculation (uncorrected actual standard time)
         let dt_absolute_utc = NaiveDate::from_ymd_opt(solar_year, solar_month, solar_day)
             .and_then(|d| d.and_hms_opt(input.hour, input.minute, 0))
             .map(|dt| {
@@ -230,7 +230,7 @@ impl FourPillars {
                 ))
             })?;
 
-        // 2. 지역 시차 보정 (True Solar Time 계산) - 일주/시주용
+        // 2. Regional time correction (True Solar Time calculation) - for Day/Hour pillars
         let lon_correction = input.get_longitude_correction_minutes();
         let (adj_year, adj_month, adj_day, adj_hour, _adj_minute) = if lon_correction != 0 {
             let dt = NaiveDate::from_ymd_opt(solar_year, solar_month, solar_day)
@@ -254,16 +254,15 @@ impl FourPillars {
             (solar_year, solar_month, solar_day, input.hour, input.minute)
         };
 
-        // 각 주(Pillar) 계산
-        // 연주, 월주는 절대 시간(dt_absolute_utc) 사용
+        // Pillar calculations
+        // Year and Month pillars use astronomical absolute UTC time
         let year_pillar = Self::calculate_year_pillar(dt_absolute_utc)?;
         let month_pillar = Self::calculate_month_pillar(dt_absolute_utc)?;
 
-        // 일주, 시주는 보정된 날짜/시간(adj_...) 사용 (진태양시 기준)
-        // [야자시 처리]
-        // use_night_rat_hour == false 이고 시간이 23시 이상이면 다음날로 간주하여 일주 계산
+        // Day and Hour pillars use adjusted date/time (True Solar Time)
+        // [Night Rat Hour handling]
+        // If use_night_rat_hour == false and adj_hour >= 23, treat as next day early rat hour
         let (calc_year, calc_month, calc_day) = if !input.use_night_rat_hour && adj_hour >= 23 {
-            // 안전한 날짜 생성: 유효하지 않으면 월초로 fallback
             let base_date =
                 NaiveDate::from_ymd_opt(adj_year, adj_month, adj_day).ok_or_else(|| {
                     SajuError::InvalidDateTime(format!(
@@ -298,7 +297,7 @@ impl FourPillars {
         })
     }
 
-    /// 년주는 입춘(立春)을 기준으로 바뀝니다.
+    /// Year pillar transitions on Li Chun (Start of Spring, 315° ecliptic longitude).
     pub(crate) fn calculate_year_pillar(dt: DateTime<Utc>) -> Result<GanZi, SajuError> {
         use eon_astro::AstroEngine;
         let engine = AstroEngine::new();
@@ -323,7 +322,7 @@ impl FourPillars {
         Ok(GanZi::from_index(idx))
     }
 
-    /// 월주 계산
+    /// Month pillar calculation
     pub(crate) fn calculate_month_pillar(dt: DateTime<Utc>) -> Result<GanZi, SajuError> {
         use crate::core::calendar::get_month_branch_index_from_dt;
 
@@ -340,7 +339,7 @@ impl FourPillars {
         Ok(GanZi::new(HeavenlyStem::from_index(month_stem_idx), branch))
     }
 
-    /// 일주 계산
+    /// Day pillar calculation
     pub(crate) fn calculate_day_pillar(
         year: i32,
         month: u32,
@@ -353,7 +352,7 @@ impl FourPillars {
         Ok(GanZi::from_index(idx as i32))
     }
 
-    /// 시주 계산
+    /// Hour pillar calculation
     pub(crate) fn calculate_hour_pillar(day_pillar: &GanZi, hour: u32) -> GanZi {
         let branch_idx = hour.div_ceil(2) % 12;
         let branch = EarthlyBranch::from_index(branch_idx as i32);
@@ -365,7 +364,7 @@ impl FourPillars {
         GanZi::new(HeavenlyStem::from_index(hour_stem_idx), branch)
     }
 
-    /// 오행 분포 계산
+    /// Five elements distribution
     pub fn element_distribution(&self) -> [(Element, u32); 5] {
         let elements = [
             self.year.stem.element(),
@@ -392,22 +391,22 @@ impl FourPillars {
         ]
     }
 
-    /// 일간(日干) 반환
+    /// Day Master (日干)
     pub fn day_master(&self) -> HeavenlyStem {
         self.day.stem
     }
 
-    /// 일간(日干) 오행 반환
+    /// Day Master element
     pub fn day_master_element(&self) -> Element {
         self.day.stem.element()
     }
 
-    /// 오행 개수 (Alias of element_distribution)
+    /// Element counts (Alias of element_distribution)
     pub fn element_counts(&self) -> [(Element, u32); 5] {
         self.element_distribution()
     }
 
-    /// 한자 표기
+    /// Hanja notation
     pub fn hanja(&self) -> String {
         format!(
             "{} {} {} {}",
@@ -418,7 +417,7 @@ impl FourPillars {
         )
     }
 
-    /// 한글 표기
+    /// Romanized/English notation
     pub fn hangul(&self) -> String {
         format!(
             "{} {} {} {}",
@@ -457,17 +456,17 @@ impl std::fmt::Display for FourPillars {
 #[derive(Debug, Clone, Error, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SajuError {
-    #[error("잘못된 날짜/시간: {0}")]
+    #[error("Invalid date/time: {0}")]
     InvalidDateTime(String),
-    #[error("음력 변환 미지원")]
+    #[error("Lunar conversion not supported")]
     LunarNotSupported,
-    #[error("계산 오류: {0}")]
+    #[error("Calculation error: {0}")]
     CalculationError(String),
-    #[error("달력 오류: {0}")]
+    #[error("Calendar error: {0}")]
     Calendar(#[from] crate::core::calendar::CalendarError),
-    #[error("천문 오류: {0}")]
+    #[error("Astronomical error: {0}")]
     Astro(#[from] eon_astro::AstroError),
-    #[error("데이터 오류: {0}")]
+    #[error("Data error: {0}")]
     Data(#[from] eon_data::DataError),
 }
 
@@ -485,38 +484,38 @@ mod tests {
 
     #[test]
     fn test_rat_hour_options() {
-        // 2024-03-20 23:30 (야자시/조자시 경계)
+        // 2024-03-20 23:30 (Boundary of night rat hour / early rat hour)
         let input_base = SajuInput::new_solar(2024, 3, 20, 23, 30);
 
-        // 1. 야자시 미사용 (기본값) -> 다음날 일주 사용
+        // 1. Without night rat hour (default) -> advances to next day pillar
         let pillars_no_night = FourPillars::calculate(&input_base).unwrap();
-        // 3월 20일은 癸卯, 21일은 甲辰. 23시 이후이므로 甲辰이 되어야 함.
-        assert_eq!(pillars_no_night.day.stem.index(), 0); // 甲
-        assert_eq!(pillars_no_night.hour.branch.index(), 0); // 子
+        // March 20 is Gui-Mao, 21 is Jia-Chen. After 23:00, becomes Jia-Chen.
+        assert_eq!(pillars_no_night.day.stem.index(), 0); // Jia (甲)
+        assert_eq!(pillars_no_night.hour.branch.index(), 0); // Zi (子)
 
-        // 2. 야자시 사용 -> 오늘 일주 유지
+        // 2. With night rat hour -> preserves current day pillar
         let input_night = input_base.with_night_rat_hour(true);
         let pillars_night = FourPillars::calculate(&input_night).unwrap();
-        assert_eq!(pillars_night.day.stem.index(), 9); // 癸
-        assert_eq!(pillars_night.hour.branch.index(), 0); // 子
+        assert_eq!(pillars_night.day.stem.index(), 9); // Gui (癸)
+        assert_eq!(pillars_night.hour.branch.index(), 0); // Zi (子)
     }
 
     #[test]
     fn test_month_pillar_zi_chou() {
-        // 2014년 (甲午年) 12월 (丙子月) - 대설(12/7) 이후
+        // 2014 (Jia-Wu year) December (Bing-Zi month) - after Da Xue (12/7)
         let input = SajuInput::new_solar(2014, 12, 10, 12, 0);
         let pillars = FourPillars::calculate(&input).unwrap();
 
-        assert_eq!(pillars.year.stem.index(), 0); // 甲
-        assert_eq!(pillars.month.stem.index(), 2); // 丙 (Zi month of Jia year is Bing Zi)
-        assert_eq!(pillars.month.branch.index(), 0); // 子
+        assert_eq!(pillars.year.stem.index(), 0); // Jia
+        assert_eq!(pillars.month.stem.index(), 2); // Bing (Zi month of Jia year is Bing Zi)
+        assert_eq!(pillars.month.branch.index(), 0); // Zi
 
-        // 2015년 새해 ( still 甲午年 until Li Chun) 1월 (丁丑月) - 소한(1/6) 이후
+        // 2015 New Year (still Jia-Wu year until Li Chun) January (Ding-Chou month) - after Xiao Han (1/6)
         let input2 = SajuInput::new_solar(2015, 1, 10, 12, 0);
         let pillars2 = FourPillars::calculate(&input2).unwrap();
 
-        assert_eq!(pillars2.year.stem.index(), 0); // 甲 (still Jia Wu until Feb)
-        assert_eq!(pillars2.month.stem.index(), 3); // 丁 (Chou month of Jia year is Ding Chou)
-        assert_eq!(pillars2.month.branch.index(), 1); // 丑
+        assert_eq!(pillars2.year.stem.index(), 0); // Jia (still Jia Wu until Feb)
+        assert_eq!(pillars2.month.stem.index(), 3); // Ding (Chou month of Jia year is Ding Chou)
+        assert_eq!(pillars2.month.branch.index(), 1); // Chou
     }
 }

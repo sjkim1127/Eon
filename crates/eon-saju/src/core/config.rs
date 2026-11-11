@@ -1,6 +1,6 @@
-//! 사주 분석용 각종 가중치 및 임계값 설정
+//! Saju analysis weights, thresholds, and configurations
 //!
-//! ML 기반 최적화나 사용자 튜닝을 용이하게 하기 위해 Struct로 관리합니다.
+//! Struct-based configuration management for ML optimization and user tuning.
 
 use serde::{Deserialize, Serialize};
 
@@ -8,7 +8,7 @@ fn default_true() -> bool {
     true
 }
 
-/// 전역 분석 설정
+/// Global Analysis Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisConfig {
     pub weights: WeightsConfig,
@@ -33,7 +33,7 @@ impl Default for AnalysisConfig {
     }
 }
 
-/// 위치별 가중치 (110점법)
+/// Position weights (110 points method)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WeightsConfig {
     pub total_weight: f32,
@@ -55,7 +55,7 @@ impl Default for WeightsConfig {
     }
 }
 
-/// 신강신약 점수 산출 가중치
+/// Strength score calculation weights
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StrengthConfig {
     pub criteria_score: f32,
@@ -77,7 +77,7 @@ impl Default for StrengthConfig {
     }
 }
 
-/// 지장간 통근 가중치
+/// Hidden stem grounding (root) weights
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RootConfig {
     pub main_root: f32,
@@ -99,7 +99,7 @@ impl Default for RootConfig {
     }
 }
 
-/// 조후 지수 임계값
+/// Climate balance index thresholds
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThermalConfig {
     pub extreme: i32,
@@ -115,80 +115,52 @@ impl Default for ThermalConfig {
     }
 }
 
-/// VM 시뮬레이션 파라미터
+/// VM simulation parameters
 ///
-/// SajuVM이 인생 시뮬레이션을 실행할 때 사용하는 가중치와 페널티입니다.
-/// ML 기반 최적화나 사용자 커스터마이징을 위해 외부에서 조정 가능합니다.
-///
-/// ## 튜닝 가이드
-///
-/// ### 기본 점수 (`base_score`)
-/// - 기본값: 50.0
-/// - 시뮬레이션 시작 점수. 중립적인 운세 상태를 나타냅니다.
-///
-/// ### 충돌 점수 (`clash_*`)
-/// - `clash_bad`: 희신/용신 충돌 시 감점 (기본: -20.0)
-/// - `clash_good`: 기신/구신 충돌 시 가점 (기본: +10.0, 개고 효과)
-/// - `clash_default`: 일반적인 충돌 (기본: -5.0)
-///
-/// ### 파이프라인 가중치 (`pipeline_*`)
-/// - 각 운(대운, 세운, 월운, 일운, 시운)이 점수에 미치는 기본 영향력
-/// - 대운이 가장 크고, 세운, 월운, 일운, 시운 순으로 감소
-///
-/// ### 인터럽트 페널티 (`irq_*`)
-/// - 흉살(백호살, 괴강살 등)에 의한 시스템 인터럽트 발생 시 감점
-/// - `irq_critical`: 가장 심각한 예외 (백호살 등, 기본: -20.0)
-/// - `irq_overflow`: 리소스 오버플로우 (괴강살 등, 기본: -15.0)
-/// - `irq_stall`: 시스템 정지 (고신/과숙 등, 기본: -10.0)
-/// - `irq_service`: 서비스 중단 (망신/겁살 등, 기본: -7.0)
-///
-/// ### 파이프라인 제어 (`stall_penalty`, `forwarding_bonus`, etc.)
-/// - `stall_penalty`: 앞 단계와 상극 시 효율 감소 배율 (기본: 0.5, 절반)
-/// - `forwarding_bonus`: 합화된 기운이 용신일 때 효율 증가 배율 (기본: 1.2)
-/// - `memory_dump_weight`: 충에 의해 해방된 지장간 기운의 영향력 (기본: 0.3)
-/// - `decay_factor`: 시간 흐름에 따른 기운 감쇠율 (기본: 0.95, 5% 감쇠)
+/// Weights and penalties used by SajuVM lifecycle emulation.
+/// Modifiable externally for ML optimization or user customization.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VmConfig {
-    /// 시뮬레이션 시작 점수 (0-100 범위의 중앙값)
+    /// Baseline starting score (midpoint of 0-100 range)
     pub base_score: f32,
 
-    /// 희신/용신 충돌 시 감점 (음수)
+    /// Penalty for clashing favorable/useful god (negative)
     pub clash_bad: f32,
-    /// 기신/구신 충돌 시 가점 (양수, 개고 효과)
+    /// Bonus for clashing unfavorable/hostile god (positive, storage release effect)
     pub clash_good: f32,
-    /// 일반적인 충돌 시 감점
+    /// Default penalty for neutral clash
     pub clash_default: f32,
 
-    // 파이프라인 가중치 (각 운의 기본 영향력)
-    /// 대운(大運) 가중치 - 10년 단위 대 흐름
+    // Pipeline weights (baseline influence of each luck level)
+    /// Major Luck (10-year cycle)
     pub pipeline_major: f32,
-    /// 세운(歲運) 가중치 - 1년 단위 운세
+    /// Yearly Luck (1-year cycle)
     pub pipeline_yearly: f32,
-    /// 월운(月運) 가중치 - 월별 변동
+    /// Monthly Luck
     pub pipeline_monthly: f32,
-    /// 일운(日運) 가중치 - 일별 변동
+    /// Daily Luck
     pub pipeline_daily: f32,
-    /// 시운(時運) 가중치 - 시간별 변동
+    /// Hourly Luck
     pub pipeline_hourly: f32,
 
-    // 인터럽트 페널티 (흉살에 의한 시스템 인터럽트)
-    /// 0x01: 고우선순위 시스템 충돌 (백호살 등)
+    // Interrupt penalties (system interrupts triggered by inauspicious spirits)
+    /// 0x01: High-priority system clash (Baihu, etc.)
     pub irq_critical: f32,
-    /// 0x02: 리소스 오버플로우 (괴강살 등)
+    /// 0x02: Resource overflow (Kuigang, etc.)
     pub irq_overflow: f32,
-    /// 0x03: 시스템 정지/고독 (고신/과숙 등)
+    /// 0x03: System freeze/isolation (Guxin/Guasu, etc.)
     pub irq_stall: f32,
-    /// 0x04: 임시 서비스 중단 (망신/겁살 등)
+    /// 0x04: Temporary service interruption (Wangshin/JieSha, etc.)
     pub irq_service: f32,
 
-    // 파이프라인 제어 파라미터
-    /// 파이프라인 스톨 발생 시 효율 감소 배율 (0.0-1.0)
+    // Pipeline control parameters
+    /// Stall efficiency multiplier when conflicting with previous stage (0.0-1.0)
     pub stall_penalty: f32,
-    /// 데이터 포워딩(합화) 성공 시 효율 증가 배율 (1.0+)
+    /// Forwarding efficiency boost multiplier when transformed energy is favorable (1.0+)
     pub forwarding_bonus: f32,
-    /// 충에 의한 지장간 메모리 덤프 영향력 (0.0-1.0)
+    /// Hidden stem memory dump influence factor released by clash (0.0-1.0)
     pub memory_dump_weight: f32,
-    /// 시간 흐름에 따른 기운 감쇠율 (0.0-1.0)
+    /// Energy decay factor over time progression (0.0-1.0)
     pub decay_factor: f32,
 }
 

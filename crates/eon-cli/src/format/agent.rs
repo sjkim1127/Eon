@@ -304,7 +304,7 @@ pub fn format_agent_context(
 
     // 9. Domain Interpretation Handbook & Archetypal Decoder
     if let Some(hb) = handbook {
-        out.push_str("## 9. Domain Interpretation Handbook & Archetypal Decoder (고전 해설집 및 원형 디코더)\n\n");
+        out.push_str("## 9. Domain Interpretation Handbook & Archetypal Decoder\n\n");
         out.push_str(&format!(
             "> **Archetypal Persona**: {}\n",
             hb.archetypal_persona
@@ -316,7 +316,7 @@ pub fn format_agent_context(
 
         if !hb.symbols.is_empty() {
             out.push_str("### [A. Pinpoint Classical Symbol Decoders]\n");
-            out.push_str("*Verified classical grounding (자평진전, 궁통보감, BPHS, 자미두수전서, 기문비급 등) decoded into modern executive psychology:*\n\n");
+            out.push_str("*Verified classical grounding (ZiPing ZhenQuan, BPHS, ZWDS Treatises, QiMen Treatises, etc.) decoded into modern executive psychology:*\n\n");
             for s in &hb.symbols {
                 out.push_str(&format!("#### {} [{}]\n", s.symbol, s.engine));
                 out.push_str(&format!(
@@ -348,13 +348,13 @@ pub fn format_agent_context(
         }
 
         out.push_str("### [C. Tactical Directives]\n");
-        out.push_str("#### DO (강력 권장):\n");
+        out.push_str("#### DO (Recommended Strategic Actions):\n");
         for d in &hb.tactical_dos {
             out.push_str(&format!("- [x] {}\n", d));
         }
         out.push('\n');
 
-        out.push_str("#### DON'T (절대 주의):\n");
+        out.push_str("#### DON'T (Critical Hazards to Avoid):\n");
         for d in &hb.tactical_donts {
             out.push_str(&format!("- [ ] {}\n", d));
         }

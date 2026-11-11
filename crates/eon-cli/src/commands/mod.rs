@@ -66,7 +66,7 @@ pub struct BirthArgs {
 impl BirthArgs {
     pub fn is_male(&self) -> bool {
         let g = self.gender.trim().to_lowercase();
-        !matches!(g.as_str(), "f" | "female" | "여" | "여자" | "2" | "4")
+        !matches!(g.as_str(), "f" | "female" | "2" | "4")
     }
 
     pub fn to_analysis_input(&self) -> Result<AnalysisInput> {

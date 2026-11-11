@@ -6,11 +6,11 @@ use eon_saju::{FourPillars, SajuInput, SajuVM};
 fn main() {
     println!("--- Saju Optimization & Report Verification ---\n");
 
-    // 1. 임의의 사주 입력 (2004-10-16 음력 -> 2004-11-27 양력)
+    // 1. Saju Input (2004-11-27 Solar)
     let input = SajuInput::new_solar(2004, 11, 27, 22, 0).with_gender(Gender::Male);
     let pillars = FourPillars::calculate(&input).unwrap();
 
-    // 2. SajuVM 시뮬레이션 (100년)
+    // 2. SajuVM Simulation (100 years)
     println!("Running 100-year simulation (Parallel)...");
     let start_sim = std::time::Instant::now();
     let vm = SajuVM::new(pillars.clone());
@@ -18,7 +18,7 @@ fn main() {
     let duration_sim = start_sim.elapsed();
     println!("Simulation done in {:?}\n", duration_sim);
 
-    // 3. 골든 타임 분석
+    // 3. Golden Time Analysis
     let timeline: Vec<eon_saju::engine::emulator::YearlyScore> = frames
         .iter()
         .map(|f| eon_saju::engine::emulator::YearlyScore {
@@ -36,7 +36,7 @@ fn main() {
         .collect();
     let golden_time = Analyzer::find_golden_time(&timeline, 10);
 
-    // 4. 고도화된 리포트 생성
+    // 4. Advanced Report Generation
     let mut report = SajuReport::new(pillars.clone()).with_vm_simulation(frames.clone());
 
     if let Some(gt) = golden_time {
@@ -49,7 +49,7 @@ fn main() {
 
     println!("Markdown report generated in {:?}\n", duration_md);
 
-    // 5. 결과 확인 (첫 1000자 출력, 유니코드 경계 안전하게)
+    // 5. Preview output (first 1000 characters safely bounded)
     println!("--- Report Preview (Snippet) ---\n");
     let preview_end = markdown
         .char_indices()
@@ -59,7 +59,7 @@ fn main() {
     println!("{}", &markdown[..preview_end]);
     println!("...\n");
 
-    // 6. 결과 파일 저장
+    // 6. Save result file
     let output_path = "verify_report.md";
     std::fs::write(output_path, markdown).unwrap();
     println!("Full report saved to: {}", output_path);

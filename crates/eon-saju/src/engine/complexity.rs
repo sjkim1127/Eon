@@ -1,20 +1,20 @@
 use crate::engine::vm::LifeFrame;
 use serde::{Deserialize, Serialize};
 
-/// 인생 복잡도 분석 결과
+/// Life complexity analysis outcome
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplexityAnalysis {
-    /// 순환 복잡도 (Cyclomatic Complexity: M = P + 1)
-    /// P: 결정 지점(Decision Points)의 수
+    /// Cyclomatic complexity (M = P + 1)
+    /// P: Number of decision points
     pub cyclomatic_complexity: u32,
 
-    /// 코드 안정성 등급 (시스템 복잡도 기준)
+    /// Code stability grade (based on system complexity)
     pub stability_grade: String,
 
-    /// 유지보수 엔트로피 (인생의 파란만장함 정도)
+    /// Maintenance entropy (degree of life volatility)
     pub entropy: f32,
 
-    /// 주요 분기점(Decision Nodes) 위치
+    /// Major decision node positions (ages)
     pub decision_nodes: Vec<u32>,
 }
 
@@ -29,13 +29,15 @@ impl DestinyComplexity {
         for frame in frames {
             let mut is_decision_point = false;
 
-            // 1. 충격 및 형살 (Exception Handling)
-            // 충(Clash)이나 형(Punishment)은 실행 흐름의 예외 상황인 분기점으로 간주
+            // 1. Clashes and Punishments (Exception Handling)
+            // Clashes and punishments represent exceptional branch points in execution flow
             let conflict_count = frame
                 .tags
                 .iter()
                 .filter(|t| {
-                    t.contains_pattern("충") || t.contains_pattern("형") || t.contains_pattern("해")
+                    t.contains_pattern("Clash")
+                        || t.contains_pattern("Punishment")
+                        || t.contains_pattern("Harm")
                 })
                 .count();
 
@@ -44,8 +46,8 @@ impl DestinyComplexity {
                 total_conflict_weight += conflict_count as f32;
             }
 
-            // 2. 특수 시그니처 (Conditional Branch)
-            // 천지덕합, 용신충극 등 강력한 시그니처는 시스템의 상태 변화를 유발하는 결정 지점
+            // 2. Special signatures (Conditional Branch)
+            // High-impact signatures trigger state transitions in the system
             if !frame.signatures.is_empty() {
                 is_decision_point = true;
                 total_conflict_weight += frame.signatures.len() as f32 * 1.5;
@@ -78,7 +80,7 @@ impl DestinyComplexity {
 
 impl std::fmt::Display for ComplexityAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "【Destiny Cyclomatic Complexity】")?;
+        writeln!(f, "[Destiny Cyclomatic Complexity]")?;
         writeln!(
             f,
             "Complexity (M): {} (Decision Points + 1)",
@@ -88,11 +90,11 @@ impl std::fmt::Display for ComplexityAnalysis {
         writeln!(f, "Maintenance Entropy: {:.2}", self.entropy)?;
 
         let path_type = if self.cyclomatic_complexity > 50 {
-            "스파게티 코드 (Spaghetti Path)"
+            "Spaghetti Path"
         } else if self.cyclomatic_complexity > 20 {
-            "구조적 분기 (Structured Path)"
+            "Structured Path"
         } else {
-            "단순 수차적 흐름 (Linear Path)"
+            "Linear Path"
         };
 
         writeln!(f, "Estimated Path Type: {}", path_type)?;
@@ -102,7 +104,7 @@ impl std::fmt::Display for ComplexityAnalysis {
                 .decision_nodes
                 .iter()
                 .take(10)
-                .map(|age| format!("{}세", age))
+                .map(|age| format!("{} yrs", age))
                 .collect::<Vec<_>>()
                 .join(", ");
             writeln!(f, "Main Decision Nodes: {} ...", nodes_str)?;

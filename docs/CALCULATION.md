@@ -1,33 +1,33 @@
-# 계산 로직 상세 (Calculation Details)
+# Calculation Specifications (Calculation Details)
 
-사주 팔자의 정확한 간지를 도출하기 위한 시분 보정 및 천문학적 규칙을 설명합니다.
+This document describes the temporal calibration, true solar time adjustments, and astronomical rules implemented to derive exact Four Pillars GanZi.
 
-## 1. 지역시(True Solar Time) 보정
+## 1. True Solar Time (Local Meridian) Correction
 
-대한민국 표준시(UTC+9, 135.0°E)와 실제 출생지의 경도 차이를 반영합니다.
+Adjusts for the longitudinal deviation between standard time zones (e.g. Korea Standard Time UTC+9, 135.0°E) and the subject's actual birthplace longitude.
 
-- **산식**: `표준시 - (135.0 - 출생지 경도) * 4분`
-- **예시 (안산, 126.8°E)**:
-  - `(135.0 - 126.8) * 4 = 32.8분` (약 33분 차이)
-  - 실제 태양이 남중하는 시간이 표준시보다 33분 늦으므로, 출생 시간에서 **33분을 차감**하여 사주를 계산합니다.
+- **Formula**: `Standard Time - (Standard Meridian - Birth Longitude) * 4 minutes`
+- **Example (Ansan, 126.8°E)**:
+  - `(135.0 - 126.8) * 4 = 32.8 minutes` (~33 min difference)
+  - Solar noon occurs 33 minutes later than standard meridian noon; hence **33 minutes are subtracted** from local clock time before pillar derivation.
 
-## 2. 입춘(立春) 기준 년주 산출
+## 2. Year Pillar Solar Transition on Li Chun (立春)
 
-새해의 시작을 양력 1월 1일이나 음력 설날이 아닌, 태양의 황경이 315도인 **입춘**을 기준으로 합니다.
+The year boundary is determined astronomically by Li Chun (solar ecliptic longitude exactly 315°), rather than Gregorian January 1 or Lunar New Year.
 
-- 입춘 시각 이전 출생: 전년도 간지 사용.
-- 입춘 시각 이후 출생: 해당 연도 간지 사용.
+- Birth before exact Li Chun timestamp: preceding year GanZi.
+- Birth at or after exact Li Chun timestamp: current year GanZi.
 
-## 3. 자시(子時) 처리 (조자시 시스템)
+## 3. Rat Hour (子時) Handling
 
-본 엔진은 현대 만세력의 대다수가 따르는 **조자시(早子時)** 시스템을 채택하고 있습니다.
+The engine supports the standard Early Rat Hour system (and configurable Night Rat Hour):
 
-- **범위**: 23:00 ~ 익일 01:00 (시각 보정 후 기준)
-- **일주**: 23:00가 넘는 순간 다음 날의 일주를 적용합니다.
-- **시주**: 해당 날의 자시(甲子, 丙子 등)를 순차적으로 적용합니다.
+- **Early Rat Window**: 23:00 to 01:00 (after true solar time adjustment).
+- **Day Pillar**: At 23:00, the Day Pillar advances to the next day.
+- **Hour Pillar**: The corresponding Zi hour GanZi (Jia-Zi, Bing-Zi, etc.) is sequentially applied.
 
-## 4. 절기(節氣) 기준 월주 산출
+## 4. Month Pillar Solar Term Boundaries
 
-각 월의 시작은 절기(節氣, 예: 경칩, 청명 등)를 기준으로 합니다.
+Each seasonal month begins at the entry of the corresponding major solar term (e.g. JingZhi for Mao month, QingMing for Chen month).
 
-- 엔진 내부의 `calendar.rs` 모듈이 각 연도별 절기 진입일을 계산하여 월지를 결정합니다.
+- The engine calculates exact minute-level solar term crossings via `swisseph-rs` astronomical algorithms to assign the Month branch.

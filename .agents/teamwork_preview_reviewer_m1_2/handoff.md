@@ -24,7 +24,7 @@
     - Implemented `check_void_dissolution` for branch clash, six combination, triple combination, and seasonal combination (lines 128-178).
   - `crates/eon-saju/src/analysis/shinsal.rs` & `spirit_markers.rs`:
     - Added `SamjaeStage` (`Entrance`, `Dwelling`, `Exit`) and `calculate_samjae` (lines 413-471).
-    - Integrated void dissolution into `spirit_markers.rs` mapped markers: voided auspicious markers are degraded to `Neutral` `"(귀인공망)"` unless dissolved (`"(공망해충/해합 구원)"`) (lines 773-798).
+    - Integrated void dissolution into `spirit_markers.rs` mapped markers: voided auspicious markers are degraded to `Neutral` `"(Void)"` unless dissolved (`"(Void/ )"`) (lines 773-798).
   - `crates/eon-saju/src/core/config.rs` & `twelve_stages.rs`:
     - Added `pub yin_stem_reverse: bool` (default `true`) with `#[serde(default = "default_true")]` to `AnalysisConfig` (lines 19-33).
     - Implemented `calculate_twelve_stage_with_config` and `TwelveStageAnalysis::from_pillars_with_config` (lines 230-318).
@@ -41,7 +41,7 @@
 
 - **Integrity Check**:
   - No hardcoded test outputs or fake logic found in source code.
-  - All domain rules (궁통보감 preferred stems, 12-Unseong Yin-Stem reverse option, Gongmang dissolution, Jin/Ga Jong root checks, HwaGi break-star checks, Yongsin priority matrix) are fully implemented algorithmically.
+  - All domain rules ( preferred stems, 12-Unseong Yin-Stem reverse option, Gongmang dissolution, Jin/Ga Jong root checks, HwaGi break-star checks, Yongsin priority matrix) are fully implemented algorithmically.
   - Layout compliance verified: `.agents/` contains only agent metadata; no source code or tests present in `.agents/`.
 
 ---

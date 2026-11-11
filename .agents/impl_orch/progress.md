@@ -9,7 +9,7 @@ Current iteration: 1 / 32
 ## Milestones Tracker
 - [x] M1: E2E Testing Framework & Setup (Done prior to this agent)
 - [x] M2: R1 Ashtakoota Guna Milan (Done)
-- [ ] M3: R2 Shadbala 6대 강도 (In Progress - Exploration)
+- [ ] M3: R2 Shadbala 6-Fold Strength (In Progress - Exploration)
 - [ ] M4: R3 KP System Lords & Significators (Pending)
 - [ ] M5: R4 Hierarchical Dasha Timeline (Pending)
 

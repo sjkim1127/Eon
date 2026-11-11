@@ -1,7 +1,7 @@
 # BRIEFING — 2026-06-20T20:44:00+09:00
 
 ## Mission
-Analyze requirements for M3 (Shadbala & Bhava Bala 6대 강도 세부 수치 시각화) and M2 Challenger findings, and design the UI and engine fixes.
+Analyze requirements for M3 (Shadbala & Bhava Bala 6-Fold Strength   ) and M2 Challenger findings, and design the UI and engine fixes.
 
 ## 🔒 My Identity
 - Archetype: explorer

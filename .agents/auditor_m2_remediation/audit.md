@@ -20,12 +20,12 @@ No hardcoded test results, facade implementations, cheat bypasses, pre-populated
 
 | # | Remediation Item | Target Module & Lines | Forensic Findings | Verdict |
 |---|------------------|----------------------|-------------------|---------|
-| 1 | **Wolwun Saju Year Calculation** | `periodic_luck.rs:200-215` | Dynamically checks `dt.month() == 1` and astronomical LiChun boundaries to set `saju_year = dt_year - 1`. Correctly applies standard Oh-Gan-Du-Wol (오간두월법) stem indexing without hardcoding date ranges or outputs. | **PASS** |
+| 1 | **Wolwun Saju Year Calculation** | `periodic_luck.rs:200-215` | Dynamically checks `dt.month() == 1` and astronomical LiChun boundaries to set `saju_year = dt_year - 1`. Correctly applies standard Oh-Gan-Du-Wol () stem indexing without hardcoding date ranges or outputs. | **PASS** |
 | 2 | **Elemental Power Preservation** | `power.rs:172-175, 283-293` | Restricts `apply_climate_correction` specifically to un-transformed Earth branches (`Chen`, `Xu`, `Chou`, `Wei`). Preserves `eff_el` for non-Earth and transformed branches without artificial overrides. | **PASS** |
 | 3 | **GaeGo Double-Scoring Prevention** | `vm.rs:555-562, 671-690` | In `SajuVM::evaluate_score`, Section 3 (`mem_dump`) checks `dynamic.gaego_events` and skips stems unsealed by GaeGo, allowing Section 6.7 (`gaego`) to score them exactly once. Invariants preserved. | **PASS** |
 | 4 | **IpMyo Trapped Element** | `dynamic_luck.rs:484` | Sets `trapped_el = dm.element()` when entering 12-Unseong `Mu` stage, resolving element mismatch for Yin Day Masters (乙, 丁, 辛, 癸). | **PASS** |
 | 5a | **Valid Gyeokguk Fulfillment** | `dynamic_luck.rs:538-543` | Adds `is_valid_gyeok_god` check filtering out `Bijian` and `Jiecai` from `GyeokStatus::Fulfilled` transitions. | **PASS** |
-| 5b | **Natal GaeGo Asymmetry** | `dynamic_luck.rs:429-444` | Enforces luck pillar involvement (`p.contains("운")`) for triple and seasonal alliances before emitting GaeGo events. Static natal-only alliances no longer emit false GaeGo events. | **PASS** |
+| 5b | **Natal GaeGo Asymmetry** | `dynamic_luck.rs:429-444` | Enforces luck pillar involvement (`p.contains("")`) for triple and seasonal alliances before emitting GaeGo events. Static natal-only alliances no longer emit false GaeGo events. | **PASS** |
 
 ### Prohibited Pattern Checks
 

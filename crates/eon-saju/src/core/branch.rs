@@ -1,42 +1,42 @@
-//! 지지(地支, Earthly Branches) - 12개의 지지
+//! Earthly Branches (地支) - 12 Earthly Branches
 //!
-//! 子丑寅卯辰巳午未申酉戌亥
+//! Zi, Chou, Yin, Mao, Chen, Si, Wu, Wei, Shen, You, Xu, Hai
 
 use crate::core::element::{Element, Polarity};
 use serde::{Deserialize, Serialize};
 
-/// 지지(地支) - 12개
+/// Earthly Branches (地支) - 12 branches
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum EarthlyBranch {
-    /// 子 (자) - 쥐 - 양수
+    /// Zi (子) - Rat - Yang Water
     Zi = 0,
-    /// 丑 (축) - 소 - 음토
+    /// Chou (丑) - Ox - Yin Earth
     Chou = 1,
-    /// 寅 (인) - 호랑이 - 양목
+    /// Yin (寅) - Tiger - Yang Wood
     Yin = 2,
-    /// 卯 (묘) - 토끼 - 음목
+    /// Mao (卯) - Rabbit - Yin Wood
     Mao = 3,
-    /// 辰 (진) - 용 - 양토
+    /// Chen (辰) - Dragon - Yang Earth
     Chen = 4,
-    /// 巳 (사) - 뱀 - 음화
+    /// Si (巳) - Snake - Yin Fire
     Si = 5,
-    /// 午 (오) - 말 - 양화
+    /// Wu (午) - Horse - Yang Fire
     Wu = 6,
-    /// 未 (미) - 양 - 음토
+    /// Wei (未) - Goat - Yin Earth
     Wei = 7,
-    /// 申 (신) - 원숭이 - 양금
+    /// Shen (申) - Monkey - Yang Metal
     Shen = 8,
-    /// 酉 (유) - 닭 - 음금
+    /// You (酉) - Rooster - Yin Metal
     You = 9,
-    /// 戌 (술) - 개 - 양토
+    /// Xu (戌) - Dog - Yang Earth
     Xu = 10,
-    /// 亥 (해) - 돼지 - 음수
+    /// Hai (亥) - Pig - Yin Water
     Hai = 11,
 }
 
 impl EarthlyBranch {
-    /// 모든 지지 배열
+    /// All branches array
     pub const ALL: [EarthlyBranch; 12] = [
         Self::Zi,
         Self::Chou,
@@ -52,45 +52,38 @@ impl EarthlyBranch {
         Self::Hai,
     ];
 
-    /// 한자 표기
+    /// Hanja notation
     pub const HANJA: [&'static str; 12] = [
         "子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥",
     ];
 
-    /// 한글 표기
+    /// Romanized/English notation
     pub const HANGUL: [&'static str; 12] = [
-        "자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해",
+        "Zi", "Chou", "Yin", "Mao", "Chen", "Si", "Wu", "Wei", "Shen", "You", "Xu", "Hai",
     ];
 
-    /// 띠 동물 (한글)
-    pub const ZODIAC_HANGUL: [&'static str; 12] = [
-        "쥐",
-        "소",
-        "호랑이",
-        "토끼",
-        "용",
-        "뱀",
-        "말",
-        "양",
-        "원숭이",
-        "닭",
-        "개",
-        "돼지",
+    /// Zodiac animal (English)
+    pub const ZODIAC: [&'static str; 12] = [
+        "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster",
+        "Dog", "Pig",
     ];
 
-    /// 인덱스 (0-11)
+    /// Zodiac alias
+    pub const ZODIAC_HANGUL: [&'static str; 12] = Self::ZODIAC;
+
+    /// Index (0-11)
     #[inline]
     pub const fn index(self) -> u8 {
         self as u8
     }
 
-    /// 인덱스로부터 지지 생성 (0-11, 그 외는 모듈로 연산)
+    /// Construct from index (0-11, modulo wrapping)
     #[inline]
     pub const fn from_index(idx: i32) -> Self {
         Self::ALL[idx.rem_euclid(12) as usize]
     }
 
-    /// 오행 반환 (지지는 장간의 정기 기준)
+    /// Associated Five Element (primary stem based)
     #[inline]
     pub const fn element(self) -> Element {
         match self {
@@ -102,7 +95,7 @@ impl EarthlyBranch {
         }
     }
 
-    /// 음양 반환
+    /// Associated Yin/Yang Polarity
     #[inline]
     pub const fn polarity(self) -> Polarity {
         match self.index() % 2 {
@@ -111,110 +104,112 @@ impl EarthlyBranch {
         }
     }
 
-    /// 한자 표기
+    /// Hanja notation
     #[inline]
     pub const fn hanja(self) -> &'static str {
         Self::HANJA[self.index() as usize]
     }
 
-    /// 한글 표기
+    /// Romanized/English notation
     #[inline]
     pub const fn hangul(self) -> &'static str {
         Self::HANGUL[self.index() as usize]
     }
 
-    /// 띠 동물 (한글)
+    /// English name alias
     #[inline]
-    pub const fn zodiac(self) -> &'static str {
-        Self::ZODIAC_HANGUL[self.index() as usize]
+    pub const fn english(self) -> &'static str {
+        Self::HANGUL[self.index() as usize]
     }
 
-    /// 시주 계산용: 시간(0-23)으로부터 지지 반환
+    /// Zodiac animal
+    #[inline]
+    pub const fn zodiac(self) -> &'static str {
+        Self::ZODIAC[self.index() as usize]
+    }
+
+    /// Hour branch calculation from solar hour (0-23)
     ///
-    /// 자시(子時): 23:00-00:59 → Zi
-    /// 축시(丑時): 01:00-02:59 → Chou
+    /// 23:00-00:59 -> Zi
+    /// 01:00-02:59 -> Chou
     /// ...
     #[inline]
     pub const fn from_hour(hour: u8) -> Self {
-        // 23시-00시는 자시, 1-2시는 축시, ...
         let adjusted = (hour + 1) % 24;
         Self::from_index((adjusted / 2) as i32)
     }
 
-    /// 월주 계산용: 월(1-12, 음력 기준)으로부터 지지 반환
+    /// Month branch calculation from lunar/solar month (1-12)
     ///
-    /// 인월(1월) → 寅, 묘월(2월) → 卯, ...
+    /// 1st month -> Yin (寅), 2nd month -> Mao (卯), ...
     #[inline]
     pub const fn from_month(month: u8) -> Self {
-        // 음력 1월 = 인월(寅)
         Self::from_index((month as i32 + 1) % 12)
     }
 
-    /// 다음 지지
+    /// Next branch
     #[inline]
     pub const fn next(self) -> Self {
         Self::from_index(self.index() as i32 + 1)
     }
 
-    /// 이전 지지
+    /// Previous branch
     #[inline]
     pub const fn prev(self) -> Self {
         Self::from_index(self.index() as i32 - 1)
     }
 
-    /// 지장간(地藏干, Hidden Stems) 정보를 반환합니다.
-    /// 여기(餘氣), 중기(中氣), 정기(正氣) 순서로 반환됩니다.
+    /// Returns Hidden Stems (地藏干) in order: Remnant (餘氣), Middle (中氣), Main (正氣).
     pub fn jijanggan(self) -> Vec<crate::core::stem::HeavenlyStem> {
         use crate::core::stem::HeavenlyStem::*;
         match self {
-            Self::Zi => vec![Ren, Gui],        // 壬, 癸 (여기, 정기)
-            Self::Chou => vec![Gui, Xin, Ji],  // 癸, 辛, 己 (여기, 중기, 정기)
-            Self::Yin => vec![Wu, Bing, Jia],  // 戊, 丙, 甲 (여기, 중기, 정기)
-            Self::Mao => vec![Jia, Yi],        // 甲, 乙 (여기, 정기)
-            Self::Chen => vec![Yi, Gui, Wu],   // 乙, 癸, 戊 (여기, 중기, 정기)
-            Self::Si => vec![Wu, Geng, Bing],  // 戊, 庚, 丙 (여기, 중기, 정기)
-            Self::Wu => vec![Bing, Ji, Ding],  // 丙, 己, 丁 (여기, 중기, 정기)
-            Self::Wei => vec![Ding, Yi, Ji],   // 丁, 乙, 己 (여기, 중기, 정기)
-            Self::Shen => vec![Wu, Ren, Geng], // 戊, 壬, 庚 (여기, 중기, 정기)
-            Self::You => vec![Geng, Xin],      // 庚, Xin (여기, 정기)
-            Self::Xu => vec![Xin, Ding, Wu],   // 辛, 丁, 戊 (여기, 중기, 정기)
-            Self::Hai => vec![Wu, Jia, Ren],   // 戊, 甲, 壬 (여기, 중기, 정기)
+            Self::Zi => vec![Ren, Gui],
+            Self::Chou => vec![Gui, Xin, Ji],
+            Self::Yin => vec![Wu, Bing, Jia],
+            Self::Mao => vec![Jia, Yi],
+            Self::Chen => vec![Yi, Gui, Wu],
+            Self::Si => vec![Wu, Geng, Bing],
+            Self::Wu => vec![Bing, Ji, Ding],
+            Self::Wei => vec![Ding, Yi, Ji],
+            Self::Shen => vec![Wu, Ren, Geng],
+            Self::You => vec![Geng, Xin],
+            Self::Xu => vec![Xin, Ding, Wu],
+            Self::Hai => vec![Wu, Jia, Ren],
         }
     }
 
-    /// 지장간(地藏干) 정보를 반환합니다. (Alias of jijanggan)
+    /// Hidden Stems alias
     pub fn hidden_stems(self) -> Vec<crate::core::stem::HeavenlyStem> {
         self.jijanggan()
     }
 
-    /// 지장간의 여기(餘氣, Remnant Stem)를 반환합니다.
+    /// Remnant Stem (餘氣)
     pub fn yeogi(self) -> crate::core::stem::HeavenlyStem {
         self.jijanggan()[0]
     }
 
-    /// 지장간의 중기(中氣, Middle Stem)를 반환합니다.
-    /// 중기가 없는 경우(자, 묘, 유) 정기를 반환하거나 처리 필요.
+    /// Middle Stem (中氣)
     pub fn junggi(self) -> crate::core::stem::HeavenlyStem {
         let stems = self.jijanggan();
         if stems.len() == 3 {
             stems[1]
         } else {
-            stems[stems.len() - 1] // 사실상 정기
+            stems[stems.len() - 1]
         }
     }
 
-    /// 지장간의 정기(正氣, Main Stem)를 반환합니다.
+    /// Main Stem (正氣)
     pub fn jeonggi(self) -> crate::core::stem::HeavenlyStem {
         let stems = self.jijanggan();
         stems[stems.len() - 1]
     }
 
-    /// 지장간의 정기(正氣, Main Stem)를 반환합니다. (Alias of jeonggi)
+    /// Primary stem alias
     pub fn primary_stem(self) -> crate::core::stem::HeavenlyStem {
         self.jeonggi()
     }
 
-    /// 계절(Season) 반환
+    /// Season
     pub fn season(self) -> Season {
         match self {
             Self::Yin | Self::Mao | Self::Chen => Season::Spring,
@@ -225,7 +220,7 @@ impl EarthlyBranch {
     }
 }
 
-/// 계절(Season)
+/// Season
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Season {
     Spring,
@@ -253,16 +248,16 @@ mod tests {
     #[test]
     fn test_branch_from_index() {
         assert_eq!(EarthlyBranch::from_index(0), EarthlyBranch::Zi);
-        assert_eq!(EarthlyBranch::from_index(12), EarthlyBranch::Zi); // 순환
-        assert_eq!(EarthlyBranch::from_index(-1), EarthlyBranch::Hai); // 음수
+        assert_eq!(EarthlyBranch::from_index(12), EarthlyBranch::Zi); // wrap
+        assert_eq!(EarthlyBranch::from_index(-1), EarthlyBranch::Hai); // negative
     }
 
     #[test]
     fn test_branch_from_hour() {
-        assert_eq!(EarthlyBranch::from_hour(23), EarthlyBranch::Zi); // 자시
-        assert_eq!(EarthlyBranch::from_hour(0), EarthlyBranch::Zi); // 자시
-        assert_eq!(EarthlyBranch::from_hour(1), EarthlyBranch::Chou); // 축시
-        assert_eq!(EarthlyBranch::from_hour(12), EarthlyBranch::Wu); // 오시
+        assert_eq!(EarthlyBranch::from_hour(23), EarthlyBranch::Zi);
+        assert_eq!(EarthlyBranch::from_hour(0), EarthlyBranch::Zi);
+        assert_eq!(EarthlyBranch::from_hour(1), EarthlyBranch::Chou);
+        assert_eq!(EarthlyBranch::from_hour(12), EarthlyBranch::Wu);
     }
 
     #[test]
@@ -276,8 +271,8 @@ mod tests {
 
     #[test]
     fn test_branch_zodiac() {
-        assert_eq!(EarthlyBranch::Zi.zodiac(), "쥐");
-        assert_eq!(EarthlyBranch::Yin.zodiac(), "호랑이");
-        assert_eq!(EarthlyBranch::Chen.zodiac(), "용");
+        assert_eq!(EarthlyBranch::Zi.zodiac(), "Rat");
+        assert_eq!(EarthlyBranch::Yin.zodiac(), "Tiger");
+        assert_eq!(EarthlyBranch::Chen.zodiac(), "Dragon");
     }
 }

@@ -12,11 +12,11 @@ Fix the following 4 specific bugs:
 1. **Fix `DeukSe` count calculation in `crates/eon-saju/src/analysis/strength.rs` (lines 416–431)**:
    In `DeukSe::check_with_options`, check `if percentage > 0.0` before incrementing `shishang_count`, `caisheng_count`, `guanxing_count`, `bijie_count`, and `yinxing_count`.
 2. **Fix Follower Pattern Selection in `crates/eon-saju/src/analysis/structure.rs` (lines 340–344)**:
-   Compare actual TenGod energy percentages (`shishang_power`, `cai_power`, `guan_power`) or corrected `DeukSe` counts so `JongJae` / `GaJongJae` (재성종격/가종재격) and `JongSal` / `GaJongSal` (관살종격/가종살격) are reachable when Caisheng or Guanxing is dominant.
+   Compare actual TenGod energy percentages (`shishang_power`, `cai_power`, `guan_power`) or corrected `DeukSe` counts so `JongJae` / `GaJongJae` (WealthFollower Structure/Fake Follow Wealth) and `JongSal` / `GaJongSal` (Follower Structure/) are reachable when Caisheng or Guanxing is dominant.
 3. **Fix False-Positive Void Dissolution in `crates/eon-saju/src/analysis/void.rs` (lines 164–175)**:
    In `check_void_dissolution`, check that `target_branch` is actually contained in the detected Triple or Seasonal combination before marking `is_dissolved = true`.
 4. **Fix Spirit Marker Position String Mismatch in `crates/eon-saju/src/analysis/spirit_markers.rs` (lines 719–730)**:
-   Map `m.position` to branch position strings (`"년지"`, `"월지"`, `"일지"`, `"시지"`) matching `rel_analysis` branch tuple position strings, enabling `is_clashed` / `is_combined` detection and restoring voided noble spirits (`(공망해충/해합 구원)`).
+   Map `m.position` to branch position strings (`"Year Branch"`, `"Month Branch"`, `"Day Branch"`, `"Hour Branch"`) matching `rel_analysis` branch tuple position strings, enabling `is_clashed` / `is_combined` detection and restoring voided noble spirits (`(Void/ )`).
 
 MANDATORY INTEGRITY WARNING:
 DO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.

@@ -2,7 +2,7 @@
 //!
 //! Mandatory Verification Areas:
 //! 1. Solar term boundary transitions (LiChun, DongZhi, XiaoHan, DaHan, etc. at minute resolution).
-//! 2. Rare and exotic natal charts (Four Earth branches / 토다자, All-stems same element / 천간일색, Multi-clash / 충다자, Special Gyeokguk structures).
+//! 2. Rare and exotic natal charts (Four Earth branches, All-stems same element, Multi-clash, Special Gyeokguk structures).
 //! 3. Temporal simulation invariants (100-year Daewun/Saewun/Wolwun continuous timeline, extreme dates 1900..2100).
 //! 4. SajuVM safety & determinism (step execution invariants, non-overflowing registers, gas/step bounds).
 //! 5. Boundary input handling (empty inputs, missing optional data, extreme geographical coordinates).
@@ -60,7 +60,7 @@ fn test_m3_solar_term_lichun_boundary_transition_minute_resolution() {
         .unwrap()
         .and_utc();
 
-    // Term 0 = 입춘 (LiChun) exact UTC timestamp
+    // Term 0 = LiChun exact UTC timestamp
     let lichun_2026_utc = engine
         .find_solar_term_time(year_start, 0)
         .expect("LiChun 2026 must be found");
@@ -130,7 +130,7 @@ fn test_m3_solar_term_lichun_boundary_transition_minute_resolution() {
 
 #[test]
 fn test_m3_solar_term_dongzhi_and_xiaohan_boundaries() {
-    // XiaoHan (소한) 2026 boundary transition:
+    // XiaoHan 2026 boundary transition:
     // Before XiaoHan in early Jan 2026 is Zi (子) month; after XiaoHan is Chou (丑) month.
     let input_xiaohan_before = SajuInput::new_solar(2026, 1, 4, 10, 0);
     let pillars_xh_before = FourPillars::calculate(&input_xiaohan_before).unwrap();
@@ -156,7 +156,7 @@ fn test_m3_solar_term_dongzhi_and_xiaohan_boundaries() {
 
 #[test]
 fn test_m3_exotic_four_earth_branches_to_da_ja() {
-    // Four Earth Branches (토다자 / 辰未戌丑 in all 4 branches):
+    // Four Earth Branches (All Earth / Chen, Wei, Xu, Chou in all 4 branches):
     // Year: 戊辰, Month: 己未, Day: 戊戌, Hour: 己丑
     let earth_pillars = make_custom_pillars(
         HeavenlyStem::Wu,
@@ -170,7 +170,7 @@ fn test_m3_exotic_four_earth_branches_to_da_ja() {
     );
 
     let struct_res = earth_pillars.structure();
-    // Heavy earth branches with Day Master Wu/Ji forms GaSaek (가색격) JeonWang pattern
+    // Heavy earth branches with Day Master Wu/Ji forms GaSaek JeonWang pattern
     assert_eq!(
         struct_res.structure,
         StructureType::GaSaek,
@@ -187,7 +187,7 @@ fn test_m3_exotic_four_earth_branches_to_da_ja() {
 
 #[test]
 fn test_m3_exotic_all_stems_same_element_cheon_gan_il_saek() {
-    // All Stems Same Element (천간일색): 甲甲甲甲 (Wood Heavenly Stems only)
+    // All Stems Same Element: Jia Jia Jia Jia (Wood Heavenly Stems only)
     // Year: 甲寅, Month: 甲戌, Day: 甲子, Hour: 甲辰
     let wood_stems_pillars = make_custom_pillars(
         HeavenlyStem::Jia,
@@ -218,7 +218,7 @@ fn test_m3_exotic_all_stems_same_element_cheon_gan_il_saek() {
 
 #[test]
 fn test_m3_exotic_multi_clash_chung_da_ja() {
-    // Multi-Clash (충다자): Simultaneous Zi-Wu clash (子午沖) and Mao-You clash (卯酉沖)
+    // Multi-Clash: Simultaneous Zi-Wu clash and Mao-You clash
     // Year: 丙子, Month: 丁卯, Day: 壬午, Hour: 己酉
     let clash_pillars = make_custom_pillars(
         HeavenlyStem::Bing,
@@ -247,7 +247,7 @@ fn test_m3_exotic_multi_clash_chung_da_ja() {
 
 #[test]
 fn test_m3_special_jeonwang_5_gyeok_structures() {
-    // 1. 곡직격 (GokJik / Wood JeonWang): 甲/乙 Day Master, Wood Month Branch (卯), Heavy Wood
+    // 1. GokJik (Wood JeonWang): 甲/乙 Day Master, Wood Month Branch (卯), Heavy Wood
     let gokjik = make_custom_pillars(
         HeavenlyStem::Gui,
         EarthlyBranch::Hai,
@@ -261,10 +261,10 @@ fn test_m3_special_jeonwang_5_gyeok_structures() {
     assert_eq!(
         gokjik.structure().structure,
         StructureType::GokJik,
-        "Must identify 곡직격"
+        "Must identify GokJik"
     );
 
-    // 2. 염상격 (YeomSang / Fire JeonWang): 丙/丁 Day Master, Fire Month Branch (午), Heavy Fire
+    // 2. YeomSang (Fire JeonWang): 丙/丁 Day Master, Fire Month Branch (午), Heavy Fire
     let yeomsang = make_custom_pillars(
         HeavenlyStem::Yi,
         EarthlyBranch::Si,
@@ -278,10 +278,10 @@ fn test_m3_special_jeonwang_5_gyeok_structures() {
     assert_eq!(
         yeomsang.structure().structure,
         StructureType::YeomSang,
-        "Must identify 염상격"
+        "Must identify YeomSang"
     );
 
-    // 3. 종혁격 (JongHyeok / Metal JeonWang): 庚/辛 Day Master, Metal Month Branch (酉), Heavy Metal
+    // 3. JongHyeok (Metal JeonWang): 庚/辛 Day Master, Metal Month Branch (酉), Heavy Metal
     let jonghyeok = make_custom_pillars(
         HeavenlyStem::Ji,
         EarthlyBranch::Si,
@@ -295,10 +295,10 @@ fn test_m3_special_jeonwang_5_gyeok_structures() {
     assert_eq!(
         jonghyeok.structure().structure,
         StructureType::JongHyeok,
-        "Must identify 종혁격"
+        "Must identify JongHyeok"
     );
 
-    // 4. 윤하격 (YoonHa / Water JeonWang): 壬/癸 Day Master, Water Month Branch (子), Heavy Water
+    // 4. YoonHa (Water JeonWang): 壬/癸 Day Master, Water Month Branch (子), Heavy Water
     let yoonha = make_custom_pillars(
         HeavenlyStem::Ren,
         EarthlyBranch::Shen,
@@ -312,7 +312,7 @@ fn test_m3_special_jeonwang_5_gyeok_structures() {
     assert_eq!(
         yoonha.structure().structure,
         StructureType::YoonHa,
-        "Must identify 윤하격"
+        "Must identify YoonHa"
     );
 }
 

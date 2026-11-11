@@ -1,14 +1,14 @@
 # BRIEFING — 2026-06-20T15:09:00+09:00
 
 ## Mission
-Analyze the requirements for Milestone M2 (R1: Ashtakoota Guna Milan 상세 고도화) by exploring the Vedic matching engine, DTO services, UI rendering, translations, and detailing the proposed changes in analysis.md.
+Analyze the requirements for Milestone M2 (R1: Ashtakoota Guna Milan Detailed Refinement) by exploring the Vedic matching engine, DTO services, UI rendering, translations, and detailing the proposed changes in analysis.md.
 
 ## 🔒 My Identity
 - Archetype: Explorer
 - Roles: Read-only investigation: analyze problems, synthesize findings, produce structured reports
 - Working directory: /Users/sjkim1127/Eon/.agents/teamwork_preview_explorer_m2_1
 - Original parent: 0b8740ae-977e-4299-a275-15f79cf1fa51
-- Milestone: M2 (R1: Ashtakoota Guna Milan 상세 고도화)
+- Milestone: M2 (R1: Ashtakoota Guna Milan Detailed Refinement)
 
 ## 🔒 Key Constraints
 - Read-only investigation — do NOT implement

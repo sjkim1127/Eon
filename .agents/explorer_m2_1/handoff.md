@@ -28,14 +28,14 @@ Direct observations made during the read-only codebase exploration:
 * **Line 121-131**: The overall compatibility explanation is built as a static Korean string in the engine:
   ```rust
   let explanation = format!(
-      "총 {}점 획득 (36점 만점). {}",
+      "Total {} points (out of 36). {}",
       total,
       if is_compatible {
-          "전반적으로 조화로운 매칭입니다. 추천합니다."
+          "  . ."
       } else if total >= 18.0 {
-          "점수는 높으나 주요 살(Nadi/Bhakoot Dosha)의 영향으로 신중한 주의가 필요합니다."
+          "   (Nadi/Bhakoot Dosha)    ."
       } else {
-          "성향적 차이가 커 상호 조율과 깊은 이해가 요구되는 상성입니다."
+          "        ."
       }
   );
   ```
@@ -47,7 +47,7 @@ Direct observations made during the read-only codebase exploration:
   // Ashtakoota Scorecard Table
   div { class: "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden",
       div { class: "bg-slate-800/50 border-b border-slate-800 px-5 py-3",
-          h3 { class: "font-semibold text-slate-200", "아쉬타쿠타(Ashtakoota) 세부 매칭 평점표" }
+          h3 { class: "font-semibold text-slate-200", "Ashtakoota   " }
       }
       ...
       tbody { class: "divide-y divide-slate-800",

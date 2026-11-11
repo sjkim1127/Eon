@@ -40,7 +40,7 @@ fn main() {
         terms.sort_by_key(|&(_, time)| time);
         cache.years.insert(year, SolarTermTable { year, terms });
 
-        // 2. 음력 데이터 생성
+        // 2. Generate lunar calendar data
         let mut lunar_records = Vec::new();
         let year_start = Utc.with_ymd_and_hms(year, 1, 1, 0, 0, 0).unwrap();
         let year_end = Utc.with_ymd_and_hms(year, 12, 31, 23, 59, 59).unwrap();

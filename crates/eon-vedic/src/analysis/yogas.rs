@@ -33,18 +33,18 @@ pub enum YogaType {
     Vasumathi, // Benefics in Upachaya (3, 6, 10, 11) houses
     Sakata,    // Moon in 6, 8, 12 from Jupiter
     // ── Nabhasa Yogas (BPHS) ────────────────────────────────
-    // Sankhya (분산 개수 기반) — 9행성이 점유한 라시 수로 판별
-    NabhasaGola,   // 9행성 → 1 rasi: 극단적 집중, 매우 희귀
-    NabhasaYuga,   // 9행성 → 2 rasi: 극단적 이원성, 도전적 삶
-    NabhasaShoola, // 9행성 → 3 rasi: 삼위일체 균형, 고난과 강인함
-    NabhasaKedara, // 9행성 → 4 rasi: 근면, 농업적 성향, 인내
-    NabhasaPasha,  // 9행성 → 5 rasi: 결속력, 집중, 집착
-    NabhasaDaama,  // 9행성 → 6 rasi: 관대함, 통솔력
-    NabhasaVeena,  // 9행성 → 7 rasi: 음악/예술/조화의 재능
-    // Akriti (사인 성질 기반) — 모든 행성이 같은 성질의 사인에만 위치
-    NabhasaAshrita,     // Chara 사인만 (Aries/Cancer/Libra/Cap): 유동성, 적응력
-    NabhasaSthira,      // Sthira 사인만 (Taurus/Leo/Scorpio/Aqu): 안정, 고집
-    NabhasaDvisvabhava, // Dvisvabhava 사인만 (Gem/Vir/Sag/Pis): 유연, 이중성
+    // Sankhya (Distribution-based) - determined by number of occupied Rasis across 9 planets
+    NabhasaGola,   // 9 planets in 1 rasi: extreme concentration, very rare
+    NabhasaYuga,   // 9 planets in 2 rasis: extreme duality, challenging life
+    NabhasaShoola, // 9 planets in 3 rasis: trinity balance, perseverance through hardship
+    NabhasaKedara, // 9 planets in 4 rasis: industriousness, agricultural nature, patience
+    NabhasaPasha,  // 9 planets in 5 rasis: bonding, focus, tenacity
+    NabhasaDaama,  // 9 planets in 6 rasis: generosity, leadership
+    NabhasaVeena,  // 9 planets in 7 rasis: musical, artistic, harmonic talent
+    // Akriti (Sign modality-based) - all planets restricted to one modality
+    NabhasaAshrita, // Chara (Movable) signs only (Aries/Cancer/Libra/Cap): fluidity, adaptability
+    NabhasaSthira,  // Sthira (Fixed) signs only (Taurus/Leo/Scorpio/Aqu): stability, tenacity
+    NabhasaDvisvabhava, // Dvisvabhava (Dual) signs only (Gem/Vir/Sag/Pis): versatility, duality
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -163,9 +163,9 @@ impl YogaEngine {
                 // Determine Quality
                 let mut quality = Self::assess_quality(chart, &planets);
 
-                // [BPHS 고도화] Vipareeta Raja Yoga: Shadbala 기반 최종 품질 조정
-                // evaluate_condition 에서 이미 score < 80 행성은 필터됐으므로
-                // 여기서는 80~180 구간(약한 Yoga)을 Weak 으로 다운그레이드
+                // [BPHS Refinement] Vipareeta Raja Yoga: Shadbala-based final quality calibration
+                // Planets with score < 80 are already filtered in evaluate_condition;
+                // Here, score range 80~180 (weak Yoga) is categorized as Weak.
                 if rule.yoga_type == YogaType::VipareetaRajaYoga {
                     let avg_shadbala = planets
                         .iter()
@@ -181,7 +181,7 @@ impl YogaEngine {
 
                     if avg_shadbala < 180.0 {
                         quality = YogaQuality::Weak(format!(
-                            "Shadbala 강도 부족 ({:.0}/180 미만) — Yoga 발현 약함",
+                            "Insufficient Shadbala strength ({:.0}/180) — weak Yoga manifestation",
                             avg_shadbala
                         ));
                     }
@@ -202,7 +202,7 @@ impl YogaEngine {
 
                     if avg_shadbala < 100.0 {
                         quality = YogaQuality::Weak(format!(
-                            "Shadbala 강도 부족 ({:.0}/100 미만) — Mahapurusha 발현 불가",
+                            "Insufficient Shadbala strength ({:.0}/100) — Mahapurusha cannot fully manifest",
                             avg_shadbala
                         ));
                     }
@@ -219,10 +219,11 @@ impl YogaEngine {
                     }
                     if !has_kendra_exaltation {
                         quality = YogaQuality::Weak(
-                            "고양성/지배성이 켄드라에 위치하지 않아 약한 니차방가".to_string(),
+                            "Exalted or dispositor lord not situated in Kendra; weak Neecha Bhanga"
+                                .to_string(),
                         );
                     } else {
-                        quality = YogaQuality::VeryHigh; // 확실한 역전
+                        quality = YogaQuality::VeryHigh; // Decisive Raja reversal
                     }
                 }
 
@@ -272,7 +273,7 @@ impl YogaEngine {
         results
     }
 
-    /// Vimshottari Dasha 대운/소운 타임라인을 기반으로 요가 발현 시기를 자동 산출하여 첨부합니다.
+    /// Attach Vimshottari Dasha activation periods for each detected Yoga.
     pub fn attach_dasha_activations(
         chart: &VedicChart,
         yogas: &mut [YogaResult],
@@ -298,7 +299,7 @@ impl YogaEngine {
                         let antar_involved = yoga.planets_involved.contains(&antar.lord);
                         if maha_involved || antar_involved {
                             let summary = format!(
-                                "{:?} 대운 / {:?} 소운 ({:04}~{:04})",
+                                "{:?} Mahadasha / {:?} Antardasha ({:04}~{:04})",
                                 maha.lord,
                                 antar.lord,
                                 antar.start_time.year(),
@@ -938,13 +939,13 @@ impl YogaEngine {
             YogaCondition::VipareetaRajaYogaCheck => {
                 // Vipareeta Raja Yoga: Lord of 6th, 8th, or 12th in another dusthana
                 //
-                // BPHS 고도화 조건:
-                // 1. 길성 7th 어스펙트가 없어야 함 (있으면 Yoga 희석)
-                // 2. 쇠약(debilitated) 행성은 제외
-                // 3. [신규] Shadbala total_score 기반 강도 게이팅:
-                //    - score < 80  → 행성이 너무 약해 Yoga 발현 불가
-                //    - 80 ≤ score < 180 → 약한 Yoga (YogaQuality 계산에 페널티)
-                //    - score ≥ 180 → 표준 Yoga 강도
+                // BPHS Refinement Conditions:
+                // 1. Must not have benefic 7th aspect (dilutes Vipareeta Yoga)
+                // 2. Debilitated planets excluded
+                // 3. Shadbala total_score gating:
+                //    - score < 80  -> planet too weak for Yoga activation
+                //    - 80 <= score < 180 -> weak Yoga penalty
+                //    - score >= 180 -> standard Yoga strength
                 let lagna_rasi = chart.ascendant.rasi;
                 let mut vipareeta_planets: Vec<(VedicPlanet, f64)> = Vec::new(); // (planet, shadbala_score)
 
@@ -955,7 +956,7 @@ impl YogaEngine {
                         let lord_house = lord_pos.house_index;
 
                         if [6, 8, 12].contains(&lord_house) && lord_house != dusthana_house {
-                            // 1. 길성 7th 어스펙트 확인
+                            // 1. Check benefic 7th aspect
                             let has_benefic_aspect = chart.planets.iter().any(|p| {
                                 let is_benefic = matches!(
                                     p.planet,
@@ -971,10 +972,10 @@ impl YogaEngine {
                                 diff == 6
                             });
 
-                            // 2. 쇠약 확인
+                            // 2. Debilitation check
                             let is_debilitated = lord_pos.rasi == lord.debilitation_rasi();
 
-                            // 3. 흉성 영향 (Yoga 순수성 강화)
+                            // 3. Malefic influence (strengthens Vipareeta purity)
                             let has_malefic_influence = chart.planets.iter().any(|p| {
                                 let is_malefic = matches!(
                                     p.planet,
@@ -988,21 +989,21 @@ impl YogaEngine {
                                 diff == 0 || diff == 6
                             });
 
-                            // 4. [BPHS 고도화] Shadbala 강도 산출
+                            // 4. Shadbala strength calculation
                             let shadbala = StrengthEngine::calculate(lord_pos, chart);
                             let strength_score = shadbala.total_score;
 
-                            // 너무 약한 행성은 Yoga 불발 (BPHS: 쇠약하면 악도 약해 길로 전환 불가)
+                            // Too weak planet cannot reverse evil into good
                             if strength_score < 80.0 {
                                 continue;
                             }
 
-                            // 쇠약+강한 어스펙트 → Yoga 제외
+                            // Debilitated + strong aspect -> exclude
                             if has_benefic_aspect && is_debilitated {
                                 continue;
                             }
 
-                            // 조건 충족
+                            // Conditions met
                             if !has_benefic_aspect && !is_debilitated {
                                 vipareeta_planets.push((lord, strength_score));
                             } else if has_malefic_influence && !is_debilitated {
@@ -1013,7 +1014,7 @@ impl YogaEngine {
                 }
 
                 if !vipareeta_planets.is_empty() {
-                    // Shadbala score가 높은 행성부터 정렬 (강도 순)
+                    // Sort by Shadbala score descending
                     vipareeta_planets
                         .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
                     vipareeta_planets.dedup_by_key(|p| p.0);

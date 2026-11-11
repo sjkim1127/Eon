@@ -3,15 +3,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct NumerologyCoreNumbers {
-    /// 생애여정수 (Life Path Number)
+    /// Life Path Number
     pub life_path: u8,
-    /// 표현수 (Expression / Destiny Number)
+    /// Expression / Destiny Number
     pub expression: u8,
-    /// 영혼수 (Soul Urge / Heart's Desire Number)
+    /// Soul Urge / Heart's Desire Number
     pub soul_urge: u8,
-    /// 인격수 (Personality Number)
+    /// Personality Number
     pub personality: u8,
-    /// 생일수 (Birthday Number)
+    /// Birthday Number
     pub birthday: u8,
 }
 
@@ -156,7 +156,10 @@ pub fn calculate_numerology(
             challenge_number: c1,
             start_age: 0,
             end_age: age1,
-            description_ko: format!("제1정점: 기반 형성기 (정점수 {}, 과제수 {})", p1, c1),
+            description_ko: format!(
+                "Pinnacle 1: Foundation Era (Pinnacle {}, Challenge {})",
+                p1, c1
+            ),
             description_en: format!(
                 "Pinnacle 1: Foundation Era (Pinnacle {}, Challenge {})",
                 p1, c1
@@ -168,7 +171,10 @@ pub fn calculate_numerology(
             challenge_number: c2,
             start_age: age1,
             end_age: age2,
-            description_ko: format!("제2정점: 개인적 도약기 (정점수 {}, 과제수 {})", p2, c2),
+            description_ko: format!(
+                "Pinnacle 2: Expansion Era (Pinnacle {}, Challenge {})",
+                p2, c2
+            ),
             description_en: format!(
                 "Pinnacle 2: Expansion Era (Pinnacle {}, Challenge {})",
                 p2, c2
@@ -181,7 +187,7 @@ pub fn calculate_numerology(
             start_age: age2,
             end_age: age3,
             description_ko: format!(
-                "제3정점: 성숙과 사회적 결실기 (정점수 {}, 과제수 {})",
+                "Pinnacle 3: Maturation & Achievement Era (Pinnacle {}, Challenge {})",
                 p3, c3
             ),
             description_en: format!(
@@ -196,7 +202,7 @@ pub fn calculate_numerology(
             start_age: age3,
             end_age: 100,
             description_ko: format!(
-                "제4정점: 완성과 지혜의 통달기 (정점수 {}, 과제수 {})",
+                "Pinnacle 4: Completion & Wisdom Era (Pinnacle {}, Challenge {})",
                 p4, c4
             ),
             description_en: format!(
@@ -209,14 +215,11 @@ pub fn calculate_numerology(
     // 5. Personal Year Number
     let personal_year = reduce_number(month + day + target_year, false);
 
-    let summary_ko = format!(
-        "생애여정수: {}, 표현수: {}, 영혼수: {}, 개인 연운수: {} (피타고라스 수비 진동 분석 완료)",
-        life_path, expression, soul_urge, personal_year
-    );
     let summary_en = format!(
         "Life Path: {}, Expression: {}, Soul Urge: {}, Personal Year: {} (Pythagorean Numerology analysis complete)",
         life_path, expression, soul_urge, personal_year
     );
+    let summary_ko = summary_en.clone();
 
     NumerologyResult {
         core: NumerologyCoreNumbers {

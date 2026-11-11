@@ -10,9 +10,9 @@ Original Request: /Users/sjkim1127/Eon/ORIGINAL_REQUEST.md
 
 Your mission:
 Decompose, manage, and execute the user request recorded in `/Users/sjkim1127/Eon/ORIGINAL_REQUEST.md`:
-1. R1. Core Analysis Precision & Pattern Completeness: 억부(抑扶), 조후(調候), 통관(通關), 병약(病藥) 용신 산출 및 격국/12운성/신살 분석 알고리즘의 예외 케이스 정밀 보완 및 고급 특수 격국 패턴 처리 로직 완비.
-2. R2. Dynamic Luck & Temporal Simulation: 대운(大運), 세운(年運), 월운(月運) 등 동적 시기별 운세 흐름 계산 및 지장간/충합 변형에 따른 운성 시뮬레이션 엔진 보강.
-3. R3. Codebase Architecture & Edge-Case Verification: `crates/eon-saju` 모듈 구조 보완 및 성능 최적화, 다양한 명조 엣지케이스 검증 단위/통합 테스트 suite 대폭 확충.
+1. R1. Core Analysis Precision & Pattern Completeness: Eokbu(抑扶), JoHu(調候), TongGwan(通關), ByeongYak(病藥) Yongshin   Gyeokguk/12/          Gyeokguk    .
+2. R2. Dynamic Luck & Temporal Simulation: Major Luck(大運), Yearly Luck(年運), Monthly Luck(月運)        Hidden Stem/      .
+3. R3. Codebase Architecture & Edge-Case Verification: `crates/eon-saju`      ,     /  suite  .
 
 Acceptance Criteria:
 - `cargo check --workspace` compilation without errors/warnings.

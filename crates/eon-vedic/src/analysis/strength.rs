@@ -471,21 +471,21 @@ impl StrengthEngine {
         use crate::core::constants::*;
 
         // Sun: BPHS Ayana-based Chesta Bala
-        // 기본: 적위(declination)로 0~60 범위 산출
-        //   - 하지(+23.45°) = 60, 동지(-23.45°) = 0
-        // 방향 보정(Uttarayana/Dakshinayana):
-        //   - 동일 적위라도 북진(Uttarayana) 중인 태양이 더 강함
-        //   - 사이드리얼 기준: 마카라(270°)~미투나(90°) = Uttarayana → +5
-        //   - 카르카(90°)~다누(270°) = Dakshinayana → 0
+        // Base: Declination produces 0~60 range
+        //   - Summer solstice (+23.45 deg) = 60, Winter solstice (-23.45 deg) = 0
+        // Directional correction (Uttarayana/Dakshinayana):
+        //   - Even with identical declination, northward-moving Sun (Uttarayana) is stronger
+        //   - Sidereal reference: Makara (270 deg) ~ Mithuna (90 deg) = Uttarayana -> +5
+        //   - Karka (90 deg) ~ Dhanu (270 deg) = Dakshinayana -> 0
         if pos.planet == VedicPlanet::Sun {
             let dec = pos.declination;
             let lon = pos.sidereal_deg;
 
-            // 기본 Ayana Chesta Bala (순수 적위 비율)
+            // Base Ayana Chesta Bala (pure declination proportion)
             let base = ((dec + ECLIPTIC_OBLIQUITY) / (2.0 * ECLIPTIC_OBLIQUITY)) * 60.0;
 
-            // Uttarayana 방향 보정: 동지점(마카라 270°)→하지점(미투나 90°)
-            // 동일 적위에서 북진 중인 태양에 추가 강도를 부여
+            // Uttarayana directional bonus: Winter Solstice (Makara 270) -> Summer Solstice (Mithuna 90)
+            // Grants additional strength to Sun moving northward
             let is_uttarayana = !(90.0..270.0).contains(&lon);
             let direction_bonus = if is_uttarayana { 5.0 } else { 0.0 };
 

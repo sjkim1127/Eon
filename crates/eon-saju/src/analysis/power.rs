@@ -1,10 +1,10 @@
-//! 오행 및 십성 점수 정밀 분석 (Power & Ten Gods Scoring)
+//! Five Elements & Ten Gods Power Scoring Analysis
 //!
-//! 보정 옵션에 따른 4가지 분석 모드를 지원합니다.
-//! 1. 기본 (보정 X)
-//! 2. 합화 적용
-//! 3. 궁성/조후 보정 적용
-//! 4. 합화 + 궁성/조후 보정 모두 적용
+//! Supports 4 analysis modes based on correction options:
+//! 1. Baseline (no corrections)
+//! 2. Transformations applied
+//! 3. Palace & climate corrections applied
+//! 4. Transformations and palace/climate corrections applied
 
 use crate::core::branch::EarthlyBranch;
 use crate::core::element::Element;
@@ -13,13 +13,13 @@ use crate::core::stem::HeavenlyStem;
 use crate::core::ten_gods::TenGod;
 use serde::{Deserialize, Serialize};
 
-/// 분석 옵션
+/// Analysis Options
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AnalysisOptions {
-    /// 합에 따른 오행 변화 적용 (Transformations)
+    /// Apply element transformations from combinations
     pub apply_transform: bool,
-    /// 조후와 궁성 보정값 적용 (Climate & Palace Corrections)
+    /// Apply climate and palace adjustments
     pub apply_correction: bool,
 }
 
@@ -32,18 +32,18 @@ impl Default for AnalysisOptions {
     }
 }
 
-/// 분석 엔진 결과
+/// Integrated Analysis Result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IntegratedAnalysis {
     pub options: AnalysisOptions,
-    /// 오행 비율 (Element, Percentage, Score)
+    /// Five Elements ratios (Element, Percentage, Score)
     pub element_scores: Vec<(Element, f32, f32)>,
-    /// 십성 비율 (TenGod, Percentage, Score)
+    /// Ten Gods ratios (TenGod, Percentage, Score)
     pub ten_god_scores: Vec<(TenGod, f32, f32)>,
-    /// 대표 오행
+    /// Dominant Element
     pub dominant_element: Element,
-    /// 대표 십성
+    /// Dominant Ten God
     pub dominant_ten_god: TenGod,
 }
 
@@ -56,7 +56,7 @@ impl IntegratedAnalysis {
         let dm = pillars.day_master();
         let month_branch = pillars.month.branch;
 
-        // 1. 가중치 설정
+        // 1. Configure weights
         let weights = if options.apply_correction {
             [
                 config.weights.stem,
@@ -72,17 +72,17 @@ impl IntegratedAnalysis {
             [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
         };
 
-        // 가중치 스케일링 (전체 합이 가중치 합이 되도록 함)
-        // 기존 110점법 호환을 위해, 만약 stem=1.0이면 10.0으로 취급하고 싶을 경우를 고려할 수 있으나
-        // 여기서는 config에 정의된 대로 사용함. (보통 stem 1.0, month 3.5 등)
+        // Scale weights
+        // 110-point method compatibility
+        // Uses weights as defined in config
 
         let mut total_weight: f32 = 0.0;
 
-        // 2. 각 위치별 실질 오행 및 십성 결정
+        // 2. Determine effective element and ten god per position
         let mut el_scores = [0.0f32; 5];
         let mut tg_scores = [0.0f32; 10];
 
-        // 실질 오행 맵 (합화 반영 여부에 따라 결정)
+        // Effective element map (reflecting transformations)
         let eff_map = if options.apply_transform {
             pillars.effective_elements()
         } else {
@@ -106,7 +106,7 @@ impl IntegratedAnalysis {
             map
         };
 
-        // 2-1. 천간 처리 (0~3)
+        // 2-1. Process stems (0~3)
         let stems = [
             pillars.year.stem,
             pillars.month.stem,
@@ -127,7 +127,7 @@ impl IntegratedAnalysis {
 
             if options.apply_correction {
                 let mut multiplier = 1.0;
-                // 연, 월, 일, 시에 대한 추가 가중치: 1.05배, 1.5배, 1.2배, 1.1배 -> 0.05, 0.5, 0.2, 0.1 누적
+                // Additional position multipliers for year, month, day, hour
                 let branch_bonus_factors = [0.05, 0.5, 0.2, 0.1];
                 for j in 0..4 {
                     let branch = branches[j];
@@ -145,9 +145,9 @@ impl IntegratedAnalysis {
             el_scores[effective_el.index() as usize] += weight;
             total_weight += weight;
 
-            // 십성 계산
+            // Ten god calculation
             let god = if effective_el != stem.element() {
-                // 합화된 경우
+                // When transformed
                 TenGod::from_stems(dm, get_dummy_stem(effective_el, stem.polarity()))
             } else {
                 TenGod::from_stems(dm, stem)
@@ -155,7 +155,7 @@ impl IntegratedAnalysis {
             tg_scores[god.index()] += weight;
         }
 
-        // 2-2. 지지 처리 (4~7)
+        // 2-2. Process branches (4~7)
         let branches = [
             pillars.year.branch,
             pillars.month.branch,
@@ -167,8 +167,8 @@ impl IntegratedAnalysis {
             let (_, mut effective_el) = eff_map[i + 4];
             let weight = weights[i + 4];
 
-            // 조후 보정 (Climate) - 예: 여름의 미토는 화로 취급 (합화되지 않은 경우에만 또는 보정이 우선일 수 있음)
-            // 여기서는 보정이 합화보다 시급한 물리적 변동으로 간주함
+            // Climate correction
+            // Climate correction takes precedence
             if options.apply_correction
                 && effective_el == branch.element()
                 && matches!(
@@ -185,7 +185,7 @@ impl IntegratedAnalysis {
             el_scores[effective_el.index() as usize] += weight;
             total_weight += weight;
 
-            // 지지 십성
+            // Branch ten gods
             let god = if effective_el != branch.element() {
                 TenGod::from_stems(
                     dm,
@@ -197,7 +197,7 @@ impl IntegratedAnalysis {
             tg_scores[god.index()] += weight;
         }
 
-        // 3. 결과 포맷팅
+        // 3. Format results
         let mut final_el = Vec::new();
         for i in 0..5 {
             let el = Element::from_index(i as i32);
@@ -232,7 +232,7 @@ impl IntegratedAnalysis {
         }
     }
 
-    /// 5/6주 (원국 + 대운 + 세운) 확장 오행/십성 점수 계산
+    /// Compute extended 5/6 pillar scores (Natal + Major Luck + Yearly Luck)
     pub fn calculate_expanded(
         pillars: &FourPillars,
         major: Option<crate::core::ganzi::GanZi>,
@@ -456,11 +456,11 @@ impl IntegratedAnalysis {
     }
 }
 
-/// 조후 보정 로직 (4토지 辰戌丑未 계절별 변형)
+/// Climate adjustment logic for the four earth branches (Chen, Xu, Chou, Wei)
 fn apply_climate_correction(branch: EarthlyBranch, month: EarthlyBranch) -> Element {
     match branch {
         EarthlyBranch::Wei => {
-            // 여름(巳, 午)의 미토는 화(火) 기운이 강화됨
+            // Wei in summer strengthens Fire
             if matches!(month, EarthlyBranch::Si | EarthlyBranch::Wu) {
                 Element::Fire
             } else {
@@ -468,7 +468,7 @@ fn apply_climate_correction(branch: EarthlyBranch, month: EarthlyBranch) -> Elem
             }
         }
         EarthlyBranch::Chou => {
-            // 겨울(亥, 子)의 축토는 수(水) 기운이 강화됨
+            // Chou in winter strengthens Water
             if matches!(month, EarthlyBranch::Hai | EarthlyBranch::Zi) {
                 Element::Water
             } else {
@@ -476,7 +476,7 @@ fn apply_climate_correction(branch: EarthlyBranch, month: EarthlyBranch) -> Elem
             }
         }
         EarthlyBranch::Chen => {
-            // 봄(寅, 卯)의 진토는 목(木) 기운이 강화됨
+            // Chen in spring strengthens Wood
             if matches!(month, EarthlyBranch::Yin | EarthlyBranch::Mao) {
                 Element::Wood
             } else {
@@ -484,7 +484,7 @@ fn apply_climate_correction(branch: EarthlyBranch, month: EarthlyBranch) -> Elem
             }
         }
         EarthlyBranch::Xu => {
-            // 가을(申, 酉)의 술토는 금(金) 기운이 강화됨
+            // Xu in autumn strengthens Metal
             if matches!(month, EarthlyBranch::Shen | EarthlyBranch::You) {
                 Element::Metal
             } else {
@@ -495,7 +495,7 @@ fn apply_climate_correction(branch: EarthlyBranch, month: EarthlyBranch) -> Elem
     }
 }
 
-/// 오행과 음양을 받아 임시 천간을 반환 (십성 계산용)
+/// Return provisional stem from element and polarity
 fn get_dummy_stem(element: Element, polarity: crate::core::element::Polarity) -> HeavenlyStem {
     use crate::core::element::Polarity::*;
     match (element, polarity) {
@@ -516,7 +516,7 @@ impl std::fmt::Display for IntegratedAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
-            "합에 따른 오행 변화 적용 {}",
+            "Transformations applied: {}",
             if self.options.apply_transform {
                 "o"
             } else {
@@ -525,7 +525,7 @@ impl std::fmt::Display for IntegratedAnalysis {
         )?;
         writeln!(
             f,
-            "조후와 궁성 보정값 적용 {}",
+            "Climate & palace corrections applied: {}",
             if self.options.apply_correction {
                 "o"
             } else {
@@ -539,17 +539,17 @@ impl std::fmt::Display for IntegratedAnalysis {
             self.dominant_ten_god.hanja()
         )?;
 
-        writeln!(f, "오행")?;
+        writeln!(f, "Five Elements")?;
         for (el, percent, _) in &self.element_scores {
             if *percent > 0.0 {
                 let state = if *percent < 10.0 {
-                    "부족"
+                    "Deficient"
                 } else if *percent <= 20.0 {
-                    "적정"
+                    "Balanced"
                 } else if *percent <= 35.0 {
-                    "발달"
+                    "Developed"
                 } else {
-                    "과다"
+                    "Excessive"
                 };
                 writeln!(
                     f,
@@ -562,7 +562,7 @@ impl std::fmt::Display for IntegratedAnalysis {
             }
         }
 
-        writeln!(f, "십성")?;
+        writeln!(f, "Ten Gods")?;
         for (god, percent, _) in &self.ten_god_scores {
             if *percent > 0.0 {
                 writeln!(f, "  {}({})  {:.1}%", god.hangul(), god.hanja(), percent)?;
@@ -575,7 +575,7 @@ impl std::fmt::Display for IntegratedAnalysis {
 }
 
 impl FourPillars {
-    /// 통합 정밀 분석
+    /// Integrated Power Analysis
     pub fn integrated_analysis(
         &self,
         options: AnalysisOptions,
@@ -584,7 +584,7 @@ impl FourPillars {
         IntegratedAnalysis::calculate(self, options, config)
     }
 
-    /// 5/6주 (원국 + 대운 + 세운) 통합 정밀 분석
+    /// Extended 5/6 pillar integrated analysis
     pub fn integrated_analysis_expanded(
         &self,
         major: Option<crate::core::ganzi::GanZi>,
@@ -595,7 +595,7 @@ impl FourPillars {
         IntegratedAnalysis::calculate_expanded(self, major, yearly, options, config)
     }
 
-    /// 기본 옵션 및 기본 설정으로 분석 수행
+    /// Perform analysis with default options and config
     pub fn analyze(&self) -> IntegratedAnalysis {
         self.integrated_analysis(
             AnalysisOptions::default(),

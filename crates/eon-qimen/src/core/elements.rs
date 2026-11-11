@@ -1,17 +1,17 @@
 use serde::{Deserialize, Serialize};
 
-/// 구궁 (Nine Palaces)
+/// Nine Palaces (Jiu Gong)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Hash)]
 pub enum Palace {
-    Kan1,    // 1궁 (감궁, 北)
-    Kun2,    // 2궁 (곤궁, 西南)
-    Zhen3,   // 3궁 (진궁, 東)
-    Xun4,    // 4궁 (손궁, 東南)
-    Center5, // 5궁 (중궁, 中央)
-    Qian6,   // 6궁 (건궁, 西北)
-    Dui7,    // 7궁 (태궁, 西)
-    Gen8,    // 8궁 (간궁, 東北)
-    Li9,     // 9궁 (이궁, 南)
+    Kan1,    // Palace 1 (Kan, North)
+    Kun2,    // Palace 2 (Kun, Southwest)
+    Zhen3,   // Palace 3 (Zhen, East)
+    Xun4,    // Palace 4 (Xun, Southeast)
+    Center5, // Palace 5 (Center)
+    Qian6,   // Palace 6 (Qian, Northwest)
+    Dui7,    // Palace 7 (Dui, West)
+    Gen8,    // Palace 8 (Gen, Northeast)
+    Li9,     // Palace 9 (Li, South)
 }
 
 impl Palace {
@@ -45,42 +45,42 @@ impl Palace {
     }
 }
 
-/// 8문 (Eight Doors - Human Plate)
+/// Eight Doors (Ba Men - Human Plate)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Door {
-    Xiu,   // 휴문 (Xiu Men - Rest)
-    Sheng, // 생문 (Sheng Men - Life)
-    Shang, // 상문 (Shang Men - Harm)
-    Du,    // 두문 (Du Men - Delusion)
-    Jing,  // 경문 (Jing(景) Men - Scenery)
-    Si,    // 사문 (Si Men - Death)
-    Jing2, // 경문 (Jing(驚) Men - Fear/Shock)
-    Kai,   // 개문 (Kai Men - Open)
+    Xiu,   // Xiu Men (Rest)
+    Sheng, // Sheng Men (Life)
+    Shang, // Shang Men (Harm)
+    Du,    // Du Men (Delusion / Concealment)
+    Jing,  // Jing Men (Scenery)
+    Si,    // Si Men (Death)
+    Jing2, // Jing Men (Fear / Shock)
+    Kai,   // Kai Men (Open)
 }
 
-/// 9성 (Nine Stars - Star Plate)
+/// Nine Stars (Jiu Xing - Star Plate)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Star {
-    Peng,  // 천봉성 (Tian Peng)
-    Ren,   // 천임성 (Tian Ren)
-    Chong, // 천충성 (Tian Chong)
-    Fu,    // 천보성 (Tian Fu)
-    Ying,  // 천영성 (Tian Ying)
-    Rui,   // 천예성 (Tian Rui)
-    Zhu,   // 천주성 (Tian Zhu)
-    Xin,   // 천심성 (Tian Xin)
-    Qin,   // 천금성 (Tian Qin) - 보통 5궁에 위치
+    Peng,  // Tian Peng
+    Ren,   // Tian Ren
+    Chong, // Tian Chong
+    Fu,    // Tian Fu
+    Ying,  // Tian Ying
+    Rui,   // Tian Rui
+    Zhu,   // Tian Zhu
+    Xin,   // Tian Xin
+    Qin,   // Tian Qin (Center Palace 5)
 }
 
-/// 8신 (Eight Deities - Deity Plate)
+/// Eight Deities (Ba Shen - Deity Plate)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Deity {
-    ZhiFu,   // 직부 (Zhi Fu - Chief)
-    TengShe, // 구사 (Teng She - Snake)
-    TaiYin,  // 태음 (Tai Yin - Moon)
-    LiuHe,   // 육합 (Liu He - Harmony)
-    BaiHu,   // 백호 (Bai Hu - White Tiger) / 음둔일 때는 구진(Gou Chen)
-    XuanWu,  // 현무 (Xuan Wu - Black Tortoise) / 음둔일 때는 주작(Zhu Que)
-    JiuDi,   // 구지 (Jiu Di - Nine Earth)
-    JiuTian, // 구천 (Jiu Tian - Nine Heaven)
+    ZhiFu,   // Zhi Fu (Chief)
+    TengShe, // Teng She (Surging Snake)
+    TaiYin,  // Tai Yin (Great Moon)
+    LiuHe,   // Liu He (Six Harmonies)
+    BaiHu,   // Bai Hu (White Tiger) / Gou Chen in Yin Dun
+    XuanWu,  // Xuan Wu (Black Tortoise) / Zhu Que in Yin Dun
+    JiuDi,   // Jiu Di (Nine Earth)
+    JiuTian, // Jiu Tian (Nine Heaven)
 }

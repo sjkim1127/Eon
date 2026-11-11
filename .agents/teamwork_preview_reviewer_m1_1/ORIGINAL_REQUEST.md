@@ -14,7 +14,7 @@ Examine modified files:
 Run `cargo check --workspace` and `cargo test -p eon-saju`.
 Verify correctness of:
 - Weighted power-based Eokbu Yongsin calculation
-- Weak DM handling for 재다신약 (BiGeop) vs GuanXing/ShiShang (Inseong)
+- Weak DM handling for Weak (BiGeop) vs GuanXing/ShiShang (Inseong)
 - Priority scoring matrix for primary Yongsin
 - Byeongyak diagnostic structure
 - Stem-specific Johu recommendations (*Qiong Tong Bao Giam*)

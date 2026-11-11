@@ -2,8 +2,8 @@
 //!
 //! Empirical adversarial test suite verifying:
 //! 1. Wolwun GanZi alignment at exact 1-minute before/after solar term entry boundaries.
-//! 2. Precedence hierarchy: completed Triple Alliance (삼합) or Seasonal Alliance (방합)
-//!    correctly suppresses lower-priority Branch Clash (지충) and Six Combination (육합) in combined_relations.
+//! 2. Precedence hierarchy: completed Triple Alliance  or Seasonal Alliance
+//!    correctly suppresses lower-priority Branch Clash  and Six Combination  in combined_relations.
 //! 3. Expanded transformations: 5/6 pillar transformation scores update elemental power in power.rs.
 
 use chrono::{Duration, NaiveDate, Utc};
@@ -56,7 +56,7 @@ fn test_wolwun_lichun_boundary_2026() {
         .unwrap()
         .and_utc();
 
-    // Term 0 = 입춘 (LiChun)
+    // Term 0 = LiChun
     let lichun_2026 = engine.find_solar_term_time(year_start, 0).unwrap();
     println!("LiChun 2026 exact time: {}", lichun_2026);
 
@@ -69,8 +69,8 @@ fn test_wolwun_lichun_boundary_2026() {
     println!("1 min before LiChun 2026: {}", ganzi_before);
     println!("1 min after LiChun 2026: {}", ganzi_after);
 
-    // Before LiChun 2026: Saju year 2025 (乙巳년), Month branch 丑 (12th month).
-    // 乙년 (stem index 1) -> 1st month stem is 戊 (4). 12th month stem is (4+11)%10 = 5 (己).
+    // Before LiChun 2026: Saju year 2025 (Yi-Si year), Month branch Chou (12th month).
+    // Yi year (stem index 1) -> 1st month stem is Wu (4). 12th month stem is (4+11)%10 = 5 (Ji).
     // So expected before: 己丑
     assert_eq!(
         ganzi_before.branch,
@@ -83,8 +83,8 @@ fn test_wolwun_lichun_boundary_2026() {
         "Before LiChun 2026 year 2025 (乙) month stem must be 己"
     );
 
-    // After LiChun 2026: Saju year 2026 (丙午년), Month branch 寅 (1st month).
-    // 丙년 (stem index 2) -> 1st month stem is 庚 (6).
+    // After LiChun 2026: Saju year 2026 (Bing-Wu year), Month branch Yin (1st month).
+    // Bing year (stem index 2) -> 1st month stem is Geng (6).
     // So expected after: 庚寅
     assert_eq!(
         ganzi_after.branch,
@@ -101,8 +101,8 @@ fn test_wolwun_lichun_boundary_2026() {
 #[test]
 fn test_wolwun_early_january_saju_year() {
     // Stress test: Jan 2, 2026 is BEFORE XiaoHan (term 22, around Jan 5) and BEFORE LiChun (Feb 4).
-    // On Jan 2, 2026, the solar term is term 21 (DongZhi, 동지).
-    // The Saju year MUST be 2025 (乙巳년), NOT 2026 (丙午년).
+    // On Jan 2, 2026, the solar term is term 21 (DongZhi).
+    // The Saju year MUST be 2025 (Yi-Si year), NOT 2026 (Bing-Wu year).
     let dt_jan2 = NaiveDate::from_ymd_opt(2026, 1, 2)
         .unwrap()
         .and_hms_opt(12, 0, 0)
@@ -112,8 +112,8 @@ fn test_wolwun_early_january_saju_year() {
     let ganzi_jan2 = MonthlyLuck::month_ganzi_at(dt_jan2);
     println!("Jan 2, 2026 Wolwun GanZi: {}", ganzi_jan2);
 
-    // Saju year 2025 (乙巳년) -> 11th Saju month (子월).
-    // 乙년 1st month stem = 戊(4). 11th month stem = (4+10)%10 = 4 (戊).
+    // Saju year 2025 (Yi-Si year) -> 11th Saju month (Zi month).
+    // Yi year 1st month stem = Wu(4). 11th month stem = (4+10)%10 = 4 (Wu).
     // Expected: 戊子
     assert_eq!(
         ganzi_jan2.branch,
@@ -136,7 +136,7 @@ fn test_wolwun_jingzhi_boundary_2026() {
         .unwrap()
         .and_utc();
 
-    // Term 2 = 경칩 (JingZhi - major solar term entering 卯월)
+    // Term 2 = JingZhi (major solar term entering Mao month)
     let jingzhi_2026 = engine.find_solar_term_time(year_start, 2).unwrap();
     println!("JingZhi 2026 exact time: {}", jingzhi_2026);
 
@@ -149,7 +149,7 @@ fn test_wolwun_jingzhi_boundary_2026() {
     println!("1 min before JingZhi 2026: {}", ganzi_before);
     println!("1 min after JingZhi 2026: {}", ganzi_after);
 
-    // 2026 is 丙午년 -> 1st month (寅): 庚寅, 2nd month (卯): 辛卯
+    // 2026 is Bing-Wu year -> 1st month (Yin): Geng-Yin, 2nd month (Mao): Xin-Mao
     assert_eq!(
         ganzi_before.branch,
         EarthlyBranch::Yin,
@@ -182,7 +182,7 @@ fn test_wolwun_yushu_minor_term_boundary_2026() {
         .unwrap()
         .and_utc();
 
-    // Term 1 = 우수 (YuShu - minor term / 중기). Saju month branch should NOT change.
+    // Term 1 = YuShu (minor term). Saju month branch should NOT change.
     let yushu_2026 = engine.find_solar_term_time(year_start, 1).unwrap();
     println!("YuShu 2026 exact time: {}", yushu_2026);
 

@@ -16,7 +16,7 @@ Eon is a single-language Rust application running Dioxus Web on the frontend and
 |---|---|---|---|---|---|
 | M1 | E2E Testing Framework & Setup | Set up initial integration tests and E2E verification files (`TEST_READY.md`, `TEST_INFRA.md`). Enumerate 4-tier test case structures. | None | DONE | 9fe611dd-1402-4089-888a-62fce40a2d5b |
 | M2 | R1 Ashtakoota Guna Milan | Enhance engine to return 8 components details; visual progress/gauge component in Compatibility tab with KO/EN/ZH/RU translations. | M1 | DONE | 125d66a6-538c-4ffc-a542-9cafb9511739 |
-| M3 | R2 Shadbala 6대 강도 | Refactor engine to compute 6 standard Shadbala factors; grid scorecard in Strength tab, Rupa benchmark comparison, KO/EN/ZH/RU translations. | M2 | IN_PROGRESS | 2edcdc61-005a-4a04-ba79-d86d8deaedde |
+| M3 | R2 Shadbala 6-Fold Strength | Refactor engine to compute 6 standard Shadbala factors; grid scorecard in Strength tab, Rupa benchmark comparison, KO/EN/ZH/RU translations. | M2 | IN_PROGRESS | 2edcdc61-005a-4a04-ba79-d86d8deaedde |
 | M4 | R3 KP System Lords & Significators | Refactor KP engine to include sign/star/sub lords and significator table; render table in KP subtab, integrate translation keys for KO/EN/ZH/RU. | M3 | PLANNED | 2edcdc61-005a-4a04-ba79-d86d8deaedde |
 | M5 | R4 Hierarchical Dasha Timeline | Implement hierarchical Maha -> Antar -> Pratyantar accordion UI in Dasha tab; dynamic current-period highlighting, KO/EN/ZH/RU translations. | M4 | PLANNED | 2edcdc61-005a-4a04-ba79-d86d8deaedde |
 | M6 | Final Verification & Hardening | Run all E2E tests, execute Phase 2 (Adversarial Coverage Hardening), and Forensic Audit check. | M1-M5 | PLANNED | - |

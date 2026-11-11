@@ -1,52 +1,52 @@
-//! Destiny Fuzzer: 운명 취약점 분석 엔진
+//! Destiny Fuzzer: Vulnerability analysis engine
 //!
-//! 리버싱의 퍼징(Fuzzing) 기술을 사주에 적용하여,
-//! 특정 사주 원국이 견디지 못하는 최악의 운세 조합(Crash)을 찾아냅니다.
+//! Applies binary fuzzing methodologies to four pillars calculations,
+//! identifying destructive edge-case crash vectors across luck cycles.
 
 use crate::core::ganzi::GanZi;
 use crate::engine::vm::{LifeFrame, SajuVM};
 use serde::{Deserialize, Serialize};
 
-/// 운명 취약점 리포트
+/// Vulnerability report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VulnerabilityReport {
-    /// 발견된 총 크래시 수
+    /// Total detected crash count
     pub total_crashes: usize,
-    /// 가장 위험한 상위 취약점들
+    /// Top critical vulnerability vectors
     pub critical_vectors: Vec<Vulnerability>,
 }
 
-/// 발견된 개별 취약점 (Crash)
+/// Individual crash vulnerability
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Vulnerability {
-    /// 크래시 시점의 에너지 점수
+    /// Energy score at time of crash
     pub crash_score: f32,
-    /// 크래시를 유발한 원인 (재현 벡터)
+    /// Root cause reproduction vector
     pub vector: LuckVector,
-    /// 취약점 유형
+    /// Vulnerability classification
     pub vulnerability_type: String,
-    /// 주요 페이로드 (태그들)
+    /// Key payloads (trace tags)
     pub tags: Vec<String>,
-    /// 리버싱을 위한 타임스탬프 (선택적)
+    /// Timestamp for reverse analysis (optional)
     pub timestamp: Option<String>,
 }
 
-/// 취약점 재현을 위한 입력 벡터 (초정밀 타임라인 지원)
+/// Input vector for vulnerability reproduction
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LuckVector {
-    pub major: GanZi,           // 대운 (Process Context)
-    pub yearly: GanZi,          // 세운 (Yearly Instruction)
-    pub monthly: Option<GanZi>, // 월운 (Monthly Segment)
-    pub daily: Option<GanZi>,   // 일운 (Daily Trace)
-    pub hourly: Option<GanZi>,  // 시운 (Hourly Offset)
+    pub major: GanZi,           // Major luck (Process Context)
+    pub yearly: GanZi,          // Yearly luck (Yearly Instruction)
+    pub monthly: Option<GanZi>, // Monthly luck (Monthly Segment)
+    pub daily: Option<GanZi>,   // Daily luck (Daily Trace)
+    pub hourly: Option<GanZi>,  // Hourly luck (Hourly Offset)
 }
 
 pub struct DestinyFuzzer {
     pub vm: SajuVM,
-    /// 크래시로 간주할 점수 임계값 (기본 30.0)
+    /// Score threshold considered as a crash (default 20.0)
     pub crash_threshold: f32,
 }
 
@@ -58,8 +58,7 @@ impl DestinyFuzzer {
         }
     }
 
-    /// 체계적 퍼징 (Systematic Exploration)
-    /// 현재 대운 컨택스트에서 모든 60갑자 세운을 순회하며 취약점을 찾습니다.
+    /// Systematic exploration across all 60 sexagenary yearly luck cycles within major luck context
     pub fn audit(&self, major_context: GanZi) -> VulnerabilityReport {
         let mut vulnerabilities = Vec::new();
 
@@ -84,7 +83,7 @@ impl DestinyFuzzer {
             }
         }
 
-        // 점수가 낮은 순으로 정렬
+        // Sort by lowest score ascending
         vulnerabilities.sort_by(|a, b| {
             a.crash_score
                 .partial_cmp(&b.crash_score)
@@ -97,8 +96,7 @@ impl DestinyFuzzer {
         }
     }
 
-    /// 랜덤 퍼징 (Random Brute-force)
-    /// 대운, 세운, 월운을 무작위로 실어나르며 예기치 못한 크래시를 찾습니다.
+    /// Random brute-force fuzzing across randomized major, yearly, and monthly luck cycles
     #[cfg(feature = "parallel")]
     pub fn fuzz_random(&self, iterations: usize) -> VulnerabilityReport {
         let mut vulnerabilities = Vec::new();
@@ -144,8 +142,8 @@ impl DestinyFuzzer {
         }
     }
 
-    /// 초정밀 전수 조사 (Full Spectrum Timeline Audit)
-    /// 100년치(약 43만 시간 슬롯) 데이터를 전수 퍼징하여 취약점을 탐지합니다.
+    /// Full Spectrum Timeline Audit
+    /// Exhaustive fuzzing across 100-year high-resolution time slots
     pub fn audit_high_res(
         &self,
         birth_year: i32,
@@ -153,7 +151,7 @@ impl DestinyFuzzer {
     ) -> VulnerabilityReport {
         let mut vulnerabilities = Vec::new();
 
-        // 100년 전수 조사
+        // 100-year exhaustive audit
         for age in 0..100 {
             let year = birth_year + age as i32;
             let yearly_ganzi = GanZi::from_year(year);
@@ -165,7 +163,7 @@ impl DestinyFuzzer {
             for month in 1..=12 {
                 let monthly_ganzi = self.calculate_month_ganzi(year, month);
 
-                // 샘플링: 매월 1, 11, 21일 (전수 조사 시 43만 개, 샘플링 시 약 4.3만 개)
+                // Sampling: 1st, 11th, 21st days of each month
                 for day in [1, 11, 21] {
                     let daily_ganzi = self.calculate_day_ganzi(year, month as u32, day);
 
@@ -195,7 +193,7 @@ impl DestinyFuzzer {
                                 vulnerability_type: self.determine_vuln_type(&frame),
                                 tags: frame.tags_as_strings(),
                                 timestamp: Some(format!(
-                                    "{}년 {}월 {}일 {}시",
+                                    "{}-{:02}-{:02} {:02}:00",
                                     year, month, day, hour
                                 )),
                             });
@@ -217,16 +215,14 @@ impl DestinyFuzzer {
         }
     }
 
-    // === 간지 계산 함수들: 공통 유틸리티 모듈 위임 ===
-    // 중복 로직 제거를 위해 `core::ganzi_utils` 모듈을 사용합니다.
-    // 이로써 FourPillars와 동일한 로직을 사용하여 정합성이 보장됩니다.
+    // === Helper methods delegating to core::ganzi_utils ===
 
     fn calculate_month_ganzi(&self, year: i32, month: i32) -> GanZi {
         crate::core::ganzi_utils::calculate_month_ganzi(year, month)
     }
 
     fn calculate_day_ganzi(&self, year: i32, month: u32, day: u32) -> GanZi {
-        // 만세력 데이터 기반의 정확한 일간지 계산 사용
+        // Calculate exact day GanZi using core utility
         crate::core::ganzi_utils::calculate_day_ganzi(year, month, day)
     }
 
@@ -234,20 +230,20 @@ impl DestinyFuzzer {
         crate::core::ganzi_utils::calculate_hour_ganzi(daily_ganzi, hour)
     }
 
-    /// 취약점 유형 판별 (Heuristics)
+    /// Vulnerability classification heuristics
     fn determine_vuln_type(&self, frame: &LifeFrame) -> String {
         if frame
             .tags
             .iter()
-            .any(|t| t.contains_pattern("충") && t.contains_pattern("용신"))
+            .any(|t| t.contains_pattern("Clash") && t.contains_pattern("CoreLuck"))
         {
-            "Critical_Yongshin_Clash (용신 파괴)".to_string()
-        } else if frame.tags.iter().any(|t| t.contains_pattern("기신")) {
-            "Elemental_Overflow (기신 과다)".to_string()
-        } else if frame.tags.iter().any(|t| t.contains_pattern("충")) {
-            "Structural_Instability (구조적 불안정)".to_string()
+            "Critical_Yongshin_Clash".to_string()
+        } else if frame.tags.iter().any(|t| t.contains_pattern("BadLuck")) {
+            "Elemental_Overflow".to_string()
+        } else if frame.tags.iter().any(|t| t.contains_pattern("Clash")) {
+            "Structural_Instability".to_string()
         } else {
-            "Low_Energy_State (에너지 저하)".to_string()
+            "Low_Energy_State".to_string()
         }
     }
 }

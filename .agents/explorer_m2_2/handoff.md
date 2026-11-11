@@ -29,28 +29,28 @@ This handoff report summarizes the read-only investigation of Milestone M2 (R1 A
 - The overall explanation string is formatted in Korean on lines 121–131:
   ```rust
   let explanation = format!(
-      "총 {}점 획득 (36점 만점). {}",
+      "Total {} points (out of 36). {}",
       total,
       if is_compatible {
-          "전반적으로 조화로운 매칭입니다. 추천합니다."
+          "  . ."
       } else if total >= 18.0 {
-          "점수는 높으나 주요 살(Nadi/Bhakoot Dosha)의 영향으로 신중한 주의가 필요합니다."
+          "   (Nadi/Bhakoot Dosha)    ."
       } else {
-          "성향적 차이가 커 상호 조율과 깊은 이해가 요구되는 상성입니다."
+          "        ."
       }
   );
   ```
 
 ### 1-2. Compatibility Tab View (`crates/eon-ui/src/components/tabs/vedic_tab.rs`)
 - Around line 2141, the scorecard table is rendered with hardcoded Korean text in headers and fields, e.g.:
-  - Line 2144: `h3 { class: "font-semibold text-slate-200", "아쉬타쿠타(Ashtakoota) 세부 매칭 평점표" }`
-  - Line 2150: `th { class: "px-4 py-3 text-left font-medium", "매칭 요인 (Koota)" }`
+  - Line 2144: `h3 { class: "font-semibold text-slate-200", "Ashtakoota   " }`
+  - Line 2150: `th { class: "px-4 py-3 text-left font-medium", "  (Koota)" }`
   - Line 2159: `td { class: "px-4 py-3 font-semibold text-slate-300", "{k.name}" }`
   - Line 2169: `td { class: "px-4 py-3 text-xs text-slate-400", "{k.description}" }`
 - Similarly, the Mangal Dosha section contains hardcoded text:
-  - Line 2113: `"남성 화성살 (Male Mangal Dosha)"`
-  - Line 2120: `if compat.report.male_mangal_dosha { "🔥 화성살(Manglik) 감지" } else { "✓ 해당 없음 (양호)" }`
-  - Line 2137: `"ℹ️ 상호 화성살 상쇄(Dosha Samya)가 성립되어 화성살의 부정적 영향이 소멸되었습니다."`
+  - Line 2113: `"  (Male Mangal Dosha)"`
+  - Line 2120: `if compat.report.male_mangal_dosha { "🔥 (Manglik) " } else { "✓   ()" }`
+  - Line 2137: `"ℹ️   (Dosha Samya)     ."`
 
 ### 1-3. Localization Mappings (`crates/eon-ui/src/i18n/`)
 - Mappings use compile-time zero-dependency static translation matching via the `TK` enum in `mod.rs` and the `translate(key: TK) -> &'static str` function inside language-specific files (`en.rs`, `ko.rs`, `zh.rs`, `ru.rs`).

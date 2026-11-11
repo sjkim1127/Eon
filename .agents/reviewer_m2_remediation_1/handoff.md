@@ -29,7 +29,7 @@ Direct source code inspection and test execution were performed for the four Mil
 
 3. **`crates/eon-saju/src/analysis/dynamic_luck.rs`** (Lines 476–494, 533–551):
    - Observed `evaluate_ipmyo_events` mapping `trapped_el` to `dm.element()` when `stage == TwelveStage::Mu`.
-   - Observed `evaluate_structure_state` adding `is_valid_gyeok_god` filter to exclude `Bijian` (비견) and `Jiecai` (겁재) from triggering `GyeokStatus::Fulfilled`:
+   - Observed `evaluate_structure_state` adding `is_valid_gyeok_god` filter to exclude `Bijian` (BiJian) and `Jiecai` (JieCai) from triggering `GyeokStatus::Fulfilled`:
      ```rust
      let god = crate::core::ten_gods::TenGod::from_stems(dm, s);
      let is_valid_gyeok_god = !matches!(
@@ -55,9 +55,9 @@ Direct source code inspection and test execution were performed for the four Mil
    - `cargo test --workspace` executed with exit code 0 (55+ tests passed across `eon-saju`, `eon-vedic`, `eon-zwds`, `eon-western`, 0 failed).
 
 ## 2. Logic Chain
-- **Wolwun pre-XiaoHan year shift**: Saju solar terms define the new year at LiChun (approx Feb 4). Gregorian January dates correspond to solar month 12 (Chou/축월) of the previous Saju year (`dt_year - 1`). Explicitly checking `dt.month() == 1` guarantees the Five Tiger Chasing rule (오호둔월법) uses the correct year stem (`dt_year - 1`), fixing pre-XiaoHan monthly luck stems.
-- **Power expanded calculation & Chou correction**: In `power.rs`, `calculate_expanded` processes both stems and branches in a unified tuple list. Passing `Option<EarthlyBranch>` allows branch-specific climate corrections without type mismatches. `EarthlyBranch::Chou` in winter months (`Hai`/`Zi`) correctly transitions to Water (`Element::Water`), completing all 4 graveyard Earth branches (진술축미).
-- **IpMyo & Gyeokguk filtering**: `evaluate_ipmyo_events` correctly traps `dm.element()`. In Gyeokguk theory, Self elements (Bijian / Jiecai) emerging in luck stems do not form standard 8-Gyeok fulfillment (`성격`). Filtering out `Bijian` and `Jiecai` prevents erroneous Gyeokguk status transitions.
+- **Wolwun pre-XiaoHan year shift**: Saju solar terms define the new year at LiChun (approx Feb 4). Gregorian January dates correspond to solar month 12 (Chou/) of the previous Saju year (`dt_year - 1`). Explicitly checking `dt.month() == 1` guarantees the Five Tiger Chasing rule () uses the correct year stem (`dt_year - 1`), fixing pre-XiaoHan monthly luck stems.
+- **Power expanded calculation & Chou correction**: In `power.rs`, `calculate_expanded` processes both stems and branches in a unified tuple list. Passing `Option<EarthlyBranch>` allows branch-specific climate corrections without type mismatches. `EarthlyBranch::Chou` in winter months (`Hai`/`Zi`) correctly transitions to Water (`Element::Water`), completing all 4 graveyard Earth branches ().
+- **IpMyo & Gyeokguk filtering**: `evaluate_ipmyo_events` correctly traps `dm.element()`. In Gyeokguk theory, Self elements (Bijian / Jiecai) emerging in luck stems do not form standard 8-Gyeok fulfillment (``). Filtering out `Bijian` and `Jiecai` prevents erroneous Gyeokguk status transitions.
 - **VM GaeGo double-scoring elimination**: Branch clashes on storage branches trigger GaeGo unsealing events evaluated in Section 6.7 of `SajuVM`. Previously, Section 3's memory dump loop scored the same hidden stems without checking if GaeGo would score them. Adding the `is_gaego_unsealed` check prevents duplicate register updates and score additions.
 
 ## 3. Caveats

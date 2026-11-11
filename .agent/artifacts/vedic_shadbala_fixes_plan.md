@@ -2,60 +2,60 @@
 
 ## Overview
 
-정통 베딕 점성학(BPHS) 표준에 맞게 Shadbala 계산 로직을 구현합니다.
+  (BPHS)   Shadbala   .
 
 ## Problems Identified
 
-### 1. Shadbala (행성 강도) 계산 오류
+### 1. Shadbala ( )  
 
-#### 1.1 Chesta Bala (체스타 발라 - 운동 강도)
+#### 1.1 Chesta Bala (  -  )
 
-**현재 문제:**
+** :**
 
-- 역행이면 무조건 60점 부여
-- 평균 속도 대비 비율로 단순 계산
+-   60 
+-      
 
-**BPHS 표준:**
+**BPHS :**
 
-- 태양/달: 별도 공식 (Ayana Bala와 연계)
-- 5행성 (화성~토성):
-  - Vakra (역행): 60
-  - Anuvakra (역행 후 정지): 30
-  - Vikala (매우 느림): 15
-  - Mandatara (느림): 7.5
-  - Manda (중간): 15
-  - Sama (평균): 30
-  - Chara (빠름): 45
-  - Ati-chara (매우 빠름): 60
+- /:   (Ayana Bala )
+- 5 (~):
+  - Vakra (): 60
+  - Anuvakra (  ): 30
+  - Vikala ( ): 15
+  - Mandatara (): 7.5
+  - Manda (): 15
+  - Sama (): 30
+  - Chara (): 45
+  - Ati-chara ( ): 60
   
-**구현 방법:**
+** :**
 
 ```rust
-// 속도 기준값 정의
+//   
 const SPEED_THRESHOLDS: [(f64, &str, f64); 8] = [
     (0.0, "Stationary", 0.0),
-    (0.05, "Vakra", 60.0),      // 역행
-    (0.1, "Vikala", 15.0),      // 매우 느림
-    (0.5, "Mandatara", 7.5),    // 느림
-    (1.0, "Manda", 15.0),       // 중간
-    (1.5, "Sama", 30.0),        // 평균
-    (2.0, "Chara", 45.0),       // 빠름
-    (f64::MAX, "Ati-chara", 60.0), // 매우 빠름
+    (0.05, "Vakra", 60.0),      // 
+    (0.1, "Vikala", 15.0),      //  
+    (0.5, "Mandatara", 7.5),    // 
+    (1.0, "Manda", 15.0),       // 
+    (1.5, "Sama", 30.0),        // 
+    (2.0, "Chara", 45.0),       // 
+    (f64::MAX, "Ati-chara", 60.0), //  
 ];
 ```
 
-#### 1.2 Ishta Phala (이슈타 팔라 - 길성 점수)
+#### 1.2 Ishta Phala (  -  )
 
-**현재 문제:**
+** :**
 
-- `(uchcha + chesta) / 2.0` (산술 평균)
+- `(uchcha + chesta) / 2.0` ( )
 
-**BPHS 표준:**
+**BPHS :**
 
-- `sqrt(uchcha * chesta)` (기하 평균)
-- 또는 `(uchcha * chesta * 60) / (uchcha + chesta)` (조화 평균)
+- `sqrt(uchcha * chesta)` ( )
+-  `(uchcha * chesta * 60) / (uchcha + chesta)` ( )
 
-**구현:**
+**:**
 
 ```rust
 fn calculate_ishta_kashta(uchcha: f64, chesta: f64) -> (f64, f64) {
@@ -66,21 +66,21 @@ fn calculate_ishta_kashta(uchcha: f64, chesta: f64) -> (f64, f64) {
 }
 ```
 
-#### 1.3 Ayana Bala (아야나 발라 - 적위 강도)
+#### 1.3 Ayana Bala (  -  )
 
-**현재 문제:**
+** :**
 
-- 적위를 24도로 가정
-- 선형 비례식 사용
+-  24 
+-   
 
-**BPHS 표준:**
+**BPHS :**
 
-- 황도 경사각 23°27' (23.45도) 사용
-- 공식: `(23.45° ± Declination) / 46.9° * 60`
-- 북쪽 강한 행성 (태양, 화성, 목성, 금성): +
-- 남쪽 강한 행성 (달, 토성): -
+-   23°27' (23.45) 
+- : `(23.45° ± Declination) / 46.9° * 60`
+-    (, , , ): +
+-    (, ): -
 
-**구현:**
+**:**
 
 ```rust
 const ECLIPTIC_OBLIQUITY: f64 = 23.45; // 23°27'
@@ -103,21 +103,21 @@ fn calculate_ayana_bala(planet: VedicPlanet, declination: f64) -> f64 {
 }
 ```
 
-#### 1.4 Drik Bala (드릭 발라 - 시각 강도)
+#### 1.4 Drik Bala (  -  )
 
-**현재 문제:**
+** :**
 
-- 계산된 값을 4로 나눔 (`val / 4.0`)
+-   4  (`val / 4.0`)
 
-**BPHS 표준:**
+**BPHS :**
 
-- Drik Bala는 모든 행성의 aspect 영향을 합산
-- Benefic aspects: 양수 가중치
-- Malefic aspects: 음수 가중치
-- 변환: Rupas = (Drik Bala in degrees) / 60
-- 최종 점수는 Virupa (1/60 Rupa) 단위로 표현
+- Drik Bala   aspect  
+- Benefic aspects:  
+- Malefic aspects:  
+- : Rupas = (Drik Bala in degrees) / 60
+-   Virupa (1/60 Rupa)  
 
-**구현:**
+**:**
 
 ```rust
 fn calculate_drik_bala(pos: &VedicPosition, chart: &VedicChart) -> f64 {
@@ -151,20 +151,20 @@ fn calculate_drik_bala(pos: &VedicPosition, chart: &VedicChart) -> f64 {
 }
 ```
 
-### 2. Tribhaga Bala (트리바가 발라) 미구현
+### 2. Tribhaga Bala ( ) 
 
-**현재 문제:**
+** :**
 
-- `calculate_tribhaga_lords`가 day_lord를 8번 반복한 배열 반환
-- 실제 시간대별 지배 행성 계산 없음
+- `calculate_tribhaga_lords` day_lord 8   
+-      
 
-**BPHS 표준:**
+**BPHS :**
 
-- 낮 3부분: Mercury, Sun, Saturn (차례대로)
-- 밤 3부분: Moon, Venus, Mars (차례대로)
-- Jupiter는 항상 60점
+-  3: Mercury, Sun, Saturn ()
+-  3: Moon, Venus, Mars ()
+- Jupiter  60
 
-**구현:**
+**:**
 
 ```rust
 fn calculate_tribhaga_lords(
@@ -193,21 +193,21 @@ fn get_tribhaga_lord(
 }
 ```
 
-### 3. Yogas (요가) 판별 로직
+### 3. Yogas ()  
 
-#### 3.1 Parivartana Yoga 분류
+#### 3.1 Parivartana Yoga 
 
-**현재 문제:**
+** :**
 
-- 단순히 교환 여부만 확인
+-    
 
-**BPHS 표준:**
+**BPHS :**
 
-- Maha Parivartana: Trikona/Kendra houses 교환
-- Khala Parivartana: Dusthana houses 한쪽 포함
-- Dainya Parivartana: 6, 8, 12 houses 교환
+- Maha Parivartana: Trikona/Kendra houses 
+- Khala Parivartana: Dusthana houses  
+- Dainya Parivartana: 6, 8, 12 houses 
 
-**구현:**
+**:**
 
 ```rust
 enum ParivartanaType {
@@ -234,43 +234,43 @@ fn classify_parivartana(house1: u8, house2: u8) -> ParivartanaType {
 }
 ```
 
-#### 3.2 Neecha Bhanga Raja Yoga 확장
+#### 3.2 Neecha Bhanga Raja Yoga 
 
-**현재 문제:**
+** :**
 
-- 몇 가지 단순 조건만 체크
+-     
 
-**BPHS 표준 조건:**
+**BPHS  :**
 
-1. Dispositor가 Kendra에 있음
-2. Exalted planet이 debilitated planet을 aspect
-3. Debilitated planet의 lord가 debilitated planet과 함께 있음
-4. Debilitated planet이 자신의 sign에 있음 (특수 케이스)
-5. Moon이 paksha bala가 강할 때 (보조 조건)
+1. Dispositor Kendra 
+2. Exalted planet debilitated planet aspect
+3. Debilitated planet lord debilitated planet  
+4. Debilitated planet  sign  ( )
+5. Moon paksha bala   ( )
 
 ## Implementation Order
 
-1. ✅ Constants 추가 (`src/constants.rs`)
-2. ✅ Ayana Bala 수정
-3. ✅ Ishta/Kashta Phala 수정
-4. ✅ Chesta Bala 수정
-5. ✅ Drik Bala 수정
-6. ✅ Tribhaga Bala 구현 (panchanga.rs)
-7. ✅ Kala Bala 업데이트 (strength.rs)
-8. ✅ Parivartana Yoga 분류 (yogas.rs)
-9. ✅ Neecha Bhanga 확장 (yogas.rs)
+1. ✅ Constants  (`src/constants.rs`)
+2. ✅ Ayana Bala 
+3. ✅ Ishta/Kashta Phala 
+4. ✅ Chesta Bala 
+5. ✅ Drik Bala 
+6. ✅ Tribhaga Bala  (panchanga.rs)
+7. ✅ Kala Bala  (strength.rs)
+8. ✅ Parivartana Yoga  (yogas.rs)
+9. ✅ Neecha Bhanga  (yogas.rs)
 
 ## Testing Strategy
 
-각 수정 후:
+  :
 
-1. 샘플 차트로 값 검증
-2. BPHS 참고 값과 비교
-3. Edge cases 테스트
+1.    
+2. BPHS   
+3. Edge cases 
 
 ## Files to Modify
 
-- `src/constants.rs` - 새로운 상수 추가
-- `src/analysis/strength.rs` - Shadbala 계산 수정
-- `src/calc/panchanga.rs` - Tribhaga 구현
-- `src/analysis/yogas.rs` - Yoga 분류 개선
+- `src/constants.rs` -   
+- `src/analysis/strength.rs` - Shadbala  
+- `src/calc/panchanga.rs` - Tribhaga 
+- `src/analysis/yogas.rs` - Yoga  

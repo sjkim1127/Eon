@@ -2,7 +2,7 @@ name: Dependency Security Audit
 
 on:
   schedule:
-    # 매주 일요일 자정(UTC)에 실행
+    # Run weekly on Sunday midnight (UTC)
     - cron: '0 0 * * 0'
   push:
     branches: [ "main" ]

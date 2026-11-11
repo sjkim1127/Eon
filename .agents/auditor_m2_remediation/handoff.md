@@ -23,7 +23,7 @@ A thorough inspection of `crates/eon-saju` git diffs and modified files was perf
    - Element scores and TenGod scores are dynamically computed and normalized (`(score / total_weight) * 100.0`).
 
 3. **`crates/eon-saju/src/analysis/dynamic_luck.rs`**:
-   - Added `evaluate_gaego_events` to compute storage unsealing (辰戌丑未) triggered by clashes (지충), triple combinations (삼합), seasonal combinations (방합), or six combinations (육합).
+   - Added `evaluate_gaego_events` to compute storage unsealing (辰戌丑未) triggered by clashes (Branch Clash), triple combinations (Triple Alliance), seasonal combinations (Seasonal Alliance), or six combinations (Six Combination).
    - Added `evaluate_ipmyo_events` for element trapping when 12-stage reaches 墓 (Mu).
    - Added `evaluate_structure_state` for dynamic structure transitions (Fulfilled, Transformed, Broken, Stable), excluding BiJian (比肩) and JieCai (劫財) from triggering Fulfilled status.
    - Alliance combination (Triple/Seasonal) precedence suppression correctly retains only non-alliance branches for clashes/six-combinations.

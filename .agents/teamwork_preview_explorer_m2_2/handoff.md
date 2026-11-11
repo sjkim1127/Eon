@@ -1,4 +1,4 @@
-# Handoff Report: Milestone M2 (R1: Ashtakoota Guna Milan 상세 고도화)
+# Handoff Report: Milestone M2 (R1: Ashtakoota Guna Milan Detailed Refinement)
 
 ## 1. Observation
 - **Vedic Matching Calculations**:

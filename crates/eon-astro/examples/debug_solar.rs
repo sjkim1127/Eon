@@ -19,7 +19,7 @@ fn get_solar_term_index(dt: DateTime<Utc>) -> u8 {
 fn main() {
     let tz = FixedOffset::east_opt(540 * 60).unwrap();
 
-    // 2024년 2월 3일 KST 12:00
+    // 2024-02-03 KST 12:00
     let dt1 = tz
         .with_ymd_and_hms(2024, 2, 3, 12, 0, 0)
         .single()
@@ -28,7 +28,7 @@ fn main() {
     println!("2024-02-03 12:00 KST: {:?}", dt1);
     get_solar_term_index(dt1);
 
-    // 2024년 2월 4일 KST 17:00
+    // 2024-02-04 KST 17:00
     let dt2 = tz
         .with_ymd_and_hms(2024, 2, 4, 17, 0, 0)
         .single()

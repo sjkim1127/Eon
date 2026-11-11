@@ -9,11 +9,11 @@ Empirical stress testing of Milestone 1 (R1) implementations for **12-Unseong**,
 - **Verified & Passed**: 
   - Samjae calculation logic across all 12 birth year branches and 12 transit branches.
   - 12-Unseong Yin-stem option (`yin_stem_reverse: true` vs `false`).
-  - Gongmang dissolution for direct 6-clash (충) and 6-combination (육합).
-  - Unclashed/uncombined Noble Spirit Marker annulment (`(귀인공망)`).
+  - Gongmang dissolution for direct 6-clash () and 6-combination (Six Combination).
+  - Unclashed/uncombined Noble Spirit Marker annulment (`(Void)`).
 - **Critical Failure Modes / Bugs Identified**:
   1. **False Positive Void Dissolution (`void.rs:164–175`)**: `check_void_dissolution` checks if any Triple or Seasonal Combination exists in the 4 pillars, but fails to check if the voided branch is a member of that combination. Unrelated void branches are incorrectly marked dissolved.
-  2. **Position String Mismatch in Spirit Marker Relations (`spirit_markers.rs:719–730`)**: `m.position.hangul()` returns `"년주"`, `"월주"`, `"일주"`, `"시주"`, whereas `rel_analysis` returns `"년지"`, `"월지"`, `"일지"`, `"시주"`. Because `"년주" != "년지"`, `is_clashed` and `is_combined` always evaluate to `false`. This completely breaks Noble Spirit restoration (`(공망해충/해합 구원)`) and clash/combination modifiers across all spirit markers.
+  2. **Position String Mismatch in Spirit Marker Relations (`spirit_markers.rs:719–730`)**: `m.position.hangul()` returns `"Year Pillar"`, `"Month Pillar"`, `"Day Pillar"`, `"Hour Pillar"`, whereas `rel_analysis` returns `"Year Branch"`, `"Month Branch"`, `"Day Branch"`, `"Hour Pillar"`. Because `"Year Pillar" != "Year Branch"`, `is_clashed` and `is_combined` always evaluate to `false`. This completely breaks Noble Spirit restoration (`(Void/ )`) and clash/combination modifiers across all spirit markers.
 
 ---
 
@@ -33,21 +33,21 @@ Empirical stress testing of Milestone 1 (R1) implementations for **12-Unseong**,
 164:    if !crate::analysis::relationships::TripleCombination::check(&all_branches).is_empty() {
 165:        return Some((
 166:            true,
-167:            "원국 삼합(三合) 성국으로 공망 해소 (공망해합)".to_string(),
+167:            " Triple Alliance(三合)  Void  (Void)".to_string(),
 168:        ));
 169:    }
 170:    if !crate::analysis::relationships::SeasonalCombination::check(&all_branches).is_empty() {
 171:        return Some((
 172:            true,
-173:            "원국 방합(方合) 성국으로 공망 해소 (공망해합)".to_string(),
+173:            " Seasonal Alliance(方合)  Void  (Void)".to_string(),
 174:        ));
 175:    }
 ```
 - In `check_void_dissolution`, `TripleCombination::check(&all_branches)` and `SeasonalCombination::check(&all_branches)` check the full set of 4 branches. If true, line 165 or 171 returns `is_dissolved = true` for `target_branch` without verifying if `target_branch` is part of the combination.
 - Empirical test case: Chart `Year=戊寅`, `Month=乙卯`, `Day=丙辰`, `Hour=丁丑`.
   - Void branches for `丙辰` day are `子` and `丑`. Hour branch `丑` is voided.
-  - `Year(寅)`, `Month(卯)`, `Day(辰)` form `寅卯辰` Seasonal Combination (방합).
-  - `check_void_dissolution` returns `is_dissolved: true` with reason `"원국 방합(方合) 성국으로 공망 해소 (공망해합)"` for `丑`, even though `丑` is Earth (Winter) and NOT part of `寅卯辰` Wood (Spring).
+  - `Year(寅)`, `Month(卯)`, `Day(辰)` form `寅卯辰` Seasonal Combination (Seasonal Alliance).
+  - `check_void_dissolution` returns `is_dissolved: true` with reason `" Seasonal Alliance(方合)  Void  (Void)"` for `丑`, even though `丑` is Earth (Winter) and NOT part of `寅卯辰` Wood (Spring).
 
 ### Observation 3: Spirit Marker Position String Mismatch (`spirit_markers.rs:718–730`)
 ```rust
@@ -57,20 +57,20 @@ Empirical stress testing of Milestone 1 (R1) implementations for **12-Unseong**,
 721:            if p1 == pos_str || p2 == pos_str { is_clashed = true; }
 722:        }
 ```
-- `m.position.hangul()` (line 258 of `spirit_markers.rs`) returns `"년주"`, `"월주"`, `"일주"`, `"시주"`.
-- `rel_analysis` (lines 777-780 of `relationships.rs`) stores branch position tuples with `"년지"`, `"월지"`, `"일지"`, `"시지"`.
-- `p1 == pos_str` compares `"년지"` with `"년주"`, which is always `false`.
+- `m.position.hangul()` (line 258 of `spirit_markers.rs`) returns `"Year Pillar"`, `"Month Pillar"`, `"Day Pillar"`, `"Hour Pillar"`.
+- `rel_analysis` (lines 777-780 of `relationships.rs`) stores branch position tuples with `"Year Branch"`, `"Month Branch"`, `"Day Branch"`, `"Hour Branch"`.
+- `p1 == pos_str` compares `"Year Branch"` with `"Year Pillar"`, which is always `false`.
 - Empirical test case: Chart `Year=癸未` (Void Tianyi), `Month=己丑` (丑未沖), `Day=庚寅`, `Hour=戊寅`.
-  - Expectation: `tc.is_clashed == true`, `tc.summary` contains `"(공망해충/해합 구원)"`.
-  - Actual result: `tc.is_clashed` is `false`, `tc.summary` is `"천을귀인 (귀인공망)"`.
+  - Expectation: `tc.is_clashed == true`, `tc.summary` contains `"(Void/ )"`.
+  - Actual result: `tc.is_clashed` is `false`, `tc.summary` is `"Tianyi Noble (Void)"`.
 
 ### Observation 4: 12-Unseong Yin-Stem Config (`twelve_stages.rs:237–263`)
 ```rust
 253:    let distance = if is_yang || !config.yin_stem_reverse {
-254:        // 양간 또는 음포태 동행설(yin_stem_reverse == false): 순행 (시계방향)
+254:        //    (yin_stem_reverse == false):  ()
 255:        (branch_idx - changsheng_idx).rem_euclid(12)
 256:    } else {
-257:        // 음간 기본: 역행 (반시계방향)
+257:        //  :  ()
 258:        (changsheng_idx - branch_idx).rem_euclid(12)
 259:    };
 ```
@@ -87,13 +87,13 @@ Empirical stress testing of Milestone 1 (R1) implementations for **12-Unseong**,
    - Stress test over all 144 combinations verified 36 valid Samjae states and 108 None states with 100% precision.
 
 2. **Gongmang Dissolution Logic**:
-   - Gongmang dissolution requires the voided branch itself to be involved in a clash (충) or combination (합).
-   - Single branch clashes (충) and six-combinations (육합) check `(target_branch, b)`, which inherently enforces membership.
+   - Gongmang dissolution requires the voided branch itself to be involved in a clash () or combination ().
+   - Single branch clashes () and six-combinations (Six Combination) check `(target_branch, b)`, which inherently enforces membership.
    - However, for Triple and Seasonal combinations, `void.rs` passes `&all_branches` to `TripleCombination::check` and `SeasonalCombination::check`. It returns `Some(...)` if ANY combination exists in `all_branches`, missing the check `combination.branches().contains(&target_branch)`.
 
 3. **Spirit Marker Modifier & Restoration Logic**:
    - `spirit_markers.rs` attempts to integrate `rel_analysis` (clashes and combinations) to adjust spirit marker interpretations and restore voided noble spirits.
-   - Because `pos_str` uses `PillarPosition::hangul()` (`"년주"`), while `rel_analysis` uses branch string names (`"년지"`), no clash or combination match ever succeeds.
+   - Because `pos_str` uses `PillarPosition::hangul()` (`"Year Pillar"`), while `rel_analysis` uses branch string names (`"Year Branch"`), no clash or combination match ever succeeds.
    - Consequently, `is_clashed` and `is_combined` remain `false` for all branch spirit markers in `spirit_markers.rs`.
 
 4. **12-Unseong Config Logic**:
@@ -106,7 +106,7 @@ Empirical stress testing of Milestone 1 (R1) implementations for **12-Unseong**,
 ## 3. Caveats
 
 - **Scope Limit**: Code modification was prohibited per role constraints ("Review-only — do NOT modify implementation code"). The bugs found were empirically captured and verified via `crates/eon-saju/tests/milestone1_part2_stress_tests.rs` without modifying production source code under `src/`.
-- **Downstream Impact**: Fixing Bug 2 (`"년주"` vs `"년지"` mismatch) in `spirit_markers.rs` will activate clash/combination modifiers for all branch spirit markers across the system, which may alter spirit marker detail summaries in UI reports.
+- **Downstream Impact**: Fixing Bug 2 (`"Year Pillar"` vs `"Year Branch"` mismatch) in `spirit_markers.rs` will activate clash/combination modifiers for all branch spirit markers across the system, which may alter spirit marker detail summaries in UI reports.
 
 ---
 
@@ -114,7 +114,7 @@ Empirical stress testing of Milestone 1 (R1) implementations for **12-Unseong**,
 
 - **Samjae**: Implemented correctly for all 12 birth year branches. Recommendation: Wire `calculate_samjae` into `YearlyLuck::calculate` in `periodic_luck.rs`.
 - **Gongmang Dissolution**: Functional for 6-clash and 6-combination, but contains a false-positive bug for Triple/Seasonal combinations. Recommendation: In `void.rs`, verify `comb.branches().contains(&target_branch)`.
-- **Noble Spirit Marker Annulment & Restoration**: Annulment works; restoration is broken due to a string mismatch (`"년주"` vs `"년지"`). Recommendation: In `spirit_markers.rs:719`, map `pos_str` to `"년지"`, `"월지"`, `"일지"`, `"시지"` or replace string comparisons with enum comparisons.
+- **Noble Spirit Marker Annulment & Restoration**: Annulment works; restoration is broken due to a string mismatch (`"Year Pillar"` vs `"Year Branch"`). Recommendation: In `spirit_markers.rs:719`, map `pos_str` to `"Year Branch"`, `"Month Branch"`, `"Day Branch"`, `"Hour Branch"` or replace string comparisons with enum comparisons.
 - **12-Unseong Yin-Stem Config**: Configurable and 100% correct.
 
 ---

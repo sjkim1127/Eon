@@ -23,8 +23,8 @@ All 4 target bugs identified by Challenger reports (`teamwork_preview_challenger
    - *Fix*: Added inclusion check `c.branches().contains(&target_branch)` for both `TripleCombination` and `SeasonalCombination` before marking `is_dissolved = true`.
 
 4. **Spirit Marker Position String Mismatch (`crates/eon-saju/src/analysis/spirit_markers.rs:719-731`)**:
-   - *Before*: `m.position.hangul()` returned `"년주"`, `"월주"`, `"일주"`, `"시주"`, while `rel_analysis` branch tuples used `"년지"`, `"월지"`, `"일지"`, `"시지"`. Comparing `"년주"` to `"년지"` always evaluated to `false`, disabling `is_clashed` and `is_combined` detection for branch spirit markers and preventing noble spirit restoration (`(공망해충/해합 구원)`).
-   - *Fix*: Mapped `m.position` to branch position strings (`"년지"`, `"월지"`, `"일지"`, `"시지"`) matching `rel_analysis` branch tuple keys.
+   - *Before*: `m.position.hangul()` returned `"Year Pillar"`, `"Month Pillar"`, `"Day Pillar"`, `"Hour Pillar"`, while `rel_analysis` branch tuples used `"Year Branch"`, `"Month Branch"`, `"Day Branch"`, `"Hour Branch"`. Comparing `"Year Pillar"` to `"Year Branch"` always evaluated to `false`, disabling `is_clashed` and `is_combined` detection for branch spirit markers and preventing noble spirit restoration (`(Void/ )`).
+   - *Fix*: Mapped `m.position` to branch position strings (`"Year Branch"`, `"Month Branch"`, `"Day Branch"`, `"Hour Branch"`) matching `rel_analysis` branch tuple keys.
 
 ---
 
@@ -34,16 +34,16 @@ All 4 target bugs identified by Challenger reports (`teamwork_preview_challenger
    - `integrated.ten_god_scores` returns all 10 TenGod enum variants. Filtering with `if percentage > 0.0` ensures only TenGods that actually manifest in the natal chart increment the respective `DeukSe` counts (`shishang_count`, `caisheng_count`, etc.).
 
 2. **Bug 2 Logic**:
-   - Follower patterns (종격) depend on which non-DM element energy dominates the chart (식상 vs 재성 vs 관살).
-   - By comparing `shishang_power`, `cai_power`, and `guan_power` calculated via `IntegratedAnalysis`, a chart with dominant Wealth energy correctly selects `JongJae` (진종재격) or `GaJongJae` (가종재격), and a chart with dominant Officer/Kill energy selects `JongSal` (진종살격) or `GaJongSal` (가종살격).
+   - Follower patterns (Follower Structure) depend on which non-DM element energy dominates the chart (Output vs Wealth vs ).
+   - By comparing `shishang_power`, `cai_power`, and `guan_power` calculated via `IntegratedAnalysis`, a chart with dominant Wealth energy correctly selects `JongJae` (True Follow Wealth) or `GaJongJae` (Fake Follow Wealth), and a chart with dominant Officer/Kill energy selects `JongSal` () or `GaJongSal` ().
 
 3. **Bug 3 Logic**:
-   - Gongmang dissolution by combination (공망해합) requires the voided branch itself to participate in the combination.
+   - Gongmang dissolution by combination (Void) requires the voided branch itself to participate in the combination.
    - Checking `triples.iter().any(|c| c.branches().contains(&target_branch))` and `seasonals.iter().any(|c| c.branches().contains(&target_branch))` guarantees that only voided branches that belong to the formed Triple or Seasonal combination are marked dissolved.
 
 4. **Bug 4 Logic**:
-   - `rel_analysis.branch_clashes`, `branch_punishments`, `six_combinations`, and `dominant_semi_combinations` use branch position labels `"년지"`, `"월지"`, `"일지"`, `"시지"`.
-   - Matching `m.position` (`Year` -> `"년지"`, `Month` -> `"월지"`, `Day` -> `"일지"`, `Hour` -> `"시지"`) allows string equality comparisons with `p1` and `p2` to succeed, correctly flagging `is_clashed = true` and `is_combined = true` and activating `(공망해충/해합 구원)` restoration logic.
+   - `rel_analysis.branch_clashes`, `branch_punishments`, `six_combinations`, and `dominant_semi_combinations` use branch position labels `"Year Branch"`, `"Month Branch"`, `"Day Branch"`, `"Hour Branch"`.
+   - Matching `m.position` (`Year` -> `"Year Branch"`, `Month` -> `"Month Branch"`, `Day` -> `"Day Branch"`, `Hour` -> `"Hour Branch"`) allows string equality comparisons with `p1` and `p2` to succeed, correctly flagging `is_clashed = true` and `is_combined = true` and activating `(Void/ )` restoration logic.
 
 ---
 

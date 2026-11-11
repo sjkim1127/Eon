@@ -1,7 +1,7 @@
-//! 하드웨어 가속 시뮬레이터
+//! Hardware-accelerated batch simulator
 //!
-//! 멀티코어 병렬 처리를 통해 수십만 개의 인생 프레임을 수 밀리초 내에 시뮬레이션합니다.
-//! WASM 환경에서는 순차 처리로 자동 폴백됩니다.
+//! Simulates hundreds of thousands of life frames in milliseconds via multi-core parallel processing.
+//! Automatically falls back to sequential execution in WASM environments.
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -22,7 +22,7 @@ impl BatchSimulator {
         }
     }
 
-    /// 1000년 전수 조사 시뮬레이션
+    /// Simulate 1,000 years exhaustive life frames
     pub fn simulate_1000_years(
         &self,
         start_year: i32,
@@ -52,7 +52,7 @@ impl BatchSimulator {
         }
     }
 
-    /// 특정 범위의 연도 시뮬레이션
+    /// Simulate specified range of years
     pub fn simulate_range(
         &self,
         start_year: i32,

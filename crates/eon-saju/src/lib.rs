@@ -8,7 +8,7 @@
 )]
 //! # Eon Saju (四柱)
 //!
-//! 사주(四柱, Four Pillars of Destiny) 계산 라이브러리입니다.
+//! Four Pillars of Destiny (四柱) calculation library.
 
 pub mod analysis;
 pub mod core;

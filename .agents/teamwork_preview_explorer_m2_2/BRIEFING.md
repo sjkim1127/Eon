@@ -1,7 +1,7 @@
 # BRIEFING — 2026-06-20T15:02:00+09:00
 
 ## Mission
-Analyze the requirements for Milestone M2 (R1: Ashtakoota Guna Milan 상세 고도화) by investigating the Vedic matching engine, service routing, DTOs, Dioxus UI components, and i18n translation files, and write an analysis report.
+Analyze the requirements for Milestone M2 (R1: Ashtakoota Guna Milan Detailed Refinement) by investigating the Vedic matching engine, service routing, DTOs, Dioxus UI components, and i18n translation files, and write an analysis report.
 
 ## 🔒 My Identity
 - Archetype: explorer

@@ -1,5 +1,5 @@
 ## 2026-06-20T15:00:38+09:00
-Analyze the requirements for Milestone M2 (R1: Ashtakoota Guna Milan 상세 고도화):
+Analyze the requirements for Milestone M2 (R1: Ashtakoota Guna Milan Detailed Refinement):
 1. Review the engine code in `crates/eon-vedic/src/analysis/matching.rs` to see how the 8 Koota factors (Varna, Vashya, Tara, Yoni, Maitri, Gana, Bhakoot, Nadi) are calculated and returned.
 2. Check how the compatibility results are routed via `crates/eon-service/src/services/vedic.rs` and the DTOs in `crates/eon-service/src/dto.rs`.
 3. Review the Dioxus UI code in `crates/eon-ui/src/components/tabs/vedic_tab.rs` (especially lines 1997-2250) and identify where and how the compatibility results are currently rendered.

@@ -250,7 +250,7 @@ impl TajikaEngine {
         let sahams_def = vec![
             (
                 "Punya",
-                "행운/번영 (Punya)",
+                "Fortune / Prosperity (Punya)",
                 "Moon - Sun + Lagna",
                 moon,
                 sun,
@@ -259,7 +259,7 @@ impl TajikaEngine {
             ),
             (
                 "Vidya",
-                "학문/지혜 (Vidya)",
+                "Learning / Wisdom (Vidya)",
                 "Sun - Moon + Lagna",
                 sun,
                 moon,
@@ -268,7 +268,7 @@ impl TajikaEngine {
             ),
             (
                 "Yash",
-                "명예/명성 (Yash)",
+                "Honor / Fame (Yash)",
                 "Jupiter - Punya + Lagna",
                 jup,
                 (moon - sun + lagna + 360.0) % 360.0,
@@ -277,7 +277,7 @@ impl TajikaEngine {
             ),
             (
                 "Mitra",
-                "우정/동료 (Mitra)",
+                "Friendship / Allies (Mitra)",
                 "Jupiter - Punya + Lagna",
                 jup,
                 (moon - sun + lagna + 360.0) % 360.0,
@@ -286,7 +286,7 @@ impl TajikaEngine {
             ),
             (
                 "Mahatmya",
-                "위엄/존귀 (Mahatmya)",
+                "Dignity / Greatness (Mahatmya)",
                 "Punya - Mars + Lagna",
                 (moon - sun + lagna + 360.0) % 360.0,
                 mars,
@@ -295,7 +295,7 @@ impl TajikaEngine {
             ),
             (
                 "Asha",
-                "희망/소원 (Asha)",
+                "Hope / Aspirations (Asha)",
                 "Saturn - Venus + Lagna",
                 sat,
                 ven,
@@ -304,7 +304,7 @@ impl TajikaEngine {
             ),
             (
                 "Samartha",
-                "역량/권능 (Samartha)",
+                "Capability / Power (Samartha)",
                 "Mars - LagnaLord + Lagna",
                 mars,
                 lagna_lord,
@@ -313,7 +313,7 @@ impl TajikaEngine {
             ),
             (
                 "Bhratri",
-                "형제/자매 (Bhratri)",
+                "Siblings / Kinship (Bhratri)",
                 "Jupiter - Saturn + Lagna",
                 jup,
                 sat,
@@ -322,7 +322,7 @@ impl TajikaEngine {
             ),
             (
                 "Gaurava",
-                "위상/자존 (Gaurava)",
+                "Self-Esteem / Respect (Gaurava)",
                 "Sun - Moon + Lagna",
                 sun,
                 moon,
@@ -331,7 +331,7 @@ impl TajikaEngine {
             ),
             (
                 "Pitri",
-                "부친 (Pitri)",
+                "Father (Pitri)",
                 "Saturn - Sun + Lagna",
                 sat,
                 sun,
@@ -340,7 +340,7 @@ impl TajikaEngine {
             ),
             (
                 "Matri",
-                "모친 (Matri)",
+                "Mother (Matri)",
                 "Moon - Venus + Lagna",
                 moon,
                 ven,
@@ -349,7 +349,7 @@ impl TajikaEngine {
             ),
             (
                 "Putra",
-                "자녀 (Putra)",
+                "Children / Offspring (Putra)",
                 "Jupiter - Moon + Lagna",
                 jup,
                 moon,
@@ -358,7 +358,7 @@ impl TajikaEngine {
             ),
             (
                 "Jeeva",
-                "생명/활력 (Jeeva)",
+                "Vitality / Life Force (Jeeva)",
                 "Saturn - Jupiter + Lagna",
                 sat,
                 jup,
@@ -367,7 +367,7 @@ impl TajikaEngine {
             ),
             (
                 "Karma",
-                "직업/커리어 (Karma)",
+                "Profession / Calling (Karma)",
                 "Mars - Sun + Lagna",
                 mars,
                 sun,
@@ -376,7 +376,7 @@ impl TajikaEngine {
             ),
             (
                 "Roga",
-                "질병/건강 (Roga)",
+                "Health / Sickness (Roga)",
                 "Lagna - Moon + Lagna",
                 lagna,
                 moon,
@@ -385,7 +385,7 @@ impl TajikaEngine {
             ),
             (
                 "Kali",
-                "갈등/분쟁 (Kali)",
+                "Conflict / Strife (Kali)",
                 "Jupiter - Mars + Lagna",
                 jup,
                 mars,
@@ -394,7 +394,7 @@ impl TajikaEngine {
             ),
             (
                 "Shastru",
-                "적/경쟁자 (Shastru)",
+                "Enemies / Competitors (Shastru)",
                 "Mars - Saturn + Lagna",
                 mars,
                 sat,
@@ -403,7 +403,7 @@ impl TajikaEngine {
             ),
             (
                 "Bandhu",
-                "친족/친지 (Bandhu)",
+                "Relatives / Community (Bandhu)",
                 "Mercury - Moon + Lagna",
                 merc,
                 moon,
@@ -412,7 +412,7 @@ impl TajikaEngine {
             ),
             (
                 "Mrityu",
-                "사고/위험 (Mrityu)",
+                "Vulnerability / Risk (Mrityu)",
                 "H8 - Moon + Lagna",
                 h8_cusp,
                 moon,
@@ -421,7 +421,7 @@ impl TajikaEngine {
             ),
             (
                 "Paradesa",
-                "타향/해외 (Paradesa)",
+                "Foreign Lands / Travel (Paradesa)",
                 "H9 - H9Lord + Lagna",
                 h9_cusp,
                 h9_lord,
@@ -430,7 +430,7 @@ impl TajikaEngine {
             ),
             (
                 "Vivaha",
-                "결혼/혼인 (Vivaha)",
+                "Marriage / Union (Vivaha)",
                 "Venus - Sun + Lagna",
                 ven,
                 sun,
@@ -439,7 +439,7 @@ impl TajikaEngine {
             ),
             (
                 "Santana",
-                "자손/후손 (Santana)",
+                "Lineage / Progeny (Santana)",
                 "Saturn - Moon + Lagna",
                 sat,
                 moon,
@@ -448,7 +448,7 @@ impl TajikaEngine {
             ),
             (
                 "Strishraddha",
-                "배우자 애정 (Strishraddha)",
+                "Partner Devotion (Strishraddha)",
                 "Venus - Mercury + Lagna",
                 ven,
                 merc,
@@ -457,7 +457,7 @@ impl TajikaEngine {
             ),
             (
                 "Vyaya",
-                "손실/지출 (Vyaya)",
+                "Expenditure / Loss (Vyaya)",
                 "H12 - H12Lord + Lagna",
                 h12_cusp,
                 h12_lord,
@@ -466,7 +466,7 @@ impl TajikaEngine {
             ),
             (
                 "Labha",
-                "성취/이익 (Labha)",
+                "Gains / Attainment (Labha)",
                 "H11 - H11Lord + Lagna",
                 h11_cusp,
                 h11_lord,
@@ -475,7 +475,7 @@ impl TajikaEngine {
             ),
             (
                 "Karyasiddhi",
-                "성공/과업 (Karyasiddhi)",
+                "Enterprise Success (Karyasiddhi)",
                 "Saturn - Sun + Lagna",
                 sat,
                 sun,
@@ -484,7 +484,7 @@ impl TajikaEngine {
             ),
             (
                 "Vanik",
-                "무역/상업 (Vanik)",
+                "Trade / Commerce (Vanik)",
                 "Mercury - Moon + Lagna",
                 merc,
                 moon,
@@ -493,7 +493,7 @@ impl TajikaEngine {
             ),
             (
                 "Preeti",
-                "애정/호감 (Preeti)",
+                "Affection / Love (Preeti)",
                 "Punya - Vidya + Lagna",
                 (moon - sun + lagna + 360.0) % 360.0,
                 (sun - moon + lagna + 360.0) % 360.0,
@@ -502,7 +502,7 @@ impl TajikaEngine {
             ),
             (
                 "Jadatha",
-                "정체/둔화 (Jadatha)",
+                "Stagnation / Delays (Jadatha)",
                 "Mars - Saturn + Lagna",
                 mars,
                 sat,
@@ -511,7 +511,7 @@ impl TajikaEngine {
             ),
             (
                 "Dainya",
-                "빈곤/궁핍 (Dainya)",
+                "Poverty / Lack (Dainya)",
                 "H9Lord - LagnaLord + Lagna",
                 h9_lord,
                 lagna_lord,
@@ -520,7 +520,7 @@ impl TajikaEngine {
             ),
             (
                 "Rajya",
-                "권력/지위 (Rajya)",
+                "Power / Kingdom (Rajya)",
                 "Saturn - Sun + Lagna",
                 sat,
                 sun,
@@ -529,7 +529,7 @@ impl TajikaEngine {
             ),
             (
                 "SantanaSukha",
-                "자녀 기쁨 (SantanaSukha)",
+                "Joy of Children (SantanaSukha)",
                 "Jupiter - Venus + Lagna",
                 jup,
                 ven,
@@ -538,7 +538,7 @@ impl TajikaEngine {
             ),
             (
                 "Desanthara",
-                "해외 이주 (Desanthara)",
+                "Relocation / Emigration (Desanthara)",
                 "H9 - Lagna + Lagna",
                 h9_cusp,
                 lagna,
@@ -547,7 +547,7 @@ impl TajikaEngine {
             ),
             (
                 "Dharma",
-                "도덕/의리 (Dharma)",
+                "Righteousness / Ethics (Dharma)",
                 "Jupiter - Sun + Lagna",
                 jup,
                 sun,
@@ -556,7 +556,7 @@ impl TajikaEngine {
             ),
             (
                 "Svami",
-                "주군/지도자 (Svami)",
+                "Sovereign / Leadership (Svami)",
                 "LagnaLord - Sun + Lagna",
                 lagna_lord,
                 sun,
@@ -565,7 +565,7 @@ impl TajikaEngine {
             ),
             (
                 "Gurubhaktu",
-                "경건/신앙 (Gurubhaktu)",
+                "Devotion / Faith (Gurubhaktu)",
                 "Sun - Jupiter + Lagna",
                 sun,
                 jup,
@@ -662,11 +662,11 @@ impl TajikaEngine {
 
             let total_virupas = (kshetra + uchcha + hadda + drekkana + navamsha) / 4.0;
             let grade = if total_virupas >= 15.0 {
-                "우수 (Purna Bala)".to_string()
+                "Purna Bala (Strong)".to_string()
             } else if total_virupas >= 10.0 {
-                "보통 (Madhya Bala)".to_string()
+                "Madhya Bala (Moderate)".to_string()
             } else {
-                "약함 (Alpa Bala)".to_string()
+                "Alpa Bala (Weak)".to_string()
             };
 
             results.push(PanchaVargeeyaBala {
@@ -693,15 +693,15 @@ impl TajikaEngine {
 
         // Vimshottari Lord sequence & base proportions (in 120 year scale)
         let dasha_lords = [
-            (VedicPlanet::Ketu, "케투 (Ketu)", 7.0),
-            (VedicPlanet::Venus, "금성 (Venus)", 20.0),
-            (VedicPlanet::Sun, "태양 (Sun)", 6.0),
-            (VedicPlanet::Moon, "달 (Moon)", 10.0),
-            (VedicPlanet::Mars, "화성 (Mars)", 7.0),
-            (VedicPlanet::Rahu, "라후 (Rahu)", 18.0),
-            (VedicPlanet::Jupiter, "목성 (Jupiter)", 16.0),
-            (VedicPlanet::Saturn, "토성 (Saturn)", 19.0),
-            (VedicPlanet::Mercury, "수성 (Mercury)", 17.0),
+            (VedicPlanet::Ketu, "Ketu", 7.0),
+            (VedicPlanet::Venus, "Venus", 20.0),
+            (VedicPlanet::Sun, "Sun", 6.0),
+            (VedicPlanet::Moon, "Moon", 10.0),
+            (VedicPlanet::Mars, "Mars", 7.0),
+            (VedicPlanet::Rahu, "Rahu", 18.0),
+            (VedicPlanet::Jupiter, "Jupiter", 16.0),
+            (VedicPlanet::Saturn, "Saturn", 19.0),
+            (VedicPlanet::Mercury, "Mercury", 17.0),
         ];
 
         let nak_span = 360.0 / 27.0;
@@ -773,9 +773,9 @@ impl TajikaEngine {
                     if ithasala {
                         yogas.push(TajikaYogaInfo {
                             name: "Ithasala Yoga".to_string(),
-                            name_kr: "이타살라 요가 (결합 성취)".to_string(),
+                            name_kr: "Ithasala Yoga (Applying Aspect)".to_string(),
                             description: format!(
-                                "{:?}와 {:?}가 딜렘 한도 내에서 상호 작용하며 과업의 성취와 협력을 상징합니다.",
+                                "{:?} and {:?} interact within their Deeptamsha orbs, symbolizing cooperative achievement and task fulfillment.",
                                 p1, p2
                             ),
                             planets_involved: vec![p1, p2],
@@ -784,9 +784,9 @@ impl TajikaEngine {
                     } else {
                         yogas.push(TajikaYogaInfo {
                             name: "Esharapha Yoga".to_string(),
-                            name_kr: "에샤라파 요가 (분리 완료)".to_string(),
+                            name_kr: "Isharafa Yoga (Separating Aspect)".to_string(),
                             description: format!(
-                                "{:?}와 {:?}의 각도가 분리 단계에 들어가 일이 이미 일단락되었음을 가리킵니다.",
+                                "The aspect between {:?} and {:?} is separating, indicating that events have already culminated or passed.",
                                 p1, p2
                             ),
                             planets_involved: vec![p1, p2],
@@ -803,8 +803,8 @@ impl TajikaEngine {
             if m_pos.rasi != VedicPlanet::Moon.debilitation_rasi() {
                 yogas.push(TajikaYogaInfo {
                     name: "Kamboola Yoga".to_string(),
-                    name_kr: "캄부라 요가 (달의 길조 보증)".to_string(),
-                    description: "달이 길한 상태에서 결합을 지원하여 년운 전반의 성공 확률을 대폭 상승시킵니다.".to_string(),
+                    name_kr: "Kamboola Yoga (Lunar Benefic Assurance)".to_string(),
+                    description: "The Moon harmoniously links the applying planets, significantly enhancing the annual success probability.".to_string(),
                     planets_involved: vec![VedicPlanet::Moon],
                     is_benefic: true,
                 });
@@ -815,8 +815,8 @@ impl TajikaEngine {
         if yogas.is_empty() {
             yogas.push(TajikaYogaInfo {
                 name: "Khallasara Yoga".to_string(),
-                name_kr: "칼라사라 요가 (고립 및 시기 상조)".to_string(),
-                description: "행성 간 결합 결속이 결여되어 독립적 판단과 주의가 필요한 상태입니다."
+                name_kr: "Khallasara Yoga (Isolation & Prematurity)".to_string(),
+                description: "Lack of harmonious planetary binding indicates independent initiative and discernment are required."
                     .to_string(),
                 planets_involved: vec![VedicPlanet::Moon],
                 is_benefic: false,

@@ -86,7 +86,7 @@ pub struct VedicChart {
     pub planets: Vec<VedicPosition>,
     pub aspects: Vec<crate::analysis::aspects::AspectRelation>,
     pub sav: crate::analysis::ashtakavarga::Sarvashtakavarga,
-    pub bav: Vec<crate::analysis::ashtakavarga::AshtakavargaPoints>, // 행성별 BAV
+    pub bav: Vec<crate::analysis::ashtakavarga::AshtakavargaPoints>, // Planetary BAV
     pub house_cusps: Vec<f64>,
     pub karakas: Vec<crate::analysis::jaimini::KarakaAssignment>,
     pub arudha_padas: Vec<crate::analysis::jaimini::ArudhaPada>,

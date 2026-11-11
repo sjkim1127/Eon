@@ -1,4 +1,4 @@
-//! LifePathEmulator: 100년 인생 경로를 시뮬레이션하고 분석합니다.
+//! LifePathEmulator: Simulates and analyzes 100-year life path trajectory.
 //!
 
 use crate::analysis::dynamic_luck::DynamicLuckAnalysis;
@@ -9,41 +9,41 @@ use crate::engine::vm::{LifeFrame, SajuVM};
 use eon_core::Gender;
 use serde::{Deserialize, Serialize};
 
-/// 1년 단위의 시계열 인생 점수 데이터
+/// Time-series life score data for a single year
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct YearlyScore {
     pub year: i32,
     pub age: u32,
 
-    // 1. Base Score (기존 종합 점수)
+    // 1. Base Score (simulation score)
     pub total_score: f64,
 
-    // 2. 다차원 십성 점수
+    // 2. Multi-dimensional Ten Gods scores
     pub wealth_score: f64,
     pub career_score: f64,
     pub academic_score: f64,
     pub health_score: f64,
 
-    // 3. 변동성 및 메타데이터
+    // 3. Volatility and metadata
     pub volatility_index: f64,      // 0.0 ~ 100.0
-    pub is_transition_period: bool, // 교운기 여부 플래그
+    pub is_transition_period: bool, // Transition period flag (Gyo-un-gi)
 
-    // 4. 이동평균선 데이터 보관용
+    // 4. Moving average data storage
     pub trend_ma_5yr: Option<f64>,
 }
 
-/// 100년 인생 시뮬레이션 결과 리포트
+/// 100-year life path simulation report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LifePathReport {
-    /// 연도별 시계열 점수 데이터
+    /// Time-series score data by year
     pub timeline: Vec<YearlyScore>,
-    /// 연도별 프레임 목록
+    /// List of frames by year
     pub frames: Vec<LifeFrame>,
-    /// 인생의 최정점 연도 (나이)
+    /// Peak life year (age)
     pub peak_age: u32,
-    /// 인생의 최저점 연도 (나이)
+    /// Trough life year (age)
     pub valley_age: u32,
 }
 
@@ -62,7 +62,7 @@ impl LifePathEmulator {
         }
     }
 
-    /// 100년 인생 경로를 에뮬레이션합니다.
+    /// Emulate 100-year life path trajectory
     pub fn emulate(&self) -> Result<LifePathReport, SajuError> {
         let mut timeline = Vec::with_capacity(101);
         let input = &self.vm.natal.raw_input;
@@ -75,7 +75,7 @@ impl LifePathEmulator {
             input.minute,
         )?;
 
-        // 원국 기준 필요 데이터
+        // Natal reference data
         let dm_element = self.vm.natal.day_master_element();
         let base_dist = self.vm.natal.element_distribution();
         let primary = self.vm.yongshin.primary;
@@ -89,7 +89,7 @@ impl LifePathEmulator {
             let year = self.birth_year + age as i32;
             let yearly_ganzi = GanZi::from_year(year);
 
-            // 현재 대운 및 주변 대운 정보 탐색
+            // Find current and adjacent major luck info
             // Precondition: major_luck.cycles is non-empty and sorted ascending by start_age
             // (guaranteed by MajorLuckAnalysis::calculate_astro). Using partition_point gives
             // O(log n) lookup and lets us borrow cycles instead of cloning them.
@@ -104,11 +104,11 @@ impl LifePathEmulator {
                 .map(|c| c.ganzi)
                 .unwrap_or(self.vm.natal.month);
 
-            // 볼라틸리티(변동성, Volatility) 인덱스 계산 - 교운기
+            // Calculate volatility index - transition period (Gyo-un-gi)
             let mut dt = (age as i32 - start_age_of_major as i32).abs();
             if dt > 5 {
-                // 교운기는 대운 시작 전후이므로 나중 대운과의 거리도 고려
-                // 다음 대운까지 남은 시간 (cycle_pos is the index of the first cycle with start_age > age)
+                // Transition period considers distance to adjacent major luck cycle
+                // Time until next major luck cycle
                 if let Some(next_c) = major_luck.cycles.get(cycle_pos) {
                     dt = (next_c.start_age as i32 - age as i32).abs();
                 }
@@ -119,24 +119,24 @@ impl LifePathEmulator {
             let t_val = (1.0 - (dt as f64 / 2.0)).max(0.0);
 
             let mut v_val = 0.0;
-            // 이전 대운과 현재 대운(또는 새 대운) 사이의 벡터 거리
+            // Vector distance between adjacent major luck cycles
             if is_transition_period {
-                // 이전 대운 또는 다음 대운 찾기
+                // Find previous or next major luck cycle
                 let mut alt_ganzi = self.vm.natal.month;
                 if age >= start_age_of_major && dt <= 2 && age < start_age_of_major + 3 {
-                    // 방금 시작한 교운기 -> 이전 대운과의 차이
+                    // Just started cycle -> difference from previous cycle
                     // current cycle is at cycle_pos - 1; previous is at cycle_pos - 2
                     if cycle_pos >= 2 {
                         alt_ganzi = major_luck.cycles[cycle_pos - 2].ganzi;
                     }
                 } else if dt <= 2 {
-                    // 곧 시작할 교운기 -> 다음 대운과의 차이
+                    // About to start cycle -> difference from next cycle
                     if let Some(next_c) = major_luck.cycles.get(cycle_pos) {
                         alt_ganzi = next_c.ganzi;
                     }
                 }
 
-                // V 계산: 두 간지의 오행 차이 유클리디안 거리
+                // Compute V: Euclidean distance in element weights between two GanZi
                 let mut vec_current = [0.0; 5];
                 let mut vec_alt = [0.0; 5];
                 vec_current[major_ganzi.stem.element() as usize] += 1.0;
@@ -152,12 +152,12 @@ impl LifePathEmulator {
                 v_val = sq_sum.sqrt();
             }
 
-            // LifeFrame 추출
+            // Extract LifeFrame
             let frame = self
                 .vm
                 .step(age, major_ganzi, yearly_ganzi, None, None, None);
 
-            // 다이나믹 분석 재생성 (M(X,t)와 C(t) 계산을 위함)
+            // Recompute dynamic analysis for M(X,t) and C(t)
             let dynamic = DynamicLuckAnalysis::analyze(
                 &self.vm.natal,
                 Some(major_ganzi),
@@ -167,30 +167,30 @@ impl LifePathEmulator {
                 None,
             );
 
-            // 세운 충돌 계수 C(t)
+            // Yearly luck clash coefficient C(t)
             let mut c_val = 1.0;
             for (_clash, p1, p2) in &dynamic.combined_relations.branch_clashes {
-                if p1.contains("일지")
-                    || p2.contains("일지")
-                    || p1.contains("월지")
-                    || p2.contains("월지")
+                if p1.contains("day_branch")
+                    || p2.contains("day_branch")
+                    || p1.contains("month_branch")
+                    || p2.contains("month_branch")
                 {
                     c_val = 1.5;
                 }
             }
             if !dynamic.combined_relations.stem_clashes.is_empty() && c_val > 1.0 {
-                c_val = 2.0; // 천극지충
+                c_val = 2.0; // Heavenly & Earthly Double Clash
             }
 
             let volatility_index = (10.0 + (t_val * v_val * c_val * 20.0)).clamp(0.0, 100.0);
 
-            // --- 다차원 십성 점수(Ten Gods Multi-dimensional Score) 계산 ---
+            // --- Multi-dimensional Ten Gods Score calculation ---
             let mut e_scores: [f64; 5] = [0.0; 5];
 
             for el_idx in 0..5 {
                 let el = Element::from_index(el_idx);
 
-                // S(X): 원국 + 대운 + 세운의 기본 세력
+                // S(X): Combined strength across natal, major, and yearly luck
                 let mut s_val = 0.0;
                 s_val += base_dist[el_idx as usize].1 as f64;
                 if major_ganzi.stem.element() == el {
@@ -206,24 +206,20 @@ impl LifePathEmulator {
                     s_val += 1.0;
                 }
 
-                // F(X): 기본 우호도 (-1.0 ~ 1.5)
+                // F(X): Baseline favorability (-1.0 ~ 1.5)
                 let priority = self
                     .vm
                     .get_element_priority(el, primary, assistant, thermal);
-                // 0.0 기준을 1.0(보통)으로 맞추고 용신일때 증폭, 기신일때 축소
-                // get_element_priority는 1.0, 0.5, -0.8 등을 반환
-                // 변동성 강화를 위해 priority 가중치를 1.5로 더 증폭
+                // Normalize 0.0 baseline to 1.0; amplify for yongshin, dampen for gishin
                 let mut f_val = 1.0 + (priority as f64 * 1.5);
                 if f_val < 0.2 {
                     f_val = 0.2;
-                } // 최소값 보장
+                }
 
-                // M(X,t): 합충형해파 변동
+                // M(X,t): interaction modifier
                 let mut m_val = 1.0;
-                // 세운 지지가 충당하는 원국/대운 요소의 오행일 때 세력 감소
+                // Decrease power when yearly branch clashes with element
                 for (_clash, _p1, _p2) in &dynamic.combined_relations.branch_clashes {
-                    // 충 발생 시 해당되는 오행(지장간 본기 기준)에 영향
-                    // 간략화를 위해 세운 지지의 오행과 충하는 오행이 el인지 확인
                     if yearly_ganzi.branch.element().controls() == el
                         || yearly_ganzi.branch.element().controlled_by() == el
                     {
@@ -233,7 +229,7 @@ impl LifePathEmulator {
                 for (_six, _p1, _p2) in &dynamic.combined_relations.six_combinations {
                     if yearly_ganzi.branch.element() == el {
                         m_val += 0.3;
-                    } // 합으로 세력 강화
+                    }
                 }
                 if m_val < 0.4 {
                     m_val = 0.4;
@@ -245,37 +241,35 @@ impl LifePathEmulator {
                 e_scores[el_idx as usize] = s_val * f_val * m_val;
             }
 
-            // 카테고리별 핵심 십성 매핑
-            // 변동성 확대를 위해 기본점수(base)를 0점으로 낮추고,
-            // 원점수 대비 증폭 계수(scale_factor)를 25.0으로 2배 더 높임
+            // Category mapping for Ten Gods domains
             let base = 0.0;
-            let scale_factor = 25.0; // 점수 증폭 극대화
+            let scale_factor = 25.0; // Score amplification
 
-            // 재물(Wealth) = 재성 0.6 + 식상 0.4
+            // Wealth = Wealth 0.6 + Output 0.4
             let wealth_el = dm_element.controls();
             let shik_el = dm_element.generates();
             let wealth_raw =
                 (e_scores[wealth_el as usize] * 0.6) + (e_scores[shik_el as usize] * 0.4);
             let wealth_score = (base + (wealth_raw * scale_factor)).clamp(0.0, 100.0);
 
-            // 직업/명예(Career) = 관성 0.7 + 인성 0.3
+            // Career = Officer 0.7 + Resource 0.3
             let career_el = dm_element.controlled_by();
             let yin_el = dm_element.generated_by();
             let career_raw =
                 (e_scores[career_el as usize] * 0.7) + (e_scores[yin_el as usize] * 0.3);
             let career_score = (base + (career_raw * scale_factor)).clamp(0.0, 100.0);
 
-            // 학업/문서(Academic) = 인성 0.7 + 식상 0.3
+            // Academic = Resource 0.7 + Output 0.3
             let academic_raw =
                 (e_scores[yin_el as usize] * 0.7) + (e_scores[shik_el as usize] * 0.3);
             let academic_score = (base + (academic_raw * scale_factor)).clamp(0.0, 100.0);
 
-            // 건강/독립(Health) = 비겁 0.5 + 식상 0.5
+            // Health = Companion 0.5 + Output 0.5
             let health_raw =
                 (e_scores[dm_element as usize] * 0.5) + (e_scores[shik_el as usize] * 0.5);
             let health_score = (base + (health_raw * scale_factor)).clamp(0.0, 100.0);
 
-            // 통합 총점: VM 시뮬레이션 점수 + 4개 세부 점수의 균등 평균
+            // Unified total score: VM simulation score + average of 4 domains
             let vm_score = frame.score as f64;
             let integrated_total =
                 ((vm_score + wealth_score + career_score + academic_score + health_score) / 5.0)
@@ -291,7 +285,7 @@ impl LifePathEmulator {
                 health_score,
                 volatility_index,
                 is_transition_period,
-                trend_ma_5yr: None, // 뒤에서 일괄 계산
+                trend_ma_5yr: None, // Computed in batch afterwards
             });
             frames_buffer.push(frame);
         }
@@ -302,8 +296,7 @@ impl LifePathEmulator {
             ));
         }
 
-        // --- 4. 시계열 점수 보정 (Smoothing & Momentum) ---
-        // 5년 이동평균(MA) 선 (과거 2년 + 현재 + 미래 2년)
+        // --- 4. Time series score smoothing: 5-year Moving Average ---
         for i in 0..timeline.len() {
             let start = i.saturating_sub(2);
             let end = (i + 2).min(timeline.len() - 1);

@@ -3,7 +3,7 @@ use eon_saju::core::pillars::{FourPillars, SajuInput};
 
 fn main() {
     let gender = Gender::Male;
-    let location = Location::new("출생지", 37.32, 126.83, 135.0);
+    let location = Location::new("Birthplace", 37.32, 126.83, 135.0);
     // 2004-11-27 22:00
     let birth_info = BirthInfo::solar(2004, 11, 27, 22, 0)
         .with_timezone("Asia/Seoul")

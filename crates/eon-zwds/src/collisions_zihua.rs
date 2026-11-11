@@ -89,7 +89,7 @@ pub fn detect_triple_sihua_collisions(
         return collisions;
     }
 
-    // 대표 대한 사화 추출 (첫번째 대한 기준 또는 지정 대한)
+    // Extract active decadal Si Hua
     let active_daxian = &daxian_list[0];
     let daxian_stem = parse_stem(&active_daxian.stem_hanja).ok();
 
@@ -98,7 +98,7 @@ pub fn detect_triple_sihua_collisions(
         let mut hualu_count = 0;
         let mut stars_involved = Vec::new();
 
-        // 1. 생년 사화 체크
+        // 1. Check natal Si Hua
         for st in &p.stars {
             if let Some(s_type) = st.si_hua {
                 match s_type {
@@ -115,7 +115,7 @@ pub fn detect_triple_sihua_collisions(
             }
         }
 
-        // 2. 대한 사화 체크
+        // 2. Check decadal Si Hua
         if let Some(d_stem) = daxian_stem {
             let d_sihua = get_sihua_stars(d_stem);
             if p.stars.iter().any(|st| st.star == d_sihua[3]) {
@@ -128,7 +128,7 @@ pub fn detect_triple_sihua_collisions(
             }
         }
 
-        // 3. 유년 사화 체크
+        // 3. Check annual Si Hua
         if let Some(ln) = current_liunian {
             if p.stars.iter().any(|st| st.star == ln.si_hua[3]) {
                 huaji_count += 1;
@@ -201,16 +201,16 @@ pub fn detect_triple_sihua_collisions(
 
 fn parse_stem(s: &str) -> Result<HeavenlyStem, ()> {
     match s {
-        "甲" | "갑" => Ok(HeavenlyStem::Jia),
-        "乙" | "을" => Ok(HeavenlyStem::Yi),
-        "丙" | "병" => Ok(HeavenlyStem::Bing),
-        "丁" | "정" => Ok(HeavenlyStem::Ding),
-        "戊" | "무" => Ok(HeavenlyStem::Wu),
-        "己" | "기" => Ok(HeavenlyStem::Ji),
-        "庚" | "경" => Ok(HeavenlyStem::Geng),
-        "辛" | "신" => Ok(HeavenlyStem::Xin),
-        "壬" | "임" => Ok(HeavenlyStem::Ren),
-        "癸" | "계" => Ok(HeavenlyStem::Gui),
+        "甲" | "Jia" | "jia" => Ok(HeavenlyStem::Jia),
+        "乙" | "Yi" | "yi" => Ok(HeavenlyStem::Yi),
+        "丙" | "Bing" | "bing" => Ok(HeavenlyStem::Bing),
+        "丁" | "Ding" | "ding" => Ok(HeavenlyStem::Ding),
+        "戊" | "Wu" | "wu" => Ok(HeavenlyStem::Wu),
+        "己" | "Ji" | "ji" => Ok(HeavenlyStem::Ji),
+        "庚" | "Geng" | "geng" => Ok(HeavenlyStem::Geng),
+        "辛" | "Xin" | "xin" => Ok(HeavenlyStem::Xin),
+        "壬" | "Ren" | "ren" => Ok(HeavenlyStem::Ren),
+        "癸" | "Gui" | "gui" => Ok(HeavenlyStem::Gui),
         _ => Err(()),
     }
 }

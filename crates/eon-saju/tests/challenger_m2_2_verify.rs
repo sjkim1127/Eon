@@ -151,7 +151,7 @@ fn test_empirical_gyeokguk_jiecai_fulfillment_flaw() {
     assert_ne!(
         dyn_analysis_wu.structure_state.status,
         GyeokStatus::Fulfilled,
-        "Rob Wealth (겁재) stem MUST NOT trigger Gyeokguk fulfillment"
+        "Rob Wealth stem MUST NOT trigger Gyeokguk fulfillment"
     );
 
     // Major Luck stem: Yi (乙) -> Seven Killings (偏官) for Ji Day Master, hidden stem of Chen
@@ -169,6 +169,6 @@ fn test_empirical_gyeokguk_jiecai_fulfillment_flaw() {
     assert_eq!(
         dyn_analysis_eul.structure_state.status,
         GyeokStatus::Fulfilled,
-        "Seven Killings (편관) stem SHOULD trigger Gyeokguk fulfillment"
+        "Seven Killings stem SHOULD trigger Gyeokguk fulfillment"
     );
 }

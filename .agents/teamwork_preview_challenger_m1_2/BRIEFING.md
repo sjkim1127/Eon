@@ -24,9 +24,9 @@ Empirical adversarial stress testing of Milestone 1 (R1) 12-Unseong, Samjae, Gon
 ## Review Scope
 - **Files reviewed**: `twelve_stages.rs`, `void.rs`, `shinsal.rs`, `spirit_markers.rs`
 - **Target verification**:
-  1. Samjae calculation across 12 birth year branches for 입삼재, 눌삼재, 날삼재.
+  1. Samjae calculation across 12 birth year branches for Entering Samjae, Staying Samjae, Exiting Samjae.
   2. Gongmang dissolution when voided branch is clashed or combined.
-  3. Noble Spirit Marker annulment (`(귀인공망)`) on voided branches vs restoration on clash/combination (`(공망해충/해합 구원)`).
+  3. Noble Spirit Marker annulment (`(Void)`) on voided branches vs restoration on clash/combination (`(Void/ )`).
   4. 12-Unseong Yin-stem option (`yin_stem_reverse: false` vs `true`).
 - **Commands**: `cargo check --workspace` and `cargo test -p eon-saju`.
 
@@ -34,7 +34,7 @@ Empirical adversarial stress testing of Milestone 1 (R1) 12-Unseong, Samjae, Gon
 - **Hypotheses tested**: All 4 target features tested with custom empirical stress harness (`milestone1_part2_stress_tests.rs`).
 - **Vulnerabilities found**:
   1. `void.rs:164–175`: False-positive void dissolution when unrelated Triple/Seasonal combinations exist in chart.
-  2. `spirit_markers.rs:719`: String mismatch between `"년주"` and `"년지"` prevents `is_clashed` and `is_combined` from being detected for branch spirit markers, disabling noble spirit restoration (`(공망해충/해합 구원)`).
+  2. `spirit_markers.rs:719`: String mismatch between `"Year Pillar"` and `"Year Branch"` prevents `is_clashed` and `is_combined` from being detected for branch spirit markers, disabling noble spirit restoration (`(Void/ )`).
 - **Untested angles**: None within requested scope.
 
 ## Loaded Skills

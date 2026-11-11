@@ -60,13 +60,13 @@ let saju_year = if term_24_idx == 22 || term_24_idx == 23 {
     dt_year
 };
 ```
-**Observation 1.2**: On `2026-01-02 12:00:00 UTC`, solar longitude is ~281.0°, which corresponds to 24-solar term index `21` (DongZhi, 동지 - which began on Dec 21 of the previous year).
+**Observation 1.2**: On `2026-01-02 12:00:00 UTC`, solar longitude is ~281.0°, which corresponds to 24-solar term index `21` (DongZhi,  - which began on Dec 21 of the previous year).
 **Logic Step**:
 1. When `term_24_idx` is `21`, it fails `term_24_idx == 22 || 23` and `term_24_idx == 0 || 1`.
 2. The code falls into `else { dt_year }`, setting `saju_year = 2026`.
-3. However, `2026-01-02` is before LiChun 2026 (`2026-02-03 20:02:08 UTC`), so the Saju year MUST be `2025` (乙巳년).
-4. Because `saju_year` is incorrectly evaluated as `2026` (丙午년), the 11th Saju month (子월) stem is calculated using 丙 (index 2) as `(6 + 10) % 10 = 6` (庚) -> `庚子`.
-5. For the correct Saju year `2025` (乙巳년), the 11th Saju month stem is `(4 + 10) % 10 = 4` (戊) -> `戊子`.
+3. However, `2026-01-02` is before LiChun 2026 (`2026-02-03 20:02:08 UTC`), so the Saju year MUST be `2025` (乙巳).
+4. Because `saju_year` is incorrectly evaluated as `2026` (丙午), the 11th Saju month (子) stem is calculated using 丙 (index 2) as `(6 + 10) % 10 = 6` (庚) -> `庚子`.
+5. For the correct Saju year `2025` (乙巳), the 11th Saju month stem is `(4 + 10) % 10 = 4` (戊) -> `戊子`.
 6. Therefore, all dates from Jan 1 up to XiaoHan entry (around Jan 5/6) return the wrong monthly GanZi.
 
 ### Bug #2: Elemental Power Corruption in `calculate_expanded` under Default Options
@@ -107,7 +107,7 @@ for (orig_el, eff_el, weight, is_stem, polarity) in items {
 ## 4. Conclusion
 
 - **Wolwun Boundary Alignment**: Works correctly at exact 1-minute before/after major solar term entry boundaries (LiChun, JingZhi) and minor solar terms (YuShu). However, **Bug #1** causes a failure for dates between Jan 1 and XiaoHan entry (Jan 5/6) due to incomplete Saju year boundary logic.
-- **Dynamic Precedence Hierarchy**: Fully verified. Completed Triple Alliances (삼합) and Seasonal Alliances (방합) correctly suppress lower-priority Branch Clashes (지충) and Six Combinations (육합) in `combined_relations`.
+- **Dynamic Precedence Hierarchy**: Fully verified. Completed Triple Alliances (Triple Alliance) and Seasonal Alliances (Seasonal Alliance) correctly suppress lower-priority Branch Clashes (Branch Clash) and Six Combinations (Six Combination) in `combined_relations`.
 - **Expanded Transformations & Power**: **Critical Bug #2** in `power.rs` corrupts all non-Earth branches into Water when `apply_correction` is `true` (the default setting), yielding invalid elemental power scores.
 
 ---

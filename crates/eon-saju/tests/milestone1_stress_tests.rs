@@ -1,11 +1,11 @@
 //! Milestone 1 (R1) Yongsin & Gyeokguk Stress Tests
 //!
 //! Empirical adversarial test suite verifying:
-//! 1. Weak DM with heavy Caisheng (재다신약) -> Yongsin is BiGeop.
+//! 1. Weak DM with heavy Caisheng (Wealth-Heavy Weak) -> Yongsin is BiGeop.
 //! 2. Equal 50/50 Metal-Wood clash -> Tonggwan gets primary Yongsin (Water).
 //! 3. Extreme Winter/Summer charts -> Johu stem preference (丙火 / 癸水).
 //! 4. Jin-Jong vs Ga-Jong -> Root score checks differentiate true vs fake Jong (and bug verification).
-//! 5. Samhap Jeonwang -> 곡직격, 염상격, 가색격, 종혁격, 윤하격.
+//! 5. Samhap Jeonwang -> GokJik, YeomSang, GaSaek, JongHyeok, YoonHa.
 
 use eon_saju::analysis::structure::StructureType;
 use eon_saju::analysis::yongshin::YongshinType;
@@ -39,7 +39,7 @@ fn make_pillars(
 }
 
 // ----------------------------------------------------
-// 1. Weak DM with heavy Caisheng (재다신약): Yongsin = BiGeop
+// 1. Weak DM with heavy Caisheng (Wealth-Heavy Weak): Yongsin = BiGeop
 // ----------------------------------------------------
 #[test]
 fn test_m1_weak_dm_heavy_caisheng() {
@@ -80,7 +80,7 @@ fn test_m1_weak_dm_heavy_caisheng() {
     assert_eq!(
         eokbu_rec.unwrap().element,
         Element::Wood,
-        "Yongsin for 재다신약 must be BiGeop (Wood)"
+        "Yongsin for Wealth-Heavy Weak must be BiGeop (Wood)"
     );
 }
 
@@ -254,9 +254,9 @@ fn test_m1_jin_jong_vs_ga_jong_root_check() {
 fn test_m1_bug_deuk_se_count_prevents_jong_jae() {
     // EMPIRICAL BUG DEMONSTRATION:
     // Chart with DM 甲木, pure Earth (Caisheng): 戊戌, 己未, 甲辰, 己丑.
-    // Earth is > 85% (Caisheng). 식상 (Fire) is 0%.
-    // Expected Structure: JongJae (진종재격) or GaJongJae.
-    // Actual Structure: JongAh (진종아격) because shishang_count == caisheng_count == 2 in DeukSe!
+    // Earth is > 85% (Caisheng). Output (Fire) is 0%.
+    // Expected Structure: JongJae (True Follow Wealth) or GaJongJae.
+    // Actual Structure: JongAh (True Follow Output) because shishang_count == caisheng_count == 2 in DeukSe!
     let pillars_cai = make_pillars(
         HeavenlyStem::Wu,
         EarthlyBranch::Xu,
@@ -285,11 +285,11 @@ fn test_m1_bug_deuk_se_count_prevents_jong_jae() {
 }
 
 // ----------------------------------------------------
-// 5. Samhap Jeonwang: 곡직격, 염상격, 가색격, 종혁격, 윤하격
+// 5. Samhap Jeonwang: GokJik, YeomSang, GaSaek, JongHyeok, YoonHa
 // ----------------------------------------------------
 #[test]
 fn test_m1_samhap_jeonwang_all_five() {
-    // 1. 곡직격 (GokJik - Wood)
+    // 1. GokJik (GokJik - Wood)
     let gokjik = make_pillars(
         HeavenlyStem::Gui,
         EarthlyBranch::Hai,
@@ -302,7 +302,7 @@ fn test_m1_samhap_jeonwang_all_five() {
     );
     assert_eq!(gokjik.structure().structure, StructureType::GokJik);
 
-    // 2. 염상격 (YeomSang - Fire)
+    // 2. YeomSang (Fire)
     let yeomsang = make_pillars(
         HeavenlyStem::Jia,
         EarthlyBranch::Yin,
@@ -315,7 +315,7 @@ fn test_m1_samhap_jeonwang_all_five() {
     );
     assert_eq!(yeomsang.structure().structure, StructureType::YeomSang);
 
-    // 3. 가색격 (GaSaek - Earth)
+    // 3. GaSaek (Earth)
     let gasaek = make_pillars(
         HeavenlyStem::Wu,
         EarthlyBranch::Chen,
@@ -328,7 +328,7 @@ fn test_m1_samhap_jeonwang_all_five() {
     );
     assert_eq!(gasaek.structure().structure, StructureType::GaSaek);
 
-    // 4. 종혁격 (JongHyeok - Metal)
+    // 4. JongHyeok (Metal)
     let jonghyeok = make_pillars(
         HeavenlyStem::Ji,
         EarthlyBranch::Si,
@@ -341,7 +341,7 @@ fn test_m1_samhap_jeonwang_all_five() {
     );
     assert_eq!(jonghyeok.structure().structure, StructureType::JongHyeok);
 
-    // 5. 윤하격 (YoonHa - Water)
+    // 5. YoonHa (Water)
     let yoonha = make_pillars(
         HeavenlyStem::Geng,
         EarthlyBranch::Shen,

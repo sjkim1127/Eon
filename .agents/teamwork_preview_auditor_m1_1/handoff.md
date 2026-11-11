@@ -15,13 +15,13 @@
 
 ### 1. Source Code Inspection Summary
 Inspected files modified by Worker 1:
-1. `crates/eon-saju/src/analysis/yongshin.rs`: Added disease/medicine (`병약용신`) logic with 25%/40% thresholds and detailed explainability helpers for weak/strong/balanced charts. Added unit test `test_byeongyak_and_priority_matrix`.
-2. `crates/eon-saju/src/analysis/structure.rs`: Added 5 element 전왕격 (곡직, 염상, 가색, 종혁, 윤하, 종왕, 종강), 진종(眞從) vs 가종(假從) structure classification, and 관살혼잡격 (GwanSalHonJab) detection.
+1. `crates/eon-saju/src/analysis/yongshin.rs`: Added disease/medicine (`ByeongYakYongshin`) logic with 25%/40% thresholds and detailed explainability helpers for weak/strong/balanced charts. Added unit test `test_byeongyak_and_priority_matrix`.
+2. `crates/eon-saju/src/analysis/structure.rs`: Added 5 element  (GokJik, YeomSang, GaSaek, JongHyeok, YoonHa, , ), (眞從) vs (假從) structure classification, and  (GwanSalHonJab) detection.
 3. `crates/eon-saju/src/core/config.rs`: Added `yin_stem_reverse` boolean parameter to `AnalysisConfig` with default `true`.
 4. `crates/eon-saju/src/core/twelve_stages.rs`: Added `calculate_twelve_stage_with_config` supporting `yin_stem_reverse` config option.
 5. `crates/eon-saju/src/analysis/void.rs`: Implemented `check_void_dissolution` covering branch clashes, six combinations, triple combinations, and seasonal combinations.
 6. `crates/eon-saju/src/analysis/shinsal.rs`: Added `SamjaeStage` enum and `calculate_samjae` based on 3-hap branch groups.
-7. `crates/eon-saju/src/analysis/spirit_markers.rs`: Integrated void interaction (`귀인공망`) and void dissolution (`공망해충/해합`) logic into spirit marker analysis.
+7. `crates/eon-saju/src/analysis/spirit_markers.rs`: Integrated void interaction (`Void`) and void dissolution (`Void/`) logic into spirit marker analysis.
 8. `crates/eon-ui/src/i18n/mod.rs`: Updated structure translations (`translate_saju_structure`).
 
 ### 2. Command Verification Outputs

@@ -12,7 +12,7 @@ All 5 requested tasks for Milestone 2 (R2) in `crates/eon-saju` have been implem
 
 2. **Dynamic Precedence Hierarchy (`crates/eon-saju/src/analysis/dynamic_luck.rs`)**:
    - Updated `analyze_expanded` to filter `combined_relations`.
-   - When a branch participates in a completed Triple Alliance (삼합 `TripleCombination`) or Seasonal Alliance (방합 `SeasonalCombination`), lower-priority Branch Clash (지충 `BranchClash`) and Six Combination (육합 `SixCombination`) entries involving that branch are suppressed from `combined_relations`.
+   - When a branch participates in a completed Triple Alliance (Triple Alliance `TripleCombination`) or Seasonal Alliance (Seasonal Alliance `SeasonalCombination`), lower-priority Branch Clash (Branch Clash `BranchClash`) and Six Combination (Six Combination `SixCombination`) entries involving that branch are suppressed from `combined_relations`.
 
 3. **Augmented Dynamic Transformation Analysis (`crates/eon-saju/src/analysis/transformations.rs` & `crates/eon-saju/src/analysis/power.rs`)**:
    - Added `major_stem`, `saewun_stem`, `major_branch`, `saewun_branch` fields to `TransformationAnalysis`.
@@ -20,7 +20,7 @@ All 5 requested tasks for Milestone 2 (R2) in `crates/eon-saju` have been implem
    - Implemented `IntegratedAnalysis::calculate_expanded` and `FourPillars::integrated_analysis_expanded` in `power.rs` to compute dynamic elemental and Ten Gods power scores.
 
 4. **Jijanggan Tomb Opening & Trapping (`crates/eon-saju/src/analysis/dynamic_luck.rs`, `crates/eon-saju/src/engine/trace_tag.rs`, `crates/eon-saju/src/engine/vm.rs`)**:
-   - Implemented storage branch (고지 辰, 戌, 丑, 未) unsealing (`GaeGoEvent`) when impacted by clashes or combinations.
+   - Implemented storage branch ( 辰, 戌, 丑, 未) unsealing (`GaeGoEvent`) when impacted by clashes or combinations.
    - Implemented trapping into storage (`IpMyoEvent`) when active luck enters 12-Unseong Mu (墓).
    - Integrated `GaeGo` and `IpMyo` handling into `SajuVM::step`, releasing unsealed hidden stems to `QiRegisters`, updating scores/traces, and adding `TraceTag::GaeGo` and `TraceTag::IpMyo`.
 
@@ -38,15 +38,15 @@ All 5 requested tasks for Milestone 2 (R2) in `crates/eon-saju` have been implem
 
 1. **Wolwun Astronomical Alignment**:
    - *Observation*: Previously, `MonthlyLuck::month_ganzi` calculated month branch using calendar month `- 1` without considering solar term boundaries.
-   - *Logic*: In authentic Saju theory, Saju months begin on exact astronomical solar term entries (절입일시). Querying `AstroEngine::get_solar_term_index(dt)` maps solar longitudes into 24 solar terms, enabling true astronomical month branch and stem derivation via Oh-Ho-Dun-Wol-Beop.
+   - *Logic*: In authentic Saju theory, Saju months begin on exact astronomical solar term entries (). Querying `AstroEngine::get_solar_term_index(dt)` maps solar longitudes into 24 solar terms, enabling true astronomical month branch and stem derivation via Oh-Ho-Dun-Wol-Beop.
 
 2. **Precedence Hierarchy Filtering**:
    - *Observation*: Lower-priority clashes/combinations were remaining active in `combined_relations` even when higher-priority alliances completed.
-   - *Logic*: When branches unite into completed Triple Alliances (삼합) or Seasonal Alliances (방합), their elemental essence shifts into the alliance, suppressing lower-priority individual clashes (지충) and six combinations (육합). Retaining non-alliance branches filters out conflicting lower-priority entries cleanly.
+   - *Logic*: When branches unite into completed Triple Alliances (Triple Alliance) or Seasonal Alliances (Seasonal Alliance), their elemental essence shifts into the alliance, suppressing lower-priority individual clashes (Branch Clash) and six combinations (Six Combination). Retaining non-alliance branches filters out conflicting lower-priority entries cleanly.
 
 3. **Expanded Transformation & Power Analysis**:
    - *Observation*: `TransformationAnalysis` previously evaluated only the 4 natal pillars.
-   - *Logic*: Active luck cycles (대운/세운) introduce 1 or 2 external pillars that participate in transformations. `from_expanded` processes all 5/6 pillars together, and `power.rs` calculates dynamically weighted elemental and Ten Gods scores.
+   - *Logic*: Active luck cycles (Major Luck/Yearly Luck) introduce 1 or 2 external pillars that participate in transformations. `from_expanded` processes all 5/6 pillars together, and `power.rs` calculates dynamically weighted elemental and Ten Gods scores.
 
 4. **Storage Branch Unsealing (GaeGo) & Trapping (IpMyo)**:
    - *Observation*: `SajuVM` only dumped hidden stems during simple branch clashes.

@@ -32,13 +32,13 @@
 ## 2. Logic Chain
 
 1. **Wolwun Astronomical Solar Term Alignment**:
-   - *Observation*: `MonthlyLuck::month_ganzi_at` queries `AstroEngine::get_solar_term_index(dt)` to obtain the exact 24-solar-term index (0 to 23, where 0 is 입춘 Lichun).
-   - *Reasoning*: Solar month branches in Saju are strictly bounded by solar terms (절입일시). Index division `term_24_idx / 2` accurately yields the 12 Saju month ordinals (`saju_month_ordinal = term_12_idx + 1`). Oh-Ho-Dun-Wol-Beop (五虎遁月法) is correctly derived from `saju_year_stem_idx % 5`.
-   - *Verification*: Tested in `test_milestone2_r2_wolwun_astronomical_alignment` (Feb 2 vs Feb 10 2026 correctly maps 丑월 vs 寅월 across Lichun).
+   - *Observation*: `MonthlyLuck::month_ganzi_at` queries `AstroEngine::get_solar_term_index(dt)` to obtain the exact 24-solar-term index (0 to 23, where 0 is  Lichun).
+   - *Reasoning*: Solar month branches in Saju are strictly bounded by solar terms (). Index division `term_24_idx / 2` accurately yields the 12 Saju month ordinals (`saju_month_ordinal = term_12_idx + 1`). Oh-Ho-Dun-Wol-Beop (五虎遁月法) is correctly derived from `saju_year_stem_idx % 5`.
+   - *Verification*: Tested in `test_milestone2_r2_wolwun_astronomical_alignment` (Feb 2 vs Feb 10 2026 correctly maps 丑 vs 寅 across Lichun).
 
 2. **Dynamic Precedence Hierarchy Filtering**:
    - *Observation*: In `DynamicLuckAnalysis::analyze_expanded`, `alliance_branches` collects all branches participating in completed `triple_combinations` and `seasonal_combinations`.
-   - *Reasoning*: Branches in completed Triple (삼합) or Seasonal (방합) Alliances undergo elemental fusion. Lower-priority Branch Clashes (지충) and Six Combinations (육합) containing any alliance branch are retained only if `!alliance_branches.contains(&b1) && !alliance_branches.contains(&b2)`.
+   - *Reasoning*: Branches in completed Triple (Triple Alliance) or Seasonal (Seasonal Alliance) Alliances undergo elemental fusion. Lower-priority Branch Clashes (Branch Clash) and Six Combinations (Six Combination) containing any alliance branch are retained only if `!alliance_branches.contains(&b1) && !alliance_branches.contains(&b2)`.
    - *Verification*: Tested in `test_milestone2_r2_dynamic_precedence_hierarchy` (Yin-Shen clash is correctly suppressed when Shen participates in Shen-Zi-Chen Triple Water Alliance).
 
 3. **Augmented Transformation & Power Analysis**:
@@ -47,7 +47,7 @@
    - *Verification*: Tested in `test_milestone2_r2_augmented_transformation_analysis`.
 
 4. **Jijanggan Tomb Opening (GaeGo) & Trapping (IpMyo)**:
-   - *Observation*: `evaluate_gaego_events` detects unsealing of storage branches (辰, 戌, 丑, 未) hit by clashes/combinations. `evaluate_ipmyo_events` detects trapping into tomb branches when day master luck enters 12-Unseong 묘(墓) stage. `SajuVM` updates `QiRegisters`, adjusts scores, emits ESIL traces, and attaches `TraceTag::GaeGo` and `TraceTag::IpMyo`.
+   - *Observation*: `evaluate_gaego_events` detects unsealing of storage branches (辰, 戌, 丑, 未) hit by clashes/combinations. `evaluate_ipmyo_events` detects trapping into tomb branches when day master luck enters 12-Unseong (墓) stage. `SajuVM` updates `QiRegisters`, adjusts scores, emits ESIL traces, and attaches `TraceTag::GaeGo` and `TraceTag::IpMyo`.
    - *Reasoning*: Tomb opening and trapping are fundamental dynamic mechanisms in Saju VM life simulation. Registers and score adjustments correctly reflect unsealed hidden stem release and energy trapping.
    - *Verification*: Tested in `test_milestone2_r2_jijanggan_gaego_and_ipmyo`.
 

@@ -1,32 +1,32 @@
-# 분석 및 보정 상세 (Analysis & Corrections)
+# Analysis & Calibration Specifications (Analysis & Corrections)
 
-사주의 에너지 균형을 수치화하는 정밀 분석 시스템을 설명합니다.
+Describes the precision quantitative analysis algorithms that evaluate elemental balances across natal charts.
 
-## 1. 110점 가중치 시스템 (Palace Weighting)
+## 1. 110-Point Weighting Method (Palace Weighting)
 
-일간을 제외한 각 글자가 전체 기운에서 차지하는 비중을 계산합니다.
+Calculates the proportional energetic weight contributed by each pillar position relative to the Day Master.
 
-| 위치 | 가중치 | 비중 (%) | 비고 |
+| Position | Points | Percentage (%) | Description |
 | :--- | :--- | :--- | :--- |
-| **월지(月支)** | 35 | 31.8% | 사주의 환경, 계절의 힘 |
-| **일지(日支)** | 15 | 13.6% | 일간의 뿌리, 배우자궁 |
-| **천간(4개)** | 각 10 | 각 9.1% | 외부 표출 기운 |
-| **년지/시지** | 각 10 | 각 9.1% | 보조 기운 |
-| **총합** | **110** | **100%** | |
+| **Month Branch (月支)** | 35 | 31.8% | Environmental foundation, seasonal authority |
+| **Day Branch (日支)** | 15 | 13.6% | Intimate grounding, spouse palace |
+| **Stems (4 positions)** | 10 each | 9.1% each | Manifest surface expression |
+| **Year / Hour Branches**| 10 each | 9.1% each | Supporting pillars |
+| **Total** | **110** | **100%** | Comprehensive chart energy |
 
-## 2. 4가지 분석 모드
+## 2. Four Analysis Calibration Modes
 
-엔진은 사용자의 선택에 따라 다음과 같은 보정 조합을 제공합니다.
+The engine provides customizable calibration combinations:
 
-1. **기본 (보정 X)**: 모든 글자에 동일 가중치(1)를 부여하여 개수 위주로 계산.
-2. **합화(合化) 적용**: 천간합/지지합 성립 시 해당 글자의 오행을 변환하여 통계에 반영.
-3. **궁성/조후 보정 적용**: 110점법 가중치를 적용하고, 계절적 특성(예: 해월의 축토 → 수)을 반영.
-4. **통합 보정 (모두 적용)**: 합화와 궁성/조후 보정을 모두 결합한 가장 정밀한 분석.
+1. **Base (No Correction)**: Equal weighting (1 per element) counting frequencies.
+2. **Transformation Applied**: Tracks actual elemental conversions resulting from Heavenly Stem and Earthly Branch combinations.
+3. **Position & Climate Correction**: Applies the 110-point method and seasonal shifts (e.g., Chou Earth in Hai month treated as wet Earth).
+4. **Integrated Mode (All Applied)**: Combines transformations with position and climate adjustments for maximum analytical fidelity.
 
-## 3. 조후 보정 (Climate Correction)
+## 3. Climate Balance Correction (JoHu)
 
-계절(월지)에 따라 특정 글자의 오행 성질을 재정의합니다.
+Modulates the operational elemental characteristics of specific branches according to seasonal climate context:
 
-- **여름(巳, 午, 未)의 미토(未)**: 토(土)이지만 화(火)의 기운을 강하게 머금은 것으로 간주.
-- **겨울(亥, 子, 丑)의 축토(丑)**: 토(土)이지만 수(水)의 기운을 머금은 것으로 간주.
-- **동절기(월지가 亥, 子, 丑)**: 사주 전체의 화(火) 기운에 가산점 또는 우선권 부여.
+- **Wei Earth (未) in Summer (Si, Wu, Wei)**: Earth imbued with intense Fire heat.
+- **Chou Earth (丑) in Winter (Hai, Zi, Chou)**: Earth saturated with cold Water moisture.
+- **Winter Charts (Hai, Zi, Chou months)**: Grants prioritization bonuses to warming Fire energy.

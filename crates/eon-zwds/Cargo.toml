@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "Eon: Zi Wei Dou Shu (紫微斗數) Engine — 자미두수 성반 명리 엔진"
+description = "Eon: Zi Wei Dou Shu (紫微斗數) Engine — Purple Star Astrology Engine"
 repository.workspace = true
 
 [dependencies]

@@ -25,7 +25,7 @@ Remediate 4 specific bugs in `crates/eon-saju` identified during Milestone 1 (R1
   1. `DeukSe` count calculation in `strength.rs` (`if percentage > 0.0`)
   2. Follower pattern selection in `structure.rs` (`JongJae` / `JongSal` reachability)
   3. False-positive void dissolution in `void.rs` (triple/seasonal membership check)
-  4. Spirit marker position string mismatch in `spirit_markers.rs` (`"년주"` vs `"년지"` mapping)
+  4. Spirit marker position string mismatch in `spirit_markers.rs` (`"Year Pillar"` vs `"Year Branch"` mapping)
 - **Success criteria**: Zero compilation errors/warnings in `cargo check --workspace`, 100% pass on all `cargo test -p eon-saju` including `milestone1_stress_tests` and `milestone1_part2_stress_tests`.
 
 ## Key Decisions Made
@@ -36,7 +36,7 @@ Remediate 4 specific bugs in `crates/eon-saju` identified during Milestone 1 (R1
   - `crates/eon-saju/src/analysis/strength.rs` (Added `if percentage > 0.0` check in `DeukSe`)
   - `crates/eon-saju/src/analysis/structure.rs` (Compared actual TenGod energy powers for follower patterns)
   - `crates/eon-saju/src/analysis/void.rs` (Added `target_branch` inclusion check in Triple/Seasonal combinations)
-  - `crates/eon-saju/src/analysis/spirit_markers.rs` (Mapped position to branch position strings `년지/월지/일지/시지`)
+  - `crates/eon-saju/src/analysis/spirit_markers.rs` (Mapped position to branch position strings `Year Branch/Month Branch/Day Branch/Hour Branch`)
   - `crates/eon-saju/tests/milestone1_stress_tests.rs` (Updated assertions to verify bug fixes)
   - `crates/eon-saju/tests/milestone1_part2_stress_tests.rs` (Updated assertions to verify bug fixes)
 - **Build status**: PASS (`cargo check --workspace` zero errors/warnings)

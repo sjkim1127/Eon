@@ -1,65 +1,65 @@
 //! Inter-Process Compatibility (IPC) Audit Module
 //!
-//! 두 개의 사주 시스템(SajuVM)이 상호작용할 때 발생하는
-//! 에너지 간섭, 자원 경합(상극), 시너지(합)를 분석합니다.
+//! Analyzes energy interference, resource contention (clash),
+//! and synergies (combination) when two Saju systems (SajuVM) interact.
 
 use crate::engine::vm::SajuVM;
 use serde::{Deserialize, Serialize};
 
-/// IPC 분석 결과 리포트
+/// IPC analysis audit report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompatibilityAudit {
-    /// 종합 상호작용 점수 (0~100)
+    /// Composite interaction score (0~100)
     pub sync_score: f32,
-    /// 시스템 간 합(Synergy)
+    /// Cross-system synergies
     pub synergies: Vec<String>,
-    /// 시스템 간 충돌(Race Conditions/Conflicts)
+    /// Cross-system conflicts (Race conditions / conflicts)
     pub conflicts: Vec<String>,
-    /// 자원 잠금 현상 (Deadlocks)
+    /// Resource deadlocks
     pub deadlocks: Vec<String>,
-    /// 두 시스템 결합 시의 ESIL 트레이스 요약
+    /// Combined ESIL trace summary upon joining both systems
     pub merged_esil_trace: String,
 }
 
 pub struct CompatibilityAuditor;
 
 impl CompatibilityAuditor {
-    /// 두 사주 시스템 간의 상호작용을 감사(Audit)합니다.
+    /// Audit cross-system interaction between two SajuVM systems
     pub fn audit(system_a: &SajuVM, system_b: &SajuVM) -> CompatibilityAudit {
         let mut synergies = Vec::new();
         let mut conflicts = Vec::new();
         let mut deadlocks = Vec::new();
         let mut merged_trace = String::new();
 
-        // 1. 천간 교차 결합 분석 (Interface Mapping)
+        // 1. Cross-stem interface mapping
         let a_stems = [
-            ("A_년간", system_a.natal.year.stem),
-            ("A_월간", system_a.natal.month.stem),
-            ("A_일간", system_a.natal.day.stem),
-            ("A_시간", system_a.natal.hour.stem),
+            ("A_year_stem", system_a.natal.year.stem),
+            ("A_month_stem", system_a.natal.month.stem),
+            ("A_day_stem", system_a.natal.day.stem),
+            ("A_hour_stem", system_a.natal.hour.stem),
         ];
         let b_stems = [
-            ("B_년간", system_b.natal.year.stem),
-            ("B_월간", system_b.natal.month.stem),
-            ("B_일간", system_b.natal.day.stem),
-            ("B_시간", system_b.natal.hour.stem),
+            ("B_year_stem", system_b.natal.year.stem),
+            ("B_month_stem", system_b.natal.month.stem),
+            ("B_day_stem", system_b.natal.day.stem),
+            ("B_hour_stem", system_b.natal.hour.stem),
         ];
 
-        // 2. 지지 교차 결합 분석 (Resource Contention)
+        // 2. Cross-branch resource contention analysis
         let a_branches = [
-            ("A_년지", system_a.natal.year.branch),
-            ("A_월지", system_a.natal.month.branch),
-            ("A_일지", system_a.natal.day.branch),
-            ("A_시지", system_a.natal.hour.branch),
+            ("A_year_branch", system_a.natal.year.branch),
+            ("A_month_branch", system_a.natal.month.branch),
+            ("A_day_branch", system_a.natal.day.branch),
+            ("A_hour_branch", system_a.natal.hour.branch),
         ];
         let b_branches = [
-            ("B_년지", system_b.natal.year.branch),
-            ("B_월지", system_b.natal.month.branch),
-            ("B_일지", system_b.natal.day.branch),
-            ("B_시지", system_b.natal.hour.branch),
+            ("B_year_branch", system_b.natal.year.branch),
+            ("B_month_branch", system_b.natal.month.branch),
+            ("B_day_branch", system_b.natal.day.branch),
+            ("B_hour_branch", system_b.natal.hour.branch),
         ];
 
-        // 3. 교차 합충 스캔
+        // 3. Scan cross-system combinations and clashes
         use crate::analysis::relationships::*;
         let mut sync_score: f32 = 50.0;
 
@@ -67,7 +67,7 @@ impl CompatibilityAuditor {
             for (p2, s2) in &b_stems {
                 if let Some(c) = StemCombination::check(*s1, *s2) {
                     synergies.push(format!(
-                        "천간합: {} <-> {} ({})",
+                        "Stem Combination: {} <-> {} ({})",
                         p1,
                         p2,
                         c.transformed_element().hangul()
@@ -76,7 +76,7 @@ impl CompatibilityAuditor {
                     merged_trace.push_str(&format!("ipc_joint:{}-{}_hap; ", p1, p2));
                 }
                 if let Some(_c) = StemClash::check(*s1, *s2) {
-                    conflicts.push(format!("천간충: {} <-> {}", p1, p2));
+                    conflicts.push(format!("Stem Clash: {} <-> {}", p1, p2));
                     sync_score -= 3.0;
                     merged_trace.push_str(&format!("ipc_collision:{}-{}_clash; ", p1, p2));
                 }
@@ -86,12 +86,12 @@ impl CompatibilityAuditor {
         for (p1, b1) in &a_branches {
             for (p2, b2) in &b_branches {
                 if let Some(_c) = BranchClash::check(*b1, *b2) {
-                    deadlocks.push(format!("지지충: {} <-> {}", p1, p2));
+                    deadlocks.push(format!("Branch Clash: {} <-> {}", p1, p2));
                     sync_score -= 5.0;
                     merged_trace.push_str(&format!("resource_lock:{}-{}_deadlock; ", p1, p2));
                 }
                 if let Some(_s) = SixCombination::check(*b1, *b2) {
-                    synergies.push(format!("육합: {} <-> {}", p1, p2));
+                    synergies.push(format!("Six Combination: {} <-> {}", p1, p2));
                     sync_score += 4.0;
                     merged_trace.push_str(&format!("memory_bridge:{}-{}_shared; ", p1, p2));
                 }

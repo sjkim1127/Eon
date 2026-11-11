@@ -1,6 +1,6 @@
 use crate::types::{PalaceIndex, ZwdsBrightness, ZwdsStar};
 
-/// 자미두수 별과 지지 인덱스(0=寅宫 ~ 11=丑宫)에 따른 묘왕이함(廟旺利陷) 밝기 상태를 반환합니다.
+/// Calculate star brightness state (Miao, Wang, Li, Xian) for a given palace.
 pub fn get_star_brightness(star: ZwdsStar, palace_idx: PalaceIndex) -> Option<ZwdsBrightness> {
     if palace_idx >= 12 {
         return None;

@@ -5,10 +5,10 @@
 Direct observations from source inspection and test execution (`cargo test --test challenger_m2_2_verify -- --nocapture` and `cargo test --test milestone2_stress_tests`):
 
 1. **GaeGo Double-Scoring in `SajuVM` (`crates/eon-saju/src/engine/vm.rs`)**:
-   - In `vm.rs` lines 552–578 (Section 3: `지지 합충 분석`), every branch clash evaluates hidden stems of participating branches and calls `registers.update(el, bonus)` and `score += bonus` (logged as `mem_dump:<branch>(<stem>)`).
-   - In `vm.rs` lines 661–685 (Section 6.7: `고지 개고`), `evaluate_score` iterates over `dynamic.gaego_events` and calls `registers.update(el, bonus)` and `score += bonus` (logged as `gaego:<branch>(<stem>)`) for the exact same unsealed stems.
+   - In `vm.rs` lines 552–578 (Section 3: `Earthly Branch  `), every branch clash evaluates hidden stems of participating branches and calls `registers.update(el, bonus)` and `score += bonus` (logged as `mem_dump:<branch>(<stem>)`).
+   - In `vm.rs` lines 661–685 (Section 6.7: ` GaeGo`), `evaluate_score` iterates over `dynamic.gaego_events` and calls `registers.update(el, bonus)` and `score += bonus` (logged as `gaego:<branch>(<stem>)`) for the exact same unsealed stems.
    - Verbatim ESIL trace output from empirical run:
-     `clash:월지-세운지지,impact:10.0; mem_dump:술(신),bonus:1.5; mem_dump:술(무),bonus:-2.4; mem_dump:진(계),bonus:3.0; mem_dump:진(무),bonus:-2.4; ... gaego:술(신),bonus:1.5; gaego:술(정),bonus:0.0; gaego:술(무),bonus:-2.4; gaego:진(을),bonus:0.0; gaego:진(계),bonus:3.0; gaego:진(무),bonus:-2.4;`
+     `clash:Month Branch-Yearly LuckEarthly Branch,impact:10.0; mem_dump:(),bonus:1.5; mem_dump:(),bonus:-2.4; mem_dump:(),bonus:3.0; mem_dump:(),bonus:-2.4; ... gaego:(),bonus:1.5; gaego:(),bonus:0.0; gaego:(),bonus:-2.4; gaego:(),bonus:0.0; gaego:(),bonus:3.0; gaego:(),bonus:-2.4;`
      (Total `mem_dump` count: 12, `gaego` count: 12 in a single `vm.step`).
 
 2. **IpMyo Element Mismatch for Yin Day Masters (`crates/eon-saju/src/analysis/dynamic_luck.rs`)**:
@@ -24,16 +24,16 @@ Direct observations from source inspection and test execution (`cargo test --tes
      };
      ```
    - For Yin Day Masters (乙 Wood, 丁 Fire, 辛 Metal, 癸 Water), 12-Unseong runs in reverse:
-     - 乙 (Yin Wood) DM reaches `Mu` (묘) at 戌. `g.branch` is 戌, so `trapped_el` evaluates to `Element::Fire`!
-     - Empirical output: `DM: Eul(Wood), Tomb Branch: 술, Trapped Element: Fire, Trigger: 대운 12운성 묘(墓)지 입묘`.
+     - 乙 (Yin Wood) DM reaches `Mu` () at 戌. `g.branch` is 戌, so `trapped_el` evaluates to `Element::Fire`!
+     - Empirical output: `DM: Eul(Wood), Tomb Branch: , Trapped Element: Fire, Trigger: Major Luck 12 (墓) IpMyo`.
 
 3. **Indiscriminate Gyeokguk Fulfillment (`crates/eon-saju/src/analysis/dynamic_luck.rs`)**:
    - `evaluate_structure_state` (lines 531–545) checks `natal.month.branch.hidden_stems().contains(&s)` for luck stems `s`.
    - When luck stem is 乙 (Rob Wealth / 劫財) and month branch is 辰 (`[乙, 癸, 戊]`), `status` transitions to `GyeokStatus::Fulfilled`.
-   - Empirical output: `Status: Fulfilled, Description: "대운 천간 편관 투출로 격국 성격"` / `"대운 천간 겁재 투출로 격국 성격"`.
+   - Empirical output: `Status: Fulfilled, Description: "Major Luck Heavenly Stem PianGuan  Gyeokguk "` / `"Major Luck Heavenly Stem JieCai  Gyeokguk "`.
 
 4. **Asymmetry in GaeGo Trigger Condition (`crates/eon-saju/src/analysis/dynamic_luck.rs`)**:
-   - `evaluate_gaego_events` (lines 405–462) requires `(p1.contains("운") || p2.contains("운"))` for clashes and six-combinations, but omits this check for triple (`triple_combinations`) and seasonal (`seasonal_combinations`) alliances.
+   - `evaluate_gaego_events` (lines 405–462) requires `(p1.contains("") || p2.contains(""))` for clashes and six-combinations, but omits this check for triple (`triple_combinations`) and seasonal (`seasonal_combinations`) alliances.
    - Result: Static natal-only triple alliances generate GaeGo events during luck-free analysis (`DynamicLuckAnalysis::analyze(natal, None, None, None, None, None)`).
 
 5. **Existing Workspace Test Failures (`crates/eon-saju/tests/milestone2_stress_tests.rs`)**:
@@ -53,11 +53,11 @@ Direct observations from source inspection and test execution (`cargo test --tes
 
 3. **Gyeokguk False Fulfillment**:
    - Observation 3 shows `evaluate_structure_state` checks only `hidden_stems().contains(&s)`.
-   - In Saju theory, Rob Wealth (劫財) and Friend (比肩) do not constitute valid Gyeokguk structures, nor does their emergence from hidden stems constitute structure fulfillment ("성격").
+   - In Saju theory, Rob Wealth (劫財) and Friend (比肩) do not constitute valid Gyeokguk structures, nor does their emergence from hidden stems constitute structure fulfillment ("").
    - Treating any matching hidden stem (including non-primary or destructive ten gods) as `Fulfilled` generates false positive structure transitions during luck cycles.
 
 4. **GaeGo Trigger Asymmetry**:
-   - Observation 4 shows `evaluate_gaego_events` enforces luck pillar checks for clashes (`p1.contains("운")`) but not for triple combinations (`tri.branches().contains(&b)`).
+   - Observation 4 shows `evaluate_gaego_events` enforces luck pillar checks for clashes (`p1.contains("")`) but not for triple combinations (`tri.branches().contains(&b)`).
    - Consequently, natal storage branches in static triple alliances are reported as dynamic GaeGo events even when no luck cycle interacts with them.
 
 ## 3. Caveats
@@ -70,7 +70,7 @@ Direct observations from source inspection and test execution (`cargo test --tes
 Empirical adversarial stress testing of Milestone 2 (R2) Jijanggan GaeGo/IpMyo and Dynamic Gyeokguk in `SajuVM` revealed **4 critical logic defects**:
 1. **Double-scoring of hidden stems** in `SajuVM::evaluate_score` during clash-induced GaeGo.
 2. **Element mismatch in `IpMyoEvent`** for Yin Day Masters (乙, 丁, 辛, 癸) due to fixed branch tomb lookup.
-3. **False positive `Fulfilled` (성격) transitions** for invalid ten gods (e.g. 劫財) in `evaluate_structure_state`.
+3. **False positive `Fulfilled` () transitions** for invalid ten gods (e.g. 劫財) in `evaluate_structure_state`.
 4. **Natal-only GaeGo false positives** due to missing luck pillar filters on triple/seasonal combinations.
 
 ## 5. Verification Method

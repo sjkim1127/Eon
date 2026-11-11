@@ -54,7 +54,7 @@
 
 3. **VM Stepping Memory Footprint**:
    - *Observation*: `SajuVM::step` is designed for high-frequency execution (e.g., simulating 100-year timelines or batch Monte Carlo analysis).
-   - *Logic*: Allocating owned `String`s for static Hanja/Hangul labels (`"辰"`, `"甲"`, `"성격(成格)"`) inside `TraceTag` variants causes heap allocation churn per frame. Storing `&'static str`, `EarthlyBranch`, `HeavenlyStem`, `GyeokStatus`, or `Cow<'static, str>` avoids dynamic allocations entirely during VM execution.
+   - *Logic*: Allocating owned `String`s for static Hanja/Hangul labels (`"辰"`, `"甲"`, `"(成格)"`) inside `TraceTag` variants causes heap allocation churn per frame. Storing `&'static str`, `EarthlyBranch`, `HeavenlyStem`, `GyeokStatus`, or `Cow<'static, str>` avoids dynamic allocations entirely during VM execution.
 
 ---
 

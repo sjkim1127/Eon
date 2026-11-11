@@ -67,7 +67,7 @@ impl SajuReport {
             &pillars, &config,
         ));
 
-        // 하위 호환성 및 SSOT를 위해 신살 정보를 명시적으로 전달하여 해석 생성
+        // Pass shinsal markers explicitly for interpretations and SSOT consistency
         supplementary_pillars.analyze_interpretations(&spirit_markers.aux_shinsals);
 
         Self {
@@ -328,7 +328,7 @@ impl SajuReport {
             md.push_str("| Age | Year | Score | Wood | Fire | Earth | Metal | Water |\n");
             md.push_str("|---|---|---|---|---|---|---|---|\n");
 
-            // 10년 단위로 요약 출력
+            // Summarize every 10 years
             for frame in self.simulation_frames.iter().step_by(10) {
                 let r = &frame.register_state;
                 md.push_str(&format!(
@@ -345,7 +345,7 @@ impl SajuReport {
             }
 
             md.push_str("\n### 8.2 Key Life Events (ESIL Trace Summary)\n");
-            // 큰 변화가 있거나 상위 5개 프레임 추출
+            // Extract top 5 key event frames
             let mut key_frames: Vec<_> = self.simulation_frames.iter().collect();
             key_frames.sort_by(|a, b| {
                 b.score

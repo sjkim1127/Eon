@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "Eon: Western Astrology Engine — 서양 점성술 명리 엔진"
+description = "Eon: Western Astrology Engine — Western Astrology Calculation Engine"
 repository.workspace = true
 
 [dependencies]

@@ -8,11 +8,11 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct PalaceState {
     pub palace: Palace,
-    pub earth_stem: Option<HeavenlyStem>, // 지반 (Earth Plate) 간
-    pub heaven_stem: Option<HeavenlyStem>, // 천반 (Heaven Plate) 간
-    pub door: Option<Door>,               // 8문
-    pub star: Option<Star>,               // 9성
-    pub deity: Option<Deity>,             // 8신
+    pub earth_stem: Option<HeavenlyStem>,  // Earth Plate Stem
+    pub heaven_stem: Option<HeavenlyStem>, // Heaven Plate Stem
+    pub door: Option<Door>,                // Eight Doors
+    pub star: Option<Star>,                // Nine Stars
+    pub deity: Option<Deity>,              // Eight Deities
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,9 +23,9 @@ pub struct QimenPan {
     pub day_pillar: GanZi,
     pub month_pillar: GanZi,
     pub year_pillar: GanZi,
-    pub is_yin_ju: bool,                // 둔국 (Yin/Yang)
-    pub ju_number: u8,                  // 국수 (1~9)
-    pub palaces: Vec<PalaceState>,      // 1~9궁 (항상 9개)
-    pub value_chief_star: Option<Star>, // 직부 (Value Chief - Star)
-    pub value_envoy_door: Option<Door>, // 직사 (Value Envoy - Door)
+    pub is_yin_ju: bool,                // Dun pattern (Yin/Yang)
+    pub ju_number: u8,                  // Ju number (1~9)
+    pub palaces: Vec<PalaceState>,      // 1~9 Palaces (always 9)
+    pub value_chief_star: Option<Star>, // Zhi Fu (Value Chief - Star)
+    pub value_envoy_door: Option<Door>, // Zhi Shi (Value Envoy - Door)
 }

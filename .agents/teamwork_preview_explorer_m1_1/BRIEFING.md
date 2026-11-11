@@ -36,8 +36,8 @@ Investigate `crates/eon-saju` and `crates/eon-service` codebase structure to ide
   - `crates/eon-service/src/facade.rs`
   - `crates/eon-saju/tests/edge_cases.rs`
 - **Key findings**:
-  - R1: Eokbu Yongshin defaults to Inseong for all Weak cases; Tonggwan omitted from primary; Byeongyak restricted to 2 weak cases; Gyeokguk lacks True/Fake Jong root check, 5-elemental Jeonwang, and mixed patterns (관살혼잡); 12-Unseong lacks school toggle; Sinsal misses Void annulment (귀인공망).
-  - R2: Dynamic timeline ignores hidden stem tomb opening (개고) / trapping (입묘); relationship expansion lacks precedence filtering (triple/seasonal > clash > 6-combo); TransformationAnalysis not executed for dynamic luck augmented pillars.
+  - R1: Eokbu Yongshin defaults to Inseong for all Weak cases; Tonggwan omitted from primary; Byeongyak restricted to 2 weak cases; Gyeokguk lacks True/Fake Jong root check, 5-elemental Jeonwang, and mixed patterns (); 12-Unseong lacks school toggle; Sinsal misses Void annulment (Void).
+  - R2: Dynamic timeline ignores hidden stem tomb opening (GaeGo) / trapping (IpMyo); relationship expansion lacks precedence filtering (triple/seasonal > clash > 6-combo); TransformationAnalysis not executed for dynamic luck augmented pillars.
   - R3: VM heap allocation overhead during `esil_trace` formatting; missing edge-case integration tests for polarized Jeonwang, Void Sinsal, and Daewun Triple Alliance.
 - **Unexplored areas**: None (all requested scope fully investigated).
 

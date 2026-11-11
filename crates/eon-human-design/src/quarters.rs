@@ -51,10 +51,10 @@ impl ZodiacQuarter {
 
     pub fn name_ko(&self) -> &'static str {
         match self {
-            Self::Initiation => "시작의 분기 (Initiation)",
-            Self::Civilization => "문명의 분기 (Civilization)",
-            Self::Duality => "이원성의 분기 (Duality)",
-            Self::Mutation => "돌연변이의 분기 (Mutation)",
+            Self::Initiation => "Quarter of Initiation",
+            Self::Civilization => "Quarter of Civilization",
+            Self::Duality => "Quarter of Duality",
+            Self::Mutation => "Quarter of Mutation",
         }
     }
 
@@ -69,10 +69,10 @@ impl ZodiacQuarter {
 
     pub fn theme_ko(&self) -> &'static str {
         match self {
-            Self::Initiation => "정신(Mind)을 통한 목적 달성",
-            Self::Civilization => "형태(Form)를 통한 목적 달성",
-            Self::Duality => "결속(Bonding)을 통한 목적 달성",
-            Self::Mutation => "변형(Transformation)을 통한 목적 달성",
+            Self::Initiation => "Purpose fulfilled through Mind",
+            Self::Civilization => "Purpose fulfilled through Form",
+            Self::Duality => "Purpose fulfilled through Bonding",
+            Self::Mutation => "Purpose fulfilled through Transformation",
         }
     }
 }

@@ -71,7 +71,7 @@ fn test_stress_wolwun_january_dates_multi_year() {
             .unwrap()
             .and_utc();
 
-        // Solar term 22 is XiaoHan (소한)
+        // Solar term 22 is XiaoHan
         let xiaohan = engine.find_solar_term_time(year_start, 22).unwrap();
 
         for day in 1..=31 {
@@ -96,7 +96,7 @@ fn test_stress_wolwun_january_dates_multi_year() {
             };
 
             if dt < xiaohan {
-                // Before XiaoHan: 11th Saju month (子월)
+                // Before XiaoHan: 11th Saju month (Zi month)
                 assert_eq!(
                     wolwun.branch,
                     EarthlyBranch::Zi,
@@ -113,7 +113,7 @@ fn test_stress_wolwun_january_dates_multi_year() {
                     year
                 );
             } else {
-                // After XiaoHan (and before LiChun): 12th Saju month (丑월)
+                // After XiaoHan (and before LiChun): 12th Saju month (Chou month)
                 assert_eq!(
                     wolwun.branch,
                     EarthlyBranch::Chou,
@@ -187,7 +187,7 @@ fn test_stress_wolwun_all_24_solar_terms_continuity_2026() {
                 term_idx
             );
         } else {
-            // Minor term (중기): Month GanZi should remain IDENTICAL before and after
+            // Minor term: Month GanZi should remain IDENTICAL before and after
             assert_eq!(
                 g_before, g_after,
                 "Minor solar term {} should not change Wolwun GanZi",
@@ -335,7 +335,7 @@ fn test_stress_gaego_vm_single_counting_invariants() {
 
     // Verify: No stem that appears in gaego trace appears in mem_dump trace for the same branch
     for g_entry in &gaegos {
-        // Format: gaego:술(신),bonus:1.5
+        // Format: gaego:Xu(Xin),bonus:1.5
         if let Some(open_paren) = g_entry.find('(') {
             if let Some(close_paren) = g_entry.find(')') {
                 let branch_name = &g_entry[6..open_paren];
@@ -609,7 +609,8 @@ fn test_stress_alliance_suppression_position_isolation() {
             .branch_clashes
             .iter()
             .any(|(_, p1, p2)| {
-                (p1 == "시지" && p2 == "대운지지") || (p1 == "대운지지" && p2 == "시지")
+                (p1 == "hour_branch" && p2 == "major_luck_branch")
+                    || (p1 == "major_luck_branch" && p2 == "hour_branch")
             });
 
     assert!(

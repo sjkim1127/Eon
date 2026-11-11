@@ -29,5 +29,5 @@ Here are the 5 specific defects to remediate in `crates/eon-saju`:
 
 5. **Indiscriminate Gyeokguk Fulfillment & Natal GaeGo Asymmetry** (`crates/eon-saju/src/analysis/dynamic_luck.rs`):
    - Problem:
-     a) `evaluate_structure_state` marks Gyeokguk as `Fulfilled` (성격) for any matching hidden stem including Rob Wealth (劫財) and Friend (比肩), which do not form or fulfill Gyeokguk structures. Ensure only valid Gyeokguk-promoting ten gods trigger `Fulfilled`.
+     a) `evaluate_structure_state` marks Gyeokguk as `Fulfilled` () for any matching hidden stem including Rob Wealth (劫財) and Friend (比肩), which do not form or fulfill Gyeokguk structures. Ensure only valid Gyeokguk-promoting ten gods trigger `Fulfilled`.
      b) `evaluate_gaego_events` checks luck pillar involvement for clashes but omits it for triple/seasonal alliances, causing static natal-only triple alliances to emit GaeGo events during luck-free analysis. Require luck pillar involvement for triple/seasonal GaeGo triggers.

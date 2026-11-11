@@ -24,7 +24,7 @@ pub use heluo::{calculate_heluo, Era, HeLuoCycle, HeLuoResult};
 pub use supplementary_pillars::SupplementaryPillars;
 pub use void::VoidAnalysis;
 
-/// 사주 분석용 공통 인터페이스
+/// Common trait for Four Pillars analysis engines
 pub trait Analyzable {
     type Output;
     fn analyze(pillars: &FourPillars, config: &AnalysisConfig) -> Self::Output;

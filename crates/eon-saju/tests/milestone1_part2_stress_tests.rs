@@ -1,9 +1,9 @@
 //! Milestone 1 (R1) Part 2 Empirical Adversarial Stress Tests
 //!
 //! Empirical adversarial test suite verifying:
-//! 1. Samjae calculation across 12 birth year branches for 입삼재, 눌삼재, 날삼재.
+//! 1. Samjae calculation across 12 birth year branches for Enter, Stay, Exit Samjae.
 //! 2. Gongmang dissolution when voided branch is clashed or combined (and bug detection).
-//! 3. Noble Spirit Marker annulment (`(귀인공망)`) on voided branches vs restoration on clash/combination (`(공망해충/해합 구원)`).
+//! 3. Noble Spirit Marker annulment (`(Noble Void)`) on voided branches vs restoration on clash/combination (`(Void Rescued)`).
 //! 4. 12-Unseong Yin-stem option (`yin_stem_reverse: false` vs `true`).
 
 use eon_saju::analysis::shinsal::{calculate_samjae, SamjaeStage};
@@ -122,7 +122,7 @@ fn test_gongmang_dissolution_clash_and_combination() {
         "Voided branch 戌 must be dissolved due to 辰戌沖"
     );
     assert!(
-        xu_v.dissolution_reason.as_ref().unwrap().contains("충(沖)"),
+        xu_v.dissolution_reason.as_ref().unwrap().contains("Clash"),
         "Dissolution reason must state clash"
     );
 
@@ -158,7 +158,7 @@ fn test_gongmang_dissolution_clash_and_combination() {
             .dissolution_reason
             .as_ref()
             .unwrap()
-            .contains("육합(六合)"),
+            .contains("Six Combination"),
         "Dissolution reason must state six combination"
     );
 }
@@ -166,11 +166,11 @@ fn test_gongmang_dissolution_clash_and_combination() {
 /// Adversarial stress test: check false positive dissolution when Seasonal Combination exists in chart but does NOT contain the void branch.
 #[test]
 fn test_gongmang_dissolution_unrelated_seasonal_comb_bug() {
-    // Day pillar: 丙辰 (xun_start=2 -> 갑인순, void branches: 子, 丑)
+    // Day pillar: 丙辰 (xun_start=2 -> JiaYin Xun, void branches: Zi, Chou)
     // Hour pillar: 丁丑 (Voided branch 丑)
     // Year pillar: 戊寅
     // Month pillar: 乙卯
-    // Note: Year(寅), Month(卯), Day(辰) forms 寅卯辰 Seasonal Combination (방합/木局).
+    // Note: Year(寅), Month(卯), Day(辰) forms 寅卯辰 Seasonal Combination (Wood).
     // Hour branch is 丑 (Earth). 丑 is NOT part of 寅卯辰!
     let pillars = make_pillars(
         HeavenlyStem::Wu,
@@ -242,8 +242,8 @@ fn test_noble_spirit_annulment_and_string_mismatch_bug() {
     println!("Void Tianyi summary: {}", td.summary);
     println!("Void Tianyi level: {:?}", td.level);
     assert!(
-        td.summary.contains("(귀인공망)"),
-        "Unclashed void Tianyi must have '(귀인공망)' in summary"
+        td.summary.contains("(Noble Void)"),
+        "Unclashed void Tianyi must have '(Noble Void)' in summary"
     );
     assert_eq!(
         td.level,
@@ -253,8 +253,8 @@ fn test_noble_spirit_annulment_and_string_mismatch_bug() {
 
     // Test String Mismatch Bug on Restoration:
     // Year: 癸未 (Void Tianyi), Month: 己丑 (丑未沖), Day: 庚寅, Hour: 戊寅
-    // In spirit_markers.rs, m.position.hangul() returns "년주", while rel_analysis.branch_clashes stores "년지".
-    // "년주" != "년지", so is_clashed remains false in spirit_markers.rs!
+    // In spirit_markers.rs position check.
+    // Position matching logic verification.
     let pillars_clash_restore = make_pillars(
         HeavenlyStem::Gui,
         EarthlyBranch::Wei,
@@ -281,8 +281,8 @@ fn test_noble_spirit_annulment_and_string_mismatch_bug() {
         "Year pillar 未 is clashed with Month pillar 丑 (丑未沖), is_clashed must be true"
     );
     assert!(
-        tc.summary.contains("(공망해충/해합 구원)"),
-        "Clashed void Tianyi noble spirit must be restored with '(공망해충/해합 구원)' in summary, got: {}",
+        tc.summary.contains("(Void Rescued)"),
+        "Clashed void Tianyi noble spirit must be restored with '(Void Rescued)' in summary, got: {}",
         tc.summary
     );
 }

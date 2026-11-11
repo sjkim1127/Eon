@@ -29,7 +29,7 @@
 - **Fixed locales**: Mappings are constrained to the current four supported locales: Ko, En, Zh, Ru.
 
 ## 4. Conclusion
-The requirements for Milestone M2 (R1: Ashtakoota Guna Milan 상세 고도화) have been fully analyzed. The proposed Dioxus UI card-grid layout provides a visually engaging, responsive, and multilingual interface that maps the backend's numeric compatibility outputs into progress bars, cosmic meanings, and translated status messages across all four target languages.
+The requirements for Milestone M2 (R1: Ashtakoota Guna Milan Detailed Refinement) have been fully analyzed. The proposed Dioxus UI card-grid layout provides a visually engaging, responsive, and multilingual interface that maps the backend's numeric compatibility outputs into progress bars, cosmic meanings, and translated status messages across all four target languages.
 
 ## 5. Verification Method
 1. **Inspecting Reports**:

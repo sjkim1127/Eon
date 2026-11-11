@@ -1,15 +1,15 @@
-//! 타임존 유틸리티
+//! Timezone utilities
 //!
-//! IANA 타임존 문자열에서 표준 자오선(경도)을 계산합니다.
+//! Calculates standard meridian longitude from IANA timezone strings.
 
 use chrono::TimeZone;
 use chrono_tz::Tz;
 
-/// IANA 타임존 문자열로부터 표준 자오선(경도, 도)을 계산합니다.
+/// Calculates the standard meridian (longitude in degrees) from an IANA timezone string.
 ///
-/// 예: "Asia/Seoul" (UTC+9) → 135.0, "America/New_York" (UTC-5) → -75.0
+/// Example: "Asia/Seoul" (UTC+9) -> 135.0, "America/New_York" (UTC-5) -> -75.0
 ///
-/// 파싱 실패 시 한국 표준경도 135.0을 반환합니다.
+/// Falls back to 135.0 (Korean Standard Meridian) on parsing failure.
 pub fn standard_meridian_from_tz(timezone: &str) -> f64 {
     if let Ok(tz) = timezone.parse::<Tz>() {
         let ref_dt = tz.with_ymd_and_hms(2024, 1, 15, 12, 0, 0).single();
@@ -19,7 +19,7 @@ pub fn standard_meridian_from_tz(timezone: &str) -> f64 {
             return (base_offset_secs / 3600.0) * 15.0;
         }
     }
-    135.0 // Fallback: Korean Standard Meridian
+    135.0 // Fallback: Standard Meridian
 }
 
 #[cfg(test)]

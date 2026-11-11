@@ -2,44 +2,43 @@ use crate::core::element::Element;
 use crate::core::pillars::FourPillars;
 use serde::{Deserialize, Serialize};
 
-/// 인생 복잡도 등급
+/// Life complexity / obfuscation level
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ObfuscationLevel {
-    #[serde(rename = "단순형")]
-    Plaintext, // 오행이 한곳에 집중, 인생 경로가 선명함
-    #[serde(rename = "보통형")]
-    Standard, // 고르게 분산된 균형 있는 사주
-    #[serde(rename = "복합형")]
-    Packed, // 다양한 기운이 얽혀 있어 복잡한 흐름
-    #[serde(rename = "복잡형")]
-    Encrypted, // 오행이 고도로 복잡하게 얽혀 있어 전문 분석 필요
+    #[serde(rename = "Plaintext")]
+    Plaintext, // Elements concentrated; path is clear
+    #[serde(rename = "Standard")]
+    Standard, // Evenly distributed and balanced
+    #[serde(rename = "Packed")]
+    Packed, // Diverse energies intertwined
+    #[serde(rename = "Encrypted")]
+    Encrypted, // Highly entangled; requires deep analysis
 }
 
-/// 엔트로피 분석 결과
+/// Entropy analysis outcome
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropyAnalysis {
     pub score: f32, // Shannon Entropy Score (0.0 ~ 2.322)
     pub level: ObfuscationLevel,
     pub description: String,
-    pub unpacker_element: Option<Element>, // 복잡성을 해소해줄 '언패커' 오행
+    pub unpacker_element: Option<Element>, // Unpacker element resolving complexity
 }
 
 pub struct DestinyEntropy;
 
 impl DestinyEntropy {
     pub fn analyze(pillars: &FourPillars) -> EntropyAnalysis {
-        // 1. 모든 요소 수집 (천간 + 지지 + 지장간 포함하여 데이터 밀도 높임)
+        // 1. Collect all elements (stems + branches + hidden stems for higher data density)
         let mut element_counts = [0.0f32; 5];
         let mut total_elements = 0.0f32;
 
-        // 원국 8글자 반영
+        // Base 8 characters
         for (el, count) in pillars.element_counts() {
             element_counts[el.index() as usize] += count as f32;
             total_elements += count as f32;
         }
 
-        // 지장간(Hidden Stems) 데이터 추가 반영하여 엔트로피 정밀도 향상
-        // 지장간은 내부 로직(난독화 데이터)으로 간주
+        // Add hidden stems (Jijanggan) data
         for branch in [
             &pillars.year.branch,
             &pillars.month.branch,
@@ -52,7 +51,7 @@ impl DestinyEntropy {
             }
         }
 
-        // 2. Shannon Entropy 계산: H = -sum(pi * log2(pi))
+        // 2. Compute Shannon Entropy: H = -sum(pi * log2(pi))
         let mut entropy = 0.0f32;
         for count in element_counts {
             if count > 0.0 {
@@ -61,26 +60,26 @@ impl DestinyEntropy {
             }
         }
 
-        // 3. 등급 판별 (DIE 기준 차용)
-        // 최대 엔트로피는 log2(5) ≈ 2.32
+        // 3. Classify level
+        // Max entropy is log2(5) ≈ 2.32
         let (level, description) = if entropy < 1.0 {
-            (ObfuscationLevel::Plaintext, "오행이 한곳에 집중되어 인생 경로가 매우 명확합니다. 목표가 뚜렷하지만 유연성이 부족할 수 있습니다.".to_string())
+            (ObfuscationLevel::Plaintext, "Five elements are concentrated in one domain, providing a clear path. Goals are distinct, though flexibility may be limited.".to_string())
         } else if entropy < 1.8 {
             (
                 ObfuscationLevel::Standard,
-                "오행이 고르게 분포되어 균형 잡힌 삶의 흐름을 가집니다.".to_string(),
+                "Five elements are evenly distributed, conferring balanced life momentum."
+                    .to_string(),
             )
         } else if entropy < 2.1 {
             (
                 ObfuscationLevel::Packed,
-                "여러 기운이 복잡하게 얽혀 있어 특정 시점에 진정한 모습이 드러납니다.".to_string(),
+                "Diverse energies are intricately bound, revealing their true character at critical junctures.".to_string(),
             )
         } else {
-            (ObfuscationLevel::Encrypted, "오행이 매우 복잡하게 얽혀 있어 삶의 흐름을 파악하기 어렵습니다. 전문적인 분석이 도움이 됩니다.".to_string())
+            (ObfuscationLevel::Encrypted, "Five elements are highly entangled, presenting complex life dynamics requiring in-depth analysis.".to_string())
         };
 
-        // 4. Unpacker 탐색: 가장 부족하거나 엔트로피를 낮춰줄(균형을 잡을) 핵심 오행
-        // 실제로는 용신과 유사하나 '복잡도 해소' 관점에서 접근
+        // 4. Find unpacker element: primary yongshin resolving complexity
         let unpacker = pillars.yongshin().primary;
 
         EntropyAnalysis {
@@ -94,7 +93,7 @@ impl DestinyEntropy {
 
 impl std::fmt::Display for EntropyAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "【Destiny Entropy & Obfuscation Analysis】")?;
+        writeln!(f, "[Destiny Entropy & Obfuscation Analysis]")?;
         writeln!(f, "Entropy Score : {:.3} (DIE Standard)", self.score)?;
 
         let level_str = match self.level {

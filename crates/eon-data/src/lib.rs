@@ -1,6 +1,6 @@
 //! # Eon Data
 //!
-//! 만세력 등 운명 계산에 필요한 정적 데이터를 제공합니다.
+//! Provides static data and binary caches for astronomical calendar calculations.
 
 pub mod cache;
 pub mod error;

@@ -1,7 +1,7 @@
-//! eon-astro: 초정밀 순수 Rust 천문 연산 엔진 (High-precision pure-Rust astronomical engine)
+//! eon-astro: High-precision pure-Rust astronomical calculation engine.
 //!
-//! `swisseph-rs`(Swiss Ephemeris의 순수 Rust 포팅)를 기반으로 하여, 외부 C/FFI 컴파일 없이
-//! 메모리 내 Moshier 분석 천문 알고리즘을 100% Rust로 실행합니다.
+//! Based on `swisseph-rs` (pure-Rust port of Swiss Ephemeris), running Moshier analytical
+//! astronomical algorithms in 100% Rust without external C/FFI toolchains.
 
 use chrono::{DateTime, Datelike, Timelike, Utc};
 use std::sync::LazyLock;
@@ -72,7 +72,7 @@ impl AstroEngine {
         Self
     }
 
-    /// Chrono DateTime을 Julian Day로 변환
+    /// Convert Chrono DateTime to Julian Day.
     fn to_julian_day(self, dt: DateTime<Utc>) -> f64 {
         let year = dt.year();
         let month = dt.month() as i32;
@@ -85,7 +85,7 @@ impl AstroEngine {
         julday(year, month, day, hour, CalendarType::Gregorian)
     }
 
-    /// 특정 시점의 태양 황경(Tropical Longitude)을 계산합니다.
+    /// Calculate tropical longitude of the Sun at a given datetime.
     pub fn get_sun_longitude(&self, datetime: DateTime<Utc>) -> Result<f64, AstroError> {
         let julian_day = self.to_julian_day(datetime);
         let res = GLOBAL_EPH
@@ -94,20 +94,20 @@ impl AstroEngine {
         Ok(res.data[0])
     }
 
-    /// 특정 시점의 24절기 인덱스(0~23)를 산출합니다.
-    /// 0: 입춘, 1: 우수, 2: 경칩 ... 23: 대한
+    /// Calculate the 24 solar term index (0~23) for a given datetime.
+    /// 0: Lichun, 1: Yushui, 2: Jingzhe ... 23: Dahan
     pub fn get_solar_term_index(&self, datetime: DateTime<Utc>) -> Result<u8, AstroError> {
         let sun_long = self.get_sun_longitude(datetime)?;
 
-        // 입춘(315도)을 0으로 맞춤
+        // Align Lichun (315 degrees) to index 0
         let adjusted = (sun_long - 315.0 + 360.0) % 360.0;
 
-        // 15도마다 절기가 바뀜 (24절기)
+        // Solar term changes every 15 degrees (24 terms total)
         let index = (adjusted / 15.0).floor() as u8;
         Ok(index % 24)
     }
 
-    /// 특정 황경(target_long)에 도달하는 정확한 시각을 추적합니다. (Root Finding)
+    /// Track exact time when the Sun reaches a target tropical longitude (Root Finding).
     pub fn find_time_for_longitude(
         &self,
         start_time: DateTime<Utc>,
@@ -117,11 +117,11 @@ impl AstroEngine {
 
         let mut current_time = start_time;
 
-        // 최대 10회 반복 (충분히 수렴함)
+        // Iterate up to 10 times for convergence
         for _ in 0..10 {
             let current_long = self.get_sun_longitude(current_time)?;
 
-            // 각도 차이 계산 (360도 보정)
+            // Calculate angular difference (-180 to +180 deg)
             let mut diff = target_long - current_long;
             while diff > 180.0 {
                 diff -= 360.0;
@@ -131,12 +131,12 @@ impl AstroEngine {
             }
 
             if diff.abs() < 0.00001 {
-                // 약 1초 미만 오차
+                // Precision within ~1 second
                 break;
             }
 
-            // 태양은 하루에 약 0.9856도 이동
-            // 초당 이동 거리로 환산하여 시간 보정
+            // The Sun moves ~0.9856 deg/day
+            // Convert degree offset to seconds
             let seconds_to_move = (diff / 0.9856) * 86400.0;
             current_time += Duration::seconds(seconds_to_move as i64);
         }
@@ -144,8 +144,8 @@ impl AstroEngine {
         Ok(current_time)
     }
 
-    /// 특정 행성이 특정 황경(target_long)에 도달하는 정확한 시각을 추적합니다.
-    /// 동적 속도를 사용하여 역행(Retrograde) 시에도 대응하며 Newton's method로 수렴합니다.
+    /// Track exact time when a specific planet reaches a target tropical longitude.
+    /// Uses dynamic speed to handle retrograde motion and converges via Newton's method.
     pub fn find_time_for_planet_longitude(
         &self,
         start_time: DateTime<Utc>,
@@ -156,11 +156,11 @@ impl AstroEngine {
 
         let mut current_time = start_time;
 
-        // 최대 20회 반복
+        // Iterate up to 20 times
         for _ in 0..20 {
             let (current_long, speed) = self.get_planet_full(current_time, planet_id, 256)?;
 
-            // 각도 차이 계산 (360도 보정)
+            // Angular difference (-180 to +180 deg)
             let mut diff = target_long - current_long;
             while diff > 180.0 {
                 diff -= 360.0;
@@ -170,20 +170,20 @@ impl AstroEngine {
             }
 
             if diff.abs() < 0.00001 {
-                // 매우 작은 오차에 도달
+                // Converged to high precision
                 break;
             }
 
-            // 속도가 0에 너무 가까울 경우 무한 발산 방지를 위해 최소 속도(절댓값) 보정
+            // Guard against division by zero if planet speed is stationary
             let mut safe_speed = speed;
             if safe_speed.abs() < 0.001 {
                 safe_speed = if safe_speed >= 0.0 { 0.001 } else { -0.001 };
             }
 
-            // speed는 일(Day) 당 이동 각도. 초 단위 이동으로 환산.
+            // Speed in deg/day converted to second adjustment
             let seconds_to_move = (diff / safe_speed) * 86400.0;
 
-            // 한 번에 너무 큰 점프를 방지 (예: 최대 30일)
+            // Clamp max single-step jump (e.g. max 30 days)
             let max_jump = 30.0 * 86400.0;
             let clamped_seconds = if seconds_to_move > max_jump {
                 max_jump
@@ -199,11 +199,11 @@ impl AstroEngine {
         Ok(current_time)
     }
 
-    /// 특정 절기(SolarTerm)의 정확한 시작 시각을 찾습니다.
+    /// Find the exact start time of a given 24 Solar Term.
     pub fn find_solar_term_time(
         &self,
         birth_time: DateTime<Utc>,
-        term_idx: u8, // 0: 입춘, 1: 우수 ... 23: 대한
+        term_idx: u8, // 0: Lichun, 1: Yushui ... 23: Dahan
     ) -> Result<DateTime<Utc>, AstroError> {
         let target_long = (315.0 + (term_idx as f64) * 15.0) % 360.0;
         let current_long = self.get_sun_longitude(birth_time)?;
@@ -216,7 +216,7 @@ impl AstroEngine {
         self.find_time_for_longitude(approx_time, target_long)
     }
 
-    /// 행성, 달, 노드의 상세 데이터 (황경, 속도) 계산
+    /// Calculate detailed planet/moon/node data (longitude, speed).
     pub fn get_planet_full(
         &self,
         datetime: DateTime<Utc>,
@@ -250,7 +250,7 @@ impl AstroEngine {
         Ok((res.data[0], res.data[3])) // Longitude, Speed
     }
 
-    /// 행성, 달, 노드의 위치 계산 (Vedic 점성술 지원용)
+    /// Calculate position of planet, moon, or node (for Vedic/Western astrology).
     pub fn get_planet_position(
         &self,
         datetime: DateTime<Utc>,
@@ -380,7 +380,7 @@ impl AstroEngine {
         ))
     }
 
-    /// 적도 좌표계 (Equatorial) 데이터 (RA, Declination) 계산
+    /// Calculate equatorial coordinates (RA, Declination).
     pub fn get_planet_equatorial(
         &self,
         datetime: DateTime<Utc>,
@@ -396,7 +396,7 @@ impl AstroEngine {
         Ok((res.data[0], res.data[1])) // RA, Declination
     }
 
-    /// 특정 시점 이전 혹은 포함된 가장 가까운 합삭(New Moon) 시각을 찾습니다.
+    /// Find the nearest New Moon occurring before or at the given datetime.
     pub fn find_new_moon_before(
         &self,
         datetime: DateTime<Utc>,
@@ -404,8 +404,8 @@ impl AstroEngine {
         self.find_relative_conjunction_backward(datetime, 0.0)
     }
 
-    /// 특정 시점 이전의 가장 가까운 동지(Winter Solstice, 황경 270도)를 찾습니다.
-    /// 음력 연도를 동지 기준으로 정렬할 때 필요합니다.
+    /// Find the nearest Winter Solstice (Sun tropical longitude 270 deg) before the given datetime.
+    /// Used for aligning the lunar calendar year to the Winter Solstice.
     pub fn find_winter_solstice_before(
         &self,
         datetime: DateTime<Utc>,
@@ -413,7 +413,7 @@ impl AstroEngine {
         self.find_longitude_time_backward(datetime, 270.0)
     }
 
-    /// 태양과 달의 상대적 위치(상대적 황경 차이)가 target_diff가 되는 시점을 역방향으로 찾습니다.
+    /// Find the point in time backwards where the Moon-Sun angular separation equals target_diff.
     fn find_relative_conjunction_backward(
         &self,
         start_time: DateTime<Utc>,
@@ -423,16 +423,16 @@ impl AstroEngine {
 
         let mut t = start_time;
 
-        // 1. 현재 시점의 차이 확인 (Newton-Raphson 근사 시작점)
+        // 1. Initial angular difference check (Newton-Raphson approximation seed)
         let sun_l = self.get_sun_longitude(t)?;
         let moon_l = self.get_planet_position(t, 1, 256)?;
         let diff = (moon_l - sun_l + 360.0) % 360.0;
 
-        // 달-태양 상대 속도 약 12.19도/일.
+        // Relative speed of Moon vs Sun is ~12.19 deg/day
         let days_back = diff / 12.19;
         t -= Duration::seconds((days_back * 86400.0) as i64);
 
-        // 2. 수렴
+        // 2. Convergence loop
         for _ in 0..10 {
             let s = self.get_sun_longitude(t)?;
             let m = self.get_planet_position(t, 1, 256)?;
@@ -454,7 +454,7 @@ impl AstroEngine {
             t += Duration::seconds((days_adj * 86400.0) as i64);
         }
 
-        // 3. 만약 결과가 start_time보다 미래라면 한 달 더 뒤로 가서 다시 찾기
+        // 3. If result is ahead of start_time, step back one month and re-evaluate
         if t > start_time + Duration::seconds(1) {
             t -= Duration::days(29);
             return self.find_relative_conjunction_backward(t, target_diff);
@@ -463,7 +463,7 @@ impl AstroEngine {
         Ok(t)
     }
 
-    /// 태양 황경이 특정 target_long이 되는 시점을 역방향으로 찾습니다.
+    /// Find the point in time backwards where the Sun reaches a target tropical longitude.
     fn find_longitude_time_backward(
         &self,
         start_time: DateTime<Utc>,
@@ -478,7 +478,7 @@ impl AstroEngine {
             diff += 360.0;
         }
 
-        // 태양 속도 약 0.9856도/일
+        // Sun speed is ~0.9856 deg/day
         let days_back = diff / 0.9856;
         t -= Duration::seconds((days_back * 86400.0) as i64);
 
@@ -507,7 +507,7 @@ impl AstroEngine {
         Ok(t)
     }
 
-    /// 특정 시점, 위치에서의 하우스(1~12) 및 ASC/MC를 계산합니다.
+    /// Calculate houses (1~12) and ASC/MC at a given datetime and coordinates.
     pub fn get_houses(
         &self,
         datetime: DateTime<Utc>,
@@ -549,12 +549,12 @@ impl AstroEngine {
         Ok((cusps_vec, ascmc))
     }
 
-    /// 특정 시점의 아야남사(Ayanamsa) 값을 계산합니다 (기본: Lahiri).
+    /// Calculate Ayanamsa value at a given datetime (default: Lahiri).
     pub fn get_ayanamsa_ut(&self, datetime: DateTime<Utc>) -> f64 {
         self.get_ayanamsa_ut_for_mode(datetime, 1, 0.0, 0.0)
     }
 
-    /// 아야남사 모드 설정 (스탯리스 엔진에서는 get_ayanamsa_ut_for_mode 권장)
+    /// Sidereal mode configuration (in stateless engine, get_ayanamsa_ut_for_mode is recommended).
     pub fn set_sidereal_mode(&self, _method_id: i32, _t0: f64, _ayan_t0: f64) {}
 
     /// Set a sidereal mode and read its ayanamsa statelessly (thread-safe, zero locks).

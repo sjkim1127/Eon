@@ -1,7 +1,7 @@
 # BRIEFING — 2026-06-20T11:46:00Z
 
 ## Mission
-Analyze the requirements for Milestone M3 (R2: Shadbala & Bhava Bala 6대 강도 세부 수치 시각화) and the Challenger robustness findings from M2.
+Analyze the requirements for Milestone M3 (R2: Shadbala & Bhava Bala 6-Fold Strength   ) and the Challenger robustness findings from M2.
 
 ## 🔒 My Identity
 - Archetype: Explorer

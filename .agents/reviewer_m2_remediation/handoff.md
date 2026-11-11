@@ -15,7 +15,7 @@ Direct code inspection and command execution were performed in `/Users/sjkim1127
    - Replaced branch-based tomb element mapping with `let trapped_el = dm.element();` in `evaluate_ipmyo_events`.
 5. `crates/eon-saju/src/analysis/dynamic_luck.rs:431-444, 538-547`:
    - In `evaluate_structure_state`, added `let is_valid_gyeok_god = !matches!(god, TenGod::Bijian | TenGod::Jiecai);` to exclude BiJian and JieCai from triggering Gyeokguk `Fulfilled` status.
-   - In `evaluate_gaego_events`, added luck pillar involvement checks `branches.iter().any(|(p, br)| p.contains("운") && tri.branches().contains(br))` for triple and seasonal alliances.
+   - In `evaluate_gaego_events`, added luck pillar involvement checks `branches.iter().any(|(p, br)| p.contains("") && tri.branches().contains(br))` for triple and seasonal alliances.
 
 ### Command Execution Results:
 - `cargo check --workspace`:
@@ -53,7 +53,7 @@ Direct code inspection and command execution were performed in `/Users/sjkim1127
 ## 2. Logic Chain
 
 1. **Wolwun Early January Year Fix**:
-   - Astronomical LiChun (입춘, solar term 0) occurs every year between Feb 3 and Feb 5.
+   - Astronomical LiChun (, solar term 0) occurs every year between Feb 3 and Feb 5.
    - All days in January (`dt.month() == 1`) precede LiChun of that calendar year and belong to Saju year `dt_year - 1`.
    - The condition `if dt.month() == 1 { dt_year - 1 }` guarantees that Jan 2, 2026 correctly maps to Saju year 2025 (乙巳 year -> 戊子 month). Verified by `test_wolwun_early_january_saju_year`.
 
@@ -68,12 +68,12 @@ Direct code inspection and command execution were performed in `/Users/sjkim1127
    - Each unsealed stem is scored exactly once. Verified by `test_gaego_no_double_scoring_in_vm` (`mem_dump` count = 0, `gaego` count = number of unsealed stems).
 
 4. **IpMyo Trapped Element for Yin Day Masters**:
-   - In 12-Unseong lifecycle analysis, when the Day Master reaches `Mu` (묘 墓) stage, the trapped element is `dm.element()`.
+   - In 12-Unseong lifecycle analysis, when the Day Master reaches `Mu` ( 墓) stage, the trapped element is `dm.element()`.
    - For Yin Day Master 乙 (Wood), `Mu` stage is at 戌 tomb branch. The trapped element is Wood (`dm.element()`). Verified by `test_empirical_ipmyo_yin_stem_mismatch`.
 
 5. **Gyeokguk Fulfillment & Natal GaeGo Asymmetry**:
    - BiJian (比肩) and JieCai (劫財) do not form or fulfill Gyeokguk structures. Filtering them out via `!matches!(god, TenGod::Bijian | TenGod::Jiecai)` prevents invalid `Fulfilled` transitions. Verified by `test_empirical_gyeokguk_jiecai_fulfillment_flaw`.
-   - Dynamic GaeGo events require luck pillar involvement (`branches.iter().any(|(p, br)| p.contains("운") && ...)`). Static natal-only alliances emit 0 GaeGo events. Verified by `test_natal_only_triple_alliance_no_gaego_events`.
+   - Dynamic GaeGo events require luck pillar involvement (`branches.iter().any(|(p, br)| p.contains("") && ...)`). Static natal-only alliances emit 0 GaeGo events. Verified by `test_natal_only_triple_alliance_no_gaego_events`.
 
 6. **Integrity & Layout Audit**:
    - Source code contains zero hardcoded test outputs, facade mocks, or bypassed logic.

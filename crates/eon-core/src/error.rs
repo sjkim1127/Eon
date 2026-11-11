@@ -1,25 +1,25 @@
-//! Eon 공통 에러 타입
+//! Common error types for Eon Core.
 
 use serde::Serialize;
 use thiserror::Error;
 
-/// Eon 플랫폼 공통 에러 타입
+/// Common platform error type for Eon
 #[derive(Debug, Error, Serialize)]
 #[serde(tag = "type", content = "message")]
 pub enum EonError {
-    /// 잘못된 날짜/시간
+    /// Invalid date or time
     #[error("Invalid datetime: {0}")]
     InvalidDateTime(String),
 
-    /// 잘못된 인덱스
+    /// Invalid index
     #[error("Invalid index: {0}")]
     InvalidIndex(i32),
 
-    /// 데이터 조회 실패
+    /// Data query failure
     #[error("Data not found: {0}")]
     DataNotFound(String),
 
-    /// 계산 오류
+    /// Calculation error
     #[error("Calculation error: {0}")]
     CalculationError(String),
 }
@@ -28,15 +28,15 @@ pub enum EonError {
 #[derive(Debug, thiserror::Error, serde::Serialize, Clone, PartialEq, Eq)]
 #[serde(tag = "type", content = "message")]
 pub enum CoreError {
-    /// 잘못된 날짜/시간
+    /// Invalid date or time parameters
     #[error("Invalid date or time parameters")]
     InvalidDateTime,
 
-    /// 로컬 시간이 대상 타임존에 존재하지 않음
+    /// Local date/time does not exist in target timezone
     #[error("Local date/time is non-existent in the target timezone")]
     NonExistentLocalTime,
 
-    /// 잘못된 타임존 형식
+    /// Invalid timezone format
     #[error("Invalid timezone format: {0}")]
     InvalidTimezone(String),
 }

@@ -23,7 +23,7 @@ Adversarial testing revealed 5 defects in `crates/eon-saju`:
 5. **Indiscriminate Gyeokguk Fulfillment & Natal GaeGo Asymmetry**:
    - File: `crates/eon-saju/src/analysis/dynamic_luck.rs:420-449, 531-544`
    - Observation:
-     - `evaluate_structure_state` marked Gyeokguk as `Fulfilled` (성격) whenever a luck stem matched a month branch hidden stem, even if the ten god was Rob Wealth (劫財) or Friend (比肩), which cannot form or fulfill Gyeokguk structures.
+     - `evaluate_structure_state` marked Gyeokguk as `Fulfilled` () whenever a luck stem matched a month branch hidden stem, even if the ten god was Rob Wealth (劫財) or Friend (比肩), which cannot form or fulfill Gyeokguk structures.
      - `evaluate_gaego_events` omitted luck pillar involvement checks for triple and seasonal alliances, causing static natal-only triple alliances to emit GaeGo events during luck-free analysis.
 
 ---
@@ -31,13 +31,13 @@ Adversarial testing revealed 5 defects in `crates/eon-saju`:
 ## 2. Logic Chain
 
 1. **Fix 1 (Wolwun Saju Year)**:
-   - LiChun (입춘, solar term 0) occurs every year between Feb 3 and Feb 5.
+   - LiChun (, solar term 0) occurs every year between Feb 3 and Feb 5.
    - Every day in January (`dt.month() == 1`) is strictly before LiChun of that calendar year.
    - Therefore, any date in January must map to Saju Year `dt_year - 1`.
    - Updated `month_ganzi_at` in `periodic_luck.rs` to check `if dt.month() == 1 { dt_year - 1 }`.
 
 2. **Fix 2 (Elemental Power Preservation)**:
-   - Climate correction (조후 보정) is specifically designed to adjust the four Earth branches (`Chen`, `Xu`, `Chou`, `Wei`) when un-transformed by higher-priority alliances.
+   - Climate correction (JoHu ) is specifically designed to adjust the four Earth branches (`Chen`, `Xu`, `Chou`, `Wei`) when un-transformed by higher-priority alliances.
    - Updated `calculate` and `calculate_expanded` in `power.rs` so climate correction only applies if `eff_el == orig_el` AND `matches!(br, EarthlyBranch::Chen | EarthlyBranch::Xu | EarthlyBranch::Chou | EarthlyBranch::Wei)`.
    - For all non-Earth or transformed branches, `eff_el` is preserved.
 
@@ -47,17 +47,17 @@ Adversarial testing revealed 5 defects in `crates/eon-saju`:
    - Section 6.7 (`gaego`) then scores those unsealed stems under the `gaego:` tag, ensuring each unsealed stem is scored exactly once.
 
 4. **Fix 4 (IpMyo Trapped Element)**:
-   - In 12-Unseong lifecycle analysis, when the Day Master enters the `Mu` (묘 墓) stage, the trapped element is the element of the Day Master (`dm.element()`), regardless of whether the Day Master stem is Yang (甲, 丙, 戊, 庚, 壬) or Yin (乙, 丁, 己, 辛, 癸).
+   - In 12-Unseong lifecycle analysis, when the Day Master enters the `Mu` ( 墓) stage, the trapped element is the element of the Day Master (`dm.element()`), regardless of whether the Day Master stem is Yang (甲, 丙, 戊, 庚, 壬) or Yin (乙, 丁, 己, 辛, 癸).
    - Replaced hardcoded branch lookup in `evaluate_ipmyo_events` with `let trapped_el = dm.element();`.
 
 5. **Fix 5a (Valid Gyeokguk Fulfillment Gods)**:
-   - Gyeokguk structures (팔정격) are formed by Eight Normal Ten Gods (식신, 상관, 편재, 정재, 편관, 정관, 편인, 정인).
-   - BiJian (비견) and JieCai (겁재) do not form or fulfill Gyeokguk structures upon stem emergence.
+   - Gyeokguk structures () are formed by Eight Normal Ten Gods (ShiShen, ShangGuan, PianCai, ZhengCai, PianGuan, ZhengGuan, PianYin, ZhengYin).
+   - BiJian (BiJian) and JieCai (JieCai) do not form or fulfill Gyeokguk structures upon stem emergence.
    - In `evaluate_structure_state`, added `let is_valid_gyeok_god = !matches!(god, TenGod::Bijian | TenGod::Jiecai);` to ensure `status` only transitions to `Fulfilled` when a valid Gyeokguk-promoting ten god emerges.
 
 6. **Fix 5b (Natal GaeGo Asymmetry)**:
-   - GaeGo (개고 剛開) represents the dynamic unsealing of storage branches by luck pillars.
-   - In `evaluate_gaego_events`, added luck pillar involvement checks for triple and seasonal alliances: `branches.iter().any(|(p, br)| p.contains("운") && tri.branches().contains(br))`.
+   - GaeGo (GaeGo 剛開) represents the dynamic unsealing of storage branches by luck pillars.
+   - In `evaluate_gaego_events`, added luck pillar involvement checks for triple and seasonal alliances: `branches.iter().any(|(p, br)| p.contains("") && tri.branches().contains(br))`.
    - Static natal-only alliances without luck pillars no longer emit GaeGo events.
 
 ---

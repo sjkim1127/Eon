@@ -23,8 +23,8 @@ Perform empirical adversarial stress testing on Milestone 2 (R2) Jijanggan GaeGo
 ## Review Scope
 - **Files reviewed**: `dynamic_luck.rs`, `trace_tag.rs`, `vm.rs`, `tests/edge_cases.rs`, `tests/milestone2_stress_tests.rs` in `crates/eon-saju`
 - **Verification criteria**:
-  - GaeGo (개고) unsealing of storage branches (辰, 戌, 丑, 未) on clashes/combinations.
-  - IpMyo (입묘) trapping into storage when luck cycles hit 12-Unseong Mu.
+  - GaeGo (GaeGo) unsealing of storage branches (辰, 戌, 丑, 未) on clashes/combinations.
+  - IpMyo (IpMyo) trapping into storage when luck cycles hit 12-Unseong Mu.
   - Dynamic Gyeokguk transitions (`DynamicStructureState`: `Transformed`, `Broken`, `Fulfilled`) during active luck periods.
   - Workspace integrity: `cargo check --workspace`, `cargo test --workspace`.
 

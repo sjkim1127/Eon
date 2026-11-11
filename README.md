@@ -171,7 +171,7 @@ eon tier --birth "1990-05-15 10:30" --gender m -f text
 
 ### Common Flags & Options
 - `--birth <YYYY-MM-DD [HH:MM]>`: Birth date and optional time (default time: `12:00`).
-- `-c, --city <NAME>`: Birth city for 100% offline resolution of coordinates and timezone (e.g. `seoul`, `busan`, `tokyo`, `new york`, `london`, `paris`, `서울`, `부산`).
+- `-c, --city <NAME>`: Birth city for 100% offline resolution of coordinates and timezone (e.g. `seoul`, `busan`, `tokyo`, `new york`, `london`, `paris`).
 - `--gender <m|f>`: Gender (`m` for male, `f` for female; default: `m`).
 - `--lat <f64>`: Latitude (default: `37.5665` for Seoul).
 - `--lon <f64>`: Longitude (default: `126.9780` for Seoul).

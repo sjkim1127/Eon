@@ -1,6 +1,6 @@
-//! 자미두수 유년(流年, 1년 운) 연산 모듈
+//! Zi Wei Dou Shu Annual Luck (Liu Nian) module.
 //!
-//! 특정 연도의 태세(천간/지지)를 구하고, 지지에 해당하는 궁을 유년 궁으로 지정하며, 천간에 따른 유년 사화를 계산합니다.
+//! Computes annual Tai Sui stem/branch, annual palace, and annual Si Hua.
 
 use crate::palace::std_idx_to_zwds_idx;
 use crate::transformations::get_sihua_stars;
@@ -8,11 +8,11 @@ use crate::types::LiuNian;
 use eon_saju::core::branch::EarthlyBranch;
 use eon_saju::core::stem::HeavenlyStem;
 
-/// 특정 연도에 대한 유년(LiuNian) 정보를 계산합니다.
+/// Calculate annual luck (Liu Nian) for a target year.
 ///
-/// * `target_year` - 운세를 보려는 연도 (예: 2026)
+/// * `target_year` - Target annual year (e.g. 2026)
 pub fn calculate_liunian(target_year: i32) -> LiuNian {
-    // 60갑자 기반 천간, 지지 계산 (甲子년 = 서기 4년 기준)
+    // Calculate GanZi based on 60-cycle (Jia-Zi = 4 AD)
     let stem_idx = (target_year - 4).rem_euclid(10) as usize;
     let branch_std_idx = (target_year - 4).rem_euclid(12) as usize;
 

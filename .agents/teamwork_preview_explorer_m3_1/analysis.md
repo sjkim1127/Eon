@@ -154,14 +154,14 @@ impl MatchingEngine {
         let is_compatible = total >= 18.0 && (!has_critical_dosha || mangal_dosha_cancelled);
 
         let explanation = format!(
-            "총 {}점 획득 (36점 만점). {}",
+            "Total {} points (out of 36). {}",
             total,
             if is_compatible {
-                "전반적으로 조화로운 매칭입니다. 추천합니다."
+                "  . ."
             } else if total >= 18.0 {
-                "점수는 높으나 주요 살(Nadi/Bhakoot Dosha)의 영향으로 신중한 주의가 필요합니다."
+                "   (Nadi/Bhakoot Dosha)    ."
             } else {
-                "성향적 차이가 커 상호 조율과 깊은 이해가 요구되는 상성입니다."
+                "        ."
             }
         );
 
@@ -504,16 +504,16 @@ We introduce new translation keys to support localized Shadbala labels.
 
 #### Korean (`ko.rs`)
 ```rust
-        TK::ShadbalaSthana => "위치 강도 (Sthana)",
-        TK::ShadbalaDig => "방향 강도 (Dig)",
-        TK::ShadbalaKala => "시간 강도 (Kala)",
-        TK::ShadbalaChesta => "운동 강도 (Cheshta)",
-        TK::ShadbalaNaisargika => "자연 강도 (Naisargika)",
-        TK::ShadbalaDrik => "성상 강도 (Drik)",
-        TK::ShadbalaBenchmark => "최소 기준 (Rupa)",
-        TK::ShadbalaGrade => "등급",
-        TK::ShadbalaStatus => "상태",
-        TK::ShadbalaRequiredMin => "필수 최소치",
+        TK::ShadbalaSthana => "  (Sthana)",
+        TK::ShadbalaDig => "  (Dig)",
+        TK::ShadbalaKala => "  (Kala)",
+        TK::ShadbalaChesta => "  (Cheshta)",
+        TK::ShadbalaNaisargika => "  (Naisargika)",
+        TK::ShadbalaDrik => "  (Drik)",
+        TK::ShadbalaBenchmark => "  (Rupa)",
+        TK::ShadbalaGrade => "",
+        TK::ShadbalaStatus => "",
+        TK::ShadbalaRequiredMin => " ",
 ```
 
 #### English (`en.rs`)

@@ -1,11 +1,11 @@
-//! 자미두수 사화(四化: 化祿·化權·化科·化忌) 연산 모듈
+//! Zi Wei Dou Shu Four Transformations (Si Hua) module.
 //!
-//! 출생년 천간에 따른 사화 배열을 조회하고, 별들에 사화를 부여하는 역할을 합니다.
+//! Resolves Si Hua star assignments based on natal year Heavenly Stem.
 
 use crate::types::{SiHuaType, ZwdsStar};
 use eon_saju::core::stem::HeavenlyStem;
 
-/// 출생년 천간에 따른 [化祿, 化權, 化科, 化忌] 대상 별들을 조회합니다.
+/// Query target stars for [HuaLu, HuaQuan, HuaKe, HuaJi] based on birth year stem.
 pub fn get_sihua_stars(year_stem: HeavenlyStem) -> [ZwdsStar; 4] {
     match year_stem {
         HeavenlyStem::Jia => [
@@ -71,7 +71,7 @@ pub fn get_sihua_stars(year_stem: HeavenlyStem) -> [ZwdsStar; 4] {
     }
 }
 
-/// 특정 별에 해당하는 사화 타입이 있는지 검사하여 반환합니다.
+/// Check if a star holds a transformation tag.
 pub fn get_sihua_for_star(star: ZwdsStar, sihua_stars: &[ZwdsStar; 4]) -> Option<SiHuaType> {
     if star == sihua_stars[0] {
         Some(SiHuaType::HuaLu)

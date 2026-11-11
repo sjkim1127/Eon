@@ -15,7 +15,7 @@ Eon is a single-language Rust application running Dioxus Web on the frontend and
 | # | Name | Scope | Dependencies | Status | Conv ID |
 |---|---|---|---|---|---|
 | M2 | R1 Ashtakoota Guna Milan | Enhance engine to return 8 components details; visual progress/gauge component in Compatibility tab with KO/EN/ZH/RU translations. | None | DONE | bbf398d6-2705-4e72-8fb3-32991a24a296, 6d5786f5-dc5b-4f25-b0df-2d6fed4fbf2d, 77fd3370-078c-4b8e-bac4-225afa02c24b, b659b762-047e-4824-9e33-bc34ea55ca48 |
-| M3 | R2 Shadbala 6대 강도 | Refactor engine to compute 6 standard Shadbala factors; grid scorecard in Strength tab, Rupa benchmark comparison, KO/EN/ZH/RU translations. | M2 | IN_PROGRESS | - |
+| M3 | R2 Shadbala 6-Fold Strength | Refactor engine to compute 6 standard Shadbala factors; grid scorecard in Strength tab, Rupa benchmark comparison, KO/EN/ZH/RU translations. | M2 | IN_PROGRESS | - |
 | M4 | R3 KP System Lords & Significators | Refactor KP engine to include sign/star/sub lords and significator table; render table in KP subtab, integrate translation keys for KO/EN/ZH/RU. | M3 | PLANNED | - |
 | M5 | R4 Hierarchical Dasha Timeline | Implement hierarchical Maha -> Antar -> Pratyantar accordion UI in Dasha tab; dynamic current-period highlighting, KO/EN/ZH/RU translations. | M4 | PLANNED | - |
 

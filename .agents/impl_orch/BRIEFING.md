@@ -26,7 +26,7 @@ Coordinate and implement the Vedic Astrology enhancements across engine (Rust) a
 4. **Succession**: Self-succeed when spawn count >= 16 and all subagents are complete.
 - **Work items**:
   - M2: R1 Ashtakoota Guna Milan [done]
-  - M3: R2 Shadbala 6대 강도 [in-progress]
+  - M3: R2 Shadbala 6-Fold Strength [in-progress]
   - M4: R3 KP System Lords & Significators [pending]
   - M5: R4 Hierarchical Dasha Timeline [pending]
 - **Current phase**: 2

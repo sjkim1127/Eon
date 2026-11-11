@@ -25,9 +25,9 @@
    - Tested by `test_empirical_ipmyo_yin_stem_mismatch` in `challenger_m2_2_verify.rs`.
 
 5. **Gyeokguk Fulfillment Filter & GaeGo Dynamic Luck Requirement (`crates/eon-saju/src/analysis/dynamic_luck.rs`)**:
-   - In `evaluate_structure_state` (lines 533-549), `is_valid_gyeok_god` explicitly filters out `TenGod::Bijian` (비견) and `TenGod::Jiecai` (겁재).
+   - In `evaluate_structure_state` (lines 533-549), `is_valid_gyeok_god` explicitly filters out `TenGod::Bijian` (BiJian) and `TenGod::Jiecai` (JieCai).
    - Only structural ten gods trigger `GyeokStatus::Fulfilled`.
-   - In `evaluate_gaego_events` (lines 405-469), triggers require dynamic luck interactions (`p.contains("운")`).
+   - In `evaluate_gaego_events` (lines 405-469), triggers require dynamic luck interactions (`p.contains("")`).
    - Tested by `test_empirical_gyeokguk_jiecai_fulfillment_flaw` and `test_natal_only_triple_alliance_no_gaego_events`.
 
 ### Command Outputs

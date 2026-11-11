@@ -19,9 +19,9 @@
 
 3. **Gyeokguk State Transitions (`Fulfilled`, `Transformed`, `Broken`) (`crates/eon-saju/src/analysis/dynamic_luck.rs`)**:
    - `dynamic_luck.rs` lines 501–563: `evaluate_structure_state` prioritizes:
-     - `Transformed` (변격) when `triple_combinations` or `seasonal_combinations` complete.
-     - `Fulfilled` (성격) when a luck stem matches a month branch hidden stem and is not `Bijian` (比肩) or `Jiecai` (劫財).
-     - `Broken` (파격) when `combined.branch_clashes` contains a clash on the month branch (`"월지"`).
+     - `Transformed` () when `triple_combinations` or `seasonal_combinations` complete.
+     - `Fulfilled` () when a luck stem matches a month branch hidden stem and is not `Bijian` (比肩) or `Jiecai` (劫財).
+     - `Broken` () when `combined.branch_clashes` contains a clash on the month branch (`"Month Branch"`).
    - Verified exclusions of `Bijian`/`Jiecai` stems in `test_stress_gyeokguk_fulfillment_exclusion_of_bijian_jiecai`.
    - Verified state machine transitions in `test_stress_gyeokguk_state_machine_coverage`.
 
@@ -69,7 +69,7 @@
    - Conclusion: IpMyo trapping for Yin Day Masters correctly matches the Day Master's element.
 
 3. **Gyeokguk State Transitions**:
-   - Observation: `evaluate_structure_state` explicitly checks `!matches!(god, TenGod::Bijian | TenGod::Jiecai)` before setting `status = Fulfilled`, and checks month branch clashes (`"월지"`) to apply `Broken`.
+   - Observation: `evaluate_structure_state` explicitly checks `!matches!(god, TenGod::Bijian | TenGod::Jiecai)` before setting `status = Fulfilled`, and checks month branch clashes (`"Month Branch"`) to apply `Broken`.
    - Deduction: Neither `Bijian` nor `Jiecai` can trigger Gyeokguk fulfillment, and month branch clashes correctly force `Broken` status.
    - Conclusion: Gyeokguk state transitions operate as designed.
 

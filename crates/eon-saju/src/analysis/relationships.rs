@@ -1,20 +1,20 @@
-//! 합충형해(合沖刑害) 분석
+//! Stem and Branch Interactions Analysis (Combinations, Clashes, Punishments, Harms, Destructions)
 //!
-//! 천간과 지지 간의 특수 관계를 분석합니다.
+//! Analyzes special dynamic relationships between Heavenly Stems and Earthly Branches.
 //!
-//! ## 천간 관계
-//! - **천간합(天干合)**: 甲己, 乙庚, 丙辛, 丁壬, 戊癸
-//! - **천간충(天干沖)**: 甲庚, 乙辛, 丙壬, 丁癸
+//! ## Heavenly Stem Relationships
+//! - **Stem Combinations**: Jia-Ji, Yi-Geng, Bing-Xin, Ding-Ren, Wu-Gui
+//! - **Stem Clashes**: Jia-Geng, Yi-Xin, Bing-Ren, Ding-Gui
 //!
-//! ## 지지 관계
-//! - **삼합(三合)**: 寅午戌(火), 申子辰(水), 巳酉丑(金), 亥卯未(木)
-//! - **반합(半合)**: 삼합 중 두 개
-//! - **방합(方合)**: 寅卯辰(東), 巳午未(南), 申酉戌(西), 亥子丑(北)
-//! - **육합(六合)**: 子丑, 寅亥, 卯戌, 辰酉, 巳申, 午未
-//! - **충(沖)**: 子午, 丑未, 寅申, 卯酉, 辰戌, 巳亥
-//! - **형(刑)**: 삼형(寅巳申), 상형(丑戌未), 자형(辰午酉亥)
-//! - **해(害)**: 子未, 丑午, 寅巳, 卯辰, 申亥, 酉戌
-//! - **파(破)**: 子酉, 丑辰, 寅亥, 卯午, 巳申, 午未
+//! ## Earthly Branch Relationships
+//! - **Triple Alliances**: Yin-Wu-Xu (Fire), Shen-Zi-Chen (Water), Si-You-Chou (Metal), Hai-Mao-Wei (Wood)
+//! - **Semi-Alliances**: Two branches of a triple alliance
+//! - **Seasonal Alliances**: Yin-Mao-Chen (East/Spring), Si-Wu-Wei (South/Summer), Shen-You-Xu (West/Autumn), Hai-Zi-Chou (North/Winter)
+//! - **Six Combinations**: Zi-Chou, Yin-Hai, Mao-Xu, Chen-You, Si-Shen, Wu-Wei
+//! - **Branch Clashes**: Zi-Wu, Chou-Wei, Yin-Shen, Mao-You, Chen-Xu, Si-Hai
+//! - **Branch Punishments**: Triple (Yin-Si-Shen), Mutual (Chou-Xu-Wei), Self (Chen, Wu, You, Hai)
+//! - **Branch Harms**: Zi-Wei, Chou-Wu, Yin-Si, Mao-Chen, Shen-Hai, You-Xu
+//! - **Branch Destructions**: Zi-You, Chou-Chen, Yin-Hai, Mao-Wu, Si-Shen, Wu-Wei
 
 use crate::analysis::supplementary_pillars::InterpretationLevel;
 use crate::core::branch::EarthlyBranch;
@@ -24,10 +24,10 @@ use crate::core::stem::HeavenlyStem;
 use serde::{Deserialize, Serialize};
 
 // ============================================
-// 천간 합 (天干合)
+// Heavenly Stem Combinations
 // ============================================
 
-/// 천간합의 종류
+/// Heavenly Stem Combination types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum StemCombination {
@@ -44,7 +44,7 @@ pub enum StemCombination {
 }
 
 impl StemCombination {
-    /// 두 천간이 합인지 확인
+    /// Check if two heavenly stems form a combination
     pub fn check(stem1: HeavenlyStem, stem2: HeavenlyStem) -> Option<Self> {
         use HeavenlyStem::*;
         match (stem1, stem2) {
@@ -57,7 +57,7 @@ impl StemCombination {
         }
     }
 
-    /// 합화 오행 (합이 되면 변하는 오행)
+    /// Transformed element resulting from combination
     pub const fn transformed_element(&self) -> Element {
         match self {
             Self::JiaJi => Element::Earth,
@@ -70,15 +70,15 @@ impl StemCombination {
 
     pub const fn hangul(&self) -> &'static str {
         match self {
-            Self::JiaJi => "갑기합",
-            Self::YiGeng => "을경합",
-            Self::BingXin => "병신합",
-            Self::DingRen => "정임합",
-            Self::WuGui => "무계합",
+            Self::JiaJi => "Jia-Ji Combination",
+            Self::YiGeng => "Yi-Geng Combination",
+            Self::BingXin => "Bing-Xin Combination",
+            Self::DingRen => "Ding-Ren Combination",
+            Self::WuGui => "Wu-Gui Combination",
         }
     }
 
-    /// 구성 천간 반환
+    /// Return component stems
     pub const fn stems(&self) -> (HeavenlyStem, HeavenlyStem) {
         use HeavenlyStem::*;
         match self {
@@ -102,10 +102,10 @@ impl StemCombination {
 }
 
 // ============================================
-// 천간 충 (天干沖)
+// Heavenly Stem Clashes
 // ============================================
 
-/// 천간충의 종류
+/// Heavenly Stem Clash types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum StemClash {
@@ -120,7 +120,7 @@ pub enum StemClash {
 }
 
 impl StemClash {
-    /// 두 천간이 충인지 확인
+    /// Check if two heavenly stems clash
     pub fn check(stem1: HeavenlyStem, stem2: HeavenlyStem) -> Option<Self> {
         use HeavenlyStem::*;
         match (stem1, stem2) {
@@ -134,10 +134,10 @@ impl StemClash {
 
     pub const fn hangul(&self) -> &'static str {
         match self {
-            Self::JiaGeng => "갑경충",
-            Self::YiXin => "을신충",
-            Self::BingRen => "병임충",
-            Self::DingGui => "정계충",
+            Self::JiaGeng => "Jia-Geng Clash",
+            Self::YiXin => "Yi-Xin Clash",
+            Self::BingRen => "Bing-Ren Clash",
+            Self::DingGui => "Ding-Gui Clash",
         }
     }
 
@@ -152,10 +152,10 @@ impl StemClash {
 }
 
 // ============================================
-// 지지 삼합 (三合)
+// Earthly Branch Triple Alliances
 // ============================================
 
-/// 삼합의 종류
+/// Triple Alliance types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum TripleCombination {
@@ -170,7 +170,7 @@ pub enum TripleCombination {
 }
 
 impl TripleCombination {
-    /// 세 지지 목록에서 발견된 모든 삼합 확인
+    /// Check all triple alliances present in branch list
     pub fn check(branches: &[EarthlyBranch]) -> Vec<Self> {
         use EarthlyBranch::*;
         let mut results = Vec::new();
@@ -193,7 +193,7 @@ impl TripleCombination {
         results
     }
 
-    /// 합화 오행
+    /// Transformed element
     pub const fn element(&self) -> Element {
         match self {
             Self::YinWuXu => Element::Fire,
@@ -205,14 +205,14 @@ impl TripleCombination {
 
     pub const fn hangul(&self) -> &'static str {
         match self {
-            Self::YinWuXu => "인오술 화국",
-            Self::ShenZiChen => "신자진 수국",
-            Self::SiYouChou => "사유축 금국",
-            Self::HaiMaoWei => "해묘미 목국",
+            Self::YinWuXu => "Yin-Wu-Xu Fire Alliance",
+            Self::ShenZiChen => "Shen-Zi-Chen Water Alliance",
+            Self::SiYouChou => "Si-You-Chou Metal Alliance",
+            Self::HaiMaoWei => "Hai-Mao-Wei Wood Alliance",
         }
     }
 
-    /// 구성 지지 반환
+    /// Return component branches
     pub fn branches(&self) -> [EarthlyBranch; 3] {
         use EarthlyBranch::*;
         match self {
@@ -225,41 +225,41 @@ impl TripleCombination {
 }
 
 // ============================================
-// 지지 반합 (半合)
+// Earthly Branch Semi-Alliances
 // ============================================
 
-/// 반합의 종류 (삼합 중 2개)
+/// Semi-Alliance types (2 of 3 triple alliance branches)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SemiCombination {
-    /// 寅午 (火局 반합)
+    /// Yin-Wu (Fire Semi-Alliance)
     YinWu,
-    /// 午戌 (火局 반합)
+    /// Wu-Xu (Fire Semi-Alliance)
     WuXu,
-    /// 寅戌 (火局 반합 - 중심 없음)
+    /// Yin-Xu (Fire Semi-Alliance without cardinal)
     YinXu,
-    /// 申子 (水局 반합)
+    /// Shen-Zi (Water Semi-Alliance)
     ShenZi,
-    /// 子辰 (水局 반합)
+    /// Zi-Chen (Water Semi-Alliance)
     ZiChen,
-    /// 申辰 (水局 반합 - 중심 없음)
+    /// Shen-Chen (Water Semi-Alliance without cardinal)
     ShenChen,
-    /// 巳酉 (金局 반합)
+    /// Si-You (Metal Semi-Alliance)
     SiYou,
-    /// 酉丑 (金局 반합)
+    /// You-Chou (Metal Semi-Alliance)
     YouChou,
-    /// 巳丑 (金局 반합 - 중심 없음)
+    /// Si-Chou (Metal Semi-Alliance without cardinal)
     SiChou,
-    /// 亥卯 (木局 반합)
+    /// Hai-Mao (Wood Semi-Alliance)
     HaiMao,
-    /// 卯未 (木局 반합)
+    /// Mao-Wei (Wood Semi-Alliance)
     MaoWei,
-    /// 亥未 (木局 반합 - 중심 없음)
+    /// Hai-Wei (Wood Semi-Alliance without cardinal)
     HaiWei,
 }
 
 impl SemiCombination {
-    /// 두 지지가 반합인지 확인
+    /// Check if two branches form a semi-alliance
     pub fn check(b1: EarthlyBranch, b2: EarthlyBranch) -> Option<Self> {
         use EarthlyBranch::*;
         match (b1, b2) {
@@ -281,22 +281,22 @@ impl SemiCombination {
 
     pub fn hangul(&self) -> &'static str {
         match self {
-            Self::YinWu => "인오반합",
-            Self::WuXu => "오술반합",
-            Self::YinXu => "인술반합",
-            Self::ShenZi => "신자반합",
-            Self::ZiChen => "자진반합",
-            Self::ShenChen => "신진반합",
-            Self::SiYou => "사유반합",
-            Self::YouChou => "유축반합",
-            Self::SiChou => "사축반합",
-            Self::HaiMao => "해묘반합",
-            Self::MaoWei => "묘미반합",
-            Self::HaiWei => "해미반합",
+            Self::YinWu => "Yin-Wu Semi-Alliance",
+            Self::WuXu => "Wu-Xu Semi-Alliance",
+            Self::YinXu => "Yin-Xu Semi-Alliance",
+            Self::ShenZi => "Shen-Zi Semi-Alliance",
+            Self::ZiChen => "Zi-Chen Semi-Alliance",
+            Self::ShenChen => "Shen-Chen Semi-Alliance",
+            Self::SiYou => "Si-You Semi-Alliance",
+            Self::YouChou => "You-Chou Semi-Alliance",
+            Self::SiChou => "Si-Chou Semi-Alliance",
+            Self::HaiMao => "Hai-Mao Semi-Alliance",
+            Self::MaoWei => "Mao-Wei Semi-Alliance",
+            Self::HaiWei => "Hai-Wei Semi-Alliance",
         }
     }
 
-    /// 왕지(子午卯酉)를 포함한 유력한 반합인지 확인
+    /// Check if semi-alliance includes cardinal branch (Zi, Wu, Mao, You)
     pub fn is_dominant(&self) -> bool {
         matches!(
             self,
@@ -313,25 +313,25 @@ impl SemiCombination {
 }
 
 // ============================================
-// 지지 방합 (方合)
+// Earthly Branch Seasonal Alliances
 // ============================================
 
-/// 방합의 종류 (계절의 결합)
+/// Seasonal Alliance types (directional combinations)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SeasonalCombination {
-    /// 寅卯辰 → 木局 (봄)
+    /// Yin-Mao-Chen -> Wood Directional (Spring)
     YinMaoChen,
-    /// 巳午未 → 火局 (여름)
+    /// Si-Wu-Wei -> Fire Directional (Summer)
     SiWuWei,
-    /// 申酉戌 → 金局 (가을)
+    /// Shen-You-Xu -> Metal Directional (Autumn)
     ShenYouXu,
-    /// 亥子丑 → 水局 (겨울)
+    /// Hai-Zi-Chou -> Water Directional (Winter)
     HaiZiChou,
 }
 
 impl SeasonalCombination {
-    /// 세 지지 목록에서 발견된 모든 방합 확인
+    /// Check all seasonal alliances present in branch list
     pub fn check(branches: &[EarthlyBranch]) -> Vec<Self> {
         use EarthlyBranch::*;
         let mut results = Vec::new();
@@ -354,7 +354,7 @@ impl SeasonalCombination {
         results
     }
 
-    /// 구성 지지 반환
+    /// Return component branches
     pub fn branches(&self) -> [EarthlyBranch; 3] {
         use EarthlyBranch::*;
         match self {
@@ -365,7 +365,7 @@ impl SeasonalCombination {
         }
     }
 
-    /// 방합에 의한 오행
+    /// Transformed element from seasonal alliance
     pub const fn element(&self) -> Element {
         match self {
             Self::YinMaoChen => Element::Wood,
@@ -377,19 +377,19 @@ impl SeasonalCombination {
 
     pub const fn hangul(&self) -> &'static str {
         match self {
-            Self::YinMaoChen => "인묘진 목방",
-            Self::SiWuWei => "사오미 화방",
-            Self::ShenYouXu => "신유술 금방",
-            Self::HaiZiChou => "해자축 수방",
+            Self::YinMaoChen => "Yin-Mao-Chen Wood Directional",
+            Self::SiWuWei => "Si-Wu-Wei Fire Directional",
+            Self::ShenYouXu => "Shen-You-Xu Metal Directional",
+            Self::HaiZiChou => "Hai-Zi-Chou Water Directional",
         }
     }
 }
 
 // ============================================
-// 지지 육합 (六合)
+// Earthly Branch Six Combinations
 // ============================================
 
-/// 육합의 종류
+/// Six Combination types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SixCombination {
@@ -408,7 +408,7 @@ pub enum SixCombination {
 }
 
 impl SixCombination {
-    /// 두 지지가 육합인지 확인
+    /// Check if two branches form a six-combination
     pub fn check(b1: EarthlyBranch, b2: EarthlyBranch) -> Option<Self> {
         use EarthlyBranch::*;
         match (b1, b2) {
@@ -421,30 +421,30 @@ impl SixCombination {
         }
     }
 
-    /// 합화 오행 (육합으로 변하는 오행)
+    /// Transformed element resulting from six combination
     pub const fn transformed_element(&self) -> Option<Element> {
         match self {
-            Self::ZiChou => Some(Element::Earth),  // 자축합토
-            Self::YinHai => Some(Element::Wood),   // 인해합목
-            Self::MaoXu => Some(Element::Fire),    // 묘술합화
-            Self::ChenYou => Some(Element::Metal), // 진유합금
-            Self::SiShen => Some(Element::Water),  // 사신합수
-            Self::WuWei => Some(Element::Fire),    // 오미합화 (불의 세력)
+            Self::ZiChou => Some(Element::Earth), // Zi-Chou transforms to Earth
+            Self::YinHai => Some(Element::Wood),  // Yin-Hai transforms to Wood
+            Self::MaoXu => Some(Element::Fire),   // Mao-Xu transforms to Fire
+            Self::ChenYou => Some(Element::Metal), // Chen-You transforms to Metal
+            Self::SiShen => Some(Element::Water), // Si-Shen transforms to Water
+            Self::WuWei => Some(Element::Fire),   // Wu-Wei transforms to Fire
         }
     }
 
     pub const fn hangul(&self) -> &'static str {
         match self {
-            Self::ZiChou => "자축합",
-            Self::YinHai => "인해합",
-            Self::MaoXu => "묘술합",
-            Self::ChenYou => "진유합",
-            Self::SiShen => "사신합",
-            Self::WuWei => "오미합",
+            Self::ZiChou => "Zi-Chou Six Combination",
+            Self::YinHai => "Yin-Hai Six Combination",
+            Self::MaoXu => "Mao-Xu Six Combination",
+            Self::ChenYou => "Chen-You Six Combination",
+            Self::SiShen => "Si-Shen Six Combination",
+            Self::WuWei => "Wu-Wei Six Combination",
         }
     }
 
-    /// 구성 지지 반환
+    /// Return component branches
     pub const fn branches(&self) -> (EarthlyBranch, EarthlyBranch) {
         use EarthlyBranch::*;
         match self {
@@ -459,65 +459,65 @@ impl SixCombination {
 }
 
 // ============================================
-// 지지 충 (沖)
+// Earthly Branch Clashes
 // ============================================
 
-/// 충(沖)의 종류에 따른 분류
+/// Branch clash classification
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ClashType {
-    /// 왕지충(旺地沖) - 子午, 卯酉
-    /// 순수 오행 충돌로 뿌리 손상이 가장 큼
+    /// Cardinal Clash - Zi-Wu, Mao-You
+    /// Pure elemental clash with highest root disruption
     Cardinal,
-    /// 생지충(生地沖) - 寅申, 巳亥
-    /// 복합 지장간으로 일부만 손상
+    /// Growth Clash - Yin-Shen, Si-Hai
+    /// Complex hidden stems with partial root disruption
     Growth,
-    /// 고지충(庫地沖/붕충) - 丑未, 辰戌
-    /// 토(土)끼리 충, 붕토 효과로 손상 적음
+    /// Storage/Tomb Clash - Chou-Wei, Chen-Xu
+    /// Earth clash with low damage and unsealing effect
     Storage,
 }
 
 impl ClashType {
-    /// 한글 이름
+    /// Formatted English name
     pub const fn hangul(&self) -> &'static str {
         match self {
-            Self::Cardinal => "왕지충",
-            Self::Growth => "생지충",
-            Self::Storage => "고지충",
+            Self::Cardinal => "CardinalClash",
+            Self::Growth => "GrowthClash",
+            Self::Storage => "StorageClash",
         }
     }
 
-    /// 뿌리 손상율 (0.0 ~ 1.0)
-    /// 이 비율만큼 통근 가중치가 감산됨
+    /// Root damage ratio (0.0 ~ 1.0)
+    /// Root weighting deduction factor
     pub const fn damage_ratio(&self) -> f32 {
         match self {
-            Self::Cardinal => 0.70, // 왕지충: 70% 손상
-            Self::Growth => 0.50,   // 생지충: 50% 손상
-            Self::Storage => 0.20,  // 고지충: 20% 손상 (붕토 효과)
+            Self::Cardinal => 0.70, // Cardinal clash: 70% damage
+            Self::Growth => 0.50,   // Growth clash: 50% damage
+            Self::Storage => 0.20,  // Storage clash: 20% damage (unsealing effect)
         }
     }
 }
 
-/// 지지충의 종류
+/// Earthly Branch Clash types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum BranchClash {
-    /// 子午沖
+    /// Zi-Wu Clash
     ZiWu,
-    /// 丑未沖
+    /// Chou-Wei Clash
     ChouWei,
-    /// 寅申沖
+    /// Yin-Shen Clash
     YinShen,
-    /// 卯酉沖
+    /// Mao-You Clash
     MaoYou,
-    /// 辰戌沖
+    /// Chen-Xu Clash
     ChenXu,
-    /// 巳亥沖
+    /// Si-Hai Clash
     SiHai,
 }
 
 impl BranchClash {
-    /// 두 지지가 충인지 확인
+    /// Check if two branches clash
     pub fn check(b1: EarthlyBranch, b2: EarthlyBranch) -> Option<Self> {
         use EarthlyBranch::*;
         match (b1, b2) {
@@ -531,35 +531,35 @@ impl BranchClash {
         }
     }
 
-    /// 충의 종류 (왕지충, 생지충, 고지충)
+    /// Clash classification (Cardinal, Growth, Storage)
     pub const fn clash_type(&self) -> ClashType {
         match self {
-            // 왕지충: 子午(수화), 卯酉(목금) - 순수 오행 정충
+            // Cardinal clash: Zi-Wu, Mao-You
             Self::ZiWu | Self::MaoYou => ClashType::Cardinal,
-            // 생지충: 寅申(목금), 巳亥(화수) - 복합 지장간
+            // Growth clash: Yin-Shen, Si-Hai
             Self::YinShen | Self::SiHai => ClashType::Growth,
-            // 고지충: 丑未, 辰戌 - 토끼리 붕충
+            // Storage clash: Chou-Wei, Chen-Xu
             Self::ChouWei | Self::ChenXu => ClashType::Storage,
         }
     }
 
-    /// 뿌리 손상율 (충 종류에 따른 차등 감산)
+    /// Root damage ratio
     pub const fn damage_ratio(&self) -> f32 {
         self.clash_type().damage_ratio()
     }
 
     pub const fn hangul(&self) -> &'static str {
         match self {
-            Self::ZiWu => "자오충",
-            Self::ChouWei => "축미충",
-            Self::YinShen => "인신충",
-            Self::MaoYou => "묘유충",
-            Self::ChenXu => "진술충",
-            Self::SiHai => "사해충",
+            Self::ZiWu => "Zi-Wu Clash",
+            Self::ChouWei => "Chou-Wei Clash",
+            Self::YinShen => "Yin-Shen Clash",
+            Self::MaoYou => "Mao-You Clash",
+            Self::ChenXu => "Chen-Xu Clash",
+            Self::SiHai => "Si-Hai Clash",
         }
     }
 
-    /// 구성 지지 반환
+    /// Return component branches
     pub const fn branches(&self) -> (EarthlyBranch, EarthlyBranch) {
         use EarthlyBranch::*;
         match self {
@@ -574,29 +574,29 @@ impl BranchClash {
 }
 
 // ============================================
-// 지지 형 (刑)
+// Earthly Branch Punishments
 // ============================================
 
-/// 지지형의 종류
+/// Branch Punishment types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum BranchPunishment {
-    /// 삼형 (寅巳申) - 무은지형
+    /// Triple Punishment (Yin-Si-Shen)
     TriplePunishment,
-    /// 상형 (丑戌未) - 무례지형
+    /// Mutual Punishment (Chou-Xu-Wei)
     MutualPunishment,
-    /// 자형 (辰午酉亥) - 각자 자신
+    /// Self Punishment (Chen, Wu, You, Hai)
     SelfPunishment(EarthlyBranch),
 }
 
 impl BranchPunishment {
-    /// 자형인지 확인
+    /// Check if branch is self-punishment
     pub fn is_self_punishment(branch: EarthlyBranch) -> bool {
         use EarthlyBranch::*;
         matches!(branch, Chen | Wu | You | Hai)
     }
 
-    /// 두 지지가 같고 자형인지 확인
+    /// Check if two branches form self-punishment
     pub fn check_self(b1: EarthlyBranch, b2: EarthlyBranch) -> Option<Self> {
         if b1 == b2 && Self::is_self_punishment(b1) {
             Some(Self::SelfPunishment(b1))
@@ -605,13 +605,13 @@ impl BranchPunishment {
         }
     }
 
-    /// 삼형살(寅巳申) 체크
+    /// Check Triple Punishment (Yin-Si-Shen)
     pub fn check_triple(branches: &[EarthlyBranch]) -> bool {
         use EarthlyBranch::*;
         branches.contains(&Yin) && branches.contains(&Si) && branches.contains(&Shen)
     }
 
-    /// 상형살(丑戌未) 체크
+    /// Check Mutual Punishment (Chou-Xu-Wei)
     pub fn check_mutual(branches: &[EarthlyBranch]) -> bool {
         use EarthlyBranch::*;
         branches.contains(&Chou) && branches.contains(&Xu) && branches.contains(&Wei)
@@ -619,37 +619,37 @@ impl BranchPunishment {
 
     pub fn hangul(&self) -> String {
         match self {
-            Self::TriplePunishment => "삼형(인사신)".to_string(),
-            Self::MutualPunishment => "상형(축술미)".to_string(),
-            Self::SelfPunishment(b) => format!("{}자형", b.hangul()),
+            Self::TriplePunishment => "Triple Punishment (Yin-Si-Shen)".to_string(),
+            Self::MutualPunishment => "Mutual Punishment (Chou-Xu-Wei)".to_string(),
+            Self::SelfPunishment(b) => format!("Self Punishment ({})", b.hangul()),
         }
     }
 }
 
 // ============================================
-// 지지 파 (破)
+// Earthly Branch Destructions
 // ============================================
 
-/// 지지파의 종류
+/// Branch Destruction types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum BranchDestruction {
-    /// 子酉破
+    /// Zi-You Destruction
     ZiYou,
-    /// 卯午破
+    /// Mao-Wu Destruction
     MaoWu,
-    /// 辰丑破
+    /// Chen-Chou Destruction
     ChenChou,
-    /// 未戌破
+    /// Wei-Xu Destruction
     WeiXu,
-    /// 寅亥破 (육합과 겹침)
+    /// Yin-Hai Destruction
     YinHai,
-    /// 巳申破 (육합과 겹침)
+    /// Si-Shen Destruction
     SiShen,
 }
 
 impl BranchDestruction {
-    /// 두 지지가 파인지 확인
+    /// Check if two branches form destruction
     pub fn check(b1: EarthlyBranch, b2: EarthlyBranch) -> Option<Self> {
         use EarthlyBranch::*;
         match (b1, b2) {
@@ -665,40 +665,40 @@ impl BranchDestruction {
 
     pub const fn hangul(&self) -> &'static str {
         match self {
-            Self::ZiYou => "자유파",
-            Self::MaoWu => "묘오파",
-            Self::ChenChou => "진축파",
-            Self::WeiXu => "미술파",
-            Self::YinHai => "인해파",
-            Self::SiShen => "사신파",
+            Self::ZiYou => "Zi-You Destruction",
+            Self::MaoWu => "Mao-Wu Destruction",
+            Self::ChenChou => "Chen-Chou Destruction",
+            Self::WeiXu => "Wei-Xu Destruction",
+            Self::YinHai => "Yin-Hai Destruction",
+            Self::SiShen => "Si-Shen Destruction",
         }
     }
 }
 
 // ============================================
-// 지지 해 (害)
+// Earthly Branch Harms
 // ============================================
 
-/// 지지해의 종류
+/// Branch Harm types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum BranchHarm {
-    /// 子未害
+    /// Zi-Wei Harm
     ZiWei,
-    /// 丑午害
+    /// Chou-Wu Harm
     ChouWu,
-    /// 寅巳害
+    /// Yin-Si Harm
     YinSi,
-    /// 卯辰害
+    /// Mao-Chen Harm
     MaoChen,
-    /// 申亥害
+    /// Shen-Hai Harm
     ShenHai,
-    /// 酉戌害
+    /// You-Xu Harm
     YouXu,
 }
 
 impl BranchHarm {
-    /// 두 지지가 해인지 확인
+    /// Check if two branches form harm
     pub fn check(b1: EarthlyBranch, b2: EarthlyBranch) -> Option<Self> {
         use EarthlyBranch::*;
         match (b1, b2) {
@@ -714,21 +714,21 @@ impl BranchHarm {
 
     pub const fn hangul(&self) -> &'static str {
         match self {
-            Self::ZiWei => "자미해",
-            Self::ChouWu => "축오해",
-            Self::YinSi => "인사해",
-            Self::MaoChen => "묘진해",
-            Self::ShenHai => "신해해",
-            Self::YouXu => "유술해",
+            Self::ZiWei => "Zi-Wei Harm",
+            Self::ChouWu => "Chou-Wu Harm",
+            Self::YinSi => "Yin-Si Harm",
+            Self::MaoChen => "Mao-Chen Harm",
+            Self::ShenHai => "Shen-Hai Harm",
+            Self::YouXu => "You-Xu Harm",
         }
     }
 }
 
 // ============================================
-// 암합 (暗合) 및 명암합 (明暗合)
+// Hidden Combinations (Amhap) and Manifest-Hidden Combinations (MyungAmHap)
 // ============================================
 
-/// 암합 (暗合, 지장간끼리의 합)
+/// Hidden combination between hidden stems in earthly branches
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Amhap {
@@ -736,7 +736,7 @@ pub struct Amhap {
     pub combination: StemCombination,
 }
 
-/// 명암합 (明暗合, 천간과 지지 속 지장간의 합)
+/// Manifest-hidden combination between heavenly stem and branch hidden stem
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MyungAmHap {
@@ -745,7 +745,7 @@ pub struct MyungAmHap {
     pub combination: StemCombination,
 }
 
-/// 발견된 관계 정보 (레거시)
+/// Found relation info (legacy)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FoundRelation {
@@ -753,7 +753,7 @@ pub struct FoundRelation {
     pub positions: (String, String),
 }
 
-/// 합충형해 상세 정보 (Explainable Relationship)
+/// Detailed explainable relationship interaction
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationshipDetail {
@@ -767,55 +767,55 @@ pub struct RelationshipDetail {
     pub transformed_element: Option<Element>,
 }
 
-/// 합충형해 분석 결과
+/// Relationship analysis outcome
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationshipAnalysis {
-    /// 발견된 모든 합충형해 상세 정보 (고도의 설명 가능성 포함)
+    /// All detailed explainable relationships
     pub mapped_relationships: Vec<RelationshipDetail>,
-    /// 천간합
+    /// Stem combinations
     pub stem_combinations: Vec<(StemCombination, String, String)>,
-    /// 천간충
+    /// Stem clashes
     pub stem_clashes: Vec<(StemClash, String, String)>,
-    /// 삼합
+    /// Triple alliances
     pub triple_combinations: Vec<TripleCombination>,
-    /// 방합
+    /// Seasonal alliances
     pub seasonal_combinations: Vec<SeasonalCombination>,
-    /// 유력한 반합 (왕지 포함, 眞合)
+    /// Dominant semi-alliances (with cardinal branch)
     pub dominant_semi_combinations: Vec<(SemiCombination, String, String)>,
-    /// 무력한 반합 (왕지 미포함, 假合)
+    /// Weak semi-alliances (without cardinal branch)
     pub weak_semi_combinations: Vec<(SemiCombination, String, String)>,
-    /// 육합
+    /// Six combinations
     pub six_combinations: Vec<(SixCombination, String, String)>,
-    /// 지지충
+    /// Branch clashes
     pub branch_clashes: Vec<(BranchClash, String, String)>,
-    /// 지지형
+    /// Branch punishments
     pub branch_punishments: Vec<(BranchPunishment, String, String)>,
-    /// 지지해
+    /// Branch harms
     pub branch_harms: Vec<(BranchHarm, String, String)>,
-    /// 지지파
+    /// Branch destructions
     pub branch_destructions: Vec<(BranchDestruction, String, String)>,
-    /// 암합 (지장간 사이의 합)
+    /// Hidden combinations (Amhap)
     pub am_combinations: Vec<(Amhap, String, String)>,
-    /// 명암합 (드러난 천간과 지장간 사이의 합)
+    /// Manifest-hidden combinations (MyungAmHap)
     pub myung_am_combinations: Vec<(MyungAmHap, String, String)>,
 }
 
 impl RelationshipAnalysis {
-    /// 사주에서 합충형해 분석
+    /// Analyze relationships from four pillars
     pub fn from_pillars(pillars: &FourPillars) -> Self {
         let stems = [
-            ("년간", pillars.year.stem),
-            ("월간", pillars.month.stem),
-            ("일간", pillars.day.stem),
-            ("시간", pillars.hour.stem),
+            ("year_stem", pillars.year.stem),
+            ("month_stem", pillars.month.stem),
+            ("day_stem", pillars.day.stem),
+            ("hour_stem", pillars.hour.stem),
         ];
 
         let branches = [
-            ("년지", pillars.year.branch),
-            ("월지", pillars.month.branch),
-            ("일지", pillars.day.branch),
-            ("시지", pillars.hour.branch),
+            ("year_branch", pillars.year.branch),
+            ("month_branch", pillars.month.branch),
+            ("day_branch", pillars.day.branch),
+            ("hour_branch", pillars.hour.branch),
         ];
 
         let mut stem_combinations = Vec::new();
@@ -831,7 +831,7 @@ impl RelationshipAnalysis {
         let mut am_combinations = Vec::new();
         let mut myung_am_combinations = Vec::new();
 
-        // 천간 분석 (모든 쌍)
+        // Analyze heavenly stems (all pairs)
         for i in 0..4 {
             for j in (i + 1)..4 {
                 let (pos1, stem1) = stems[i];
@@ -846,7 +846,7 @@ impl RelationshipAnalysis {
             }
         }
 
-        // 지지 분석 (모든 쌍)
+        // Analyze earthly branches (all pairs)
         for i in 0..4 {
             for j in (i + 1)..4 {
                 let (pos1, branch1) = branches[i];
@@ -874,7 +874,7 @@ impl RelationshipAnalysis {
             }
         }
 
-        // 자형 분석 (같은 지지가 2개 이상)
+        // Analyze self-punishments
         for i in 0..4 {
             for j in (i + 1)..4 {
                 let (pos1, branch1) = branches[i];
@@ -885,29 +885,29 @@ impl RelationshipAnalysis {
             }
         }
 
-        // 삼형살 및 상형살 분석
+        // Analyze triple and mutual punishments
         let all_branches: Vec<_> = branches.iter().map(|(_, b)| *b).collect();
         if BranchPunishment::check_triple(&all_branches) {
             branch_punishments.push((
                 BranchPunishment::TriplePunishment,
-                "삼형".to_string(),
-                "인사신".to_string(),
+                "TriplePunishment".to_string(),
+                "YinSiShen".to_string(),
             ));
         }
         if BranchPunishment::check_mutual(&all_branches) {
             branch_punishments.push((
                 BranchPunishment::MutualPunishment,
-                "상형".to_string(),
-                "축술미".to_string(),
+                "MutualPunishment".to_string(),
+                "ChouXuWei".to_string(),
             ));
         }
 
-        // 삼합 및 방합 분석
+        // Analyze triple and seasonal alliances
         let all_branches: Vec<_> = branches.iter().map(|(_, b)| *b).collect();
         let triple_combinations = TripleCombination::check(&all_branches);
         let seasonal_combinations = SeasonalCombination::check(&all_branches);
 
-        // 암합 분석 (지지 간의 지장간 합)
+        // Analyze hidden combinations (branch hidden stems)
         for i in 0..4 {
             for j in (i + 1)..4 {
                 let (pos1, b1) = branches[i];
@@ -926,7 +926,7 @@ impl RelationshipAnalysis {
             }
         }
 
-        // 명암합 분석 (천간과 지지 지장간의 합)
+        // Analyze manifest-hidden combinations (stem with branch hidden stems)
         for (stem_pos, stem) in &stems {
             for (branch_pos, branch) in &branches {
                 let combinations = Self::check_myung_am_combinations(*stem, *branch);
@@ -944,10 +944,10 @@ impl RelationshipAnalysis {
             }
         }
 
-        // === 상세 설명 모델(mapped_relationships) 생성 ===
+        // === Generate detailed explainable relationships ===
         let mut mapped_relationships = Vec::new();
 
-        // 1. 지지충 (BranchClash) - 파괴력 1순위
+        // 1. Branch Clash (BranchClash)
         for (clash, p1, p2) in &branch_clashes {
             let info = clash.clash_type();
             mapped_relationships.push(RelationshipDetail {
@@ -955,9 +955,9 @@ impl RelationshipAnalysis {
                 name: clash.hangul().to_string(),
                 positions: vec![p1.clone(), p2.clone()],
                 level: InterpretationLevel::Caution,
-                summary: format!("{}으로 두 기운이 정면 충돌", clash.hangul()),
+                summary: format!("Two forces collide directly via {}", clash.hangul()),
                 description: format!(
-                    "{}에 해당하는 충입니다. 뿌리 기운이 {}% 가량 흔들리며 강한 변화를 동반합니다.",
+                    "Clash corresponding to {}. Root vitality destabilized by approx {}%, driving strong structural changes.",
                     info.hangul(),
                     (info.damage_ratio() * 100.0) as u32
                 ),
@@ -966,7 +966,7 @@ impl RelationshipAnalysis {
             });
         }
 
-        // 2. 천간합 (StemCombination)
+        // 2. Stem Combination (StemCombination)
         for (comb, p1, p2) in &stem_combinations {
             let elem = comb.transformed_element();
             mapped_relationships.push(RelationshipDetail {
@@ -974,17 +974,17 @@ impl RelationshipAnalysis {
                 name: comb.hangul().to_string(),
                 positions: vec![p1.clone(), p2.clone()],
                 level: InterpretationLevel::Auspicious,
-                summary: format!("{}으로 새로운 기운 형성", comb.hangul()),
+                summary: format!("New energy formed via {}", comb.hangul()),
                 description: format!(
-                    "두 천간이 결합하여 {}의 성질로 변화하려는 흐름이 생깁니다.",
+                    "Two heavenly stems combine to create a flow transforming toward {} nature.",
                     elem.hangul()
                 ),
-                reasons: vec![format!("{} 합화", elem.hangul())],
+                reasons: vec![format!("{} transformation", elem.hangul())],
                 transformed_element: Some(elem),
             });
         }
 
-        // 3. 육합 (SixCombination)
+        // 3. Six Combination (SixCombination)
         for (six, p1, p2) in &six_combinations {
             let elem = six.transformed_element();
             mapped_relationships.push(RelationshipDetail {
@@ -992,56 +992,56 @@ impl RelationshipAnalysis {
                 name: six.hangul().to_string(),
                 positions: vec![p1.clone(), p2.clone()],
                 level: InterpretationLevel::Auspicious,
-                summary: format!("{}으로 지지의 화합", six.hangul()),
-                description: "서로 다른 지지의 기운이 조화롭게 묶여 안정감을 줍니다.".to_string(),
-                reasons: vec!["육합(六合)".to_string()],
+                summary: format!("Harmonious union of branches via {}", six.hangul()),
+                description: "Distinct earthly branch energies bind harmoniously, providing stability and security.".to_string(),
+                reasons: vec!["Six Combination".to_string()],
                 transformed_element: elem,
             });
         }
 
-        // 4. 삼합 (TripleCombination)
+        // 4. Triple Alliance (TripleCombination)
         for triple in &triple_combinations {
             let elem = triple.element();
             mapped_relationships.push(RelationshipDetail {
                 relation_type: "TripleCombination".to_string(),
                 name: triple.hangul().to_string(),
-                positions: vec!["전체".to_string()], // 삼합은 전체 분포
+                positions: vec!["all".to_string()], // Triple alliance spans chart
                 level: InterpretationLevel::Auspicious,
-                summary: format!("{} 성립으로 {} 기운 강화", triple.hangul(), elem.hangul()),
-                description: "세 지지가 목적 의식을 가지고 하나의 강력한 오행 국(局)을 형성합니다."
+                summary: format!("{} energy amplified by formation of {}", elem.hangul(), triple.hangul()),
+                description: "Three branches unite with purposeful alignment, forming a powerful elemental alliance bureau."
                     .to_string(),
-                reasons: vec!["삼합 완결".to_string()],
+                reasons: vec!["Triple Alliance Completed".to_string()],
                 transformed_element: Some(elem),
             });
         }
 
-        // 5. 방합 (SeasonalCombination)
+        // 5. Seasonal Alliance (SeasonalCombination)
         for seasonal in &seasonal_combinations {
             let elem = seasonal.element();
             mapped_relationships.push(RelationshipDetail {
                 relation_type: "SeasonalCombination".to_string(),
                 name: seasonal.hangul().to_string(),
-                positions: vec!["전체".to_string()],
+                positions: vec!["all".to_string()],
                 level: InterpretationLevel::Auspicious,
-                summary: format!("{} 성립으로 계절적 세력 결집", seasonal.hangul()),
+                summary: format!("Seasonal forces coalesced via {}", seasonal.hangul()),
                 description:
-                    "계절의 힘을 상징하는 지지들이 모여 해당 오행의 세력이 매우 강력해집니다."
+                    "Branches representing seasonal vitality assemble, making the corresponding elemental power extremely formidable."
                         .to_string(),
-                reasons: vec!["방합(方合)".to_string()],
+                reasons: vec!["Seasonal Combination".to_string()],
                 transformed_element: Some(elem),
             });
         }
 
-        // 6. 형/해/파 (Punishments, Harms, Destructions)
+        // 6. Punishments, Harms, Destructions
         for (pun, p1, p2) in &branch_punishments {
             mapped_relationships.push(RelationshipDetail {
                 relation_type: "BranchPunishment".to_string(),
                 name: pun.hangul(),
                 positions: vec![p1.clone(), p2.clone()],
                 level: InterpretationLevel::Caution,
-                summary: "지지 사이의 복잡한 간섭(刑)".to_string(),
-                description: "기운이 매끄럽지 못하게 얽히거나 조정되는 과정에서 스트레스가 발생할 수 있습니다.".to_string(),
-                reasons: vec!["형살(刑殺)".to_string()],
+                summary: "Complex friction and interaction between earthly branches (Punishment)".to_string(),
+                description: "Occurs when energies intertwine discordantly during coordination, potentially generating stress and adjustment friction.".to_string(),
+                reasons: vec!["Branch Punishment".to_string()],
                 transformed_element: None,
             });
         }
@@ -1051,15 +1051,15 @@ impl RelationshipAnalysis {
                 name: harm.hangul().to_string(),
                 positions: vec![p1.clone(), p2.clone()],
                 level: InterpretationLevel::Caution,
-                summary: "서로의 기운을 해치거나 방해함(害)".to_string(),
-                description: "육합을 방해하는 기운들이 만나 실익이 줄어들거나 갈등이 생집니다."
+                summary: "Mutual obstruction or impedance between branches (Harm)".to_string(),
+                description: "Encountering energies that disrupt six-combinations, diminishing practical gains or inciting conflict."
                     .to_string(),
-                reasons: vec!["해살(害殺)".to_string()],
+                reasons: vec!["Branch Harm".to_string()],
                 transformed_element: None,
             });
         }
 
-        // 7. 반합 (眞/假)
+        // 7. Semi-Alliance (Dominant / Weak)
         for (semi, p1, p2) in &dominant_semi_combinations {
             let triple = match semi {
                 SemiCombination::YinWu | SemiCombination::WuXu | SemiCombination::YinXu => {
@@ -1081,9 +1081,9 @@ impl RelationshipAnalysis {
                 name: format!("{}(眞)", semi.hangul()),
                 positions: vec![p1.clone(), p2.clone()],
                 level: InterpretationLevel::Auspicious,
-                summary: format!("{} 성립으로 {} 기운 발동", semi.hangul(), elem.hangul()),
-                description: "왕지(子午卯酉)를 포함한 강력한 결합입니다. 삼합에 준하는 실질적인 오행 변화가 일어납니다.".to_string(),
-                reasons: vec!["진반합(眞半合)".to_string(), format!("{} 포함", elem.hangul())],
+                summary: format!("{} energy activated via {}", elem.hangul(), semi.hangul()),
+                description: "Potent combination including a cardinal branch (Zi, Wu, Mao, You), inducing substantial elemental shifts akin to triple alliances.".to_string(),
+                reasons: vec!["True Semi-Alliance".to_string(), format!("Contains {}", elem.hangul())],
                 transformed_element: Some(elem),
             });
         }
@@ -1105,41 +1105,41 @@ impl RelationshipAnalysis {
             let elem = triple.element();
             mapped_relationships.push(RelationshipDetail {
                 relation_type: "SemiCombination".to_string(),
-                name: format!("{}(假)", semi.hangul()),
+                name: format!("{}(Weak)", semi.hangul()),
                 positions: vec![p1.clone(), p2.clone()],
                 level: InterpretationLevel::Neutral,
-                summary: format!("{} 형성 (세력 미약)", semi.hangul()),
-                description: "중심 기운인 왕지가 빠진 결합입니다. 작용력은 약하지만 해당 오행으로 향하려는 경향성을 띱니다.".to_string(),
-                reasons: vec!["가반합(假半合)".to_string(), "왕지 미포함".to_string()],
+                summary: format!("Formation of {} (subtle force)", semi.hangul()),
+                description: "Combination lacking the central cardinal branch; while subtle in strength, it maintains an inclination toward that element.".to_string(),
+                reasons: vec!["Weak Semi-Alliance".to_string(), "Missing cardinal branch".to_string()],
                 transformed_element: Some(elem),
             });
         }
 
-        // 8. 파 (BranchDestruction)
+        // 8. Branch Destruction (BranchDestruction)
         for (dest, p1, p2) in &branch_destructions {
             mapped_relationships.push(RelationshipDetail {
                 relation_type: "BranchDestruction".to_string(),
                 name: dest.hangul().to_string(),
                 positions: vec![p1.clone(), p2.clone()],
                 level: InterpretationLevel::Caution,
-                summary: "기운의 분열과 파괴(破)".to_string(),
-                description: "완성된 기운을 깨뜨리거나 내부적인 분열을 야기할 수 있는 작용입니다. 세밀한 조정이 필요합니다.".to_string(),
-                reasons: vec!["파살(破殺)".to_string()],
+                summary: "Disruption and destruction of energy (Destruction)".to_string(),
+                description: "Action that breaks consolidated vitality or causes internal divergence, requiring meticulous calibration.".to_string(),
+                reasons: vec!["Branch Destruction".to_string()],
                 transformed_element: None,
             });
         }
 
-        // 9. 암합 / 명암합
+        // 9. Hidden Combination / Manifest-Hidden Combination
         for (am, p1, p2) in &am_combinations {
             let elem = am.combination.transformed_element();
             mapped_relationships.push(RelationshipDetail {
                 relation_type: "Amhap".to_string(),
-                name: format!("암합({})", am.combination.hangul()),
+                name: format!("Hidden Combo ({})", am.combination.hangul()),
                 positions: vec![p1.clone(), p2.clone()],
                 level: InterpretationLevel::Auspicious,
-                summary: "지장간끼리의 비밀스러운 결합".to_string(),
-                description: "겉으로 드러나지 않는 은밀한 유대감이나 애정, 혹은 보이지 않는 곳에서의 협력을 의미합니다.".to_string(),
-                reasons: vec!["암합(暗合)".to_string(), format!("{} 합화", elem.hangul())],
+                summary: "Subtle bond between hidden earthly stems".to_string(),
+                description: "Denotes covert rapport, affection, or unpublicized cooperation operating beneath the surface.".to_string(),
+                reasons: vec!["Hidden Combination".to_string(), format!("{} transformation", elem.hangul())],
                 transformed_element: Some(elem),
             });
         }
@@ -1147,12 +1147,12 @@ impl RelationshipAnalysis {
             let elem = ma.combination.transformed_element();
             mapped_relationships.push(RelationshipDetail {
                 relation_type: "MyungAmHap".to_string(),
-                name: format!("명암합({})", ma.combination.hangul()),
+                name: format!("Manifest-Hidden Combo ({})", ma.combination.hangul()),
                 positions: vec![p1.clone(), p2.clone()],
                 level: InterpretationLevel::Auspicious,
-                summary: "천간과 지지 속 지장간의 결합".to_string(),
-                description: "드러난 의지와 보이지 않는 환경 사이의 강한 유대입니다. 떼려야 뗄 수 없는 밀접한 관계를 뜻합니다.".to_string(),
-                reasons: vec!["명암합(明暗合)".to_string(), format!("{} 합화", elem.hangul())],
+                summary: "Bond between heavenly stem and branch hidden stem".to_string(),
+                description: "Strong bond linking overt willpower with covert ambient factors, denoting an inseparable connection.".to_string(),
+                reasons: vec!["Manifest-Hidden Combination".to_string(), format!("{} transformation", elem.hangul())],
                 transformed_element: Some(elem),
             });
         }
@@ -1175,7 +1175,7 @@ impl RelationshipAnalysis {
         }
     }
 
-    /// 지지 간의 암합(지장간 합) 체크
+    /// Check hidden combinations between earthly branches
     pub fn check_am_combinations(b1: EarthlyBranch, b2: EarthlyBranch) -> Vec<StemCombination> {
         let jj1 = b1.jijanggan();
         let jj2 = b2.jijanggan();
@@ -1192,7 +1192,7 @@ impl RelationshipAnalysis {
         results
     }
 
-    /// 천간과 지지 지장간 사이의 명암합 체크
+    /// Check manifest-hidden combinations between stem and branch hidden stems
     pub fn check_myung_am_combinations(
         stem: HeavenlyStem,
         branch: EarthlyBranch,
@@ -1209,7 +1209,7 @@ impl RelationshipAnalysis {
         results
     }
 
-    /// 합이 있는지 확인
+    /// Check if any combinations exist
     pub fn has_combinations(&self) -> bool {
         !self.stem_combinations.is_empty()
             || !self.triple_combinations.is_empty()
@@ -1219,7 +1219,7 @@ impl RelationshipAnalysis {
             || !self.six_combinations.is_empty()
     }
 
-    /// 충이 있는지 확인
+    /// Check if any clashes exist
     pub fn has_clashes(&self) -> bool {
         !self.stem_clashes.is_empty() || !self.branch_clashes.is_empty()
     }
@@ -1227,11 +1227,11 @@ impl RelationshipAnalysis {
 
 impl std::fmt::Display for RelationshipAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "【합충형해 분석】")?;
-        writeln!(f, "─────────────────────────────────")?;
+        writeln!(f, "[Branch & Stem Interactions]")?;
+        writeln!(f, "---------------------------------")?;
 
         if !self.stem_combinations.is_empty() {
-            write!(f, "천간합: ")?;
+            write!(f, "Stem Combinations: ")?;
             for (i, (comb, p1, p2)) in self.stem_combinations.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1242,7 +1242,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.stem_clashes.is_empty() {
-            write!(f, "천간충: ")?;
+            write!(f, "Stem Clashes: ")?;
             for (i, (clash, p1, p2)) in self.stem_clashes.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1253,7 +1253,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.triple_combinations.is_empty() {
-            write!(f, "삼합: ")?;
+            write!(f, "Triple Alliances: ")?;
             for (i, triple) in self.triple_combinations.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1264,7 +1264,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.seasonal_combinations.is_empty() {
-            write!(f, "방합: ")?;
+            write!(f, "Seasonal Alliances: ")?;
             for (i, seasonal) in self.seasonal_combinations.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1275,7 +1275,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.dominant_semi_combinations.is_empty() {
-            write!(f, "반합(眞): ")?;
+            write!(f, "Dominant Semi-Alliances: ")?;
             for (i, (semi, p1, p2)) in self.dominant_semi_combinations.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1286,7 +1286,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.weak_semi_combinations.is_empty() {
-            write!(f, "반합(假): ")?;
+            write!(f, "Weak Semi-Alliances: ")?;
             for (i, (semi, p1, p2)) in self.weak_semi_combinations.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1297,7 +1297,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.six_combinations.is_empty() {
-            write!(f, "육합: ")?;
+            write!(f, "Six Combinations: ")?;
             for (i, (six, p1, p2)) in self.six_combinations.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1308,7 +1308,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.branch_clashes.is_empty() {
-            write!(f, "지지충: ")?;
+            write!(f, "Branch Clashes: ")?;
             for (i, (clash, p1, p2)) in self.branch_clashes.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1319,7 +1319,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.branch_punishments.is_empty() {
-            write!(f, "지지형: ")?;
+            write!(f, "Branch Punishments: ")?;
             for (i, (pun, p1, p2)) in self.branch_punishments.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1330,7 +1330,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.branch_harms.is_empty() {
-            write!(f, "지지해: ")?;
+            write!(f, "Branch Harms: ")?;
             for (i, (harm, p1, p2)) in self.branch_harms.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1341,7 +1341,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.branch_destructions.is_empty() {
-            write!(f, "지지파: ")?;
+            write!(f, "Branch Destructions: ")?;
             for (i, (dest, p1, p2)) in self.branch_destructions.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1352,7 +1352,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.am_combinations.is_empty() {
-            write!(f, "암합: ")?;
+            write!(f, "Hidden Combinations: ")?;
             for (i, (am, p1, p2)) in self.am_combinations.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1363,7 +1363,7 @@ impl std::fmt::Display for RelationshipAnalysis {
         }
 
         if !self.myung_am_combinations.is_empty() {
-            write!(f, "명암합: ")?;
+            write!(f, "Manifest-Hidden Combinations: ")?;
             for (i, (ma, p1, p2)) in self.myung_am_combinations.iter().enumerate() {
                 if i > 0 {
                     write!(f, ", ")?;
@@ -1378,11 +1378,11 @@ impl std::fmt::Display for RelationshipAnalysis {
 }
 
 // ============================================
-// FourPillars 편의 메서드
+// FourPillars helper methods
 // ============================================
 
 impl FourPillars {
-    /// 합충형해 분석
+    /// Relationship analysis
     pub fn relationships(&self) -> RelationshipAnalysis {
         RelationshipAnalysis::from_pillars(self)
     }
@@ -1395,7 +1395,7 @@ mod tests {
 
     #[test]
     fn test_user_relationships() {
-        // 김성주님 사주: 甲申年 乙亥月 庚戌日 丁亥時
+        // Chart: Jia-Shen Year, Yi-Hai Month, Geng-Xu Day, Ding-Hai Hour
         let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
         let pillars = FourPillars::calculate(&input).unwrap();
 
@@ -1403,25 +1403,25 @@ mod tests {
 
         println!("{}", analysis);
 
-        // 을경합 확인 (乙-庚)
+        // Verify Yi-Geng combination
         assert!(analysis
             .stem_combinations
             .iter()
             .any(|(c, _, _)| *c == StemCombination::YiGeng));
 
-        // 갑경충 확인 (甲-庚)
+        // Verify Jia-Geng clash
         assert!(analysis
             .stem_clashes
             .iter()
             .any(|(c, _, _)| *c == StemClash::JiaGeng));
 
-        // 해해자형 확인 (亥-亥) - 월지와 시지가 모두 亥
+        // Verify Hai-Hai self-punishment
         assert!(analysis
             .branch_punishments
             .iter()
             .any(|(p, _, _)| matches!(p, BranchPunishment::SelfPunishment(EarthlyBranch::Hai))));
 
-        // 신해해 확인 (申-亥)
+        // Verify Shen-Hai harm
         assert!(analysis
             .branch_harms
             .iter()

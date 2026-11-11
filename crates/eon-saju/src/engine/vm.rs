@@ -1,7 +1,7 @@
-//! Saju-VM: 인생 경로 에뮬레이션을 위한 가상 머신
+//! Saju-VM: Virtual machine for life path trajectory emulation
 //!
-//! 사주 원국을 불변의 상태로 두고, 대운과 세운을 입력값(Instructions)으로 받아
-//! 실시간 인생 에너지 상태를 시뮬레이션합니다.
+//! Treats natal Four Pillars as an immutable base state, consuming luck cycles
+//! (Major, Yearly, etc.) as instructions to simulate real-time energy flow.
 
 use crate::analysis::dynamic_luck::DynamicLuckAnalysis;
 use crate::analysis::major_luck::MajorLuckAnalysis;
@@ -21,33 +21,33 @@ use crate::engine::trace_tag::{
 };
 use serde::{Deserialize, Serialize};
 
-/// Saju Interrupt (하드웨어 예외/인터럽트)
+/// Saju Interrupt (hardware exception/interrupt)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SajuInterrupt {
-    /// 0x01: 고우선순위 시스템 충돌 (백호살 등)
+    /// 0x01: High-priority system clash (Baekho, etc.)
     CriticalException,
-    /// 0x02: 리소스 오버플로우 (괴강살 등)
+    /// 0x02: Resource overflow (Goegang, etc.)
     ResourceOverflow,
-    /// 0x03: 시스템 정지/고독 (고신/과숙 등)
+    /// 0x03: System stall / isolation (Gosin/Gwasuk, etc.)
     SystemStall,
-    /// 0x04: 임시 서비스 중단 (망신/겁살 등)
+    /// 0x04: Temporary service interruption (Mangshin/Geop, etc.)
     ServiceInterrupt,
 }
 
-/// 오행 레지스터 (R0~R4)
+/// Five Elements Registers (R0~R4)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QiRegisters {
-    /// R0: 목 (Wood)
+    /// R0: Wood
     pub r0_wood: f32,
-    /// R1: 화 (Fire)
+    /// R1: Fire
     pub r1_fire: f32,
-    /// R2: 토 (Earth)
+    /// R2: Earth
     pub r2_earth: f32,
-    /// R3: 금 (Metal)
+    /// R3: Metal
     pub r3_metal: f32,
-    /// R4: 수 (Water)
+    /// R4: Water
     pub r4_water: f32,
 }
 
@@ -78,7 +78,7 @@ impl QiRegisters {
         }
     }
 
-    /// 기운의 감쇠 (시간 흐름에 따른 기전 상실 표현)
+    /// Energy decay over time
     pub fn apply_decay(&mut self, factor: f32) {
         self.r0_wood *= factor;
         self.r1_fire *= factor;
@@ -87,7 +87,7 @@ impl QiRegisters {
         self.r4_water *= factor;
     }
 
-    /// 기운의 정규화 (전체 합을 100%로 유지하여 상대적 균형 분석)
+    /// Energy normalization (maintains total sum at 100% for relative balance)
     pub fn normalize(&mut self) {
         self.r0_wood = self.r0_wood.max(0.0);
         self.r1_fire = self.r1_fire.max(0.0);
@@ -106,26 +106,26 @@ impl QiRegisters {
     }
 }
 
-/// 인생의 한 지점(1년 단위)의 시뮬레이션 결과
+/// Simulation result for a single life frame (1-year interval)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LifeFrame {
-    /// 나이
+    /// Age
     pub age: u32,
-    pub ganzi: GanZi,       // 그 해의 세운
-    pub major_ganzi: GanZi, // 당시의 대운
-    pub score: f32,         // 운세 점수 (0~100)
-    /// 주요 특징 (용신운, 충, 합 등) - 구조화된 태그로 힙 할당 최소화
+    pub ganzi: GanZi,       // Yearly luck stem-branch
+    pub major_ganzi: GanZi, // Major luck stem-branch
+    pub score: f32,         // Luck score (0~100)
+    /// Key features (yongshin luck, clash, combination, etc.)
     pub tags: Vec<TraceTag>,
-    pub signatures: Vec<LuckSignature>, // 탐지된 운세 패턴
-    /// ESIL 트레이스 (명령어 실행 로그)
+    pub signatures: Vec<LuckSignature>, // Detected luck patterns
+    /// ESIL trace (instruction execution log)
     pub esil_trace: String,
-    /// 사건 종료 후의 레지스터 상태
+    /// Register state after event resolution
     pub register_state: QiRegisters,
 }
 
 impl LifeFrame {
-    /// 태그를 문자열 벡터로 변환 (레거시 호환용)
+    /// Convert tags to string vector (legacy compatibility)
     pub fn tags_as_strings(&self) -> Vec<String> {
         crate::engine::trace_tag::tags_to_strings(&self.tags)
     }
@@ -134,13 +134,13 @@ impl LifeFrame {
 /// Saju Virtual Machine
 #[derive(Debug, Clone)]
 pub struct SajuVM {
-    /// 원국 (고정 컨텍스트)
+    /// Natal chart (fixed context)
     pub natal: FourPillars,
-    /// 용신 분석 결과 (고정 기준)
+    /// Yongshin analysis outcome (fixed reference)
     pub yongshin: YongshinAnalysis,
-    /// 공망 분석 결과 (고정 기준)
+    /// Void analysis outcome (fixed reference)
     pub void: VoidAnalysis,
-    /// 분석 설정
+    /// Engine configuration
     pub config: crate::core::config::AnalysisConfig,
 }
 
@@ -198,14 +198,14 @@ impl SajuVM {
             register_state: registers,
         };
 
-        // 시그니처 스캔
+        // Signature scan
         frame.signatures = SignatureScanner::scan(&frame, &dynamic);
 
         frame
     }
 
-    /// 점수 평가 로직 (Precision Tuning)
-    /// - Data Flow Analysis처럼 원국의 상태와 운의 상호작용을 정밀 추적
+    /// Scoring evaluation logic (Precision Tuning)
+    /// - Tracks interaction between natal state and luck cycles akin to Data Flow Analysis
     fn evaluate_score(
         &self,
         dynamic: &DynamicLuckAnalysis,
@@ -222,11 +222,11 @@ impl SajuVM {
             registers.update(el, pct);
         }
 
-        // 0. 하드웨어 인터럽트 체크 (Interrupt Vector Table Scan)
+        // 0. Check hardware interrupts (Interrupt Vector Table scan)
         self.handle_interrupts(dynamic, tags, esil_trace, registers, &mut score);
 
-        // 1. 파이프라인 에뮬레이션 (Instruction Pipeline Execution)
-        // 대운(Fetch) -> 세운(Decode) -> 월운(Execute) -> 일운(Memory) -> 시운(WriteBack)
+        // 1. Pipeline execution emulation:
+        // Major(Fetch) -> Yearly(Decode) -> Monthly(Execute) -> Daily(Memory) -> Hourly(WriteBack)
         self.execute_pipeline(dynamic, tags, esil_trace, registers, &mut score);
 
         let primary_yongshin = self.yongshin.primary;
@@ -234,32 +234,31 @@ impl SajuVM {
         let thermal_index =
             crate::analysis::yongshin::calculate_thermal_index(&self.natal, &self.config);
 
-        // 2. 공망(Void) 동적 감지 및 탈공(Escaping Void) 분석
-        // 운에서 들어온 지지가 공망인지 확인
+        // 2. Dynamic void detection and escaping void analysis
         for (luck_branch, label) in [
             (
                 dynamic.major_influence.as_ref().map(|i| i.ganzi.branch),
-                "대운",
+                "Major",
             ),
             (
                 dynamic.yearly_influence.as_ref().map(|i| i.ganzi.branch),
-                "세운",
+                "Yearly",
             ),
         ] {
             if let Some(b) = luck_branch {
                 if self.void.void_branches.contains(&b) {
-                    // 공망 발생! 기본적으로 흉(비효율, 헛됨)으로 간주
-                    // 하지만 합(육합, 삼합, 방합)이나 충이 발생하면 '탈공(전실)'되어 공망이 해소됨
+                    // Void occurrence: fundamentally considered inauspicious unless rescued by clash or combination
 
                     let mut is_escaped = false;
                     let _b_hangul = b.hangul();
 
-                    // 탈공 조건 1: 지지 충
+                    // Rescued void condition 1: Branch clash
                     for (_, p1, p2) in &dynamic.combined_relations.branch_clashes {
-                        if (p1.contains(label) || p2.contains(label))
-                            && ((p1.contains(label)
+                        if (p1.contains(&label.to_lowercase())
+                            || p2.contains(&label.to_lowercase()))
+                            && ((p1.contains(&label.to_lowercase())
                                 && self.get_branch_by_path(p1, dynamic) == Some(b))
-                                || (p2.contains(label)
+                                || (p2.contains(&label.to_lowercase())
                                     && self.get_branch_by_path(p2, dynamic) == Some(b)))
                         {
                             is_escaped = true;
@@ -271,11 +270,13 @@ impl SajuVM {
                         }
                     }
 
-                    // 탈공 조건 2: 합 (육합, 삼합, 방합)
+                    // Rescued void condition 2: Combinations (Six, Triple, Seasonal)
                     if !is_escaped {
-                        // 육합 체크
+                        // Check Six Combination
                         for (_, p1, p2) in &dynamic.combined_relations.six_combinations {
-                            if p1.contains(label) || p2.contains(label) {
+                            if p1.contains(&label.to_lowercase())
+                                || p2.contains(&label.to_lowercase())
+                            {
                                 is_escaped = true;
                                 let period = LuckPeriod::from_label(label);
                                 tags.push(TraceTag::EscapedVoidSixCombo { period });
@@ -284,7 +285,9 @@ impl SajuVM {
                         }
                         if !is_escaped {
                             for (_, p1, p2) in &dynamic.combined_relations.branch_clashes {
-                                if p1.contains(label) || p2.contains(label) {
+                                if p1.contains(&label.to_lowercase())
+                                    || p2.contains(&label.to_lowercase())
+                                {
                                     is_escaped = true;
                                     let period = LuckPeriod::from_label(label);
                                     tags.push(TraceTag::EscapedVoidClash { period });
@@ -292,7 +295,7 @@ impl SajuVM {
                                 }
                             }
                         }
-                        // 삼합/방합 체크 (이미 combined_relations에 포함됨)
+                        // Check Triple / Seasonal Alliances
                         if !is_escaped {
                             for trip in &dynamic.combined_relations.triple_combinations {
                                 if trip.branches().contains(&b) {
@@ -316,10 +319,10 @@ impl SajuVM {
                     }
 
                     if is_escaped {
-                        // 탈공됨 (전실): 전화위복
-                        score += 5.0; // 오히려 좋아질 수 있음
+                        // Rescued void: turned into opportunity
+                        score += 5.0;
                     } else {
-                        // 진공(眞空): 공망의 흉의가 그대로 작용
+                        // True void: unrescued void penalty
                         let penalty = 10.0;
                         score -= penalty;
                         tags.push(TraceTag::VoidLuck {
@@ -332,8 +335,7 @@ impl SajuVM {
             }
         }
 
-        // 2.5 신살(Shinsal) 동적 분석 (Phase 12)
-        // 12신살, 길신(천을/문창), 흉살(원진/귀문) 체크
+        // 2.5 Dynamic Shinsal analysis: 12 Shinsal, Auspicious spirits, Inauspicious spirits
 
         let natal_day_branch = self.natal.day.branch;
         let natal_year_branch = self.natal.year.branch;
@@ -342,23 +344,23 @@ impl SajuVM {
         for (luck_branch, label) in [
             (
                 dynamic.major_influence.as_ref().map(|i| i.ganzi.branch),
-                "대운",
+                "Major",
             ),
             (
                 dynamic.yearly_influence.as_ref().map(|i| i.ganzi.branch),
-                "세운",
+                "Yearly",
             ),
         ] {
             if let Some(b) = luck_branch {
-                // A. 12신살 (일지 기준)
+                // A. 12 Shinsal (day branch reference)
                 let shinsal_day = TwelveShinsal::calculate(natal_day_branch, b);
                 let (s_score, _s_tag) = match shinsal_day {
-                    TwelveShinsal::Jangseongsal | TwelveShinsal::Banansal => (5.0, "길신"),
+                    TwelveShinsal::Jangseongsal | TwelveShinsal::Banansal => (5.0, "Auspicious"),
                     TwelveShinsal::Geopsal | TwelveShinsal::Jaesal | TwelveShinsal::Cheonsal => {
-                        (-5.0, "흉신")
+                        (-5.0, "Inauspicious")
                     }
-                    TwelveShinsal::Yeokmasal | TwelveShinsal::Jisal => (2.0, "이동"), // 역마/지살은 활동성 증가
-                    _ => (0.0, "평"),
+                    TwelveShinsal::Yeokmasal | TwelveShinsal::Jisal => (2.0, "Movement"),
+                    _ => (0.0, "Neutral"),
                 };
                 if s_score != 0.0 {
                     score += s_score;
@@ -373,7 +375,7 @@ impl SajuVM {
                     ));
                 }
 
-                // B. 길신 (천을귀인, 문창귀인)
+                // B. Auspicious spirits (Cheoneul, Munchang)
                 let cheoneul = Gilsin::cheoneul_branches(day_master);
                 if cheoneul.contains(&b) {
                     let bonus = 15.0;
@@ -385,10 +387,11 @@ impl SajuVM {
                     esil_trace.push_str(&format!("gilsin:cheoneul,bonus:{:.1}; ", bonus));
                 }
 
-                // C. 흉살 (원진, 귀문) - 일지/년지와 관계
-                for (target, target_name) in
-                    [(natal_day_branch, "일지"), (natal_year_branch, "년지")]
-                {
+                // C. Inauspicious spirits (Wonjin, Gwimun)
+                for (target, target_name) in [
+                    (natal_day_branch, "day_branch"),
+                    (natal_year_branch, "year_branch"),
+                ] {
                     if let Some(_wonjin) = EvilSpirit::check_wonjin(target, b) {
                         score -= 5.0;
                         tags.push(TraceTag::InauspiciousSpirit {
@@ -409,32 +412,31 @@ impl SajuVM {
             }
         }
 
-        // 2.6 동적 12운성 (Lifecycle Analysis) - Phase 13
-        // 일간이 운에서 만나는 지지에 따라 에너지 상태 변화
+        // 2.6 Dynamic 12 Life Stages analysis
         for (luck_branch, label) in [
             (
                 dynamic.major_influence.as_ref().map(|i| i.ganzi.branch),
-                "대운",
+                "Major",
             ),
             (
                 dynamic.yearly_influence.as_ref().map(|i| i.ganzi.branch),
-                "세운",
+                "Yearly",
             ),
         ] {
             if let Some(b) = luck_branch {
                 let stage = crate::core::twelve_stages::calculate_twelve_stage(day_master, b);
 
-                // 왕상휴수사(旺相休囚死)와 유사한 에너지 레벨
+                // Energy levels analogous to the Five Seasonal Qi States
                 let (stage_score, _description) = match stage {
                     TwelveStage::Changsheng
                     | TwelveStage::Guandai
                     | TwelveStage::Jianlu
-                    | TwelveStage::Diwang => (10.0, "왕성"),
+                    | TwelveStage::Diwang => (10.0, "Prosperous"),
                     TwelveStage::Shuai | TwelveStage::Bing | TwelveStage::Si | TwelveStage::Mu => {
-                        (-5.0, "쇠퇴")
+                        (-5.0, "Declining")
                     }
-                    TwelveStage::Jue | TwelveStage::Tai | TwelveStage::Yang => (-2.0, "불안/잉태"),
-                    TwelveStage::Muyu => (-2.0, "목욕/불안"),
+                    TwelveStage::Jue | TwelveStage::Tai | TwelveStage::Yang => (-2.0, "Unstable"),
+                    TwelveStage::Muyu => (-2.0, "Cleansing/Volatile"),
                 };
 
                 if stage_score != 0.0 {
@@ -453,24 +455,22 @@ impl SajuVM {
             }
         }
 
-        // 2.7 십신 복합 패턴 (Combinatorial Ten Gods) - Phase 13
-        // 예: 상관견관(Hurting Officer + Direct Officer) -> 위화백단
+        // 2.7 Combinatorial Ten Gods patterns
         for (luck_stem, label) in [
             (
                 dynamic.major_influence.as_ref().map(|i| i.ganzi.stem),
-                "대운",
+                "Major",
             ),
             (
                 dynamic.yearly_influence.as_ref().map(|i| i.ganzi.stem),
-                "세운",
+                "Yearly",
             ),
         ] {
             if let Some(s) = luck_stem {
                 let ten_god = TenGod::from_stems(day_master, s);
 
-                // A. 상관견관 (상관 운 + 원국 정관)
+                // A. Hurting Officer meets Direct Officer
                 if ten_god == TenGod::Shangguan {
-                    // 원국 천간에 정관이 있는지 확인
                     let has_zhengguan = [
                         self.natal.year.stem,
                         self.natal.month.stem,
@@ -492,7 +492,7 @@ impl SajuVM {
                     }
                 }
 
-                // B. 식신생재 (식신 운 + 원국 재성)
+                // B. Eating God produces Wealth
                 if ten_god == TenGod::Shishen {
                     let has_wealth = [
                         self.natal.year.stem,
@@ -518,13 +518,9 @@ impl SajuVM {
             }
         }
 
-        // 3. 지지 합충 분석 (Structural Stability)
+        // 3. Branch Clash Analysis (Structural Stability)
         for (clash, p1, p2) in &dynamic.combined_relations.branch_clashes {
-            if p1.contains("세운")
-                || p2.contains("세운")
-                || p1.contains("대운")
-                || p2.contains("대운")
-            {
+            if p1.contains("luck") || p2.contains("luck") {
                 let b1 = self.get_branch_by_path(p1, dynamic);
                 let b2 = self.get_branch_by_path(p2, dynamic);
 
@@ -545,17 +541,16 @@ impl SajuVM {
                         thermal_index,
                     );
 
-                    // 정통 명리학: 희신(좋은 오행)을 충하면 흉, 기신(나쁜 오행)을 충하면 길
-                    // 가중치 합산: 우선순위가 높을수록(용신) 충돌 시 감점이 큼
+                    // Clash evaluation: clashing auspicious elements is unfavorable, clashing inauspicious is favorable
                     let total_impact = p1_priority + p2_priority;
                     let score_change = if total_impact > 1.0 {
-                        // 희신/용신 충돌 (감점)
+                        // Clashing favorable elements
                         self.config.vm.clash_bad
                     } else if total_impact < -0.5 {
-                        // 기신/구신 충돌 (가점 - 개고 효과 등)
+                        // Clashing unfavorable elements
                         self.config.vm.clash_good
                     } else {
-                        // 일반적인 충돌 (약한 감점)
+                        // Neutral clash
                         self.config.vm.clash_default
                     };
 
@@ -564,8 +559,7 @@ impl SajuVM {
                         .push_str(&format!("clash:{}-{},impact:{:.1}; ", p1, p2, score_change));
                 }
 
-                // 지장간 메모리 덤프 (Memory Dump of Hidden Stems)
-                // 충돌이 발생한 지지의 지장간 기운을 해방하여 시스템에 반영
+                // Memory dump of hidden stems: releasing unsealed qi into the system
                 let b1_obj = self.get_branch_by_path(p1, dynamic);
                 let b2_obj = self.get_branch_by_path(p2, dynamic);
 
@@ -589,8 +583,7 @@ impl SajuVM {
                             thermal_index,
                         );
 
-                        // 지장간 기운은 겉으로 드러난 기운보다 영향력은 작지만(가중치 0.3)
-                        // 충에 의해 해방될 때 시스템에 변수를 제공함
+                        // Hidden stem qi released upon clash
                         let bonus = 10.0 * self.config.vm.memory_dump_weight * weight;
                         score += bonus;
                         registers.update(el, bonus);
@@ -611,7 +604,7 @@ impl SajuVM {
             }
         }
 
-        // 4. 지지 형 (刑) - Memory Corruption
+        // 4. Branch Punishment - Memory Corruption
         for (pun, p1, p2) in &dynamic.combined_relations.branch_punishments {
             let penalty = 5.0;
             score -= penalty;
@@ -624,7 +617,7 @@ impl SajuVM {
             });
         }
 
-        // 5. 지지 해 (害) - Race Condition
+        // 5. Branch Harm - Race Condition
         for (harm, p1, p2) in &dynamic.combined_relations.branch_harms {
             let penalty = 3.0;
             score -= penalty;
@@ -637,7 +630,7 @@ impl SajuVM {
             });
         }
 
-        // 6. 지지 파 (破) - IO Error
+        // 6. Branch Destruction - IO Error
         for (dest, p1, p2) in &dynamic.combined_relations.branch_destructions {
             let penalty = 2.0;
             score -= penalty;
@@ -647,15 +640,15 @@ impl SajuVM {
             });
         }
 
-        // 6.5 육합 (Six Combinations) - Stable Connection
+        // 6.5 Six Combinations - Stable Connection
         for (six, p1, p2) in &dynamic.combined_relations.six_combinations {
-            // 원국 내의 육합은 이미 정적 분석에 포함됨, 여기서는 운과의 결합을 중시
-            if p1.contains("운") || p2.contains("운") {
+            // Evaluates six combinations involving luck pillars
+            if p1.contains("luck") || p2.contains("luck") {
                 let bonus = 8.0;
                 score += bonus;
 
-                // 합화 오행 기운 상승
-                let element = six.transformed_element(); // 육합의 화기(예: 자축합토)
+                // Boost transformed element energy
+                let element = six.transformed_element();
                 if let Some(transformed_el) = element {
                     let weight = self.get_element_priority(
                         transformed_el,
@@ -674,7 +667,7 @@ impl SajuVM {
             }
         }
 
-        // 6.6 천간충 (Stem Clashes) - Mental Stress
+        // 6.6 Stem Clashes - Mental Stress
         for (clash, p1, p2) in &dynamic.combined_relations.stem_clashes {
             let penalty = 5.0;
             score -= penalty;
@@ -687,7 +680,7 @@ impl SajuVM {
             });
         }
 
-        // 6.7 고지 개고 (GaeGo: Storage Unsealing)
+        // 6.7 Storage Unsealing (GaeGo)
         for event in &dynamic.gaego_events {
             for stem in &event.unsealed_stems {
                 let el = stem.element();
@@ -713,7 +706,7 @@ impl SajuVM {
             }
         }
 
-        // 6.8 고지 입묘 (IpMyo: Trapping into Storage)
+        // 6.8 Storage Trapping (IpMyo)
         for event in &dynamic.ipmyo_events {
             let el = event.element;
             let penalty = 8.0;
@@ -731,7 +724,7 @@ impl SajuVM {
             });
         }
 
-        // 6.9 동적 격국 상태 (Dynamic Structure State Transition)
+        // 6.9 Dynamic Structure State Transition
         let gyeok_state = &dynamic.structure_state;
         let gyeok_score = match gyeok_state.status {
             crate::analysis::dynamic_luck::GyeokStatus::Fulfilled => 15.0,
@@ -753,11 +746,10 @@ impl SajuVM {
             status: gyeok_state.status,
         });
 
-        // 7. 동적 회합(Triple/Seasonal) 완성 분석 - Dynamic Combination Completion
-        // 원국에 없던 삼합/방합이 대운/세운에 의해 완성될 때 강력한 시너지 보너스 부여
+        // 7. Dynamic Combination Completion (Triple / Seasonal Alliances)
         self.evaluate_dynamic_combinations(dynamic, tags, esil_trace, registers, &mut score);
 
-        // 8. 신강/신약 태깅
+        // 8. Strength / Weakness tagging
         let strength = self.natal.strength();
         let strength_name = match strength.strength_type {
             crate::analysis::strength::StrengthType::Strong => StrengthTypeName::Strong,
@@ -793,13 +785,11 @@ impl SajuVM {
         final_score
     }
 
-    /// 동적 오행 변환 (에너지 보존 법칙)
+    /// Dynamic element energy conversion (Conservation of Energy)
     fn apply_dynamic_transformation(&self, registers: &mut QiRegisters, esil_trace: &mut String) {
-        // 생(生) 상생 사이클 시뮬레이션
-        // Wood -> Fire -> Earth -> Metal -> Water -> Wood
-        // 소모되는 에너지는 줄이고 생성되는 에너지는 증가 (보존)
-
-        let transfer_rate = 0.1; // 10% 에너지 전이
+        // Generating cycle simulation: Wood -> Fire -> Earth -> Metal -> Water -> Wood
+        // Energy drained from parent increases child element (energy conservation)
+        let transfer_rate = 0.1; // 10% energy transfer
 
         let wood_transfer = registers.r0_wood * transfer_rate;
         let fire_transfer = registers.r1_fire * transfer_rate;
@@ -831,7 +821,7 @@ impl SajuVM {
         esil_trace.push_str("qi_conservation:applied; ");
     }
 
-    /// 인터럽트 벡터 테이블(IVT) 및 핸들링 로직
+    /// Interrupt Vector Table (IVT) and handling logic
     fn handle_interrupts(
         &self,
         dynamic: &DynamicLuckAnalysis,
@@ -840,14 +830,12 @@ impl SajuVM {
         registers: &mut QiRegisters,
         score: &mut f32,
     ) {
-        // 현재 활성화된 신살 스캔 (원국 + 운의 상호작용)
-        // 100년 전수 조사를 위해 가벼운 체크 로직 적용
+        // Scan active spirits (natal + luck interaction)
 
         let yearly_ganzi = dynamic.yearly_influence.as_ref().map(|i| i.ganzi);
 
         if let Some(y) = yearly_ganzi {
-            // 1. 고우선순위 인터럽트: 백호살 (Baihu)
-            // 지지 충돌 시 백호대살이 겹치면 '심각한 하드웨어 예외' 발생
+            // 1. High-priority interrupt: Baekho (Baihu)
             let el = y.stem.element();
             let thermal_index =
                 crate::analysis::yongshin::calculate_thermal_index(&self.natal, &self.config);
@@ -861,25 +849,32 @@ impl SajuVM {
             if crate::analysis::spirit_markers::SpiritMarkerAnalysis::is_baihu(y) {
                 let mut irq = SajuInterrupt::CriticalException;
                 if p > 0.5 {
-                    irq = SajuInterrupt::ServiceInterrupt; // 용신 제화(완화)
+                    irq = SajuInterrupt::ServiceInterrupt; // Yongshin mitigation
                     esil_trace.push_str("irq_mitigate:yongshin_protect; ");
                 }
-                self.trigger_irq(irq, "백호대살", tags, esil_trace, registers, score);
+                self.trigger_irq(irq, "BaekhoDaeSal", tags, esil_trace, registers, score);
             }
 
-            // 2. 리소스 오버플로우: 괴강살 (Kuigang)
+            // 2. Resource overflow: Goegang (Kuigang)
             if crate::analysis::spirit_markers::SpiritMarkerAnalysis::is_kuigang(y) {
                 let mut irq = SajuInterrupt::ResourceOverflow;
                 if p > 0.5 {
-                    irq = SajuInterrupt::ServiceInterrupt; // 용신 제화(완화)
+                    irq = SajuInterrupt::ServiceInterrupt; // Yongshin mitigation
                     esil_trace.push_str("irq_mitigate:yongshin_protect; ");
                 }
-                self.trigger_irq(irq, "괴강특수운", tags, esil_trace, registers, score);
+                self.trigger_irq(
+                    irq,
+                    "GoegangSpecialLuck",
+                    tags,
+                    esil_trace,
+                    registers,
+                    score,
+                );
             }
         }
     }
 
-    /// 인터럽트 발생 (Handler Execution)
+    /// Interrupt execution handler
     fn trigger_irq(
         &self,
         irq: SajuInterrupt,
@@ -910,14 +905,14 @@ impl SajuVM {
             marker: marker_name.into(),
         });
 
-        // 인터럽트 발생 시 특정 레지스터 강제 변조 (Kernel Panic 효과)
+        // Force register modification upon interrupt (Kernel Panic effect)
         if matches!(irq, SajuInterrupt::CriticalException) {
-            registers.r2_earth += self.config.vm.irq_critical; // 토(Earth) 기운 급증으로 인한 시스템 정체
+            registers.r2_earth += self.config.vm.irq_critical; // Earth energy surge causing system congestion
             esil_trace.push_str("kernel_panic:earth_overflow; ");
         }
     }
 
-    /// 파이프라인 명령어 실행 루프
+    /// Pipeline instruction execution loop
     fn execute_pipeline(
         &self,
         dynamic: &DynamicLuckAnalysis,
@@ -931,31 +926,31 @@ impl SajuVM {
         let thermal_index =
             crate::analysis::yongshin::calculate_thermal_index(&self.natal, &self.config);
 
-        // 스테이지 정의
+        // Stage definitions
         let stages = [
             (
                 dynamic.major_influence.as_ref().map(|i| i.ganzi),
-                "대운",
+                "Major",
                 self.config.vm.pipeline_major,
             ),
             (
                 dynamic.yearly_influence.as_ref().map(|i| i.ganzi),
-                "세운",
+                "Yearly",
                 self.config.vm.pipeline_yearly,
             ),
             (
                 dynamic.monthly_influence.as_ref().map(|i| i.ganzi),
-                "월운",
+                "Monthly",
                 self.config.vm.pipeline_monthly,
             ),
             (
                 dynamic.daily_influence.as_ref().map(|i| i.ganzi),
-                "일운",
+                "Daily",
                 self.config.vm.pipeline_daily,
             ),
             (
                 dynamic.hourly_influence.as_ref().map(|i| i.ganzi),
-                "시운",
+                "Hourly",
                 self.config.vm.pipeline_hourly,
             ),
         ];
@@ -965,8 +960,8 @@ impl SajuVM {
 
         for (opt_ganzi, label, base_weight) in stages {
             if let Some(ganzi) = opt_ganzi {
-                // 천간 합에 의한 변환된 오행 확인 (Forwarding 체크)
-                let stem_label = format!("{}천간", label);
+                // Forwarding check: transformed element from stem combination
+                let stem_label = format!("{}_luck_stem", label.to_lowercase());
                 let eff_el = self
                     .get_effective_stem(dynamic, &stem_label)
                     .unwrap_or(ganzi.stem.element());
@@ -978,7 +973,7 @@ impl SajuVM {
                     thermal_index,
                 );
 
-                // 1. Data Hazard (Stall): 앞선 단계와 현재 단계가 상극일 경우
+                // 1. Data Hazard (Stall): conflict between previous and current stage
                 if let Some(prev) = prev_el {
                     if prev.controls() == eff_el {
                         let stall_penalty = self.config.vm.stall_penalty;
@@ -991,7 +986,7 @@ impl SajuVM {
                     }
                 }
 
-                // 2. Bypassing (Forwarding): 합에 의해 생성된 기운이 용신일 경우 보너스 가중치
+                // 2. Bypassing (Forwarding): bonus when transformed element aligns with yongshin
                 if let Some(fwd) = forwarding_buffer {
                     if fwd == eff_el || fwd.generates() == eff_el {
                         let fwd_bonus = self.config.vm.forwarding_bonus;
@@ -1007,7 +1002,7 @@ impl SajuVM {
                 let increment = base_weight * weight;
                 *score += increment;
 
-                // VM 레지스터 업데이트 전 감쇠 및 후 정규화
+                // Energy decay and normalization
                 registers.apply_decay(self.config.vm.decay_factor);
                 registers.update(eff_el, increment);
                 registers.normalize();
@@ -1020,8 +1015,8 @@ impl SajuVM {
                     increment
                 ));
 
-                // 태깅
-                if label == "대운" || label == "세운" {
+                // Tagging
+                if label == "Major" || label == "Yearly" {
                     let period = LuckPeriod::from_label(label);
                     if weight >= 1.5 {
                         tags.push(TraceTag::CoreLuck { period });
@@ -1032,10 +1027,10 @@ impl SajuVM {
                     }
                 }
 
-                // 다음 단계를 위해 현재 기운 저장
+                // Store energy for next stage
                 prev_el = Some(eff_el);
 
-                // 합화된 기운이 있다면 포워딩 버퍼에 저장
+                // Store transformed energy in forwarding buffer
                 if self.get_effective_stem(dynamic, &stem_label).is_some() {
                     forwarding_buffer = Some(eff_el);
                 } else {
@@ -1045,7 +1040,7 @@ impl SajuVM {
         }
     }
 
-    /// 합화에 의한 실질 천간 오행 추출
+    /// Extract effective stem element after combination transformation
     fn get_effective_stem(&self, dynamic: &DynamicLuckAnalysis, target: &str) -> Option<Element> {
         for (combo, p1, p2) in &dynamic.combined_relations.stem_combinations {
             if p1 == target || p2 == target {
@@ -1059,7 +1054,7 @@ impl SajuVM {
         None
     }
 
-    /// 오행별 우선순위 가중치 (Thermal + Yongshin Matrix)
+    /// Element priority weighting matrix
     pub fn get_element_priority(
         &self,
         el: Element,
@@ -1093,27 +1088,27 @@ impl SajuVM {
         multiplier
     }
 
-    /// 경로 문자열로부터 실제 Branch 객체 추출
+    /// Extract branch object from position string
     fn get_branch_by_path(
         &self,
         path: &str,
         dynamic: &DynamicLuckAnalysis,
     ) -> Option<crate::core::branch::EarthlyBranch> {
         match path {
-            "년지" => Some(self.natal.year.branch),
-            "월지" => Some(self.natal.month.branch),
-            "일지" => Some(self.natal.day.branch),
-            "시지" => Some(self.natal.hour.branch),
-            "대운지지" => dynamic.major_influence.as_ref().map(|i| i.ganzi.branch),
-            "세운지지" => dynamic.yearly_influence.as_ref().map(|i| i.ganzi.branch),
-            "월운지지" => dynamic.monthly_influence.as_ref().map(|i| i.ganzi.branch),
-            "일운지지" => dynamic.daily_influence.as_ref().map(|i| i.ganzi.branch),
-            "시운지지" => dynamic.hourly_influence.as_ref().map(|i| i.ganzi.branch),
+            "year_branch" => Some(self.natal.year.branch),
+            "month_branch" => Some(self.natal.month.branch),
+            "day_branch" => Some(self.natal.day.branch),
+            "hour_branch" => Some(self.natal.hour.branch),
+            "major_luck_branch" => dynamic.major_influence.as_ref().map(|i| i.ganzi.branch),
+            "yearly_luck_branch" => dynamic.yearly_influence.as_ref().map(|i| i.ganzi.branch),
+            "monthly_luck_branch" => dynamic.monthly_influence.as_ref().map(|i| i.ganzi.branch),
+            "daily_luck_branch" => dynamic.daily_influence.as_ref().map(|i| i.ganzi.branch),
+            "hourly_luck_branch" => dynamic.hourly_influence.as_ref().map(|i| i.ganzi.branch),
             _ => None,
         }
     }
 
-    /// 동적 회합(삼합/방합) 완성 평가
+    /// Evaluate dynamic combination completion (Triple / Seasonal)
     fn evaluate_dynamic_combinations(
         &self,
         dynamic: &DynamicLuckAnalysis,
@@ -1125,10 +1120,9 @@ impl SajuVM {
         let natal_triples = &dynamic.natal_relations.triple_combinations;
         let natal_seasonals = &dynamic.natal_relations.seasonal_combinations;
 
-        // 1. 삼합 완성 체크
+        // 1. Triple Alliance completion check
         for triple in &dynamic.combined_relations.triple_combinations {
             if !natal_triples.contains(triple) {
-                // 원국에는 없던 삼합이 완성됨!
                 let element = triple.element();
                 let priority = self.get_element_priority(
                     element,
@@ -1154,7 +1148,7 @@ impl SajuVM {
             }
         }
 
-        // 2. 방합 완성 체크
+        // 2. Seasonal Alliance completion check
         for seasonal in &dynamic.combined_relations.seasonal_combinations {
             if !natal_seasonals.contains(seasonal) {
                 let element = seasonal.element();
@@ -1165,7 +1159,7 @@ impl SajuVM {
                     0,
                 );
 
-                let bonus = 20.0 * priority; // 방합은 세력이 더 강력함
+                let bonus = 20.0 * priority;
                 *score += bonus;
                 registers.update(element, bonus.abs());
 
@@ -1183,9 +1177,9 @@ impl SajuVM {
         }
     }
 
-    /// 인생 시뮬레이션
+    /// Life simulation
     pub fn simulate_life(&self, start_age: u32, end_age: u32) -> Vec<LifeFrame> {
-        // 1. 대운 흐름 계산 (교운기 포함 정밀 분석)
+        // 1. Calculate major luck flow
         let luck_analysis = MajorLuckAnalysis::calculate_astro(
             &self.natal,
             self.natal.gender,
@@ -1197,22 +1191,22 @@ impl SajuVM {
         )
         .ok();
 
-        // 출생 연도 (세운 계산 기준)
+        // Birth year (reference for yearly luck)
         let birth_year = self.natal.raw_input.year;
 
         let mapper = |age: u32| {
-            // 2. 해당 나이의 대운 간지 추출
+            // 2. Extract major luck for age
             let major_ganzi = luck_analysis
                 .as_ref()
                 .and_then(|a| a.at_age(age))
                 .map(|m| m.ganzi)
                 .unwrap_or_else(|| GanZi::from_index(0));
 
-            // 3. 해당 나이의 세운 간지 추출
+            // 3. Extract yearly luck for age
             let target_year = birth_year + (age as i32) - 1;
             let yearly_ganzi = YearlyLuck::calculate(target_year, &self.natal).ganzi;
 
-            // 4. 정밀한 step 수행
+            // 4. Execute precision step
             self.step(age, major_ganzi, yearly_ganzi, None, None, None)
         };
 
@@ -1235,7 +1229,7 @@ mod tests {
     use crate::core::pillars::SajuInput;
 
     fn test_vm() -> SajuVM {
-        // 갑자년 갑자월 갑자일 갑자시 (가장 심플한 케이스)
+        // Jia-Zi year, Jia-Zi month, Jia-Zi day, Jia-Zi hour
         let input = SajuInput::new_solar(1984, 1, 1, 0, 0);
         // Note: 1984 is GapJa year
         let pillars = FourPillars::calculate(&input).unwrap();

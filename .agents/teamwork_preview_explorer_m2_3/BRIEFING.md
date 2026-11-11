@@ -1,7 +1,7 @@
 # BRIEFING — 2026-06-20T15:00:38+09:00
 
 ## Mission
-Analyze the requirements for Milestone M2 (R1: Ashtakoota Guna Milan 상세 고도화) in the Eon codebase and propose the necessary UI, engine, DTO, and translation changes.
+Analyze the requirements for Milestone M2 (R1: Ashtakoota Guna Milan Detailed Refinement) in the Eon codebase and propose the necessary UI, engine, DTO, and translation changes.
 
 ## 🔒 My Identity
 - Archetype: explorer

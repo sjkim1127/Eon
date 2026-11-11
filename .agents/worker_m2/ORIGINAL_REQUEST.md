@@ -10,13 +10,13 @@ Your tasks for Milestone 2 (R2):
 1. **Wolwun Astronomical Solar Term Alignment (`crates/eon-saju/src/analysis/periodic_luck.rs`)**:
    - Refactor `MonthlyLuck::calculate` and `month_ganzi` to calculate true Saju month GanZi based on astronomical solar term entry boundaries (`AstroEngine` solar term indices) rather than simple calendar month `- 1`.
 2. **Dynamic Precedence Hierarchy (`crates/eon-saju/src/analysis/dynamic_luck.rs`)**:
-   - Filter `combined_relations`: When a branch participates in a completed Triple Alliance (삼합) or Seasonal Alliance (방합), suppress lower-priority Branch Clash (지충) and Six Combination (육합) entries involving that branch.
+   - Filter `combined_relations`: When a branch participates in a completed Triple Alliance (Triple Alliance) or Seasonal Alliance (Seasonal Alliance), suppress lower-priority Branch Clash (Branch Clash) and Six Combination (Six Combination) entries involving that branch.
 3. **Augmented Dynamic Transformation Analysis (`crates/eon-saju/src/analysis/transformations.rs`)**:
    - Add `TransformationAnalysis::from_expanded` to evaluate 5/6 pillars (Natal + active Daewun + Saewun) during luck cycles and dynamically compute updated elemental power scores in `power.rs`.
 4. **Jijanggan Tomb Opening & Trapping (`crates/eon-saju/src/analysis/dynamic_luck.rs` & `crates/eon-saju/src/engine/vm.rs`)**:
-   - Implement storage branch (고지 辰, 戌, 丑, 未) unsealing (`GaeGo` 개고) and trapping (`IpMyo` 입묘) in `SajuVM` when hit by Daewun/Saewun clashes, combinations, or 12-Unseong Mu. Unseal stored hidden stems and update `QiRegisters`.
+   - Implement storage branch ( 辰, 戌, 丑, 未) unsealing (`GaeGo` GaeGo) and trapping (`IpMyo` IpMyo) in `SajuVM` when hit by Daewun/Saewun clashes, combinations, or 12-Unseong Mu. Unseal stored hidden stems and update `QiRegisters`.
 5. **Dynamic Gyeokguk State Transitions (`crates/eon-saju/src/analysis/dynamic_luck.rs` & `crates/eon-saju/src/engine/vm.rs`)**:
-   - Implement dynamic Gyeokguk state tracking (`DynamicStructureState`: `Stable`, `Transformed` (변격), `Broken` (파격), `Fulfilled` (성격)) during active luck cycles when new stems project or triple alliances complete.
+   - Implement dynamic Gyeokguk state tracking (`DynamicStructureState`: `Stable`, `Transformed` (), `Broken` (), `Fulfilled` ()) during active luck cycles when new stems project or triple alliances complete.
 
 MANDATORY INTEGRITY WARNING:
 DO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A Forensic Auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.

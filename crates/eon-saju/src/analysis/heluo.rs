@@ -75,7 +75,7 @@ pub struct HeLuoResult {
     pub post_natal_hexagram: u8,
     pub yuan_dang_yao: u8,
     pub lifetime_cycles: Vec<HeLuoCycle>,
-    // 확장 필드
+    // Extended fields
     pub yuan_qi: bool,
     pub hua_gong: bool,
     pub se_yao: u8,
@@ -86,7 +86,7 @@ pub struct HeLuoResult {
     pub yearly_hexagrams: Vec<YearlyHexagramResult>,
 }
 
-/// 천간의 낙서 수리 배정 (후천팔괘 납갑수)
+/// Luo Shu number assignment for Heavenly Stems (Later Heaven Bagua)
 fn stem_to_num(stem: HeavenlyStem) -> u32 {
     match stem {
         HeavenlyStem::Jia => 6,  // 乾
@@ -102,7 +102,7 @@ fn stem_to_num(stem: HeavenlyStem) -> u32 {
     }
 }
 
-/// 지지의 오행 배송 하도 수리 배정 (생수와 성수 쌍)
+/// He Tu number assignment for Earthly Branches
 fn branch_to_nums(branch: EarthlyBranch) -> Vec<u32> {
     match branch {
         EarthlyBranch::Zi | EarthlyBranch::Hai => vec![1, 6],
@@ -115,7 +115,7 @@ fn branch_to_nums(branch: EarthlyBranch) -> Vec<u32> {
     }
 }
 
-/// 5의 기궁(寄宮) 처리
+/// Center 5 Gigung trigram assignment
 fn get_gigung_trigram(era: Era, is_male: bool, is_yang_male_or_yin_female: bool) -> u8 {
     match era {
         Era::SangWon => {
@@ -123,21 +123,21 @@ fn get_gigung_trigram(era: Era, is_male: bool, is_yang_male_or_yin_female: bool)
                 8
             } else {
                 2
-            } // 남기간(8), 여기관(2)
+            } // Male Gen (8), Female Kun (2)
         }
         Era::JungWon => {
             if is_yang_male_or_yin_female {
                 8
             } else {
                 2
-            } // 양남음녀기간(8), 음남양녀기관(2)
+            } // Yang Male / Yin Female Gen (8), Yin Male / Yang Female Kun (2)
         }
         Era::HaWon => {
             if is_male {
                 9
             } else {
                 7
-            } // 남기리(9), 여기태(7)
+            } // Male Li (9), Female Dui (7)
         }
     }
 }
@@ -151,7 +151,7 @@ fn reduce_heaven(sum: u32, is_male: bool, is_yang_male_or_yin_female: bool, era:
         remainder = 25;
     }
 
-    // 去十不用 (십의 자리는 버림)
+    // Drop tens place
     let val = if remainder == 10 {
         1
     } else if remainder == 20 {
@@ -176,7 +176,7 @@ fn reduce_earth(sum: u32, is_male: bool, is_yang_male_or_yin_female: bool, era: 
         remainder = 30;
     }
 
-    // 去十不用 (십의 자리는 버림)
+    // Drop tens place
     let val = if remainder == 10 {
         1
     } else if remainder == 20 {
@@ -222,7 +222,7 @@ pub fn get_king_wen_index(upper: u8, lower: u8) -> u8 {
         (6, 7) => 10, // 履
         (2, 6) => 11, // 泰
         (6, 2) => 12, // 否
-        (6, 9) => 13, // 同인
+        (6, 9) => 13, // TongRen
         (9, 6) => 14, // 大有
         (2, 8) => 15, // 謙
         (3, 2) => 16, // 豫
@@ -288,7 +288,7 @@ pub fn calculate_heluo(
 ) -> HeLuoResult {
     let era = Era::from_year(birth_year);
 
-    // 1. 천간 수리 치환 및 합산
+    // 1. Map stems to numbers and sum
     let stem_nums = vec![
         stem_to_num(year_ganzi.stem),
         stem_to_num(month_ganzi.stem),
@@ -296,7 +296,7 @@ pub fn calculate_heluo(
         stem_to_num(hour_ganzi.stem),
     ];
 
-    // 2. 지지 수리 치환 및 합산
+    // 2. Map branches to numbers and sum
     let mut branch_nums = Vec::new();
     branch_nums.extend(branch_to_nums(year_ganzi.branch));
     branch_nums.extend(branch_to_nums(month_ganzi.branch));
@@ -307,7 +307,7 @@ pub fn calculate_heluo(
     all_nums.extend(stem_nums);
     all_nums.extend(branch_nums);
 
-    // 천수(홀수) 및 지수(짝수) 분류 및 합산
+    // Classify odd (Heaven) and even (Earth) numbers
     let mut sum_odd = 0;
     let mut sum_even = 0;
     for num in all_nums {
@@ -318,7 +318,7 @@ pub fn calculate_heluo(
         }
     }
 
-    // 양남음녀 판단
+    // Determine Yang Male / Yin Female
     let is_year_yang = matches!(
         year_ganzi.stem,
         HeavenlyStem::Jia
@@ -329,7 +329,7 @@ pub fn calculate_heluo(
     );
     let is_yang_male_or_yin_female = (is_year_yang && is_male) || (!is_year_yang && !is_male);
 
-    // 상괘 / 하괘 번호 도출
+    // Derive Upper and Lower trigram numbers
     let odd_trigram_num = reduce_heaven(sum_odd, is_male, is_yang_male_or_yin_female, era);
     let even_trigram_num = reduce_earth(sum_even, is_male, is_yang_male_or_yin_female, era);
 
@@ -341,23 +341,23 @@ pub fn calculate_heluo(
 
     let pre_natal_hexagram = get_king_wen_index(pre_upper, pre_lower);
 
-    // 선천괘의 6효 구조 만들기
+    // Construct 6 lines of Pre-natal hexagram
     let upper_lines = get_trigram_lines(pre_upper);
     let lower_lines = get_trigram_lines(pre_lower);
     let mut pre_lines = [false; 6];
-    pre_lines[0] = lower_lines[0]; // 초효
-    pre_lines[1] = lower_lines[1]; // 2효
-    pre_lines[2] = lower_lines[2]; // 3효
-    pre_lines[3] = upper_lines[0]; // 4효
-    pre_lines[4] = upper_lines[1]; // 5효
-    pre_lines[5] = upper_lines[2]; // 상효
+    pre_lines[0] = lower_lines[0]; // Line 1
+    pre_lines[1] = lower_lines[1]; // Line 2
+    pre_lines[2] = lower_lines[2]; // Line 3
+    pre_lines[3] = upper_lines[0]; // Line 4
+    pre_lines[4] = upper_lines[1]; // Line 5
+    pre_lines[5] = upper_lines[2]; // Line 6
 
-    // 태어난 시의 음양 및 인덱스 (자~사=양시(0..5), 오~해=음시(6..11))
+    // Hour polarity and index (Zi..Si = Yang hour (0..5), Wu..Hai = Yin hour (6..11))
     let hour_branch_idx = hour_ganzi.branch.index() as usize;
     let is_yang_hour = hour_branch_idx <= 5;
     let hi = hour_branch_idx % 6;
 
-    // 원당효 계산을 위해 매칭/타겟 라인 분리
+    // Separate matching/target lines for Yuan Dang Yao calculation
     let mut matching_indices = Vec::new();
     let mut other_indices = Vec::new();
     for i in 0..6 {
@@ -370,7 +370,7 @@ pub fn calculate_heluo(
 
     let k = matching_indices.len();
     let yuan_dang_idx = if k == 0 || k == 6 {
-        // 순수 괘상(전부 양이거나 전부 음)일 때의 순수 원당 규칙
+        // Pure hexagram (all Yang or all Yin) Yuan Dang rules
         let base_line = if is_yang_hour {
             (hi % 3) + 1
         } else {
@@ -397,7 +397,7 @@ pub fn calculate_heluo(
             base_line - 1
         }
     } else {
-        // 일반적인 괘상
+        // Standard hexagrams
         let mut slots = Vec::new();
         if k <= 3 {
             slots.extend(&matching_indices);
@@ -412,31 +412,31 @@ pub fn calculate_heluo(
 
     let yuan_dang_yao = (yuan_dang_idx + 1) as u8;
 
-    // 후천괘 만들기
+    // Construct Post-natal hexagram
     let is_yang_ling = month_ganzi.branch.index() <= 5;
 
-    // 삼지존괘 (坎 29, 屯 3, 蹇 39) 조건 체크
+    // Three Supreme Hexagrams (Kan 29, Chun 3, Jian 39) condition check
     let is_three_sovereign =
         pre_natal_hexagram == 29 || pre_natal_hexagram == 3 || pre_natal_hexagram == 39;
     let is_special_sovereign_case = is_three_sovereign
         && (
-            (yuan_dang_yao == 5 && !is_yang_ling) || // 9五 이며 음령일 때
+            (yuan_dang_yao == 5 && !is_yang_ling) || // 9-5 and Yin Ling
         (yuan_dang_yao == 6 && is_yang_ling)
-            // 上六 이며 양령일 때
+            // Top-6 and Yang Ling
         );
 
     let mut post_lines = pre_lines;
     post_lines[yuan_dang_idx] = !pre_lines[yuan_dang_idx];
 
     let (post_upper, post_lower, post_yuan_dang_idx) = if is_special_sovereign_case {
-        // 변이불이 (변하되 바뀌지 않음): 내외괘(상하괘)를 서로 교환하지 않음, 원당효 위치 유지
+        // Change without exchange: do not swap upper/lower trigrams, retain line index
         let post_lower_lines = [post_lines[0], post_lines[1], post_lines[2]];
         let post_upper_lines = [post_lines[3], post_lines[4], post_lines[5]];
         let pl = lines_to_trigram_num(post_lower_lines);
         let pu = lines_to_trigram_num(post_upper_lines);
         (pu, pl, yuan_dang_idx)
     } else {
-        // 일반 케이스: 내외괘(상하괘) 교환 및 원당효 위치 3칸 시프트
+        // Standard case: swap upper/lower trigrams and shift Yuan Dang line by 3
         let post_lower_lines = [post_lines[3], post_lines[4], post_lines[5]];
         let post_upper_lines = [post_lines[0], post_lines[1], post_lines[2]];
         let pl = lines_to_trigram_num(post_lower_lines);
@@ -453,11 +453,11 @@ pub fn calculate_heluo(
 
     let post_natal_hexagram = get_king_wen_index(post_upper, post_lower);
 
-    // 평생 대운 타임라인 생성
+    // Generate lifelong cycles timeline
     let mut lifetime_cycles = Vec::new();
     let mut current_age = 1;
 
-    // 1. 선천괘 주기 (원당효부터 항상 위로 순행)
+    // 1. Pre-natal hexagram cycles (forward from Yuan Dang line)
     let mut line_ptr = yuan_dang_idx;
     for _ in 0..6 {
         let is_yang = pre_lines[line_ptr];
@@ -473,10 +473,10 @@ pub fn calculate_heluo(
         });
 
         current_age += duration;
-        line_ptr = (line_ptr + 1) % 6; // 항상 위쪽 방향(초->상)으로 진행
+        line_ptr = (line_ptr + 1) % 6; // Progress upward (line 1 -> 6)
     }
 
-    // 2. 후천괘 주기 (후천괘 원당효부터 항상 위로 순행)
+    // 2. Post-natal hexagram cycles (forward from post-natal Yuan Dang line)
     let mut post_line_ptr = post_yuan_dang_idx;
     for _ in 0..6 {
         let is_yang = post_lines[post_line_ptr];
@@ -492,21 +492,21 @@ pub fn calculate_heluo(
         });
 
         current_age += duration;
-        post_line_ptr = (post_line_ptr + 1) % 6; // 항상 위쪽 방향으로 진행
+        post_line_ptr = (post_line_ptr + 1) % 6; // Progress upward
     }
 
-    // 확장 필드 연산
+    // Extended field calculation
     let (se_yao, ying_yao) = get_se_ying_yao(pre_natal_hexagram);
     let ti_yong = analyze_ti_yong(pre_upper, pre_lower, yuan_dang_yao);
 
-    // 납갑(NaJia) 6효 계산
+    // Calculate 6-line NaJia
     let mut najia_lines = Vec::new();
     for i in 1..=6 {
         let (stem, branch) = get_najia_for_line(pre_upper, pre_lower, i);
         najia_lines.push(NaJiaYao { stem, branch });
     }
 
-    // 신살(Shinsal) 6효 계산
+    // Calculate 6-line Shinsal
     let (void_branches, _) = crate::analysis::void::calculate_void_branches(*day_ganzi);
     let mut shinsal_lines = Vec::new();
     for i in 0..6 {
@@ -563,7 +563,7 @@ pub fn calculate_heluo(
         });
     }
 
-    // 원기(YuanQi) / 화공(HuaGong) 판정
+    // Determine YuanQi and HuaGong
     let yd_idx = (yuan_dang_yao - 1) as usize;
     let yd_branch = najia_lines[yd_idx].branch;
     let yd_element = yd_branch.element();
@@ -823,8 +823,8 @@ mod tests {
 
     #[test]
     fn test_heluo_case_1964_04_18() {
-        // 1964년 음력 3월 7일 巳시 (양력 1964년 4월 18일)
-        // 갑진년 무진월 정유일 을사시 (시두법 상 정일 기사시가 아닌 을사시가 맞음)
+        // 1964 Lunar Mar 7 Si hour (Solar 1964-04-18)
+        // JiaChen, WuChen, DingYou, YiSi
         let year_gz = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Chen);
         let month_gz = GanZi::new(HeavenlyStem::Wu, EarthlyBranch::Chen);
         let day_gz = GanZi::new(HeavenlyStem::Ding, EarthlyBranch::You);
@@ -832,14 +832,14 @@ mod tests {
 
         let res = calculate_heluo(1964, true, &year_gz, &month_gz, &day_gz, &hour_gz);
 
-        // 선천괘와 후천괘 출력
+        // Output pre-natal and post-natal hexagrams
         println!(
             "1964-04-18 Pre-natal: {}, Post-natal: {}, Yuan Dang: {}",
             res.pre_natal_hexagram, res.post_natal_hexagram, res.yuan_dang_yao
         );
 
-        assert_eq!(res.pre_natal_hexagram, 50); // 화풍정 (火風鼎)
-        assert_eq!(res.post_natal_hexagram, 9); // 풍천소축 (風天小畜)
+        assert_eq!(res.pre_natal_hexagram, 50); // Ding (火風鼎)
+        assert_eq!(res.post_natal_hexagram, 9); // XiaoChu (風天小畜)
         assert_eq!(res.yuan_dang_yao, 5);
     }
 }

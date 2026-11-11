@@ -1,44 +1,44 @@
-//! 자미두수 도메인 타입 정의
+//! Zi Wei Dou Shu (ZWDS) domain type definitions.
 //!
-//! 좌표계: 12궁은 寅宮=0으로 시작, 반시계 방향(逆時針) 증가
+//! Coordinate system: 12 Palaces start with Yin (寅) = 0, increasing counter-clockwise.
 //! [0=寅, 1=卯, 2=辰, 3=巳, 4=午, 5=未, 6=申, 7=酉, 8=戌, 9=亥, 10=子, 11=丑]
 
 use serde::{Deserialize, Serialize};
 
 // ============================================================
-// 12궁(宮) 인덱스
+// 12 Palaces index
 // ============================================================
 
-/// 자미두수 좌표계: 寅=0, 반시계 방향
+/// ZWDS coordinate system: Yin=0, counter-clockwise
 /// `fix_index(i)` = `((i % 12) + 12) % 12`
 pub type PalaceIndex = usize;
 
-/// 12 궁위(宮位) 이름
+/// 12 Palace names
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PalaceName {
-    /// 命宮 (명궁) — 자아/성격
+    /// Life Palace (Ming) - Self, personality, foundational destiny
     Ming,
-    /// 兄弟宮 (형제궁)
+    /// Siblings Palace (Xiongdi)
     Xiongdi,
-    /// 夫妻宮 (부처궁)
+    /// Spouse Palace (Fuqi)
     Fuqi,
-    /// 子女宮 (자녀궁)
+    /// Children Palace (Zinv)
     Zinv,
-    /// 財帛宮 (재백궁)
+    /// Wealth Palace (Caibo)
     Caibo,
-    /// 疾厄宮 (질액궁)
+    /// Health Palace (Jie)
     Jie,
-    /// 遷移宮 (천이궁)
+    /// Travel Palace (Qianyi)
     Qianyi,
-    /// 奴僕宮 (노복궁)
+    /// Friends / Servants Palace (Nupao)
     Nupao,
-    /// 官祿宮 (관록궁)
+    /// Career Palace (Guanlu)
     Guanlu,
-    /// 田宅宮 (전택궁)
+    /// Property Palace (Tianzhai)
     Tianzhai,
-    /// 福德宮 (복덕궁)
+    /// Karma / Happiness Palace (Fude)
     Fude,
-    /// 父母宮 (부모궁)
+    /// Parents Palace (Fumu)
     Fumu,
 }
 
@@ -76,20 +76,7 @@ impl PalaceName {
     }
 
     pub fn korean(&self) -> &'static str {
-        match self {
-            Self::Ming => "명궁",
-            Self::Xiongdi => "형제궁",
-            Self::Fuqi => "부처궁",
-            Self::Zinv => "자녀궁",
-            Self::Caibo => "재백궁",
-            Self::Jie => "질액궁",
-            Self::Qianyi => "천이궁",
-            Self::Nupao => "노복궁",
-            Self::Guanlu => "관록궁",
-            Self::Tianzhai => "전택궁",
-            Self::Fude => "복덕궁",
-            Self::Fumu => "부모궁",
-        }
+        self.english()
     }
 
     pub fn english(&self) -> &'static str {
@@ -111,141 +98,141 @@ impl PalaceName {
 }
 
 // ============================================================
-// 별(星) 열거형
+// Stars enumeration
 // ============================================================
 
-/// 자미두수 전체 성계(星系)
+/// Complete ZWDS star system
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum ZwdsStar {
     // ── 14 主星 ──────────────────────────────────────────
-    /// 紫微 (자미)
+    /// 紫微
     ZiWei,
-    /// 天機 (천기)
+    /// 天機
     TianJi,
-    /// 太陽 (태양)
+    /// 太陽
     TaiYang,
-    /// 武曲 (무곡)
+    /// 武曲
     WuQu,
-    /// 天同 (천동)
+    /// 天同
     TianTong,
-    /// 廉貞 (렴정)
+    /// 廉貞
     LianZhen,
-    /// 天府 (천부)
+    /// 天府
     TianFu,
-    /// 太陰 (태음)
+    /// 太陰
     TaiYin,
-    /// 貪狼 (탐랑)
+    /// 貪狼
     TanLang,
-    /// 巨門 (거문)
+    /// 巨門
     JuMen,
-    /// 天相 (천상)
+    /// 天相
     TianXiang,
-    /// 天梁 (천량)
+    /// 天梁
     TianLiang,
-    /// 七殺 (칠살)
+    /// 七殺
     QiSha,
-    /// 破軍 (파군)
+    /// 破軍
     PoJun,
 
     // ── 6 輔星 A ─────────────────────────────────────────
-    /// 文昌 (문창)
+    /// 文昌
     WenChang,
-    /// 文曲 (문곡)
+    /// 文曲
     WenQu,
-    /// 左輔 (좌보)
+    /// 左輔
     ZuoFu,
-    /// 右弼 (우필)
+    /// 右弼
     YouBi,
-    /// 天魁 (천괴)
+    /// 天魁
     TianKui,
-    /// 天鉞 (천월)
+    /// 天鉞
     TianYue,
 
     // ── 祿馬三方 ──────────────────────────────────────────
-    /// 禄存 (록존)
+    /// 禄存
     LuCun,
-    /// 擎羊 (경양)
+    /// 擎羊
     QingYang,
-    /// 陀羅 (타라)
+    /// 陀羅
     TuoLuo,
-    /// 天馬 (천마)
+    /// 天馬
     TianMa,
 
     // ── 火鈴 ─────────────────────────────────────────────
-    /// 火星 (화성)
+    /// 火星
     HuoXing,
-    /// 鈴星 (영성)
+    /// 鈴星
     LingXing,
 
     // ── 空劫 ─────────────────────────────────────────────
-    /// 地劫 (지겁)
+    /// 地劫
     DiJie,
-    /// 地空 (지공)
+    /// 地空
     DiKong,
 
-    // ── 中諸星 (중잡성, ~24성) ───────────────────────────
-    /// 紅鸞 (홍란)
+    // ── Minor and Auxiliary Stars (~24 stars) ───────────────────
+    /// 紅鸞
     HongLuan,
-    /// 天喜 (천희)
+    /// 天喜
     TianXi,
-    /// 天刑 (천형)
+    /// 天刑
     TianXing,
-    /// 天姚 (천요)
+    /// 天姚
     TianYao,
-    /// 解神 (해신)
+    /// 解神
     JieShen,
-    /// 天巫 (천무)
+    /// 天巫
     TianWu,
-    /// 天月 (천월성, TianYue와 다름)
+    /// 天月 (TianYueStar, distinct from TianYue)
     TianYueStar,
-    /// 陰煞 (음살)
+    /// 陰煞
     YinSha,
-    /// 台輔 (대보)
+    /// 台輔
     TaiFu,
-    /// 封誥 (봉고)
+    /// 封誥
     FengGao,
-    /// 三台 (삼태)
+    /// 三台
     SanTai,
-    /// 八座 (팔좌)
+    /// 八座
     BaZuo,
-    /// 恩光 (은광)
+    /// 恩光
     EnGuang,
-    /// 天貴 (천귀)
+    /// 天貴
     TianGui,
-    /// 天才 (천재)
+    /// 天才
     TianCai,
-    /// 天壽 (천수)
+    /// 天壽
     TianShou,
-    /// 龍池 (용지)
+    /// 龍池
     LongChi,
-    /// 鳳閣 (봉각)
+    /// 鳳閣
     FengGe,
-    /// 天哭 (천곡)
+    /// 天哭
     TianKu,
-    /// 天虛 (천허)
+    /// 天虛
     TianXu,
-    /// 華蓋 (화개)
+    /// 華蓋
     HuaGai,
-    /// 咸池 (함지)
+    /// 咸池
     XianChi,
-    /// 孤辰 (고신)
+    /// 孤辰
     GuChen,
-    /// 寡宿 (과숙)
+    /// 寡宿
     GuaSu,
-    /// 天空 (천공)
+    /// 天空
     TianKong,
-    /// 劫殺 (겁살)
+    /// 劫殺
     JieSha,
-    /// 天廚 (천주)
+    /// 天廚
     TianChu,
-    /// 天官 (천관)
+    /// 天官
     TianGuan,
-    /// 天福 (천복)
-    TianFu2, // 天府와 이름 충돌 방지
+    /// 天福
+    TianFu2, // Avoid name collision with TianFu
 }
 
 impl ZwdsStar {
-    /// 한자 표기
+    /// Hanja / Chinese character representation
     pub fn hanja(&self) -> &'static str {
         match self {
             Self::ZiWei => "紫微",
@@ -308,70 +295,70 @@ impl ZwdsStar {
         }
     }
 
-    /// 한글 표기
+    /// English / Pinyin representation
     pub fn korean(&self) -> &'static str {
         match self {
-            Self::ZiWei => "자미",
-            Self::TianJi => "천기",
-            Self::TaiYang => "태양",
-            Self::WuQu => "무곡",
-            Self::TianTong => "천동",
-            Self::LianZhen => "렴정",
-            Self::TianFu => "천부",
-            Self::TaiYin => "태음",
-            Self::TanLang => "탐랑",
-            Self::JuMen => "거문",
-            Self::TianXiang => "천상",
-            Self::TianLiang => "천량",
-            Self::QiSha => "칠살",
-            Self::PoJun => "파군",
-            Self::WenChang => "문창",
-            Self::WenQu => "문곡",
-            Self::ZuoFu => "좌보",
-            Self::YouBi => "우필",
-            Self::TianKui => "천괴",
-            Self::TianYue => "천월",
-            Self::LuCun => "록존",
-            Self::QingYang => "경양",
-            Self::TuoLuo => "타라",
-            Self::TianMa => "천마",
-            Self::HuoXing => "화성",
-            Self::LingXing => "영성",
-            Self::DiJie => "지겁",
-            Self::DiKong => "지공",
-            Self::HongLuan => "홍란",
-            Self::TianXi => "천희",
-            Self::TianXing => "천형",
-            Self::TianYao => "천요",
-            Self::JieShen => "해신",
-            Self::TianWu => "천무",
-            Self::TianYueStar => "천월성",
-            Self::YinSha => "음살",
-            Self::TaiFu => "대보",
-            Self::FengGao => "봉고",
-            Self::SanTai => "삼태",
-            Self::BaZuo => "팔좌",
-            Self::EnGuang => "은광",
-            Self::TianGui => "천귀",
-            Self::TianCai => "천재",
-            Self::TianShou => "천수",
-            Self::LongChi => "용지",
-            Self::FengGe => "봉각",
-            Self::TianKu => "천곡",
-            Self::TianXu => "천허",
-            Self::HuaGai => "화개",
-            Self::XianChi => "함지",
-            Self::GuChen => "고신",
-            Self::GuaSu => "과숙",
-            Self::TianKong => "천공",
-            Self::JieSha => "겁살",
-            Self::TianChu => "천주",
-            Self::TianGuan => "천관",
-            Self::TianFu2 => "천복",
+            Self::ZiWei => "ZiWei",
+            Self::TianJi => "TianJi",
+            Self::TaiYang => "TaiYang",
+            Self::WuQu => "WuQu",
+            Self::TianTong => "TianTong",
+            Self::LianZhen => "LianZhen",
+            Self::TianFu => "TianFu",
+            Self::TaiYin => "TaiYin",
+            Self::TanLang => "TanLang",
+            Self::JuMen => "JuMen",
+            Self::TianXiang => "TianXiang",
+            Self::TianLiang => "TianLiang",
+            Self::QiSha => "QiSha",
+            Self::PoJun => "PoJun",
+            Self::WenChang => "WenChang",
+            Self::WenQu => "WenQu",
+            Self::ZuoFu => "ZuoFu",
+            Self::YouBi => "YouBi",
+            Self::TianKui => "TianKui",
+            Self::TianYue => "TianYue",
+            Self::LuCun => "LuCun",
+            Self::QingYang => "QingYang",
+            Self::TuoLuo => "TuoLuo",
+            Self::TianMa => "TianMa",
+            Self::HuoXing => "HuoXing",
+            Self::LingXing => "LingXing",
+            Self::DiJie => "DiJie",
+            Self::DiKong => "DiKong",
+            Self::HongLuan => "HongLuan",
+            Self::TianXi => "TianXi",
+            Self::TianXing => "TianXing",
+            Self::TianYao => "TianYao",
+            Self::JieShen => "JieShen",
+            Self::TianWu => "TianWu",
+            Self::TianYueStar => "TianYueStar",
+            Self::YinSha => "YinSha",
+            Self::TaiFu => "TaiFu",
+            Self::FengGao => "FengGao",
+            Self::SanTai => "SanTai",
+            Self::BaZuo => "BaZuo",
+            Self::EnGuang => "EnGuang",
+            Self::TianGui => "TianGui",
+            Self::TianCai => "TianCai",
+            Self::TianShou => "TianShou",
+            Self::LongChi => "LongChi",
+            Self::FengGe => "FengGe",
+            Self::TianKu => "TianKu",
+            Self::TianXu => "TianXu",
+            Self::HuaGai => "HuaGai",
+            Self::XianChi => "XianChi",
+            Self::GuChen => "GuChen",
+            Self::GuaSu => "GuaSu",
+            Self::TianKong => "TianKong",
+            Self::JieSha => "JieSha",
+            Self::TianChu => "TianChu",
+            Self::TianGuan => "TianGuan",
+            Self::TianFu2 => "TianFu2",
         }
     }
 
-    /// 주성 여부
+    /// Whether this is a major star
     pub fn is_main_star(&self) -> bool {
         matches!(
             self,
@@ -398,25 +385,25 @@ impl ZwdsStar {
 }
 
 // ============================================================
-// 오행국(五行局)
+// Five Elements Bureau (Wu Xing Ju)
 // ============================================================
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FiveElementsClass {
-    /// 水二局 — 대한 2세 시작
+    /// Water 2nd Bureau (starts at age 2)
     Water2,
-    /// 木三局 — 대한 3세 시작
+    /// Wood 3rd Bureau (starts at age 3)
     Wood3,
-    /// 金四局 — 대한 4세 시작
+    /// Metal 4th Bureau (starts at age 4)
     Metal4,
-    /// 土五局 — 대한 5세 시작
+    /// Earth 5th Bureau (starts at age 5)
     Earth5,
-    /// 火六局 — 대한 6세 시작
+    /// Fire 6th Bureau (starts at age 6)
     Fire6,
 }
 
 impl FiveElementsClass {
-    /// 대한 시작 나이
+    /// Decadal starting age
     pub fn starting_age(&self) -> u8 {
         match self {
             Self::Water2 => 2,
@@ -427,7 +414,7 @@ impl FiveElementsClass {
         }
     }
 
-    /// 오행국 숫자 값
+    /// Bureau numeric value
     pub fn value(&self) -> u32 {
         match self {
             Self::Water2 => 2,
@@ -440,38 +427,38 @@ impl FiveElementsClass {
 
     pub fn korean(&self) -> &'static str {
         match self {
-            Self::Water2 => "수이국(水二局)",
-            Self::Wood3 => "목삼국(木三局)",
-            Self::Metal4 => "금사국(金四局)",
-            Self::Earth5 => "토오국(土五局)",
-            Self::Fire6 => "화육국(火六局)",
+            Self::Water2 => "Water 2nd Bureau (Water2)",
+            Self::Wood3 => "Wood 3rd Bureau (Wood3)",
+            Self::Metal4 => "Metal 4th Bureau (Metal4)",
+            Self::Earth5 => "Earth 5th Bureau (Earth5)",
+            Self::Fire6 => "Fire 6th Bureau (Fire6)",
         }
     }
 }
 
 // ============================================================
-// 사화(四化)
+// Four Transformations (Si Hua)
 // ============================================================
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SiHuaType {
-    /// 化祿 (화록) — 재물·복록
+    /// Hua Lu - Prosperity, fortune, wealth
     HuaLu,
-    /// 化權 (화권) — 권위·리더십
+    /// Hua Quan - Authority, power, leadership
     HuaQuan,
-    /// 化科 (화과) — 명예·학문
+    /// Hua Ke - Fame, academic renown, reputation
     HuaKe,
-    /// 化忌 (화기) — 장애·시련
+    /// Hua Ji - Obstacle, challenge, catalyst
     HuaJi,
 }
 
 impl SiHuaType {
     pub fn korean(&self) -> &'static str {
         match self {
-            Self::HuaLu => "화록(化祿)",
-            Self::HuaQuan => "화권(化權)",
-            Self::HuaKe => "화과(化科)",
-            Self::HuaJi => "화기(化忌)",
+            Self::HuaLu => "Hua Lu (Prosperity)",
+            Self::HuaQuan => "Hua Quan (Authority)",
+            Self::HuaKe => "Hua Ke (Fame / Acclaim)",
+            Self::HuaJi => "Hua Ji (Obstacle / Catalyst)",
         }
     }
     pub fn emoji(&self) -> &'static str {
@@ -485,57 +472,57 @@ impl SiHuaType {
 }
 
 // ============================================================
-// 각 궁(宮)의 데이터
+// Palace data
 // ============================================================
 
-/// 자미두수 별의 밝기 (廟旺利陷)
+/// Star brightness (Miao, Wang, Li, Xian)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ZwdsBrightness {
-    /// 廟 (Temple) — 가장 밝고 길함
+    /// Miao (Temple) - Highest brightness, auspicious
     Miao,
-    /// 旺 (Bright) — 매우 밝고 길함
+    /// Wang (Bright) - Very bright, auspicious
     Wang,
-    /// 得 (Gain) — 얻음, 길함
+    /// De (Gain) - Gained ground, positive
     De,
-    /// 利 (Benefit) — 이로움, 보통 이상
+    /// Li (Benefit) - Beneficial, above average
     Li,
-    /// 平 (Peace) — 평범함
+    /// Ping (Peace / Neutral) - Average
     Ping,
-    /// 不 (Not) — 밝지 않음, 不得地
+    /// Bu (Dim) - Below average
     Bu,
-    /// 陷 (Fallen) — 낙함, 가장 어둡고 흉함
+    /// Xian (Fallen) - Lowest brightness, challenged
     Xian,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StarInPalace {
     pub star: ZwdsStar,
-    /// 사화 태그 (해당 별에 사화가 붙는 경우)
+    /// Si Hua transformation attached to this star
     pub si_hua: Option<SiHuaType>,
-    /// 별의 밝기 (廟旺利陷)
+    /// Star brightness status
     pub brightness: Option<ZwdsBrightness>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PalaceData {
-    /// 궁 인덱스 (0=寅宮)
+    /// Palace index (0=Yin)
     pub index: PalaceIndex,
-    /// 궁 이름
+    /// Palace name
     pub name: PalaceName,
-    /// 천간(天干) — 궁의 천간
+    /// Palace Heavenly Stem
     pub heavenly_stem: String,
-    /// 지지(地支) — 궁의 지지
+    /// Palace Earthly Branch
     pub earthly_branch: String,
-    /// 이 궁에 배치된 별들
+    /// Stars situated in this palace
     pub stars: Vec<StarInPalace>,
-    /// 대한(大限) 연령 범위 (이 궁이 몇 세 대한인지)
+    /// Decadal luck age range
     pub daxian_range: Option<(u8, u8)>,
-    /// 유년(流年) 해당 여부
+    /// Whether active in current annual flow
     pub is_current_liu_nian: bool,
 }
 
 // ============================================================
-// 음력 데이터
+// Lunar calendar data
 // ============================================================
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -544,16 +531,16 @@ pub struct LunarBirthInfo {
     pub month: u32,
     pub day: u32,
     pub is_leap_month: bool,
-    /// 연간(年干) 인덱스 (0=甲…9=癸)
+    /// Year stem index (0=Jia..9=Gui)
     pub year_stem_idx: usize,
-    /// 연지(年支) 인덱스 (0=子…11=亥, 표준 子=0 기준)
+    /// Year branch index (0=Zi..11=Hai)
     pub year_branch_idx: usize,
-    /// 시지(時支) 인덱스 (0=子…11=亥)
+    /// Hour branch index (0=Zi..11=Hai)
     pub time_branch_idx: usize,
 }
 
 // ============================================================
-// 운세 분석 데이터 (대한 / 유년 / 성반)
+// Fortune analysis data
 // ============================================================
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

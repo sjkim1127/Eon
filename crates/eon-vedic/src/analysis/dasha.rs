@@ -369,36 +369,36 @@ impl VimshottariDasha {
                             (a_pos.house_index as i32 - pos.house_index as i32).rem_euclid(12) + 1;
 
                         let (a_favorable, rel_desc) = match diff {
-                            1 | 5 | 9 => (true, "대운과 소운 행성이 1/5/9 트리콘(Trikona) 조화로운 관계에 있어 발전과 행운이 따릅니다."),
-                            3 | 11 => (true, "노력에 따른 성과와 인맥 확장이 이루어집니다."),
-                            4 | 10 => (true, "안정과 성취, 사회적 기틀을 다지는 켄드라(Kendra) 시기입니다."),
-                            2 | 12 => (false, "수입과 지출, 혹은 가족과 단절의 이슈가 교차하는 시기입니다."),
-                            6 | 8 => (false, "대운 행성과 6/8 축을 형성하여 갑작스러운 변동, 갈등, 건강 이슈 등 시련을 통해 배우는 시기입니다."),
-                            7 => (true, "대인관계나 파트너십을 통한 전환점이 발생합니다."),
-                            _ => (true, "무난한 흐름입니다."),
+                            1 | 5 | 9 => (true, "Major and sub-period lords form a harmonious 1/5/9 Trikona relationship, fostering growth, fortune, and alignment."),
+                            3 | 11 => (true, "Efforts yield tangible accomplishments and expansive social connections."),
+                            4 | 10 => (true, "A Kendra period providing stability, public achievement, and solid foundational progress."),
+                            2 | 12 => (false, "A mixed period highlighting income vs. expenditure cycles and family dynamics."),
+                            6 | 8 => (false, "Forms a difficult 6/8 Shadashtaka axis with the major lord, bringing unexpected shifts, conflicts, and endurance tests."),
+                            7 => (true, "A pivotal turning point unfolding through partnerships and interpersonal connections."),
+                            _ => (true, "A steady, balanced developmental flow."),
                         };
 
                         let a_lord_desc = match antar_lord {
-                            VedicPlanet::Sun => "자아 실현",
-                            VedicPlanet::Moon => "감정적 교류",
-                            VedicPlanet::Mars => "추진력",
-                            VedicPlanet::Mercury => "지적 활동",
-                            VedicPlanet::Jupiter => "긍정적 확장",
-                            VedicPlanet::Venus => "관계와 즐거움",
-                            VedicPlanet::Saturn => "책임과 인내",
-                            VedicPlanet::Rahu => "세속적 성취욕",
-                            VedicPlanet::Ketu => "영적 통찰",
+                            VedicPlanet::Sun => "Self-actualization and authority",
+                            VedicPlanet::Moon => "Emotional receptivity and mind",
+                            VedicPlanet::Mars => "Drive, courage, and initiative",
+                            VedicPlanet::Mercury => "Intellectual inquiry and commerce",
+                            VedicPlanet::Jupiter => "Expansive wisdom and benefic guidance",
+                            VedicPlanet::Venus => "Creative harmony, romance, and luxury",
+                            VedicPlanet::Saturn => "Discipline, perseverance, and structure",
+                            VedicPlanet::Rahu => "Material ambition and breakthrough exploration",
+                            VedicPlanet::Ketu => "Spiritual introspection and detachment",
                             _ => "",
                         };
 
                         antar.is_favorable = Some(favorable && a_favorable);
                         antar.interpretation = Some(
                             format!(
-                                "{}의 분위기 속에서 {}. {}",
+                                "Focusing on {}: {}. {}",
                                 a_lord_desc,
                                 rel_desc,
                                 if !a_favorable {
-                                    "돌발적인 변화에 대비하고 무리한 확장을 자제하는 것이 좋습니다."
+                                    "Caution advised against over-expansion and unexpected turbulence."
                                 } else {
                                     ""
                                 }

@@ -24,7 +24,7 @@ Empirical adversarial stress testing of Milestone 1 (R1) Yongsin (`yongshin.rs`)
 ## Review Scope
 - **Files reviewed**: `crates/eon-saju/src/analysis/yongshin.rs`, `crates/eon-saju/src/analysis/structure.rs`, `crates/eon-saju/src/analysis/strength.rs`, `crates/eon-saju/src/analysis/power.rs`.
 - **Test results**:
-  1. Weak DM heavy Caisheng (재다신약): Verified Yongsin is BiGeop.
+  1. Weak DM heavy Caisheng (Weak): Verified Yongsin is BiGeop.
   2. 50/50 Metal-Wood clash: Verified Tonggwan gets Primary (Water).
   3. Extreme Winter/Summer: Verified Johu stem preference (丙火 / 癸水).
   4. Jin-Jong vs Ga-Jong & Follower patterns: **Discovered CRITICAL BUG** in `DeukSe` counting logic where all TenGod counts evaluate to 2, causing `JongJae` and `JongSal` to be completely unreachable and misclassified as `JongAh`.

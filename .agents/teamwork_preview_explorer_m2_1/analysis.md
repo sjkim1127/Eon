@@ -1,110 +1,110 @@
-# Milestone M2 — Ashtakoota Guna Milan 상세 고도화 분석 리포트 (Analysis Report)
+# Milestone M2 — Ashtakoota Guna Milan Detailed Refinement   (Analysis Report)
 
-## 1. 개요 및 요약 (Overview & Summary)
-본 리포트는 Eon 프로젝트의 마일스톤 M2(R1: 아쉬타쿠타 구나 밀란 상세 고도화)를 위한 요구사항 분석 및 UI/i18n 설계 제안서입니다. 
-기존의 하드코딩된 한국어 테이블 형태의 궁합 출력을 각 8대 요인(Ashtakoota)의 의미와 매칭 점수에 따른 프로그레스 바를 적용한 카드형 그리드 디자인으로 고도화하고, 4개 국어(한국어, 영어, 중국어, 러시아어) 대응을 위한 i18n 번역 구조와 UI 컴포넌트의 다국어 적용 방식을 정의합니다.
+## 1.    (Overview & Summary)
+  Eon   M2(R1: Ashtakoota    )     UI/i18n  . 
+     Compatibility   8 (Ashtakoota)           , 4 (, , , )   i18n   UI     .
 
 ---
 
-## 2. 베딕 매칭 엔진 및 DTO 분석 (Vedic Matching Engine & DTOs)
+## 2.     DTO  (Vedic Matching Engine & DTOs)
 
-### 2-1. 8대 쿠타(Ashtakoota) 요인 분석 (`crates/eon-vedic/src/analysis/matching.rs`)
-베딕 궁합(Guna Milan)은 달(Moon)의 성좌(Rasi) 및 나크샤트라(Nakshatra)를 기준으로 총 36점 만점의 8대 요인을 평가합니다.
+### 2-1. 8 (Ashtakoota)   (`crates/eon-vedic/src/analysis/matching.rs`)
+ Compatibility(Guna Milan) (Moon) (Rasi)  (Nakshatra)   36 points total 8  .
 
-1. **Varna (정신적 성향 / 직업군) [최대 1.0점]**:
-   - **산출 방법**: 달 성좌(Rasi)에 따른 카스트 등급(Brahmin=4, Kshatriya=3, Vaishya=2, Shudra=1)을 매겨, 남성의 등급이 여성의 등급보다 크거나 같으면 1.0점, 그렇지 않으면 0.0점 부여.
-2. **Vashya (상호 영향력 / 매력) [최대 2.0점]**:
-   - **산출 방법**: Rasi의 분류 유형(Chatushpada, Manushya, Jalachara, Vanachara, Keeta) 간의 호환성 평가. 동일 유형은 2.0점, 특정 우호 조합은 1.0점 또는 0.5점, 그 외에는 0.0점.
-3. **Tara (운명과 건강 / 별자리 거리) [최대 3.0점]**:
-   - **산출 방법**: 남녀 나크샤트라 간의 상대적 거리 (mod 9) + 1을 계산하여 흉수(3, 5, 7 - Vipat, Pratyak, Naidhana)에 해당하는지 평가. 둘 다 흉수가 아니면 3.0점, 한쪽만 흉수이면 1.5점, 둘 다 흉수이면 0.0점(Tara Dosha).
-4. **Yoni (생물학적/성적 조화) [최대 4.0점]**:
-   - **산출 방법**: 27 나크샤트라를 14가지 동물 상징에 매핑. 상극 동물(예: 말과 버팔로, 코끼리와 사자 등)인 경우 0.0점, 동일 동물인 경우 4.0점, 우호 관계는 3.0점, 중립 관계는 2.0점.
-5. **Graha Maitri (정신적 교감 / 지배성 우정) [최대 5.0점]**:
-   - **산출 방법**: 남녀 달 성좌 지배성(Lord) 간의 자연적 관계(우호, 중립, 적대)를 분석. 쌍방 우호는 5.0점, 적대는 0.0점, 그 외 중간 등급에 따라 4.0, 3.0, 2.0, 1.0점 부여.
-6. **Gana (기질과 성품) [최대 6.0점]**:
-   - **산출 방법**: 나크샤트라 기질인 Deva(신), Manushya(인간), Rakshasa(악마/격렬함) 분류 비교. 동일 기질은 6.0점, Deva-Manushya는 5.0점, Manushya-Rakshasa는 3.0점, Deva-Rakshasa는 1.0점. (Rakshasa-Deva/Manushya 격차 시 Gana Dosha 영향).
-7. **Bhakoot (정서적 유대 / 월성좌 거리) [최대 7.0점]**:
-   - **산출 방법**: 달 성좌 간의 상대적 거리가 길한 조합(1, 7, 3, 11, 4, 10)인 경우 7.0점, 흉한 조합(2/12, 5/9, 6/8)인 경우 0.0점(Bhakoot Dosha).
-8. **Nadi (유전적 호환성 / 신경계 체질) [최대 8.0점]**:
-   - **산출 방법**: 나크샤트라 체질인 Adi(바타), Madhya(피타), Antya(카파) 비교. 남녀 체질이 다르면 8.0점, 같으면 0.0점(Nadi Dosha - 과도한 동일 기운으로 체질적 불일치 및 자녀 출산 장애 위험).
+1. **Varna (  / ) [ 1.0]**:
+   - ** **:  (Rasi)   (Brahmin=4, Kshatriya=3, Vaishya=2, Shudra=1) ,       1.0,   0.0 .
+2. **Vashya (  / ) [ 2.0]**:
+   - ** **: Rasi  (Chatushpada, Manushya, Jalachara, Vanachara, Keeta)   .   2.0,    1.0  0.5,   0.0.
+3. **Tara (  /  ) [ 3.0]**:
+   - ** **:      (mod 9) + 1  (3, 5, 7 - Vipat, Pratyak, Naidhana)  .     3.0,   1.5,    0.0(Tara Dosha).
+4. **Yoni (/ ) [ 4.0]**:
+   - ** **: 27  14   .  (:  ,   )  0.0,    4.0,   3.0,   2.0.
+5. **Graha Maitri (  /  ) [ 5.0]**:
+   - ** **:    (Lord)   (, , ) .   5.0,  0.0,      4.0, 3.0, 2.0, 1.0 .
+6. **Gana ( ) [ 6.0]**:
+   - ** **:   Deva(), Manushya(), Rakshasa(/)  .   6.0, Deva-Manushya 5.0, Manushya-Rakshasa 3.0, Deva-Rakshasa 1.0. (Rakshasa-Deva/Manushya   Gana Dosha ).
+7. **Bhakoot (  /  ) [ 7.0]**:
+   - ** **:       (1, 7, 3, 11, 4, 10)  7.0,  (2/12, 5/9, 6/8)  0.0(Bhakoot Dosha).
+8. **Nadi (  /  ) [ 8.0]**:
+   - ** **:   Adi(), Madhya(), Antya() .    8.0,  0.0(Nadi Dosha -          ).
 
-### 2-2. 화성살(Mangal Dosha) 및 조화성 판정
-- 남녀 각각의 차트에서 화성이 Lagna 또는 Moon 기준 1, 2, 4, 7, 8, 12 하우스에 있는지를 기준으로 화성살(Manglik) 감지.
-- **Dosha Samya**: 남녀 모두 화성살이 있는 경우 상호 상쇄(`mangal_dosha_cancelled = true`) 처리되어 부정적 영향 소멸.
-- **최종 판정**: 총점 18.0점 이상이며, 주요 살(Nadi Dosha = 0점, Bhakoot Dosha = 0점)이 없거나 화성살이 상쇄된 경우에만 `is_compatible = true`가 됩니다.
+### 2-2. (Mangal Dosha)   
+-     Lagna  Moon  1, 2, 4, 7, 8, 12    (Manglik) .
+- **Dosha Samya**:       (`mangal_dosha_cancelled = true`)    .
+- ** **:  18.0 ,  (Nadi Dosha = 0, Bhakoot Dosha = 0)     `is_compatible = true` .
 
-### 2-3. DTO 및 라우팅 분석
-- 서비스 진입점: `crates/eon-service/src/services/vedic.rs` -> `analyze_compatibility` 함수.
-- 입력 DTO: `VedicCompatibilityInput` (남녀 각각의 `AnalysisInput` 포함).
-- 출력 DTO: `VedicCompatibilityOutput`
+### 2-3. DTO   
+-  : `crates/eon-service/src/services/vedic.rs` -> `analyze_compatibility` .
+-  DTO: `VedicCompatibilityInput` (  `AnalysisInput` ).
+-  DTO: `VedicCompatibilityOutput`
   ```rust
   pub struct VedicCompatibilityOutput {
       pub meta: AnalysisMeta,
       pub report: eon_vedic::analysis::matching::CompatibilityReport,
   }
   ```
-  `CompatibilityReport` 구조체에는 `total_score` (f64), `is_compatible` (bool), `kootas` (Vec<KootaScore>), `male_mangal_dosha` (bool), `female_mangal_dosha` (bool), `mangal_dosha_cancelled` (bool), `explanation` (String)이 담겨 있습니다.
+  `CompatibilityReport`  `total_score` (f64), `is_compatible` (bool), `kootas` (Vec<KootaScore>), `male_mangal_dosha` (bool), `female_mangal_dosha` (bool), `mangal_dosha_cancelled` (bool), `explanation` (String)  .
 
 ---
 
-## 3. UI 변경 설계 (UI Design Proposal)
+## 3. UI   (UI Design Proposal)
 
-### 3-1. 디자인 컴포넌트 구조
-기존 테이블 방식을 탈피하여 궁합 매칭 상태를 시각화합니다.
-1. **종합 결과 카드 (Overall Status Card)**:
-   - 좌측에 획득한 총점과 최대 점수(`{total_score} / 36 Gunas`)를 표시하고, 우측에 종합 판정 뱃지(`✓ 상성 우수` 또는 `⚠️ 신중함 요구`)를 다국어 텍스트로 배치합니다.
-   - 다국어화된 종합 설명 문구(Explanation)를 노출합니다.
-2. **화성살 진단 영역 (Mangal Dosha Cards)**:
-   - 남성과 여성의 화성살 여부를 명확한 카드 디자인으로 표시합니다.
-   - 화성살 감지 시 붉은색 글씨(`🔥 화성살 감지`), 정상인 경우 초록색 글씨(`✓ 해당 없음`)로 상태를 시각화합니다.
-   - 상호 상쇄(Dosha Samya)가 일어난 경우 정보 배너를 통해 사용자에게 친절히 설명합니다.
-3. **8대 요인 상세 카드 그리드 (8-Koota Detailed Grid)**:
-   - `grid grid-cols-1 md:grid-cols-2 gap-4` 레이아웃을 통해 8개 항목을 카드 형태로 배치합니다.
-   - 각 카드에는 **[요인 이름]**, **[설명 / 의미]**, **[점수 바 (Progress Bar)]**, **[점수별 상태 해석]**을 포함합니다.
-   - **점수 바(Progress Bar)** 색상 매핑:
-     - 만점(Ratio == 1.0): Emerald 색상 (`bg-emerald-500`)
-     - 부분 점수(Ratio > 0.0): Purple 색상 (`bg-purple-500`)
-     - 0점(Ratio == 0.0): Red 색상 (`bg-red-500`)
+### 3-1.   
+    Compatibility   .
+1. **   (Overall Status Card)**:
+   -     (`{total_score} / 36 Gunas`) ,    (`✓  `  `⚠️  `)   .
+   -    (Explanation) .
+2. **   (Mangal Dosha Cards)**:
+   -        .
+   -     (`🔥  `),    (`✓  `)  .
+   -  (Dosha Samya)        .
+3. **8     (8-Koota Detailed Grid)**:
+   - `grid grid-cols-1 md:grid-cols-2 gap-4`   8    .
+   -   **[ ]**, **[ / ]**, **[  (Progress Bar)]**, **[  ]** .
+   - ** (Progress Bar)**  :
+     - (Ratio == 1.0): Emerald  (`bg-emerald-500`)
+     -  (Ratio > 0.0): Purple  (`bg-purple-500`)
+     - 0(Ratio == 0.0): Red  (`bg-red-500`)
 
 ---
 
-## 4. 다국어 (i18n) 설계 (Localization Strategy)
+## 4.  (i18n)  (Localization Strategy)
 
-현재 엔진에서 생성하는 `explanation` 및 Koota `description`은 하드코딩된 한국어 및 영어 문자열입니다. 코드 수정 없이 완벽한 4개 국어(Ko, En, Zh, Ru) 지원을 달성하기 위해 UI단에서 획득 점수 및 요인 인덱스를 바탕으로 다국어 해석을 동적 조립하는 헬퍼 함수를 적용합니다.
+   `explanation`  Koota `description`     .     4 (Ko, En, Zh, Ru)    UI             .
 
-### 4-1. 추가되는 다국어 키 (Translation Keys in `TK` enum)
-`crates/eon-ui/src/i18n/mod.rs`에 아래 다국어 키를 등록합니다.
+### 4-1.    (Translation Keys in `TK` enum)
+`crates/eon-ui/src/i18n/mod.rs`    .
 
 ```rust
     // Vedic Compatibility
-    VedicCompatPartnerInputHeader,     // "상대방 출생 정보 입력"
-    VedicCompatPartnerYearLabel,       // "년도"
-    VedicCompatPartnerMonthLabel,      // "월"
-    VedicCompatPartnerDayLabel,        // "일"
-    VedicCompatPartnerHourLabel,       // "시간 (시)"
-    VedicCompatPartnerMinLabel,        // "시간 (분)"
-    VedicCompatPartnerLatLabel,        // "위도 (Latitude)"
-    VedicCompatPartnerLonLabel,        // "경도 (Longitude)"
-    VedicCompatRunButton,              // "💞 궁합 분석 실행"
-    VedicCompatLoadingText,            // "궁합 연산 중..."
-    VedicCompatOverallJudgementHeader, // "종합 매칭 판정"
-    VedicCompatScoreLabelText,         // "호환성 점수"
-    VedicCompatStatusExcellentText,    // "✓ 상성 우수"
-    VedicCompatStatusCautionText,      // "⚠️ 신중함 요구"
-    VedicCompatMaleMangalTitle,        // "남성 화성살 (Male Mangal Dosha)"
-    VedicCompatFemaleMangalTitle,      // "여성 화성살 (Female Mangal Dosha)"
-    VedicCompatMangalDetected,         // "🔥 화성살(Manglik) 감지"
-    VedicCompatMangalNotDetected,      // "✓ 해당 없음 (양호)"
-    VedicCompatMangalCancelledText,    // "ℹ️ 상호 화성살 상쇄(Dosha Samya)..."
-    VedicCompatAshtakootaTableHeader,  // "아쉬타쿠타(Ashtakoota) 세부 매칭 평점표"
+    VedicCompatPartnerInputHeader,     // "Enter Partner Birth Information"
+    VedicCompatPartnerYearLabel,       // ""
+    VedicCompatPartnerMonthLabel,      // ""
+    VedicCompatPartnerDayLabel,        // ""
+    VedicCompatPartnerHourLabel,       // " ()"
+    VedicCompatPartnerMinLabel,        // " ()"
+    VedicCompatPartnerLatLabel,        // " (Latitude)"
+    VedicCompatPartnerLonLabel,        // " (Longitude)"
+    VedicCompatRunButton,              // "💞 Compatibility  "
+    VedicCompatLoadingText,            // "Compatibility  ..."
+    VedicCompatOverallJudgementHeader, // "  "
+    VedicCompatScoreLabelText,         // " "
+    VedicCompatStatusExcellentText,    // "✓  "
+    VedicCompatStatusCautionText,      // "⚠️  "
+    VedicCompatMaleMangalTitle,        // "  (Male Mangal Dosha)"
+    VedicCompatFemaleMangalTitle,      // "  (Female Mangal Dosha)"
+    VedicCompatMangalDetected,         // "🔥 (Manglik) "
+    VedicCompatMangalNotDetected,      // "✓   ()"
+    VedicCompatMangalCancelledText,    // "ℹ️   (Dosha Samya)..."
+    VedicCompatAshtakootaTableHeader,  // "Ashtakoota   "
 ```
 
 ---
 
-## 5. 상세 제안 코드 (Proposed Code Changes)
+## 5.    (Proposed Code Changes)
 
-### 5-1. `crates/eon-ui/src/i18n/mod.rs` 변경 제안
-`TK` 열거형에 신규 키를 추가합니다.
+### 5-1. `crates/eon-ui/src/i18n/mod.rs`  
+`TK`    .
 
 ```rust
 <<<< BEFORE
@@ -142,31 +142,31 @@
 >>>>
 ```
 
-### 5-2. `ko.rs`, `en.rs`, `zh.rs`, `ru.rs` 다국어 매핑 추가 제안
+### 5-2. `ko.rs`, `en.rs`, `zh.rs`, `ru.rs`    
 
 #### `crates/eon-ui/src/i18n/ko.rs`
 ```rust
         // Vedic-specific (Vedic Compatibility)
-        TK::VedicCompatPartnerInputHeader => "상대방 출생 정보 입력",
-        TK::VedicCompatPartnerYearLabel => "년도",
-        TK::VedicCompatPartnerMonthLabel => "월",
-        TK::VedicCompatPartnerDayLabel => "일",
-        TK::VedicCompatPartnerHourLabel => "시간 (시)",
-        TK::VedicCompatPartnerMinLabel => "시간 (분)",
-        TK::VedicCompatPartnerLatLabel => "위도 (Latitude)",
-        TK::VedicCompatPartnerLonLabel => "경도 (Longitude)",
-        TK::VedicCompatRunButton => "💞 궁합 분석 실행",
-        TK::VedicCompatLoadingText => "궁합 연산 중...",
-        TK::VedicCompatOverallJudgementHeader => "종합 매칭 판정",
-        TK::VedicCompatScoreLabelText => "호환성 점수",
-        TK::VedicCompatStatusExcellentText => "✓ 상성 우수",
-        TK::VedicCompatStatusCautionText => "⚠️ 신중함 요구",
-        TK::VedicCompatMaleMangalTitle => "남성 화성살 (Male Mangal Dosha)",
-        TK::VedicCompatFemaleMangalTitle => "여성 화성살 (Female Mangal Dosha)",
-        TK::VedicCompatMangalDetected => "🔥 화성살(Manglik) 감지",
-        TK::VedicCompatMangalNotDetected => "✓ 해당 없음 (양호)",
-        TK::VedicCompatMangalCancelledText => "ℹ️ 상호 화성살 상쇄(Dosha Samya)가 성립되어 화성살의 부정적 영향이 소멸되었습니다.",
-        TK::VedicCompatAshtakootaTableHeader => "아쉬타쿠타(Ashtakoota) 세부 매칭 평점표",
+        TK::VedicCompatPartnerInputHeader => "Enter Partner Birth Information",
+        TK::VedicCompatPartnerYearLabel => "",
+        TK::VedicCompatPartnerMonthLabel => "",
+        TK::VedicCompatPartnerDayLabel => "",
+        TK::VedicCompatPartnerHourLabel => " ()",
+        TK::VedicCompatPartnerMinLabel => " ()",
+        TK::VedicCompatPartnerLatLabel => " (Latitude)",
+        TK::VedicCompatPartnerLonLabel => " (Longitude)",
+        TK::VedicCompatRunButton => "💞 Compatibility  ",
+        TK::VedicCompatLoadingText => "Compatibility  ...",
+        TK::VedicCompatOverallJudgementHeader => "  ",
+        TK::VedicCompatScoreLabelText => " ",
+        TK::VedicCompatStatusExcellentText => "✓  ",
+        TK::VedicCompatStatusCautionText => "⚠️  ",
+        TK::VedicCompatMaleMangalTitle => "  (Male Mangal Dosha)",
+        TK::VedicCompatFemaleMangalTitle => "  (Female Mangal Dosha)",
+        TK::VedicCompatMangalDetected => "🔥 (Manglik) ",
+        TK::VedicCompatMangalNotDetected => "✓   ()",
+        TK::VedicCompatMangalCancelledText => "ℹ️   (Dosha Samya)     .",
+        TK::VedicCompatAshtakootaTableHeader => "Ashtakoota   ",
 ```
 
 #### `crates/eon-ui/src/i18n/en.rs`
@@ -246,9 +246,9 @@
 
 ---
 
-### 5-3. `crates/eon-ui/src/components/tabs/vedic_tab.rs` 변경 제안
+### 5-3. `crates/eon-ui/src/components/tabs/vedic_tab.rs`  
 
-#### 1) Koota 다국어화 헬퍼 함수 정의 (컴포넌트 파일 내 또는 별도 유틸리티에 추가)
+#### 1) Koota     (      )
 ```rust
 struct LocalizedKoota {
     name: &'static str,
@@ -260,73 +260,73 @@ fn localize_koota(locale: Locale, index: usize, earned: f64, max: f64) -> Locali
     match locale {
         Locale::Ko => match index {
             0 => LocalizedKoota {
-                name: "바르나 (Varna) - 정신적 성향",
-                meaning: "사회적 역할, 영적 성숙도 및 직업적 성향의 조화를 나타냅니다.",
+                name: " (Varna) -  ",
+                meaning: " ,       .",
                 interpretation: if earned == 1.0 {
-                    "상호 협력과 역할 분담이 순조로운 긍정적인 관계입니다.".to_string()
+                    "      .".to_string()
                 } else {
-                    "가치관과 일에 대한 태도 차이로 갈등이 생길 수 있습니다.".to_string()
+                    "        .".to_string()
                 }
             },
             1 => LocalizedKoota {
-                name: "바샤 (Vashya) - 상호 영향력",
-                meaning: "부부 사이의 주도권, 상호 매력과 영향력의 균형을 분석합니다.",
-                interpretation: format!("상호 지배 및 협력도 평점: {}/2.", earned),
+                name: " (Vashya) -  ",
+                meaning: "  ,     .",
+                interpretation: format!("    : {}/2.", earned),
             },
             2 => LocalizedKoota {
-                name: "타라 (Tara) - 운명과 건강",
-                meaning: "두 사람의 탄생 별자리 관계를 통해 수명과 전반적인 운세를 판단합니다.",
+                name: " (Tara) -  ",
+                meaning: "         .",
                 interpretation: if earned == 3.0 {
-                    "최상의 운명적 조화와 장수운을 나타냅니다.".to_string()
+                    "    .".to_string()
                 } else if earned == 1.5 {
-                    "무난한 수준의 건강 및 활동성 호환을 보입니다.".to_string()
+                    "      .".to_string()
                 } else {
-                    "건강과 장수에 주의를 요하는 배치입니다 (타라 도샤).".to_string()
+                    "     ( ).".to_string()
                 }
             },
             3 => LocalizedKoota {
-                name: "요니 (Yoni) - 생물학적 조화",
-                meaning: "신체적, 성적 조화 및 본능적 친밀도를 상징적 동물 유형으로 평가합니다.",
-                interpretation: format!("생물학적/본능적 친밀도: {}/4.", earned),
+                name: " (Yoni) -  ",
+                meaning: ",         .",
+                interpretation: format!("/ : {}/4.", earned),
             },
             4 => LocalizedKoota {
-                name: "그라하 마이트리 (Graha Maitri) - 정신적 교감",
-                meaning: "두 사람의 달(지배성) 관계를 통해 지적 소통과 우정을 측정합니다.",
+                name: "  (Graha Maitri) -  ",
+                meaning: "  ()      .",
                 interpretation: if earned >= 4.0 {
-                    "정신적 깊은 유대와 따뜻한 우정이 성립됩니다.".to_string()
+                    "     .".to_string()
                 } else if earned >= 2.0 {
-                    "평범한 지적 교감을 나누며 원활히 대화할 수 있습니다.".to_string()
+                    "       .".to_string()
                 } else {
-                    "소통 방식의 차이로 오해가 생기기 쉬운 조합입니다.".to_string()
+                    "      .".to_string()
                 }
             },
             5 => LocalizedKoota {
-                name: "가나 (Gana) - 기질과 성품",
-                meaning: "성격과 기질(Deva-신, Manushya-인간, Rakshasa-격렬함)의 호환성입니다.",
+                name: " (Gana) -  ",
+                meaning: " (Deva-, Manushya-, Rakshasa-) .",
                 interpretation: if earned >= 5.0 {
-                    "기질이 조화로워 감정적 충돌이 거의 없습니다.".to_string()
+                    "     .".to_string()
                 } else if earned >= 3.0 {
-                    "보통 수준의 조화로, 상호 양보가 필요합니다.".to_string()
+                    "  ,   .".to_string()
                 } else {
-                    "성격 차이가 커 잦은 마찰이 일어날 수 있습니다 (가나 도샤).".to_string()
+                    "        ( ).".to_string()
                 }
             },
             6 => LocalizedKoota {
-                name: "바쿠트 (Bhakoot) - 정서적 유대",
-                meaning: "상대적인 월성좌 거리를 통해 정서적 건강, 번영과 부부애를 분석합니다.",
+                name: " (Bhakoot) -  ",
+                meaning: "     ,   .",
                 interpretation: if earned == 7.0 {
-                    "감정의 기복이 없고 안정적인 정서적 유대감이 지속됩니다.".to_string()
+                    "      .".to_string()
                 } else {
-                    "정서적 소외감이나 가계 재정 흐름의 기복이 우려됩니다 (바쿠트 도샤).".to_string()
+                    "       ( ).".to_string()
                 }
             },
             7 => LocalizedKoota {
-                name: "나디 (Nadi) - 유전적 호환성",
-                meaning: "가장 중요한 요소로, 신경 계통의 기운(체질)과 유전적 어울림을 봅니다.",
+                name: " (Nadi) -  ",
+                meaning: "  ,   ()   .",
                 interpretation: if earned == 8.0 {
-                    "신체적 면역계가 서로 잘 결합하여 건강한 자녀운을 지닙니다.".to_string()
+                    "       .".to_string()
                 } else {
-                    "같은 계열의 과도한 에너지로 유전적 불일치 위험이 큽니다 (나디 도샤).".to_string()
+                    "        ( ).".to_string()
                 }
             },
             _ => LocalizedKoota { name: "", meaning: "", interpretation: "".to_string() }
@@ -554,8 +554,8 @@ fn localize_koota(locale: Locale, index: usize, earned: f64, max: f64) -> Locali
 }
 ```
 
-#### 2) `vedic_tab.rs` 내 호환성 탭 렌더링 코드 변경 제안
-(기존 라인 1996~2185 영역의 Dioxus 컴포넌트 마크업을 아래 코드로 대체)
+#### 2) `vedic_tab.rs`       
+(  1996~2185  Dioxus     )
 
 ```rust
                                 3 => rsx! {
@@ -656,14 +656,14 @@ fn localize_koota(locale: Locale, index: usize, earned: f64, max: f64) -> Locali
                                                     // Dynamically localize the overall matching explanation
                                                     let explanation_text = match locale {
                                                         Locale::Ko => format!(
-                                                            "총 {}점 획득 (36점 만점). {}",
+                                                            "Total {} points (out of 36). {}",
                                                             compat.report.total_score,
                                                             if compat.report.is_compatible {
-                                                                "전반적으로 조화로운 매칭입니다. 추천합니다."
+                                                                "  . ."
                                                             } else if compat.report.total_score >= 18.0 {
-                                                                "점수는 높으나 주요 살(Nadi/Bhakoot Dosha)의 영향으로 신중한 주의가 필요합니다."
+                                                                "   (Nadi/Bhakoot Dosha)    ."
                                                             } else {
-                                                                "성향적 차이가 커 상호 조율과 깊은 이해가 요구되는 상성입니다."
+                                                                "        ."
                                                             }
                                                         ),
                                                         Locale::En => format!(

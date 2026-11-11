@@ -18,7 +18,7 @@ Milestone 3 Tasks:
 2. **Comprehensive Edge-Case Verification Suite**:
    - Create `crates/eon-saju/tests/milestone3_edge_cases.rs` containing a broad battery of edge-case tests:
      - Solar term boundary transitions (LiChun, DongZhi, XiaoHan, DaHan, etc. at minute resolution).
-     - Rare and exotic natal charts (Four Earth branches / 토다자, All-stems same element / 천간일색, Multi-clash / 충다자, Special Gyeokguk structures).
+     - Rare and exotic natal charts (Four Earth branches / All-Earth branches, All-stems same element / Heavenly Stem, Multi-clash / Multi-clash, Special Gyeokguk structures).
      - Temporal simulation invariants (100-year Daewun/Saewun/Wolwun continuous timeline, extreme dates 1900..2100).
      - SajuVM safety & determinism (step execution invariants, non-overflowing registers, gas/step bounds).
      - Boundary input handling (empty inputs, missing optional data, extreme geographical coordinates).

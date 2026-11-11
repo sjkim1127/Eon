@@ -1,6 +1,6 @@
 # Milestone M3: Strength Visualization and Robustness Analysis
 
-This document provides the requirements analysis, engine vulnerability audit, design specification, and translation definitions for Milestone M3 (R2: Shadbala & Bhava Bala 6대 강도 세부 수치 시각화).
+This document provides the requirements analysis, engine vulnerability audit, design specification, and translation definitions for Milestone M3 (R2: Shadbala & Bhava Bala 6-Fold Strength   ).
 
 ---
 
@@ -307,22 +307,22 @@ Add these enum variants to `pub enum TK`:
 
 ### Korean Translations (`crates/eon-ui/src/i18n/ko.rs`)
 ```rust
-        TK::ShadbalaTitle => "샤드발라 행성 세력 (Shadbala)",
-        TK::ShadbalaTotalScore => "총점",
-        TK::ShadbalaBenchmark => "최소 기준값 (Benchmark)",
-        TK::ShadbalaStatus => "상태",
-        TK::ShadbalaGrade => "등급",
-        TK::ShadbalaFactorSthana => "체성 강도 (Sthana Bala - 위치)",
-        TK::ShadbalaFactorDig => "방향 강도 (Dig Bala - 하우스)",
-        TK::ShadbalaFactorKala => "시간 강도 (Kala Bala - 주야/시각)",
-        TK::ShadbalaFactorChesta => "운동 강도 (Cheshta Bala - 속도/역행)",
-        TK::ShadbalaFactorNaisargika => "자연 강도 (Naisargika Bala - 고유세기)",
-        TK::ShadbalaFactorDrik => "시각 강도 (Drik Bala - 타행성 각도)",
-        TK::ShadbalaStatusExalted => "고양 (Exalted)",
-        TK::ShadbalaStatusDebilitated => "쇠퇴 (Debilitated)",
-        TK::ShadbalaStatusStrong => "강함",
-        TK::ShadbalaStatusWeak => "약함",
-        TK::ShadbalaStatusNeutral => "중립",
+        TK::ShadbalaTitle => "   (Shadbala)",
+        TK::ShadbalaTotalScore => "",
+        TK::ShadbalaBenchmark => "  (Benchmark)",
+        TK::ShadbalaStatus => "",
+        TK::ShadbalaGrade => "",
+        TK::ShadbalaFactorSthana => "  (Sthana Bala - )",
+        TK::ShadbalaFactorDig => "  (Dig Bala - )",
+        TK::ShadbalaFactorKala => "  (Kala Bala - /)",
+        TK::ShadbalaFactorChesta => "  (Cheshta Bala - /)",
+        TK::ShadbalaFactorNaisargika => "  (Naisargika Bala - )",
+        TK::ShadbalaFactorDrik => "  (Drik Bala -  )",
+        TK::ShadbalaStatusExalted => " (Exalted)",
+        TK::ShadbalaStatusDebilitated => " (Debilitated)",
+        TK::ShadbalaStatusStrong => "",
+        TK::ShadbalaStatusWeak => "",
+        TK::ShadbalaStatusNeutral => "",
 ```
 
 ### English Translations (`crates/eon-ui/src/i18n/en.rs`)

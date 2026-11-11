@@ -1,18 +1,18 @@
-//! 신강신약(身强身弱, Day Master Strength) 판정
+//! Day Master Strength (身强身弱) Determination
 //!
-//! 일간(日干)의 강약을 판단합니다.
+//! (日干)  .
 //!
-//! ## 판정 기준
+//! ##  
 //!
-//! 1. **득령(得令)** - 월지가 일간을 생(生) 또는 비(比)하는가
-//! 2. **득지(得地)** - 지지에 일간의 뿌리(통근)가 있는가
-//! 3. **득시(得時)** - 시지가 일간을 생(生) 또는 비(比)하는가
-//! 4. **득세(得勢)** - 비겁(比劫)/인성(印星)이 많은가
+//! 1. **(得令)** -   (生)  (比)
+//! 2. **(得地)** -   ()
+//! 3. **(得時)** -   (生)  (比)
+//! 4. **(得勢)** - (比劫)/(印星)
 //!
-//! ## 강약 판정
+//! ##  
 //!
-//! - 4가지 중 2가지 이상 만족 → 신강(身强)
-//! - 4가지 중 1가지 이하 만족 → 신약(身弱)
+//! - 4  2   → (身强)
+//! - 4  1   → (身弱)
 
 use crate::analysis::relationships::RelationshipAnalysis;
 use crate::core::branch::EarthlyBranch;
@@ -24,24 +24,24 @@ use serde::{Deserialize, Serialize};
 
 use crate::core::config::AnalysisConfig;
 
-/// 강약 유형
+/// Strength Type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum StrengthType {
-    /// 신강(身强) - 강한 사주
+    /// (身强) -  
     Strong,
-    /// 신약(身弱) - 약한 사주
+    /// (身弱) -  
     Weak,
-    /// 중화(中和) - 균형 잡힌 사주 (드묾)
+    /// (中和) -    ()
     Balanced,
 }
 
 impl StrengthType {
     pub const fn hangul(&self) -> &'static str {
         match self {
-            Self::Strong => "신강",
-            Self::Weak => "신약",
-            Self::Balanced => "중화",
+            Self::Strong => "Strong",
+            Self::Weak => "Weak",
+            Self::Balanced => "Balanced",
         }
     }
 
@@ -55,9 +55,9 @@ impl StrengthType {
 
     pub const fn description(&self) -> &'static str {
         match self {
-            Self::Strong => "일간의 힘이 강하므로 식상/재성/관성이 필요합니다.",
-            Self::Weak => "일간의 힘이 약하므로 인성/비겁이 필요합니다.",
-            Self::Balanced => "일간과 다른 기운이 균형을 이루고 있습니다.",
+            Self::Strong => "Day Master is strong; outputs, wealth, or officers are favorable.",
+            Self::Weak => "Day Master is weak; resources or parallels are favorable.",
+            Self::Balanced => "Day Master and surrounding elements are well balanced.",
         }
     }
 }
@@ -68,28 +68,28 @@ impl std::fmt::Display for StrengthType {
     }
 }
 
-/// 득령(得令) 판정 - 월지와 일간의 관계
+/// Obtain Season (得令) Determination
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeukRyeong {
-    /// 득령 여부
+    /// Acquired season
     pub acquired: bool,
-    /// 월지
+    /// Month Branch
     pub month_branch: EarthlyBranch,
-    /// 월지 오행
+    /// Month Branch
     pub month_element: Element,
-    /// 일간 오행
+    /// Day Master Element
     pub day_master_element: Element,
 }
 
 impl DeukRyeong {
-    /// 득령 판정
-    /// 월지 오행이 일간을 생하거나 같으면 득령
+    /// Determine Obtain Season
+    /// Month Branch     
     pub fn check(day_master: HeavenlyStem, month_branch: EarthlyBranch) -> Self {
         let day_element = day_master.element();
         let month_element = month_branch.element();
 
-        // 월지가 일간을 생(生)하거나 비(比)하면 득령
+        //   (生) (比)
         let is_generating = month_element.generates() == day_element;
         let is_same = month_element == day_element;
         let acquired = is_generating || is_same;
@@ -102,7 +102,7 @@ impl DeukRyeong {
         }
     }
 
-    /// 실질 오행을 반영한 득령 판정
+    /// Checks DeukRyeong using effective transformed element.
     pub fn check_effective(
         day_master: HeavenlyStem,
         month_branch: EarthlyBranch,
@@ -110,7 +110,7 @@ impl DeukRyeong {
     ) -> Self {
         let day_element = day_master.element();
 
-        // 월지의 실질 오행이 일간을 생(生)하거나 비(比)하면 득령
+        //     (生) (比)
         let is_generating = month_eff.generates() == day_element;
         let is_same = month_eff == day_element;
         let acquired = is_generating || is_same;
@@ -123,51 +123,51 @@ impl DeukRyeong {
         }
     }
 
-    /// 관계 설명
+    /// Relationship description
     pub fn relation(&self) -> &'static str {
         let is_generating = self.month_element.generates() == self.day_master_element;
         let is_same = self.month_element == self.day_master_element;
 
         if is_generating {
-            "월지가 일간을 생함 (生)"
+            "Month branch generates Day Master (Generates)"
         } else if is_same {
-            "월지와 일간이 같은 오행 (比)"
+            "Month branch shares Day Master element (Same)"
         } else if self.day_master_element.generates() == self.month_element {
-            "일간이 월지를 생함 (泄)"
+            "Day Master generates month branch (Exhausts)"
         } else if self.day_master_element.controls() == self.month_element {
-            "일간이 월지를 극함 (剋)"
+            "Day Master controls month branch (Controls)"
         } else {
-            "월지가 일간을 극함 (剋)"
+            "Month branch controls Day Master (Controlled)"
         }
     }
 }
 
-/// 득지(得地) 판정 - 지지에 통근 여부
+/// Obtain Ground (得地) Determination
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeukJi {
-    /// 득지 여부
+    /// Acquired ground
     pub acquired: bool,
-    /// 통근(通根) 개수
+    /// Root count
     pub root_count: u8,
-    /// 통근(通根) 가중치 점수 합계
+    /// Root weight score sum
     pub root_score: f32,
-    /// 통근 위치들
+    /// Root positions
     pub root_positions: Vec<String>,
-    /// 강한 12운성 개수 (A급 또는 B급)
+    /// Strong 12-stage count
     pub strong_stage_count: u8,
-    /// 12운성 가중치 합계 (A급=1.0, B급=0.5, C급=0.0)
+    /// 12-stage weight sum
     pub stage_weight_sum: f32,
 }
 
 impl DeukJi {
-    /// 득지 판정 (기존 호환성 유지)
+    /// Determine Obtain Ground
     pub fn check(pillars: &FourPillars, config: &AnalysisConfig) -> Self {
         let relations = RelationshipAnalysis::from_pillars(pillars);
         Self::check_with_relations(pillars, &relations, config)
     }
 
-    /// 득지 판정 (합충 관계 반영)
+    /// Determine Obtain Ground reflecting interactions
     pub fn check_with_relations(
         pillars: &FourPillars,
         relations: &RelationshipAnalysis,
@@ -176,10 +176,10 @@ impl DeukJi {
         let day_element = pillars.day_master().element();
 
         let branches = [
-            ("년지", pillars.year.branch),
-            ("월지", pillars.month.branch),
-            ("일지", pillars.day.branch),
-            ("시지", pillars.hour.branch),
+            ("year_branch", pillars.year.branch),
+            ("month_branch", pillars.month.branch),
+            ("day_branch", pillars.day.branch),
+            ("hour_branch", pillars.hour.branch),
         ];
 
         let mut root_count = 0;
@@ -188,7 +188,7 @@ impl DeukJi {
         let mut strong_stage_count = 0;
         let mut stage_weight_sum = 0.0_f32;
 
-        // 충돌 정보를 위치별로 매핑 (충 종류 포함)
+        //     (  )
         use std::collections::HashMap;
         let mut clash_info: HashMap<&str, &crate::analysis::relationships::BranchClash> =
             HashMap::new();
@@ -198,14 +198,13 @@ impl DeukJi {
         }
 
         for (name, branch) in &branches {
-            // 위치별 기본 가중치
             let base_weight = match *name {
-                "월지" => config.weights.month_branch,
-                "일지" => config.weights.day_branch,
-                _ => config.weights.other_branch, // 년지, 시지
+                "month_branch" => config.weights.month_branch,
+                "day_branch" => config.weights.day_branch,
+                _ => config.weights.other_branch, // Year and hour branches
             };
 
-            // 충(Clash) 발생 시 충 종류에 따른 차등 감산율 적용
+            // (Clash)
             let (weight, clash_label) = if let Some(clash) = clash_info.get(*name) {
                 let damage = clash.damage_ratio();
                 let adjusted = base_weight * (1.0 - damage);
@@ -217,10 +216,10 @@ impl DeukJi {
                 (base_weight, None)
             };
 
-            // 지장간(Hidden Stems) 전체를 확인하여 통근 여부 및 세기 분석
+            // (Hidden Stems)
             let hidden_stems = branch.hidden_stems();
             let mut branch_root_score = 0.0;
-            let saryeong = if *name == "월지" {
+            let saryeong = if *name == "month_branch" {
                 pillars.saryeong().ok()
             } else {
                 None
@@ -228,7 +227,7 @@ impl DeukJi {
 
             for (idx, stem) in hidden_stems.iter().enumerate() {
                 if stem.element() == day_element {
-                    // 기운의 종류에 따른 가중치 (정기: 1.0, 중기: 0.6, 여기: 0.3)
+                    //     (: 1.0, : 0.6, : 0.3)
                     let part_weight = if idx == hidden_stems.len() - 1 {
                         config.root.main_root
                     } else if hidden_stems.len() == 3 && idx == 1 {
@@ -237,7 +236,7 @@ impl DeukJi {
                         config.root.remain_root
                     };
 
-                    // 사령(Commanding) 여부 확인 (월지만 해당, 가중치 20% 보정)
+                    // (Commanding)   ( ,  20% )
                     let saryeong_multiplier = if let Some(ref s) = saryeong {
                         if s.commanding_stem == *stem {
                             config.root.saryeong_bonus
@@ -262,22 +261,22 @@ impl DeukJi {
                 }
             }
 
-            // 12운성 확인 및 가중치 계산
+            // 12
             let stage =
                 crate::core::twelve_stages::calculate_twelve_stage(pillars.day_master(), *branch);
 
-            // 12운성 가중치 누적 (A급=1.0, B급=0.5, C급=0.0)
+            // 12   (A=1.0, B=0.5, C=0.0)
             stage_weight_sum += stage.root_weight();
 
-            // 강한 12운성 개수 (A급 또는 B급)
+            //  12  (A  B)
             if stage.is_strong() {
                 strong_stage_count += 1;
             }
         }
 
-        // 득지 판정:
-        // 1) 12운성 가중치 합이 1.0 이상 (A급 1개 또는 B급 2개 이상)
-        // 2) 또는 통근 점수가 설정된 최소 점수 이상
+        //  :
+        // 1) 12   1.0  (A 1  B 2 )
+        // 2)
         let acquired = stage_weight_sum >= 1.0 || root_score >= config.root.min_deuk_ji_score;
 
         Self {
@@ -291,28 +290,28 @@ impl DeukJi {
     }
 }
 
-/// 득시(得時) 판정 - 시지와 일간의 관계
+/// Obtain Time (得時) Determination
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeukSi {
-    /// 득시 여부
+    /// Acquired time
     pub acquired: bool,
-    /// 시지
+    /// Hour Branch
     pub hour_branch: EarthlyBranch,
-    /// 시지 오행
+    /// Hour Branch
     pub hour_element: Element,
-    /// 일간 오행
+    /// Day Master Element
     pub day_master_element: Element,
 }
 
 impl DeukSi {
-    /// 득시 판정
-    /// 시지 오행이 일간을 생하거나 같으면 득시
+    /// Determine Obtain Time
+    /// Hour Branch     
     pub fn check(day_master: HeavenlyStem, hour_branch: EarthlyBranch) -> Self {
         let day_element = day_master.element();
         let hour_element = hour_branch.element();
 
-        // 시지가 일간을 생(生)하거나 비(比)하면 득시
+        //   (生) (比)
         let is_generating = hour_element.generates() == day_element;
         let is_same = hour_element == day_element;
         let acquired = is_generating || is_same;
@@ -325,7 +324,7 @@ impl DeukSi {
         }
     }
 
-    /// 실질 오행을 반영한 득시 판정
+    /// Checks DeukSi using effective transformed element.
     pub fn check_effective(
         day_master: HeavenlyStem,
         hour_branch: EarthlyBranch,
@@ -333,7 +332,7 @@ impl DeukSi {
     ) -> Self {
         let day_element = day_master.element();
 
-        // 시지의 실질 오행이 일간을 생(生)하거나 비(比)하면 득시
+        //     (生) (比)
         let is_generating = hour_eff.generates() == day_element;
         let is_same = hour_eff == day_element;
         let acquired = is_generating || is_same;
@@ -346,53 +345,53 @@ impl DeukSi {
         }
     }
 
-    /// 관계 설명
+    /// Relationship description
     pub fn relation(&self) -> &'static str {
         let is_generating = self.hour_element.generates() == self.day_master_element;
         let is_same = self.hour_element == self.day_master_element;
 
         if is_generating {
-            "시지가 일간을 생함 (生)"
+            "Hour branch generates Day Master (Generates)"
         } else if is_same {
-            "시지와 일간이 같은 오행 (比)"
+            "Hour branch shares Day Master element (Same)"
         } else if self.day_master_element.generates() == self.hour_element {
-            "일간이 시지를 생함 (泄)"
+            "Day Master generates hour branch (Exhausts)"
         } else if self.day_master_element.controls() == self.hour_element {
-            "일간이 시지를 극함 (剋)"
+            "Day Master controls hour branch (Controls)"
         } else {
-            "시지가 일간을 극함 (剋)"
+            "Hour branch controls Day Master (Controlled)"
         }
     }
 }
 
-/// 득세(得勢) 판정 - 비겁/인성의 숫자
+/// Obtain Power (得勢) Determination
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeukSe {
-    /// 득세 여부
+    /// Acquired power
     pub acquired: bool,
-    /// 비겁(比肩+劫財) 개수
+    /// Parallel count
     pub bijie_count: u8,
-    /// 인성(正印+偏印) 개수
+    /// Resource count
     pub yinxing_count: u8,
-    /// 식상(食神+傷官) 개수
+    /// Output count
     pub shishang_count: u8,
-    /// 재성(正財+偏財) 개수
+    /// Wealth count
     pub caisheng_count: u8,
-    /// 관성(正官+偏官) 개수
+    /// Officer count
     pub guanxing_count: u8,
-    /// 비겁+인성 비율 (%)
+    /// Parallels + Resources ratio (%)
     pub support_ratio: f32,
 }
 
 impl DeukSe {
-    /// 득세 판정
-    /// 비겁+인성이 식상+재성+관성보다 많으면 득세
+    /// Determine Obtain Power
+    /// + ++  
     pub fn check(pillars: &FourPillars, config: &AnalysisConfig) -> Self {
         Self::check_with_options(pillars, false, config)
     }
 
-    /// 옵션에 따른 득세 판정 (Input vs Output 에너지량 비교 추상화)
+    ///     (Input vs Output   )
     pub fn check_with_options(
         pillars: &FourPillars,
         apply_transform: bool,
@@ -445,36 +444,35 @@ impl DeukSe {
     }
 }
 
-/// 신강신약 분석 결과
+/// Strength Analysis Result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StrengthAnalysis {
-    /// 일간
+    /// Day Master
     pub day_master: HeavenlyStem,
-    /// 강약 유형
+    /// Strength Type
     pub strength_type: StrengthType,
-    /// 득령 판정
+    /// Determine Obtain Season
     pub deuk_ryeong: DeukRyeong,
-    /// 득지 판정
+    /// Obtain Ground
     pub deuk_ji: DeukJi,
-    /// 득시 판정
+    /// Determine Obtain Time
     pub deuk_si: DeukSi,
-    /// 득세 판정
+    /// Determine Obtain Power
     pub deuk_se: DeukSe,
-    /// 만족 조건 개수 (0-4)
+    /// Acquired count (0-4)
     pub acquired_count: u8,
-    /// 신강/신약 점수 (0-100, 50 기준)
+    /// Strength score (0-100, 50 baseline)
     pub strength_score: f32,
 }
 
 impl StrengthAnalysis {
-    /// 사주로부터 신강신약 분석
+    /// Strength analysis from Four Pillars
     pub fn from_pillars(pillars: &FourPillars) -> Self {
-        // 기본적으로 합화 반영
         Self::from_pillars_with_options(pillars, true, &AnalysisConfig::default())
     }
 
-    /// 옵션 및 설정을 기반으로 한 신강신약 분석
+    /// Strength analysis from Four Pillars with options
     pub fn from_pillars_with_options(
         pillars: &FourPillars,
         apply_transform: bool,
@@ -504,20 +502,18 @@ impl StrengthAnalysis {
 
         let deuk_se = DeukSe::check_with_options(pillars, apply_transform, config);
 
-        // 만족 조건 개수 (4가지)
+        //    (4)
         let acquired_count = (deuk_ryeong.acquired as u8)
             + (deuk_ji.acquired as u8)
             + (deuk_si.acquired as u8)
             + (deuk_se.acquired as u8);
 
-        // 강약 판정
         let strength_type = match acquired_count {
             2..=4 => StrengthType::Strong,
             1 | 0 => StrengthType::Weak,
             _ => StrengthType::Balanced,
         };
 
-        // 종합 점수 계산
         let score_ryeong = if deuk_ryeong.acquired {
             config.strength.criteria_score
         } else {
@@ -548,23 +544,23 @@ impl StrengthAnalysis {
         }
     }
 
-    /// 용신(用神) 추천 (오행 그룹 반환)
+    /// Recommended Yongshin element groups
     pub fn recommend_yongshin(&self) -> Vec<Element> {
         let dm_element = self.day_master.element();
         match self.strength_type {
             StrengthType::Strong => {
-                // 식상 / 재성 / 관성 오행들
+                //  /  /
                 vec![
-                    dm_element.generates(),     // 식상
-                    dm_element.controls(),      // 재성
-                    dm_element.controlled_by(), // 관성
+                    dm_element.generates(),     // Output
+                    dm_element.controls(),      // Wealth
+                    dm_element.controlled_by(), // Officer
                 ]
             }
             StrengthType::Weak => {
-                // 인성 / 비겁 오행들
+                //  /
                 vec![
-                    dm_element.generated_by(), // 인성
-                    dm_element,                // 비겁
+                    dm_element.generated_by(), // Resource
+                    dm_element,                // Parallel
                 ]
             }
             StrengthType::Balanced => {
@@ -576,17 +572,16 @@ impl StrengthAnalysis {
 
 impl std::fmt::Display for StrengthAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "【신강/신약 분석】")?;
+        writeln!(f, "【Day Master Strength (身强身弱) Analysis】")?;
         writeln!(f, "─────────────────────────────────")?;
         writeln!(
             f,
-            "일간: {} ({})",
+            "Day Master: {} ({})",
             self.day_master.hanja(),
             self.day_master.element().hangul()
         )?;
         writeln!(f)?;
 
-        // 득령
         let ryeong_mark = if self.deuk_ryeong.acquired {
             "○"
         } else {
@@ -594,35 +589,37 @@ impl std::fmt::Display for StrengthAnalysis {
         };
         writeln!(
             f,
-            "득령(得令): {} - {}",
+            "Obtain Season (得令): {} - {}",
             ryeong_mark,
             self.deuk_ryeong.relation()
         )?;
 
-        // 득지
         let ji_mark = if self.deuk_ji.acquired { "○" } else { "✗" };
         writeln!(
             f,
-            "득지(得地): {} - 통근 {}개, 강한 운성 {}개",
+            "Obtain Ground (得地): {} - Roots {}, Strong stages {}",
             ji_mark, self.deuk_ji.root_count, self.deuk_ji.strong_stage_count
         )?;
 
-        // 득시
         let si_mark = if self.deuk_si.acquired { "○" } else { "✗" };
-        writeln!(f, "득시(得時): {} - {}", si_mark, self.deuk_si.relation())?;
+        writeln!(
+            f,
+            "Obtain Time (得時): {} - {}",
+            si_mark,
+            self.deuk_si.relation()
+        )?;
 
-        // 득세
         let se_mark = if self.deuk_se.acquired { "○" } else { "✗" };
         writeln!(
             f,
-            "득세(得勢): {} - 비겁+인성 {:.1}%",
+            "Obtain Power (得勢): {} - Parallels+Resources {:.1}%",
             se_mark, self.deuk_se.support_ratio
         )?;
 
         writeln!(f)?;
-        writeln!(f, "【판정 결과】")?;
-        writeln!(f, "조건 충족: {}/4", self.acquired_count)?;
-        writeln!(f, "종합 점수: {:.1}%", self.strength_score)?;
+        writeln!(f, "【Determination Result】")?;
+        writeln!(f, "Conditions Met: {}/4", self.acquired_count)?;
+        writeln!(f, "Overall Score: {:.1}%", self.strength_score)?;
         writeln!(f)?;
         writeln!(
             f,
@@ -638,33 +635,33 @@ impl std::fmt::Display for StrengthAnalysis {
             .iter()
             .map(|e| e.hangul().to_string())
             .collect();
-        writeln!(f, "용신(추천 오행): {}", yongshin_names.join(", "))?;
+        writeln!(f, "Recommended Elements: {}", yongshin_names.join(", "))?;
 
         Ok(())
     }
 }
 
 // ============================================
-// FourPillars 편의 메서드
+// FourPillars
 // ============================================
 
 impl FourPillars {
-    /// 신강/신약 분석
+    /// Day Master Strength analysis
     pub fn strength(&self) -> StrengthAnalysis {
         StrengthAnalysis::from_pillars(self)
     }
 
-    /// 설정을 포함한 신강/신약 분석
+    /// Strength analysis with config
     pub fn strength_with_config(&self, config: &AnalysisConfig) -> StrengthAnalysis {
         StrengthAnalysis::from_pillars_with_options(self, true, config)
     }
 
-    /// 신강 여부
+    /// Whether Strong
     pub fn is_strong(&self) -> bool {
         self.strength().strength_type == StrengthType::Strong
     }
 
-    /// 신약 여부
+    /// Whether Weak
     pub fn is_weak(&self) -> bool {
         self.strength().strength_type == StrengthType::Weak
     }
@@ -686,8 +683,8 @@ mod tests {
 
     #[test]
     fn test_user_strength() {
-        // 김성주님 사주: 甲申年 乙亥月 庚戌日 丁亥時
-        // 일간 庚(금), 월지 亥(수), 시지 亥(수)
+        //  : 甲申年 乙亥月 庚戌日 丁亥時
+        //  庚(),  亥(),  亥()
         let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
         let pillars = FourPillars::calculate(&input).unwrap();
 
@@ -695,11 +692,11 @@ mod tests {
 
         println!("{}", analysis);
 
-        // 사용자 만세력 결과: 신약
-        // 득령: ✗ (亥水가 庚金을 설기)
-        // 득지: ○ (申에 건록)
-        // 득시: ✗ (亥水가 庚金을 설기)
-        // 득세: ✗
+        //   :
+        // : ✗ (亥水 庚金 )
+        // : ○ (申 )
+        // : ✗ (亥水 庚金 )
+        // : ✗
         assert!(!analysis.deuk_ryeong.acquired);
         assert!(analysis.deuk_ji.acquired);
         assert!(!analysis.deuk_si.acquired);
@@ -708,22 +705,22 @@ mod tests {
 
     #[test]
     fn test_deuk_ryeong() {
-        // 庚일간, 申월 → 득령 (같은 금)
+        // 庚, 申 →  ( )
         let dr = DeukRyeong::check(HeavenlyStem::Geng, EarthlyBranch::Shen);
         assert!(dr.acquired);
 
-        // 庚일간, 亥월 → 비득령 (금 → 수 설기)
+        // 庚, 亥 →  ( →  )
         let dr2 = DeukRyeong::check(HeavenlyStem::Geng, EarthlyBranch::Hai);
         assert!(!dr2.acquired);
     }
 
     #[test]
     fn test_deuk_si() {
-        // 庚일간, 申시 → 득시 (같은 금)
+        // 庚, 申 →  ( )
         let ds = DeukSi::check(HeavenlyStem::Geng, EarthlyBranch::Shen);
         assert!(ds.acquired);
 
-        // 庚일간, 亥시 → 비득시 (금 → 수 설기)
+        // 庚, 亥 →  ( →  )
         let ds2 = DeukSi::check(HeavenlyStem::Geng, EarthlyBranch::Hai);
         assert!(!ds2.acquired);
     }
@@ -734,11 +731,11 @@ mod tests {
         let pillars = FourPillars::calculate(&input).unwrap();
         let analysis = pillars.strength();
 
-        // 4가지 기준 모두 확인
-        println!("득령: {}", analysis.deuk_ryeong.acquired);
-        println!("득지: {}", analysis.deuk_ji.acquired);
-        println!("득시: {}", analysis.deuk_si.acquired);
-        println!("득세: {}", analysis.deuk_se.acquired);
-        println!("총 충족: {}/4", analysis.acquired_count);
+        // 4
+        println!("Obtain Season: {}", analysis.deuk_ryeong.acquired);
+        println!("Obtain Ground: {}", analysis.deuk_ji.acquired);
+        println!("Obtain Time: {}", analysis.deuk_si.acquired);
+        println!("Obtain Power: {}", analysis.deuk_se.acquired);
+        println!("Total Acquired: {}/4", analysis.acquired_count);
     }
 }

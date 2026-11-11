@@ -10,9 +10,9 @@
 
 | Milestone | Scope | Status | Notes |
 |---|---|---|---|
-| **Milestone 1 (R1)** | Core Analysis Precision & Pattern Completeness (抑扶, 調候, 通關, 病藥 용신, 眞從/假從, 破星, 全旺 5格, 官殺混雜, 三災, 坤網, 12運性) | **DONE & VERIFIED** | All unit/integration tests passed 100%. Initial bugs remediated and verified CLEAN by Forensic Auditor 1. |
-| **Milestone 2 (R2)** | Dynamic Luck & Temporal Simulation Engine (월운 절입일시, 동적 위계, 5/6주 변형 power, 開庫/入墓, 동적 격국 변격/파격/성격) | **IN_PROGRESS** | Initial implementation completed by Worker 2. Reviewer 1 approved. Challengers 1 & 2 and Reviewer 2 identified 6 specific logic bugs requiring remediation. Auditor 2 failed due to rate limit and requires replacement. |
-| **Milestone 3 (R3)** | Codebase Architecture & Edge-Case Verification Suite (`crates/eon-saju` 모듈 구조, VM `esil_trace` Heap 최적화, 엣지케이스/Fuzzer 테스트 확장) | **PLANNED** | Ready to begin following Milestone 2 remediation. |
+| **Milestone 1 (R1)** | Core Analysis Precision & Pattern Completeness (抑扶, 調候, 通關, 病藥 Yongshin, 眞從/假從, 破星, 全旺 5格, 官殺混雜, 三災, 坤網, 12運性) | **DONE & VERIFIED** | All unit/integration tests passed 100%. Initial bugs remediated and verified CLEAN by Forensic Auditor 1. |
+| **Milestone 2 (R2)** | Dynamic Luck & Temporal Simulation Engine (Monthly Luck ,  , 5/6  power, 開庫/入墓,  Gyeokguk //) | **IN_PROGRESS** | Initial implementation completed by Worker 2. Reviewer 1 approved. Challengers 1 & 2 and Reviewer 2 identified 6 specific logic bugs requiring remediation. Auditor 2 failed due to rate limit and requires replacement. |
+| **Milestone 3 (R3)** | Codebase Architecture & Edge-Case Verification Suite (`crates/eon-saju`  , VM `esil_trace` Heap , /Fuzzer  ) | **PLANNED** | Ready to begin following Milestone 2 remediation. |
 
 ---
 

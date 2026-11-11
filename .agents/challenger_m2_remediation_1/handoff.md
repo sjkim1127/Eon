@@ -7,7 +7,7 @@
 1. **Wolwun Solar Term Boundaries (`crates/eon-saju/src/analysis/periodic_luck.rs:183-234`)**:
    - `MonthlyLuck::month_ganzi_at` evaluates exact astronomical solar term transitions using `AstroEngine`.
    - **LiChun Boundary**: In `test_wolwun_lichun_boundary_2026`, 1 minute before LiChun 2026 (Feb 4 04:01 UTC) yields `己丑` (Saju year 2025 乙巳, 12th month Chou), while 1 minute after yields `庚寅` (Saju year 2026 丙午, 1st month Yin).
-   - **Early January Pre-XiaoHan / DongZhi**: In `test_wolwun_early_january_saju_year`, Jan 2, 2026 (during DongZhi term_24_idx 21) evaluates to Saju year 2025 (乙巳년) and month ganzi `戊子` (11th Saju month Zi). Multi-year stress test `test_stress_wolwun_january_dates_multi_year` verified all 31 days of January from 2020 to 2035 enforce `saju_year == dt_year - 1`.
+   - **Early January Pre-XiaoHan / DongZhi**: In `test_wolwun_early_january_saju_year`, Jan 2, 2026 (during DongZhi term_24_idx 21) evaluates to Saju year 2025 (乙巳) and month ganzi `戊子` (11th Saju month Zi). Multi-year stress test `test_stress_wolwun_january_dates_multi_year` verified all 31 days of January from 2020 to 2035 enforce `saju_year == dt_year - 1`.
    - **JingZhi Boundary**: In `test_wolwun_jingzhi_boundary_2026`, 1 minute before JingZhi 2026 yields `庚寅` (1st month Yin), while 1 minute after yields `辛卯` (2nd month Mao).
    - **Minor Solar Terms (YuShui)**: In `test_wolwun_yushu_minor_term_boundary_2026`, minor solar terms (middle solar terms) do NOT alter the Wolwun GanZi (`庚寅` preserved before and after YuShui).
 

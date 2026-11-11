@@ -1,5 +1,5 @@
 //! Destiny It Easy (DIE) Engine
-//! 사주의 엔트로피(복잡도)를 계산하고, 에너지가 묶인(Packed) 상태를 탐지합니다.
+//! Computes entropy of Four Pillars and detects packed energy states.
 
 use crate::analysis::relationships::RelationshipAnalysis;
 use crate::core::element::Element;
@@ -8,18 +8,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DieAnalysis {
-    /// 섀넌 엔트로피 (0.0 ~ 2.32)
-    /// 높을수록 에너지가 산만하고, 낮을수록 집중됨
+    /// Shannon entropy (0.0 ~ 2.32)
+    /// Higher indicates dispersed energy; lower indicates concentrated energy
     pub entropy: f32,
 
-    /// 압축 상태 (Is Packed?)
+    /// Packed status (Is Packed?)
     pub is_packed: bool,
-    pub packer_name: Option<String>, // 예: "Heavenly Stem Combine Packer"
+    pub packer_name: Option<String>, // e.g. "Heavenly Stem Combine Packer"
 
-    /// 컴파일러 정보 (월령/격국)
+    /// Compiler info (Month branch season / structure)
     pub compiler_info: String,
 
-    /// 파일 타입 (신강/신약)
+    /// File type (Strong/Weak analogue)
     pub file_type: String,
 }
 
@@ -39,7 +39,7 @@ impl DestinyItEasy {
         }
     }
 
-    /// 1. 엔트로피 계산 (Shannon Entropy)
+    /// 1. Shannon Entropy calculation
     /// H(X) = -∑ P(x) * log2(P(x))
     fn calculate_entropy(counts: &[(Element, u32); 5]) -> f32 {
         let total: u32 = counts.iter().map(|(_, c)| c).sum();
@@ -57,11 +57,11 @@ impl DestinyItEasy {
         entropy
     }
 
-    /// 2. 패커 탐지 (합이 많으면 Packed 상태)
+    /// 2. Packer detection (Dense combinations represent packed state)
     fn detect_packer(pillars: &FourPillars) -> Option<String> {
         let relations = RelationshipAnalysis::from_pillars(pillars);
 
-        // 천간합이나 지지합(육합/삼합/방합)이 많으면 "강하게 압축됨"
+        // Multiple stem or branch combinations indicate tightly packed energy
         let combine_count = relations.stem_combinations.len()
             + relations.six_combinations.len()
             + relations.triple_combinations.len()
@@ -75,36 +75,37 @@ impl DestinyItEasy {
         } else if combine_count == 1 {
             Some("Simple_Bond_Packer v1.0".to_string())
         } else {
-            None // 순정(Raw) 바이너리
+            None // Raw binary
         }
     }
 
-    /// 3. 컴파일러 탐지 (월지 기준)
+    /// 3. Compiler detection (based on month branch)
     fn detect_compiler(pillars: &FourPillars) -> String {
         let month_branch = pillars.month.branch;
         let season = month_branch.season();
 
-        // 예: "Built on Winter Season (Juta Framework)"
         format!("Built on {:?} Season ({:?} Core)", season, month_branch)
     }
 
-    /// 4. 파일 타입 (신강/신약 = EXE/DLL?)
+    /// 4. File type (Strong / Weak analogue)
     fn detect_file_type(pillars: &FourPillars) -> String {
         let analysis = pillars.strength();
 
         match analysis.strength_type {
             crate::analysis::strength::StrengthType::Strong => {
-                "Standalone Executable (신강)".to_string()
+                "Standalone Executable (Strong)".to_string()
             }
-            crate::analysis::strength::StrengthType::Weak => "Dependent Library (신약)".to_string(),
-            crate::analysis::strength::StrengthType::Balanced => "Shared Object (중화)".to_string(),
+            crate::analysis::strength::StrengthType::Weak => "Dependent Library (Weak)".to_string(),
+            crate::analysis::strength::StrengthType::Balanced => {
+                "Shared Object (Balanced)".to_string()
+            }
         }
     }
 }
 
 impl std::fmt::Display for DieAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "【Destiny It Easy v3.01 Scan Result】")?;
+        writeln!(f, "[Destiny It Easy v3.01 Scan Result]")?;
         writeln!(f, "* File Type: {}", self.file_type)?;
         writeln!(f, "* Compiler : {}", self.compiler_info)?;
         writeln!(

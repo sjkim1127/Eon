@@ -1,82 +1,82 @@
-//! 납음(納音) 오행 - Nayin Five Elements
+//! Nayin Five Elements (納音五行)
 //!
-//! 60갑자 각각에 해당하는 납음 오행을 계산합니다.
-//! 납음은 천간과 지지의 조합에 따른 고유한 오행 특성을 나타냅니다.
+//! Calculates the Nayin Five Element corresponding to each of the 60 pillars.
+//! Nayin represents unique energetic qualities formed by stem-branch synthesis.
 //!
-//! ## 참조
+//! ## Reference
 //! - bazica (Go BaZi Calculator) - get_ganzhi.go
 
 use crate::core::element::Element;
 use crate::core::ganzi::GanZi;
 use serde::{Deserialize, Serialize};
 
-/// 납음 오행 유형 (60갑자를 30쌍으로 그룹화)
+/// Nayin Element Type (60 pillars grouped into 30 pairs)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NayinType {
-    /// 해중금 (海中金) - 바다 속의 금
+    /// Sea Metal (海中金)
     SeaGold,
-    /// 노중화 (爐中火) - 화로 속의 불
+    /// Furnace Fire (爐中火)
     FurnaceFire,
-    /// 대림목 (大林木) - 큰 숲의 나무
+    /// Forest Wood (大林木)
     ForestWood,
-    /// 노방토 (路傍土) - 길가의 흙
+    /// Road Earth (路傍土)
     RoadEarth,
-    /// 검봉금 (劍鋒金) - 칼날의 금
+    /// Sword Metal (劍鋒金)
     SwordGold,
-    /// 산두화 (山頭火) - 산 정상의 불
+    /// Volcano Fire (山頭火)
     VolcanoFire,
-    /// 간하수 (澗下水) - 골짜기 물
+    /// Cave Water (澗下水)
     CaveWater,
-    /// 성두토 (城頭土) - 성벽의 흙
+    /// Fortress Earth (城頭土)
     FortressEarth,
-    /// 백랍금 (白蠟金) - 백랍(밀랍) 금
+    /// Wax Metal (白蠟金)
     WaxGold,
-    /// 양류목 (楊柳木) - 버드나무
+    /// Willow Wood (楊柳木)
     WillowWood,
-    /// 천하수 (泉中水) - 샘물
+    /// Stream Water (泉中水)
     StreamWater,
-    /// 옥상토 (屋上土) - 지붕 위의 흙
+    /// Roof Earth (屋上土)
     RoofEarth,
-    /// 벽력화 (霹靂火) - 번개불
+    /// Lightning Fire (霹靂火)
     LightningFire,
-    /// 송백목 (松柏木) - 소나무/측백나무
+    /// Pine Wood (松柏木)
     PineWood,
-    /// 장류수 (長流水) - 큰 강물
+    /// River Water (長流水)
     RiverWater,
-    /// 사중금 (砂中金) - 모래 속의 금
+    /// Sand Metal (砂中金)
     SandGold,
-    /// 산하화 (山下火) - 산 아래의 불
+    /// Forest Fire (山下火)
     ForestFire,
-    /// 평지목 (平地木) - 평지의 나무
+    /// Meadow Wood (平地木)
     MeadowWood,
-    /// 벽상토 (壁上土) - 담장의 흙
+    /// Adobe Earth (壁上土)
     AdobeEarth,
-    /// 금박금 (金箔金) - 금박 금
+    /// Precious Metal (金箔金)
     PreciousGold,
-    /// 복등화 (覆燈火) - 등불
+    /// Lamp Fire (覆燈火)
     LampFire,
-    /// 천하수 (天河水) - 하늘의 강물
+    /// Sky Water (天河水)
     SkyWater,
-    /// 대역토 (大驛土) - 큰 역참의 흙
+    /// Highway Earth (大驛土)
     HighwayEarth,
-    /// 차천금 (釵釧金) - 비녀/팔찌 금
+    /// Jewelry Metal (釵釧金)
     JewelryGold,
-    /// 상자목 (桑柘木) - 뽕나무
+    /// Mulberry Wood (桑柘木)
     MulberryWood,
-    /// 대계수 (大溪水) - 큰 계곡의 물
+    /// Rapids Water (大溪水)
     RapidsWater,
-    /// 사중토 (沙中土) - 사막의 흙
+    /// Desert Earth (沙中土)
     DesertEarth,
-    /// 천상화 (天上火) - 하늘의 불 (태양)
+    /// Sun Fire (天上火)
     SunFire,
-    /// 석류목 (石榴木) - 석류나무
+    /// Pomegranate Wood (石榴木)
     PomegranateWood,
-    /// 대해수 (大海水) - 큰 바다의 물
+    /// Ocean Water (大海水)
     OceanWater,
 }
 
 impl NayinType {
-    /// 납음 오행의 기본 오행을 반환
+    /// Return the primary element of the Nayin type
     pub fn element(&self) -> Element {
         match self {
             Self::SeaGold
@@ -116,43 +116,43 @@ impl NayinType {
         }
     }
 
-    /// 한국어 이름
+    /// English name with Hanja
     pub fn hangul(&self) -> &'static str {
         match self {
-            Self::SeaGold => "해중금(海中金)",
-            Self::FurnaceFire => "노중화(爐中火)",
-            Self::ForestWood => "대림목(大林木)",
-            Self::RoadEarth => "노방토(路傍土)",
-            Self::SwordGold => "검봉금(劍鋒金)",
-            Self::VolcanoFire => "산두화(山頭火)",
-            Self::CaveWater => "간하수(澗下水)",
-            Self::FortressEarth => "성두토(城頭土)",
-            Self::WaxGold => "백랍금(白蠟金)",
-            Self::WillowWood => "양류목(楊柳木)",
-            Self::StreamWater => "천중수(泉中水)",
-            Self::RoofEarth => "옥상토(屋上土)",
-            Self::LightningFire => "벽력화(霹靂火)",
-            Self::PineWood => "송백목(松柏木)",
-            Self::RiverWater => "장류수(長流水)",
-            Self::SandGold => "사중금(砂中金)",
-            Self::ForestFire => "산하화(山下火)",
-            Self::MeadowWood => "평지목(平地木)",
-            Self::AdobeEarth => "벽상토(壁上土)",
-            Self::PreciousGold => "금박금(金箔金)",
-            Self::LampFire => "복등화(覆燈火)",
-            Self::SkyWater => "천하수(天河水)",
-            Self::HighwayEarth => "대역토(大驛土)",
-            Self::JewelryGold => "차천금(釵釧金)",
-            Self::MulberryWood => "상자목(桑拓木)",
-            Self::RapidsWater => "대계수(大溪水)",
-            Self::DesertEarth => "사중토(沙中土)",
-            Self::SunFire => "천상화(天上火)",
-            Self::PomegranateWood => "석류목(石榴木)",
-            Self::OceanWater => "대해수(大海水)",
+            Self::SeaGold => "Sea Metal (海中金)",
+            Self::FurnaceFire => "Furnace Fire (爐中火)",
+            Self::ForestWood => "Forest Wood (大林木)",
+            Self::RoadEarth => "Road Earth (路傍土)",
+            Self::SwordGold => "Sword Metal (劍鋒金)",
+            Self::VolcanoFire => "Volcano Fire (山頭火)",
+            Self::CaveWater => "Cave Water (澗下水)",
+            Self::FortressEarth => "Fortress Earth (城頭土)",
+            Self::WaxGold => "Wax Metal (白蠟金)",
+            Self::WillowWood => "Willow Wood (楊柳木)",
+            Self::StreamWater => "Stream Water (泉中水)",
+            Self::RoofEarth => "Roof Earth (屋上土)",
+            Self::LightningFire => "Lightning Fire (霹靂火)",
+            Self::PineWood => "Pine Wood (松柏木)",
+            Self::RiverWater => "River Water (長流水)",
+            Self::SandGold => "Sand Metal (砂中金)",
+            Self::ForestFire => "Forest Fire (山下火)",
+            Self::MeadowWood => "Meadow Wood (平地木)",
+            Self::AdobeEarth => "Adobe Earth (壁上土)",
+            Self::PreciousGold => "Precious Metal (金箔金)",
+            Self::LampFire => "Lamp Fire (覆燈火)",
+            Self::SkyWater => "Sky Water (天河水)",
+            Self::HighwayEarth => "Highway Earth (大驛土)",
+            Self::JewelryGold => "Jewelry Metal (釵釧金)",
+            Self::MulberryWood => "Mulberry Wood (桑柘木)",
+            Self::RapidsWater => "Rapids Water (大溪水)",
+            Self::DesertEarth => "Desert Earth (沙中土)",
+            Self::SunFire => "Sun Fire (天上火)",
+            Self::PomegranateWood => "Pomegranate Wood (石榴木)",
+            Self::OceanWater => "Ocean Water (大海水)",
         }
     }
 
-    /// 영어 이름
+    /// English name
     pub fn english(&self) -> &'static str {
         match self {
             Self::SeaGold => "Sea Metal",
@@ -189,108 +189,108 @@ impl NayinType {
     }
 }
 
-/// 60갑자 납음 테이블 (인덱스 0-59)
+/// 60 Cycle Nayin lookup table (Index 0-59)
 const NAYIN_TABLE: [NayinType; 60] = [
-    // 갑자(0), 을축(1)
+    // JiaZi (0), YiChou (1)
     NayinType::SeaGold,
     NayinType::SeaGold,
-    // 병인(2), 정묘(3)
+    // BingYin (2), DingMao (3)
     NayinType::FurnaceFire,
     NayinType::FurnaceFire,
-    // 무진(4), 기사(5)
+    // WuChen (4), JiSi (5)
     NayinType::ForestWood,
     NayinType::ForestWood,
-    // 경오(6), 신미(7)
+    // GengWu (6), XinWei (7)
     NayinType::RoadEarth,
     NayinType::RoadEarth,
-    // 임신(8), 계유(9)
+    // RenShen (8), GuiYou (9)
     NayinType::SwordGold,
     NayinType::SwordGold,
-    // 갑술(10), 을해(11)
+    // JiaXu (10), YiHai (11)
     NayinType::VolcanoFire,
     NayinType::VolcanoFire,
-    // 병자(12), 정축(13)
+    // BingZi (12), DingChou (13)
     NayinType::CaveWater,
     NayinType::CaveWater,
-    // 무인(14), 기묘(15)
+    // WuYin (14), JiMao (15)
     NayinType::FortressEarth,
     NayinType::FortressEarth,
-    // 경진(16), 신사(17)
+    // GengChen (16), XinSi (17)
     NayinType::WaxGold,
     NayinType::WaxGold,
-    // 임오(18), 계미(19)
+    // RenWu (18), GuiWei (19)
     NayinType::WillowWood,
     NayinType::WillowWood,
-    // 갑신(20), 을유(21)
+    // JiaShen (20), YiYou (21)
     NayinType::StreamWater,
     NayinType::StreamWater,
-    // 병술(22), 정해(23)
+    // BingXu (22), DingHai (23)
     NayinType::RoofEarth,
     NayinType::RoofEarth,
-    // 무자(24), 기축(25)
+    // WuZi (24), JiChou (25)
     NayinType::LightningFire,
     NayinType::LightningFire,
-    // 경인(26), 신묘(27)
+    // GengYin (26), XinMao (27)
     NayinType::PineWood,
     NayinType::PineWood,
-    // 임진(28), 계사(29)
+    // RenChen (28), GuiSi (29)
     NayinType::RiverWater,
     NayinType::RiverWater,
-    // 갑오(30), 을미(31)
+    // JiaWu (30), YiWei (31)
     NayinType::SandGold,
     NayinType::SandGold,
-    // 병신(32), 정유(33)
+    // BingShen (32), DingYou (33)
     NayinType::ForestFire,
     NayinType::ForestFire,
-    // 무술(34), 기해(35)
+    // WuXu (34), JiHai (35)
     NayinType::MeadowWood,
     NayinType::MeadowWood,
-    // 경자(36), 신축(37)
+    // GengZi (36), XinChou (37)
     NayinType::AdobeEarth,
     NayinType::AdobeEarth,
-    // 임인(38), 계묘(39)
+    // RenYin (38), GuiMao (39)
     NayinType::PreciousGold,
     NayinType::PreciousGold,
-    // 갑진(40), 을사(41)
+    // JiaChen (40), YiSi (41)
     NayinType::LampFire,
     NayinType::LampFire,
-    // 병오(42), 정미(43)
+    // BingWu (42), DingWei (43)
     NayinType::SkyWater,
     NayinType::SkyWater,
-    // 무신(44), 기유(45)
+    // WuShen (44), JiYou (45)
     NayinType::HighwayEarth,
     NayinType::HighwayEarth,
-    // 경술(46), 신해(47)
+    // GengXu (46), XinHai (47)
     NayinType::JewelryGold,
     NayinType::JewelryGold,
-    // 임자(48), 계축(49)
+    // RenZi (48), GuiChou (49)
     NayinType::MulberryWood,
     NayinType::MulberryWood,
-    // 갑인(50), 을묘(51)
+    // JiaYin (50), YiMao (51)
     NayinType::RapidsWater,
     NayinType::RapidsWater,
-    // 병진(52), 정사(53)
+    // BingChen (52), DingSi (53)
     NayinType::DesertEarth,
     NayinType::DesertEarth,
-    // 무오(54), 기미(55)
+    // WuWu (54), JiWei (55)
     NayinType::SunFire,
     NayinType::SunFire,
-    // 경신(56), 신유(57)
+    // GengShen (56), XinYou (57)
     NayinType::PomegranateWood,
     NayinType::PomegranateWood,
-    // 임술(58), 계해(59)
+    // RenXu (58), GuiHai (59)
     NayinType::OceanWater,
     NayinType::OceanWater,
 ];
 
-/// GanZi에서 납음 오행을 계산
+/// Calculate Nayin from GanZi
 pub fn get_nayin(ganzi: &GanZi) -> NayinType {
     let idx = ganzi.index() as usize;
     NAYIN_TABLE[idx]
 }
 
 impl GanZi {
-    /// 이 간지의 납음 오행을 반환
+    /// Return Nayin Five Element for this GanZi
     pub fn nayin(&self) -> NayinType {
         get_nayin(self)
     }
@@ -304,17 +304,14 @@ mod tests {
 
     #[test]
     fn test_nayin_basic() {
-        // 갑자 = 해중금
         let jiazi = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi);
         assert_eq!(jiazi.nayin(), NayinType::SeaGold);
         assert_eq!(jiazi.nayin().element(), Element::Metal);
 
-        // 병인 = 노중화
         let bingyin = GanZi::new(HeavenlyStem::Bing, EarthlyBranch::Yin);
         assert_eq!(bingyin.nayin(), NayinType::FurnaceFire);
         assert_eq!(bingyin.nayin().element(), Element::Fire);
 
-        // 경술 = 차천금 (김성주 일주)
         let gengxu = GanZi::new(HeavenlyStem::Geng, EarthlyBranch::Xu);
         assert_eq!(gengxu.nayin(), NayinType::JewelryGold);
         assert_eq!(gengxu.nayin().element(), Element::Metal);
@@ -322,7 +319,6 @@ mod tests {
 
     #[test]
     fn test_nayin_pairs() {
-        // 연속된 두 간지는 같은 납음을 공유
         let jiazi = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi);
         let yichou = GanZi::new(HeavenlyStem::Yi, EarthlyBranch::Chou);
         assert_eq!(jiazi.nayin(), yichou.nayin());
@@ -331,6 +327,6 @@ mod tests {
     #[test]
     fn test_nayin_hangul() {
         let jiazi = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi);
-        assert_eq!(jiazi.nayin().hangul(), "해중금(海中金)");
+        assert_eq!(jiazi.nayin().hangul(), "Sea Metal (海中金)");
     }
 }

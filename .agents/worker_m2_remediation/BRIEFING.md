@@ -38,7 +38,7 @@ Remediate 5 critical defects in crates/eon-saju discovered during adversarial te
 - `dynamic_luck.rs`:
   - `evaluate_ipmyo_events`: Set `trapped_el = dm.element()` for Day Master 12-Unseong Mu stage.
   - `evaluate_structure_state`: Exclude `Bijian` (Friend) and `Jiecai` (Rob Wealth) stems from triggering `GyeokStatus::Fulfilled`.
-  - `evaluate_gaego_events`: Require luck pillar involvement (`branches.iter().any(|(p, br)| p.contains("운") && tri/sea.branches().contains(br))`) for triple and seasonal alliance GaeGo triggers.
+  - `evaluate_gaego_events`: Require luck pillar involvement (`branches.iter().any(|(p, br)| p.contains("") && tri/sea.branches().contains(br))`) for triple and seasonal alliance GaeGo triggers.
 
 ## Artifact Index
 - `/Users/sjkim1127/Eon/.agents/worker_m2_remediation/ORIGINAL_REQUEST.md` — Original request log

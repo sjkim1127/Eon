@@ -26,7 +26,7 @@ fn test_xun_shou() {
     let jiayin = GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Yin);
     assert_eq!(get_xun_shou(jiayin), HeavenlyStem::Gui);
 
-    let xinwei = GanZi::new(HeavenlyStem::Xin, EarthlyBranch::Wei); // 갑자순 (미=7, 신=7 => 7-7 = 0)
+    let xinwei = GanZi::new(HeavenlyStem::Xin, EarthlyBranch::Wei); // Jia-Zi Xun (Wei=7, Xin=7 => 7-7 = 0)
     assert_eq!(get_xun_shou(xinwei), HeavenlyStem::Wu);
 }
 

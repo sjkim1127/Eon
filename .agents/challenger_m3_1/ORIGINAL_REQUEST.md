@@ -6,7 +6,7 @@ Project Root: /Users/sjkim1127/Eon
 
 Task:
 Empirically stress test the Milestone 3 features:
-- JeonWang 5-Gyeok patterns (곡직, 염상, 가색, 종혁, 윤하).
+- JeonWang 5-Gyeok patterns (GokJik, YeomSang, GaSaek, JongHyeok, YoonHa).
 - GwanSalHonJab clear/control mechanisms.
 - Void Tianyi noble annulment and Escaped Void.
 - Run `cargo test --package eon-saju --test edge_cases` and `cargo test --workspace`.

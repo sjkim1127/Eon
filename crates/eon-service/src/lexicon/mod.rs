@@ -73,13 +73,15 @@ pub fn build_handbook(
     // 4. ZWDS symbols
     if let Some(z) = zwds {
         // Soul master
-        if let Some(interp) = zwds::interpret_major_star(z.chart.soul_master.korean()) {
+        let master_name = format!("{:?}", z.chart.soul_master);
+        if let Some(interp) = zwds::interpret_major_star(&master_name) {
             symbols.push(interp);
         }
         // Major stars in Ming palace
         if z.chart.soul_idx < z.chart.palaces.len() {
             for star_info in &z.chart.palaces[z.chart.soul_idx].stars {
-                if let Some(interp) = zwds::interpret_major_star(star_info.star.korean()) {
+                let star_name = format!("{:?}", star_info.star);
+                if let Some(interp) = zwds::interpret_major_star(&star_name) {
                     if !symbols.iter().any(|s| s.symbol == interp.symbol) {
                         symbols.push(interp);
                     }

@@ -1,7 +1,7 @@
 # BRIEFING — 2026-07-25T03:19:45Z
 
 ## Mission
-Deep investigation on dynamic luck flows (대운/세운/월운) and test coverage in crates/eon-saju.
+Deep investigation on dynamic luck flows (Major Luck/Yearly Luck/Monthly Luck) and test coverage in crates/eon-saju.
 
 ## 🔒 My Identity
 - Archetype: explorer
