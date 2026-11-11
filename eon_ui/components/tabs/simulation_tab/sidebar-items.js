@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["EnergyBar","LifelineChart","SimulationTab","StatCard"],"struct":["EnergyBarProps","StatCardProps"]};

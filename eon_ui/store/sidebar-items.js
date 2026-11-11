@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["TaskStatus"],"mod":["db"],"struct":["AnalysisState","AnalysisTaskState","FormState"]};

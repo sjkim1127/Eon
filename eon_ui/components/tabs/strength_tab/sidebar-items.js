@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["DeukDetail","StrengthTab","planet_bar_color"],"struct":["DeukDetailProps"]};

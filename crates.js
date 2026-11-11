@@ -1,2 +1,2 @@
-window.ALL_CRATES = ["eon_ai","eon_astro","eon_core","eon_data","eon_human_design","eon_numerology","eon_qimen","eon_saju","eon_service","eon_ui","eon_vedic","eon_western","eon_zwds","export_ts"];
-//{"start":21,"fragment_lengths":[8,12,11,11,19,17,12,11,14,9,12,14,11,12]}
+window.ALL_CRATES = [{"c":"eon"},{"c":"eon_ai"},{"c":"eon_astro"},{"c":"eon_core"},{"c":"eon_data"},{"c":"eon_human_design"},{"c":"eon_numerology"},{"c":"eon_qimen"},{"c":"eon_saju"},{"c":"eon_service"},{"c":"eon_vedic"},{"c":"eon_western"},{"c":"eon_zwds"},{"c":"export_ts"}];
+//{"start":21,"fragment_lengths":[11,15,18,17,17,25,23,18,17,20,18,20,17,18]}

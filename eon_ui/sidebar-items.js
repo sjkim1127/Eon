@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["App","main"],"mod":["components","i18n","router","store","types","utils","worker"]};

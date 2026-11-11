@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["WesternChartWheel","WesternTab","get_aspect_emoji_and_name","get_planet_emoji_and_name","get_sign_emoji_and_name"]};

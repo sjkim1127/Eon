@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["IChingTab","get_trigram_lines","get_trigram_num_from_hex"]};

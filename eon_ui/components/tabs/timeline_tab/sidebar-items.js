@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["LegendItem","SummaryCard","TimelineTab","summarize_timeline","timeline_chart","timeline_labels"],"struct":["LegendItemProps","SummaryCardProps","TimelineLabels","TimelineSummary"]};

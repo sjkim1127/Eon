@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["AppLayout","BottomNavLink","MobileLink","Sidebar","SidebarLink","check_and_run_tier","web_sys_set_locale"],"struct":["BottomNavLinkProps","MobileLinkProps","SidebarLinkProps"]};
