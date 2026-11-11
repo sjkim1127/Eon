@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-cli/src/commands/saju.rs`."><title>saju.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1f5a765c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eon" data-themes="" data-resource-suffix="" data-rustdoc-version="1.102.0-nightly (ac8310ba6 2026-11-09)" data-channel="nightly" data-search-js="search-69faa2c4.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-9b351432.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-b2682d9c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-101b5a15.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon/commands/</div>saju.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>anyhow::Result;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-cli/src/commands/saju.rs`."><title>saju.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1f5a765c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eon" data-themes="" data-resource-suffix="" data-rustdoc-version="1.102.0-nightly (9c5648833 2026-11-10)" data-channel="nightly" data-search-js="search-69faa2c4.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-9b351432.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-419f3a3f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-101b5a15.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon/commands/</div>saju.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>anyhow::Result;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>clap::Args;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>eon_service::dto::SajuAnalysisInput;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>eon_service::facade;
@@ -10,7 +10,7 @@
 <a href=#10 id=10 data-nosnippet>10</a>    <span class="attr">#[command(flatten)]
 <a href=#11 id=11 data-nosnippet>11</a>    </span><span class="kw">pub </span>birth: BirthArgs,
 <a href=#12 id=12 data-nosnippet>12</a>
-<a href=#13 id=13 data-nosnippet>13</a>    <span class="doccomment">/// Night rat hour option (야자시 사용 여부)
+<a href=#13 id=13 data-nosnippet>13</a>    <span class="doccomment">/// Night rat hour option (Zi hour split)
 <a href=#14 id=14 data-nosnippet>14</a>    </span><span class="attr">#[arg(long)]
 <a href=#15 id=15 data-nosnippet>15</a>    </span><span class="kw">pub </span>night_rat: bool,
 <a href=#16 id=16 data-nosnippet>16</a>
@@ -32,9 +32,9 @@
 <a href=#32 id=32 data-nosnippet>32</a>        }
 <a href=#33 id=33 data-nosnippet>33</a>        <span class="kw">_ </span>=&gt; {
 <a href=#34 id=34 data-nosnippet>34</a>            <span class="kw">let </span>p = <span class="kw-2">&amp;</span>res.report.pillars;
-<a href=#35 id=35 data-nosnippet>35</a>            <span class="macro">println!</span>(<span class="string">"== 사주 명리학 원국 =="</span>);
+<a href=#35 id=35 data-nosnippet>35</a>            <span class="macro">println!</span>(<span class="string">"== Four Pillars of Destiny (Saju / BaZi) =="</span>);
 <a href=#36 id=36 data-nosnippet>36</a>            <span class="macro">println!</span>(
-<a href=#37 id=37 data-nosnippet>37</a>                <span class="string">"년주: {}({}{}) | 월주: {}({}{}) | 일주: {}({}{}) | 시주: {}({}{})"</span>,
+<a href=#37 id=37 data-nosnippet>37</a>                <span class="string">"Year: {}({}-{}) | Month: {}({}-{}) | Day: {}({}-{}) | Hour: {}({}-{})"</span>,
 <a href=#38 id=38 data-nosnippet>38</a>                p.year,
 <a href=#39 id=39 data-nosnippet>39</a>                p.year.stem.hangul(),
 <a href=#40 id=40 data-nosnippet>40</a>                p.year.branch.hangul(),
@@ -49,21 +49,24 @@
 <a href=#49 id=49 data-nosnippet>49</a>                p.hour.branch.hangul()
 <a href=#50 id=50 data-nosnippet>50</a>            );
 <a href=#51 id=51 data-nosnippet>51</a>            <span class="macro">println!</span>(
-<a href=#52 id=52 data-nosnippet>52</a>                <span class="string">"신강약: {:?} (신강 지수: {:.1})"</span>,
+<a href=#52 id=52 data-nosnippet>52</a>                <span class="string">"Day Master Strength: {:?} (Score: {:.1})"</span>,
 <a href=#53 id=53 data-nosnippet>53</a>                res.report.strength.strength_type, res.report.strength.strength_score
 <a href=#54 id=54 data-nosnippet>54</a>            );
-<a href=#55 id=55 data-nosnippet>55</a>            <span class="macro">println!</span>(<span class="string">"격국: {:?}"</span>, res.report.structure.structure);
-<a href=#56 id=56 data-nosnippet>56</a>            <span class="macro">println!</span>(<span class="string">"용신(주용신): {:?}"</span>, res.report.yongshin.primary);
-<a href=#57 id=57 data-nosnippet>57</a>            <span class="macro">println!</span>(<span class="string">"오행 유통성: {:.1}%"</span>, res.qi_topology.throughput * <span class="number">100.0</span>);
-<a href=#58 id=58 data-nosnippet>58</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(gt) = <span class="kw-2">&amp;</span>res.report.golden_time {
-<a href=#59 id=59 data-nosnippet>59</a>                <span class="macro">println!</span>(
-<a href=#60 id=60 data-nosnippet>60</a>                    <span class="string">"골든타임: {}~{}세 (평균 {:.1}점)"</span>,
-<a href=#61 id=61 data-nosnippet>61</a>                    gt.start_age, gt.end_age, gt.average_score
-<a href=#62 id=62 data-nosnippet>62</a>                );
-<a href=#63 id=63 data-nosnippet>63</a>            }
-<a href=#64 id=64 data-nosnippet>64</a>        }
-<a href=#65 id=65 data-nosnippet>65</a>    }
-<a href=#66 id=66 data-nosnippet>66</a>
-<a href=#67 id=67 data-nosnippet>67</a>    <span class="prelude-val">Ok</span>(())
-<a href=#68 id=68 data-nosnippet>68</a>}
+<a href=#55 id=55 data-nosnippet>55</a>            <span class="macro">println!</span>(<span class="string">"Structure: {:?}"</span>, res.report.structure.structure);
+<a href=#56 id=56 data-nosnippet>56</a>            <span class="macro">println!</span>(<span class="string">"Yongshin (Primary): {:?}"</span>, res.report.yongshin.primary);
+<a href=#57 id=57 data-nosnippet>57</a>            <span class="macro">println!</span>(
+<a href=#58 id=58 data-nosnippet>58</a>                <span class="string">"Five Elements Throughput: {:.1}%"</span>,
+<a href=#59 id=59 data-nosnippet>59</a>                res.qi_topology.throughput * <span class="number">100.0
+<a href=#60 id=60 data-nosnippet>60</a>            </span>);
+<a href=#61 id=61 data-nosnippet>61</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(gt) = <span class="kw-2">&amp;</span>res.report.golden_time {
+<a href=#62 id=62 data-nosnippet>62</a>                <span class="macro">println!</span>(
+<a href=#63 id=63 data-nosnippet>63</a>                    <span class="string">"Golden Period: Age {}~{} (Avg: {:.1} pts)"</span>,
+<a href=#64 id=64 data-nosnippet>64</a>                    gt.start_age, gt.end_age, gt.average_score
+<a href=#65 id=65 data-nosnippet>65</a>                );
+<a href=#66 id=66 data-nosnippet>66</a>            }
+<a href=#67 id=67 data-nosnippet>67</a>        }
+<a href=#68 id=68 data-nosnippet>68</a>    }
+<a href=#69 id=69 data-nosnippet>69</a>
+<a href=#70 id=70 data-nosnippet>70</a>    <span class="prelude-val">Ok</span>(())
+<a href=#71 id=71 data-nosnippet>71</a>}
 </code></pre></div></section></main></body></html>
