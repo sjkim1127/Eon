@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["interpret_life_path","interpret_personal_year"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["interpret_aspect_pattern"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["interpret_nakshatra","interpret_yoga"]};

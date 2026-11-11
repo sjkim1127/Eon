@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["build_handbook"],"mod":["human_design","numerology","qimen","saju","synthesis","vedic","western","zwds"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["interpret_structure","interpret_yongshin"]};

@@ -1,0 +1,78 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-service/src/lexicon/human_design.rs`."><title>human_design.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1f5a765c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eon_service" data-themes="" data-resource-suffix="" data-rustdoc-version="1.102.0-nightly (9c5648833 2026-11-10)" data-channel="nightly" data-search-js="search-69faa2c4.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-9b351432.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-419f3a3f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-101b5a15.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_service/lexicon/</div>human_design.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::dto::SymbolInterpretation;
+<a href=#2 id=2 data-nosnippet>2</a>
+<a href=#3 id=3 data-nosnippet>3</a><span class="kw">pub fn </span>interpret_type_strategy(chart_type: <span class="kw-2">&amp;</span>str, strategy: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;SymbolInterpretation&gt; {
+<a href=#4 id=4 data-nosnippet>4</a>    <span class="kw">let </span>type_lower = chart_type.to_lowercase();
+<a href=#5 id=5 data-nosnippet>5</a>    <span class="kw">if </span>type_lower.contains(<span class="string">"projector"</span>) || type_lower.contains(<span class="string">"프로젝터"</span>) {
+<a href=#6 id=6 data-nosnippet>6</a>        <span class="prelude-val">Some</span>(SymbolInterpretation {
+<a href=#7 id=7 data-nosnippet>7</a>            engine: <span class="string">"Human Design System"</span>.to_string(),
+<a href=#8 id=8 data-nosnippet>8</a>            symbol: <span class="macro">format!</span>(<span class="string">"Type: Projector | Strategy: {}"</span>, strategy),
+<a href=#9 id=9 data-nosnippet>9</a>            classical_grounding: <span class="string">"《The Definitive Book of Human Design》: '프로젝터는 비에너지 타입이자 차세대 가이드이니, 직접 모터를 돌리기보다 타인의 에너지를 인도할 때 빛난다.'"</span>.to_string(),
+<a href=#10 id=10 data-nosnippet>10</a>            modern_translation: <span class="string">"시스템 조율자, 마스터 컨설턴트, 다른 사람의 잠재력을 꿰뚫어보고 최적의 배치와 전략을 제시하는 최고 가이드."</span>.to_string(),
+<a href=#11 id=11 data-nosnippet>11</a>            shadow_and_caution: <span class="string">"인정받지 못했는데 먼저 덤벼들어 조언하다 거절당하는 쓴맛(Bitterness), 에너지 고갈과 만성 피로."</span>.to_string(),
+<a href=#12 id=12 data-nosnippet>12</a>            tactical_remedy: <span class="string">"절대 먼저 밀어붙이지 말고, 자신의 전문성을 조용히 가꾸며 '공식적인 인정과 초대(Invitation)'를 기다린 후 개입할 것."</span>.to_string(),
+<a href=#13 id=13 data-nosnippet>13</a>        })
+<a href=#14 id=14 data-nosnippet>14</a>    } <span class="kw">else if </span>type_lower.contains(<span class="string">"generator"</span>) || type_lower.contains(<span class="string">"제너레이터"</span>) {
+<a href=#15 id=15 data-nosnippet>15</a>        <span class="prelude-val">Some</span>(SymbolInterpretation {
+<a href=#16 id=16 data-nosnippet>16</a>            engine: <span class="string">"Human Design System"</span>.to_string(),
+<a href=#17 id=17 data-nosnippet>17</a>            symbol: <span class="macro">format!</span>(<span class="string">"Type: Generator | Strategy: {}"</span>, strategy),
+<a href=#18 id=18 data-nosnippet>18</a>            classical_grounding: <span class="string">"《Human Design》: '천골(Sacral)의 무한한 생명력 에너지를 지닌 인류의 위대한 건설자이자 장인.'"</span>.to_string(),
+<a href=#19 id=19 data-nosnippet>19</a>            modern_translation: <span class="string">"지치지 않는 실행력의 소유자, 좋아하는 일에 몰입할 때 거대한 현실적 결과물을 창출해 내는 마스터 빌더."</span>.to_string(),
+<a href=#20 id=20 data-nosnippet>20</a>            shadow_and_caution: <span class="string">"머리로 해야 한다고 생각하는 일에 억지로 매달리다 마주하는 깊은 좌절감(Frustration)."</span>.to_string(),
+<a href=#21 id=21 data-nosnippet>21</a>            tactical_remedy: <span class="string">"머리로 결론짓지 말고, 외부 자극에 대해 배 속(천골)에서 올라오는 직관적인 '응/아니'의 소리에 반응하여 움직일 것."</span>.to_string(),
+<a href=#22 id=22 data-nosnippet>22</a>        })
+<a href=#23 id=23 data-nosnippet>23</a>    } <span class="kw">else if </span>type_lower.contains(<span class="string">"manifestor"</span>) || type_lower.contains(<span class="string">"매니페스터"</span>) {
+<a href=#24 id=24 data-nosnippet>24</a>        <span class="prelude-val">Some</span>(SymbolInterpretation {
+<a href=#25 id=25 data-nosnippet>25</a>            engine: <span class="string">"Human Design System"</span>.to_string(),
+<a href=#26 id=26 data-nosnippet>26</a>            symbol: <span class="macro">format!</span>(<span class="string">"Type: Manifestor | Strategy: {}"</span>, strategy),
+<a href=#27 id=27 data-nosnippet>27</a>            classical_grounding: <span class="string">"《Human Design》: '역사를 시작하고 새로운 패러다임을 발화시키는 유일한 순수 이니시에이터(Initiator).'"</span>.to_string(),
+<a href=#28 id=28 data-nosnippet>28</a>            modern_translation: <span class="string">"새로운 프로젝트를 독자적으로 개시하는 퍼스트 무버, 누구의 허락도 필요 없는 독립적 혁신가."</span>.to_string(),
+<a href=#29 id=29 data-nosnippet>29</a>            shadow_and_caution: <span class="string">"타인을 알리지 않고 혼자 폭주하다 마주하는 주변의 저항과 고립, 깊은 분노(Anger)."</span>.to_string(),
+<a href=#30 id=30 data-nosnippet>30</a>            tactical_remedy: <span class="string">"행동하기 전 영향을 받을 사람들에게 반드시 사전에 '알리기(Informing)'를 통해 저항을 평화로 바꿀 것."</span>.to_string(),
+<a href=#31 id=31 data-nosnippet>31</a>        })
+<a href=#32 id=32 data-nosnippet>32</a>    } <span class="kw">else if </span>type_lower.contains(<span class="string">"reflector"</span>) || type_lower.contains(<span class="string">"리플렉터"</span>) {
+<a href=#33 id=33 data-nosnippet>33</a>        <span class="prelude-val">Some</span>(SymbolInterpretation {
+<a href=#34 id=34 data-nosnippet>34</a>            engine: <span class="string">"Human Design System"</span>.to_string(),
+<a href=#35 id=35 data-nosnippet>35</a>            symbol: <span class="macro">format!</span>(<span class="string">"Type: Reflector | Strategy: {}"</span>, strategy),
+<a href=#36 id=36 data-nosnippet>36</a>            classical_grounding: <span class="string">"《Human Design》: '9개 센터가 모두 열린 달의 존재이니, 공동체와 환경의 건강 상태를 완벽하게 반영하는 거울이다.'"</span>.to_string(),
+<a href=#37 id=37 data-nosnippet>37</a>            modern_translation: <span class="string">"시대의 흐름과 조직의 영적·신체적 상태를 정확히 진단하는 궁극의 평가관이자 영적 카운슬러."</span>.to_string(),
+<a href=#38 id=38 data-nosnippet>38</a>            shadow_and_caution: <span class="string">"부적절한 환경과 탁한 에너지에 노출되어 영혼이 병드는 실망감(Disappointment)."</span>.to_string(),
+<a href=#39 id=39 data-nosnippet>39</a>            tactical_remedy: <span class="string">"중대한 결정 시 달의 주기(28.5일) 동안 숙고하며 환경을 무엇보다 까다롭게 고를 것."</span>.to_string(),
+<a href=#40 id=40 data-nosnippet>40</a>        })
+<a href=#41 id=41 data-nosnippet>41</a>    } <span class="kw">else </span>{
+<a href=#42 id=42 data-nosnippet>42</a>        <span class="prelude-val">None
+<a href=#43 id=43 data-nosnippet>43</a>    </span>}
+<a href=#44 id=44 data-nosnippet>44</a>}
+<a href=#45 id=45 data-nosnippet>45</a>
+<a href=#46 id=46 data-nosnippet>46</a><span class="kw">pub fn </span>interpret_profile(profile: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;SymbolInterpretation&gt; {
+<a href=#47 id=47 data-nosnippet>47</a>    <span class="kw">if </span>profile.contains(<span class="string">"6/2"</span>) {
+<a href=#48 id=48 data-nosnippet>48</a>        <span class="prelude-val">Some</span>(SymbolInterpretation {
+<a href=#49 id=49 data-nosnippet>49</a>            engine: <span class="string">"Human Design System"</span>.to_string(),
+<a href=#50 id=50 data-nosnippet>50</a>            symbol: <span class="string">"Profile: 6/2 (Role Model / Hermit — 롤모델 / 은둔자)"</span>.to_string(),
+<a href=#51 id=51 data-nosnippet>51</a>            classical_grounding: <span class="string">"《Human Design Profile》: '1단계(30세까지) 시행착오의 시기를 거쳐 지붕 위로 올라가 관조한 뒤 마침내 살아있는 롤모델로 하산하는 영웅의 여정.'"</span>.to_string(),
+<a href=#52 id=52 data-nosnippet>52</a>            modern_translation: <span class="string">"젊은 날의 온갖 풍파와 경험을 지혜로 승화시켜, 높은 곳에서 전체를 조망하며 타인에게 영감을 주는 살아있는 롤모델."</span>.to_string(),
+<a href=#53 id=53 data-nosnippet>53</a>            shadow_and_caution: <span class="string">"완벽하지 않은 세상에 대한 냉소와 환멸, 자기만의 동굴에 지나치게 오래 갇혀 하산하지 않으려는 고립."</span>.to_string(),
+<a href=#54 id=54 data-nosnippet>54</a>            tactical_remedy: <span class="string">"은둔의 시간(2라인)으로 에너지를 충전하되, 준비가 되었을 때 자신의 통찰을 세상과 나누며 모범을 보일 것."</span>.to_string(),
+<a href=#55 id=55 data-nosnippet>55</a>        })
+<a href=#56 id=56 data-nosnippet>56</a>    } <span class="kw">else if </span>profile.contains(<span class="string">"1/3"</span>) {
+<a href=#57 id=57 data-nosnippet>57</a>        <span class="prelude-val">Some</span>(SymbolInterpretation {
+<a href=#58 id=58 data-nosnippet>58</a>            engine: <span class="string">"Human Design System"</span>.to_string(),
+<a href=#59 id=59 data-nosnippet>59</a>            symbol: <span class="string">"Profile: 1/3 (Investigator / Martyr — 탐구자 / 순교자)"</span>.to_string(),
+<a href=#60 id=60 data-nosnippet>60</a>            classical_grounding: <span class="string">"《Human Design Profile》: '밑바닥 기초를 파고드는 철저한 탐구와 수많은 시행착오(Trial &amp; Error)를 통해 진짜 작동하는 진실만을 걸러내는 구조.'"</span>.to_string(),
+<a href=#61 id=61 data-nosnippet>61</a>            modern_translation: <span class="string">"어설픈 것은 용납하지 않는 팩트체커, 실패를 통해 시장과 시스템의 취약점을 완벽하게 찾아내는 최고 감사관."</span>.to_string(),
+<a href=#62 id=62 data-nosnippet>62</a>            shadow_and_caution: <span class="string">"실패에 대한 자책감, 불확실성에 대한 두려움으로 인한 연구 중독과 행동 지연."</span>.to_string(),
+<a href=#63 id=63 data-nosnippet>63</a>            tactical_remedy: <span class="string">"실패를 오류가 아닌 '작동하지 않는 것을 발견한 값진 데이터'로 정의하고 과감하게 테스트를 지속할 것."</span>.to_string(),
+<a href=#64 id=64 data-nosnippet>64</a>        })
+<a href=#65 id=65 data-nosnippet>65</a>    } <span class="kw">else if </span>profile.contains(<span class="string">"3/5"</span>) {
+<a href=#66 id=66 data-nosnippet>66</a>        <span class="prelude-val">Some</span>(SymbolInterpretation {
+<a href=#67 id=67 data-nosnippet>67</a>            engine: <span class="string">"Human Design System"</span>.to_string(),
+<a href=#68 id=68 data-nosnippet>68</a>            symbol: <span class="string">"Profile: 3/5 (Martyr / Heretic — 순교자 / 이단아)"</span>.to_string(),
+<a href=#69 id=69 data-nosnippet>69</a>            classical_grounding: <span class="string">"《Human Design Profile》: '부딪히고 깨지며 얻은 실전 노하우로 대중의 위기를 구원하는 파격적인 솔루션을 제시하는 해결사.'"</span>.to_string(),
+<a href=#70 id=70 data-nosnippet>70</a>            modern_translation: <span class="string">"위기 현장의 트러블슈터(Troubleshooter), 대중의 투사를 받아 문제를 근본적으로 해결해 내는 카리스마 넘치는 이단아."</span>.to_string(),
+<a href=#71 id=71 data-nosnippet>71</a>            shadow_and_caution: <span class="string">"타인의 비현실적인 기대(투사)에 부응하지 못했을 때 쏟아지는 비난과 상처, 관계의 돌발 단절."</span>.to_string(),
+<a href=#72 id=72 data-nosnippet>72</a>            tactical_remedy: <span class="string">"해결할 수 있는 현실적 약속만을 명확히 제한하고, 투사가 깨지기 전에 명확한 결과물을 제시하고 퇴장할 것."</span>.to_string(),
+<a href=#73 id=73 data-nosnippet>73</a>        })
+<a href=#74 id=74 data-nosnippet>74</a>    } <span class="kw">else </span>{
+<a href=#75 id=75 data-nosnippet>75</a>        <span class="prelude-val">None
+<a href=#76 id=76 data-nosnippet>76</a>    </span>}
+<a href=#77 id=77 data-nosnippet>77</a>}
+</code></pre></div></section></main></body></html>

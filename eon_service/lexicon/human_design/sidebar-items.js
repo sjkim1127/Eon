@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["interpret_profile","interpret_type_strategy"]};
