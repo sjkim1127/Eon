@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="assets/eon-logo.svg" alt="Eon logo" width="600">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="assets/eon-logo-dark.svg">
+    <img src="assets/eon-logo.svg" alt="Eon logo" width="180">
+  </picture>
 </p>
 
 # Eon
