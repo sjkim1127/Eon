@@ -11,6 +11,7 @@ pub fn format_markdown_report(
     qimen: Option<&QimenAnalysisOutput>,
     num: Option<&NumerologyAnalysisOutput>,
     tier: Option<&TierResult>,
+    handbook: Option<&InterpretationHandbook>,
 ) -> String {
     let mut md = String::new();
 
@@ -209,6 +210,42 @@ pub fn format_markdown_report(
             "- **Expression**: {} | **Soul Urge**: {} | **Personal Year**: {}\n\n",
             n.result.core.expression, n.result.core.soul_urge, n.result.personal_year
         ));
+    }
+
+    if let Some(hb) = handbook {
+        md.push_str("## 8. Domain Interpretation Handbook & Archetypal Decoder\n");
+        md.push_str(&format!("> **Persona**: {}\n\n", hb.archetypal_persona));
+        md.push_str(&format!("{}\n\n", hb.core_essence_summary));
+
+        if !hb.symbols.is_empty() {
+            md.push_str("### Pinpoint Classical Symbol Decoders\n\n");
+            for s in &hb.symbols {
+                md.push_str(&format!("#### {} ({})\n", s.symbol, s.engine));
+                md.push_str(&format!(
+                    "- **Classical Grounding**: {}\n",
+                    s.classical_grounding
+                ));
+                md.push_str(&format!(
+                    "- **Modern Translation**: {}\n",
+                    s.modern_translation
+                ));
+                md.push_str(&format!("- **Shadow & Risk**: {}\n", s.shadow_and_caution));
+                md.push_str(&format!("- **Tactical Remedy**: {}\n\n", s.tactical_remedy));
+            }
+        }
+
+        if !hb.tactical_dos.is_empty() || !hb.tactical_donts.is_empty() {
+            md.push_str("### Tactical Directives\n\n");
+            md.push_str("**DO**:\n");
+            for d in &hb.tactical_dos {
+                md.push_str(&format!("- [x] {}\n", d));
+            }
+            md.push_str("\n**DON'T**:\n");
+            for d in &hb.tactical_donts {
+                md.push_str(&format!("- [ ] {}\n", d));
+            }
+            md.push('\n');
+        }
     }
 
     md

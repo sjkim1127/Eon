@@ -95,6 +95,16 @@ pub fn analyze_all_synthesized(
 
     let tier = analyze_destiny_tier_omni(omni_input)?;
 
+    let handbook = crate::lexicon::build_handbook(
+        &saju,
+        &vedic,
+        western_res.as_ref(),
+        zwds_res.as_ref(),
+        hd_res.as_ref(),
+        qimen_res.as_ref(),
+        num_res.as_ref(),
+    );
+
     Ok(SynthesizedOmniAnalysis {
         input,
         tier,
@@ -105,6 +115,7 @@ pub fn analyze_all_synthesized(
         human_design: hd_res,
         qimen: qimen_res,
         numerology: num_res,
+        handbook,
     })
 }
 

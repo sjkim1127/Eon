@@ -38,6 +38,7 @@ pub fn run(cmd: PromptCommand) -> Result<()> {
         omni.qimen.as_ref(),
         omni.numerology.as_ref(),
         Some(&omni.tier),
+        Some(&omni.handbook),
     );
 
     println!("{}", text);

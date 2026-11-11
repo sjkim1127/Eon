@@ -5,6 +5,7 @@ pub mod dto;
 pub mod error;
 pub mod facade;
 pub mod fixtures;
+pub mod lexicon;
 pub mod services;
 pub mod tests;
 

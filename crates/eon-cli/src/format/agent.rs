@@ -29,6 +29,7 @@ pub fn format_agent_context(
     qimen: Option<&QimenAnalysisOutput>,
     num: Option<&NumerologyAnalysisOutput>,
     tier: Option<&TierResult>,
+    handbook: Option<&InterpretationHandbook>,
 ) -> String {
     let mut out = String::new();
 
@@ -301,8 +302,67 @@ pub fn format_agent_context(
         out.push('\n');
     }
 
+    // 9. Domain Interpretation Handbook & Archetypal Decoder
+    if let Some(hb) = handbook {
+        out.push_str("## 9. Domain Interpretation Handbook & Archetypal Decoder (고전 해설집 및 원형 디코더)\n\n");
+        out.push_str(&format!(
+            "> **Archetypal Persona**: {}\n",
+            hb.archetypal_persona
+        ));
+        out.push_str(&format!(
+            "> **Core Essence**: {}\n\n",
+            hb.core_essence_summary
+        ));
+
+        if !hb.symbols.is_empty() {
+            out.push_str("### [A. Pinpoint Classical Symbol Decoders]\n");
+            out.push_str("*Verified classical grounding (자평진전, 궁통보감, BPHS, 자미두수전서, 기문비급 등) decoded into modern executive psychology:*\n\n");
+            for s in &hb.symbols {
+                out.push_str(&format!("#### {} [{}]\n", s.symbol, s.engine));
+                out.push_str(&format!(
+                    "- **Classical Grounding**: {}\n",
+                    s.classical_grounding
+                ));
+                out.push_str(&format!(
+                    "- **Modern Translation**: {}\n",
+                    s.modern_translation
+                ));
+                out.push_str(&format!("- **Shadow & Risk**: {}\n", s.shadow_and_caution));
+                out.push_str(&format!("- **Tactical Remedy**: {}\n\n", s.tactical_remedy));
+            }
+        }
+
+        if !hb.synthesis_guidelines.is_empty() {
+            out.push_str("### [B. Multi-Dimensional Synthesis Guidelines]\n");
+            for g in &hb.synthesis_guidelines {
+                out.push_str(&format!("#### {}\n", g.domain));
+                out.push_str(&format!(
+                    "- **Cross-Engine Insight**: {}\n",
+                    g.combined_insight
+                ));
+                out.push_str(&format!(
+                    "- **Strategic Action**: {}\n\n",
+                    g.strategic_action
+                ));
+            }
+        }
+
+        out.push_str("### [C. Tactical Directives]\n");
+        out.push_str("#### DO (강력 권장):\n");
+        for d in &hb.tactical_dos {
+            out.push_str(&format!("- [x] {}\n", d));
+        }
+        out.push('\n');
+
+        out.push_str("#### DON'T (절대 주의):\n");
+        for d in &hb.tactical_donts {
+            out.push_str(&format!("- [ ] {}\n", d));
+        }
+        out.push('\n');
+    }
+
     out.push_str("---\n");
-    out.push_str("*Instructions for AI Agent: Synthesize the cross-engine intelligence data above to provide deep, actionable, compassionate, and precise counseling regarding the client's destiny blueprint, core strengths, timing, and optimal life strategies.*\n");
+    out.push_str("*Instructions for AI Agent: Ground your analysis strictly on the verified multi-disciplinary calculation data and the classical-to-modern decoders in Section 9. Interpret the detected symbols directly without hallucination, resolve engine nuances using the Cross-Engine Synthesis Guidelines, and deliver actionable counseling following the Tactical DOs & DON'Ts.*\n");
 
     out
 }

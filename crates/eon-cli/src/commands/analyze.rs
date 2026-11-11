@@ -38,6 +38,7 @@ pub fn run(cmd: AnalyzeCommand) -> Result<()> {
                 omni.qimen.as_ref(),
                 omni.numerology.as_ref(),
                 Some(&omni.tier),
+                Some(&omni.handbook),
             );
             println!("{}", text);
         }
@@ -52,6 +53,7 @@ pub fn run(cmd: AnalyzeCommand) -> Result<()> {
                 omni.qimen.as_ref(),
                 omni.numerology.as_ref(),
                 Some(&omni.tier),
+                Some(&omni.handbook),
             );
             println!("{}", md);
         }

@@ -537,6 +537,36 @@ pub struct OmniDestinyTierInput {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SymbolInterpretation {
+    pub engine: String,
+    pub symbol: String,
+    pub classical_grounding: String,
+    pub modern_translation: String,
+    pub shadow_and_caution: String,
+    pub tactical_remedy: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CrossEngineSynthesisGuideline {
+    pub domain: String,
+    pub combined_insight: String,
+    pub strategic_action: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InterpretationHandbook {
+    pub archetypal_persona: String,
+    pub core_essence_summary: String,
+    pub symbols: Vec<SymbolInterpretation>,
+    pub synthesis_guidelines: Vec<CrossEngineSynthesisGuideline>,
+    pub tactical_dos: Vec<String>,
+    pub tactical_donts: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SynthesizedOmniAnalysis {
     pub input: AnalysisInput,
     pub tier: TierResult,
@@ -547,6 +577,7 @@ pub struct SynthesizedOmniAnalysis {
     pub human_design: Option<HumanDesignAnalysisOutput>,
     pub qimen: Option<QimenAnalysisOutput>,
     pub numerology: Option<NumerologyAnalysisOutput>,
+    pub handbook: InterpretationHandbook,
 }
 
 impl TryFrom<SajuAnalysisRequest> for SajuAnalysisInput {

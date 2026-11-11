@@ -204,6 +204,7 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                                             omni.qimen.as_ref(),
                                             omni.numerology.as_ref(),
                                             Some(&omni.tier),
+                                            Some(&omni.handbook),
                                         )
                                     };
 
