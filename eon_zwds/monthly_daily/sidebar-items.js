@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["calculate_liuri","calculate_liuyue"]};
+window.SIDEBAR_ITEMS = {"fn":["calculate_liuri","calculate_liuri_from_solar_date","calculate_liuyue"]};

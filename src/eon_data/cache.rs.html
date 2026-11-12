@@ -61,88 +61,118 @@
 <a href=#61 id=61 data-nosnippet>61</a>            .terms
 <a href=#62 id=62 data-nosnippet>62</a>            .partition_point(|(<span class="kw">_</span>, term_time)| <span class="kw-2">*</span>term_time &lt;= time);
 <a href=#63 id=63 data-nosnippet>63</a>        <span class="kw">if </span>pos == <span class="number">0 </span>{
-<a href=#64 id=64 data-nosnippet>64</a>            <span class="comment">// `time` is before all solar terms of this year. This edge case is rare in practice;
-<a href=#65 id=65 data-nosnippet>65</a>            // match the original behavior of returning index 0 (or the first term's index if stored
-<a href=#66 id=66 data-nosnippet>66</a>            // differently) rather than None, since callers expect a valid term index.
-<a href=#67 id=67 data-nosnippet>67</a>            </span><span class="prelude-val">Some</span>(table.terms.first().map_or(<span class="number">0</span>, |(idx, <span class="kw">_</span>)| <span class="kw-2">*</span>idx))
-<a href=#68 id=68 data-nosnippet>68</a>        } <span class="kw">else </span>{
-<a href=#69 id=69 data-nosnippet>69</a>            <span class="prelude-val">Some</span>(table.terms[pos - <span class="number">1</span>].<span class="number">0</span>)
-<a href=#70 id=70 data-nosnippet>70</a>        }
-<a href=#71 id=71 data-nosnippet>71</a>    }
-<a href=#72 id=72 data-nosnippet>72</a>
-<a href=#73 id=73 data-nosnippet>73</a>    <span class="doccomment">/// Query corresponding lunar date for a given solar date
-<a href=#74 id=74 data-nosnippet>74</a>    </span><span class="kw">pub fn </span>get_lunar_date(<span class="kw-2">&amp;</span><span class="self">self</span>, solar_date: chrono::NaiveDate) -&gt; <span class="prelude-ty">Option</span>&lt;(i32, u32, u32, bool)&gt; {
-<a href=#75 id=75 data-nosnippet>75</a>        <span class="kw">let </span>year = solar_date.year();
-<a href=#76 id=76 data-nosnippet>76</a>        <span class="comment">// Current year and previous year data (lunar month 1 often starts in February).
-<a href=#77 id=77 data-nosnippet>77</a>        </span><span class="kw">let </span>prev_months = <span class="self">self
-<a href=#78 id=78 data-nosnippet>78</a>            </span>.lunar_months
-<a href=#79 id=79 data-nosnippet>79</a>            .get(<span class="kw-2">&amp;</span>(year - <span class="number">1</span>))
-<a href=#80 id=80 data-nosnippet>80</a>            .map(|v| v.as_slice())
-<a href=#81 id=81 data-nosnippet>81</a>            .unwrap_or(<span class="kw-2">&amp;</span>[]);
-<a href=#82 id=82 data-nosnippet>82</a>        <span class="kw">let </span>curr_months = <span class="self">self
-<a href=#83 id=83 data-nosnippet>83</a>            </span>.lunar_months
-<a href=#84 id=84 data-nosnippet>84</a>            .get(<span class="kw-2">&amp;</span>year)
-<a href=#85 id=85 data-nosnippet>85</a>            .map(|v| v.as_slice())
-<a href=#86 id=86 data-nosnippet>86</a>            .unwrap_or(<span class="kw-2">&amp;</span>[]);
-<a href=#87 id=87 data-nosnippet>87</a>
-<a href=#88 id=88 data-nosnippet>88</a>        <span class="comment">// Each slice is sorted by new_moon_date; use binary search (partition_point) to find the
-<a href=#89 id=89 data-nosnippet>89</a>        // latest record whose new_moon_date &lt;= solar_date in each slice, then pick the most recent.
-<a href=#90 id=90 data-nosnippet>90</a>        // This avoids allocating a combined Vec and runs in O(log n) per slice.
-<a href=#91 id=91 data-nosnippet>91</a>        </span><span class="kw">let </span>prev_pos = prev_months.partition_point(|r| r.new_moon_date &lt;= solar_date);
-<a href=#92 id=92 data-nosnippet>92</a>        <span class="kw">let </span>curr_pos = curr_months.partition_point(|r| r.new_moon_date &lt;= solar_date);
-<a href=#93 id=93 data-nosnippet>93</a>
-<a href=#94 id=94 data-nosnippet>94</a>        <span class="kw">let </span>prev_best = <span class="kw">if </span>prev_pos &gt; <span class="number">0 </span>{
-<a href=#95 id=95 data-nosnippet>95</a>            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>prev_months[prev_pos - <span class="number">1</span>])
-<a href=#96 id=96 data-nosnippet>96</a>        } <span class="kw">else </span>{
-<a href=#97 id=97 data-nosnippet>97</a>            <span class="prelude-val">None
-<a href=#98 id=98 data-nosnippet>98</a>        </span>};
-<a href=#99 id=99 data-nosnippet>99</a>        <span class="kw">let </span>curr_best = <span class="kw">if </span>curr_pos &gt; <span class="number">0 </span>{
-<a href=#100 id=100 data-nosnippet>100</a>            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>curr_months[curr_pos - <span class="number">1</span>])
-<a href=#101 id=101 data-nosnippet>101</a>        } <span class="kw">else </span>{
-<a href=#102 id=102 data-nosnippet>102</a>            <span class="prelude-val">None
-<a href=#103 id=103 data-nosnippet>103</a>        </span>};
-<a href=#104 id=104 data-nosnippet>104</a>
-<a href=#105 id=105 data-nosnippet>105</a>        <span class="kw">let </span>record = <span class="kw">match </span>(prev_best, curr_best) {
-<a href=#106 id=106 data-nosnippet>106</a>            (<span class="prelude-val">Some</span>(a), <span class="prelude-val">Some</span>(b)) =&gt; {
-<a href=#107 id=107 data-nosnippet>107</a>                <span class="kw">if </span>b.new_moon_date &gt;= a.new_moon_date {
-<a href=#108 id=108 data-nosnippet>108</a>                    b
-<a href=#109 id=109 data-nosnippet>109</a>                } <span class="kw">else </span>{
-<a href=#110 id=110 data-nosnippet>110</a>                    a
-<a href=#111 id=111 data-nosnippet>111</a>                }
-<a href=#112 id=112 data-nosnippet>112</a>            }
-<a href=#113 id=113 data-nosnippet>113</a>            (<span class="prelude-val">Some</span>(a), <span class="prelude-val">None</span>) =&gt; a,
-<a href=#114 id=114 data-nosnippet>114</a>            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(b)) =&gt; b,
-<a href=#115 id=115 data-nosnippet>115</a>            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-<a href=#116 id=116 data-nosnippet>116</a>        };
-<a href=#117 id=117 data-nosnippet>117</a>
-<a href=#118 id=118 data-nosnippet>118</a>        <span class="kw">let </span>day = (solar_date - record.new_moon_date).num_days() <span class="kw">as </span>u32 + <span class="number">1</span>;
-<a href=#119 id=119 data-nosnippet>119</a>        <span class="prelude-val">Some</span>((record.lunar_year, record.lunar_month, day, record.is_leap))
-<a href=#120 id=120 data-nosnippet>120</a>    }
-<a href=#121 id=121 data-nosnippet>121</a>}
-<a href=#122 id=122 data-nosnippet>122</a>
-<a href=#123 id=123 data-nosnippet>123</a><span class="doccomment">/// Global shared cache instance (Lazy initialization)
-<a href=#124 id=124 data-nosnippet>124</a></span><span class="kw">static </span>GLOBAL_CACHE_INTERNAL: OnceLock&lt;ManseryukCache&gt; = OnceLock::new();
-<a href=#125 id=125 data-nosnippet>125</a>
-<a href=#126 id=126 data-nosnippet>126</a><span class="kw">pub struct </span>GlobalCache;
-<a href=#127 id=127 data-nosnippet>127</a>
-<a href=#128 id=128 data-nosnippet>128</a><span class="kw">impl </span>GlobalCache {
-<a href=#129 id=129 data-nosnippet>129</a>    <span class="kw">pub fn </span>get() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ManseryukCache {
-<a href=#130 id=130 data-nosnippet>130</a>        GLOBAL_CACHE_INTERNAL.get_or_init(|| {
-<a href=#131 id=131 data-nosnippet>131</a>            <span class="comment">// Load embedded binary cache data
-<a href=#132 id=132 data-nosnippet>132</a>            </span><span class="kw">let </span>bytes = <span class="macro">include_bytes!</span>(<span class="string">"manseryuk.bin"</span>);
-<a href=#133 id=133 data-nosnippet>133</a>            ManseryukCache::from_binary(bytes).unwrap_or_else(|e| {
-<a href=#134 id=134 data-nosnippet>134</a>                <span class="macro">eprintln!</span>(<span class="string">"Failed to load manseryuk cache: {}"</span>, e);
-<a href=#135 id=135 data-nosnippet>135</a>                ManseryukCache::default()
-<a href=#136 id=136 data-nosnippet>136</a>            })
-<a href=#137 id=137 data-nosnippet>137</a>        })
-<a href=#138 id=138 data-nosnippet>138</a>    }
-<a href=#139 id=139 data-nosnippet>139</a>
-<a href=#140 id=140 data-nosnippet>140</a>    <span class="kw">pub fn </span>get_solar_term(year: i32, term_idx: u8) -&gt; <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
-<a href=#141 id=141 data-nosnippet>141</a>        <span class="self">Self</span>::get().get_solar_term(year, term_idx)
-<a href=#142 id=142 data-nosnippet>142</a>    }
-<a href=#143 id=143 data-nosnippet>143</a>
-<a href=#144 id=144 data-nosnippet>144</a>    <span class="kw">pub fn </span>get_lunar_date(solar_date: chrono::NaiveDate) -&gt; <span class="prelude-ty">Option</span>&lt;(i32, u32, u32, bool)&gt; {
-<a href=#145 id=145 data-nosnippet>145</a>        <span class="self">Self</span>::get().get_lunar_date(solar_date)
-<a href=#146 id=146 data-nosnippet>146</a>    }
-<a href=#147 id=147 data-nosnippet>147</a>}
+<a href=#64 id=64 data-nosnippet>64</a>            <span class="comment">// `time` is before all solar terms in `year` (e.g. in January before Lichun).
+<a href=#65 id=65 data-nosnippet>65</a>            // Look up the last solar term of `year - 1` (Xiaohan or Dahan).
+<a href=#66 id=66 data-nosnippet>66</a>            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(prev_table) = <span class="self">self</span>.years.get(<span class="kw-2">&amp;</span>(year - <span class="number">1</span>)) {
+<a href=#67 id=67 data-nosnippet>67</a>                <span class="kw">let </span>prev_pos = prev_table
+<a href=#68 id=68 data-nosnippet>68</a>                    .terms
+<a href=#69 id=69 data-nosnippet>69</a>                    .partition_point(|(<span class="kw">_</span>, term_time)| <span class="kw-2">*</span>term_time &lt;= time);
+<a href=#70 id=70 data-nosnippet>70</a>                <span class="kw">if </span>prev_pos &gt; <span class="number">0 </span>{
+<a href=#71 id=71 data-nosnippet>71</a>                    <span class="kw">return </span><span class="prelude-val">Some</span>(prev_table.terms[prev_pos - <span class="number">1</span>].<span class="number">0</span>);
+<a href=#72 id=72 data-nosnippet>72</a>                } <span class="kw">else if let </span><span class="prelude-val">Some</span>(last) = prev_table.terms.last() {
+<a href=#73 id=73 data-nosnippet>73</a>                    <span class="kw">return </span><span class="prelude-val">Some</span>(last.<span class="number">0</span>);
+<a href=#74 id=74 data-nosnippet>74</a>                }
+<a href=#75 id=75 data-nosnippet>75</a>            }
+<a href=#76 id=76 data-nosnippet>76</a>            <span class="prelude-val">Some</span>(table.terms.first().map_or(<span class="number">0</span>, |(idx, <span class="kw">_</span>)| <span class="kw-2">*</span>idx))
+<a href=#77 id=77 data-nosnippet>77</a>        } <span class="kw">else </span>{
+<a href=#78 id=78 data-nosnippet>78</a>            <span class="prelude-val">Some</span>(table.terms[pos - <span class="number">1</span>].<span class="number">0</span>)
+<a href=#79 id=79 data-nosnippet>79</a>        }
+<a href=#80 id=80 data-nosnippet>80</a>    }
+<a href=#81 id=81 data-nosnippet>81</a>
+<a href=#82 id=82 data-nosnippet>82</a>    <span class="doccomment">/// Query corresponding lunar date for a given solar date
+<a href=#83 id=83 data-nosnippet>83</a>    </span><span class="kw">pub fn </span>get_lunar_date(<span class="kw-2">&amp;</span><span class="self">self</span>, solar_date: chrono::NaiveDate) -&gt; <span class="prelude-ty">Option</span>&lt;(i32, u32, u32, bool)&gt; {
+<a href=#84 id=84 data-nosnippet>84</a>        <span class="kw">let </span>year = solar_date.year();
+<a href=#85 id=85 data-nosnippet>85</a>        <span class="comment">// Current year and previous year data (lunar month 1 often starts in February).
+<a href=#86 id=86 data-nosnippet>86</a>        </span><span class="kw">let </span>prev_months = <span class="self">self
+<a href=#87 id=87 data-nosnippet>87</a>            </span>.lunar_months
+<a href=#88 id=88 data-nosnippet>88</a>            .get(<span class="kw-2">&amp;</span>(year - <span class="number">1</span>))
+<a href=#89 id=89 data-nosnippet>89</a>            .map(|v| v.as_slice())
+<a href=#90 id=90 data-nosnippet>90</a>            .unwrap_or(<span class="kw-2">&amp;</span>[]);
+<a href=#91 id=91 data-nosnippet>91</a>        <span class="kw">let </span>curr_months = <span class="self">self
+<a href=#92 id=92 data-nosnippet>92</a>            </span>.lunar_months
+<a href=#93 id=93 data-nosnippet>93</a>            .get(<span class="kw-2">&amp;</span>year)
+<a href=#94 id=94 data-nosnippet>94</a>            .map(|v| v.as_slice())
+<a href=#95 id=95 data-nosnippet>95</a>            .unwrap_or(<span class="kw-2">&amp;</span>[]);
+<a href=#96 id=96 data-nosnippet>96</a>
+<a href=#97 id=97 data-nosnippet>97</a>        <span class="comment">// Each slice is sorted by new_moon_date; use binary search (partition_point) to find the
+<a href=#98 id=98 data-nosnippet>98</a>        // latest record whose new_moon_date &lt;= solar_date in each slice, then pick the most recent.
+<a href=#99 id=99 data-nosnippet>99</a>        // This avoids allocating a combined Vec and runs in O(log n) per slice.
+<a href=#100 id=100 data-nosnippet>100</a>        </span><span class="kw">let </span>prev_pos = prev_months.partition_point(|r| r.new_moon_date &lt;= solar_date);
+<a href=#101 id=101 data-nosnippet>101</a>        <span class="kw">let </span>curr_pos = curr_months.partition_point(|r| r.new_moon_date &lt;= solar_date);
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a>        <span class="kw">let </span>prev_best = <span class="kw">if </span>prev_pos &gt; <span class="number">0 </span>{
+<a href=#104 id=104 data-nosnippet>104</a>            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>prev_months[prev_pos - <span class="number">1</span>])
+<a href=#105 id=105 data-nosnippet>105</a>        } <span class="kw">else </span>{
+<a href=#106 id=106 data-nosnippet>106</a>            <span class="prelude-val">None
+<a href=#107 id=107 data-nosnippet>107</a>        </span>};
+<a href=#108 id=108 data-nosnippet>108</a>        <span class="kw">let </span>curr_best = <span class="kw">if </span>curr_pos &gt; <span class="number">0 </span>{
+<a href=#109 id=109 data-nosnippet>109</a>            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>curr_months[curr_pos - <span class="number">1</span>])
+<a href=#110 id=110 data-nosnippet>110</a>        } <span class="kw">else </span>{
+<a href=#111 id=111 data-nosnippet>111</a>            <span class="prelude-val">None
+<a href=#112 id=112 data-nosnippet>112</a>        </span>};
+<a href=#113 id=113 data-nosnippet>113</a>
+<a href=#114 id=114 data-nosnippet>114</a>        <span class="kw">let </span>record = <span class="kw">match </span>(prev_best, curr_best) {
+<a href=#115 id=115 data-nosnippet>115</a>            (<span class="prelude-val">Some</span>(a), <span class="prelude-val">Some</span>(b)) =&gt; {
+<a href=#116 id=116 data-nosnippet>116</a>                <span class="kw">if </span>b.new_moon_date &gt;= a.new_moon_date {
+<a href=#117 id=117 data-nosnippet>117</a>                    b
+<a href=#118 id=118 data-nosnippet>118</a>                } <span class="kw">else </span>{
+<a href=#119 id=119 data-nosnippet>119</a>                    a
+<a href=#120 id=120 data-nosnippet>120</a>                }
+<a href=#121 id=121 data-nosnippet>121</a>            }
+<a href=#122 id=122 data-nosnippet>122</a>            (<span class="prelude-val">Some</span>(a), <span class="prelude-val">None</span>) =&gt; a,
+<a href=#123 id=123 data-nosnippet>123</a>            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(b)) =&gt; b,
+<a href=#124 id=124 data-nosnippet>124</a>            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+<a href=#125 id=125 data-nosnippet>125</a>        };
+<a href=#126 id=126 data-nosnippet>126</a>
+<a href=#127 id=127 data-nosnippet>127</a>        <span class="kw">let </span>day = (solar_date - record.new_moon_date).num_days() <span class="kw">as </span>u32 + <span class="number">1</span>;
+<a href=#128 id=128 data-nosnippet>128</a>        <span class="prelude-val">Some</span>((record.lunar_year, record.lunar_month, day, record.is_leap))
+<a href=#129 id=129 data-nosnippet>129</a>    }
+<a href=#130 id=130 data-nosnippet>130</a>}
+<a href=#131 id=131 data-nosnippet>131</a>
+<a href=#132 id=132 data-nosnippet>132</a><span class="doccomment">/// Global shared cache instance (Lazy initialization)
+<a href=#133 id=133 data-nosnippet>133</a></span><span class="kw">static </span>GLOBAL_CACHE_INTERNAL: OnceLock&lt;ManseryukCache&gt; = OnceLock::new();
+<a href=#134 id=134 data-nosnippet>134</a>
+<a href=#135 id=135 data-nosnippet>135</a><span class="kw">pub struct </span>GlobalCache;
+<a href=#136 id=136 data-nosnippet>136</a>
+<a href=#137 id=137 data-nosnippet>137</a><span class="kw">impl </span>GlobalCache {
+<a href=#138 id=138 data-nosnippet>138</a>    <span class="kw">pub fn </span>get() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ManseryukCache {
+<a href=#139 id=139 data-nosnippet>139</a>        GLOBAL_CACHE_INTERNAL.get_or_init(|| {
+<a href=#140 id=140 data-nosnippet>140</a>            <span class="comment">// Load embedded binary cache data
+<a href=#141 id=141 data-nosnippet>141</a>            </span><span class="kw">let </span>bytes = <span class="macro">include_bytes!</span>(<span class="string">"manseryuk.bin"</span>);
+<a href=#142 id=142 data-nosnippet>142</a>            ManseryukCache::from_binary(bytes).unwrap_or_else(|e| {
+<a href=#143 id=143 data-nosnippet>143</a>                <span class="macro">eprintln!</span>(<span class="string">"Failed to load manseryuk cache: {}"</span>, e);
+<a href=#144 id=144 data-nosnippet>144</a>                ManseryukCache::default()
+<a href=#145 id=145 data-nosnippet>145</a>            })
+<a href=#146 id=146 data-nosnippet>146</a>        })
+<a href=#147 id=147 data-nosnippet>147</a>    }
+<a href=#148 id=148 data-nosnippet>148</a>
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="kw">pub fn </span>get_solar_term(year: i32, term_idx: u8) -&gt; <span class="prelude-ty">Option</span>&lt;DateTime&lt;Utc&gt;&gt; {
+<a href=#150 id=150 data-nosnippet>150</a>        <span class="self">Self</span>::get().get_solar_term(year, term_idx)
+<a href=#151 id=151 data-nosnippet>151</a>    }
+<a href=#152 id=152 data-nosnippet>152</a>
+<a href=#153 id=153 data-nosnippet>153</a>    <span class="kw">pub fn </span>get_lunar_date(solar_date: chrono::NaiveDate) -&gt; <span class="prelude-ty">Option</span>&lt;(i32, u32, u32, bool)&gt; {
+<a href=#154 id=154 data-nosnippet>154</a>        <span class="self">Self</span>::get().get_lunar_date(solar_date)
+<a href=#155 id=155 data-nosnippet>155</a>    }
+<a href=#156 id=156 data-nosnippet>156</a>}
+<a href=#157 id=157 data-nosnippet>157</a>
+<a href=#158 id=158 data-nosnippet>158</a><span class="attr">#[cfg(test)]
+<a href=#159 id=159 data-nosnippet>159</a></span><span class="kw">mod </span>tests {
+<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#161 id=161 data-nosnippet>161</a>    <span class="kw">use </span>chrono::TimeZone;
+<a href=#162 id=162 data-nosnippet>162</a>
+<a href=#163 id=163 data-nosnippet>163</a>    <span class="attr">#[test]
+<a href=#164 id=164 data-nosnippet>164</a>    </span><span class="kw">fn </span>test_january_term_index_lookup() {
+<a href=#165 id=165 data-nosnippet>165</a>        <span class="kw">let </span>cache = GlobalCache::get();
+<a href=#166 id=166 data-nosnippet>166</a>        <span class="kw">if </span>!cache.years.is_empty() {
+<a href=#167 id=167 data-nosnippet>167</a>            <span class="comment">// Mid-January 2024 should be Xiaohan (term 22) or Dahan (term 23), NOT Lichun (term 0)
+<a href=#168 id=168 data-nosnippet>168</a>            </span><span class="kw">let </span>time = Utc.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">1</span>, <span class="number">15</span>, <span class="number">12</span>, <span class="number">0</span>, <span class="number">0</span>).unwrap();
+<a href=#169 id=169 data-nosnippet>169</a>            <span class="kw">let </span>idx = cache.get_term_index_at(time);
+<a href=#170 id=170 data-nosnippet>170</a>            <span class="macro">assert!</span>(
+<a href=#171 id=171 data-nosnippet>171</a>                idx == <span class="prelude-val">Some</span>(<span class="number">22</span>) || idx == <span class="prelude-val">Some</span>(<span class="number">23</span>),
+<a href=#172 id=172 data-nosnippet>172</a>                <span class="string">"Expected January 15 to be Xiaohan(22) or Dahan(23), got {:?}"</span>,
+<a href=#173 id=173 data-nosnippet>173</a>                idx
+<a href=#174 id=174 data-nosnippet>174</a>            );
+<a href=#175 id=175 data-nosnippet>175</a>        }
+<a href=#176 id=176 data-nosnippet>176</a>    }
+<a href=#177 id=177 data-nosnippet>177</a>}
 </code></pre></div></section></main></body></html>

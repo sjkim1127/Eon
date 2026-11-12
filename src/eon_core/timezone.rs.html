@@ -5,43 +5,70 @@
 <a href=#5 id=5 data-nosnippet>5</a></span><span class="kw">use </span>chrono::TimeZone;
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>chrono_tz::Tz;
 <a href=#7 id=7 data-nosnippet>7</a>
-<a href=#8 id=8 data-nosnippet>8</a><span class="doccomment">/// Calculates the standard meridian (longitude in degrees) from an IANA timezone string.
-<a href=#9 id=9 data-nosnippet>9</a>///
-<a href=#10 id=10 data-nosnippet>10</a>/// Example: "Asia/Seoul" (UTC+9) -&gt; 135.0, "America/New_York" (UTC-5) -&gt; -75.0
-<a href=#11 id=11 data-nosnippet>11</a>///
-<a href=#12 id=12 data-nosnippet>12</a>/// Falls back to 135.0 (Korean Standard Meridian) on parsing failure.
-<a href=#13 id=13 data-nosnippet>13</a></span><span class="kw">pub fn </span>standard_meridian_from_tz(timezone: <span class="kw-2">&amp;</span>str) -&gt; f64 {
-<a href=#14 id=14 data-nosnippet>14</a>    <span class="kw">if let </span><span class="prelude-val">Ok</span>(tz) = timezone.parse::&lt;Tz&gt;() {
-<a href=#15 id=15 data-nosnippet>15</a>        <span class="kw">let </span>ref_dt = tz.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">1</span>, <span class="number">15</span>, <span class="number">12</span>, <span class="number">0</span>, <span class="number">0</span>).single();
-<a href=#16 id=16 data-nosnippet>16</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(dt) = ref_dt {
-<a href=#17 id=17 data-nosnippet>17</a>            <span class="kw">use </span>chrono_tz::OffsetComponents;
-<a href=#18 id=18 data-nosnippet>18</a>            <span class="kw">let </span>base_offset_secs = dt.offset().base_utc_offset().num_seconds() <span class="kw">as </span>f64;
-<a href=#19 id=19 data-nosnippet>19</a>            <span class="kw">return </span>(base_offset_secs / <span class="number">3600.0</span>) * <span class="number">15.0</span>;
-<a href=#20 id=20 data-nosnippet>20</a>        }
-<a href=#21 id=21 data-nosnippet>21</a>    }
-<a href=#22 id=22 data-nosnippet>22</a>    <span class="number">135.0 </span><span class="comment">// Fallback: Standard Meridian
-<a href=#23 id=23 data-nosnippet>23</a></span>}
-<a href=#24 id=24 data-nosnippet>24</a>
-<a href=#25 id=25 data-nosnippet>25</a><span class="attr">#[cfg(test)]
-<a href=#26 id=26 data-nosnippet>26</a></span><span class="kw">mod </span>tests {
-<a href=#27 id=27 data-nosnippet>27</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-<a href=#28 id=28 data-nosnippet>28</a>
-<a href=#29 id=29 data-nosnippet>29</a>    <span class="attr">#[test]
-<a href=#30 id=30 data-nosnippet>30</a>    </span><span class="kw">fn </span>test_asia_seoul() {
-<a href=#31 id=31 data-nosnippet>31</a>        <span class="kw">let </span>m = standard_meridian_from_tz(<span class="string">"Asia/Seoul"</span>);
-<a href=#32 id=32 data-nosnippet>32</a>        <span class="macro">assert!</span>((m - <span class="number">135.0</span>).abs() &lt; <span class="number">0.01</span>);
-<a href=#33 id=33 data-nosnippet>33</a>    }
-<a href=#34 id=34 data-nosnippet>34</a>
-<a href=#35 id=35 data-nosnippet>35</a>    <span class="attr">#[test]
-<a href=#36 id=36 data-nosnippet>36</a>    </span><span class="kw">fn </span>test_america_new_york() {
-<a href=#37 id=37 data-nosnippet>37</a>        <span class="kw">let </span>m = standard_meridian_from_tz(<span class="string">"America/New_York"</span>);
-<a href=#38 id=38 data-nosnippet>38</a>        <span class="macro">assert!</span>((m - (-<span class="number">75.0</span>)).abs() &lt; <span class="number">0.01</span>);
-<a href=#39 id=39 data-nosnippet>39</a>    }
+<a href=#8 id=8 data-nosnippet>8</a><span class="doccomment">/// Calculates the standard meridian (longitude in degrees) from an IANA timezone string
+<a href=#9 id=9 data-nosnippet>9</a>/// at an optional historical reference datetime.
+<a href=#10 id=10 data-nosnippet>10</a>///
+<a href=#11 id=11 data-nosnippet>11</a>/// Example:
+<a href=#12 id=12 data-nosnippet>12</a>/// - "Asia/Seoul" at 2024 -&gt; 135.0 (UTC+9)
+<a href=#13 id=13 data-nosnippet>13</a>/// - "Asia/Seoul" at 1955 -&gt; 127.5 (UTC+8:30, used historically between 1954-03-21 and 1961-08-09)
+<a href=#14 id=14 data-nosnippet>14</a></span><span class="kw">pub fn </span>standard_meridian_from_tz_at(timezone: <span class="kw-2">&amp;</span>str, dt_opt: <span class="prelude-ty">Option</span>&lt;chrono::NaiveDateTime&gt;) -&gt; f64 {
+<a href=#15 id=15 data-nosnippet>15</a>    <span class="kw">if let </span><span class="prelude-val">Ok</span>(tz) = timezone.parse::&lt;Tz&gt;() {
+<a href=#16 id=16 data-nosnippet>16</a>        <span class="kw">let </span>ref_dt = <span class="kw">match </span>dt_opt {
+<a href=#17 id=17 data-nosnippet>17</a>            <span class="prelude-val">Some</span>(dt) =&gt; tz
+<a href=#18 id=18 data-nosnippet>18</a>                .from_local_datetime(<span class="kw-2">&amp;</span>dt)
+<a href=#19 id=19 data-nosnippet>19</a>                .earliest()
+<a href=#20 id=20 data-nosnippet>20</a>                .or_else(|| tz.from_local_datetime(<span class="kw-2">&amp;</span>dt).latest()),
+<a href=#21 id=21 data-nosnippet>21</a>            <span class="prelude-val">None </span>=&gt; tz.with_ymd_and_hms(<span class="number">2024</span>, <span class="number">1</span>, <span class="number">15</span>, <span class="number">12</span>, <span class="number">0</span>, <span class="number">0</span>).single(),
+<a href=#22 id=22 data-nosnippet>22</a>        };
+<a href=#23 id=23 data-nosnippet>23</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(dt) = ref_dt {
+<a href=#24 id=24 data-nosnippet>24</a>            <span class="kw">use </span>chrono_tz::OffsetComponents;
+<a href=#25 id=25 data-nosnippet>25</a>            <span class="kw">let </span>base_offset_secs = dt.offset().base_utc_offset().num_seconds() <span class="kw">as </span>f64;
+<a href=#26 id=26 data-nosnippet>26</a>            <span class="kw">return </span>(base_offset_secs / <span class="number">3600.0</span>) * <span class="number">15.0</span>;
+<a href=#27 id=27 data-nosnippet>27</a>        }
+<a href=#28 id=28 data-nosnippet>28</a>    }
+<a href=#29 id=29 data-nosnippet>29</a>    <span class="number">135.0 </span><span class="comment">// Fallback: Standard Meridian
+<a href=#30 id=30 data-nosnippet>30</a></span>}
+<a href=#31 id=31 data-nosnippet>31</a>
+<a href=#32 id=32 data-nosnippet>32</a><span class="doccomment">/// Calculates the standard meridian (longitude in degrees) from an IANA timezone string (defaulting to modern 2024 reference).
+<a href=#33 id=33 data-nosnippet>33</a></span><span class="kw">pub fn </span>standard_meridian_from_tz(timezone: <span class="kw-2">&amp;</span>str) -&gt; f64 {
+<a href=#34 id=34 data-nosnippet>34</a>    standard_meridian_from_tz_at(timezone, <span class="prelude-val">None</span>)
+<a href=#35 id=35 data-nosnippet>35</a>}
+<a href=#36 id=36 data-nosnippet>36</a>
+<a href=#37 id=37 data-nosnippet>37</a><span class="attr">#[cfg(test)]
+<a href=#38 id=38 data-nosnippet>38</a></span><span class="kw">mod </span>tests {
+<a href=#39 id=39 data-nosnippet>39</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <a href=#40 id=40 data-nosnippet>40</a>
 <a href=#41 id=41 data-nosnippet>41</a>    <span class="attr">#[test]
-<a href=#42 id=42 data-nosnippet>42</a>    </span><span class="kw">fn </span>test_invalid_fallback() {
-<a href=#43 id=43 data-nosnippet>43</a>        <span class="kw">let </span>m = standard_meridian_from_tz(<span class="string">"invalid/tz"</span>);
+<a href=#42 id=42 data-nosnippet>42</a>    </span><span class="kw">fn </span>test_asia_seoul() {
+<a href=#43 id=43 data-nosnippet>43</a>        <span class="kw">let </span>m = standard_meridian_from_tz(<span class="string">"Asia/Seoul"</span>);
 <a href=#44 id=44 data-nosnippet>44</a>        <span class="macro">assert!</span>((m - <span class="number">135.0</span>).abs() &lt; <span class="number">0.01</span>);
 <a href=#45 id=45 data-nosnippet>45</a>    }
-<a href=#46 id=46 data-nosnippet>46</a>}
+<a href=#46 id=46 data-nosnippet>46</a>
+<a href=#47 id=47 data-nosnippet>47</a>    <span class="attr">#[test]
+<a href=#48 id=48 data-nosnippet>48</a>    </span><span class="kw">fn </span>test_asia_seoul_historical_1955() {
+<a href=#49 id=49 data-nosnippet>49</a>        <span class="kw">use </span>chrono::NaiveDate;
+<a href=#50 id=50 data-nosnippet>50</a>        <span class="kw">let </span>dt = NaiveDate::from_ymd_opt(<span class="number">1955</span>, <span class="number">6</span>, <span class="number">15</span>)
+<a href=#51 id=51 data-nosnippet>51</a>            .unwrap()
+<a href=#52 id=52 data-nosnippet>52</a>            .and_hms_opt(<span class="number">12</span>, <span class="number">0</span>, <span class="number">0</span>)
+<a href=#53 id=53 data-nosnippet>53</a>            .unwrap();
+<a href=#54 id=54 data-nosnippet>54</a>        <span class="kw">let </span>m = standard_meridian_from_tz_at(<span class="string">"Asia/Seoul"</span>, <span class="prelude-val">Some</span>(dt));
+<a href=#55 id=55 data-nosnippet>55</a>        <span class="macro">assert!</span>(
+<a href=#56 id=56 data-nosnippet>56</a>            (m - <span class="number">127.5</span>).abs() &lt; <span class="number">0.01</span>,
+<a href=#57 id=57 data-nosnippet>57</a>            <span class="string">"1955 Korea must use UTC+8:30 (127.5 deg meridian), got {}"</span>,
+<a href=#58 id=58 data-nosnippet>58</a>            m
+<a href=#59 id=59 data-nosnippet>59</a>        );
+<a href=#60 id=60 data-nosnippet>60</a>    }
+<a href=#61 id=61 data-nosnippet>61</a>
+<a href=#62 id=62 data-nosnippet>62</a>    <span class="attr">#[test]
+<a href=#63 id=63 data-nosnippet>63</a>    </span><span class="kw">fn </span>test_america_new_york() {
+<a href=#64 id=64 data-nosnippet>64</a>        <span class="kw">let </span>m = standard_meridian_from_tz(<span class="string">"America/New_York"</span>);
+<a href=#65 id=65 data-nosnippet>65</a>        <span class="macro">assert!</span>((m - (-<span class="number">75.0</span>)).abs() &lt; <span class="number">0.01</span>);
+<a href=#66 id=66 data-nosnippet>66</a>    }
+<a href=#67 id=67 data-nosnippet>67</a>
+<a href=#68 id=68 data-nosnippet>68</a>    <span class="attr">#[test]
+<a href=#69 id=69 data-nosnippet>69</a>    </span><span class="kw">fn </span>test_invalid_fallback() {
+<a href=#70 id=70 data-nosnippet>70</a>        <span class="kw">let </span>m = standard_meridian_from_tz(<span class="string">"invalid/tz"</span>);
+<a href=#71 id=71 data-nosnippet>71</a>        <span class="macro">assert!</span>((m - <span class="number">135.0</span>).abs() &lt; <span class="number">0.01</span>);
+<a href=#72 id=72 data-nosnippet>72</a>    }
+<a href=#73 id=73 data-nosnippet>73</a>}
 </code></pre></div></section></main></body></html>
