@@ -17,7 +17,7 @@ pub struct TierCommand {
 
 pub fn run(cmd: TierCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let is_male = cmd.birth.is_male();
+    let is_male = cmd.birth.is_male()?;
 
     let saju_in = SajuAnalysisInput::new(input.clone(), is_male, false, Some(false));
     let vedic_in = VedicAnalysisInput::new(input.clone(), Some(false), None);

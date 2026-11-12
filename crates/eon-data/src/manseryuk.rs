@@ -102,42 +102,59 @@ impl LunarCalendar {
         let ws_t = engine.find_winter_solstice_before(nm_t + chrono::Duration::days(1))?;
         let ws_nm_t = engine.find_new_moon_before(ws_t + chrono::Duration::minutes(1))?;
 
+        // Determine if this sui (cycle between Winter Solstices) has 13 lunar months (contains a leap month)
+        let next_ws_t = engine.find_winter_solstice_before(ws_t + chrono::Duration::days(380))?;
+        let next_ws_nm_t = engine.find_new_moon_before(next_ws_t + chrono::Duration::minutes(1))?;
+        let sui_months = ((next_ws_nm_t - ws_nm_t).num_days() as f64 / 29.53).round() as i32;
+        let has_leap_year = sui_months >= 13;
+
         // The month containing the Winter Solstice is always lunar Month 11
         let mut curr_nm = ws_nm_t;
         let mut month_num = 11;
         let mut is_leap = false;
+        let mut leap_placed = false;
         let mut lunar_year = (ws_t + kst_offset).year();
-        // Since Winter Solstice is in late December, Month 1 of this lunar year usually falls in the next solar year
-        if (ws_t + kst_offset).month() == 12 {
-            // Winter Solstice in Dec: Month 11 belongs to this lunar cycle's year
-        }
 
         // 4. Step forward month by month from Month 11 to current New Moon
-        while (nm_t - curr_nm).num_minutes() > 4320 {
+        while (nm_t - curr_nm).num_minutes() > 1440 {
             let next_nm = engine.find_new_moon_before(curr_nm + chrono::Duration::days(45))?;
+            let next_next_nm = engine.find_new_moon_before(next_nm + chrono::Duration::days(45))?;
 
-            // Check if this month contains a Zhong-qi (major solar term)
+            // Evaluate the upcoming month [next_nm, next_next_nm)
             let mut has_zq = false;
-            for i in 1..=23 {
-                if i % 2 == 1 {
-                    // Zhong-qi odd indices (1, 3, 5, ...)
-                    if let Ok(zq_t) = engine.find_solar_term_time(curr_nm, i) {
-                        // Consider included if Zhong-qi occurs on the day of new moon (in KST)
-                        let zq_date = (zq_t + kst_offset).date_naive();
-                        let curr_nm_date = (curr_nm + kst_offset).date_naive();
-                        let next_nm_date = (next_nm + kst_offset).date_naive();
+            let month_start_kst = (next_nm + kst_offset).date_naive();
+            let month_end_kst = (next_next_nm + kst_offset).date_naive();
 
-                        if zq_date >= curr_nm_date && zq_date < next_nm_date {
-                            has_zq = true;
-                            break;
+            if let Some(start_dt) = Utc
+                .with_ymd_and_hms(
+                    month_start_kst.year(),
+                    month_start_kst.month(),
+                    month_start_kst.day(),
+                    0,
+                    0,
+                    0,
+                )
+                .single()
+            {
+                let search_start_utc = start_dt - kst_offset;
+                for i in 1..=23 {
+                    if i % 2 == 1 {
+                        // Zhong-qi odd indices (1, 3, 5, ..., 23)
+                        if let Ok(zq_t) = engine.find_solar_term_time(search_start_utc, i) {
+                            let zq_date = (zq_t + kst_offset).date_naive();
+                            if zq_date >= month_start_kst && zq_date < month_end_kst {
+                                has_zq = true;
+                                break;
+                            }
                         }
                     }
                 }
             }
 
-            if !has_zq && !is_leap {
-                // If a month has no Zhong-qi and no leap month has been set yet, assign leap month
+            if has_leap_year && !leap_placed && !has_zq {
+                // Month without Zhong-qi in a leap sui becomes the leap month
                 is_leap = true;
+                leap_placed = true;
             } else {
                 month_num += 1;
                 if month_num > 12 {
@@ -213,5 +230,11 @@ mod tests {
         // Verify inverse conversion
         let solar_back = LunarCalendar::to_solar(2004, 10, 16, false).unwrap();
         assert_eq!(solar_back, solar);
+
+        // KASI reference: 2023-03-22 is Lunar 2023 Leap Month 2 Day 1 (윤2월 1일)
+        let leap_date = NaiveDate::from_ymd_opt(2023, 3, 22).unwrap();
+        let lunar_leap = LunarCalendar::from_solar_internal(leap_date).unwrap();
+        println!("DEBUG: Lunar result for 2023-03-22: {:?}", lunar_leap);
+        assert_eq!(lunar_leap, (2023, 2, 1, true));
     }
 }

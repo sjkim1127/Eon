@@ -132,7 +132,100 @@ impl VimshottariDasha {
             current_start = end_time;
         }
 
+        // Guarantee 120-year complete cycle coverage even when starting mid-dasha
+        let elapsed_portion = 1.0 - portion_remaining;
+        if elapsed_portion > 0.0001 {
+            let remainder_years = full_years * elapsed_portion;
+            let end_time = current_start + Duration::seconds(years_to_secs(remainder_years));
+
+            let mut dasha = DashaPeriod {
+                lord: first_lord,
+                start_time: current_start,
+                end_time,
+                sub_dashas: Vec::new(),
+                name: None,
+                interpretation: None,
+                is_favorable: None,
+            };
+
+            if levels > 1 {
+                dasha.sub_dashas = Self::calculate_sub_periods_prefix(
+                    first_lord,
+                    current_start,
+                    end_time,
+                    levels - 1,
+                    elapsed_portion,
+                );
+            }
+
+            timeline.push(dasha);
+        }
+
         timeline
+    }
+
+    fn calculate_sub_periods_prefix(
+        lord: VedicPlanet,
+        start: DateTime<Utc>,
+        end: DateTime<Utc>,
+        levels_remaining: u8,
+        prefix_fraction: f64,
+    ) -> Vec<DashaPeriod> {
+        let total_duration = end.signed_duration_since(start).num_seconds() as f64;
+        let lord_idx = Self::CYCLE
+            .iter()
+            .position(|&(p, _)| p == lord)
+            .unwrap_or(0);
+
+        let full_mahadasha_duration = if prefix_fraction > 0.0 {
+            total_duration / prefix_fraction
+        } else {
+            total_duration
+        };
+
+        let mut sub_periods = Vec::new();
+        let mut current_start = start;
+        let mut cumulative_fraction = 0.0;
+
+        for i in 0..9 {
+            let idx = (lord_idx + i) % 9;
+            let (p_lord, years) = Self::CYCLE[idx];
+            let sub_fraction = years / Self::TOTAL_YEARS;
+
+            if cumulative_fraction >= prefix_fraction - 1e-6 {
+                break;
+            }
+
+            let portion_to_take = (prefix_fraction - cumulative_fraction).min(sub_fraction);
+            let sub_duration = full_mahadasha_duration * portion_to_take;
+            let sub_end = current_start + Duration::seconds(sub_duration as i64);
+
+            let mut sub = DashaPeriod {
+                lord: p_lord,
+                start_time: current_start,
+                end_time: sub_end,
+                sub_dashas: Vec::new(),
+                name: None,
+                interpretation: None,
+                is_favorable: None,
+            };
+
+            if levels_remaining > 1 {
+                sub.sub_dashas = Self::calculate_sub_periods(
+                    p_lord,
+                    current_start,
+                    sub_end,
+                    levels_remaining - 1,
+                    None,
+                );
+            }
+
+            sub_periods.push(sub);
+            current_start = sub_end;
+            cumulative_fraction += portion_to_take;
+        }
+
+        sub_periods
     }
 
     fn calculate_sub_periods(
@@ -487,5 +580,27 @@ mod tests {
             assert!(!yogini.is_empty());
             assert_eq!(vimshottari[0].lord, VedicPlanet::Ketu);
         }
+    }
+
+    #[test]
+    fn test_vimshottari_guarantees_120_year_coverage() {
+        let birth = Utc.with_ymd_and_hms(1990, 5, 15, 10, 30, 0).unwrap();
+        // Moon in middle of a nakshatra (say 50% elapsed)
+        let moon_long = 125.5;
+        let timeline = VimshottariDasha::calculate_timeline(birth, moon_long, 2);
+
+        // First dasha starts at birth
+        assert_eq!(timeline.first().unwrap().start_time, birth);
+
+        // Last dasha ends ~120 years later
+        let end_time = timeline.last().unwrap().end_time;
+        let total_days = (end_time - birth).num_days();
+        let expected_days = (120.0 * 365.2425) as i64;
+        assert!(
+            (total_days - expected_days).abs() <= 2,
+            "Total days covered {} must match 120 years {}",
+            total_days,
+            expected_days
+        );
     }
 }

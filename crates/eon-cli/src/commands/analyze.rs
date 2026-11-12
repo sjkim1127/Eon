@@ -18,7 +18,7 @@ pub struct AnalyzeCommand {
 
 pub fn run(cmd: AnalyzeCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let is_male = cmd.birth.is_male();
+    let is_male = cmd.birth.is_male()?;
     let name = cmd.birth.name.clone();
 
     let omni = facade::analyze_all_synthesized(input, is_male, name)?;

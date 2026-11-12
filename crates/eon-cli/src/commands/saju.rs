@@ -21,7 +21,7 @@ pub struct SajuCommand {
 
 pub fn run(cmd: SajuCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let is_male = cmd.birth.is_male();
+    let is_male = cmd.birth.is_male()?;
     let saju_in = SajuAnalysisInput::new(input, is_male, cmd.night_rat, Some(false));
 
     let res = facade::analyze_saju(saju_in)?;

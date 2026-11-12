@@ -3,7 +3,7 @@ use crate::error::ServiceError;
 use chrono::Datelike;
 use chrono::NaiveDate;
 use chrono_tz::Tz;
-use eon_core::{standard_meridian_from_tz, BirthInfo, Gender, Location};
+use eon_core::{BirthInfo, Gender, Location};
 use std::str::FromStr;
 
 pub struct PreparedBirthContext {
@@ -27,11 +27,13 @@ pub fn prepare_birth_context(
     validate_analysis_input(input)?;
 
     let location_name = input.city.as_deref().unwrap_or("Birth Location");
+    let dt_naive = chrono::NaiveDate::from_ymd_opt(input.year, input.month, input.day)
+        .and_then(|d| d.and_hms_opt(input.hour, input.minute, 0));
     let location = Location::new(
         location_name,
         input.lat,
         input.lon,
-        standard_meridian_from_tz(&input.timezone),
+        eon_core::standard_meridian_from_tz_at(&input.timezone, dt_naive),
     );
 
     let mut birth_info = if input.is_lunar {

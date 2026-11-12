@@ -184,7 +184,7 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
 
                     match birth_args.to_analysis_input() {
                         Ok(input) => {
-                            let is_male = birth_args.is_male();
+                            let is_male = birth_args.is_male().unwrap_or(true);
                             match facade::analyze_all_synthesized(
                                 input,
                                 is_male,

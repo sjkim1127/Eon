@@ -20,4 +20,4 @@ pub mod timezone;
 pub use birth::{timezones, BirthInfo, CalendarType, Gender};
 pub use error::{CoreError, EonError};
 pub use location::{lookup_city, CityInfo, Location, BUILTIN_CITIES};
-pub use timezone::standard_meridian_from_tz;
+pub use timezone::{standard_meridian_from_tz, standard_meridian_from_tz_at};

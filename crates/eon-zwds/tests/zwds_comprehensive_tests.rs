@@ -42,7 +42,13 @@ fn test_monthly_and_daily_luck_calculation() {
     assert_eq!(liuyue.palace_idx, (annual_palace_idx + 5) % 12);
     assert_eq!(liuyue.si_hua, get_sihua_stars(HeavenlyStem::Yi)); // Bing year -> 1st month Geng -> 6th month Yi
 
-    let liuri = calculate_liuri(liuyue.palace_idx, 15); // 15th Lunar Day
+    let liuri = calculate_liuri(liuyue.palace_idx, 15, HeavenlyStem::Wu); // 15th Lunar Day with Wu stem
     assert_eq!(liuri.day, 15);
     assert_eq!(liuri.palace_idx, (liuyue.palace_idx + 14) % 12);
+    assert_eq!(liuri.si_hua, get_sihua_stars(HeavenlyStem::Wu));
+
+    // Verify date-based Liu Ri derivation
+    let date = chrono::NaiveDate::from_ymd_opt(2024, 5, 20).unwrap();
+    let liuri_date = calculate_liuri_from_solar_date(liuyue.palace_idx, 15, date);
+    assert_eq!(liuri_date.day, 15);
 }

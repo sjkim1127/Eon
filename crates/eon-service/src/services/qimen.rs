@@ -56,10 +56,10 @@ pub fn analyze_qimen(input: QimenAnalysisInput) -> Result<QimenAnalysisOutput, S
 
     let meta = AnalysisMeta {
         precision: BirthTimePrecision::Exact,
-        input_time: dt.to_rfc3339(),
-        corrected_time: dt.to_rfc3339(),
-        is_dst: false,
-        dst_offset_hours: None,
+        input_time: birth_ctx.input_time_string,
+        corrected_time: birth_ctx.corrected_time_string,
+        is_dst: birth_ctx.is_dst,
+        dst_offset_hours: birth_ctx.dst_offset_hours,
         analysis_timezone: input.base.timezone,
     };
 

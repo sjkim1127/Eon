@@ -61,9 +61,18 @@ impl ManseryukCache {
             .terms
             .partition_point(|(_, term_time)| *term_time <= time);
         if pos == 0 {
-            // `time` is before all solar terms of this year. This edge case is rare in practice;
-            // match the original behavior of returning index 0 (or the first term's index if stored
-            // differently) rather than None, since callers expect a valid term index.
+            // `time` is before all solar terms in `year` (e.g. in January before Lichun).
+            // Look up the last solar term of `year - 1` (Xiaohan or Dahan).
+            if let Some(prev_table) = self.years.get(&(year - 1)) {
+                let prev_pos = prev_table
+                    .terms
+                    .partition_point(|(_, term_time)| *term_time <= time);
+                if prev_pos > 0 {
+                    return Some(prev_table.terms[prev_pos - 1].0);
+                } else if let Some(last) = prev_table.terms.last() {
+                    return Some(last.0);
+                }
+            }
             Some(table.terms.first().map_or(0, |(idx, _)| *idx))
         } else {
             Some(table.terms[pos - 1].0)
@@ -143,5 +152,26 @@ impl GlobalCache {
 
     pub fn get_lunar_date(solar_date: chrono::NaiveDate) -> Option<(i32, u32, u32, bool)> {
         Self::get().get_lunar_date(solar_date)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    #[test]
+    fn test_january_term_index_lookup() {
+        let cache = GlobalCache::get();
+        if !cache.years.is_empty() {
+            // Mid-January 2024 should be Xiaohan (term 22) or Dahan (term 23), NOT Lichun (term 0)
+            let time = Utc.with_ymd_and_hms(2024, 1, 15, 12, 0, 0).unwrap();
+            let idx = cache.get_term_index_at(time);
+            assert!(
+                idx == Some(22) || idx == Some(23),
+                "Expected January 15 to be Xiaohan(22) or Dahan(23), got {:?}",
+                idx
+            );
+        }
     }
 }

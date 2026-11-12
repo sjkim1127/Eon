@@ -17,7 +17,7 @@ pub struct IchingCommand {
 
 pub fn run(cmd: IchingCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let is_male = cmd.birth.is_male();
+    let is_male = cmd.birth.is_male()?;
     let saju_in = SajuAnalysisInput::new(input, is_male, false, None);
     let res = facade::analyze_iching(saju_in)?;
 

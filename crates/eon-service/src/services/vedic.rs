@@ -47,7 +47,7 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
             .find(|position| position.planet == VedicPlanet::Moon)
             .map(|position| position.rasi)
             .unwrap_or(0),
-        chart.ayanamsa,
+        transit_chart.ayanamsa,
         &mut gochara,
         input.current.now_utc,
         input.base.lat,

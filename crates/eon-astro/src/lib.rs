@@ -199,7 +199,7 @@ impl AstroEngine {
         Ok(current_time)
     }
 
-    /// Find the exact start time of a given 24 Solar Term.
+    /// Find the exact start time of a given 24 Solar Term occurring AT or AFTER birth_time.
     pub fn find_solar_term_time(
         &self,
         birth_time: DateTime<Utc>,
@@ -214,6 +214,16 @@ impl AstroEngine {
         let approx_time = birth_time + Duration::seconds((diff * 86400.0 / 0.9856) as i64);
 
         self.find_time_for_longitude(approx_time, target_long)
+    }
+
+    /// Find the exact start time of a given 24 Solar Term occurring BEFORE or AT the reference time.
+    pub fn find_previous_solar_term_time(
+        &self,
+        reference_time: DateTime<Utc>,
+        term_idx: u8, // 0: Lichun, 1: Yushui ... 23: Dahan
+    ) -> Result<DateTime<Utc>, AstroError> {
+        let target_long = (315.0 + (term_idx as f64) * 15.0) % 360.0;
+        self.find_longitude_time_backward(reference_time, target_long)
     }
 
     /// Calculate detailed planet/moon/node data (longitude, speed).
@@ -500,7 +510,11 @@ impl AstroEngine {
             t += Duration::seconds((days_adj * 86400.0) as i64);
         }
 
-        if t > start_time + Duration::seconds(1) {
+        if t > start_time {
+            let sec_diff = (t - start_time).num_seconds();
+            if sec_diff <= 10 {
+                return Ok(start_time);
+            }
             t -= Duration::days(360);
             return self.find_longitude_time_backward(t, target_long);
         }

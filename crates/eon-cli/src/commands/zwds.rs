@@ -17,7 +17,7 @@ pub struct ZwdsCommand {
 
 pub fn run(cmd: ZwdsCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let is_male = cmd.birth.is_male();
+    let is_male = cmd.birth.is_male()?;
     let zwds_in = ZwdsAnalysisInput::new(input, is_male, None);
     let res = facade::analyze_zwds(zwds_in)?;
 

@@ -17,7 +17,7 @@ pub struct QimenCommand {
 
 pub fn run(cmd: QimenCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let is_male = cmd.birth.is_male();
+    let is_male = cmd.birth.is_male()?;
     let qimen_in = QimenAnalysisInput::new(input, is_male);
     let res = facade::analyze_qimen(qimen_in)?;
 
