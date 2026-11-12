@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["OutputFormat"],"mod":["analyze","hd","mcp","numerology","prompt","qimen","saju","tier","vedic","western","zwds"],"struct":["BirthArgs"]};
+window.SIDEBAR_ITEMS = {"enum":["OutputFormat"],"mod":["analyze","hd","iching","mcp","numerology","prompt","qimen","saju","tier","vedic","western","zwds"],"struct":["BirthArgs"]};
