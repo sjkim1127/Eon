@@ -201,7 +201,7 @@ impl VimshottariDasha {
                     current_start,
                     sub_end,
                     levels_remaining - 1,
-                    Some(sub_elapsed / full_sub_portion),
+                    Some(remaining_sub_portion / full_sub_portion),
                 );
             }
 

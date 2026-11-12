@@ -40,9 +40,24 @@ pub fn run(cmd: NumerologyCommand) -> Result<()> {
                     ""
                 }
             );
-            println!("Expression Number: {}", core.expression);
-            println!("Soul Urge Number: {}", core.soul_urge);
-            println!("Personality Number: {}", core.personality);
+            println!(
+                "Expression Number: {}",
+                core.expression
+                    .map(|v| v.to_string())
+                    .unwrap_or_else(|| "N/A (Requires Latin name)".to_string())
+            );
+            println!(
+                "Soul Urge Number: {}",
+                core.soul_urge
+                    .map(|v| v.to_string())
+                    .unwrap_or_else(|| "N/A (Requires Latin name)".to_string())
+            );
+            println!(
+                "Personality Number: {}",
+                core.personality
+                    .map(|v| v.to_string())
+                    .unwrap_or_else(|| "N/A (Requires Latin name)".to_string())
+            );
             println!("Birthday Number: {}", core.birthday);
             println!("Personal Year Vibration: {}", res.result.personal_year);
             println!("Four Pinnacle Cycles:");

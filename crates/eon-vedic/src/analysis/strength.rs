@@ -1,7 +1,7 @@
 use crate::chart::{VedicChart, VedicPosition};
 use crate::constants::*;
 use crate::planets::VedicPlanet;
-use chrono::Timelike;
+
 use serde::{Deserialize, Serialize}; // Time calculation needed
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -43,7 +43,7 @@ impl StrengthEngine {
         let chesta_score = Self::calculate_chesta_bala(pos, chart);
         let naisargika_score = Self::calculate_naisargika_bala(pos.planet);
         let kala_score = Self::calculate_kala_bala(pos.planet, chart);
-        let ayana_score = Self::calculate_ayana_bala(pos.planet, pos.sidereal_deg);
+        let ayana_score = Self::calculate_ayana_bala(pos.planet, pos.declination);
 
         let drik_score = Self::calculate_drik_bala(pos, chart);
         let paksha_score = Self::calculate_paksha_bala(pos.planet, chart);
@@ -135,7 +135,7 @@ impl StrengthEngine {
         let chesta_score = Self::calculate_chesta_bala(pos, chart);
         let naisargika_score = Self::calculate_naisargika_bala(pos.planet);
         let kala_score = Self::calculate_kala_bala(pos.planet, chart);
-        let ayana_score = Self::calculate_ayana_bala(pos.planet, pos.sidereal_deg);
+        let ayana_score = Self::calculate_ayana_bala(pos.planet, pos.declination);
         let drik_score = Self::calculate_drik_bala(pos, chart);
         let paksha_score = Self::calculate_paksha_bala(pos.planet, chart);
         let sapta_score = Self::calculate_saptavargaja_bala(pos, chart);
@@ -405,48 +405,9 @@ impl StrengthEngine {
         }
 
         // 4. Tribhaga Bala (Day/Night 3 Parts)
-        // Jupiter always gets 60.
-        if planet == VedicPlanet::Jupiter {
+        // Jupiter always gets 60. The lord of the birth-time third (calculated using full UTC timestamps) gets 60.
+        if planet == VedicPlanet::Jupiter || planet == p.tribhaga_lord {
             score += 60.0;
-        } else {
-            // Determine the 3 lords based on Day or Night
-            // Day Lords: Mercury, Sun, Saturn
-            // Night Lords: Moon, Venus, Mars
-            let lords = if p.is_day_birth {
-                [VedicPlanet::Mercury, VedicPlanet::Sun, VedicPlanet::Saturn]
-            } else {
-                [VedicPlanet::Moon, VedicPlanet::Venus, VedicPlanet::Mars]
-            };
-
-            // Calculate duration in seconds to find which part
-            let sr_secs = p.sunrise.num_seconds_from_midnight();
-            let ss_secs = p.sunset.num_seconds_from_midnight();
-            let bt_secs = p.current_time.time().num_seconds_from_midnight();
-
-            let (start_secs, duration_secs) = if p.is_day_birth {
-                (sr_secs, ss_secs.wrapping_sub(sr_secs)) // Simple subtraction for day
-            } else {
-                // Night duration = (24h - sunset) + sunrise
-                let day_seconds = 24 * 3600;
-                let night_len = (day_seconds - ss_secs) + sr_secs;
-                (ss_secs, night_len)
-            };
-
-            // Elapsed time from start of period
-            let elapsed = if bt_secs >= start_secs {
-                bt_secs - start_secs
-            } else {
-                // Wrapped around midnight (e.g. Birth 2AM, Start 18PM)
-                (bt_secs + 24 * 3600) - start_secs
-            };
-
-            let part_len = duration_secs / 3;
-            if part_len > 0 {
-                let idx = (elapsed / part_len).min(2) as usize; // Clamp to max 2
-                if lords[idx] == planet {
-                    score += 60.0;
-                }
-            }
         }
 
         score

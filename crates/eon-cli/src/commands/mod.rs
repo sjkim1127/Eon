@@ -4,6 +4,7 @@ use eon_service::dto::AnalysisInput;
 
 pub mod analyze;
 pub mod hd;
+pub mod iching;
 pub mod mcp;
 pub mod numerology;
 pub mod prompt;

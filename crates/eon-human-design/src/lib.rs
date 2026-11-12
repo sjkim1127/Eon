@@ -297,7 +297,7 @@ pub fn get_planet_positions(
     for (name, planet_id) in planets {
         let pos = match engine.get_planet_position(datetime, planet_id, 2) {
             Ok(p) => p,
-            Err(_) if planet_id == 15 => 0.0, // Fallback for Chiron if ephemeris is missing (e.g., in CI or Wasm without asteroid data)
+            Err(_) if planet_id == 15 => continue, // Skip Chiron if asteroid ephemeris is missing to avoid fake Gate 41 activation
             Err(e) => return Err(e),
         };
         let (gate, line, color, tone, base) = degree_to_gate_line(pos);

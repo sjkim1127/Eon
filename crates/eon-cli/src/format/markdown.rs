@@ -208,7 +208,17 @@ pub fn format_markdown_report(
         ));
         md.push_str(&format!(
             "- **Expression**: {} | **Soul Urge**: {} | **Personal Year**: {}\n\n",
-            n.result.core.expression, n.result.core.soul_urge, n.result.personal_year
+            n.result
+                .core
+                .expression
+                .map(|v| v.to_string())
+                .unwrap_or_else(|| "N/A".to_string()),
+            n.result
+                .core
+                .soul_urge
+                .map(|v| v.to_string())
+                .unwrap_or_else(|| "N/A".to_string()),
+            n.result.personal_year
         ));
     }
 

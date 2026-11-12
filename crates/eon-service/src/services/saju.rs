@@ -23,6 +23,10 @@ pub fn analyze(input: SajuAnalysisInput) -> Result<SajuAnalysisOutput, ServiceEr
     };
 
     let birth_ctx = prepare_birth_context(&input.base, Some(gender), true)?;
+    let birth_utc = birth_ctx
+        .birth_info
+        .to_utc()
+        .map_err(|e| ServiceError::InvalidInput(e.to_string()))?;
 
     let saju_input = SajuInput::new_solar(
         birth_ctx.corrected_year,
@@ -31,6 +35,7 @@ pub fn analyze(input: SajuAnalysisInput) -> Result<SajuAnalysisOutput, ServiceEr
         birth_ctx.corrected_hour,
         birth_ctx.corrected_minute,
     )
+    .with_birth_utc(birth_utc)
     .with_gender(gender)
     .with_night_rat_hour(input.use_night_rat_hour);
 
@@ -103,4 +108,32 @@ pub fn analyze(input: SajuAnalysisInput) -> Result<SajuAnalysisOutput, ServiceEr
         void_analysis,
         complexity,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::dto::AnalysisInput;
+
+    #[test]
+    fn test_solar_term_boundary_after_lichun_2024_02_04() {
+        // 2024-02-04 17:45 KST in Seoul. Actual Lichun was at 17:27 KST.
+        // Longitude correction for Seoul is ~ -32 min (17:13).
+        // Year pillar must be Jia-Chen (甲辰) and Month pillar must be Bing-Yin (丙寅).
+        let input = SajuAnalysisInput::new(
+            AnalysisInput::new(2024, 2, 4, 17, 45, "Asia/Seoul", 37.5665, 126.9780)
+                .with_city("Seoul".to_string()),
+            true,
+            false,
+            None,
+        );
+
+        let output = analyze(input).expect("Saju analysis should succeed");
+        let pillars = output.report.pillars;
+
+        assert_eq!(pillars.year.to_string(), "甲辰");
+        assert_eq!(pillars.month.to_string(), "丙寅");
+        assert_eq!(pillars.day.to_string(), "戊戌");
+        assert_eq!(pillars.hour.to_string(), "辛酉");
+    }
 }

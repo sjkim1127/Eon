@@ -293,7 +293,16 @@ pub fn format_agent_context(
         ));
         out.push_str(&format!(
             "- **Core Numbers**: Expression: {}, Soul Urge: {}, Personality: {}, Birthday: {}\n",
-            core.expression, core.soul_urge, core.personality, core.birthday
+            core.expression
+                .map(|v| v.to_string())
+                .unwrap_or_else(|| "N/A".to_string()),
+            core.soul_urge
+                .map(|v| v.to_string())
+                .unwrap_or_else(|| "N/A".to_string()),
+            core.personality
+                .map(|v| v.to_string())
+                .unwrap_or_else(|| "N/A".to_string()),
+            core.birthday
         ));
         out.push_str(&format!(
             "- **Personal Year**: Cycle Vibration {}\n",

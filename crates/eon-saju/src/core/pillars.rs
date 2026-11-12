@@ -42,6 +42,8 @@ pub struct SajuInput {
     pub use_night_rat_hour: bool,
     /// Gender (used for Major Luck progression direction)
     pub gender: eon_core::Gender,
+    /// Optional exact UTC birth moment for astronomical calculations (solar terms, etc.)
+    pub birth_utc: Option<DateTime<Utc>>,
 }
 
 impl SajuInput {
@@ -61,6 +63,7 @@ impl SajuInput {
             timezone_offset_h: 9.0,         // Default KST
             use_night_rat_hour: false,      // Default next day early rat hour
             gender: eon_core::Gender::Male, // Default Male
+            birth_utc: None,
         }
     }
 
@@ -88,6 +91,7 @@ impl SajuInput {
             timezone_offset_h: 9.0,
             use_night_rat_hour: false,
             gender: eon_core::Gender::Male,
+            birth_utc: None,
         }
     }
 
@@ -114,6 +118,7 @@ impl SajuInput {
             timezone_offset_h: 9.0, // Default KST
             use_night_rat_hour: false,
             gender: eon_core::Gender::Male,
+            birth_utc: None,
         }
     }
 
@@ -151,7 +156,20 @@ impl SajuInput {
             timezone_offset_h: 9.0, // Default KST
             use_night_rat_hour: false,
             gender: eon_core::Gender::Male,
+            birth_utc: None,
         }
+    }
+
+    /// Sets exact astronomical UTC timestamp
+    pub fn with_birth_utc(mut self, birth_utc: DateTime<Utc>) -> Self {
+        self.birth_utc = Some(birth_utc);
+        self
+    }
+
+    /// Sets timezone offset in hours
+    pub fn with_timezone_offset(mut self, offset_h: f32) -> Self {
+        self.timezone_offset_h = offset_h;
+        self
     }
 
     /// Sets gender
@@ -216,19 +234,23 @@ impl FourPillars {
             )));
         }
 
-        // 1. UTC timestamp for solar term calculation (uncorrected actual standard time)
-        let dt_absolute_utc = NaiveDate::from_ymd_opt(solar_year, solar_month, solar_day)
-            .and_then(|d| d.and_hms_opt(input.hour, input.minute, 0))
-            .map(|dt| {
-                let offset_ms = (input.timezone_offset_h * 3600.0 * 1000.0) as i64;
-                Utc.from_utc_datetime(&(dt - Duration::milliseconds(offset_ms)))
-            })
-            .ok_or_else(|| {
-                SajuError::InvalidDateTime(format!(
-                    "Absolute DT error: {}-{}-{}",
-                    solar_year, solar_month, solar_day
-                ))
-            })?;
+        // 1. UTC timestamp for solar term calculation (astronomical absolute time)
+        let dt_absolute_utc = if let Some(utc) = input.birth_utc {
+            utc
+        } else {
+            NaiveDate::from_ymd_opt(solar_year, solar_month, solar_day)
+                .and_then(|d| d.and_hms_opt(input.hour, input.minute, 0))
+                .map(|dt| {
+                    let offset_ms = (input.timezone_offset_h * 3600.0 * 1000.0) as i64;
+                    Utc.from_utc_datetime(&(dt - Duration::milliseconds(offset_ms)))
+                })
+                .ok_or_else(|| {
+                    SajuError::InvalidDateTime(format!(
+                        "Absolute DT error: {}-{}-{}",
+                        solar_year, solar_month, solar_day
+                    ))
+                })?
+        };
 
         // 2. Regional time correction (True Solar Time calculation) - for Day/Hour pillars
         let lon_correction = input.get_longitude_correction_minutes();

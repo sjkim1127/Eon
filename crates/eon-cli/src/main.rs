@@ -54,6 +54,9 @@ enum Commands {
     /// QiMen DunJia (9 Palaces, 8 Doors, 9 Stars, 8 Deities) analysis
     Qimen(qimen::QimenCommand),
 
+    /// I Ching / HeLuo Destiny Hexagrams (Pre-natal, Post-natal, Lifetime Cycles) analysis
+    Iching(iching::IchingCommand),
+
     /// Pythagorean Numerology (5 Core Numbers, Pinnacles, Personal Year) analysis
     Numerology(numerology::NumerologyCommand),
 
@@ -76,6 +79,7 @@ fn main() -> Result<()> {
         Commands::Zwds(cmd) => zwds::run(cmd),
         Commands::Hd(cmd) => hd::run(cmd),
         Commands::Qimen(cmd) => qimen::run(cmd),
+        Commands::Iching(cmd) => iching::run(cmd),
         Commands::Numerology(cmd) => numerology::run(cmd),
         Commands::Tier(cmd) => tier::run(cmd),
         Commands::Mcp(cmd) => mcp::run(cmd),

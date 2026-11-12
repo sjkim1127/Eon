@@ -29,6 +29,7 @@ pub fn analyze_qimen(input: QimenAnalysisInput) -> Result<QimenAnalysisOutput, S
         birth_ctx.corrected_hour,
         birth_ctx.corrected_minute,
     )
+    .with_birth_utc(dt)
     .with_gender(gender)
     .with_night_rat_hour(input.use_night_rat_hour);
 

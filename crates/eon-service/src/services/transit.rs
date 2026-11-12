@@ -16,6 +16,10 @@ pub fn analyze(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, Ser
     };
 
     let birth_ctx = prepare_birth_context(&input.base.base, Some(gender), true)?;
+    let birth_utc = birth_ctx
+        .birth_info
+        .to_utc()
+        .map_err(|e| ServiceError::InvalidInput(e.to_string()))?;
 
     let saju_input = SajuInput::new_solar(
         birth_ctx.corrected_year,
@@ -24,6 +28,7 @@ pub fn analyze(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, Ser
         birth_ctx.corrected_hour,
         birth_ctx.corrected_minute,
     )
+    .with_birth_utc(birth_utc)
     .with_gender(gender)
     .with_night_rat_hour(input.base.use_night_rat_hour);
 

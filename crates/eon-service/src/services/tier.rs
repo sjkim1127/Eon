@@ -60,7 +60,15 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
 
     let quantum_synergies =
         compute_quantum_synergies(saju, vedic, western, zwds, human_design, qimen, numerology);
-    let component_raw: f32 = detailed_components.iter().map(|c| c.score * c.weight).sum();
+    let total_weight: f32 = detailed_components.iter().map(|c| c.weight).sum();
+    let component_raw: f32 = if total_weight > 0.0 {
+        detailed_components
+            .iter()
+            .map(|c| c.score * (c.weight / total_weight))
+            .sum()
+    } else {
+        50.0
+    };
     let synergy_delta: f32 = quantum_synergies.iter().map(|s| s.score_delta).sum();
     let destiny_raw_score = (component_raw + synergy_delta).clamp(0.0, 100.0);
 
@@ -101,8 +109,13 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
     }
     if let Some(num) = numerology {
         strengths.push(format!(
-            "Pythagorean Numerology: Life Path {}, Expression {}",
-            num.result.core.life_path, num.result.core.expression
+            "Pythagorean Numerology: Life Path {}{}",
+            num.result.core.life_path,
+            num.result
+                .core
+                .expression
+                .map(|e| format!(", Expression {}", e))
+                .unwrap_or_default()
         ));
     }
 
@@ -319,92 +332,102 @@ fn compute_omni_detailed_components(
     });
 
     // 8. Western Dignities & Aspects (Weight: 0.09)
-    let west_score = if let Some(w) = western {
+    let (west_score, west_reason) = if let Some(w) = western {
         let pattern_bonus = w.result.aspect_patterns.len() as f32 * 15.0;
         let aspect_score = (w.result.aspects.len() as f32 * 2.0).min(50.0);
-        (50.0 + pattern_bonus + aspect_score).min(100.0)
+        (
+            (50.0 + pattern_bonus + aspect_score).min(100.0),
+            format!(
+                "{} aspects, {} aspect patterns detected",
+                w.result.aspects.len(),
+                w.result.aspect_patterns.len()
+            ),
+        )
     } else {
-        55.0
+        (
+            50.0,
+            "Western astrology module uncalculated (neutral baseline applied)".to_string(),
+        )
     };
     components.push(DestinyComponent {
         key: "western_astrology".to_string(),
         label: "Western Aspects & Essential Dignities".to_string(),
         score: west_score,
         weight: 0.09,
-        reasons: vec![if let Some(w) = western {
-            format!(
-                "{} aspects, {} aspect patterns detected",
-                w.result.aspects.len(),
-                w.result.aspect_patterns.len()
-            )
-        } else {
-            "Default Western astrology module applied".to_string()
-        }],
+        reasons: vec![west_reason],
     });
 
     // 9. ZWDS Pattern & Sihua (Weight: 0.09)
-    let zwds_score = if let Some(z) = zwds {
+    let (zwds_score, zwds_reason) = if let Some(z) = zwds {
         let pat_score = (z.chart.destiny_patterns.len() as f32 * 20.0).min(60.0);
         let collision_penalty = z.chart.collisions.len() as f32 * 10.0;
-        (50.0 + pat_score - collision_penalty).clamp(20.0, 100.0)
+        (
+            (50.0 + pat_score - collision_penalty).clamp(20.0, 100.0),
+            format!(
+                "{} destiny formations, {} SiHua collisions",
+                z.chart.destiny_patterns.len(),
+                z.chart.collisions.len()
+            ),
+        )
     } else {
-        55.0
+        (
+            50.0,
+            "Zi Wei Dou Shu module uncalculated (neutral baseline applied)".to_string(),
+        )
     };
     components.push(DestinyComponent {
         key: "zwds_harmony".to_string(),
         label: "ZWDS Formations & Flying SiHua Clashes".to_string(),
         score: zwds_score,
         weight: 0.09,
-        reasons: vec![if let Some(z) = zwds {
-            format!(
-                "{} destiny formations, {} SiHua collisions",
-                z.chart.destiny_patterns.len(),
-                z.chart.collisions.len()
-            )
-        } else {
-            "Default Zi Wei Dou Shu module applied".to_string()
-        }],
+        reasons: vec![zwds_reason],
     });
 
     // 10. Human Design Dynamics (Weight: 0.07)
-    let hd_score = if let Some(hd) = human_design {
-        let center_bonus = hd.result.defined_centers.len() as f32 * 10.0;
-        let channel_bonus = hd.result.active_channels.len() as f32 * 12.0;
-        (30.0 + center_bonus + channel_bonus).clamp(20.0, 100.0)
+    let (hd_score, hd_reason) = if let Some(hd) = human_design {
+        let channel_bonus = (hd.result.active_channels.len() as f32 * 10.0).min(40.0);
+        let center_balance = if !hd.result.defined_centers.is_empty() {
+            10.0
+        } else {
+            15.0 // Reflectors have pure open sensitivity wisdom
+        };
+        (
+            (45.0 + channel_bonus + center_balance).clamp(20.0, 100.0),
+            format!(
+                "{} defined centers, {} active channels, Type: {}",
+                hd.result.defined_centers.len(),
+                hd.result.active_channels.len(),
+                hd.result.chart_type
+            ),
+        )
     } else {
-        55.0
+        (
+            50.0,
+            "Human Design module uncalculated (neutral baseline applied)".to_string(),
+        )
     };
     components.push(DestinyComponent {
         key: "human_design_dynamics".to_string(),
         label: "Human Design Centers & Active Channels".to_string(),
         score: hd_score,
         weight: 0.07,
-        reasons: vec![if let Some(hd) = human_design {
-            format!(
-                "{} defined centers, {} active channels, Type: {}",
-                hd.result.defined_centers.len(),
-                hd.result.active_channels.len(),
-                hd.result.chart_type
-            )
-        } else {
-            "Default Human Design module applied".to_string()
-        }],
+        reasons: vec![hd_reason],
     });
 
     // 11. Qimen Harmony (Weight: 0.06)
-    let qimen_score = if let Some(qm) = qimen {
-        let ju_base = (qm.report.pan.ju_number as f32 * 8.0).min(70.0);
-        let palace_bonus = (qm.report.pan.palaces.len() as f32 * 3.0).min(30.0);
-        (20.0 + ju_base + palace_bonus).clamp(20.0, 100.0)
-    } else {
-        55.0
-    };
-    components.push(DestinyComponent {
-        key: "qimen_harmony".to_string(),
-        label: "QiMen 9 Palaces & Auspicious Doors".to_string(),
-        score: qimen_score,
-        weight: 0.06,
-        reasons: vec![if let Some(qm) = qimen {
+    let (qimen_score, qimen_reason) = if let Some(qm) = qimen {
+        use eon_qimen::core::elements::{Door, Star};
+        let door_bonus: f32 = match qm.report.pan.value_envoy_door {
+            Some(Door::Kai | Door::Xiu | Door::Sheng) => 25.0, // Three Auspicious Doors (三吉門)
+            Some(Door::Jing | Door::Du) => 10.0,
+            _ => 0.0,
+        };
+        let star_bonus: f32 = match qm.report.pan.value_chief_star {
+            Some(Star::Ren | Star::Fu | Star::Chong) => 15.0, // Auspicious stars
+            _ => 5.0,
+        };
+        (
+            (45.0 + door_bonus + star_bonus).clamp(20.0, 100.0),
             format!(
                 "QiMen DunJia Ju {} ({}), Value Chief: {:?}, Envoy Door: {:?}",
                 qm.report.pan.ju_number,
@@ -425,37 +448,59 @@ fn compute_omni_detailed_components(
                     .as_ref()
                     .map(|d| format!("{:?}", d))
                     .unwrap_or_default()
-            )
-        } else {
-            "Default QiMen DunJia module applied".to_string()
-        }],
+            ),
+        )
+    } else {
+        (
+            50.0,
+            "QiMen DunJia module uncalculated (neutral baseline applied)".to_string(),
+        )
+    };
+    components.push(DestinyComponent {
+        key: "qimen_harmony".to_string(),
+        label: "QiMen 9 Palaces & Auspicious Doors".to_string(),
+        score: qimen_score,
+        weight: 0.06,
+        reasons: vec![qimen_reason],
     });
 
     // 12. Numerology Vibration (Weight: 0.06)
-    let num_score = if let Some(num) = numerology {
+    let (num_score, num_reason) = if let Some(num) = numerology {
         let master_bonus = if num.result.is_master_life_path {
             20.0
         } else {
             0.0
         };
         let lp_val = (num.result.core.life_path as f32 * 6.0).min(50.0);
-        (30.0 + lp_val + master_bonus).clamp(20.0, 100.0)
+        (
+            (30.0 + lp_val + master_bonus).clamp(20.0, 100.0),
+            format!(
+                "Life Path: {}, Expression: {}, Soul Urge: {}",
+                num.result.core.life_path,
+                num.result
+                    .core
+                    .expression
+                    .map(|v| v.to_string())
+                    .unwrap_or_else(|| "N/A".to_string()),
+                num.result
+                    .core
+                    .soul_urge
+                    .map(|v| v.to_string())
+                    .unwrap_or_else(|| "N/A".to_string()),
+            ),
+        )
     } else {
-        55.0
+        (
+            50.0,
+            "Pythagorean Numerology module uncalculated (neutral baseline applied)".to_string(),
+        )
     };
     components.push(DestinyComponent {
         key: "numerology_vibration".to_string(),
         label: "Pythagorean Numerology Vibrations".to_string(),
         score: num_score,
         weight: 0.06,
-        reasons: vec![if let Some(num) = numerology {
-            format!(
-                "Life Path: {}, Expression: {}, Soul Urge: {}",
-                num.result.core.life_path, num.result.core.expression, num.result.core.soul_urge
-            )
-        } else {
-            "Default Numerology module applied".to_string()
-        }],
+        reasons: vec![num_reason],
     });
 
     // 13. Luck Cycle & Transits (Weight: 0.05)

@@ -6,11 +6,11 @@ pub struct NumerologyCoreNumbers {
     /// Life Path Number
     pub life_path: u8,
     /// Expression / Destiny Number
-    pub expression: u8,
+    pub expression: Option<u8>,
     /// Soul Urge / Heart's Desire Number
-    pub soul_urge: u8,
+    pub soul_urge: Option<u8>,
     /// Personality Number
-    pub personality: u8,
+    pub personality: Option<u8>,
     /// Birthday Number
     pub birthday: u8,
 }
@@ -105,18 +105,26 @@ pub fn calculate_numerology(
                 }
             }
         }
-        (
-            reduce_number(expr_sum, true),
-            reduce_number(soul_sum, true),
-            reduce_number(pers_sum, true),
-        )
+
+        if expr_sum > 0 {
+            (
+                Some(reduce_number(expr_sum, true)),
+                if soul_sum > 0 {
+                    Some(reduce_number(soul_sum, true))
+                } else {
+                    None
+                },
+                if pers_sum > 0 {
+                    Some(reduce_number(pers_sum, true))
+                } else {
+                    None
+                },
+            )
+        } else {
+            (None, None, None)
+        }
     } else {
-        // Fallback proxy from birth values if latin name not provided
-        (
-            reduce_number(d_red + y_red, true),
-            reduce_number(m_red, true),
-            reduce_number(y_red, true),
-        )
+        (None, None, None)
     };
 
     // 4. 4 Pinnacles & Challenges
@@ -217,7 +225,14 @@ pub fn calculate_numerology(
 
     let summary_en = format!(
         "Life Path: {}, Expression: {}, Soul Urge: {}, Personal Year: {} (Pythagorean Numerology analysis complete)",
-        life_path, expression, soul_urge, personal_year
+        life_path,
+        expression
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "N/A".to_string()),
+        soul_urge
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "N/A".to_string()),
+        personal_year
     );
     let summary_ko = summary_en.clone();
 
@@ -254,8 +269,16 @@ mod tests {
     fn test_calculate_numerology() {
         let res = calculate_numerology(1990, 5, 15, Some("John Doe"), 2026);
         assert!(res.core.life_path >= 1);
+        assert!(res.core.expression.is_some());
+        assert!(res.core.soul_urge.is_some());
+        assert!(res.core.personality.is_some());
         assert_eq!(res.pinnacles.len(), 4);
         assert!(res.personal_year >= 1 && res.personal_year <= 9);
+
+        let res_no_name = calculate_numerology(1990, 5, 15, None, 2026);
+        assert!(res_no_name.core.expression.is_none());
+        assert!(res_no_name.core.soul_urge.is_none());
+        assert!(res_no_name.core.personality.is_none());
     }
 
     #[test]

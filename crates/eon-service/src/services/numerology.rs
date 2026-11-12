@@ -78,7 +78,7 @@ mod tests {
         assert_eq!(output.result.pinnacles[0].challenge_number, 4);
         assert_eq!(output.meta.input_time, "1990-05-28T00:00:00Z");
         assert_eq!(output.meta.analysis_timezone, "Asia/Seoul");
-        assert_ne!(output.result.core.expression, 0);
+        assert!(output.result.core.expression.is_some());
     }
 
     #[test]

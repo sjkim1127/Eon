@@ -23,7 +23,7 @@ use crate::core::pillars::FourPillars;
 use crate::core::pillars::SajuError;
 use crate::core::stem::HeavenlyStem;
 use crate::core::ten_gods::TenGod;
-use chrono::{Datelike, NaiveDate, TimeZone, Utc};
+use chrono::{Datelike, TimeZone, Utc};
 use eon_core::Gender;
 use serde::{Deserialize, Serialize};
 
@@ -150,11 +150,11 @@ impl MajorLuckAnalysis {
     pub fn calculate_astro(
         pillars: &FourPillars,
         gender: Gender,
-        birth_year: i32,
-        birth_month: u32,
-        birth_day: u32,
-        birth_hour: u32,
-        birth_min: u32,
+        _birth_year: i32,
+        _birth_month: u32,
+        _birth_day: u32,
+        _birth_hour: u32,
+        _birth_min: u32,
     ) -> Result<Self, SajuError> {
         use eon_astro::AstroEngine;
 
@@ -162,19 +162,7 @@ impl MajorLuckAnalysis {
         let direction = LuckDirection::from_year_and_gender(pillars.year.stem, gender);
         let astro = AstroEngine::new();
 
-        // KST 9   UTC
-        let dt_local = NaiveDate::from_ymd_opt(birth_year, birth_month, birth_day)
-            .and_then(|d| d.and_hms_opt(birth_hour, birth_min, 0))
-            .ok_or_else(|| {
-                SajuError::InvalidDateTime(format!(
-                    "Invalid date for major luck calculation: {}-{}-{} {}:{}",
-                    birth_year, birth_month, birth_day, birth_hour, birth_min
-                ))
-            })?;
-
-        let tz_offset =
-            chrono::Duration::minutes((pillars.raw_input.timezone_offset_h * 60.0) as i64);
-        let birth_time = Utc.from_utc_datetime(&(dt_local - tz_offset));
+        let birth_time = pillars.birth_time;
 
         //  24   (0:  ~ 23: )
         let term_idx = astro.get_solar_term_index(birth_time)?;
