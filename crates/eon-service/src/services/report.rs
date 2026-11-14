@@ -257,12 +257,12 @@ fn generate_health_report(saju: &SajuAnalysisOutput, name: &str) -> (String, Str
     // Element distribution analysis
     let mut fire_count = 0;
     let mut water_count = 0;
-    for pillar in &[
-        &saju.report.pillars.year,
-        &saju.report.pillars.month,
-        &saju.report.pillars.day,
-        &saju.report.pillars.hour,
-    ] {
+    let natal = &saju.report.pillars;
+    // The Hour pillar is absent when the birth time is unknown
+    for pillar in [&natal.year, &natal.month, &natal.day]
+        .into_iter()
+        .chain(natal.hour.as_ref())
+    {
         if pillar.stem.element() == Element::Fire {
             fire_count += 1;
         }

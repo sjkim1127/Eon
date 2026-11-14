@@ -325,19 +325,21 @@ impl SpiritMarkerAnalysis {
     pub fn from_pillars(pillars: &FourPillars) -> Self {
         let mut markers = Vec::new();
 
-        let branches = [
+        let mut branches = vec![
             (pillars.year.branch, PillarPosition::Year),
             (pillars.month.branch, PillarPosition::Month),
             (pillars.day.branch, PillarPosition::Day),
-            (pillars.hour.branch, PillarPosition::Hour),
         ];
-
-        let stems = [
+        let mut stems = vec![
             (pillars.year.stem, PillarPosition::Year),
             (pillars.month.stem, PillarPosition::Month),
             (pillars.day.stem, PillarPosition::Day),
-            (pillars.hour.stem, PillarPosition::Hour),
         ];
+        // The Hour pillar is absent when the birth time is unknown
+        if let Some(hour) = pillars.hour {
+            branches.push((hour.branch, PillarPosition::Hour));
+            stems.push((hour.stem, PillarPosition::Hour));
+        }
 
         let day_branch = pillars.day.branch;
         let day_stem = pillars.day.stem;
@@ -525,12 +527,14 @@ impl SpiritMarkerAnalysis {
 
         // ===  (白虎煞) ===
         // 甲辰, 乙未, 丙戌, 丁丑, 戊辰, 壬戌, 癸丑
-        let pillars_ganzi = [
+        let mut pillars_ganzi = vec![
             (pillars.year, PillarPosition::Year),
             (pillars.month, PillarPosition::Month),
             (pillars.day, PillarPosition::Day),
-            (pillars.hour, PillarPosition::Hour),
         ];
+        if let Some(hour) = pillars.hour {
+            pillars_ganzi.push((hour, PillarPosition::Hour));
+        }
         for (ganzi, pos) in &pillars_ganzi {
             if Self::is_baihu(*ganzi) {
                 markers.push(FoundMarker {
@@ -709,12 +713,12 @@ impl SpiritMarkerAnalysis {
 
         // ===   (mapped_markers)  ===
         let mapped_markers = markers.iter()
-            .map(|m| {
+            .filter_map(|m| {
                 let pillar_ganzi = match m.position {
                     PillarPosition::Year => pillars.year,
                     PillarPosition::Month => pillars.month,
                     PillarPosition::Day => pillars.day,
-                    PillarPosition::Hour => pillars.hour,
+                    PillarPosition::Hour => pillars.hour?,
                 };
                 let element = if m.is_stem { pillar_ganzi.stem.element() } else { pillar_ganzi.branch.element() };
                 let is_yong_hee = element == primary_el || element == assistant_el;
@@ -851,7 +855,7 @@ impl SpiritMarkerAnalysis {
 
 * {}", description, pos_context);
 
-                SpiritMarkerDetail {
+                Some(SpiritMarkerDetail {
                     marker: m.marker,
                     position: m.position,
                     is_stem: m.is_stem,
@@ -861,18 +865,21 @@ impl SpiritMarkerAnalysis {
                     reasons,
                     is_clashed,
                     is_combined,
-                }
+                })
             })
             .collect();
 
         // ===  (//)   ===
         let mut aux_shinsals = Vec::new();
         let sp = &pillars.supplementary_pillars;
-        let aux_pillars = [
-            ("Taewon", sp.taewon),
-            ("Myeonggung", sp.myeonggung),
-            ("Singung", sp.shingung),
-        ];
+        let mut aux_pillars = vec![("Taewon", sp.taewon)];
+        // Myeonggung/Singung depend on the birth hour
+        if let Some(mg) = sp.myeonggung {
+            aux_pillars.push(("Myeonggung", mg));
+        }
+        if let Some(sg) = sp.shingung {
+            aux_pillars.push(("Singung", sg));
+        }
 
         // tianyi_branches is already in scope from the beginning of the method
 
@@ -1333,7 +1340,7 @@ mod tests {
             year,
             month,
             day,
-            hour,
+            hour: Some(hour),
             birth_time: chrono::Utc::now(),
             gender: eon_core::Gender::Male,
             raw_input: SajuInput::new_solar(2000, 1, 1, 12, 0),

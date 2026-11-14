@@ -35,7 +35,7 @@ fn make_pillars(
         year: GanZi::new(y_s, y_b),
         month: GanZi::new(m_s, m_b),
         day: GanZi::new(d_s, d_b),
-        hour: GanZi::new(h_s, h_b),
+        hour: Some(GanZi::new(h_s, h_b)),
         birth_time: Utc::now(),
         gender: Gender::Male,
         raw_input: dummy_input,

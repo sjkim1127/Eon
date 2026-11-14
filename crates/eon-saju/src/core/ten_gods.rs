@@ -194,11 +194,13 @@ pub struct TenGodAnalysis {
     pub year_stem: TenGod,
     pub month_stem: TenGod,
     pub day_stem: TenGod,
-    pub hour_stem: TenGod,
+    /// `None` when the birth hour is unknown
+    pub hour_stem: Option<TenGod>,
     pub year_branch: TenGod,
     pub month_branch: TenGod,
     pub day_branch: TenGod,
-    pub hour_branch: TenGod,
+    /// `None` when the birth hour is unknown
+    pub hour_branch: Option<TenGod>,
 }
 
 impl TenGodAnalysis {
@@ -209,11 +211,13 @@ impl TenGodAnalysis {
             year_stem: TenGod::from_stems(dm, pillars.year.stem),
             month_stem: TenGod::from_stems(dm, pillars.month.stem),
             day_stem: TenGod::Bijian,
-            hour_stem: TenGod::from_stems(dm, pillars.hour.stem),
+            hour_stem: pillars.hour.map(|h| TenGod::from_stems(dm, h.stem)),
             year_branch: TenGod::from_stem_and_branch(dm, pillars.year.branch),
             month_branch: TenGod::from_stem_and_branch(dm, pillars.month.branch),
             day_branch: TenGod::from_stem_and_branch(dm, pillars.day.branch),
-            hour_branch: TenGod::from_stem_and_branch(dm, pillars.hour.branch),
+            hour_branch: pillars
+                .hour
+                .map(|h| TenGod::from_stem_and_branch(dm, h.branch)),
         }
     }
 
@@ -232,16 +236,16 @@ impl TenGodAnalysis {
         ];
 
         let all = [
-            self.year_stem,
-            self.month_stem,
+            Some(self.year_stem),
+            Some(self.month_stem),
             self.hour_stem,
-            self.year_branch,
-            self.month_branch,
-            self.day_branch,
+            Some(self.year_branch),
+            Some(self.month_branch),
+            Some(self.day_branch),
             self.hour_branch,
         ];
 
-        for god in all {
+        for god in all.into_iter().flatten() {
             counts[god.index()].1 += 1;
         }
 
@@ -272,7 +276,7 @@ impl std::fmt::Display for TenGodAnalysis {
         writeln!(
             f,
             "│ {:^6} │ {:^6} │ {:^6} │ {:^6} │",
-            self.hour_stem.hangul(),
+            self.hour_stem.map_or("-", |g| g.hangul()),
             self.day_stem.hangul(),
             self.month_stem.hangul(),
             self.year_stem.hangul()
@@ -280,7 +284,7 @@ impl std::fmt::Display for TenGodAnalysis {
         writeln!(
             f,
             "│ {:^6} │ {:^6} │ {:^6} │ {:^6} │",
-            self.hour_branch.hangul(),
+            self.hour_branch.map_or("-", |g| g.hangul()),
             self.day_branch.hangul(),
             self.month_branch.hangul(),
             self.year_branch.hangul()
@@ -328,7 +332,7 @@ mod tests {
         assert_eq!(analysis.day_master, HeavenlyStem::Geng);
         assert_eq!(analysis.year_stem, TenGod::Piancai);
         assert_eq!(analysis.month_stem, TenGod::Zhengcai);
-        assert_eq!(analysis.hour_stem, TenGod::Zhengguan);
+        assert_eq!(analysis.hour_stem, Some(TenGod::Zhengguan));
 
         println!("{}", analysis);
     }

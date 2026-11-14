@@ -804,19 +804,21 @@ pub struct RelationshipAnalysis {
 impl RelationshipAnalysis {
     /// Analyze relationships from four pillars
     pub fn from_pillars(pillars: &FourPillars) -> Self {
-        let stems = [
+        let mut stems = vec![
             ("year_stem", pillars.year.stem),
             ("month_stem", pillars.month.stem),
             ("day_stem", pillars.day.stem),
-            ("hour_stem", pillars.hour.stem),
         ];
-
-        let branches = [
+        let mut branches = vec![
             ("year_branch", pillars.year.branch),
             ("month_branch", pillars.month.branch),
             ("day_branch", pillars.day.branch),
-            ("hour_branch", pillars.hour.branch),
         ];
+        // The Hour pillar is absent when the birth time is unknown
+        if let Some(hour) = pillars.hour {
+            stems.push(("hour_stem", hour.stem));
+            branches.push(("hour_branch", hour.branch));
+        }
 
         let mut stem_combinations = Vec::new();
         let mut stem_clashes = Vec::new();
@@ -832,8 +834,8 @@ impl RelationshipAnalysis {
         let mut myung_am_combinations = Vec::new();
 
         // Analyze heavenly stems (all pairs)
-        for i in 0..4 {
-            for j in (i + 1)..4 {
+        for i in 0..stems.len() {
+            for j in (i + 1)..stems.len() {
                 let (pos1, stem1) = stems[i];
                 let (pos2, stem2) = stems[j];
 
@@ -847,8 +849,8 @@ impl RelationshipAnalysis {
         }
 
         // Analyze earthly branches (all pairs)
-        for i in 0..4 {
-            for j in (i + 1)..4 {
+        for i in 0..branches.len() {
+            for j in (i + 1)..branches.len() {
                 let (pos1, branch1) = branches[i];
                 let (pos2, branch2) = branches[j];
 
@@ -875,8 +877,8 @@ impl RelationshipAnalysis {
         }
 
         // Analyze self-punishments
-        for i in 0..4 {
-            for j in (i + 1)..4 {
+        for i in 0..branches.len() {
+            for j in (i + 1)..branches.len() {
                 let (pos1, branch1) = branches[i];
                 let (pos2, branch2) = branches[j];
                 if let Some(pun) = BranchPunishment::check_self(branch1, branch2) {
@@ -908,8 +910,8 @@ impl RelationshipAnalysis {
         let seasonal_combinations = SeasonalCombination::check(&all_branches);
 
         // Analyze hidden combinations (branch hidden stems)
-        for i in 0..4 {
-            for j in (i + 1)..4 {
+        for i in 0..branches.len() {
+            for j in (i + 1)..branches.len() {
                 let (pos1, b1) = branches[i];
                 let (pos2, b2) = branches[j];
                 let combinations = Self::check_am_combinations(b1, b2);

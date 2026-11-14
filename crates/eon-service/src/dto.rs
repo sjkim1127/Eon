@@ -18,6 +18,9 @@ pub struct AnalysisInput {
     pub timezone: String,
     #[serde(default)]
     pub city: Option<String>,
+    /// Birth time of day is unknown (a noon placeholder was supplied).
+    #[serde(default)]
+    pub unknown_time: bool,
 }
 
 impl AnalysisInput {
@@ -43,7 +46,13 @@ impl AnalysisInput {
             lon,
             timezone: timezone.into(),
             city: None,
+            unknown_time: false,
         }
+    }
+
+    pub fn with_unknown_time(mut self, unknown_time: bool) -> Self {
+        self.unknown_time = unknown_time;
+        self
     }
 
     pub fn with_city(mut self, city: impl Into<String>) -> Self {
@@ -69,7 +78,7 @@ impl SajuAnalysisInput {
         use_night_rat_hour: bool,
         unknown_time: Option<bool>,
     ) -> Self {
-        let precision = if unknown_time.unwrap_or(false) {
+        let precision = if unknown_time.unwrap_or(base.unknown_time) {
             BirthTimePrecision::UnknownTimeNoonProxy
         } else {
             BirthTimePrecision::Exact
@@ -124,7 +133,7 @@ impl VedicAnalysisInput {
         unknown_time: Option<bool>,
         now_utc: Option<DateTime<Utc>>,
     ) -> Self {
-        let precision = if unknown_time.unwrap_or(false) {
+        let precision = if unknown_time.unwrap_or(base.unknown_time) {
             BirthTimePrecision::UnknownTimeNoonProxy
         } else {
             BirthTimePrecision::Exact
@@ -206,7 +215,8 @@ pub struct AnalysisMeta {
     pub input_time: String,
     pub corrected_time: String,
     pub is_dst: bool,
-    pub dst_offset_hours: Option<i32>,
+    /// Total UTC offset in hours at birth (base + DST); fractional for zones like +5:30.
+    pub dst_offset_hours: Option<f64>,
     pub analysis_timezone: String,
 }
 
@@ -442,7 +452,8 @@ pub struct TierResult {
     pub potential_tier: TierGrade,
     pub domain_tiers: Vec<DomainTier>,
     pub saju_result: ScoreResult,
-    pub vedic_result: ScoreResult,
+    /// `None` when the birth time is unknown (Vedic requires the ascendant and Moon)
+    pub vedic_result: Option<ScoreResult>,
     pub transit_result: ScoreResult,
     pub strengths: Vec<String>,
     pub weaknesses: Vec<String>,
@@ -526,7 +537,8 @@ pub struct DestinyTierRequest {
 #[serde(rename_all = "camelCase")]
 pub struct OmniDestinyTierInput {
     pub saju: SajuAnalysisOutput,
-    pub vedic: VedicAnalysisOutput,
+    /// `None` when the birth time is unknown
+    pub vedic: Option<VedicAnalysisOutput>,
     pub western: Option<WesternAnalysisOutput>,
     pub zwds: Option<ZwdsAnalysisOutput>,
     pub human_design: Option<HumanDesignAnalysisOutput>,
@@ -571,13 +583,25 @@ pub struct SynthesizedOmniAnalysis {
     pub input: AnalysisInput,
     pub tier: TierResult,
     pub saju: SajuAnalysisOutput,
-    pub vedic: VedicAnalysisOutput,
+    /// `None` when the birth time is unknown (Vedic requires the ascendant and Moon)
+    pub vedic: Option<VedicAnalysisOutput>,
     pub western: Option<WesternAnalysisOutput>,
     pub zwds: Option<ZwdsAnalysisOutput>,
     pub human_design: Option<HumanDesignAnalysisOutput>,
     pub qimen: Option<QimenAnalysisOutput>,
     pub numerology: Option<NumerologyAnalysisOutput>,
     pub handbook: InterpretationHandbook,
+    /// Engines that were not run, with the reason (e.g. unknown birth time)
+    #[serde(default)]
+    pub skipped_engines: Vec<SkippedEngine>,
+}
+
+/// An engine that was intentionally not evaluated, with the reason why.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SkippedEngine {
+    pub engine: String,
+    pub reason: String,
 }
 
 impl TryFrom<SajuAnalysisRequest> for SajuAnalysisInput {
@@ -603,6 +627,7 @@ impl TryFrom<SajuAnalysisRequest> for SajuAnalysisInput {
                 lon: req.base.lon,
                 timezone: req.base.timezone,
                 city: None,
+                unknown_time: req.base.unknown_time.unwrap_or(false),
             },
             is_male: req.is_male,
             use_night_rat_hour: req.use_night_rat_hour.unwrap_or(false),
@@ -628,6 +653,7 @@ impl TryFrom<QimenAnalysisRequest> for QimenAnalysisInput {
                 lon: req.base.lon,
                 timezone: req.base.timezone,
                 city: None,
+                unknown_time: req.base.unknown_time.unwrap_or(false),
             },
             is_male: req.is_male,
             use_night_rat_hour: req.use_night_rat_hour.unwrap_or(false),
@@ -690,6 +716,7 @@ impl TryFrom<VedicAnalysisRequest> for VedicAnalysisInput {
                 lon: req.base.lon,
                 timezone: req.base.timezone,
                 city: None,
+                unknown_time: req.base.unknown_time.unwrap_or(false),
             },
             precision,
             current: CurrentContext {
