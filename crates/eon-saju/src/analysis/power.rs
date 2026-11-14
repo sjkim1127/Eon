@@ -86,43 +86,44 @@ impl IntegratedAnalysis {
         let eff_map = if options.apply_transform {
             pillars.effective_elements()
         } else {
-            let mut map = [(Element::Wood, Element::Wood); 8];
+            let mut map: [Option<(Element, Element)>; 8] = [None; 8];
             let stems = [
-                pillars.year.stem,
-                pillars.month.stem,
-                pillars.day.stem,
-                pillars.hour.stem,
+                Some(pillars.year.stem),
+                Some(pillars.month.stem),
+                Some(pillars.day.stem),
+                pillars.hour.map(|h| h.stem),
             ];
             let branches = [
-                pillars.year.branch,
-                pillars.month.branch,
-                pillars.day.branch,
-                pillars.hour.branch,
+                Some(pillars.year.branch),
+                Some(pillars.month.branch),
+                Some(pillars.day.branch),
+                pillars.hour.map(|h| h.branch),
             ];
             for i in 0..4 {
-                map[i] = (stems[i].element(), stems[i].element());
-                map[i + 4] = (branches[i].element(), branches[i].element());
+                map[i] = stems[i].map(|s| (s.element(), s.element()));
+                map[i + 4] = branches[i].map(|b| (b.element(), b.element()));
             }
             map
         };
 
-        // 2-1. Process stems (0~3)
+        // 2-1. Process stems (0~3); the hour slot is skipped when the birth hour is unknown
         let stems = [
-            pillars.year.stem,
-            pillars.month.stem,
-            pillars.day.stem,
-            pillars.hour.stem,
+            Some(pillars.year.stem),
+            Some(pillars.month.stem),
+            Some(pillars.day.stem),
+            pillars.hour.map(|h| h.stem),
         ];
         let branches = [
-            pillars.year.branch,
-            pillars.month.branch,
-            pillars.day.branch,
-            pillars.hour.branch,
+            Some(pillars.year.branch),
+            Some(pillars.month.branch),
+            Some(pillars.day.branch),
+            pillars.hour.map(|h| h.branch),
         ];
 
         for i in 0..4 {
-            let stem = stems[i];
-            let (_, effective_el) = eff_map[i];
+            let (Some(stem), Some((_, effective_el))) = (stems[i], eff_map[i]) else {
+                continue;
+            };
             let mut weight = weights[i];
 
             if options.apply_correction {
@@ -130,7 +131,9 @@ impl IntegratedAnalysis {
                 // Additional position multipliers for year, month, day, hour
                 let branch_bonus_factors = [0.05, 0.5, 0.2, 0.1];
                 for j in 0..4 {
-                    let branch = branches[j];
+                    let Some(branch) = branches[j] else {
+                        continue;
+                    };
                     let has_root = branch
                         .hidden_stems()
                         .iter()
@@ -156,15 +159,10 @@ impl IntegratedAnalysis {
         }
 
         // 2-2. Process branches (4~7)
-        let branches = [
-            pillars.year.branch,
-            pillars.month.branch,
-            pillars.day.branch,
-            pillars.hour.branch,
-        ];
         for i in 0..4 {
-            let branch = branches[i];
-            let (_, mut effective_el) = eff_map[i + 4];
+            let (Some(branch), Some((_, mut effective_el))) = (branches[i], eff_map[i + 4]) else {
+                continue;
+            };
             let weight = weights[i + 4];
 
             // Climate correction
@@ -292,14 +290,6 @@ impl IntegratedAnalysis {
                 None,
             ),
             (
-                pillars.hour.stem.element(),
-                trans.hour_stem.effective,
-                base_weights[3],
-                true,
-                pillars.hour.stem.polarity(),
-                None,
-            ),
-            (
                 pillars.year.branch.element(),
                 trans.year_branch.effective,
                 base_weights[4],
@@ -323,15 +313,28 @@ impl IntegratedAnalysis {
                 pillars.day.branch.primary_stem().polarity(),
                 Some(pillars.day.branch),
             ),
-            (
-                pillars.hour.branch.element(),
-                trans.hour_branch.effective,
+        ];
+
+        // Hour pillar is absent when the birth hour is unknown
+        if let (Some(h), Some(hs), Some(hb)) = (pillars.hour, &trans.hour_stem, &trans.hour_branch)
+        {
+            items.push((
+                h.stem.element(),
+                hs.effective,
+                base_weights[3],
+                true,
+                h.stem.polarity(),
+                None,
+            ));
+            items.push((
+                h.branch.element(),
+                hb.effective,
                 base_weights[7],
                 false,
-                pillars.hour.branch.primary_stem().polarity(),
-                Some(pillars.hour.branch),
-            ),
-        ];
+                h.branch.primary_stem().polarity(),
+                Some(h.branch),
+            ));
+        }
 
         if let (Some(m_ganzi), Some(ref ms)) = (major, &trans.major_stem) {
             items.push((

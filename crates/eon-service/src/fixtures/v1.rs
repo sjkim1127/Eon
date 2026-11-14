@@ -19,6 +19,7 @@ pub fn get_v1_fixtures() -> Vec<OracleFixture> {
                 lon: 126.9780,
                 timezone: "Asia/Seoul".to_string(),
                 city: None,
+                unknown_time: false,
             },
             is_male: true,
             expected_saju: ExpectedSaju {
@@ -55,6 +56,7 @@ pub fn get_v1_fixtures() -> Vec<OracleFixture> {
                 lon: 126.9780,
                 timezone: "Asia/Seoul".to_string(),
                 city: None,
+                unknown_time: false,
             },
             is_male: true,
             expected_saju: ExpectedSaju {
@@ -90,6 +92,7 @@ pub fn get_v1_fixtures() -> Vec<OracleFixture> {
                 lon: -74.0060,
                 timezone: "America/New_York".to_string(),
                 city: None,
+                unknown_time: false,
             },
             is_male: false,
             expected_saju: ExpectedSaju {
@@ -99,8 +102,9 @@ pub fn get_v1_fixtures() -> Vec<OracleFixture> {
                 month_branch: "Si".to_string(),
                 day_stem: "Yi".to_string(),
                 day_branch: "You".to_string(),
-                hour_stem: "Jia".to_string(),
-                hour_branch: "Shen".to_string(),
+                // 15:30 EDT = 14:30 EST (DST removed) + 4m longitude = 14:34 true solar time => Wei hour
+                hour_stem: "Gui".to_string(),
+                hour_branch: "Wei".to_string(),
                 day_master: "Yi".to_string(),
             },
             expected_vedic: ExpectedVedic {

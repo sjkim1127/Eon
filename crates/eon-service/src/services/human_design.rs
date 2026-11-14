@@ -6,6 +6,7 @@ use crate::error::ServiceError;
 use chrono::Datelike;
 
 pub fn analyze(input: HumanDesignAnalysisInput) -> Result<HumanDesignAnalysisOutput, ServiceError> {
+    crate::birth::require_known_birth_time(&input.base, "Human Design")?;
     let birth_ctx = prepare_birth_context(&input.base, None, false)?;
 
     let dt = birth_ctx

@@ -1,5 +1,5 @@
 use crate::birth::prepare_birth_context;
-use crate::dto::{AnalysisMeta, SajuAnalysisInput, SajuAnalysisOutput};
+use crate::dto::{AnalysisMeta, BirthTimePrecision, SajuAnalysisInput, SajuAnalysisOutput};
 use crate::error::ServiceError;
 use eon_core::Gender;
 use eon_saju::analysis::analytics::Analyzer;
@@ -37,7 +37,11 @@ pub fn analyze(input: SajuAnalysisInput) -> Result<SajuAnalysisOutput, ServiceEr
     )
     .with_birth_utc(birth_utc)
     .with_gender(gender)
-    .with_night_rat_hour(input.use_night_rat_hour);
+    .with_night_rat_hour(input.use_night_rat_hour)
+    .with_unknown_time(matches!(
+        input.precision,
+        BirthTimePrecision::UnknownTimeNoonProxy
+    ));
 
     let pillars = FourPillars::calculate(&saju_input)
         .map_err(|e| ServiceError::Saju(format!("Four Pillars calculation failed: {}", e)))?;
@@ -134,6 +138,6 @@ mod tests {
         assert_eq!(pillars.year.to_string(), "甲辰");
         assert_eq!(pillars.month.to_string(), "丙寅");
         assert_eq!(pillars.day.to_string(), "戊戌");
-        assert_eq!(pillars.hour.to_string(), "辛酉");
+        assert_eq!(pillars.hour.unwrap().to_string(), "辛酉");
     }
 }

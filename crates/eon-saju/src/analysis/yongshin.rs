@@ -324,18 +324,17 @@ pub fn calculate_thermal_index(pillars: &FourPillars, _config: &AnalysisConfig) 
         }
     }
 
-    let stems = [
-        pillars.year.stem,
-        pillars.month.stem,
-        pillars.day.stem,
-        pillars.hour.stem,
-    ];
-    let branches = [
+    // The Hour pillar is absent when the birth time is unknown
+    let mut stems = vec![pillars.year.stem, pillars.month.stem, pillars.day.stem];
+    let mut branches = vec![
         pillars.year.branch,
         pillars.month.branch,
         pillars.day.branch,
-        pillars.hour.branch,
     ];
+    if let Some(hour) = pillars.hour {
+        stems.push(hour.stem);
+        branches.push(hour.branch);
+    }
 
     for s in stems {
         use crate::core::stem::HeavenlyStem as S;
@@ -400,18 +399,17 @@ pub fn calculate_humidity_index(pillars: &FourPillars, _config: &AnalysisConfig)
         }
     }
 
-    let stems = [
-        pillars.year.stem,
-        pillars.month.stem,
-        pillars.day.stem,
-        pillars.hour.stem,
-    ];
-    let branches = [
+    // The Hour pillar is absent when the birth time is unknown
+    let mut stems = vec![pillars.year.stem, pillars.month.stem, pillars.day.stem];
+    let mut branches = vec![
         pillars.year.branch,
         pillars.month.branch,
         pillars.day.branch,
-        pillars.hour.branch,
     ];
+    if let Some(hour) = pillars.hour {
+        stems.push(hour.stem);
+        branches.push(hour.branch);
+    }
 
     for s in stems {
         use crate::core::stem::HeavenlyStem as S;

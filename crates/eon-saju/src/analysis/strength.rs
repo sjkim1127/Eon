@@ -175,12 +175,14 @@ impl DeukJi {
     ) -> Self {
         let day_element = pillars.day_master().element();
 
-        let branches = [
+        let mut branches = vec![
             ("year_branch", pillars.year.branch),
             ("month_branch", pillars.month.branch),
             ("day_branch", pillars.day.branch),
-            ("hour_branch", pillars.hour.branch),
         ];
+        if let Some(hour) = pillars.hour {
+            branches.push(("hour_branch", hour.branch));
+        }
 
         let mut root_count = 0;
         let mut root_score = 0.0;
@@ -457,7 +459,8 @@ pub struct StrengthAnalysis {
     /// Obtain Ground
     pub deuk_ji: DeukJi,
     /// Determine Obtain Time
-    pub deuk_si: DeukSi,
+    /// Obtain Time (得時); `None` when the birth hour is unknown (3-criteria judgement)
+    pub deuk_si: Option<DeukSi>,
     /// Determine Obtain Power
     pub deuk_se: DeukSe,
     /// Acquired count (0-4)
@@ -487,25 +490,28 @@ impl StrengthAnalysis {
         };
 
         let deuk_ryeong = if let Some(map) = eff_map {
-            DeukRyeong::check_effective(day_master, pillars.month.branch, map[5].1)
+            // Month branch (index 5) always exists
+            let month_eff = map[5].map_or_else(|| pillars.month.branch.element(), |(_, eff)| eff);
+            DeukRyeong::check_effective(day_master, pillars.month.branch, month_eff)
         } else {
             DeukRyeong::check(day_master, pillars.month.branch)
         };
 
         let deuk_ji = DeukJi::check_with_relations(pillars, &relations, config);
 
-        let deuk_si = if let Some(map) = eff_map {
-            DeukSi::check_effective(day_master, pillars.hour.branch, map[7].1)
-        } else {
-            DeukSi::check(day_master, pillars.hour.branch)
-        };
+        let deuk_si = pillars
+            .hour
+            .map(|hour| match eff_map.and_then(|map| map[7]) {
+                Some((_, hour_eff)) => DeukSi::check_effective(day_master, hour.branch, hour_eff),
+                None => DeukSi::check(day_master, hour.branch),
+            });
 
         let deuk_se = DeukSe::check_with_options(pillars, apply_transform, config);
 
         //    (4)
         let acquired_count = (deuk_ryeong.acquired as u8)
             + (deuk_ji.acquired as u8)
-            + (deuk_si.acquired as u8)
+            + (deuk_si.is_some_and(|d| d.acquired) as u8)
             + (deuk_se.acquired as u8);
 
         let strength_type = match acquired_count {
@@ -524,13 +530,24 @@ impl StrengthAnalysis {
         } else {
             0.0
         };
-        let score_si = if deuk_si.acquired {
+        let score_si = if deuk_si.is_some_and(|d| d.acquired) {
             config.strength.criteria_score
         } else {
             0.0
         };
         let score_se = deuk_se.support_ratio * config.strength.deuk_se_weight;
-        let strength_score = score_ryeong + score_ji + score_si + score_se;
+        let mut strength_score = score_ryeong + score_ji + score_si + score_se;
+        if deuk_si.is_none() {
+            // Hour unknown: the 得時 criterion cannot be evaluated, so rescale the remaining
+            // criteria to the full score range instead of silently counting it as failed.
+            // support_ratio is a percentage (0..=100), so 得勢 contributes at most 100 * weight
+            let se_max = 100.0 * config.strength.deuk_se_weight;
+            let full = 3.0 * config.strength.criteria_score + se_max;
+            let available = 2.0 * config.strength.criteria_score + se_max;
+            if available > 0.0 {
+                strength_score *= full / available;
+            }
+        }
 
         Self {
             day_master,
@@ -601,13 +618,16 @@ impl std::fmt::Display for StrengthAnalysis {
             ji_mark, self.deuk_ji.root_count, self.deuk_ji.strong_stage_count
         )?;
 
-        let si_mark = if self.deuk_si.acquired { "○" } else { "✗" };
-        writeln!(
-            f,
-            "Obtain Time (得時): {} - {}",
-            si_mark,
-            self.deuk_si.relation()
-        )?;
+        match &self.deuk_si {
+            Some(si) => {
+                let si_mark = if si.acquired { "○" } else { "✗" };
+                writeln!(f, "Obtain Time (得時): {} - {}", si_mark, si.relation())?;
+            }
+            None => writeln!(
+                f,
+                "Obtain Time (得時): - (birth time unknown, not evaluated)"
+            )?,
+        }
 
         let se_mark = if self.deuk_se.acquired { "○" } else { "✗" };
         writeln!(
@@ -618,7 +638,12 @@ impl std::fmt::Display for StrengthAnalysis {
 
         writeln!(f)?;
         writeln!(f, "【Determination Result】")?;
-        writeln!(f, "Conditions Met: {}/4", self.acquired_count)?;
+        let total_criteria = if self.deuk_si.is_some() { 4 } else { 3 };
+        writeln!(
+            f,
+            "Conditions Met: {}/{}",
+            self.acquired_count, total_criteria
+        )?;
         writeln!(f, "Overall Score: {:.1}%", self.strength_score)?;
         writeln!(f)?;
         writeln!(
@@ -699,7 +724,7 @@ mod tests {
         // : ✗
         assert!(!analysis.deuk_ryeong.acquired);
         assert!(analysis.deuk_ji.acquired);
-        assert!(!analysis.deuk_si.acquired);
+        assert!(!analysis.deuk_si.unwrap().acquired);
         assert_eq!(analysis.strength_type, StrengthType::Weak);
     }
 
@@ -734,7 +759,7 @@ mod tests {
         // 4
         println!("Obtain Season: {}", analysis.deuk_ryeong.acquired);
         println!("Obtain Ground: {}", analysis.deuk_ji.acquired);
-        println!("Obtain Time: {}", analysis.deuk_si.acquired);
+        println!("Obtain Time: {:?}", analysis.deuk_si.map(|d| d.acquired));
         println!("Obtain Power: {}", analysis.deuk_se.acquired);
         println!("Total Acquired: {}/4", analysis.acquired_count);
     }

@@ -199,18 +199,20 @@ impl StructureAnalysis {
         let month_branch = pillars.month.branch;
         let hidden_stems = month_branch.hidden_stems();
 
-        let other_stems = [
+        let mut other_stems = vec![
             ("year_stem", pillars.year.stem),
             ("month_stem", pillars.month.stem),
-            ("hour_stem", pillars.hour.stem),
         ];
+        if let Some(hour) = pillars.hour {
+            other_stems.push(("hour_stem", hour.stem));
+        }
 
         // -1. (HwaGi)   ( 破星  / )
         let mut hwagi_result = None;
-        let adjacent_stems = [
-            ("month_stem", pillars.month.stem),
-            ("hour_stem", pillars.hour.stem),
-        ];
+        let mut adjacent_stems = vec![("month_stem", pillars.month.stem)];
+        if let Some(hour) = pillars.hour {
+            adjacent_stems.push(("hour_stem", hour.stem));
+        }
         for (path, stem_on_top) in &adjacent_stems {
             if let Some(combo) =
                 crate::analysis::relationships::StemCombination::check(dm, *stem_on_top)
@@ -219,12 +221,9 @@ impl StructureAnalysis {
                 if month_branch.element() == transformed_elem {
                     // 1)    (破星)
                     let breaker_elem = transformed_elem.controlled_by();
-                    let all_stems = [
-                        pillars.year.stem,
-                        pillars.month.stem,
-                        pillars.day.stem,
-                        pillars.hour.stem,
-                    ];
+                    let mut all_stems =
+                        vec![pillars.year.stem, pillars.month.stem, pillars.day.stem];
+                    all_stems.extend(pillars.hour.map(|h| h.stem));
                     let has_break_star = all_stems.iter().any(|s| s.element() == breaker_elem);
 
                     // 2) /
@@ -262,12 +261,12 @@ impl StructureAnalysis {
             || strength.deuk_se.support_ratio <= config.strength.polarized_low;
 
         if is_polarized {
-            let all_branches = [
+            let mut all_branches = vec![
                 pillars.year.branch,
                 pillars.month.branch,
                 pillars.day.branch,
-                pillars.hour.branch,
             ];
+            all_branches.extend(pillars.hour.map(|h| h.branch));
 
             //    ()   ( 眞從 vs  假從 )
             let dm_el = dm.element();
@@ -448,7 +447,8 @@ impl StructureAnalysis {
 
         // 0.5. (官殺混雜格)
         // //     (/)
-        let exposed_stems = [pillars.year.stem, pillars.month.stem, pillars.hour.stem];
+        let mut exposed_stems = vec![pillars.year.stem, pillars.month.stem];
+        exposed_stems.extend(pillars.hour.map(|h| h.stem));
         let exposed_tgs: Vec<TenGod> = exposed_stems
             .iter()
             .map(|&s| TenGod::from_stems(dm, s))

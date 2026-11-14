@@ -33,13 +33,14 @@ pub struct TransformationAnalysis {
     pub month_stem: EffectiveElement,
     /// Day Stem Effective Element
     pub day_stem: EffectiveElement,
-    /// Hour Stem Effective Element
-    pub hour_stem: EffectiveElement,
+    /// Hour Stem Effective Element (`None` when the birth hour is unknown)
+    pub hour_stem: Option<EffectiveElement>,
     /// Includes 4 branches (reflecting triple combinations)
     pub year_branch: EffectiveElement,
     pub month_branch: EffectiveElement,
     pub day_branch: EffectiveElement,
-    pub hour_branch: EffectiveElement,
+    /// `None` when the birth hour is unknown
+    pub hour_branch: Option<EffectiveElement>,
     /// Major Luck Stem Effective Element
     pub major_stem: Option<EffectiveElement>,
     /// Yearly Luck Stem Effective Element
@@ -58,7 +59,9 @@ impl TransformationAnalysis {
         let mut year_stem = EffectiveElement::new(pillars.year.stem.element());
         let mut month_stem = EffectiveElement::new(pillars.month.stem.element());
         let mut day_stem = EffectiveElement::new(pillars.day.stem.element());
-        let mut hour_stem = EffectiveElement::new(pillars.hour.stem.element());
+        let mut hour_stem = pillars
+            .hour
+            .map(|h| EffectiveElement::new(h.stem.element()));
 
         // 1. Stem transformation processing
         // Rival / Jealous combination analysis
@@ -153,7 +156,9 @@ impl TransformationAnalysis {
         let mut year_branch = EffectiveElement::new(pillars.year.branch.element());
         let mut month_branch = EffectiveElement::new(pillars.month.branch.element());
         let mut day_branch = EffectiveElement::new(pillars.day.branch.element());
-        let mut hour_branch = EffectiveElement::new(pillars.hour.branch.element());
+        let mut hour_branch = pillars
+            .hour
+            .map(|h| EffectiveElement::new(h.branch.element()));
 
         for tri in &rel.triple_combinations {
             let transformed = tri.element();
@@ -240,7 +245,9 @@ impl TransformationAnalysis {
         let mut year_stem = EffectiveElement::new(pillars.year.stem.element());
         let mut month_stem = EffectiveElement::new(pillars.month.stem.element());
         let mut day_stem = EffectiveElement::new(pillars.day.stem.element());
-        let mut hour_stem = EffectiveElement::new(pillars.hour.stem.element());
+        let mut hour_stem = pillars
+            .hour
+            .map(|h| EffectiveElement::new(h.stem.element()));
         let mut major_stem = major.map(|m| EffectiveElement::new(m.stem.element()));
         let mut saewun_stem = yearly.map(|y| EffectiveElement::new(y.stem.element()));
 
@@ -282,7 +289,9 @@ impl TransformationAnalysis {
         let mut year_branch = EffectiveElement::new(pillars.year.branch.element());
         let mut month_branch = EffectiveElement::new(pillars.month.branch.element());
         let mut day_branch = EffectiveElement::new(pillars.day.branch.element());
-        let mut hour_branch = EffectiveElement::new(pillars.hour.branch.element());
+        let mut hour_branch = pillars
+            .hour
+            .map(|h| EffectiveElement::new(h.branch.element()));
         let mut major_branch = major.map(|m| EffectiveElement::new(m.branch.element()));
         let mut saewun_branch = yearly.map(|y| EffectiveElement::new(y.branch.element()));
 
@@ -396,12 +405,16 @@ impl TransformationAnalysis {
             &self.year_stem,
             &self.month_stem,
             &self.day_stem,
-            &self.hour_stem,
             &self.year_branch,
             &self.month_branch,
             &self.day_branch,
-            &self.hour_branch,
         ];
+        if let Some(ref h) = self.hour_stem {
+            elements.push(h);
+        }
+        if let Some(ref h) = self.hour_branch {
+            elements.push(h);
+        }
         if let Some(ref s) = self.major_stem {
             elements.push(s);
         }
@@ -443,7 +456,7 @@ fn apply_stem_transform(
     y: &mut EffectiveElement,
     m: &mut EffectiveElement,
     d: &mut EffectiveElement,
-    h: &mut EffectiveElement,
+    h: &mut Option<EffectiveElement>,
 ) {
     let (s1, s2) = match combo {
         StemCombination::JiaJi => (HeavenlyStem::Jia, HeavenlyStem::Ji),
@@ -464,9 +477,11 @@ fn apply_stem_transform(
         d.effective = target;
         d.reason = Some(reason.to_string());
     }
-    if pillars.hour.stem == s1 || pillars.hour.stem == s2 {
-        h.effective = target;
-        h.reason = Some(reason.to_string());
+    if let (Some(h), Some(hp)) = (h.as_mut(), pillars.hour) {
+        if hp.stem == s1 || hp.stem == s2 {
+            h.effective = target;
+            h.reason = Some(reason.to_string());
+        }
     }
 }
 
@@ -477,7 +492,7 @@ fn apply_stem_transform_failure(
     y: &mut EffectiveElement,
     m: &mut EffectiveElement,
     d: &mut EffectiveElement,
-    h: &mut EffectiveElement,
+    h: &mut Option<EffectiveElement>,
 ) {
     let (s1, s2) = match combo {
         StemCombination::JiaJi => (HeavenlyStem::Jia, HeavenlyStem::Ji),
@@ -496,8 +511,10 @@ fn apply_stem_transform_failure(
     if (pillars.day.stem == s1 || pillars.day.stem == s2) && d.reason.is_none() {
         d.reason = Some(reason.to_string());
     }
-    if (pillars.hour.stem == s1 || pillars.hour.stem == s2) && h.reason.is_none() {
-        h.reason = Some(reason.to_string());
+    if let (Some(h), Some(hp)) = (h.as_mut(), pillars.hour) {
+        if (hp.stem == s1 || hp.stem == s2) && h.reason.is_none() {
+            h.reason = Some(reason.to_string());
+        }
     }
 }
 
@@ -509,7 +526,7 @@ fn apply_triple_transform(
     y: &mut EffectiveElement,
     m: &mut EffectiveElement,
     d: &mut EffectiveElement,
-    h: &mut EffectiveElement,
+    h: &mut Option<EffectiveElement>,
 ) {
     let branches = match tri {
         TripleCombination::YinWuXu => {
@@ -537,9 +554,11 @@ fn apply_triple_transform(
         d.effective = target;
         d.reason = Some(reason.to_string());
     }
-    if branches.contains(&pillars.hour.branch) {
-        h.effective = target;
-        h.reason = Some(reason.to_string());
+    if let (Some(h), Some(hp)) = (h.as_mut(), pillars.hour) {
+        if branches.contains(&hp.branch) {
+            h.effective = target;
+            h.reason = Some(reason.to_string());
+        }
     }
 }
 
@@ -551,7 +570,7 @@ fn apply_seasonal_transform(
     y: &mut EffectiveElement,
     m: &mut EffectiveElement,
     d: &mut EffectiveElement,
-    h: &mut EffectiveElement,
+    h: &mut Option<EffectiveElement>,
 ) {
     let branches = match sea {
         SeasonalCombination::YinMaoChen => {
@@ -579,9 +598,11 @@ fn apply_seasonal_transform(
         d.effective = target;
         d.reason = Some(reason.to_string());
     }
-    if branches.contains(&pillars.hour.branch) {
-        h.effective = target;
-        h.reason = Some(reason.to_string());
+    if let (Some(h), Some(hp)) = (h.as_mut(), pillars.hour) {
+        if branches.contains(&hp.branch) {
+            h.effective = target;
+            h.reason = Some(reason.to_string());
+        }
     }
 }
 
@@ -593,7 +614,7 @@ fn apply_semi_transform(
     y: &mut EffectiveElement,
     m: &mut EffectiveElement,
     d: &mut EffectiveElement,
-    h: &mut EffectiveElement,
+    h: &mut Option<EffectiveElement>,
 ) {
     let branches = match semi {
         SemiCombination::YinWu => vec![EarthlyBranch::Yin, EarthlyBranch::Wu],
@@ -618,9 +639,11 @@ fn apply_semi_transform(
         d.effective = target;
         d.reason = Some(reason.to_string());
     }
-    if branches.contains(&pillars.hour.branch) {
-        h.effective = target;
-        h.reason = Some(reason.to_string());
+    if let (Some(h), Some(hp)) = (h.as_mut(), pillars.hour) {
+        if branches.contains(&hp.branch) {
+            h.effective = target;
+            h.reason = Some(reason.to_string());
+        }
     }
 }
 
@@ -630,18 +653,18 @@ impl std::fmt::Display for TransformationAnalysis {
         writeln!(f, "─────────────────────────────────")?;
 
         let items = [
-            ("year_stem", &self.year_stem),
-            ("month_stem", &self.month_stem),
-            ("day_stem", &self.day_stem),
-            ("hour_stem", &self.hour_stem),
-            ("year_branch", &self.year_branch),
-            ("month_branch", &self.month_branch),
-            ("day_branch", &self.day_branch),
-            ("hour_branch", &self.hour_branch),
+            ("year_stem", Some(&self.year_stem)),
+            ("month_stem", Some(&self.month_stem)),
+            ("day_stem", Some(&self.day_stem)),
+            ("hour_stem", self.hour_stem.as_ref()),
+            ("year_branch", Some(&self.year_branch)),
+            ("month_branch", Some(&self.month_branch)),
+            ("day_branch", Some(&self.day_branch)),
+            ("hour_branch", self.hour_branch.as_ref()),
         ];
 
         let mut has_transform = false;
-        for (name, eff) in items {
+        for (name, eff) in items.into_iter().filter_map(|(n, e)| e.map(|e| (n, e))) {
             if let Some(reason) = &eff.reason {
                 writeln!(
                     f,
@@ -685,18 +708,20 @@ impl FourPillars {
     }
 
     /// Extract effective element map
-    /// Returns: [(original, effective); 8]
-    pub fn effective_elements(&self) -> [(Element, Element); 8] {
+    /// Returns: [(original, effective); 8] in order year/month/day/hour stem then branch;
+    /// the two hour slots (indices 3 and 7) are `None` when the birth hour is unknown.
+    pub fn effective_elements(&self) -> [Option<(Element, Element)>; 8] {
         let trans = self.transformations();
+        let pair = |e: &EffectiveElement| (e.original, e.effective);
         [
-            (trans.year_stem.original, trans.year_stem.effective),
-            (trans.month_stem.original, trans.month_stem.effective),
-            (trans.day_stem.original, trans.day_stem.effective),
-            (trans.hour_stem.original, trans.hour_stem.effective),
-            (trans.year_branch.original, trans.year_branch.effective),
-            (trans.month_branch.original, trans.month_branch.effective),
-            (trans.day_branch.original, trans.day_branch.effective),
-            (trans.hour_branch.original, trans.hour_branch.effective),
+            Some(pair(&trans.year_stem)),
+            Some(pair(&trans.month_stem)),
+            Some(pair(&trans.day_stem)),
+            trans.hour_stem.as_ref().map(pair),
+            Some(pair(&trans.year_branch)),
+            Some(pair(&trans.month_branch)),
+            Some(pair(&trans.day_branch)),
+            trans.hour_branch.as_ref().map(pair),
         ]
     }
 }

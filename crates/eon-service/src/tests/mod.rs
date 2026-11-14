@@ -3,6 +3,8 @@ pub mod contract;
 mod destiny_tier_omni_tests;
 #[cfg(test)]
 mod tuning;
+#[cfg(test)]
+mod unknown_time_tests;
 
 #[cfg(test)]
 mod tests {
@@ -164,13 +166,13 @@ mod tests {
                     f.id
                 );
                 assert_eq!(
-                    format!("{:?}", saju_res.report.pillars.hour.stem),
+                    format!("{:?}", saju_res.report.pillars.hour.unwrap().stem),
                     f.expected_saju.hour_stem,
                     "Hour Stem mismatch for {}",
                     f.id
                 );
                 assert_eq!(
-                    format!("{:?}", saju_res.report.pillars.hour.branch),
+                    format!("{:?}", saju_res.report.pillars.hour.unwrap().branch),
                     f.expected_saju.hour_branch,
                     "Hour Branch mismatch for {}",
                     f.id

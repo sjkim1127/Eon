@@ -8,6 +8,7 @@ use eon_qimen::builder::pan::build_qimen_pan;
 use eon_saju::core::pillars::{FourPillars, SajuInput};
 
 pub fn analyze_qimen(input: QimenAnalysisInput) -> Result<QimenAnalysisOutput, ServiceError> {
+    crate::birth::require_known_birth_time(&input.base, "QiMen DunJia")?;
     let gender = if input.is_male {
         Gender::Male
     } else {
@@ -40,13 +41,17 @@ pub fn analyze_qimen(input: QimenAnalysisInput) -> Result<QimenAnalysisOutput, S
     let (is_yin_ju, ju_number) = calculate_ju(dt, pillars.day)
         .map_err(|e| ServiceError::InvalidInput(format!("QiMen Ju calculation failed: {}", e)))?;
 
+    let hour_pillar = pillars
+        .hour
+        .ok_or_else(|| ServiceError::BirthTimeRequired("QiMen DunJia".to_string()))?;
+
     // 4. Execute QiMen Pan building algorithm
     let pan = build_qimen_pan(
         dt,
         pillars.year,
         pillars.month,
         pillars.day,
-        pillars.hour,
+        hour_pillar,
         is_yin_ju,
         ju_number,
     );

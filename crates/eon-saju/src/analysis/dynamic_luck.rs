@@ -125,14 +125,18 @@ impl DynamicLuckAnalysis {
             ("year_stem", natal.year.stem),
             ("month_stem", natal.month.stem),
             ("day_stem", natal.day.stem),
-            ("hour_stem", natal.hour.stem),
         ];
+        if let Some(hour) = natal.hour {
+            stems.push(("hour_stem", hour.stem));
+        }
         let mut branches = vec![
             ("year_branch", natal.year.branch),
             ("month_branch", natal.month.branch),
             ("day_branch", natal.day.branch),
-            ("hour_branch", natal.hour.branch),
         ];
+        if let Some(hour) = natal.hour {
+            branches.push(("hour_branch", hour.branch));
+        }
 
         if let Some(m) = major {
             stems.push(("major_luck_stem", m.stem));
@@ -619,18 +623,20 @@ impl DynamicLuckAnalysis {
         let mut relations = Vec::new();
         let mut impacts = Vec::new();
 
-        let n_stems = [
+        let mut n_stems = vec![
             ("year_stem", natal.year.stem),
             ("month_stem", natal.month.stem),
             ("day_stem", natal.day.stem),
-            ("hour_stem", natal.hour.stem),
         ];
-        let n_branches = [
+        let mut n_branches = vec![
             ("year_branch", natal.year.branch),
             ("month_branch", natal.month.branch),
             ("day_branch", natal.day.branch),
-            ("hour_branch", natal.hour.branch),
         ];
+        if let Some(hour) = natal.hour {
+            n_stems.push(("hour_stem", hour.stem));
+            n_branches.push(("hour_branch", hour.branch));
+        }
 
         use crate::analysis::relationships::*;
         use crate::core::ten_gods::TenGod;

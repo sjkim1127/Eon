@@ -29,6 +29,21 @@ pub fn standard_meridian_from_tz_at(timezone: &str, dt_opt: Option<chrono::Naive
     135.0 // Fallback: Standard Meridian
 }
 
+/// Same as [`standard_meridian_from_tz_at`], taking the local birth date/time as plain numbers.
+/// Falls back to the modern reference when the date/time is invalid.
+pub fn standard_meridian_from_tz_for(
+    timezone: &str,
+    year: i32,
+    month: u32,
+    day: u32,
+    hour: u32,
+    minute: u32,
+) -> f64 {
+    let dt = chrono::NaiveDate::from_ymd_opt(year, month, day)
+        .and_then(|d| d.and_hms_opt(hour, minute, 0));
+    standard_meridian_from_tz_at(timezone, dt)
+}
+
 /// Calculates the standard meridian (longitude in degrees) from an IANA timezone string (defaulting to modern 2024 reference).
 pub fn standard_meridian_from_tz(timezone: &str) -> f64 {
     standard_meridian_from_tz_at(timezone, None)

@@ -43,7 +43,14 @@ pub fn format_agent_context(
         format!("Coordinates: ({:.4}, {:.4})", input.lat, input.lon)
     };
 
-    let std_meridian = eon_core::standard_meridian_from_tz(&input.timezone);
+    let std_meridian = eon_core::standard_meridian_from_tz_for(
+        &input.timezone,
+        input.year,
+        input.month,
+        input.day,
+        input.hour,
+        input.minute,
+    );
     let offset_mins = ((input.lon - std_meridian) * 4.0).round() as i32;
     let sign = if offset_mins >= 0 { "+" } else { "" };
 
@@ -57,17 +64,29 @@ pub fn format_agent_context(
         format!("Solar Time Offset: {}{}m", sign, offset_mins)
     };
 
-    out.push_str(&format!(
-        "> **Birth**: {:04}-{:02}-{:02} {:02}:{:02} ({}) | {} | {}\n\n",
-        input.year,
-        input.month,
-        input.day,
-        input.hour,
-        input.minute,
-        input.timezone,
-        loc_str,
-        solar_correction_str,
-    ));
+    if input.unknown_time {
+        out.push_str(&format!(
+            "> **Birth**: {:04}-{:02}-{:02} (time of day UNKNOWN) ({}) | {}\n\n",
+            input.year, input.month, input.day, input.timezone, loc_str,
+        ));
+        out.push_str(
+            "> **BIRTH TIME UNKNOWN**: The Hour pillar is not evaluated (three-pillar Saju; 得時, 命宮 and 身宮 are omitted). \
+Vedic, Western, Zi Wei Dou Shu, Human Design, QiMen DunJia and I Ching depend on the ascendant, houses or an hour-based chart, so they are NOT evaluated. \
+Major Luck start age assumes a noon birth and may shift by a few months. Do not infer hour-dependent traits.\n\n",
+        );
+    } else {
+        out.push_str(&format!(
+            "> **Birth**: {:04}-{:02}-{:02} {:02}:{:02} ({}) | {} | {}\n\n",
+            input.year,
+            input.month,
+            input.day,
+            input.hour,
+            input.minute,
+            input.timezone,
+            loc_str,
+            solar_correction_str,
+        ));
+    }
 
     // 1. Omni Destiny Tier 7.0
     if let Some(t) = tier {
@@ -77,7 +96,7 @@ pub fn format_agent_context(
             t.destiny_tier.grade, t.destiny_raw_score, t.destiny_tier_score, t.potential_tier.grade, t.potential_score
         ));
         out.push_str(&format!(
-            "- **Profile Type**: {} | **Growth Gap**: +{:.1}pt\n",
+            "- **Profile Type**: {} | **Growth Gap**: {:+.1}pt\n",
             t.profile, t.growth_gap
         ));
 
@@ -111,8 +130,12 @@ pub fn format_agent_context(
     if let Some(s) = saju {
         out.push_str("## 2. Four Pillars of Destiny (Saju / BaZi)\n");
         let pillars = &s.report.pillars;
+        let hour_str = match &pillars.hour {
+            Some(h) => format!("{} ({:?}-{:?})", h, h.stem, h.branch),
+            None => "NOT EVALUATED (birth time unknown; three-pillar analysis)".to_string(),
+        };
         out.push_str(&format!(
-            "- **Four Pillars**: Year: {} ({:?}-{:?}) | Month: {} ({:?}-{:?}) | Day: {} ({:?}-{:?}) | Hour: {} ({:?}-{:?})\n",
+            "- **Four Pillars**: Year: {} ({:?}-{:?}) | Month: {} ({:?}-{:?}) | Day: {} ({:?}-{:?}) | Hour: {}\n",
             pillars.year,
             pillars.year.stem,
             pillars.year.branch,
@@ -122,9 +145,7 @@ pub fn format_agent_context(
             pillars.day,
             pillars.day.stem,
             pillars.day.branch,
-            pillars.hour,
-            pillars.hour.stem,
-            pillars.hour.branch
+            hour_str
         ));
         out.push_str(&format!(
             "- **Day Master Strength**: {:?} (Score: {:.1})\n",

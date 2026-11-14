@@ -243,12 +243,14 @@ pub struct TwelveStageAnalysis {
     pub year_stage: TwelveStage,
     pub month_stage: TwelveStage,
     pub day_stage: TwelveStage,
-    pub hour_stage: TwelveStage,
+    /// `None` when the birth hour is unknown
+    pub hour_stage: Option<TwelveStage>,
     pub total_energy: u8,
     pub year_self: TwelveStage,
     pub month_self: TwelveStage,
     pub day_self: TwelveStage,
-    pub hour_self: TwelveStage,
+    /// `None` when the birth hour is unknown
+    pub hour_self: Option<TwelveStage>,
 }
 
 impl TwelveStageAnalysis {
@@ -267,8 +269,9 @@ impl TwelveStageAnalysis {
         let month_stage =
             calculate_twelve_stage_with_config(day_master, pillars.month.branch, config);
         let day_stage = calculate_twelve_stage_with_config(day_master, pillars.day.branch, config);
-        let hour_stage =
-            calculate_twelve_stage_with_config(day_master, pillars.hour.branch, config);
+        let hour_stage = pillars
+            .hour
+            .map(|h| calculate_twelve_stage_with_config(day_master, h.branch, config));
 
         let year_self =
             calculate_twelve_stage_with_config(pillars.year.stem, pillars.year.branch, config);
@@ -276,14 +279,20 @@ impl TwelveStageAnalysis {
             calculate_twelve_stage_with_config(pillars.month.stem, pillars.month.branch, config);
         let day_self =
             calculate_twelve_stage_with_config(pillars.day.stem, pillars.day.branch, config);
-        let hour_self =
-            calculate_twelve_stage_with_config(pillars.hour.stem, pillars.hour.branch, config);
+        let hour_self = pillars
+            .hour
+            .map(|h| calculate_twelve_stage_with_config(h.stem, h.branch, config));
 
-        let total_energy = (year_stage.energy_level() as u32
-            + month_stage.energy_level() as u32
-            + day_stage.energy_level() as u32
-            + hour_stage.energy_level() as u32)
-            / 4;
+        // Average over the pillars that exist (3 when the birth hour is unknown)
+        let mut energies = vec![
+            year_stage.energy_level() as u32,
+            month_stage.energy_level() as u32,
+            day_stage.energy_level() as u32,
+        ];
+        if let Some(h) = hour_stage {
+            energies.push(h.energy_level() as u32);
+        }
+        let total_energy = energies.iter().sum::<u32>() / energies.len() as u32;
 
         Self {
             day_master,
@@ -299,13 +308,21 @@ impl TwelveStageAnalysis {
         }
     }
 
-    pub fn strongest_position(&self) -> (&'static str, TwelveStage) {
-        let positions = [
+    /// Branch stages by position; the hour entry is omitted when the birth hour is unknown.
+    fn positions(&self) -> Vec<(&'static str, TwelveStage)> {
+        let mut positions = vec![
             ("year_branch", self.year_stage),
             ("month_branch", self.month_stage),
             ("day_branch", self.day_stage),
-            ("hour_branch", self.hour_stage),
         ];
+        if let Some(h) = self.hour_stage {
+            positions.push(("hour_branch", h));
+        }
+        positions
+    }
+
+    pub fn strongest_position(&self) -> (&'static str, TwelveStage) {
+        let positions = self.positions();
 
         positions
             .into_iter()
@@ -314,12 +331,7 @@ impl TwelveStageAnalysis {
     }
 
     pub fn weakest_position(&self) -> (&'static str, TwelveStage) {
-        let positions = [
-            ("year_branch", self.year_stage),
-            ("month_branch", self.month_stage),
-            ("day_branch", self.day_stage),
-            ("hour_branch", self.hour_stage),
-        ];
+        let positions = self.positions();
 
         positions
             .into_iter()
@@ -331,7 +343,7 @@ impl TwelveStageAnalysis {
         self.year_stage == stage
             || self.month_stage == stage
             || self.day_stage == stage
-            || self.hour_stage == stage
+            || self.hour_stage == Some(stage)
     }
 }
 
@@ -367,13 +379,16 @@ impl std::fmt::Display for TwelveStageAnalysis {
             self.day_stage.hanja(),
             self.day_stage.description()
         )?;
-        writeln!(
-            f,
-            "  Hour Branch: {} ({}) - {}",
-            self.hour_stage.hangul(),
-            self.hour_stage.hanja(),
-            self.hour_stage.description()
-        )?;
+        match self.hour_stage {
+            Some(h) => writeln!(
+                f,
+                "  Hour Branch: {} ({}) - {}",
+                h.hangul(),
+                h.hanja(),
+                h.description()
+            )?,
+            None => writeln!(f, "  Hour Branch: - (birth time unknown)")?,
+        }
         writeln!(f)?;
         writeln!(f, "【Internal Pillar Self Stages】")?;
         writeln!(
@@ -382,7 +397,7 @@ impl std::fmt::Display for TwelveStageAnalysis {
             self.year_self.hangul(),
             self.month_self.hangul(),
             self.day_self.hangul(),
-            self.hour_self.hangul()
+            self.hour_self.map_or("-", |h| h.hangul())
         )?;
         writeln!(f)?;
         writeln!(f, "Total Energy: {}%", self.total_energy)?;

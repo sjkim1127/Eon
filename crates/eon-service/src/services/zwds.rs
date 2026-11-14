@@ -12,6 +12,7 @@ use eon_zwds::build_chart;
 
 /// Performs Zi Wei Dou Shu analysis.
 pub fn analyze(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceError> {
+    crate::birth::require_known_birth_time(&input.base, "Zi Wei Dou Shu")?;
     let gender = if input.is_male {
         Gender::Male
     } else {
@@ -21,8 +22,17 @@ pub fn analyze(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceEr
     // ZWDS typically does not apply longitude True Solar Time correction: apply_tst = false
     let birth_ctx = prepare_birth_context(&input.base, Some(gender), false)?;
 
+    // ZWDS reads the standard (non-DST) clock: remove the DST hour, but no longitude shift.
+    let mut zwds_birth = birth_ctx.birth_info.clone();
+    let (sy, sm, sd, sh, smin) = birth_ctx.birth_info.standard_clock_datetime();
+    zwds_birth.year = sy;
+    zwds_birth.month = sm;
+    zwds_birth.day = sd;
+    zwds_birth.hour = sh;
+    zwds_birth.minute = smin;
+
     // 1. Build chart
-    let mut chart = build_chart(&birth_ctx.birth_info)
+    let mut chart = build_chart(&zwds_birth)
         .map_err(|e| ServiceError::Zwds(format!("Failed to build ZWDS chart: {}", e)))?;
 
     // 2. Determine target year (defaults to current year)
@@ -67,4 +77,28 @@ pub fn analyze(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, ServiceEr
         current_daxian,
         current_liu_nian,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::dto::AnalysisInput;
+
+    fn chart_key(input: AnalysisInput) -> (usize, usize, String) {
+        let out = analyze(ZwdsAnalysisInput::new(input, true, Some(2024))).unwrap();
+        (
+            out.chart.soul_idx,
+            out.chart.body_idx,
+            format!("{:?}", out.chart.five_elements),
+        )
+    }
+
+    #[test]
+    fn dst_hour_is_removed_before_building_chart() {
+        // Seoul 1988-07-01 01:10 is DST (UTC+10): the standard clock reads 00:10 (Zi hour).
+        // Tokyo has no DST (UTC+9), so its 00:10 is the same standard-clock reading.
+        let seoul_dst = AnalysisInput::new(1988, 7, 1, 1, 10, "Asia/Seoul", 37.5665, 126.978);
+        let tokyo_std = AnalysisInput::new(1988, 7, 1, 0, 10, "Asia/Tokyo", 37.5665, 126.978);
+        assert_eq!(chart_key(seoul_dst), chart_key(tokyo_std));
+    }
 }

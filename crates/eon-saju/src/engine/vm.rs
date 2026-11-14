@@ -471,13 +471,10 @@ impl SajuVM {
 
                 // A. Hurting Officer meets Direct Officer
                 if ten_god == TenGod::Shangguan {
-                    let has_zhengguan = [
-                        self.natal.year.stem,
-                        self.natal.month.stem,
-                        self.natal.hour.stem,
-                    ]
-                    .iter()
-                    .any(|&hz| TenGod::from_stems(day_master, hz) == TenGod::Zhengguan);
+                    let has_zhengguan = self
+                        .exposed_natal_stems()
+                        .iter()
+                        .any(|&hz| TenGod::from_stems(day_master, hz) == TenGod::Zhengguan);
 
                     if has_zhengguan {
                         let penalty = 15.0;
@@ -494,13 +491,7 @@ impl SajuVM {
 
                 // B. Eating God produces Wealth
                 if ten_god == TenGod::Shishen {
-                    let has_wealth = [
-                        self.natal.year.stem,
-                        self.natal.month.stem,
-                        self.natal.hour.stem,
-                    ]
-                    .iter()
-                    .any(|&hz| {
+                    let has_wealth = self.exposed_natal_stems().iter().any(|&hz| {
                         let god = TenGod::from_stems(day_master, hz);
                         god == TenGod::Zhengcai || god == TenGod::Piancai
                     });
@@ -765,7 +756,7 @@ impl SajuVM {
         if strength.deuk_ji.acquired {
             tags.push(TraceTag::DeukJi);
         }
-        if strength.deuk_si.acquired {
+        if strength.deuk_si.is_some_and(|d| d.acquired) {
             tags.push(TraceTag::DeukSi);
         }
         if strength.deuk_se.acquired {
@@ -1088,6 +1079,13 @@ impl SajuVM {
         multiplier
     }
 
+    /// Natal stems exposed on the heaven level (year, month, hour); hour omitted if unknown
+    fn exposed_natal_stems(&self) -> Vec<crate::core::stem::HeavenlyStem> {
+        let mut stems = vec![self.natal.year.stem, self.natal.month.stem];
+        stems.extend(self.natal.hour.map(|h| h.stem));
+        stems
+    }
+
     /// Extract branch object from position string
     fn get_branch_by_path(
         &self,
@@ -1098,7 +1096,7 @@ impl SajuVM {
             "year_branch" => Some(self.natal.year.branch),
             "month_branch" => Some(self.natal.month.branch),
             "day_branch" => Some(self.natal.day.branch),
-            "hour_branch" => Some(self.natal.hour.branch),
+            "hour_branch" => self.natal.hour.map(|h| h.branch),
             "major_luck_branch" => dynamic.major_influence.as_ref().map(|i| i.ganzi.branch),
             "yearly_luck_branch" => dynamic.yearly_influence.as_ref().map(|i| i.ganzi.branch),
             "monthly_luck_branch" => dynamic.monthly_influence.as_ref().map(|i| i.ganzi.branch),
