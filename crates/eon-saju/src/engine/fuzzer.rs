@@ -100,13 +100,13 @@ impl DestinyFuzzer {
     #[cfg(feature = "parallel")]
     pub fn fuzz_random(&self, iterations: usize) -> VulnerabilityReport {
         let mut vulnerabilities = Vec::new();
-        use rand::Rng;
-        let mut rng = rand::thread_rng();
+        use rand::RngExt;
+        let mut rng = rand::rng();
 
         for _ in 0..iterations {
-            let major = GanZi::from_index(rng.gen_range(0..60));
-            let yearly = GanZi::from_index(rng.gen_range(0..60));
-            let monthly = GanZi::from_index(rng.gen_range(0..60));
+            let major = GanZi::from_index(rng.random_range(0..60));
+            let yearly = GanZi::from_index(rng.random_range(0..60));
+            let monthly = GanZi::from_index(rng.random_range(0..60));
 
             let frame = self.vm.step(0, major, yearly, Some(monthly), None, None);
 
