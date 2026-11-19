@@ -85,3 +85,54 @@ fn main() -> Result<()> {
         Commands::Mcp(cmd) => mcp::run(cmd),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse(args: &[&str]) -> Result<Cli, clap::Error> {
+        Cli::try_parse_from(std::iter::once("eon").chain(args.iter().copied()))
+    }
+
+    #[test]
+    fn negative_coordinates_are_accepted_without_equals_sign() {
+        let cli = parse(&[
+            "saju",
+            "--birth",
+            "1990-05-15 10:30",
+            "--lat",
+            "-33.87",
+            "--lon",
+            "-122.4",
+        ])
+        .expect("negative lat/lon must parse");
+        match cli.command {
+            Commands::Saju(cmd) => {
+                assert_eq!(cmd.birth.lat, Some(-33.87));
+                assert_eq!(cmd.birth.lon, Some(-122.4));
+            }
+            other => panic!("unexpected command: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn single_engine_formats_list_only_what_they_do() {
+        assert!(parse(&["saju", "--birth", "1990-05-15", "--format", "json"]).is_ok());
+        assert!(parse(&["saju", "--birth", "1990-05-15", "--format", "text"]).is_ok());
+        // Legacy spellings stay accepted as aliases of `text`.
+        assert!(parse(&["saju", "--birth", "1990-05-15", "--format", "agent"]).is_ok());
+        assert!(parse(&["saju", "--birth", "1990-05-15", "--format", "markdown"]).is_ok());
+        assert!(parse(&["saju", "--birth", "1990-05-15", "--format", "bogus"]).is_err());
+    }
+
+    #[test]
+    fn analyze_text_is_an_alias_of_agent() {
+        let agent = parse(&["analyze", "--birth", "1990-05-15", "--format", "agent"]).unwrap();
+        let text = parse(&["analyze", "--birth", "1990-05-15", "--format", "text"]).unwrap();
+        let fmt = |c: Cli| match c.command {
+            Commands::Analyze(a) => a.format,
+            other => panic!("unexpected command: {other:?}"),
+        };
+        assert_eq!(fmt(agent), fmt(text));
+    }
+}

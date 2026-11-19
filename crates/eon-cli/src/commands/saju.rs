@@ -3,7 +3,7 @@ use clap::Args;
 use eon_service::dto::SajuAnalysisInput;
 use eon_service::facade;
 
-use super::{BirthArgs, OutputFormat};
+use super::{BirthArgs, EngineFormat};
 
 #[derive(Args, Debug)]
 pub struct SajuCommand {
@@ -16,7 +16,7 @@ pub struct SajuCommand {
 
     /// Output format: json (default), text
     #[arg(short, long, value_enum, default_value = "json")]
-    pub format: OutputFormat,
+    pub format: EngineFormat,
 }
 
 pub fn run(cmd: SajuCommand) -> Result<()> {
@@ -32,7 +32,7 @@ pub fn run(cmd: SajuCommand) -> Result<()> {
     let res = facade::analyze_saju(saju_in)?;
 
     match cmd.format {
-        OutputFormat::Json => {
+        EngineFormat::Json => {
             println!("{}", serde_json::to_string_pretty(&res)?);
         }
         _ => {

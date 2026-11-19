@@ -11,7 +11,7 @@ pub struct AnalyzeCommand {
     #[command(flatten)]
     pub birth: BirthArgs,
 
-    /// Output format: agent (LLM Context), json (raw structured), markdown, text
+    /// Output format: agent (LLM context block; `text` is an alias), json (raw structured), markdown (report with tables)
     #[arg(short, long, value_enum, default_value = "agent")]
     pub format: OutputFormat,
 }
@@ -27,7 +27,7 @@ pub fn run(cmd: AnalyzeCommand) -> Result<()> {
         OutputFormat::Json => {
             println!("{}", serde_json::to_string_pretty(&omni)?);
         }
-        OutputFormat::Agent | OutputFormat::Text => {
+        OutputFormat::Agent => {
             let text = format_agent_context(
                 &omni.input,
                 Some(&omni.saju),

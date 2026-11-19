@@ -15,12 +15,29 @@ pub mod vedic;
 pub mod western;
 pub mod zwds;
 
+/// Output formats of the multi-engine commands (`analyze`).
+///
+/// - `agent`: high-density context block for LLM prompts (`text` is accepted as an alias)
+/// - `json`: full typed engine DTOs
+/// - `markdown`: human-readable report with tables
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum OutputFormat {
     #[default]
+    #[value(alias = "text")]
     Agent,
     Json,
     Markdown,
+}
+
+/// Output formats of the single-engine commands (`saju`, `vedic`, ...).
+///
+/// - `json`: full typed engine DTO
+/// - `text`: compact summary (`agent` and `markdown` are accepted as aliases)
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum EngineFormat {
+    #[default]
+    Json,
+    #[value(alias = "agent", alias = "markdown")]
     Text,
 }
 
@@ -40,11 +57,11 @@ pub struct BirthArgs {
     pub city: Option<String>,
 
     /// Latitude (default: 37.5665 for Seoul, or automatically resolved from --city)
-    #[arg(long)]
+    #[arg(long, allow_negative_numbers = true)]
     pub lat: Option<f64>,
 
     /// Longitude (default: 126.9780 for Seoul, or automatically resolved from --city)
-    #[arg(long)]
+    #[arg(long, allow_negative_numbers = true)]
     pub lon: Option<f64>,
 
     /// Timezone (default: Asia/Seoul, or automatically resolved from --city)
