@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["prepare_birth_context"],"struct":["PreparedBirthContext"]};
+window.SIDEBAR_ITEMS = {"fn":["prepare_birth_context","require_known_birth_time"],"struct":["PreparedBirthContext"]};

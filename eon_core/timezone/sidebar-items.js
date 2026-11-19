@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["standard_meridian_from_tz","standard_meridian_from_tz_at"]};
+window.SIDEBAR_ITEMS = {"fn":["standard_meridian_from_tz","standard_meridian_from_tz_at","standard_meridian_from_tz_for"]};
