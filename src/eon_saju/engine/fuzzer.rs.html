@@ -100,13 +100,13 @@
 <a href=#100 id=100 data-nosnippet>100</a>    </span><span class="attr">#[cfg(feature = <span class="string">"parallel"</span>)]
 <a href=#101 id=101 data-nosnippet>101</a>    </span><span class="kw">pub fn </span>fuzz_random(<span class="kw-2">&amp;</span><span class="self">self</span>, iterations: usize) -&gt; VulnerabilityReport {
 <a href=#102 id=102 data-nosnippet>102</a>        <span class="kw">let </span><span class="kw-2">mut </span>vulnerabilities = Vec::new();
-<a href=#103 id=103 data-nosnippet>103</a>        <span class="kw">use </span>rand::Rng;
-<a href=#104 id=104 data-nosnippet>104</a>        <span class="kw">let </span><span class="kw-2">mut </span>rng = rand::thread_rng();
+<a href=#103 id=103 data-nosnippet>103</a>        <span class="kw">use </span>rand::RngExt;
+<a href=#104 id=104 data-nosnippet>104</a>        <span class="kw">let </span><span class="kw-2">mut </span>rng = rand::rng();
 <a href=#105 id=105 data-nosnippet>105</a>
 <a href=#106 id=106 data-nosnippet>106</a>        <span class="kw">for _ in </span><span class="number">0</span>..iterations {
-<a href=#107 id=107 data-nosnippet>107</a>            <span class="kw">let </span>major = GanZi::from_index(rng.gen_range(<span class="number">0</span>..<span class="number">60</span>));
-<a href=#108 id=108 data-nosnippet>108</a>            <span class="kw">let </span>yearly = GanZi::from_index(rng.gen_range(<span class="number">0</span>..<span class="number">60</span>));
-<a href=#109 id=109 data-nosnippet>109</a>            <span class="kw">let </span>monthly = GanZi::from_index(rng.gen_range(<span class="number">0</span>..<span class="number">60</span>));
+<a href=#107 id=107 data-nosnippet>107</a>            <span class="kw">let </span>major = GanZi::from_index(rng.random_range(<span class="number">0</span>..<span class="number">60</span>));
+<a href=#108 id=108 data-nosnippet>108</a>            <span class="kw">let </span>yearly = GanZi::from_index(rng.random_range(<span class="number">0</span>..<span class="number">60</span>));
+<a href=#109 id=109 data-nosnippet>109</a>            <span class="kw">let </span>monthly = GanZi::from_index(rng.random_range(<span class="number">0</span>..<span class="number">60</span>));
 <a href=#110 id=110 data-nosnippet>110</a>
 <a href=#111 id=111 data-nosnippet>111</a>            <span class="kw">let </span>frame = <span class="self">self</span>.vm.step(<span class="number">0</span>, major, yearly, <span class="prelude-val">Some</span>(monthly), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
 <a href=#112 id=112 data-nosnippet>112</a>
