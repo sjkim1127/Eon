@@ -178,7 +178,7 @@ eon tier --birth "1990-05-15 10:30" --gender m -f text
 - `--tz <STRING>`: IANA timezone string (default: `Asia/Seoul`).
 - `--lunar`: Interpret birth date using the Lunar calendar.
 - `--leap`: Specify that the lunar month is a leap month.
-- `-f, --format <agent|json|markdown|text>`: Output format.
+- `-f, --format`: Output format. `analyze` accepts `agent` (default; `text` is an alias), `json` and `markdown`. Single-engine commands (`saju`, `vedic`, ...) accept `json` (default) and `text` (compact summary; `agent` and `markdown` are aliases of `text`).
 
 ---
 

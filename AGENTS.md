@@ -89,10 +89,10 @@ let input = AnalysisInput::new(
 
 ### 3-2. AI Agent Optimized Formats
 The CLI natively supports high-density outputs tailored for LLM reasoning and agent tool pipelines:
-- `--format agent` (or `eon prompt`): High-density markdown context ready for injection into an LLM's system or user prompt.
+- `--format agent` (or `eon prompt`): High-density markdown context ready for injection into an LLM's system or user prompt (`analyze` only; `text` is an alias).
 - `--format json`: Fully typed, structured JSON serialization of engine DTOs.
-- `--format markdown`: Clean human-readable reports with formatted tables and bullet points.
-- `--format text`: Ultra-compact summaries for terminal inspection.
+- `--format markdown`: Clean human-readable report with formatted tables and bullet points (`analyze` only).
+- `--format text`: Compact summary for single-engine commands (`saju`, `vedic`, ...); `agent` and `markdown` are accepted there as aliases.
 
 ### 3-3. Model Context Protocol (MCP) Standard
 The `eon mcp` command runs an MCP server over stdio using JSON-RPC 2.0. Any MCP-compatible host (Claude Desktop, Cursor, Antigravity, etc.) can discover and call `eon_analyze` directly as a native agent tool.

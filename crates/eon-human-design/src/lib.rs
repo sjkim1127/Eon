@@ -685,4 +685,240 @@ mod tests {
         assert!(!result.personality.is_empty());
         assert!(!result.design.is_empty());
     }
+
+    // ---------------------------------------------------------------------------------------
+    // Regression tests against independently written reference tables.
+    // The tables below are deliberately NOT derived from the crate's own constants so that a
+    // wrong edit to the gate wheel, the channel map or the type rules is caught.
+    // ---------------------------------------------------------------------------------------
+
+    /// Rave Mandala: gate order starting at 2deg00' Aquarius (302 degrees), 5.625 degrees each.
+    const REF_WHEEL: [u8; 64] = [
+        41, 19, 13, 49, 30, 55, 37, 63, 22, 36, 25, 17, 21, 51, 42, 3, 27, 24, 2, 23, 8, 20, 16,
+        35, 45, 12, 15, 52, 39, 53, 62, 56, 31, 33, 7, 4, 29, 59, 40, 64, 47, 6, 46, 18, 48, 57,
+        32, 50, 28, 44, 1, 43, 14, 34, 9, 5, 26, 11, 10, 58, 38, 54, 61, 60,
+    ];
+
+    const REF_CENTERS: [(HdCenter, &[u8]); 9] = [
+        (HdCenter::Head, &[64, 61, 63]),
+        (HdCenter::Ajna, &[47, 24, 4, 17, 43, 11]),
+        (
+            HdCenter::Throat,
+            &[62, 23, 56, 35, 12, 45, 33, 8, 31, 20, 16],
+        ),
+        (HdCenter::SelfG, &[1, 13, 25, 46, 2, 15, 10, 7]),
+        (HdCenter::Heart, &[21, 40, 26, 51]),
+        (HdCenter::Spleen, &[48, 57, 44, 50, 32, 28, 18]),
+        (HdCenter::SolarPlexus, &[36, 22, 37, 6, 49, 55, 30]),
+        (HdCenter::Sacral, &[5, 14, 29, 59, 9, 3, 42, 27, 34]),
+        (HdCenter::Root, &[53, 60, 52, 19, 39, 41, 58, 38, 54]),
+    ];
+
+    const REF_CHANNELS: [(u8, u8); 36] = [
+        (1, 8),
+        (2, 14),
+        (3, 60),
+        (4, 63),
+        (5, 15),
+        (6, 59),
+        (7, 31),
+        (9, 52),
+        (10, 20),
+        (10, 34),
+        (10, 57),
+        (11, 56),
+        (12, 22),
+        (13, 33),
+        (16, 48),
+        (17, 62),
+        (18, 58),
+        (19, 49),
+        (20, 34),
+        (20, 57),
+        (21, 45),
+        (23, 43),
+        (24, 61),
+        (25, 51),
+        (26, 44),
+        (27, 50),
+        (28, 38),
+        (29, 46),
+        (30, 41),
+        (32, 54),
+        (34, 57),
+        (35, 36),
+        (37, 40),
+        (39, 55),
+        (42, 53),
+        (47, 64),
+    ];
+
+    fn ref_center(gate: u8) -> HdCenter {
+        REF_CENTERS
+            .iter()
+            .find(|(_, gates)| gates.contains(&gate))
+            .map(|(c, _)| *c)
+            .expect("every gate belongs to a center")
+    }
+
+    #[test]
+    fn gate_wheel_matches_reference_for_every_gate_and_line() {
+        for (i, &gate) in REF_WHEEL.iter().enumerate() {
+            let start = (302.0 + 5.625 * i as f64) % 360.0;
+            for line in 0..6u8 {
+                let deg = (start + 0.9375 * f64::from(line) + 0.01) % 360.0;
+                let (g, l, ..) = degree_to_gate_line(deg);
+                assert_eq!((g, l), (gate, line + 1), "longitude {deg}");
+            }
+            // The very end of the gate still belongs to line 6 of the same gate.
+            let (g, l, ..) = degree_to_gate_line((start + 5.624) % 360.0);
+            assert_eq!((g, l), (gate, 6), "end of gate {gate}");
+        }
+    }
+
+    #[test]
+    fn channel_map_has_exactly_the_36_channels_with_correct_centers() {
+        for &(a, b) in &REF_CHANNELS {
+            let (c1, c2) = get_channel_centers(a, b).unwrap_or_else(|| panic!("{a}-{b} missing"));
+            let mut got = [c1, c2];
+            let mut want = [ref_center(a), ref_center(b)];
+            got.sort();
+            want.sort();
+            assert_eq!(got, want, "centers of channel {a}-{b}");
+            // Order of the two gates must not matter.
+            assert_eq!(get_channel_centers(b, a), get_channel_centers(a, b));
+        }
+        let mut extra = 0;
+        for a in 1..=64u8 {
+            for b in (a + 1)..=64u8 {
+                if get_channel_centers(a, b).is_some() && !REF_CHANNELS.contains(&(a, b)) {
+                    extra += 1;
+                }
+            }
+        }
+        assert_eq!(extra, 0, "no channel outside the 36 standard ones");
+        assert_eq!(CHANNELS.len(), 36);
+    }
+
+    fn analyse(gates: &[u8]) -> (String, String, String, HashSet<HdCenter>) {
+        let all: HashSet<u8> = gates.iter().copied().collect();
+        let (centers, channels) = get_defined_centers_and_channels(&all);
+        (
+            determine_type(&centers, &channels),
+            determine_authority(&centers),
+            determine_definition_type(&centers, &channels),
+            centers,
+        )
+    }
+
+    #[test]
+    fn type_authority_and_definition_follow_the_standard_rules() {
+        // (activated gates, type, authority, definition)
+        let cases: [(&[u8], &str, &str, &str); 10] = [
+            (&[], "Reflector", "None/Outer", "No Definition"),
+            // Sacral-G only: a Generator; the Sacral is the authority.
+            (&[5, 15], "Generator", "Sacral", "Single Definition"),
+            // Sacral-Throat (20-34): Sacral motor reaches the Throat -> Manifesting Generator.
+            (
+                &[20, 34],
+                "Manifesting Generator",
+                "Sacral",
+                "Single Definition",
+            ),
+            // Solar Plexus-Throat (35-36), Sacral undefined: motor to Throat -> Manifestor.
+            (&[35, 36], "Manifestor", "Emotional", "Single Definition"),
+            // Heart-Throat (21-45): Manifestor with ego authority.
+            (&[21, 45], "Manifestor", "Ego", "Single Definition"),
+            // Head-Ajna only: no motor, no Sacral -> Projector.
+            (&[64, 47], "Projector", "Mental/Outer", "Single Definition"),
+            // Spleen-Throat (16-48) has no motor -> Projector with splenic authority.
+            (&[16, 48], "Projector", "Splenic", "Single Definition"),
+            // G-Throat (7-31): Projector with self-projected authority.
+            (&[7, 31], "Projector", "Self-Projected", "Single Definition"),
+            // Solar Plexus outranks Sacral (6-59 connects both).
+            (&[6, 59], "Generator", "Emotional", "Single Definition"),
+            // Two disconnected groups -> split definition.
+            (
+                &[64, 47, 16, 48],
+                "Projector",
+                "Splenic",
+                "Split Definition",
+            ),
+        ];
+        for (gates, ty, auth, def) in cases {
+            let (t, a, d, _) = analyse(gates);
+            assert_eq!(
+                (t.as_str(), a.as_str(), d.as_str()),
+                (ty, auth, def),
+                "gates {gates:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn motor_must_reach_the_throat_through_defined_channels() {
+        // Root-Sacral (9-52) and Throat-Spleen (16-48) are not connected to each other.
+        let (t, ..) = analyse(&[9, 52, 16, 48]);
+        assert_eq!(t, "Generator");
+        // Adding Spleen-Sacral (27-50) links the Sacral motor to the Throat.
+        let (t, ..) = analyse(&[9, 52, 16, 48, 27, 50]);
+        assert_eq!(t, "Manifesting Generator");
+    }
+
+    #[test]
+    fn strategy_and_not_self_theme_cover_every_type() {
+        for ty in [
+            "Manifestor",
+            "Generator",
+            "Manifesting Generator",
+            "Projector",
+            "Reflector",
+        ] {
+            assert_ne!(determine_strategy(ty), "Unknown", "{ty}");
+            assert_ne!(determine_not_self_theme(ty), "Unknown", "{ty}");
+        }
+    }
+
+    /// Golden chart cross-checked against an independent implementation on swisseph
+    /// (1990-05-15 01:30 UTC): personality Sun 23.6, design Sun 30.2, profile 6/2.
+    #[test]
+    fn golden_chart_1990_05_15() {
+        let engine = AstroEngine::new();
+        let birth = Utc.with_ymd_and_hms(1990, 5, 15, 1, 30, 0).unwrap();
+        let r = calculate_human_design(&engine, birth).unwrap();
+
+        assert_eq!(r.chart_type, "Projector");
+        assert_eq!(r.profile, "6/2");
+        assert_eq!(r.authority, "Emotional");
+        assert_eq!(r.definition_type, "Split Definition");
+
+        let p_sun = &r.personality["Sun"];
+        let d_sun = &r.design["Sun"];
+        assert_eq!((p_sun.gate, p_sun.line), (23, 6));
+        assert_eq!((d_sun.gate, d_sun.line), (30, 2));
+
+        let mut gates: Vec<u8> = r.active_gates.to_vec();
+        gates.sort_unstable();
+        assert_eq!(
+            gates,
+            vec![1, 7, 13, 15, 19, 21, 22, 23, 24, 29, 30, 32, 33, 38, 41, 43, 52, 54, 58, 61]
+        );
+        let mut channels = r.active_channels.clone();
+        channels.sort_unstable();
+        assert_eq!(
+            channels,
+            vec![(13, 33), (23, 43), (24, 61), (30, 41), (32, 54)]
+        );
+    }
+
+    #[test]
+    fn design_time_is_88_degrees_of_solar_arc_before_birth() {
+        let engine = AstroEngine::new();
+        let birth = Utc.with_ymd_and_hms(1990, 5, 15, 1, 30, 0).unwrap();
+        let r = calculate_human_design(&engine, birth).unwrap();
+        let p = r.personality["Sun"].degree;
+        let d = r.design["Sun"].degree;
+        let arc = (p - d + 360.0) % 360.0;
+        assert!((arc - 88.0).abs() < 1e-3, "solar arc was {arc}");
+    }
 }
