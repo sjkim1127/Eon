@@ -67,11 +67,14 @@ fn test_case_2_midnight_boundary_hai() {
     let input = SajuInput::new_solar(2023, 1, 1, 21, 30);
     let pillars = FourPillars::calculate(&input).unwrap();
 
-    println!("21:30 Hour pillar: {}", pillars.hour.branch.hanja());
+    println!(
+        "21:30 Hour pillar: {}",
+        pillars.hour.unwrap().branch.hanja()
+    );
 
     // 21:00-22:59 is Hai hour
     assert_eq!(
-        pillars.hour.branch,
+        pillars.hour.unwrap().branch,
         EarthlyBranch::Hai,
         "21:30 must be Hai hour"
     );
@@ -85,13 +88,13 @@ fn test_case_2_midnight_boundary_zi_early() {
 
     println!(
         "23:00 Hour pillar: {} Day pillar: {}",
-        pillars.hour.branch.hanja(),
+        pillars.hour.unwrap().branch.hanja(),
         pillars.day.branch.hanja()
     );
 
     // 23:00 is Zi hour
     assert_eq!(
-        pillars.hour.branch,
+        pillars.hour.unwrap().branch,
         EarthlyBranch::Zi,
         "23:00 must be Zi hour"
     );
@@ -105,13 +108,13 @@ fn test_case_2_midnight_boundary_zi_late() {
 
     println!(
         "00:01 Hour pillar: {} Day pillar: {}",
-        pillars.hour.branch.hanja(),
+        pillars.hour.unwrap().branch.hanja(),
         pillars.day.branch.hanja()
     );
 
     // 00:00-00:59 is Zi hour
     assert_eq!(
-        pillars.hour.branch,
+        pillars.hour.unwrap().branch,
         EarthlyBranch::Zi,
         "00:01 must be Zi hour"
     );
@@ -137,22 +140,22 @@ fn test_case_2_night_rat_hour_comparison() {
     println!(
         "Early Rat (Default): Day pillar {} Hour pillar {}",
         jojasi_pillars.day.hangul(),
-        jojasi_pillars.hour.hangul()
+        jojasi_pillars.hour.unwrap().hangul()
     );
     println!(
         "Night Rat: Day pillar {} Hour pillar {}",
         yajasi_pillars.day.hangul(),
-        yajasi_pillars.hour.hangul()
+        yajasi_pillars.hour.unwrap().hangul()
     );
 
     // Both modes have Zi hour
     assert_eq!(
-        jojasi_pillars.hour.branch,
+        jojasi_pillars.hour.unwrap().branch,
         EarthlyBranch::Zi,
         "Early Rat: Hour pillar Zi"
     );
     assert_eq!(
-        yajasi_pillars.hour.branch,
+        yajasi_pillars.hour.unwrap().branch,
         EarthlyBranch::Zi,
         "Night Rat: Hour pillar Zi"
     );
@@ -199,12 +202,15 @@ fn test_case_3_1988_summer_time() {
     let input = SajuInput::new_solar(y, m, d, h, 0);
     let pillars = FourPillars::calculate(&input).unwrap();
 
-    println!("1988 DST Hour pillar: {}", pillars.hour.branch.hanja());
+    println!(
+        "1988 DST Hour pillar: {}",
+        pillars.hour.unwrap().branch.hanja()
+    );
 
     // 13:30 (Wei) should become 12:00 (Wu) after correction
     // DST -1h + longitude -30m = approx 12:00
     assert_eq!(
-        pillars.hour.branch,
+        pillars.hour.unwrap().branch,
         EarthlyBranch::Wu,
         "Must be Wu hour after 1988 DST + longitude correction"
     );
@@ -248,7 +254,7 @@ fn test_case_4_longitude_ulleungdo() {
     println!(
         "Ulleungdo 11:29 corrected time: {} -> Hour pillar: {}",
         h,
-        pillars.hour.branch.hanja()
+        pillars.hour.unwrap().branch.hanja()
     );
 
     // Ulleungdo (130.8E): correction = (130.8 - 135) * 4 = -16.8 min
@@ -274,7 +280,7 @@ fn test_case_4_longitude_mokpo() {
     println!(
         "Mokpo 11:29 corrected time: {} -> Hour pillar: {}",
         h,
-        pillars.hour.branch.hanja()
+        pillars.hour.unwrap().branch.hanja()
     );
 
     // Mokpo (126.3E): correction = (126.3 - 135) * 4 = -34.8 min
@@ -334,7 +340,7 @@ fn test_case_5_leap_month() {
     println!("Year pillar: {}", pillars.year);
     println!("Month pillar: {}", pillars.month);
     println!("Day pillar: {}", pillars.day);
-    println!("Hour pillar: {}", pillars.hour);
+    println!("Hour pillar: {}", pillars.hour.unwrap());
 
     // Between XiaoMan (5/20) and MangZhong (6/5) -> 4th month (Si month)
     // 2020-05-23 is after XiaoMan (5/20) so Si month
@@ -411,8 +417,16 @@ fn test_user_saju_complete() {
     assert_eq!(pillars.month.branch, EarthlyBranch::Hai, "Month branch Hai");
     assert_eq!(pillars.day.stem, HeavenlyStem::Geng, "Day stem Geng");
     assert_eq!(pillars.day.branch, EarthlyBranch::Xu, "Day branch Xu");
-    assert_eq!(pillars.hour.stem, HeavenlyStem::Ding, "Hour stem Ding");
-    assert_eq!(pillars.hour.branch, EarthlyBranch::Hai, "Hour branch Hai");
+    assert_eq!(
+        pillars.hour.unwrap().stem,
+        HeavenlyStem::Ding,
+        "Hour stem Ding"
+    );
+    assert_eq!(
+        pillars.hour.unwrap().branch,
+        EarthlyBranch::Hai,
+        "Hour branch Hai"
+    );
 }
 #[test]
 fn test_case_6_advanced_analysis_refinements() {
@@ -539,7 +553,7 @@ fn test_case_8_transformation_impact() {
     let has_stem_transform = trans.year_stem.reason.is_some()
         || trans.month_stem.reason.is_some()
         || trans.day_stem.reason.is_some()
-        || trans.hour_stem.reason.is_some();
+        || trans.hour_stem.as_ref().is_some_and(|h| h.reason.is_some());
 
     if has_stem_transform {
         // Check transformation propagation
@@ -975,7 +989,7 @@ fn make_pillars(
         year: GanZi::new(y_s, y_b),
         month: GanZi::new(m_s, m_b),
         day: GanZi::new(d_s, d_b),
-        hour: GanZi::new(h_s, h_b),
+        hour: Some(GanZi::new(h_s, h_b)),
         birth_time: Utc.with_ymd_and_hms(1990, 1, 1, 12, 0, 0).unwrap(),
         gender: Gender::Male,
         raw_input: dummy_input,

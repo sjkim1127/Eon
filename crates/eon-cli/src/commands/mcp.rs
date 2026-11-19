@@ -71,7 +71,7 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                         },
                         "serverInfo": {
                             "name": "eon-destiny-engine",
-                            "version": "7.0.0"
+                            "version": env!("CARGO_PKG_VERSION")
                         }
                     })),
                     error: None,
@@ -197,7 +197,7 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                                         format_agent_context(
                                             &omni.input,
                                             Some(&omni.saju),
-                                            Some(&omni.vedic),
+                                            omni.vedic.as_ref(),
                                             omni.western.as_ref(),
                                             omni.zwds.as_ref(),
                                             omni.human_design.as_ref(),

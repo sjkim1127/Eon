@@ -22,7 +22,12 @@ pub struct SajuCommand {
 pub fn run(cmd: SajuCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
     let is_male = cmd.birth.is_male()?;
-    let saju_in = SajuAnalysisInput::new(input, is_male, cmd.night_rat, Some(false));
+    let saju_in = SajuAnalysisInput::new(
+        input.clone(),
+        is_male,
+        cmd.night_rat,
+        Some(input.unknown_time),
+    );
 
     let res = facade::analyze_saju(saju_in)?;
 
@@ -33,8 +38,12 @@ pub fn run(cmd: SajuCommand) -> Result<()> {
         _ => {
             let p = &res.report.pillars;
             println!("== Four Pillars of Destiny (Saju / BaZi) ==");
+            let hour_str = match &p.hour {
+                Some(h) => format!("{}({}-{})", h, h.stem.hangul(), h.branch.hangul()),
+                None => "- (birth time unknown)".to_string(),
+            };
             println!(
-                "Year: {}({}-{}) | Month: {}({}-{}) | Day: {}({}-{}) | Hour: {}({}-{})",
+                "Year: {}({}-{}) | Month: {}({}-{}) | Day: {}({}-{}) | Hour: {}",
                 p.year,
                 p.year.stem.hangul(),
                 p.year.branch.hangul(),
@@ -44,9 +53,7 @@ pub fn run(cmd: SajuCommand) -> Result<()> {
                 p.day,
                 p.day.stem.hangul(),
                 p.day.branch.hangul(),
-                p.hour,
-                p.hour.stem.hangul(),
-                p.hour.branch.hangul()
+                hour_str
             );
             println!(
                 "Day Master Strength: {:?} (Score: {:.1})",

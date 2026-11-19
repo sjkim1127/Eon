@@ -261,12 +261,14 @@ pub struct ShinsalAnalysis {
 impl ShinsalAnalysis {
     pub fn from_pillars(pillars: &FourPillars) -> Self {
         let day_stem = pillars.day_master();
-        let branches = [
+        let mut branches = vec![
             ("year_branch", pillars.year.branch),
             ("month_branch", pillars.month.branch),
             ("day_branch", pillars.day.branch),
-            ("hour_branch", pillars.hour.branch),
         ];
+        if let Some(hour) = pillars.hour {
+            branches.push(("hour_branch", hour.branch));
+        }
 
         // 1. 12 ( )
         let mut twelve_shinsal_day = Vec::new();

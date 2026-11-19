@@ -81,6 +81,12 @@ impl BirthArgs {
         self.parse_gender().map(|g| g == eon_core::Gender::Male)
     }
 
+    /// True when the birth string carries a time of day (not just a date).
+    pub fn has_explicit_time(&self) -> bool {
+        let raw = self.birth.trim();
+        raw.contains(' ') || raw.contains('T')
+    }
+
     pub fn to_analysis_input(&self) -> Result<AnalysisInput> {
         // Validate gender strictly
         let _ = self.parse_gender()?;
@@ -197,6 +203,7 @@ impl BirthArgs {
             lon,
             timezone: tz,
             city: resolved_city,
+            unknown_time: !self.has_explicit_time(),
         })
     }
 }
@@ -274,5 +281,33 @@ mod tests {
         };
         assert!(args.parse_gender().is_err());
         assert!(args.to_analysis_input().is_err());
+    }
+
+    #[test]
+    fn date_only_birth_marks_unknown_time() {
+        let mk = |birth: &str| BirthArgs {
+            birth: birth.to_string(),
+            gender: "m".to_string(),
+            city: None,
+            lat: None,
+            lon: None,
+            tz: None,
+            lunar: false,
+            leap: false,
+            name: None,
+        };
+        assert!(mk("1990-05-15").to_analysis_input().unwrap().unknown_time);
+        assert!(
+            !mk("1990-05-15 10:30")
+                .to_analysis_input()
+                .unwrap()
+                .unknown_time
+        );
+        assert!(
+            !mk("1990-05-15T10:30")
+                .to_analysis_input()
+                .unwrap()
+                .unknown_time
+        );
     }
 }

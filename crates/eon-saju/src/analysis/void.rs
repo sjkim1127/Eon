@@ -51,11 +51,10 @@ impl VoidAnalysis {
         let mut void_ten_gods = Vec::new();
         let mut mapped_voids = Vec::new();
 
-        let checks = [
-            ("Year", pillars.year),
-            ("Month", pillars.month),
-            ("Hour", pillars.hour),
-        ];
+        let mut checks = vec![("Year", pillars.year), ("Month", pillars.month)];
+        if let Some(hour) = pillars.hour {
+            checks.push(("Hour", hour));
+        }
 
         let dm = pillars.day_master();
 
@@ -133,18 +132,15 @@ fn check_void_dissolution(
     target_pos: &str,
     pillars: &FourPillars,
 ) -> Option<(bool, String)> {
-    let other_branches = [
+    let mut other_branches = vec![
         ("Year", pillars.year.branch),
         ("Month", pillars.month.branch),
         ("Day", pillars.day.branch),
-        ("Hour", pillars.hour.branch),
     ];
-    let all_branches = [
-        pillars.year.branch,
-        pillars.month.branch,
-        pillars.day.branch,
-        pillars.hour.branch,
-    ];
+    if let Some(hour) = pillars.hour {
+        other_branches.push(("Hour", hour.branch));
+    }
+    let all_branches: Vec<EarthlyBranch> = other_branches.iter().map(|(_, b)| *b).collect();
 
     for (pos, b) in other_branches {
         if pos == target_pos {

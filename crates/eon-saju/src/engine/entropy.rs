@@ -40,11 +40,14 @@ impl DestinyEntropy {
 
         // Add hidden stems (Jijanggan) data
         for branch in [
-            &pillars.year.branch,
-            &pillars.month.branch,
-            &pillars.day.branch,
-            &pillars.hour.branch,
-        ] {
+            Some(&pillars.year.branch),
+            Some(&pillars.month.branch),
+            Some(&pillars.day.branch),
+            pillars.hour.as_ref().map(|h| &h.branch),
+        ]
+        .into_iter()
+        .flatten()
+        {
             for stem in branch.jijanggan() {
                 element_counts[stem.element().index() as usize] += 0.3;
                 total_elements += 0.3;

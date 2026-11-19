@@ -25,7 +25,14 @@ pub fn format_markdown_report(
         format!("**Coordinates**: ({:.4}, {:.4})", input.lat, input.lon)
     };
 
-    let std_meridian = eon_core::standard_meridian_from_tz(&input.timezone);
+    let std_meridian = eon_core::standard_meridian_from_tz_for(
+        &input.timezone,
+        input.year,
+        input.month,
+        input.day,
+        input.hour,
+        input.minute,
+    );
     let offset_mins = ((input.lon - std_meridian) * 4.0).round() as i32;
     let sign = if offset_mins >= 0 { "+" } else { "" };
 
@@ -39,17 +46,29 @@ pub fn format_markdown_report(
         format!("**Solar Time Offset**: {}{}m", sign, offset_mins)
     };
 
-    md.push_str(&format!(
-        "**Birth**: {:04}-{:02}-{:02} {:02}:{:02} | **Timezone**: {} | {} | {}\n\n",
-        input.year,
-        input.month,
-        input.day,
-        input.hour,
-        input.minute,
-        input.timezone,
-        loc_str,
-        solar_str
-    ));
+    if input.unknown_time {
+        md.push_str(&format!(
+            "**Birth**: {:04}-{:02}-{:02} (time of day unknown) | **Timezone**: {} | {}\n\n",
+            input.year, input.month, input.day, input.timezone, loc_str
+        ));
+        md.push_str(
+            "> **Birth time unknown.** The Hour pillar is not evaluated (three-pillar Saju). \
+Vedic, Western, Zi Wei Dou Shu, Human Design, QiMen DunJia and I Ching depend on the ascendant, houses or an hour-based chart and are not evaluated. \
+Major Luck start age assumes a noon birth.\n\n",
+        );
+    } else {
+        md.push_str(&format!(
+            "**Birth**: {:04}-{:02}-{:02} {:02}:{:02} | **Timezone**: {} | {} | {}\n\n",
+            input.year,
+            input.month,
+            input.day,
+            input.hour,
+            input.minute,
+            input.timezone,
+            loc_str,
+            solar_str
+        ));
+    }
 
     if let Some(t) = tier {
         md.push_str("## Omni Destiny Tier 7.0 Summary\n");
@@ -66,7 +85,7 @@ pub fn format_markdown_report(
             "| **Current Transit Score** | {:.1} pts |\n",
             t.current_score
         ));
-        md.push_str(&format!("| **Growth Gap** | +{:.1} pts |\n", t.growth_gap));
+        md.push_str(&format!("| **Growth Gap** | {:+.1} pts |\n", t.growth_gap));
         md.push_str(&format!(
             "| **Risk / Stability Level** | {} |\n\n",
             t.risk_level
@@ -106,8 +125,12 @@ pub fn format_markdown_report(
     if let Some(s) = saju {
         md.push_str("## 1. Four Pillars of Destiny (Saju / BaZi)\n");
         let p = &s.report.pillars;
+        let hour_str = match &p.hour {
+            Some(h) => format!("{} ({:?}-{:?})", h, h.stem, h.branch),
+            None => "not evaluated (birth time unknown)".to_string(),
+        };
         md.push_str(&format!(
-            "- **Chart**: Year: {} ({:?}-{:?}) / Month: {} ({:?}-{:?}) / Day: {} ({:?}-{:?}) / Hour: {} ({:?}-{:?})\n",
+            "- **Chart**: Year: {} ({:?}-{:?}) / Month: {} ({:?}-{:?}) / Day: {} ({:?}-{:?}) / Hour: {}\n",
             p.year,
             p.year.stem,
             p.year.branch,
@@ -117,9 +140,7 @@ pub fn format_markdown_report(
             p.day,
             p.day.stem,
             p.day.branch,
-            p.hour,
-            p.hour.stem,
-            p.hour.branch
+            hour_str
         ));
         md.push_str(&format!(
             "- **Strength**: {:?} (Score: {:.1})\n",

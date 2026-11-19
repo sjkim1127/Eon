@@ -15,7 +15,7 @@ use crate::dto::{
 
 pub fn build_handbook(
     saju: &SajuAnalysisOutput,
-    vedic: &VedicAnalysisOutput,
+    vedic: Option<&VedicAnalysisOutput>,
     western: Option<&WesternAnalysisOutput>,
     zwds: Option<&ZwdsAnalysisOutput>,
     hd: Option<&HumanDesignAnalysisOutput>,
@@ -35,13 +35,15 @@ pub fn build_handbook(
     }
 
     // 2. Vedic symbols
-    for yoga in &vedic.report.yogas {
-        if let Some(interp) = vedic::interpret_yoga(&yoga.name) {
+    if let Some(vedic) = vedic {
+        for yoga in &vedic.report.yogas {
+            if let Some(interp) = vedic::interpret_yoga(&yoga.name) {
+                symbols.push(interp);
+            }
+        }
+        if let Some(interp) = vedic::interpret_nakshatra(&vedic.report.nakshatra_info) {
             symbols.push(interp);
         }
-    }
-    if let Some(interp) = vedic::interpret_nakshatra(&vedic.report.nakshatra_info) {
-        symbols.push(interp);
     }
 
     // 3. Western symbols

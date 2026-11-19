@@ -100,11 +100,14 @@ impl LunarCalendar {
         // 3. Find reference Winter Solstice to determine month and year alignment
         // Find Winter Solstice before or at the current new moon
         let ws_t = engine.find_winter_solstice_before(nm_t + chrono::Duration::days(1))?;
-        let ws_nm_t = engine.find_new_moon_before(ws_t + chrono::Duration::minutes(1))?;
+        // The month containing the Winter Solstice is decided by calendar date (KST), not by
+        // timestamp: a solstice on the same KST date as a later new moon belongs to the month
+        // that begins on that date.
+        let ws_nm_t = Self::new_moon_on_or_before_kst_date(&engine, ws_t)?;
 
         // Determine if this sui (cycle between Winter Solstices) has 13 lunar months (contains a leap month)
         let next_ws_t = engine.find_winter_solstice_before(ws_t + chrono::Duration::days(380))?;
-        let next_ws_nm_t = engine.find_new_moon_before(next_ws_t + chrono::Duration::minutes(1))?;
+        let next_ws_nm_t = Self::new_moon_on_or_before_kst_date(&engine, next_ws_t)?;
         let sui_months = ((next_ws_nm_t - ws_nm_t).num_days() as f64 / 29.53).round() as i32;
         let has_leap_year = sui_months >= 13;
 
@@ -167,6 +170,21 @@ impl LunarCalendar {
         }
 
         Ok((lunar_year, month_num as u32, lunar_day, is_leap))
+    }
+
+    /// Latest new moon whose KST calendar date is on or before the KST date of `t`.
+    fn new_moon_on_or_before_kst_date(
+        engine: &eon_astro::AstroEngine,
+        t: DateTime<Utc>,
+    ) -> Result<DateTime<Utc>, crate::error::DataError> {
+        let kst_offset = chrono::Duration::hours(9);
+        let d = (t + kst_offset).date_naive();
+        let end_of_day_utc = Utc
+            .with_ymd_and_hms(d.year(), d.month(), d.day(), 23, 59, 59)
+            .single()
+            .ok_or(crate::error::DataError::InvalidDate)?
+            - kst_offset;
+        Ok(engine.find_new_moon_before(end_of_day_utc)?)
     }
 
     /// Convert lunar date to solar date.
@@ -236,5 +254,60 @@ mod tests {
         let lunar_leap = LunarCalendar::from_solar_internal(leap_date).unwrap();
         println!("DEBUG: Lunar result for 2023-03-22: {:?}", lunar_leap);
         assert_eq!(lunar_leap, (2023, 2, 1, true));
+    }
+
+    #[test]
+    fn test_leap_month_when_solstice_and_new_moon_share_kst_date() {
+        // Winter solstice precedes the new moon on the same KST date (12-22):
+        // the month beginning that day contains the solstice and is month 11.
+        let d = |y, m, dd| NaiveDate::from_ymd_opt(y, m, dd).unwrap();
+        // 1984 leap month 10 (윤10월) starts 1984-11-23
+        assert_eq!(
+            LunarCalendar::from_solar_internal(d(1984, 11, 25)).unwrap(),
+            (1984, 10, 3, true)
+        );
+        // 2014 leap month 9 (윤9월) starts 2014-10-24
+        assert_eq!(
+            LunarCalendar::from_solar_internal(d(2014, 10, 24)).unwrap(),
+            (2014, 9, 1, true)
+        );
+        // 1985 has no leap month: 1985-02-20 is Lunar New Year (1월 1일)
+        assert_eq!(
+            LunarCalendar::from_solar_internal(d(1985, 2, 20)).unwrap(),
+            (1985, 1, 1, false)
+        );
+    }
+
+    #[test]
+    fn test_embedded_cache_matches_live_calculation() {
+        // Guards against a stale manseryuk.bin: regenerate with
+        // `cargo run --release -p eon-data --example generate_cache`.
+        let cache = crate::cache::GlobalCache::get();
+        for year in [1984, 1985, 2014, 2017, 2023, 2033, 2034] {
+            let records = cache
+                .lunar_months
+                .get(&year)
+                .unwrap_or_else(|| panic!("no lunar records for {year}"));
+            assert!(!records.is_empty());
+            for r in records {
+                let live = LunarCalendar::from_solar_internal(r.new_moon_date).unwrap();
+                assert_eq!(
+                    (r.lunar_year, r.lunar_month, 1, r.is_leap),
+                    live,
+                    "stale cache at {}",
+                    r.new_moon_date
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_to_solar_leap_month_roundtrip() {
+        let solar = LunarCalendar::to_solar(2023, 2, 1, true).unwrap();
+        assert_eq!(solar, NaiveDate::from_ymd_opt(2023, 3, 22).unwrap());
+        assert_eq!(
+            LunarCalendar::from_solar(solar).unwrap(),
+            (2023, 2, 1, true)
+        );
     }
 }

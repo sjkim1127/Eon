@@ -17,7 +17,7 @@ pub struct VedicCommand {
 
 pub fn run(cmd: VedicCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let vedic_in = VedicAnalysisInput::new(input, Some(false), None);
+    let vedic_in = VedicAnalysisInput::new(input.clone(), Some(input.unknown_time), None);
     let res = facade::analyze_vedic(vedic_in)?;
 
     match cmd.format {

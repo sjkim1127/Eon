@@ -31,7 +31,7 @@ pub fn run(cmd: PromptCommand) -> Result<()> {
     let text = format_agent_context(
         &omni.input,
         Some(&omni.saju),
-        Some(&omni.vedic),
+        omni.vedic.as_ref(),
         omni.western.as_ref(),
         omni.zwds.as_ref(),
         omni.human_design.as_ref(),

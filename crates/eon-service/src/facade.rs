@@ -32,7 +32,7 @@ pub fn analyze_destiny_tier(
     vedic: VedicAnalysisOutput,
     transit: Option<TransitAnalysisOutput>,
 ) -> Result<TierResult, ServiceError> {
-    Ok(crate::services::tier::analyze(saju, vedic, transit))
+    Ok(crate::services::tier::analyze(saju, Some(vedic), transit))
 }
 
 pub fn analyze_destiny_tier_omni(
@@ -46,13 +46,15 @@ pub fn analyze_all_synthesized(
     is_male: bool,
     name: Option<String>,
 ) -> Result<SynthesizedOmniAnalysis, ServiceError> {
-    let saju_in = SajuAnalysisInput::new(input.clone(), is_male, false, Some(false));
-    let vedic_in = VedicAnalysisInput::new(input.clone(), Some(false), None);
+    let saju_in = SajuAnalysisInput::new(input.clone(), is_male, false, Some(input.unknown_time));
+    let vedic_in = VedicAnalysisInput::new(input.clone(), Some(input.unknown_time), None);
     let western_in = WesternAnalysisInput::new(input.clone(), "Placidus".to_string());
     let zwds_in = ZwdsAnalysisInput::new(input.clone(), is_male, None);
     let hd_in = HumanDesignAnalysisInput::new(input.clone());
     let qimen_in = QimenAnalysisInput::new(input.clone(), is_male);
     let num_in = NumerologyAnalysisInput::new(input.clone(), name, None);
+
+    let unknown_time = input.unknown_time;
 
     let (saju_res, vedic_res, western_res, zwds_res, hd_res, qimen_res, num_res) =
         std::thread::scope(|s| {
@@ -80,7 +82,31 @@ pub fn analyze_all_synthesized(
         });
 
     let saju = saju_res?;
-    let vedic = vedic_res?;
+    // Vedic is mandatory for a known birth time, but intentionally skipped without one.
+    let vedic = match vedic_res {
+        Ok(v) => Some(v),
+        Err(ServiceError::BirthTimeRequired(_)) if unknown_time => None,
+        Err(e) => return Err(e),
+    };
+
+    let skipped_engines = if unknown_time {
+        [
+            ("Vedic astrology", vedic.is_none()),
+            ("Western astrology", western_res.is_none()),
+            ("Zi Wei Dou Shu", zwds_res.is_none()),
+            ("Human Design", hd_res.is_none()),
+            ("QiMen DunJia", qimen_res.is_none()),
+        ]
+        .into_iter()
+        .filter(|(_, skipped)| *skipped)
+        .map(|(engine, _)| SkippedEngine {
+            engine: engine.to_string(),
+            reason: "Birth time of day is unknown; this engine depends on the ascendant, houses or hour-based chart and is not evaluated.".to_string(),
+        })
+        .collect()
+    } else {
+        Vec::new()
+    };
 
     let omni_input = OmniDestinyTierInput {
         saju: saju.clone(),
@@ -97,7 +123,7 @@ pub fn analyze_all_synthesized(
 
     let handbook = crate::lexicon::build_handbook(
         &saju,
-        &vedic,
+        vedic.as_ref(),
         western_res.as_ref(),
         zwds_res.as_ref(),
         hd_res.as_ref(),
@@ -116,6 +142,7 @@ pub fn analyze_all_synthesized(
         qimen: qimen_res,
         numerology: num_res,
         handbook,
+        skipped_engines,
     })
 }
 
@@ -123,6 +150,9 @@ pub fn analyze_iching(input: SajuAnalysisInput) -> Result<IChingAnalysisOutput, 
     let saju_res = analyze_saju(input.clone())?;
     let pillars = &saju_res.report.pillars;
     let birth_year = input.base.year;
+    let hour_pillar = pillars
+        .hour
+        .ok_or_else(|| ServiceError::BirthTimeRequired("I Ching HeLuo".to_string()))?;
 
     let res = eon_saju::analysis::heluo::calculate_heluo(
         birth_year,
@@ -130,7 +160,7 @@ pub fn analyze_iching(input: SajuAnalysisInput) -> Result<IChingAnalysisOutput, 
         &pillars.year,
         &pillars.month,
         &pillars.day,
-        &pillars.hour,
+        &hour_pillar,
     );
 
     Ok(IChingAnalysisOutput {

@@ -10,10 +10,10 @@ use serde::{Deserialize, Serialize};
 pub struct SupplementaryPillars {
     /// Taewon (胎元): Conception Pillar
     pub taewon: GanZi,
-    /// Myeonggung (命宮): Life Palace Pillar
-    pub myeonggung: GanZi,
-    /// Singung (身宮): Body Palace Pillar
-    pub shingung: GanZi,
+    /// Myeonggung (命宮): Life Palace Pillar (`None` when the birth hour is unknown)
+    pub myeonggung: Option<GanZi>,
+    /// Singung (身宮): Body Palace Pillar (`None` when the birth hour is unknown)
+    pub shingung: Option<GanZi>,
     /// Meta information
     pub meta: SupplementaryPillarsMeta,
     /// Interpretation summary
@@ -54,14 +54,24 @@ pub struct SupplementaryPillarsMeta {
 impl SupplementaryPillars {
     /// Calculate supplementary pillars from FourPillars
     pub fn calculate(pillars: &FourPillars) -> Self {
-        Self::calculate_partial(&pillars.year, &pillars.month, &pillars.day, &pillars.hour)
+        Self::calculate_partial(
+            &pillars.year,
+            &pillars.month,
+            &pillars.day,
+            pillars.hour.as_ref(),
+        )
     }
 
     /// Calculate supplementary pillars directly from natal GanZi
-    pub fn calculate_partial(year: &GanZi, month: &GanZi, _day: &GanZi, hour: &GanZi) -> Self {
+    pub fn calculate_partial(
+        year: &GanZi,
+        month: &GanZi,
+        _day: &GanZi,
+        hour: Option<&GanZi>,
+    ) -> Self {
         let taewon = Self::calculate_taewon(month);
-        let myeonggung = Self::calculate_myeonggung(year, month, hour);
-        let shingung = Self::calculate_shingung(year, month, hour);
+        let myeonggung = hour.map(|h| Self::calculate_myeonggung(year, month, h));
+        let shingung = hour.map(|h| Self::calculate_shingung(year, month, h));
 
         Self {
             taewon,
@@ -70,7 +80,7 @@ impl SupplementaryPillars {
             meta: SupplementaryPillarsMeta {
                 formula_version: "1.0".to_string(),
                 formula_name: "Traditional (Yin-centric)".to_string(),
-                hour_sensitive: true,
+                hour_sensitive: hour.is_some(),
             },
             interpretations: Vec::new(), // Will be populated in SajuReport or later
         }
@@ -203,8 +213,8 @@ impl Default for SupplementaryPillars {
     fn default() -> Self {
         Self {
             taewon: GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi),
-            myeonggung: GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi),
-            shingung: GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi),
+            myeonggung: Some(GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi)),
+            shingung: Some(GanZi::new(HeavenlyStem::Jia, EarthlyBranch::Zi)),
             meta: SupplementaryPillarsMeta {
                 formula_version: "0.0".to_string(),
                 formula_name: "None".to_string(),
@@ -233,7 +243,7 @@ mod tests {
             year: year_pillar,
             month: month_pillar,
             day: day_pillar,
-            hour: hour_pillar,
+            hour: Some(hour_pillar),
             birth_time: Utc::now(),
             gender: eon_core::Gender::Male,
             raw_input: SajuInput::new_solar(2000, 1, 1, 12, 0),
@@ -241,7 +251,7 @@ mod tests {
                 &year_pillar,
                 &month_pillar,
                 &day_pillar,
-                &hour_pillar,
+                Some(&hour_pillar),
             ),
         }
     }
@@ -262,8 +272,8 @@ mod tests {
         let res1 = &p1.supplementary_pillars;
         assert_eq!(res1.taewon.stem, S::Bing);
         assert_eq!(res1.taewon.branch, B::Yin);
-        assert_eq!(res1.myeonggung.branch, B::Xu);
-        assert_eq!(res1.shingung.branch, B::Si);
+        assert_eq!(res1.myeonggung.unwrap().branch, B::Xu);
+        assert_eq!(res1.shingung.unwrap().branch, B::Si);
 
         // Test case verification
         // Test case verification
@@ -278,8 +288,8 @@ mod tests {
         );
         let res2 = &p2.supplementary_pillars;
         assert_eq!(res2.taewon.branch, B::Shen);
-        assert_eq!(res2.myeonggung.branch, B::Xu);
-        assert_eq!(res2.shingung.branch, B::Si);
+        assert_eq!(res2.myeonggung.unwrap().branch, B::Xu);
+        assert_eq!(res2.shingung.unwrap().branch, B::Si);
 
         // Test case verification
         // Test case verification
@@ -292,8 +302,8 @@ mod tests {
             (S::Yi, B::Chou),
         );
         let res3 = &p3.supplementary_pillars;
-        assert_eq!(res3.myeonggung.branch, B::Si);
-        assert_eq!(res3.shingung.branch, B::Hai);
+        assert_eq!(res3.myeonggung.unwrap().branch, B::Si);
+        assert_eq!(res3.shingung.unwrap().branch, B::Hai);
 
         // Test case verification
         // Test case verification
@@ -306,8 +316,8 @@ mod tests {
             (S::Bing, B::Shen),
         );
         let res4 = &p4.supplementary_pillars;
-        assert_eq!(res4.myeonggung.branch, B::Zi);
-        assert_eq!(res4.shingung.branch, B::Yin);
+        assert_eq!(res4.myeonggung.unwrap().branch, B::Zi);
+        assert_eq!(res4.shingung.unwrap().branch, B::Yin);
 
         // Test case verification
         // Test case verification
@@ -320,8 +330,8 @@ mod tests {
             (S::Geng, B::Zi),
         );
         let res5 = &p5.supplementary_pillars;
-        assert_eq!(res5.myeonggung.branch, B::Shen);
-        assert_eq!(res5.shingung.branch, B::Shen);
+        assert_eq!(res5.myeonggung.unwrap().branch, B::Shen);
+        assert_eq!(res5.shingung.unwrap().branch, B::Shen);
 
         // Test case verification
         // Test case verification
@@ -334,8 +344,8 @@ mod tests {
             (S::Ding, B::Wei),
         );
         let res6 = &p6.supplementary_pillars;
-        assert_eq!(res6.myeonggung.branch, B::Si);
-        assert_eq!(res6.shingung.branch, B::Hai);
+        assert_eq!(res6.myeonggung.unwrap().branch, B::Si);
+        assert_eq!(res6.shingung.unwrap().branch, B::Hai);
 
         // Test case verification
         // Test case verification
@@ -348,8 +358,8 @@ mod tests {
             (S::Gui, B::Si),
         );
         let res7 = &p7.supplementary_pillars;
-        assert_eq!(res7.myeonggung.branch, B::Zi);
-        assert_eq!(res7.shingung.branch, B::Yin);
+        assert_eq!(res7.myeonggung.unwrap().branch, B::Zi);
+        assert_eq!(res7.shingung.unwrap().branch, B::Yin);
 
         // Test case verification
         // Test case verification
@@ -362,7 +372,7 @@ mod tests {
             (S::Gui, B::You),
         );
         let res8 = &p8.supplementary_pillars;
-        assert_eq!(res8.myeonggung.branch, B::Si);
-        assert_eq!(res8.shingung.branch, B::Xu);
+        assert_eq!(res8.myeonggung.unwrap().branch, B::Si);
+        assert_eq!(res8.shingung.unwrap().branch, B::Xu);
     }
 }

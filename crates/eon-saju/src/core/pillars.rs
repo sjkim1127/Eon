@@ -44,6 +44,10 @@ pub struct SajuInput {
     pub gender: eon_core::Gender,
     /// Optional exact UTC birth moment for astronomical calculations (solar terms, etc.)
     pub birth_utc: Option<DateTime<Utc>>,
+    /// Birth time of day is unknown: the Hour pillar is omitted (three-pillar analysis).
+    /// `hour`/`minute` are then only a noon placeholder used for Day/Month pillar lookup.
+    #[serde(default)]
+    pub unknown_time: bool,
 }
 
 impl SajuInput {
@@ -64,6 +68,7 @@ impl SajuInput {
             use_night_rat_hour: false,      // Default next day early rat hour
             gender: eon_core::Gender::Male, // Default Male
             birth_utc: None,
+            unknown_time: false,
         }
     }
 
@@ -92,6 +97,7 @@ impl SajuInput {
             use_night_rat_hour: false,
             gender: eon_core::Gender::Male,
             birth_utc: None,
+            unknown_time: false,
         }
     }
 
@@ -119,6 +125,7 @@ impl SajuInput {
             use_night_rat_hour: false,
             gender: eon_core::Gender::Male,
             birth_utc: None,
+            unknown_time: false,
         }
     }
 
@@ -157,6 +164,7 @@ impl SajuInput {
             use_night_rat_hour: false,
             gender: eon_core::Gender::Male,
             birth_utc: None,
+            unknown_time: false,
         }
     }
 
@@ -169,6 +177,12 @@ impl SajuInput {
     /// Sets timezone offset in hours
     pub fn with_timezone_offset(mut self, offset_h: f32) -> Self {
         self.timezone_offset_h = offset_h;
+        self
+    }
+
+    /// Marks the birth time of day as unknown (Hour pillar omitted)
+    pub fn with_unknown_time(mut self, unknown_time: bool) -> Self {
+        self.unknown_time = unknown_time;
         self
     }
 
@@ -195,8 +209,9 @@ pub struct FourPillars {
     pub month: GanZi,
     /// Day Pillar (日柱)
     pub day: GanZi,
-    /// Hour Pillar (時柱)
-    pub hour: GanZi,
+    /// Hour Pillar (時柱); `None` when the birth time of day is unknown
+    #[serde(default)]
+    pub hour: Option<GanZi>,
     /// Reference UTC timestamp
     pub birth_time: DateTime<Utc>,
     /// Gender
@@ -284,22 +299,25 @@ impl FourPillars {
         // Day and Hour pillars use adjusted date/time (True Solar Time)
         // [Night Rat Hour handling]
         // If use_night_rat_hour == false and adj_hour >= 23, treat as next day early rat hour
-        let (calc_year, calc_month, calc_day) = if !input.use_night_rat_hour && adj_hour >= 23 {
-            let base_date =
-                NaiveDate::from_ymd_opt(adj_year, adj_month, adj_day).ok_or_else(|| {
-                    SajuError::InvalidDateTime(format!(
-                        "Cannot create date: {}-{}-{}",
-                        adj_year, adj_month, adj_day
-                    ))
-                })?;
-            let next_day = base_date + Duration::days(1);
-            (next_day.year(), next_day.month(), next_day.day())
-        } else {
-            (adj_year, adj_month, adj_day)
-        };
+        // With an unknown birth time there is no Hour pillar and no night-rat day shift.
+        let (calc_year, calc_month, calc_day) =
+            if !input.unknown_time && !input.use_night_rat_hour && adj_hour >= 23 {
+                let base_date =
+                    NaiveDate::from_ymd_opt(adj_year, adj_month, adj_day).ok_or_else(|| {
+                        SajuError::InvalidDateTime(format!(
+                            "Cannot create date: {}-{}-{}",
+                            adj_year, adj_month, adj_day
+                        ))
+                    })?;
+                let next_day = base_date + Duration::days(1);
+                (next_day.year(), next_day.month(), next_day.day())
+            } else {
+                (adj_year, adj_month, adj_day)
+            };
 
         let day_pillar = Self::calculate_day_pillar(calc_year, calc_month, calc_day)?;
-        let hour_pillar = Self::calculate_hour_pillar(&day_pillar, adj_hour);
+        let hour_pillar =
+            (!input.unknown_time).then(|| Self::calculate_hour_pillar(&day_pillar, adj_hour));
 
         Ok(Self {
             year: year_pillar,
@@ -314,7 +332,7 @@ impl FourPillars {
                     &year_pillar,
                     &month_pillar,
                     &day_pillar,
-                    &hour_pillar,
+                    hour_pillar.as_ref(),
                 ),
         })
     }
@@ -395,13 +413,16 @@ impl FourPillars {
             self.month.branch.element(),
             self.day.stem.element(),
             self.day.branch.element(),
-            self.hour.stem.element(),
-            self.hour.branch.element(),
         ];
 
         let mut counts = [0u32; 5];
         for el in elements {
             counts[el as usize] += 1;
+        }
+        // The Hour pillar is absent when the birth time is unknown (6 characters instead of 8)
+        if let Some(hour) = &self.hour {
+            counts[hour.stem.element() as usize] += 1;
+            counts[hour.branch.element() as usize] += 1;
         }
 
         [
@@ -432,7 +453,9 @@ impl FourPillars {
     pub fn hanja(&self) -> String {
         format!(
             "{} {} {} {}",
-            self.hour.hanja(),
+            self.hour
+                .as_ref()
+                .map_or_else(|| "--".to_string(), |h| h.hanja().to_string()),
             self.day.hanja(),
             self.month.hanja(),
             self.year.hanja()
@@ -443,7 +466,9 @@ impl FourPillars {
     pub fn hangul(&self) -> String {
         format!(
             "{} {} {} {}",
-            self.hour.hangul(),
+            self.hour
+                .as_ref()
+                .map_or_else(|| "--".to_string(), |h| h.hangul().to_string()),
             self.day.hangul(),
             self.month.hangul(),
             self.year.hangul()
@@ -457,7 +482,9 @@ impl std::fmt::Display for FourPillars {
         writeln!(
             f,
             "  {:>2}   {:>2}   {:>2}   {:>2}",
-            self.hour.stem.hanja(),
+            self.hour
+                .as_ref()
+                .map_or_else(|| "-".to_string(), |h| h.stem.hanja().to_string()),
             self.day.stem.hanja(),
             self.month.stem.hanja(),
             self.year.hanja()
@@ -466,7 +493,9 @@ impl std::fmt::Display for FourPillars {
         writeln!(
             f,
             "  {}   {}   {}   {}",
-            self.hour.hangul(),
+            self.hour
+                .as_ref()
+                .map_or_else(|| "--".to_string(), |h| h.hangul().to_string()),
             self.day.hangul(),
             self.month.hangul(),
             self.year.hangul()
@@ -513,13 +542,13 @@ mod tests {
         let pillars_no_night = FourPillars::calculate(&input_base).unwrap();
         // March 20 is Gui-Mao, 21 is Jia-Chen. After 23:00, becomes Jia-Chen.
         assert_eq!(pillars_no_night.day.stem.index(), 0); // Jia (甲)
-        assert_eq!(pillars_no_night.hour.branch.index(), 0); // Zi (子)
+        assert_eq!(pillars_no_night.hour.unwrap().branch.index(), 0); // Zi (子)
 
         // 2. With night rat hour -> preserves current day pillar
         let input_night = input_base.with_night_rat_hour(true);
         let pillars_night = FourPillars::calculate(&input_night).unwrap();
         assert_eq!(pillars_night.day.stem.index(), 9); // Gui (癸)
-        assert_eq!(pillars_night.hour.branch.index(), 0); // Zi (子)
+        assert_eq!(pillars_night.hour.unwrap().branch.index(), 0); // Zi (子)
     }
 
     #[test]
@@ -539,5 +568,57 @@ mod tests {
         assert_eq!(pillars2.year.stem.index(), 0); // Jia (still Jia Wu until Feb)
         assert_eq!(pillars2.month.stem.index(), 3); // Ding (Chou month of Jia year is Ding Chou)
         assert_eq!(pillars2.month.branch.index(), 1); // Chou
+    }
+
+    #[test]
+    fn unknown_time_omits_hour_pillar_and_keeps_day_pillar() {
+        // 23:40 would normally roll the Day pillar to the next day; with an unknown time the
+        // noon placeholder must neither create an Hour pillar nor shift the Day pillar.
+        let known = SajuInput::new_solar(1990, 5, 15, 12, 0);
+        let unknown = SajuInput::new_solar(1990, 5, 15, 23, 40).with_unknown_time(true);
+
+        let p_known = FourPillars::calculate(&known).unwrap();
+        let p_unknown = FourPillars::calculate(&unknown).unwrap();
+
+        assert!(p_known.hour.is_some());
+        assert!(p_unknown.hour.is_none());
+        assert_eq!(p_unknown.day, p_known.day);
+        assert_eq!(p_unknown.year, p_known.year);
+        assert_eq!(p_unknown.month, p_known.month);
+        // 3 pillars = 6 characters
+        let total: u32 = p_unknown
+            .element_distribution()
+            .iter()
+            .map(|(_, c)| c)
+            .sum();
+        assert_eq!(total, 6);
+        let total_known: u32 = p_known.element_distribution().iter().map(|(_, c)| c).sum();
+        assert_eq!(total_known, 8);
+    }
+
+    #[test]
+    fn unknown_time_full_analysis_does_not_panic() {
+        let input = SajuInput::new_solar(1990, 5, 15, 12, 0).with_unknown_time(true);
+        let p = FourPillars::calculate(&input).unwrap();
+
+        let strength = p.strength();
+        assert!(strength.deuk_si.is_none());
+        assert!(p.supplementary_pillars.myeonggung.is_none());
+        assert!(p.supplementary_pillars.shingung.is_none());
+
+        // Every analysis must run on three pillars without indexing past the end.
+        let _ = p.ten_gods();
+        let _ = p.twelve_stages();
+        let _ = p.relationships();
+        let _ = p.transformations();
+        let _ = p.effective_elements();
+        let _ = p.void_analysis();
+        let _ = p.yongshin();
+        let _ = p.structure();
+        let _ = p.shinsal();
+        let _ = p.spirit_markers();
+        let _ = p.to_string();
+        let _ = p.hanja();
+        let _ = p.hangul();
     }
 }

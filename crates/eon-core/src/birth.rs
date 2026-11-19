@@ -231,8 +231,41 @@ impl BirthInfo {
         }
     }
 
+    /// DST shift in minutes in effect at the local birth time (0 when none or timezone unknown).
+    ///
+    /// True solar time is derived from the *standard* (non-DST) clock, so this shift must be
+    /// removed from the local clock time before applying the longitude correction.
+    pub fn dst_offset_minutes(&self) -> i32 {
+        let (Ok(naive), Ok(tz)) = (self.local_naive_datetime(), self.parse_timezone()) else {
+            return 0;
+        };
+
+        use chrono::TimeZone;
+        use chrono_tz::OffsetComponents;
+
+        let secs = match tz.from_local_datetime(&naive) {
+            LocalResult::Single(dt) => dt.offset().dst_offset().num_seconds(),
+            LocalResult::Ambiguous(dt1, _) => dt1.offset().dst_offset().num_seconds(),
+            LocalResult::None => 0,
+        };
+        (secs / 60) as i32
+    }
+
+    /// Birth clock time on the standard (non-DST) clock, without any longitude correction.
+    ///
+    /// Equals the local clock time outside DST; during DST it is one DST shift earlier.
+    pub fn standard_clock_datetime(&self) -> (i32, u32, u32, u32, u32) {
+        match self.local_naive_datetime() {
+            Ok(naive) => {
+                let t = naive - chrono::Duration::minutes(self.dst_offset_minutes() as i64);
+                (t.year(), t.month(), t.day(), t.hour(), t.minute())
+            }
+            Err(_) => (self.year, self.month, self.day, self.hour, self.minute),
+        }
+    }
+
     /// Returns total UTC offset in hours (base + DST)
-    pub fn dst_offset_hours(&self) -> Option<i32> {
+    pub fn dst_offset_hours(&self) -> Option<f64> {
         let naive = self.local_naive_datetime().ok()?;
         let tz = self.parse_timezone().ok()?;
 
@@ -242,11 +275,11 @@ impl BirthInfo {
         match tz.from_local_datetime(&naive) {
             LocalResult::Single(dt) => {
                 let total = dt.offset().base_utc_offset() + dt.offset().dst_offset();
-                Some((total.num_seconds() / 3600) as i32)
+                Some(total.num_seconds() as f64 / 3600.0)
             }
             LocalResult::Ambiguous(dt1, _) => {
                 let total = dt1.offset().base_utc_offset() + dt1.offset().dst_offset();
-                Some((total.num_seconds() / 3600) as i32)
+                Some(total.num_seconds() as f64 / 3600.0)
             }
             LocalResult::None => None,
         }
@@ -267,7 +300,7 @@ impl BirthInfo {
             return (self.hour, self.minute);
         }
 
-        let offset = self.longitude_offset_minutes();
+        let offset = self.longitude_offset_minutes() - self.dst_offset_minutes();
         let total_minutes = self.hour as i32 * 60 + self.minute as i32 + offset;
 
         let normalized = ((total_minutes % 1440) + 1440) % 1440;
@@ -283,7 +316,7 @@ impl BirthInfo {
             return (self.year, self.month, self.day, self.hour, self.minute);
         }
 
-        let offset = self.longitude_offset_minutes();
+        let offset = self.longitude_offset_minutes() - self.dst_offset_minutes();
         if let Ok(naive) = self.local_naive_datetime() {
             let corrected = naive + chrono::Duration::minutes(offset as i64);
             (
@@ -406,7 +439,7 @@ mod tests {
 
         // Verify DST
         assert!(info.is_dst());
-        assert_eq!(info.dst_offset_hours(), Some(10));
+        assert_eq!(info.dst_offset_hours(), Some(10.0));
     }
 
     #[test]
@@ -415,7 +448,7 @@ mod tests {
         let info = BirthInfo::solar(2004, 1, 15, 10, 0).with_korea_timezone();
 
         assert!(!info.is_dst());
-        assert_eq!(info.dst_offset_hours(), Some(9));
+        assert_eq!(info.dst_offset_hours(), Some(9.0));
     }
 
     #[test]
@@ -438,5 +471,37 @@ mod tests {
 
         let display = format!("{}", info);
         assert!(display.contains("DST"));
+    }
+
+    #[test]
+    fn test_corrected_time_removes_dst_hour() {
+        // Seoul 1988-07-01 12:00 is DST (UTC+10): standard 11:00, minus 32m longitude => 10:28
+        let info = BirthInfo::solar(1988, 7, 1, 12, 0)
+            .with_korea_timezone()
+            .with_location(Location::seoul())
+            .with_true_solar_time(true);
+        assert_eq!(info.dst_offset_minutes(), 60);
+        assert_eq!(info.corrected_datetime(), (1988, 7, 1, 10, 28));
+
+        // Outside DST nothing changes
+        let info = BirthInfo::solar(1990, 5, 15, 10, 30)
+            .with_korea_timezone()
+            .with_location(Location::seoul())
+            .with_true_solar_time(true);
+        assert_eq!(info.dst_offset_minutes(), 0);
+        assert_eq!(info.corrected_datetime(), (1990, 5, 15, 9, 58));
+    }
+
+    #[test]
+    fn test_standard_clock_datetime_removes_only_dst() {
+        // 1988-07-01 01:10 Seoul is DST => standard clock 00:10 (no longitude shift)
+        let info = BirthInfo::solar(1988, 7, 1, 1, 10).with_korea_timezone();
+        assert_eq!(info.standard_clock_datetime(), (1988, 7, 1, 0, 10));
+        // DST crossing midnight: 00:30 DST => previous day 23:30
+        let info = BirthInfo::solar(1988, 7, 1, 0, 30).with_korea_timezone();
+        assert_eq!(info.standard_clock_datetime(), (1988, 6, 30, 23, 30));
+        // No DST: unchanged
+        let info = BirthInfo::solar(1990, 5, 15, 10, 30).with_korea_timezone();
+        assert_eq!(info.standard_clock_datetime(), (1990, 5, 15, 10, 30));
     }
 }

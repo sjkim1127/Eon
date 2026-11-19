@@ -31,6 +31,9 @@ pub enum ServiceError {
     #[error("human design analysis failed: {0}")]
     HumanDesign(String),
 
+    #[error("{0} requires a known birth time of day")]
+    BirthTimeRequired(String),
+
     #[error("serialization failed: {0}")]
     Serialization(String),
 }

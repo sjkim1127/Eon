@@ -180,16 +180,18 @@ impl Analyzable for ThemedAnalysis {
                 .to_string();
 
         // 4. Health & Vulnerable Organs
-        let elements = [
+        let mut elements = vec![
             pillars.year.stem.element(),
             pillars.year.branch.element(),
             pillars.month.stem.element(),
             pillars.month.branch.element(),
             pillars.day.stem.element(),
             pillars.day.branch.element(),
-            pillars.hour.stem.element(),
-            pillars.hour.branch.element(),
         ];
+        if let Some(hour) = pillars.hour {
+            elements.push(hour.stem.element());
+            elements.push(hour.branch.element());
+        }
 
         let mut wood_cnt = 0;
         let mut fire_cnt = 0;

@@ -31,7 +31,7 @@ fn test_omni_destiny_tier_synthesis() {
 
     let omni_input = OmniDestinyTierInput {
         saju: saju_res,
-        vedic: vedic_res,
+        vedic: Some(vedic_res),
         western: western_res,
         zwds: zwds_res,
         human_design: hd_res,
@@ -95,7 +95,7 @@ fn test_omni_destiny_tier_female_case() {
 
     let omni_input = OmniDestinyTierInput {
         saju: saju_res,
-        vedic: vedic_res,
+        vedic: Some(vedic_res),
         western: western_res,
         zwds: zwds_res,
         human_design: None,
@@ -123,7 +123,7 @@ fn test_omni_destiny_tier_with_transit() {
 
     let omni_input = OmniDestinyTierInput {
         saju: saju_res,
-        vedic: vedic_res,
+        vedic: Some(vedic_res),
         western: None,
         zwds: None,
         human_design: None,
@@ -149,7 +149,7 @@ fn test_omni_destiny_tier_weight_sum_is_one() {
 
     let omni_input = OmniDestinyTierInput {
         saju: saju_res,
-        vedic: vedic_res,
+        vedic: Some(vedic_res),
         western: None,
         zwds: None,
         human_design: None,
@@ -183,7 +183,7 @@ fn test_legacy_analyze_delegation_parity() {
 
     let omni_input = OmniDestinyTierInput {
         saju: saju_res,
-        vedic: vedic_res,
+        vedic: Some(vedic_res),
         western: None,
         zwds: None,
         human_design: None,
