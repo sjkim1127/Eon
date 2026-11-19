@@ -18,7 +18,7 @@ eon-astro = { workspace = true }
 chrono.workspace = true
 serde.workspace = true
 thiserror.workspace = true
-rand = { version = "0.8", optional = true }
+rand = { version = "0.10", optional = true }
 rayon = { version = "1.10", optional = true }
 
 [dev-dependencies]
