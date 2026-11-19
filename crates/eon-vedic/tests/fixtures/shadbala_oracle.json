@@ -7,10 +7,10 @@
     "expected": {
       "uchcha_bala": 57.27,
       "naisargika_bala": 60.0,
-      "ayana_bala": 32.3,
+      "ayana_bala": 42.85,
       "paksha_bala": 31.1
     },
-    "notes": "Verified: Sun declination at mid-April results in ~32 Ayana Bala."
+    "notes": "Verified: Sun declination at mid-April (~10.05 deg) results in ~42.85 Ayana Bala."
   },
   {
     "case_id": "full_moon_paksha_max",

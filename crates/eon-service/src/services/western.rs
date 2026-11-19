@@ -3,6 +3,7 @@ use crate::dto::{AnalysisMeta, BirthTimePrecision, WesternAnalysisInput, Western
 use crate::error::ServiceError;
 
 pub fn analyze(input: WesternAnalysisInput) -> Result<WesternAnalysisOutput, ServiceError> {
+    crate::birth::require_known_birth_time(&input.base, "Western astrology")?;
     let birth_ctx = prepare_birth_context(&input.base, None, false)?;
 
     let dt = birth_ctx

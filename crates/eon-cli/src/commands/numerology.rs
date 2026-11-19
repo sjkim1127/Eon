@@ -3,7 +3,7 @@ use clap::Args;
 use eon_service::dto::NumerologyAnalysisInput;
 use eon_service::facade;
 
-use super::{BirthArgs, OutputFormat};
+use super::{BirthArgs, EngineFormat};
 
 #[derive(Args, Debug)]
 pub struct NumerologyCommand {
@@ -16,7 +16,7 @@ pub struct NumerologyCommand {
 
     /// Output format: json (default), text
     #[arg(short, long, value_enum, default_value = "json")]
-    pub format: OutputFormat,
+    pub format: EngineFormat,
 }
 
 pub fn run(cmd: NumerologyCommand) -> Result<()> {
@@ -25,7 +25,7 @@ pub fn run(cmd: NumerologyCommand) -> Result<()> {
     let res = facade::analyze_numerology(num_in)?;
 
     match cmd.format {
-        OutputFormat::Json => {
+        EngineFormat::Json => {
             println!("{}", serde_json::to_string_pretty(&res)?);
         }
         _ => {
@@ -40,9 +40,24 @@ pub fn run(cmd: NumerologyCommand) -> Result<()> {
                     ""
                 }
             );
-            println!("Expression Number: {}", core.expression);
-            println!("Soul Urge Number: {}", core.soul_urge);
-            println!("Personality Number: {}", core.personality);
+            println!(
+                "Expression Number: {}",
+                core.expression
+                    .map(|v| v.to_string())
+                    .unwrap_or_else(|| "N/A (Requires Latin name)".to_string())
+            );
+            println!(
+                "Soul Urge Number: {}",
+                core.soul_urge
+                    .map(|v| v.to_string())
+                    .unwrap_or_else(|| "N/A (Requires Latin name)".to_string())
+            );
+            println!(
+                "Personality Number: {}",
+                core.personality
+                    .map(|v| v.to_string())
+                    .unwrap_or_else(|| "N/A (Requires Latin name)".to_string())
+            );
             println!("Birthday Number: {}", core.birthday);
             println!("Personal Year Vibration: {}", res.result.personal_year);
             println!("Four Pinnacle Cycles:");

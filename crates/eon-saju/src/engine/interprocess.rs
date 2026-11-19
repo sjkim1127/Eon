@@ -32,32 +32,40 @@ impl CompatibilityAuditor {
         let mut merged_trace = String::new();
 
         // 1. Cross-stem interface mapping
-        let a_stems = [
+        let mut a_stems = vec![
             ("A_year_stem", system_a.natal.year.stem),
             ("A_month_stem", system_a.natal.month.stem),
             ("A_day_stem", system_a.natal.day.stem),
-            ("A_hour_stem", system_a.natal.hour.stem),
         ];
-        let b_stems = [
+        if let Some(h) = system_a.natal.hour {
+            a_stems.push(("A_hour_stem", h.stem));
+        }
+        let mut b_stems = vec![
             ("B_year_stem", system_b.natal.year.stem),
             ("B_month_stem", system_b.natal.month.stem),
             ("B_day_stem", system_b.natal.day.stem),
-            ("B_hour_stem", system_b.natal.hour.stem),
         ];
+        if let Some(h) = system_b.natal.hour {
+            b_stems.push(("B_hour_stem", h.stem));
+        }
 
         // 2. Cross-branch resource contention analysis
-        let a_branches = [
+        let mut a_branches = vec![
             ("A_year_branch", system_a.natal.year.branch),
             ("A_month_branch", system_a.natal.month.branch),
             ("A_day_branch", system_a.natal.day.branch),
-            ("A_hour_branch", system_a.natal.hour.branch),
         ];
-        let b_branches = [
+        if let Some(h) = system_a.natal.hour {
+            a_branches.push(("A_hour_branch", h.branch));
+        }
+        let mut b_branches = vec![
             ("B_year_branch", system_b.natal.year.branch),
             ("B_month_branch", system_b.natal.month.branch),
             ("B_day_branch", system_b.natal.day.branch),
-            ("B_hour_branch", system_b.natal.hour.branch),
         ];
+        if let Some(h) = system_b.natal.hour {
+            b_branches.push(("B_hour_branch", h.branch));
+        }
 
         // 3. Scan cross-system combinations and clashes
         use crate::analysis::relationships::*;

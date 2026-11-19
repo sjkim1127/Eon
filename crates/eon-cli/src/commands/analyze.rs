@@ -11,14 +11,14 @@ pub struct AnalyzeCommand {
     #[command(flatten)]
     pub birth: BirthArgs,
 
-    /// Output format: agent (LLM Context), json (raw structured), markdown, text
+    /// Output format: agent (LLM context block; `text` is an alias), json (raw structured), markdown (report with tables)
     #[arg(short, long, value_enum, default_value = "agent")]
     pub format: OutputFormat,
 }
 
 pub fn run(cmd: AnalyzeCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let is_male = cmd.birth.is_male();
+    let is_male = cmd.birth.is_male()?;
     let name = cmd.birth.name.clone();
 
     let omni = facade::analyze_all_synthesized(input, is_male, name)?;
@@ -27,11 +27,11 @@ pub fn run(cmd: AnalyzeCommand) -> Result<()> {
         OutputFormat::Json => {
             println!("{}", serde_json::to_string_pretty(&omni)?);
         }
-        OutputFormat::Agent | OutputFormat::Text => {
+        OutputFormat::Agent => {
             let text = format_agent_context(
                 &omni.input,
                 Some(&omni.saju),
-                Some(&omni.vedic),
+                omni.vedic.as_ref(),
                 omni.western.as_ref(),
                 omni.zwds.as_ref(),
                 omni.human_design.as_ref(),
@@ -46,7 +46,7 @@ pub fn run(cmd: AnalyzeCommand) -> Result<()> {
             let md = format_markdown_report(
                 &omni.input,
                 Some(&omni.saju),
-                Some(&omni.vedic),
+                omni.vedic.as_ref(),
                 omni.western.as_ref(),
                 omni.zwds.as_ref(),
                 omni.human_design.as_ref(),

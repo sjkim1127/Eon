@@ -3,7 +3,7 @@ use clap::Args;
 use eon_service::dto::*;
 use eon_service::facade;
 
-use super::{BirthArgs, OutputFormat};
+use super::{BirthArgs, EngineFormat};
 
 #[derive(Args, Debug)]
 pub struct TierCommand {
@@ -12,15 +12,15 @@ pub struct TierCommand {
 
     /// Output format: json (default), text
     #[arg(short, long, value_enum, default_value = "json")]
-    pub format: OutputFormat,
+    pub format: EngineFormat,
 }
 
 pub fn run(cmd: TierCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let is_male = cmd.birth.is_male();
+    let is_male = cmd.birth.is_male()?;
 
-    let saju_in = SajuAnalysisInput::new(input.clone(), is_male, false, Some(false));
-    let vedic_in = VedicAnalysisInput::new(input.clone(), Some(false), None);
+    let saju_in = SajuAnalysisInput::new(input.clone(), is_male, false, Some(input.unknown_time));
+    let vedic_in = VedicAnalysisInput::new(input.clone(), Some(input.unknown_time), None);
     let western_in = WesternAnalysisInput::new(input.clone(), "Placidus".to_string());
     let zwds_in = ZwdsAnalysisInput::new(input.clone(), is_male, None);
     let hd_in = HumanDesignAnalysisInput::new(input.clone());
@@ -28,7 +28,12 @@ pub fn run(cmd: TierCommand) -> Result<()> {
     let num_in = NumerologyAnalysisInput::new(input, cmd.birth.name.clone(), None);
 
     let saju_res = facade::analyze_saju(saju_in)?;
-    let vedic_res = facade::analyze_vedic(vedic_in)?;
+    // Vedic needs the ascendant and Moon, so it is skipped when the birth time is unknown
+    let vedic_res = match facade::analyze_vedic(vedic_in) {
+        Ok(v) => Some(v),
+        Err(eon_service::error::ServiceError::BirthTimeRequired(_)) => None,
+        Err(e) => return Err(e.into()),
+    };
     let western_res = facade::analyze_western(western_in).ok();
     let zwds_res = facade::analyze_zwds(zwds_in).ok();
     let hd_res = facade::analyze_human_design(hd_in).ok();
@@ -49,7 +54,7 @@ pub fn run(cmd: TierCommand) -> Result<()> {
     let tier_res = facade::analyze_destiny_tier_omni(omni_input)?;
 
     match cmd.format {
-        OutputFormat::Json => {
+        EngineFormat::Json => {
             println!("{}", serde_json::to_string_pretty(&tier_res)?);
         }
         _ => {
@@ -63,7 +68,7 @@ pub fn run(cmd: TierCommand) -> Result<()> {
                 tier_res.potential_tier.grade, tier_res.potential_score
             );
             println!(
-                "Growth Gap: +{:.1} pts | Profile: {}",
+                "Growth Gap: {:+.1} pts | Profile: {}",
                 tier_res.growth_gap, tier_res.profile
             );
             println!(

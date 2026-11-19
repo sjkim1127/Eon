@@ -135,16 +135,24 @@ impl SajuReport {
             self.supplementary_pillars.taewon.hanja(),
             self.supplementary_pillars.taewon.hangul()
         ));
-        md.push_str(&format!(
-            "- **Myeonggung (Destiny)**: {} ({})\n",
-            self.supplementary_pillars.myeonggung.hanja(),
-            self.supplementary_pillars.myeonggung.hangul()
-        ));
-        md.push_str(&format!(
-            "- **Shingung (Body)**: {} ({})\n",
-            self.supplementary_pillars.shingung.hanja(),
-            self.supplementary_pillars.shingung.hangul()
-        ));
+        match (
+            &self.supplementary_pillars.myeonggung,
+            &self.supplementary_pillars.shingung,
+        ) {
+            (Some(mg), Some(sg)) => {
+                md.push_str(&format!(
+                    "- **Myeonggung (Destiny)**: {} ({})\n",
+                    mg.hanja(),
+                    mg.hangul()
+                ));
+                md.push_str(&format!(
+                    "- **Shingung (Body)**: {} ({})\n",
+                    sg.hanja(),
+                    sg.hangul()
+                ));
+            }
+            _ => md.push_str("- **Myeonggung / Shingung**: not evaluated (birth time unknown)\n"),
+        }
 
         if !self.supplementary_pillars.interpretations.is_empty() {
             md.push_str("\n#### Interpretations\n");
@@ -200,10 +208,10 @@ impl SajuReport {
         ));
         md.push_str(&format!(
             "- **Deuk-Si**: {}\n",
-            if self.strength.deuk_si.acquired {
-                "Yes"
-            } else {
-                "No"
+            match self.strength.deuk_si {
+                Some(si) if si.acquired => "Yes",
+                Some(_) => "No",
+                None => "Not evaluated (birth time unknown)",
             }
         ));
         md.push_str(&format!(

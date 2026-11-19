@@ -23,7 +23,7 @@ use crate::core::pillars::FourPillars;
 use crate::core::pillars::SajuError;
 use crate::core::stem::HeavenlyStem;
 use crate::core::ten_gods::TenGod;
-use chrono::{Datelike, NaiveDate, TimeZone, Utc};
+use chrono::{Datelike, TimeZone, Utc};
 use eon_core::Gender;
 use serde::{Deserialize, Serialize};
 
@@ -150,11 +150,11 @@ impl MajorLuckAnalysis {
     pub fn calculate_astro(
         pillars: &FourPillars,
         gender: Gender,
-        birth_year: i32,
-        birth_month: u32,
-        birth_day: u32,
-        birth_hour: u32,
-        birth_min: u32,
+        _birth_year: i32,
+        _birth_month: u32,
+        _birth_day: u32,
+        _birth_hour: u32,
+        _birth_min: u32,
     ) -> Result<Self, SajuError> {
         use eon_astro::AstroEngine;
 
@@ -162,19 +162,7 @@ impl MajorLuckAnalysis {
         let direction = LuckDirection::from_year_and_gender(pillars.year.stem, gender);
         let astro = AstroEngine::new();
 
-        // KST 9   UTC
-        let dt_local = NaiveDate::from_ymd_opt(birth_year, birth_month, birth_day)
-            .and_then(|d| d.and_hms_opt(birth_hour, birth_min, 0))
-            .ok_or_else(|| {
-                SajuError::InvalidDateTime(format!(
-                    "Invalid date for major luck calculation: {}-{}-{} {}:{}",
-                    birth_year, birth_month, birth_day, birth_hour, birth_min
-                ))
-            })?;
-
-        let tz_offset =
-            chrono::Duration::minutes((pillars.raw_input.timezone_offset_h * 60.0) as i64);
-        let birth_time = Utc.from_utc_datetime(&(dt_local - tz_offset));
+        let birth_time = pillars.birth_time;
 
         //  24   (0:  ~ 23: )
         let term_idx = astro.get_solar_term_index(birth_time)?;
@@ -199,25 +187,43 @@ impl MajorLuckAnalysis {
             }
         };
 
-        let target_term_time = astro
-            .find_solar_term_time(birth_time, target_term_idx)
-            .map_err(|e| {
-                SajuError::CalculationError(format!("Failed to calculate solar term time: {}", e))
-            })?;
+        let target_term_time = match direction {
+            LuckDirection::Forward => astro
+                .find_solar_term_time(birth_time, target_term_idx)
+                .map_err(|e| {
+                    SajuError::CalculationError(format!(
+                        "Failed to calculate next solar term time: {}",
+                        e
+                    ))
+                })?,
+            LuckDirection::Reverse => astro
+                .find_previous_solar_term_time(birth_time, target_term_idx)
+                .map_err(|e| {
+                    SajuError::CalculationError(format!(
+                        "Failed to calculate previous solar term time: {}",
+                        e
+                    ))
+                })?,
+        };
 
-        //     (, ,  )
+        // Precise start age (years, months, days)
         let (start_age, start_months, start_days) =
             Self::calculate_precise_start_with_times(birth_time, target_term_time, direction);
 
-        //     ( )
-        // 3 = 1 : ()  (10 diff = 1217  )
+        // Calculate offset duration (3 days = 1 year)
         let diff = if direction == LuckDirection::Forward {
             target_term_time - birth_time
         } else {
             birth_time - target_term_time
         };
-        let offset_seconds = (diff.num_seconds() as f64 * (365.2425 / 3.0)) as i64;
+        let offset_seconds = (diff.num_seconds().max(0) as f64 * (365.2425 / 3.0)) as i64;
         let start_date = birth_time + chrono::Duration::seconds(offset_seconds);
+
+        debug_assert!(
+            start_date >= birth_time,
+            "Major luck start date must be >= birth time"
+        );
+        debug_assert!(start_age < 20, "Major luck start age must be < 20");
 
         //    (  /)
         let mut cycles = Vec::new();
@@ -511,5 +517,23 @@ mod tests {
         // 11 27 22:00 KST ~ 12 7 03:48 KST ()
         //  9 5 -> 3
         assert_eq!(luck.start_age, 3);
+    }
+
+    #[test]
+    fn test_major_luck_astro_reverse() {
+        // 2024-02-05 12:00 KST, Jia-Chen (甲辰) year, Female -> Reverse luck direction
+        let input = SajuInput::new_solar(2024, 2, 5, 12, 0);
+        let pillars = FourPillars::calculate(&input).unwrap();
+
+        let luck = pillars
+            .major_luck(Gender::Female, 2024, 2, 5, 12, 0)
+            .unwrap();
+
+        assert_eq!(luck.direction, LuckDirection::Reverse);
+        // Start date must be in the future (>= birth_time), and start_age must be realistic (< 20)
+        assert!(luck.start_date >= pillars.birth_time);
+        assert!(luck.start_age < 20);
+        // Born less than 1 day after Lichun (2024-02-04 17:27 KST), so diff is < 1 day, start_age is 0
+        assert_eq!(luck.start_age, 0);
     }
 }

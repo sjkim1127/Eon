@@ -9,7 +9,7 @@ use eon_vedic::analysis::yogas::YogaQuality;
 
 pub fn analyze(
     saju: SajuAnalysisOutput,
-    vedic: VedicAnalysisOutput,
+    vedic: Option<VedicAnalysisOutput>,
     transit: Option<TransitAnalysisOutput>,
 ) -> TierResult {
     // #6 Fix: Delegate to analyze_omni to eliminate code duplication
@@ -28,7 +28,8 @@ pub fn analyze(
 
 pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
     let saju = &input.saju;
-    let vedic = &input.vedic;
+    // Vedic is absent when the birth time is unknown (ascendant/Moon dependent)
+    let vedic = input.vedic.as_ref();
     let western = input.western.as_ref();
     let zwds = input.zwds.as_ref();
     let human_design = input.human_design.as_ref();
@@ -37,14 +38,19 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
     let transit = input.transit.as_ref();
 
     let saju_res = compute_saju_score(saju);
-    let vedic_res = compute_vedic_score(vedic);
+    let vedic_res = vedic.map(compute_vedic_score);
     let transit_res = transit.map(compute_transit_score).unwrap_or(ScoreResult {
         score: 50.0,
         highlights: vec![],
     });
     let pot_res = compute_potential_score(saju, vedic);
 
-    let current_age = transit.map(|t| t.current_age).unwrap_or(30);
+    let current_age = transit.map(|t| t.current_age).unwrap_or_else(|| {
+        use chrono::Datelike;
+        let birth_year = saju.report.pillars.birth_time.year();
+        let current_year = chrono::Utc::now().year();
+        (current_year - birth_year).max(0) as u32
+    });
 
     let detailed_components = compute_omni_detailed_components(
         saju,
@@ -60,7 +66,12 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
 
     let quantum_synergies =
         compute_quantum_synergies(saju, vedic, western, zwds, human_design, qimen, numerology);
-    let component_raw: f32 = detailed_components.iter().map(|c| c.score * c.weight).sum();
+    let total_weight: f32 = detailed_components.iter().map(|c| c.weight).sum();
+    let component_raw: f32 = if total_weight > 0.0 {
+        detailed_components.iter().map(|c| c.score * c.weight).sum()
+    } else {
+        50.0
+    };
     let synergy_delta: f32 = quantum_synergies.iter().map(|s| s.score_delta).sum();
     let destiny_raw_score = (component_raw + synergy_delta).clamp(0.0, 100.0);
 
@@ -69,7 +80,9 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
 
     let mut strengths = Vec::new();
     strengths.extend(saju_res.highlights.iter().take(2).cloned());
-    strengths.extend(vedic_res.highlights.iter().take(2).cloned());
+    if let Some(vr) = &vedic_res {
+        strengths.extend(vr.highlights.iter().take(2).cloned());
+    }
     if let Some(w) = western {
         strengths.push(format!(
             "Western Aspect Patterns: {} configurations",
@@ -101,8 +114,13 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
     }
     if let Some(num) = numerology {
         strengths.push(format!(
-            "Pythagorean Numerology: Life Path {}, Expression {}",
-            num.result.core.life_path, num.result.core.expression
+            "Pythagorean Numerology: Life Path {}{}",
+            num.result.core.life_path,
+            num.result
+                .core
+                .expression
+                .map(|e| format!(", Expression {}", e))
+                .unwrap_or_default()
         ));
     }
 
@@ -112,7 +130,7 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
             weaknesses.push(format!("Cautionary timing points: {}", vr.total_crashes));
         }
     }
-    if matches!(vedic.report.sade_sati, SadeSatiPhase::Peak) {
+    if vedic.is_some_and(|v| matches!(v.report.sade_sati, SadeSatiPhase::Peak)) {
         weaknesses.push("Sade Sati Peak Phase".to_string());
     }
 
@@ -124,7 +142,10 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
     }
 
     let mut domain_tiers = Vec::new();
-    for h in &vedic.report.house_summary {
+    for h in vedic
+        .map(|v| v.report.house_summary.as_slice())
+        .unwrap_or(&[])
+    {
         let tier = match h.rating.as_str() {
             "Excellent" => "S",
             "Strong" => "A",
@@ -190,7 +211,7 @@ pub fn analyze_omni(input: crate::dto::OmniDestinyTierInput) -> TierResult {
 
 fn compute_omni_detailed_components(
     saju: &SajuAnalysisOutput,
-    vedic: &VedicAnalysisOutput,
+    vedic: Option<&VedicAnalysisOutput>,
     western: Option<&crate::dto::WesternAnalysisOutput>,
     zwds: Option<&crate::dto::ZwdsAnalysisOutput>,
     human_design: Option<&crate::dto::HumanDesignAnalysisOutput>,
@@ -258,153 +279,174 @@ fn compute_omni_detailed_components(
         )],
     });
 
-    // 5. Vedic House Score (Weight: 0.09)
-    let house_score = vedic.report.overall_strength_score as f32 / 6.0;
-    components.push(DestinyComponent {
-        key: "vedic_houses".to_string(),
-        label: "Vedic 12 House Capacity".to_string(),
-        score: house_score.clamp(0.0, 100.0),
-        weight: 0.09,
-        reasons: vec![format!("House average strength: {:.1}", house_score)],
-    });
+    // Vedic components need the ascendant/Moon, so they are skipped when the birth time is
+    // unknown; the remaining active weights are renormalised below.
+    if let Some(vedic) = vedic {
+        // 5. Vedic House Score (Weight: 0.09)
+        let house_score = vedic.report.overall_strength_score as f32 / 6.0;
+        components.push(DestinyComponent {
+            key: "vedic_houses".to_string(),
+            label: "Vedic 12 House Capacity".to_string(),
+            score: house_score.clamp(0.0, 100.0),
+            weight: 0.09,
+            reasons: vec![format!("House average strength: {:.1}", house_score)],
+        });
 
-    // 6. Vedic Yogas (Weight: 0.08)
-    let yoga_score = (vedic
-        .report
-        .yogas
-        .iter()
-        .filter(|y| matches!(y.quality, YogaQuality::VeryHigh))
-        .count() as f32
-        * 30.0)
-        .min(100.0);
-    components.push(DestinyComponent {
-        key: "vedic_yogas".to_string(),
-        label: "Vedic Classical Yogas (108 Major)".to_string(),
-        score: yoga_score,
-        weight: 0.08,
-        reasons: vec![format!(
-            "{} top-tier yogas detected",
-            vedic
-                .report
-                .yogas
-                .iter()
-                .filter(|y| matches!(y.quality, YogaQuality::VeryHigh))
-                .count()
-        )],
-    });
+        // 6. Vedic Yogas (Weight: 0.08)
+        let yoga_score = (vedic
+            .report
+            .yogas
+            .iter()
+            .filter(|y| matches!(y.quality, YogaQuality::VeryHigh))
+            .count() as f32
+            * 30.0)
+            .min(100.0);
+        components.push(DestinyComponent {
+            key: "vedic_yogas".to_string(),
+            label: "Vedic Classical Yogas (108 Major)".to_string(),
+            score: yoga_score,
+            weight: 0.08,
+            reasons: vec![format!(
+                "{} top-tier yogas detected",
+                vedic
+                    .report
+                    .yogas
+                    .iter()
+                    .filter(|y| matches!(y.quality, YogaQuality::VeryHigh))
+                    .count()
+            )],
+        });
 
-    // 7. Planet Status (Avasthas) (Weight: 0.05)
-    let avastha_score = (vedic
-        .chart
-        .avasthas
-        .iter()
-        .filter(|a| matches!(a.baladi, BaladiAvastha::Bala | BaladiAvastha::Yuva))
-        .count() as f32
-        / 7.0)
-        * 100.0;
-    components.push(DestinyComponent {
-        key: "planet_status".to_string(),
-        label: "Vedic Planetary Vitality (Avasthas)".to_string(),
-        score: avastha_score.clamp(0.0, 100.0),
-        weight: 0.05,
-        reasons: vec![format!(
-            "{} active state planets",
-            vedic
-                .chart
-                .avasthas
-                .iter()
-                .filter(|a| matches!(a.baladi, BaladiAvastha::Bala | BaladiAvastha::Yuva))
-                .count()
-        )],
-    });
+        // 7. Planet Status (Avasthas) (Weight: 0.05)
+        let avastha_score = (vedic
+            .chart
+            .avasthas
+            .iter()
+            .filter(|a| matches!(a.baladi, BaladiAvastha::Bala | BaladiAvastha::Yuva))
+            .count() as f32
+            / 7.0)
+            * 100.0;
+        components.push(DestinyComponent {
+            key: "planet_status".to_string(),
+            label: "Vedic Planetary Vitality (Avasthas)".to_string(),
+            score: avastha_score.clamp(0.0, 100.0),
+            weight: 0.05,
+            reasons: vec![format!(
+                "{} active state planets",
+                vedic
+                    .chart
+                    .avasthas
+                    .iter()
+                    .filter(|a| matches!(a.baladi, BaladiAvastha::Bala | BaladiAvastha::Yuva))
+                    .count()
+            )],
+        });
+    }
 
     // 8. Western Dignities & Aspects (Weight: 0.09)
-    let west_score = if let Some(w) = western {
+    let (west_score, west_weight, west_reason) = if let Some(w) = western {
         let pattern_bonus = w.result.aspect_patterns.len() as f32 * 15.0;
         let aspect_score = (w.result.aspects.len() as f32 * 2.0).min(50.0);
-        (50.0 + pattern_bonus + aspect_score).min(100.0)
+        (
+            (50.0 + pattern_bonus + aspect_score).min(100.0),
+            0.09,
+            format!(
+                "{} aspects, {} aspect patterns detected",
+                w.result.aspects.len(),
+                w.result.aspect_patterns.len()
+            ),
+        )
     } else {
-        55.0
+        (
+            0.0,
+            0.0,
+            "Western astrology module uncalculated (excluded from synthesis)".to_string(),
+        )
     };
     components.push(DestinyComponent {
         key: "western_astrology".to_string(),
         label: "Western Aspects & Essential Dignities".to_string(),
         score: west_score,
-        weight: 0.09,
-        reasons: vec![if let Some(w) = western {
-            format!(
-                "{} aspects, {} aspect patterns detected",
-                w.result.aspects.len(),
-                w.result.aspect_patterns.len()
-            )
-        } else {
-            "Default Western astrology module applied".to_string()
-        }],
+        weight: west_weight,
+        reasons: vec![west_reason],
     });
 
     // 9. ZWDS Pattern & Sihua (Weight: 0.09)
-    let zwds_score = if let Some(z) = zwds {
+    let (zwds_score, zwds_weight, zwds_reason) = if let Some(z) = zwds {
         let pat_score = (z.chart.destiny_patterns.len() as f32 * 20.0).min(60.0);
         let collision_penalty = z.chart.collisions.len() as f32 * 10.0;
-        (50.0 + pat_score - collision_penalty).clamp(20.0, 100.0)
+        (
+            (50.0 + pat_score - collision_penalty).clamp(20.0, 100.0),
+            0.09,
+            format!(
+                "{} destiny formations, {} SiHua collisions",
+                z.chart.destiny_patterns.len(),
+                z.chart.collisions.len()
+            ),
+        )
     } else {
-        55.0
+        (
+            0.0,
+            0.0,
+            "Zi Wei Dou Shu module uncalculated (excluded from synthesis)".to_string(),
+        )
     };
     components.push(DestinyComponent {
         key: "zwds_harmony".to_string(),
         label: "ZWDS Formations & Flying SiHua Clashes".to_string(),
         score: zwds_score,
-        weight: 0.09,
-        reasons: vec![if let Some(z) = zwds {
-            format!(
-                "{} destiny formations, {} SiHua collisions",
-                z.chart.destiny_patterns.len(),
-                z.chart.collisions.len()
-            )
-        } else {
-            "Default Zi Wei Dou Shu module applied".to_string()
-        }],
+        weight: zwds_weight,
+        reasons: vec![zwds_reason],
     });
 
     // 10. Human Design Dynamics (Weight: 0.07)
-    let hd_score = if let Some(hd) = human_design {
-        let center_bonus = hd.result.defined_centers.len() as f32 * 10.0;
-        let channel_bonus = hd.result.active_channels.len() as f32 * 12.0;
-        (30.0 + center_bonus + channel_bonus).clamp(20.0, 100.0)
-    } else {
-        55.0
-    };
-    components.push(DestinyComponent {
-        key: "human_design_dynamics".to_string(),
-        label: "Human Design Centers & Active Channels".to_string(),
-        score: hd_score,
-        weight: 0.07,
-        reasons: vec![if let Some(hd) = human_design {
+    let (hd_score, hd_weight, hd_reason) = if let Some(hd) = human_design {
+        let channel_bonus = (hd.result.active_channels.len() as f32 * 10.0).min(40.0);
+        let center_balance = if !hd.result.defined_centers.is_empty() {
+            10.0
+        } else {
+            15.0 // Reflectors have pure open sensitivity wisdom
+        };
+        (
+            (45.0 + channel_bonus + center_balance).clamp(20.0, 100.0),
+            0.07,
             format!(
                 "{} defined centers, {} active channels, Type: {}",
                 hd.result.defined_centers.len(),
                 hd.result.active_channels.len(),
                 hd.result.chart_type
-            )
-        } else {
-            "Default Human Design module applied".to_string()
-        }],
+            ),
+        )
+    } else {
+        (
+            0.0,
+            0.0,
+            "Human Design module uncalculated (excluded from synthesis)".to_string(),
+        )
+    };
+    components.push(DestinyComponent {
+        key: "human_design_dynamics".to_string(),
+        label: "Human Design Centers & Active Channels".to_string(),
+        score: hd_score,
+        weight: hd_weight,
+        reasons: vec![hd_reason],
     });
 
     // 11. Qimen Harmony (Weight: 0.06)
-    let qimen_score = if let Some(qm) = qimen {
-        let ju_base = (qm.report.pan.ju_number as f32 * 8.0).min(70.0);
-        let palace_bonus = (qm.report.pan.palaces.len() as f32 * 3.0).min(30.0);
-        (20.0 + ju_base + palace_bonus).clamp(20.0, 100.0)
-    } else {
-        55.0
-    };
-    components.push(DestinyComponent {
-        key: "qimen_harmony".to_string(),
-        label: "QiMen 9 Palaces & Auspicious Doors".to_string(),
-        score: qimen_score,
-        weight: 0.06,
-        reasons: vec![if let Some(qm) = qimen {
+    let (qimen_score, qimen_weight, qimen_reason) = if let Some(qm) = qimen {
+        use eon_qimen::core::elements::{Door, Star};
+        let door_bonus: f32 = match qm.report.pan.value_envoy_door {
+            Some(Door::Kai | Door::Xiu | Door::Sheng) => 25.0, // Three Auspicious Doors (三吉門)
+            Some(Door::Jing | Door::Du) => 10.0,
+            _ => 0.0,
+        };
+        let star_bonus: f32 = match qm.report.pan.value_chief_star {
+            Some(Star::Ren | Star::Fu | Star::Chong) => 15.0, // Auspicious stars
+            _ => 5.0,
+        };
+        (
+            (45.0 + door_bonus + star_bonus).clamp(20.0, 100.0),
+            0.06,
             format!(
                 "QiMen DunJia Ju {} ({}), Value Chief: {:?}, Envoy Door: {:?}",
                 qm.report.pan.ju_number,
@@ -425,47 +467,84 @@ fn compute_omni_detailed_components(
                     .as_ref()
                     .map(|d| format!("{:?}", d))
                     .unwrap_or_default()
-            )
-        } else {
-            "Default QiMen DunJia module applied".to_string()
-        }],
+            ),
+        )
+    } else {
+        (
+            0.0,
+            0.0,
+            "QiMen DunJia module uncalculated (excluded from synthesis)".to_string(),
+        )
+    };
+    components.push(DestinyComponent {
+        key: "qimen_harmony".to_string(),
+        label: "QiMen 9 Palaces & Auspicious Doors".to_string(),
+        score: qimen_score,
+        weight: qimen_weight,
+        reasons: vec![qimen_reason],
     });
 
     // 12. Numerology Vibration (Weight: 0.06)
-    let num_score = if let Some(num) = numerology {
+    let (num_score, num_weight, num_reason) = if let Some(num) = numerology {
         let master_bonus = if num.result.is_master_life_path {
             20.0
         } else {
             0.0
         };
         let lp_val = (num.result.core.life_path as f32 * 6.0).min(50.0);
-        (30.0 + lp_val + master_bonus).clamp(20.0, 100.0)
+        (
+            (30.0 + lp_val + master_bonus).clamp(20.0, 100.0),
+            0.06,
+            format!(
+                "Life Path: {}, Expression: {}, Soul Urge: {}",
+                num.result.core.life_path,
+                num.result
+                    .core
+                    .expression
+                    .map(|v| v.to_string())
+                    .unwrap_or_else(|| "N/A".to_string()),
+                num.result
+                    .core
+                    .soul_urge
+                    .map(|v| v.to_string())
+                    .unwrap_or_else(|| "N/A".to_string()),
+            ),
+        )
     } else {
-        55.0
+        (
+            0.0,
+            0.0,
+            "Pythagorean Numerology module uncalculated (excluded from synthesis)".to_string(),
+        )
     };
     components.push(DestinyComponent {
         key: "numerology_vibration".to_string(),
         label: "Pythagorean Numerology Vibrations".to_string(),
         score: num_score,
-        weight: 0.06,
-        reasons: vec![if let Some(num) = numerology {
-            format!(
-                "Life Path: {}, Expression: {}, Soul Urge: {}",
-                num.result.core.life_path, num.result.core.expression, num.result.core.soul_urge
-            )
-        } else {
-            "Default Numerology module applied".to_string()
-        }],
+        weight: num_weight,
+        reasons: vec![num_reason],
     });
 
     // 13. Luck Cycle & Transits (Weight: 0.05)
-    let luck_score = transit_res.score;
+    let (luck_score, luck_weight, luck_reason) = if _transit_opt.is_some() {
+        (
+            transit_res.score,
+            0.05,
+            format!("Transit composite score: {:.1}", transit_res.score),
+        )
+    } else {
+        (
+            0.0,
+            0.0,
+            "Transit dynamics uncalculated (excluded from synthesis)".to_string(),
+        )
+    };
     components.push(DestinyComponent {
         key: "luck_cycle".to_string(),
         label: "Current Transit Dynamics".to_string(),
         score: luck_score,
-        weight: 0.05,
-        reasons: vec![format!("Transit composite score: {:.1}", luck_score)],
+        weight: luck_weight,
+        reasons: vec![luck_reason],
     });
 
     // 14. Stability & System Safety (Weight: 0.03)
@@ -511,12 +590,22 @@ fn compute_omni_detailed_components(
             .unwrap_or_else(|| "Golden era undetermined".to_string())],
     });
 
+    // Normalize active component weights so they sum to exactly 1.0
+    let total_active_weight: f32 = components.iter().map(|c| c.weight).sum();
+    if total_active_weight > 0.0 {
+        for c in &mut components {
+            if c.weight > 0.0 {
+                c.weight /= total_active_weight;
+            }
+        }
+    }
+
     components
 }
 
 fn compute_detailed_components(
     saju: &SajuAnalysisOutput,
-    vedic: &VedicAnalysisOutput,
+    vedic: Option<&VedicAnalysisOutput>,
     _transit_opt: Option<&TransitAnalysisOutput>,
     transit_res: &ScoreResult,
 ) -> Vec<DestinyComponent> {
@@ -635,7 +724,7 @@ fn get_tier_from_score(score: f32) -> TierGrade {
 
 fn compute_risk_level(
     saju: &SajuAnalysisOutput,
-    vedic: &VedicAnalysisOutput,
+    vedic: Option<&VedicAnalysisOutput>,
     transit_res: &ScoreResult,
 ) -> String {
     let mut risk_points = 0;
@@ -650,10 +739,12 @@ fn compute_risk_level(
     if transit_res.score < 40.0 {
         risk_points += 1;
     }
-    if matches!(
-        vedic.report.sade_sati,
-        SadeSatiPhase::Peak | SadeSatiPhase::Rising
-    ) {
+    if vedic.is_some_and(|v| {
+        matches!(
+            v.report.sade_sati,
+            SadeSatiPhase::Peak | SadeSatiPhase::Rising
+        )
+    }) {
         risk_points += 2;
     }
 
@@ -677,24 +768,24 @@ fn compute_saju_score(saju: &SajuAnalysisOutput) -> ScoreResult {
     let strength_norm = clamp_score(st.strength_score * 2.0);
     score += strength_norm * 0.28;
 
-    let acquired = vec![
-        st.deuk_ryeong.acquired,
-        st.deuk_ji.acquired,
-        st.deuk_si.acquired,
+    // 得時 is not evaluable without a birth hour; it then neither counts nor blocks the bonus
+    let criteria: Vec<bool> = [
+        Some(st.deuk_ryeong.acquired),
+        Some(st.deuk_ji.acquired),
+        st.deuk_si.map(|d| d.acquired),
     ]
     .into_iter()
-    .filter(|&x| x)
-    .count() as f32;
+    .flatten()
+    .collect();
+    let acquired = criteria.iter().filter(|&&x| x).count() as f32;
     score += acquired * 4.0;
-    if acquired == 3.0 {
+    if criteria.len() == 3 && acquired == 3.0 {
         highlights.push("Triple Acquisition (Season, Position, Time) complete".to_string());
     }
 
-    let support_pct = if st.deuk_se.support_ratio > 1.0 {
-        st.deuk_se.support_ratio
-    } else {
-        st.deuk_se.support_ratio * 100.0
-    };
+    // `support_ratio` is already a percentage (0..=100); the old "<= 1.0 means a fraction"
+    // heuristic turned a genuine 0.5% into 50%.
+    let support_pct = st.deuk_se.support_ratio.clamp(0.0, 100.0);
     score += (support_pct / 100.0) * 10.0;
 
     let topo = &saju.qi_topology;
@@ -775,7 +866,10 @@ fn compute_transit_score(transit: &TransitAnalysisOutput) -> ScoreResult {
     }
 }
 
-fn compute_potential_score(saju: &SajuAnalysisOutput, vedic: &VedicAnalysisOutput) -> ScoreResult {
+fn compute_potential_score(
+    saju: &SajuAnalysisOutput,
+    vedic: Option<&VedicAnalysisOutput>,
+) -> ScoreResult {
     let mut score = 50.0;
     let topo = &saju.qi_topology;
     score += topo.throughput * 12.0;
@@ -785,12 +879,13 @@ fn compute_potential_score(saju: &SajuAnalysisOutput, vedic: &VedicAnalysisOutpu
         score += 12.0_f32.min(len * 0.5);
     }
 
-    let high_yogas = vedic
-        .report
-        .yogas
-        .iter()
-        .filter(|y| matches!(y.quality, YogaQuality::VeryHigh | YogaQuality::High))
-        .count() as f32;
+    let high_yogas = vedic.map_or(0, |v| {
+        v.report
+            .yogas
+            .iter()
+            .filter(|y| matches!(y.quality, YogaQuality::VeryHigh | YogaQuality::High))
+            .count()
+    }) as f32;
     score += 10.0_f32.min(high_yogas * 3.0);
 
     ScoreResult {
@@ -801,7 +896,7 @@ fn compute_potential_score(saju: &SajuAnalysisOutput, vedic: &VedicAnalysisOutpu
 
 fn compute_quantum_synergies(
     saju: &SajuAnalysisOutput,
-    vedic: &VedicAnalysisOutput,
+    vedic: Option<&VedicAnalysisOutput>,
     western: Option<&crate::dto::WesternAnalysisOutput>,
     zwds: Option<&crate::dto::ZwdsAnalysisOutput>,
     human_design: Option<&crate::dto::HumanDesignAnalysisOutput>,
@@ -811,12 +906,13 @@ fn compute_quantum_synergies(
     let mut items = Vec::new();
 
     let saju_ausp_count = saju.report.spirit_markers.auspicious.len();
-    let vedic_yoga_count = vedic
-        .report
-        .yogas
-        .iter()
-        .filter(|y| matches!(y.quality, YogaQuality::VeryHigh))
-        .count();
+    let vedic_yoga_count = vedic.map_or(0, |v| {
+        v.report
+            .yogas
+            .iter()
+            .filter(|y| matches!(y.quality, YogaQuality::VeryHigh))
+            .count()
+    });
     if saju_ausp_count >= 2 && vedic_yoga_count >= 1 {
         items.push(crate::dto::QuantumSynergyItem {
             title: "Noble Alignment (East-West Auspicious Synergy)".to_string(),
@@ -911,7 +1007,7 @@ fn compute_quantum_synergies(
 
 fn compute_8d_domain_radar(
     saju: &SajuAnalysisOutput,
-    vedic: &VedicAnalysisOutput,
+    vedic: Option<&VedicAnalysisOutput>,
     western: Option<&crate::dto::WesternAnalysisOutput>,
     zwds: Option<&crate::dto::ZwdsAnalysisOutput>,
     human_design: Option<&crate::dto::HumanDesignAnalysisOutput>,
@@ -945,7 +1041,7 @@ fn compute_8d_domain_radar(
     for (key, name, house_nums, weight) in domain_defs {
         let mut house_scores: Vec<f32> = Vec::new();
         for &hn in house_nums {
-            let v_h = vedic.report.house_summary.iter().find(|h| h.house == hn);
+            let v_h = vedic.and_then(|v| v.report.house_summary.iter().find(|h| h.house == hn));
             let hs = match v_h.map(|h| h.rating.as_str()).unwrap_or("Average") {
                 "Excellent" => 92.0,
                 "Strong" => 80.0,
@@ -1009,12 +1105,14 @@ fn compute_8d_domain_radar(
 
         let primary_house = house_nums[0];
         let primary_rating = vedic
-            .report
-            .house_summary
-            .iter()
-            .find(|h| h.house == primary_house)
+            .and_then(|v| {
+                v.report
+                    .house_summary
+                    .iter()
+                    .find(|h| h.house == primary_house)
+            })
             .map(|h| h.rating.as_str())
-            .unwrap_or("N/A");
+            .unwrap_or("N/A (not evaluated)");
 
         domains.push(crate::dto::DomainRadarTier {
             domain_key: key.to_string(),
@@ -1033,36 +1131,46 @@ fn compute_8d_domain_radar(
 
 fn compute_temporal_tier_trajectory(
     saju: &SajuAnalysisOutput,
-    vedic: &VedicAnalysisOutput,
+    vedic: Option<&VedicAnalysisOutput>,
 ) -> Vec<crate::dto::TemporalTierPoint> {
     let mut trajectory = Vec::new();
     let frames = &saju.report.simulation_frames;
 
     // #3 Fix: Build a vedic Dasha favorability lookup by approximate age
-    let dasha_timeline = &vedic.report.dasha_timeline;
+    let dasha_timeline: &[eon_vedic::analysis::dasha::DashaPeriod] =
+        vedic.map_or(&[], |v| v.report.dasha_timeline.as_slice());
 
     if !frames.is_empty() {
         for frame in frames.iter().step_by(10) {
             // Find the Dasha period active around this age (approximate)
             let dasha_bonus = compute_dasha_bonus_for_age(dasha_timeline, frame.age);
 
-            // Blend saju simulation (60%) + vedic dasha favorability (40%)
-            let blended_score = (frame.score * 0.6 + dasha_bonus * 0.4).clamp(0.0, 100.0);
+            // Blend saju simulation (60%) + vedic dasha favorability (40%);
+            // without Vedic (unknown birth time) only the Saju simulation is used.
+            let blended_score = if vedic.is_some() {
+                (frame.score * 0.6 + dasha_bonus * 0.4).clamp(0.0, 100.0)
+            } else {
+                frame.score.clamp(0.0, 100.0)
+            };
 
             let grade = get_tier_from_score(blended_score).grade;
-            let dasha_lord_name = find_dasha_lord_at_age(dasha_timeline, frame.age);
-            let note = if blended_score >= 80.0 {
-                format!("Apex Era (Peak Luck Phase) — Dasha: {}", dasha_lord_name)
-            } else if blended_score >= 60.0 {
+            let dasha_suffix = if vedic.is_some() {
                 format!(
-                    "Growth Era (Accumulation & Expansion Phase) — Dasha: {}",
-                    dasha_lord_name
+                    " — Dasha: {}",
+                    find_dasha_lord_at_age(dasha_timeline, frame.age)
                 )
             } else {
+                String::new()
+            };
+            let note = if blended_score >= 80.0 {
+                format!("Apex Era (Peak Luck Phase){}", dasha_suffix)
+            } else if blended_score >= 60.0 {
                 format!(
-                    "Restoration Era (Inner Cultivation Phase) — Dasha: {}",
-                    dasha_lord_name
+                    "Growth Era (Accumulation & Expansion Phase){}",
+                    dasha_suffix
                 )
+            } else {
+                format!("Restoration Era (Inner Cultivation Phase){}", dasha_suffix)
             };
             trajectory.push(crate::dto::TemporalTierPoint {
                 age: frame.age,
@@ -1072,8 +1180,8 @@ fn compute_temporal_tier_trajectory(
             });
         }
     } else {
-        // Fallback: use Dasha timeline alone if no simulation frames
-        for age in (10..=80).step_by(10) {
+        // Fallback: use Dasha timeline alone if no simulation frames (needs Vedic)
+        for age in (10..=80).step_by(10).filter(|_| vedic.is_some()) {
             let dasha_bonus = compute_dasha_bonus_for_age(dasha_timeline, age);
             let score = (50.0 + dasha_bonus * 0.5).clamp(20.0, 99.0);
             let grade = get_tier_from_score(score).grade;
@@ -1168,5 +1276,55 @@ mod dasha_trajectory_tests {
         assert_eq!(find_dasha_lord_at_age(&timeline, 1), "Ketu");
         assert_eq!(find_dasha_lord_at_age(&timeline, 10), "Venus");
         assert!(compute_dasha_bonus_for_age(&timeline, 10) > 70.0);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn spread_normalize_keeps_fixed_points_and_is_monotonic() {
+        assert_eq!(spread_normalize(0.0), 0.0);
+        assert_eq!(spread_normalize(50.0), 50.0);
+        assert_eq!(spread_normalize(100.0), 100.0);
+        let mut prev = -1.0;
+        for i in 0..=100 {
+            let v = spread_normalize(i as f32);
+            assert!(v >= prev, "not monotonic at {i}");
+            prev = v;
+        }
+        // Scores above 50 are pulled up, scores below 50 are pushed down.
+        assert!(spread_normalize(70.0) > 70.0);
+        assert!(spread_normalize(30.0) < 30.0);
+    }
+
+    #[test]
+    fn grade_thresholds_match_the_documented_table() {
+        let table = [
+            (97.0, "S+"),
+            (90.0, "S"),
+            (83.0, "A+"),
+            (75.0, "A"),
+            (67.0, "B+"),
+            (59.0, "B"),
+            (51.0, "C+"),
+            (43.0, "C"),
+            (35.0, "D+"),
+            (27.0, "D"),
+            (18.0, "E"),
+            (0.0, "F"),
+        ];
+        for (min, grade) in table {
+            assert_eq!(get_tier_from_score(min).grade, grade, "lower bound {min}");
+            if min > 0.0 {
+                assert_ne!(
+                    get_tier_from_score(min - 1.0).grade,
+                    grade,
+                    "just below {min}"
+                );
+            }
+        }
+        assert_eq!(get_tier_from_score(100.0).grade, "S+");
     }
 }

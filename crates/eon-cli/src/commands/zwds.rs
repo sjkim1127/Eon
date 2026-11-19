@@ -3,7 +3,7 @@ use clap::Args;
 use eon_service::dto::ZwdsAnalysisInput;
 use eon_service::facade;
 
-use super::{BirthArgs, OutputFormat};
+use super::{BirthArgs, EngineFormat};
 
 #[derive(Args, Debug)]
 pub struct ZwdsCommand {
@@ -12,17 +12,17 @@ pub struct ZwdsCommand {
 
     /// Output format: json (default), text
     #[arg(short, long, value_enum, default_value = "json")]
-    pub format: OutputFormat,
+    pub format: EngineFormat,
 }
 
 pub fn run(cmd: ZwdsCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let is_male = cmd.birth.is_male();
+    let is_male = cmd.birth.is_male()?;
     let zwds_in = ZwdsAnalysisInput::new(input, is_male, None);
     let res = facade::analyze_zwds(zwds_in)?;
 
     match cmd.format {
-        OutputFormat::Json => {
+        EngineFormat::Json => {
             println!("{}", serde_json::to_string_pretty(&res)?);
         }
         _ => {

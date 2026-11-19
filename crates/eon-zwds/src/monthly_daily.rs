@@ -44,16 +44,18 @@ pub fn calculate_liuyue(
     }
 }
 
-///  //  (LiuRi)  .
+/// Calculate daily luck (Liu Ri) for a target lunar day and its authentic 60-Ganzhi day stem.
 ///
-/// * `liuyue_palace_idx` -   
-/// * `target_day` -    (1~30)
-pub fn calculate_liuri(liuyue_palace_idx: PalaceIndex, target_day: u32) -> LiuRi {
-    //    = (  + (target_day - 1)) % 12
+/// * `liuyue_palace_idx` - Target monthly palace index
+/// * `target_day` - Target lunar day (1~30)
+/// * `day_stem` - Authentic Heavenly Stem of the day (from the 60 Ganzhi day cycle)
+pub fn calculate_liuri(
+    liuyue_palace_idx: PalaceIndex,
+    target_day: u32,
+    day_stem: HeavenlyStem,
+) -> LiuRi {
+    // Liu Ri palace moves 1 palace per lunar day from Liu Yue palace
     let palace_idx = (liuyue_palace_idx + (target_day as usize - 1)) % 12;
-
-    let day_stem_idx = (target_day as usize - 1) % 10;
-    let day_stem = HeavenlyStem::from_index(day_stem_idx as i32);
 
     let branch_std_idx = (palace_idx + 2) % 12;
     let day_branch = EarthlyBranch::from_index(branch_std_idx as i32);
@@ -67,4 +69,16 @@ pub fn calculate_liuri(liuyue_palace_idx: PalaceIndex, target_day: u32) -> LiuRi
         branch_hanja: day_branch.hanja().to_string(),
         si_hua,
     }
+}
+
+/// Calculate daily luck (Liu Ri) directly from a solar date.
+pub fn calculate_liuri_from_solar_date(
+    liuyue_palace_idx: PalaceIndex,
+    target_day: u32,
+    solar_date: chrono::NaiveDate,
+) -> LiuRi {
+    let day_ganzi_idx = eon_data::manseryuk::get_day_ganzi_index(solar_date);
+    let day_stem_idx = day_ganzi_idx % 10;
+    let day_stem = HeavenlyStem::from_index(day_stem_idx as i32);
+    calculate_liuri(liuyue_palace_idx, target_day, day_stem)
 }

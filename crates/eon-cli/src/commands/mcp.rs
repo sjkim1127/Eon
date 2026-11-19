@@ -6,6 +6,7 @@ use serde_json::{json, Value};
 use std::io::{self, BufRead, Write};
 
 use crate::format::agent::format_agent_context;
+use crate::format::markdown::format_markdown_report;
 
 #[derive(Args, Debug)]
 pub struct McpCommand {}
@@ -27,6 +28,20 @@ struct JsonRpcResponse {
     result: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<Value>,
+}
+
+/// A tool-execution failure. MCP reports these inside the tool result (`isError: true`) so the
+/// model can read the message and correct its call, instead of as a protocol-level error.
+fn tool_error(id: Value, message: String) -> JsonRpcResponse {
+    JsonRpcResponse {
+        jsonrpc: "2.0",
+        id,
+        result: Some(json!({
+            "content": [{ "type": "text", "text": message }],
+            "isError": true
+        })),
+        error: None,
+    }
 }
 
 pub fn run(_cmd: McpCommand) -> Result<()> {
@@ -71,7 +86,7 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                         },
                         "serverInfo": {
                             "name": "eon-destiny-engine",
-                            "version": "7.0.0"
+                            "version": env!("CARGO_PKG_VERSION")
                         }
                     })),
                     error: None,
@@ -81,6 +96,16 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
             }
             "notifications/initialized" => {
                 // No-op for notification
+            }
+            "ping" => {
+                let res = JsonRpcResponse {
+                    jsonrpc: "2.0",
+                    id: req_id,
+                    result: Some(json!({})),
+                    error: None,
+                };
+                writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
+                stdout.flush()?;
             }
             "tools/list" => {
                 let res = JsonRpcResponse {
@@ -96,13 +121,23 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                                     "properties": {
                                         "birth": {
                                             "type": "string",
-                                            "description": "Birth datetime in 'YYYY-MM-DD HH:MM' format (e.g. '1990-05-15 10:30')"
+                                            "description": "Birth date and time as 'YYYY-MM-DD HH:MM' (e.g. '1990-05-15 10:30'). A date alone ('1990-05-15') means the birth time is unknown: the Hour pillar and time-dependent engines (Vedic, Western, Zi Wei Dou Shu, Human Design, QiMen) are then not evaluated."
                                         },
                                         "gender": {
                                             "type": "string",
                                             "enum": ["m", "f"],
                                             "description": "Gender: 'm' for male, 'f' for female",
                                             "default": "m"
+                                        },
+                                        "lunar": {
+                                            "type": "boolean",
+                                            "description": "True if 'birth' is a lunar calendar date",
+                                            "default": false
+                                        },
+                                        "leap": {
+                                            "type": "boolean",
+                                            "description": "True if the lunar birth month is a leap month (only with lunar=true)",
+                                            "default": false
                                         },
                                         "city": {
                                             "type": "string",
@@ -127,7 +162,7 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                                         "format": {
                                             "type": "string",
                                             "enum": ["agent", "json", "markdown"],
-                                            "description": "Output format: 'agent' for LLM prompt context, 'json' for raw data",
+                                            "description": "Output format: 'agent' for a compact LLM prompt context, 'markdown' for a report with tables, 'json' for the full structured data (very large)",
                                             "default": "agent"
                                         }
                                     },
@@ -170,6 +205,22 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string());
 
+                    let lunar_val = args.get("lunar").and_then(|v| v.as_bool()).unwrap_or(false);
+                    let leap_val = args.get("leap").and_then(|v| v.as_bool()).unwrap_or(false);
+
+                    if !matches!(format_str, "agent" | "json" | "markdown") {
+                        let res = tool_error(
+                            req_id,
+                            format!(
+                                "Invalid format: '{}'. Expected 'agent', 'json' or 'markdown'",
+                                format_str
+                            ),
+                        );
+                        writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
+                        stdout.flush()?;
+                        continue;
+                    }
+
                     let birth_args = crate::commands::BirthArgs {
                         birth: birth_str.to_string(),
                         gender: gender_str.to_string(),
@@ -177,14 +228,14 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                         lat: lat_val,
                         lon: lon_val,
                         tz: tz_str,
-                        lunar: false,
-                        leap: false,
+                        lunar: lunar_val,
+                        leap: leap_val,
                         name: name_str,
                     };
 
                     match birth_args.to_analysis_input() {
                         Ok(input) => {
-                            let is_male = birth_args.is_male();
+                            let is_male = birth_args.is_male().unwrap_or(true);
                             match facade::analyze_all_synthesized(
                                 input,
                                 is_male,
@@ -193,11 +244,24 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                                 Ok(omni) => {
                                     let content_text = if format_str == "json" {
                                         serde_json::to_string_pretty(&omni)?
+                                    } else if format_str == "markdown" {
+                                        format_markdown_report(
+                                            &omni.input,
+                                            Some(&omni.saju),
+                                            omni.vedic.as_ref(),
+                                            omni.western.as_ref(),
+                                            omni.zwds.as_ref(),
+                                            omni.human_design.as_ref(),
+                                            omni.qimen.as_ref(),
+                                            omni.numerology.as_ref(),
+                                            Some(&omni.tier),
+                                            Some(&omni.handbook),
+                                        )
                                     } else {
                                         format_agent_context(
                                             &omni.input,
                                             Some(&omni.saju),
-                                            Some(&omni.vedic),
+                                            omni.vedic.as_ref(),
                                             omni.western.as_ref(),
                                             omni.zwds.as_ref(),
                                             omni.human_design.as_ref(),
@@ -224,29 +288,14 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                                     writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
                                 }
                                 Err(err) => {
-                                    let res = JsonRpcResponse {
-                                        jsonrpc: "2.0",
-                                        id: req_id,
-                                        result: None,
-                                        error: Some(json!({
-                                            "code": -32603,
-                                            "message": format!("Analysis failed: {}", err),
-                                        })),
-                                    };
+                                    let res =
+                                        tool_error(req_id, format!("Analysis failed: {}", err));
                                     writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
                                 }
                             }
                         }
                         Err(e) => {
-                            let res = JsonRpcResponse {
-                                jsonrpc: "2.0",
-                                id: req_id,
-                                result: None,
-                                error: Some(json!({
-                                    "code": -32602,
-                                    "message": format!("Invalid arguments: {}", e)
-                                })),
-                            };
+                            let res = tool_error(req_id, format!("Invalid arguments: {}", e));
                             writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
                         }
                     }
@@ -256,13 +305,16 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                         id: req_id,
                         result: None,
                         error: Some(json!({
-                            "code": -32601,
-                            "message": format!("Tool not found: {}", tool_name)
+                            "code": -32602,
+                            "message": format!("Unknown tool: {}", tool_name)
                         })),
                     };
                     writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
                 }
                 stdout.flush()?;
+            }
+            _ if req.id.is_none() => {
+                // Unknown notification: JSON-RPC forbids replying to notifications.
             }
             _ => {
                 let res = JsonRpcResponse {

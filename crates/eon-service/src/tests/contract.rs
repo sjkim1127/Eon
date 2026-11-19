@@ -38,14 +38,14 @@ mod tests {
         assert_eq!(tier_res.detailed_components.len(), 15);
 
         // Check specific keys to ensure contract alignment with frontend
-        let keys: Vec<String> = tier_res
+        let keys: Vec<&str> = tier_res
             .detailed_components
             .iter()
-            .map(|c| c.key.clone())
+            .map(|c| c.key.as_str())
             .collect();
-        assert!(keys.contains(&"saju_strength".to_string()));
-        assert!(keys.contains(&"vedic_houses".to_string()));
-        assert!(keys.contains(&"luck_cycle".to_string()));
+        assert!(keys.contains(&"saju_strength"));
+        assert!(keys.contains(&"vedic_houses"));
+        assert!(keys.contains(&"luck_cycle"));
 
         // Verify scores are within range
         assert!(tier_res.destiny_score >= 0.0 && tier_res.destiny_score <= 100.0);

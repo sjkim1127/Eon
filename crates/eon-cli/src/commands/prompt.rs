@@ -17,7 +17,7 @@ pub struct PromptCommand {
 
 pub fn run(cmd: PromptCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let is_male = cmd.birth.is_male();
+    let is_male = cmd.birth.is_male()?;
     let name = cmd.birth.name.clone();
 
     let omni = facade::analyze_all_synthesized(input, is_male, name)?;
@@ -31,7 +31,7 @@ pub fn run(cmd: PromptCommand) -> Result<()> {
     let text = format_agent_context(
         &omni.input,
         Some(&omni.saju),
-        Some(&omni.vedic),
+        omni.vedic.as_ref(),
         omni.western.as_ref(),
         omni.zwds.as_ref(),
         omni.human_design.as_ref(),

@@ -3,7 +3,7 @@ use crate::error::ServiceError;
 use chrono::Datelike;
 use chrono::NaiveDate;
 use chrono_tz::Tz;
-use eon_core::{standard_meridian_from_tz, BirthInfo, Gender, Location};
+use eon_core::{BirthInfo, Gender, Location};
 use std::str::FromStr;
 
 pub struct PreparedBirthContext {
@@ -14,7 +14,7 @@ pub struct PreparedBirthContext {
     pub corrected_hour: u32,
     pub corrected_minute: u32,
     pub is_dst: bool,
-    pub dst_offset_hours: Option<i32>,
+    pub dst_offset_hours: Option<f64>,
     pub input_time_string: String,
     pub corrected_time_string: String,
 }
@@ -27,11 +27,13 @@ pub fn prepare_birth_context(
     validate_analysis_input(input)?;
 
     let location_name = input.city.as_deref().unwrap_or("Birth Location");
+    let dt_naive = chrono::NaiveDate::from_ymd_opt(input.year, input.month, input.day)
+        .and_then(|d| d.and_hms_opt(input.hour, input.minute, 0));
     let location = Location::new(
         location_name,
         input.lat,
         input.lon,
-        standard_meridian_from_tz(&input.timezone),
+        eon_core::standard_meridian_from_tz_at(&input.timezone, dt_naive),
     );
 
     let mut birth_info = if input.is_lunar {
@@ -88,6 +90,15 @@ pub fn prepare_birth_context(
         corrected_time_string,
         input_time_string,
     })
+}
+
+/// Rejects engines whose result is intrinsically determined by the birth time of day
+/// (ascendant/houses, hour-based charts) when only a date was supplied.
+pub fn require_known_birth_time(input: &AnalysisInput, engine: &str) -> Result<(), ServiceError> {
+    if input.unknown_time {
+        return Err(ServiceError::BirthTimeRequired(engine.to_string()));
+    }
+    Ok(())
 }
 
 fn validate_analysis_input(input: &AnalysisInput) -> Result<(), ServiceError> {

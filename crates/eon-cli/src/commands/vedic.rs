@@ -3,7 +3,7 @@ use clap::Args;
 use eon_service::dto::VedicAnalysisInput;
 use eon_service::facade;
 
-use super::{BirthArgs, OutputFormat};
+use super::{BirthArgs, EngineFormat};
 
 #[derive(Args, Debug)]
 pub struct VedicCommand {
@@ -12,16 +12,16 @@ pub struct VedicCommand {
 
     /// Output format: json (default), text
     #[arg(short, long, value_enum, default_value = "json")]
-    pub format: OutputFormat,
+    pub format: EngineFormat,
 }
 
 pub fn run(cmd: VedicCommand) -> Result<()> {
     let input = cmd.birth.to_analysis_input()?;
-    let vedic_in = VedicAnalysisInput::new(input, Some(false), None);
+    let vedic_in = VedicAnalysisInput::new(input.clone(), Some(input.unknown_time), None);
     let res = facade::analyze_vedic(vedic_in)?;
 
     match cmd.format {
-        OutputFormat::Json => {
+        EngineFormat::Json => {
             println!("{}", serde_json::to_string_pretty(&res)?);
         }
         _ => {

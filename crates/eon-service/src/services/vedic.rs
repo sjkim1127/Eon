@@ -8,6 +8,7 @@ use eon_vedic::core::config::{VedicConfig, VedicYearType};
 use eon_vedic::core::planets::VedicPlanet;
 
 pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, ServiceError> {
+    crate::birth::require_known_birth_time(&input.base, "Vedic astrology")?;
     let birth_ctx = prepare_birth_context(&input.base, None, false)?;
 
     let dt = birth_ctx
@@ -47,7 +48,7 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
             .find(|position| position.planet == VedicPlanet::Moon)
             .map(|position| position.rasi)
             .unwrap_or(0),
-        chart.ayanamsa,
+        transit_chart.ayanamsa,
         &mut gochara,
         input.current.now_utc,
         input.base.lat,

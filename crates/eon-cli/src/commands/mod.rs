@@ -4,6 +4,7 @@ use eon_service::dto::AnalysisInput;
 
 pub mod analyze;
 pub mod hd;
+pub mod iching;
 pub mod mcp;
 pub mod numerology;
 pub mod prompt;
@@ -14,12 +15,29 @@ pub mod vedic;
 pub mod western;
 pub mod zwds;
 
+/// Output formats of the multi-engine commands (`analyze`).
+///
+/// - `agent`: high-density context block for LLM prompts (`text` is accepted as an alias)
+/// - `json`: full typed engine DTOs
+/// - `markdown`: human-readable report with tables
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum OutputFormat {
     #[default]
+    #[value(alias = "text")]
     Agent,
     Json,
     Markdown,
+}
+
+/// Output formats of the single-engine commands (`saju`, `vedic`, ...).
+///
+/// - `json`: full typed engine DTO
+/// - `text`: compact summary (`agent` and `markdown` are accepted as aliases)
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum EngineFormat {
+    #[default]
+    Json,
+    #[value(alias = "agent", alias = "markdown")]
     Text,
 }
 
@@ -39,11 +57,11 @@ pub struct BirthArgs {
     pub city: Option<String>,
 
     /// Latitude (default: 37.5665 for Seoul, or automatically resolved from --city)
-    #[arg(long)]
+    #[arg(long, allow_negative_numbers = true)]
     pub lat: Option<f64>,
 
     /// Longitude (default: 126.9780 for Seoul, or automatically resolved from --city)
-    #[arg(long)]
+    #[arg(long, allow_negative_numbers = true)]
     pub lon: Option<f64>,
 
     /// Timezone (default: Asia/Seoul, or automatically resolved from --city)
@@ -64,12 +82,32 @@ pub struct BirthArgs {
 }
 
 impl BirthArgs {
-    pub fn is_male(&self) -> bool {
+    pub fn parse_gender(&self) -> Result<eon_core::Gender> {
         let g = self.gender.trim().to_lowercase();
-        !matches!(g.as_str(), "f" | "female" | "2" | "4")
+        match g.as_str() {
+            "m" | "male" | "1" | "3" => Ok(eon_core::Gender::Male),
+            "f" | "female" | "2" | "4" => Ok(eon_core::Gender::Female),
+            _ => Err(anyhow!(
+                "Invalid gender: '{}'. Expected 'm', 'male', 'f', or 'female'",
+                self.gender
+            )),
+        }
+    }
+
+    pub fn is_male(&self) -> Result<bool> {
+        self.parse_gender().map(|g| g == eon_core::Gender::Male)
+    }
+
+    /// True when the birth string carries a time of day (not just a date).
+    pub fn has_explicit_time(&self) -> bool {
+        let raw = self.birth.trim();
+        raw.contains(' ') || raw.contains('T')
     }
 
     pub fn to_analysis_input(&self) -> Result<AnalysisInput> {
+        // Validate gender strictly
+        let _ = self.parse_gender()?;
+
         let raw = self.birth.trim();
         let (date_part, time_part) = if let Some((d, t)) = raw.split_once(' ') {
             (d, t)
@@ -102,9 +140,46 @@ impl BirthArgs {
             .parse()
             .map_err(|_| anyhow!("Invalid day: {}", parts[2]))?;
 
+        if !(1..=12).contains(&month) {
+            return Err(anyhow!("Invalid month: {}. Month must be 1-12", month));
+        }
+        if !(1..=31).contains(&day) {
+            return Err(anyhow!("Invalid day: {}. Day must be 1-31", day));
+        }
+
         let time_parts: Vec<&str> = time_part.split(':').collect();
-        let hour: u32 = time_parts.first().unwrap_or(&"12").parse().unwrap_or(12);
-        let minute: u32 = time_parts.get(1).unwrap_or(&"0").parse().unwrap_or(0);
+        if time_parts.is_empty() || time_parts.len() > 3 {
+            return Err(anyhow!(
+                "Invalid time format: '{}'. Expected 'HH:MM'",
+                time_part
+            ));
+        }
+        let hour: u32 = time_parts[0].parse().map_err(|_| {
+            anyhow!(
+                "Invalid hour '{}' in birth time '{}'",
+                time_parts[0],
+                self.birth
+            )
+        })?;
+        let minute: u32 = if time_parts.len() >= 2 {
+            time_parts[1].parse().map_err(|_| {
+                anyhow!(
+                    "Invalid minute '{}' in birth time '{}'",
+                    time_parts[1],
+                    self.birth
+                )
+            })?
+        } else {
+            0
+        };
+
+        if hour > 23 || minute > 59 {
+            return Err(anyhow!(
+                "Birth time out of range: '{:02}:{:02}'. Hour must be 0-23, minute 0-59",
+                hour,
+                minute
+            ));
+        }
 
         let (lat, lon, tz, resolved_city) = if let Some(ref city_query) = self.city {
             match eon_core::lookup_city(city_query) {
@@ -145,6 +220,111 @@ impl BirthArgs {
             lon,
             timezone: tz,
             city: resolved_city,
+            unknown_time: !self.has_explicit_time(),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_valid_birth_args() {
+        let args = BirthArgs {
+            birth: "1990-05-15 10:30".to_string(),
+            gender: "m".to_string(),
+            city: Some("Seoul".to_string()),
+            lat: None,
+            lon: None,
+            tz: None,
+            lunar: false,
+            leap: false,
+            name: None,
+        };
+        let input = args.to_analysis_input().unwrap();
+        assert_eq!(input.year, 1990);
+        assert_eq!(input.month, 5);
+        assert_eq!(input.day, 15);
+        assert_eq!(input.hour, 10);
+        assert_eq!(input.minute, 30);
+        assert!(args.is_male().unwrap());
+    }
+
+    #[test]
+    fn test_invalid_birth_time_fails() {
+        let args = BirthArgs {
+            birth: "1990-05-15 xx:yy".to_string(),
+            gender: "m".to_string(),
+            city: None,
+            lat: None,
+            lon: None,
+            tz: None,
+            lunar: false,
+            leap: false,
+            name: None,
+        };
+        assert!(args.to_analysis_input().is_err());
+    }
+
+    #[test]
+    fn test_out_of_range_time_fails() {
+        let args = BirthArgs {
+            birth: "1990-05-15 25:99".to_string(),
+            gender: "m".to_string(),
+            city: None,
+            lat: None,
+            lon: None,
+            tz: None,
+            lunar: false,
+            leap: false,
+            name: None,
+        };
+        assert!(args.to_analysis_input().is_err());
+    }
+
+    #[test]
+    fn test_invalid_gender_fails() {
+        let args = BirthArgs {
+            birth: "1990-05-15 10:30".to_string(),
+            gender: "alien".to_string(),
+            city: None,
+            lat: None,
+            lon: None,
+            tz: None,
+            lunar: false,
+            leap: false,
+            name: None,
+        };
+        assert!(args.parse_gender().is_err());
+        assert!(args.to_analysis_input().is_err());
+    }
+
+    #[test]
+    fn date_only_birth_marks_unknown_time() {
+        let mk = |birth: &str| BirthArgs {
+            birth: birth.to_string(),
+            gender: "m".to_string(),
+            city: None,
+            lat: None,
+            lon: None,
+            tz: None,
+            lunar: false,
+            leap: false,
+            name: None,
+        };
+        assert!(mk("1990-05-15").to_analysis_input().unwrap().unknown_time);
+        assert!(
+            !mk("1990-05-15 10:30")
+                .to_analysis_input()
+                .unwrap()
+                .unknown_time
+        );
+        assert!(
+            !mk("1990-05-15T10:30")
+                .to_analysis_input()
+                .unwrap()
+                .unknown_time
+        );
     }
 }
