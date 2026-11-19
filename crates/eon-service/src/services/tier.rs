@@ -783,11 +783,9 @@ fn compute_saju_score(saju: &SajuAnalysisOutput) -> ScoreResult {
         highlights.push("Triple Acquisition (Season, Position, Time) complete".to_string());
     }
 
-    let support_pct = if st.deuk_se.support_ratio > 1.0 {
-        st.deuk_se.support_ratio
-    } else {
-        st.deuk_se.support_ratio * 100.0
-    };
+    // `support_ratio` is already a percentage (0..=100); the old "<= 1.0 means a fraction"
+    // heuristic turned a genuine 0.5% into 50%.
+    let support_pct = st.deuk_se.support_ratio.clamp(0.0, 100.0);
     score += (support_pct / 100.0) * 10.0;
 
     let topo = &saju.qi_topology;
@@ -1278,5 +1276,55 @@ mod dasha_trajectory_tests {
         assert_eq!(find_dasha_lord_at_age(&timeline, 1), "Ketu");
         assert_eq!(find_dasha_lord_at_age(&timeline, 10), "Venus");
         assert!(compute_dasha_bonus_for_age(&timeline, 10) > 70.0);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn spread_normalize_keeps_fixed_points_and_is_monotonic() {
+        assert_eq!(spread_normalize(0.0), 0.0);
+        assert_eq!(spread_normalize(50.0), 50.0);
+        assert_eq!(spread_normalize(100.0), 100.0);
+        let mut prev = -1.0;
+        for i in 0..=100 {
+            let v = spread_normalize(i as f32);
+            assert!(v >= prev, "not monotonic at {i}");
+            prev = v;
+        }
+        // Scores above 50 are pulled up, scores below 50 are pushed down.
+        assert!(spread_normalize(70.0) > 70.0);
+        assert!(spread_normalize(30.0) < 30.0);
+    }
+
+    #[test]
+    fn grade_thresholds_match_the_documented_table() {
+        let table = [
+            (97.0, "S+"),
+            (90.0, "S"),
+            (83.0, "A+"),
+            (75.0, "A"),
+            (67.0, "B+"),
+            (59.0, "B"),
+            (51.0, "C+"),
+            (43.0, "C"),
+            (35.0, "D+"),
+            (27.0, "D"),
+            (18.0, "E"),
+            (0.0, "F"),
+        ];
+        for (min, grade) in table {
+            assert_eq!(get_tier_from_score(min).grade, grade, "lower bound {min}");
+            if min > 0.0 {
+                assert_ne!(
+                    get_tier_from_score(min - 1.0).grade,
+                    grade,
+                    "just below {min}"
+                );
+            }
+        }
+        assert_eq!(get_tier_from_score(100.0).grade, "S+");
     }
 }
