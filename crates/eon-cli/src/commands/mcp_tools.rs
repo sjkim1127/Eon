@@ -238,7 +238,7 @@ pub fn definitions() -> Vec<Value> {
         ),
         tool(
             "eon_human_design",
-            "Human Design: type, strategy, authority, profile, centers, channels, incarnation cross; optionally overlay a transit date or a planetary return.",
+            "Human Design: type, strategy, authority (incl. Lunar for Reflectors), profile, centers, channels, circuitry (Tribal/Individual/Collective and sub-circuit groups, dominant circuit), line fixation, incarnation cross; optionally overlay a transit date or a planetary return.",
             with(single(), vec![
                 ("transit_at", json!({ "type": "string", "description": "Overlay the sky of this date on the natal chart: 'YYYY-MM-DD[ HH:MM]' in the birth timezone, or RFC 3339" })),
                 ("return", json!({ "type": "string", "enum": ["solar", "saturn", "chiron"], "description": "Planetary return chart overlaid on the natal chart" })),

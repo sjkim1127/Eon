@@ -38,7 +38,7 @@ Engineered specifically for **Large Language Models (LLMs) and autonomous AI Age
   2. **Vedic Astrology (Jyotish)**: Sidereal planetary positions, Varga charts (D1..D60), Shadbala, Ashtakavarga, Vimshottari Dasha, Sade Sati, and 100+ classical Yogas.
   3. **Western Astrology**: Tropical positions, Placidus & Whole Sign houses, major and minor aspects, Arabian parts, and complex aspect patterns (Grand Trine, T-Square, Yod, etc.).
   4. **Zi Wei Dou Shu (Purple Star Astrology)**: 12 Palaces, 14 Major Stars, Flying SiHua (Mutagenic Stars), and classic destiny configurations.
-  5. **Human Design System**: Type, Profile, Inner Authority, 9 Energy Centers, 36 Channels, and 64 Gates.
+  5. **Human Design System**: Type, Profile, Inner Authority (incl. Lunar for Reflectors), 9 Energy Centers, 36 Channels with circuitry (Tribal / Individual / Collective and their sub-circuits), and 64 Gates.
   6. **QiMen DunJia**: Yin/Yang Dun 18 Ju formations, 9 Palaces, 8 Doors, 9 Stars, and 8 Deities with Value Chief and Envoy Door tracking.
   7. **Pythagorean Numerology**: 5 Core Numbers (Life Path, Expression, Soul Urge, Personality, Birthday), 4 Pinnacle Cycles, and Personal Year vibrations.
   8. **Omni Destiny Tier 7.0 Synthesis**: Multi-engine quantum cross-synergy matrix scoring potential, resilience, growth gap, and 15 weighted component factors.
@@ -91,7 +91,7 @@ eon-core (Shared Primitives, Birth Info, Locations)
 | [`crates/eon-vedic`](file:///Users/sjkim1127/Eon/crates/eon-vedic) | Vedic Engine | Sidereal rasis, nakshatras, Shadbala, Ashtakavarga, and Yogas. |
 | [`crates/eon-western`](file:///Users/sjkim1127/Eon/crates/eon-western) | Western Engine | Tropical planets, houses (Placidus/Koch/Equal), and aspect configurations. |
 | [`crates/eon-zwds`](file:///Users/sjkim1127/Eon/crates/eon-zwds) | ZWDS Engine | Zi Wei Dou Shu 12 palaces, 14 major stars, SiHua, and destiny patterns. |
-| [`crates/eon-human-design`](file:///Users/sjkim1127/Eon/crates/eon-human-design) | Human Design Engine | Type, authority, 9 centers, 36 channels, and 64 gates. |
+| [`crates/eon-human-design`](file:///Users/sjkim1127/Eon/crates/eon-human-design) | Human Design Engine | Type, authority, 9 centers, 36 channels (with circuitry), and 64 gates. |
 | [`crates/eon-qimen`](file:///Users/sjkim1127/Eon/crates/eon-qimen) | QiMen Engine | 9 Palaces, 8 Doors, 9 Stars, 8 Deities, and Value Chief/Envoy. |
 | [`crates/eon-numerology`](file:///Users/sjkim1127/Eon/crates/eon-numerology) | Numerology Engine | Life Path, Expression, Soul Urge, Birthday, and Pinnacle cycles. |
 
@@ -296,7 +296,7 @@ Single-engine and relationship tools. All take `birth` (plus the optional `gende
 | `eon_vedic` | Chart, dashas, yogas, Shadbala, Ashtakavarga, Bhava Bala, gochara, annual chart | `ayanamsa`, `target_year`, `year_type` |
 | `eon_western` | Planets, houses, aspects, patterns; optional secondary progression | `house_system`, `progress_to` |
 | `eon_zwds` | Palaces, stars, four transformations, annual palace | `target_year` |
-| `eon_human_design` | Type, authority, centers, channels; optional transit or return overlay | `transit_at`, `return`, `year` |
+| `eon_human_design` | Type, authority, centers, channels, circuitry; optional transit or return overlay | `transit_at`, `return`, `year` |
 | `eon_human_design_penta` | Penta group dynamics | `members` (3 to 5), `city` |
 | `eon_qimen` | QiMen DunJia birth chart | |
 | `eon_numerology` | Core numbers, pinnacles, personal year | `name`, `target_year` |
