@@ -208,5 +208,30 @@
 <a href=#208 id=208 data-nosnippet>208</a>        .is_err());
 <a href=#209 id=209 data-nosnippet>209</a>        <span class="macro">assert!</span>(parse(<span class="kw-2">&amp;</span>[<span class="string">"hd"</span>, <span class="string">"--birth"</span>, <span class="string">"1990-05-15"</span>, <span class="string">"--return"</span>, <span class="string">"mars"</span>]).is_err());
 <a href=#210 id=210 data-nosnippet>210</a>    }
-<a href=#211 id=211 data-nosnippet>211</a>}
+<a href=#211 id=211 data-nosnippet>211</a>
+<a href=#212 id=212 data-nosnippet>212</a>    <span class="attr">#[test]
+<a href=#213 id=213 data-nosnippet>213</a>    </span><span class="kw">fn </span>western_timing_techniques_are_mutually_exclusive() {
+<a href=#214 id=214 data-nosnippet>214</a>        <span class="kw">for </span>flag <span class="kw">in </span>[
+<a href=#215 id=215 data-nosnippet>215</a>            [<span class="string">"--transit-at"</span>, <span class="string">"2026-11-20"</span>],
+<a href=#216 id=216 data-nosnippet>216</a>            [<span class="string">"--progress-to"</span>, <span class="string">"2026-11-20"</span>],
+<a href=#217 id=217 data-nosnippet>217</a>            [<span class="string">"--solar-arc-to"</span>, <span class="string">"2026-11-20"</span>],
+<a href=#218 id=218 data-nosnippet>218</a>            [<span class="string">"--profection-at"</span>, <span class="string">"2026-11-20"</span>],
+<a href=#219 id=219 data-nosnippet>219</a>            [<span class="string">"--solar-return"</span>, <span class="string">"2027"</span>],
+<a href=#220 id=220 data-nosnippet>220</a>            [<span class="string">"--lunar-return-after"</span>, <span class="string">"2026-11-20"</span>],
+<a href=#221 id=221 data-nosnippet>221</a>        ] {
+<a href=#222 id=222 data-nosnippet>222</a>            <span class="macro">assert!</span>(parse(<span class="kw-2">&amp;</span>[<span class="string">"western"</span>, <span class="string">"--birth"</span>, <span class="string">"1990-05-15 10:30"</span>, flag[<span class="number">0</span>], flag[<span class="number">1</span>]]).is_ok());
+<a href=#223 id=223 data-nosnippet>223</a>        }
+<a href=#224 id=224 data-nosnippet>224</a>        <span class="macro">assert!</span>(parse(<span class="kw-2">&amp;</span>[
+<a href=#225 id=225 data-nosnippet>225</a>            <span class="string">"western"</span>,
+<a href=#226 id=226 data-nosnippet>226</a>            <span class="string">"--birth"</span>,
+<a href=#227 id=227 data-nosnippet>227</a>            <span class="string">"1990-05-15 10:30"</span>,
+<a href=#228 id=228 data-nosnippet>228</a>            <span class="string">"--transit-at"</span>,
+<a href=#229 id=229 data-nosnippet>229</a>            <span class="string">"2026-11-20"</span>,
+<a href=#230 id=230 data-nosnippet>230</a>            <span class="string">"--solar-return"</span>,
+<a href=#231 id=231 data-nosnippet>231</a>            <span class="string">"2027"
+<a href=#232 id=232 data-nosnippet>232</a>        </span>])
+<a href=#233 id=233 data-nosnippet>233</a>        .is_err());
+<a href=#234 id=234 data-nosnippet>234</a>        <span class="macro">assert!</span>(parse(<span class="kw-2">&amp;</span>[<span class="string">"western"</span>, <span class="string">"--birth"</span>, <span class="string">"1990-05-15"</span>, <span class="string">"--solar-return"</span>, <span class="string">"soon"</span>]).is_err());
+<a href=#235 id=235 data-nosnippet>235</a>    }
+<a href=#236 id=236 data-nosnippet>236</a>}
 </code></pre></div></section></main></body></html>

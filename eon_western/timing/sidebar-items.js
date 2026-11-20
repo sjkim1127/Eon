@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ReturnKind"],"fn":["calculate_lunar_return","calculate_profection","calculate_solar_arc","calculate_solar_return","calculate_transits"],"struct":["DirectedPoint","ProfectionResult","ReturnResult","SolarArcResult","TransitPlanetData","TransitResult"]};

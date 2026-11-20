@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["HOUSE_SYSTEMS"],"fn":["analyze","analyze_progression","analyze_synastry","parse_house_system"]};
+window.SIDEBAR_ITEMS = {"constant":["HOUSE_SYSTEMS"],"fn":["analyze","analyze_lunar_return","analyze_profection","analyze_progression","analyze_solar_arc","analyze_solar_return","analyze_synastry","analyze_transit","parse_house_system"]};

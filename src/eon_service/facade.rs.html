@@ -244,4 +244,46 @@
 <a href=#244 id=244 data-nosnippet>244</a>) -&gt; <span class="prelude-ty">Result</span>&lt;SajuCompatibilityOutput, ServiceError&gt; {
 <a href=#245 id=245 data-nosnippet>245</a>    <span class="kw">crate</span>::services::saju::analyze_compatibility(a, b)
 <a href=#246 id=246 data-nosnippet>246</a>}
+<a href=#247 id=247 data-nosnippet>247</a>
+<a href=#248 id=248 data-nosnippet>248</a><span class="doccomment">/// Transits: the sky at `target_time` over the natal chart (Western astrology).
+<a href=#249 id=249 data-nosnippet>249</a></span><span class="kw">pub fn </span>analyze_western_transit(
+<a href=#250 id=250 data-nosnippet>250</a>    input: WesternAnalysisInput,
+<a href=#251 id=251 data-nosnippet>251</a>    target_time: chrono::DateTime&lt;chrono::Utc&gt;,
+<a href=#252 id=252 data-nosnippet>252</a>) -&gt; <span class="prelude-ty">Result</span>&lt;WesternTransitOutput, ServiceError&gt; {
+<a href=#253 id=253 data-nosnippet>253</a>    <span class="kw">crate</span>::services::western::analyze_transit(input, target_time)
+<a href=#254 id=254 data-nosnippet>254</a>}
+<a href=#255 id=255 data-nosnippet>255</a>
+<a href=#256 id=256 data-nosnippet>256</a><span class="doccomment">/// Solar return of calendar `year`; `relocation` is an optional (lat, lon) for the return chart.
+<a href=#257 id=257 data-nosnippet>257</a></span><span class="kw">pub fn </span>analyze_western_solar_return(
+<a href=#258 id=258 data-nosnippet>258</a>    input: WesternAnalysisInput,
+<a href=#259 id=259 data-nosnippet>259</a>    year: i32,
+<a href=#260 id=260 data-nosnippet>260</a>    relocation: <span class="prelude-ty">Option</span>&lt;(f64, f64)&gt;,
+<a href=#261 id=261 data-nosnippet>261</a>) -&gt; <span class="prelude-ty">Result</span>&lt;WesternReturnOutput, ServiceError&gt; {
+<a href=#262 id=262 data-nosnippet>262</a>    <span class="kw">crate</span>::services::western::analyze_solar_return(input, year, relocation)
+<a href=#263 id=263 data-nosnippet>263</a>}
+<a href=#264 id=264 data-nosnippet>264</a>
+<a href=#265 id=265 data-nosnippet>265</a><span class="doccomment">/// First lunar return on or after `after`; `relocation` is an optional (lat, lon).
+<a href=#266 id=266 data-nosnippet>266</a></span><span class="kw">pub fn </span>analyze_western_lunar_return(
+<a href=#267 id=267 data-nosnippet>267</a>    input: WesternAnalysisInput,
+<a href=#268 id=268 data-nosnippet>268</a>    after: chrono::DateTime&lt;chrono::Utc&gt;,
+<a href=#269 id=269 data-nosnippet>269</a>    relocation: <span class="prelude-ty">Option</span>&lt;(f64, f64)&gt;,
+<a href=#270 id=270 data-nosnippet>270</a>) -&gt; <span class="prelude-ty">Result</span>&lt;WesternReturnOutput, ServiceError&gt; {
+<a href=#271 id=271 data-nosnippet>271</a>    <span class="kw">crate</span>::services::western::analyze_lunar_return(input, after, relocation)
+<a href=#272 id=272 data-nosnippet>272</a>}
+<a href=#273 id=273 data-nosnippet>273</a>
+<a href=#274 id=274 data-nosnippet>274</a><span class="doccomment">/// Solar arc directions to `target_time`.
+<a href=#275 id=275 data-nosnippet>275</a></span><span class="kw">pub fn </span>analyze_western_solar_arc(
+<a href=#276 id=276 data-nosnippet>276</a>    input: WesternAnalysisInput,
+<a href=#277 id=277 data-nosnippet>277</a>    target_time: chrono::DateTime&lt;chrono::Utc&gt;,
+<a href=#278 id=278 data-nosnippet>278</a>) -&gt; <span class="prelude-ty">Result</span>&lt;WesternSolarArcOutput, ServiceError&gt; {
+<a href=#279 id=279 data-nosnippet>279</a>    <span class="kw">crate</span>::services::western::analyze_solar_arc(input, target_time)
+<a href=#280 id=280 data-nosnippet>280</a>}
+<a href=#281 id=281 data-nosnippet>281</a>
+<a href=#282 id=282 data-nosnippet>282</a><span class="doccomment">/// Annual profection at `target_time`.
+<a href=#283 id=283 data-nosnippet>283</a></span><span class="kw">pub fn </span>analyze_western_profection(
+<a href=#284 id=284 data-nosnippet>284</a>    input: WesternAnalysisInput,
+<a href=#285 id=285 data-nosnippet>285</a>    target_time: chrono::DateTime&lt;chrono::Utc&gt;,
+<a href=#286 id=286 data-nosnippet>286</a>) -&gt; <span class="prelude-ty">Result</span>&lt;WesternProfectionOutput, ServiceError&gt; {
+<a href=#287 id=287 data-nosnippet>287</a>    <span class="kw">crate</span>::services::western::analyze_profection(input, target_time)
+<a href=#288 id=288 data-nosnippet>288</a>}
 </code></pre></div></section></main></body></html>

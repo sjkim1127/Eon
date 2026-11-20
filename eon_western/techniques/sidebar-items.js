@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AntisciaKind"],"fn":["calculate_antiscia","calculate_midpoints","calculate_mutual_receptions"],"struct":["AntisciaContact","MidpointContact","MutualReception"]};
