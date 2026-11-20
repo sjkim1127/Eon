@@ -84,3 +84,133 @@ pub enum Deity {
     JiuDi,   // Jiu Di (Nine Earth)
     JiuTian, // Jiu Tian (Nine Heaven)
 }
+
+impl Palace {
+    /// Trigram (卦) name of the palace; the centre has none.
+    pub fn trigram(&self) -> &'static str {
+        match self {
+            Palace::Kan1 => "坎",
+            Palace::Kun2 => "坤",
+            Palace::Zhen3 => "震",
+            Palace::Xun4 => "巽",
+            Palace::Center5 => "中",
+            Palace::Qian6 => "乾",
+            Palace::Dui7 => "兌",
+            Palace::Gen8 => "艮",
+            Palace::Li9 => "離",
+        }
+    }
+
+    pub fn korean(&self) -> &'static str {
+        match self {
+            Palace::Kan1 => "감궁(북)",
+            Palace::Kun2 => "곤궁(남서)",
+            Palace::Zhen3 => "진궁(동)",
+            Palace::Xun4 => "손궁(남동)",
+            Palace::Center5 => "중궁",
+            Palace::Qian6 => "건궁(북서)",
+            Palace::Dui7 => "태궁(서)",
+            Palace::Gen8 => "간궁(북동)",
+            Palace::Li9 => "리궁(남)",
+        }
+    }
+}
+
+impl Door {
+    pub fn hanja(&self) -> &'static str {
+        match self {
+            Door::Xiu => "休門",
+            Door::Sheng => "生門",
+            Door::Shang => "傷門",
+            Door::Du => "杜門",
+            Door::Jing => "景門",
+            Door::Si => "死門",
+            Door::Jing2 => "驚門",
+            Door::Kai => "開門",
+        }
+    }
+
+    pub fn english(&self) -> &'static str {
+        match self {
+            Door::Xiu => "Rest",
+            Door::Sheng => "Life",
+            Door::Shang => "Harm",
+            Door::Du => "Delusion",
+            Door::Jing => "Scenery",
+            Door::Si => "Death",
+            Door::Jing2 => "Fear",
+            Door::Kai => "Open",
+        }
+    }
+
+    pub fn korean(&self) -> &'static str {
+        match self {
+            Door::Xiu => "휴문",
+            Door::Sheng => "생문",
+            Door::Shang => "상문",
+            Door::Du => "두문",
+            Door::Jing => "경문(景)",
+            Door::Si => "사문",
+            Door::Jing2 => "경문(驚)",
+            Door::Kai => "개문",
+        }
+    }
+}
+
+impl Star {
+    pub fn hanja(&self) -> &'static str {
+        match self {
+            Star::Peng => "天蓬",
+            Star::Ren => "天任",
+            Star::Chong => "天沖",
+            Star::Fu => "天輔",
+            Star::Ying => "天英",
+            Star::Rui => "天芮",
+            Star::Zhu => "天柱",
+            Star::Xin => "天心",
+            Star::Qin => "天禽",
+        }
+    }
+
+    pub fn english(&self) -> &'static str {
+        match self {
+            Star::Peng => "Tian Peng",
+            Star::Ren => "Tian Ren",
+            Star::Chong => "Tian Chong",
+            Star::Fu => "Tian Fu",
+            Star::Ying => "Tian Ying",
+            Star::Rui => "Tian Rui",
+            Star::Zhu => "Tian Zhu",
+            Star::Xin => "Tian Xin",
+            Star::Qin => "Tian Qin",
+        }
+    }
+}
+
+impl Deity {
+    pub fn hanja(&self) -> &'static str {
+        match self {
+            Deity::ZhiFu => "值符",
+            Deity::TengShe => "螣蛇",
+            Deity::TaiYin => "太陰",
+            Deity::LiuHe => "六合",
+            Deity::BaiHu => "白虎",
+            Deity::XuanWu => "玄武",
+            Deity::JiuDi => "九地",
+            Deity::JiuTian => "九天",
+        }
+    }
+
+    pub fn english(&self) -> &'static str {
+        match self {
+            Deity::ZhiFu => "Zhi Fu",
+            Deity::TengShe => "Teng She",
+            Deity::TaiYin => "Tai Yin",
+            Deity::LiuHe => "Liu He",
+            Deity::BaiHu => "Bai Hu",
+            Deity::XuanWu => "Xuan Wu",
+            Deity::JiuDi => "Jiu Di",
+            Deity::JiuTian => "Jiu Tian",
+        }
+    }
+}

@@ -233,4 +233,26 @@ mod tests {
         .is_err());
         assert!(parse(&["western", "--birth", "1990-05-15", "--solar-return", "soon"]).is_err());
     }
+
+    #[test]
+    fn qimen_accepts_a_divination_moment_and_a_known_question_only() {
+        assert!(parse(&[
+            "qimen",
+            "--birth",
+            "1990-05-15 10:30",
+            "--at",
+            "2026-11-20 15:00",
+            "--question",
+            "wealth"
+        ])
+        .is_ok());
+        assert!(parse(&[
+            "qimen",
+            "--birth",
+            "1990-05-15 10:30",
+            "--question",
+            "lottery"
+        ])
+        .is_err());
+    }
 }

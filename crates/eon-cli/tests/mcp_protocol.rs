@@ -439,3 +439,53 @@ fn western_techniques_are_mutually_exclusive_and_validated_through_mcp() {
     }
     assert!(text_of(&r[0]).contains("only one"), "{}", text_of(&r[0]));
 }
+
+#[test]
+fn qimen_tool_reads_questions_and_divination_charts() {
+    let r = exchange(&[
+        &tool_call(
+            "eon_qimen",
+            r#"{"birth":"2004-11-27 22:00","city":"ansan","question":"wealth"}"#,
+        ),
+        &tool_call(
+            "eon_qimen",
+            r#"{"birth":"2004-11-27 22:00","city":"ansan","at":"2026-11-20 15:00","question":"lawsuit","format":"json"}"#,
+        ),
+        &tool_call(
+            "eon_qimen",
+            r#"{"birth":"2004-11-27 22:00","question":"lottery"}"#,
+        ),
+        &tool_call(
+            "eon_qimen",
+            r#"{"birth":"2004-11-27 22:00","at":"someday"}"#,
+        ),
+    ]);
+
+    let text = text_of(&r[0]);
+    for needle in [
+        "Void (空亡)",
+        "Horse star",
+        "Palaces:",
+        "Question: Wealth",
+        "Overall",
+    ] {
+        assert!(text.contains(needle), "missing {needle:?} in:\n{text}");
+    }
+
+    let json: Value = serde_json::from_str(text_of(&r[1])).expect("json output");
+    assert_eq!(json["reading"]["question"], "lawsuit");
+    assert_eq!(
+        json["report"]["insights"]["palaces"]
+            .as_array()
+            .unwrap()
+            .len(),
+        9
+    );
+    // The divination chart is cast for the requested moment, not for the birth.
+    assert_eq!(json["meta"]["inputTime"], "2026-11-20 15:00");
+
+    for resp in [&r[2], &r[3]] {
+        assert_eq!(resp["result"]["isError"], true, "{resp}");
+    }
+    assert!(text_of(&r[2]).contains("Invalid question"));
+}

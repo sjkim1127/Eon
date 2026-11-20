@@ -1,3 +1,4 @@
+use crate::analysis::insights::{analyze_plate, QimenInsights};
 use crate::core::QimenPan;
 use serde::{Deserialize, Serialize};
 
@@ -6,6 +7,9 @@ use serde::{Deserialize, Serialize};
 pub struct QimenAnalysisReport {
     pub pan: QimenPan,
     pub summary: String,
+    /// Void palaces, horse star, formations and per-palace scores
+    #[serde(default)]
+    pub insights: QimenInsights,
 }
 
 impl QimenAnalysisReport {
@@ -20,12 +24,14 @@ impl QimenAnalysisReport {
             .value_envoy_door
             .map(|door| format!("Envoy Door {:?}", door))
             .unwrap_or_else(|| "Envoy Door Unknown".to_string());
+        let insights = analyze_plate(&pan);
         Self {
             pan,
             summary: format!(
                 "QiMen DunJia {} Ju {} — {}, {}",
                 mode, ju, chief_star, envoy_door
             ),
+            insights,
         }
     }
 }

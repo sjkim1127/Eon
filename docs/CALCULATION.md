@@ -95,6 +95,43 @@ School-dependent choices the engine currently makes (not verified against a sing
   when the 旬首 is in the centre).
 - The hour pillar comes from true solar time, whereas many QiMen tools use the standard clock.
 
+## 7a. QiMen Reading (空亡, 馬星, 格局, 用神)
+
+Computed by `eon_qimen::analysis` on top of the plate of section 7. Everything is a heuristic over
+classical tables (《煙波釣叟歌》, 《奇門遁甲統宗》 as summarised in modern manuals); schools disagree on
+details, so the scores rank the palaces of one plate against each other and are not a prediction.
+
+- **空亡 (void)**: the two branches after the last branch of the ten-day 旬 of the hour and of the day
+  pillar (甲子旬 戌亥, 甲戌旬 申酉, 甲申旬 午未, 甲午旬 辰巳, 甲辰旬 寅卯, 甲寅旬 子丑). Branches map to
+  palaces by the Later Heaven arrangement (子 Kan1, 丑寅 Gen8, 卯 Zhen3, 辰巳 Xun4, 午 Li9, 未申 Kun2,
+  酉 Dui7, 戌亥 Qian6). A void palace keeps half of its door, star and deity score (integer division).
+- **馬星 (horse star)**: of the hour branch: 申子辰 寅, 寅午戌 申, 巳酉丑 亥, 亥卯未 巳.
+- **Palace score** = door + star + deity (halved in a void palace) - 2 when the door's element
+  controls the palace's element (門迫) + 2 per auspicious and - 2 per inauspicious formation in the
+  palace. Doors: 開休生 +2, 景杜 0, 傷驚 -2, 死 -3. Stars: 輔心 +2, 禽任沖 +1, 英柱 -1, 蓬芮 -2.
+  Deities: 值符 +2, 九天九地太陰六合 +1, 螣蛇玄武 -1, 白虎 -2. Verdict: >=3 very auspicious,
+  >=1 auspicious, > -1 neutral, > -3 inauspicious, otherwise very inauspicious.
+- **Formations**: heaven stem over earth stem (青龍返首 戊/丙, 飛鳥跌穴 丙/戊, 太白入熒 庚/丙,
+  熒入太白 丙/庚, 青龍逃走 乙/辛, 白虎猖狂 辛/乙, 螣蛇夭矯 癸/丁, 朱雀投江 丁/癸, 大格 庚/癸,
+  小格 庚/壬, 刑格 庚/己); 三奇升殿 (乙 in 震, 丙 in 離, 丁 in 兌); 三奇入墓 (乙 in 坤, 丙 in 乾,
+  丁 in 艮); 六儀擊刑 (戊 in 震, 己 in 坤, 庚 in 艮, 辛 in 離, 壬癸 in 巽); 三奇得使 and 玉女守門 (a wonder
+  stem in the palace of the value envoy door; 丁 is the jade maiden); five of the nine escapes
+  (天遁 丙/丁+生門, 地遁 乙/己+開門, 人遁 丁+太陰+休門, 神遁 丙+九天+生門, 鬼遁 丁+九地+杜門);
+  年格/月格/日格/時格 (heaven 庚 over the earth-plate position of that pillar's stem; 甲 uses the xun
+  head); 伏吟/反吟 of the stars and of the doors (every one at home / every one opposite); and
+  五不遇時 (the hour stem is the same-polarity controller of the day stem). The centre palace is
+  skipped. Other escapes, 三詐五假 and 天乙飛宮 are not implemented.
+- **用神**: the querent is the palace of the day stem (日干宮) and the matter of the hour the palace
+  of the hour stem (時干宮); 甲 hides under its xun head and a stem in the centre is entrusted to Kun 2.
+  Per question: wealth 生門 and heaven 戊; career 開門 and the 值符 deity; marriage heaven 乙 for a man
+  or 庚 for a woman and 六合; health 天心; travel the envoy door and the horse palace; lawsuit the
+  opponent's (hour stem) palace; study 景門, 天輔 and heaven 丁; general the envoy door and the hour
+  stem palace. The overall score is half the querent's plus half the mean 用神 score (a lawsuit: the
+  querent's score minus the opponent's). A 用神 that is not on the plate (or only in the centre) is
+  left out.
+- **Divination chart**: `--at` casts the same plate for any moment with the true-solar-time
+  convention used for births; there is no separate query-time rule set.
+
 ## 8. Other School-Dependent Choices
 
 - Zi Wei Dou Shu: leap-month births use the lunar month number only; the 15-day rule (some schools move

@@ -31,6 +31,27 @@ pub fn analyze_qimen(input: QimenAnalysisInput) -> Result<QimenAnalysisOutput, S
     crate::services::qimen::analyze_qimen(input)
 }
 
+/// QiMen plate for the moment in `input` (birth chart, or a divination chart for any moment)
+/// plus a reading of the palaces that stand for `question`.
+pub fn analyze_qimen_question(
+    input: QimenAnalysisInput,
+    question: eon_qimen::analysis::question::QimenQuestion,
+) -> Result<QimenQuestionOutput, ServiceError> {
+    let is_male = input.is_male;
+    let output = crate::services::qimen::analyze_qimen(input)?;
+    let reading = eon_qimen::analysis::question::read_question(
+        &output.report.pan,
+        &output.report.insights,
+        question,
+        is_male,
+    );
+    Ok(QimenQuestionOutput {
+        meta: output.meta,
+        report: output.report,
+        reading,
+    })
+}
+
 pub fn analyze_transit(input: TransitAnalysisInput) -> Result<TransitAnalysisOutput, ServiceError> {
     crate::services::transit::analyze(input)
 }

@@ -266,8 +266,11 @@ pub fn definitions() -> Vec<Value> {
         ),
         tool(
             "eon_qimen",
-            "QiMen DunJia birth chart: Yin/Yang Dun, Ju number, chief star, envoy door, nine palaces.",
-            single(),
+            "QiMen DunJia plate: Yin/Yang Dun, Ju, chief star, envoy door, nine palaces with void palaces, horse star, formations and per-palace scores. Cast it for the birth moment, or for any moment (divination chart) with 'at', and optionally read the palaces that stand for a question.",
+            with(single(), vec![
+                ("at", json!({ "type": "string", "description": "Cast the plate for this moment ('YYYY-MM-DD HH:MM', local time of the place) instead of the birth moment; place, timezone and gender still come from the birth fields" })),
+                ("question", json!({ "type": "string", "enum": ["general", "wealth", "career", "marriage", "health", "travel", "lawsuit", "study"], "description": "Read the palaces that stand for this question" })),
+            ]),
             &["birth"],
         ),
         tool(
@@ -445,8 +448,16 @@ pub fn call(name: &str, args: &Value) -> Option<Result<String, String>> {
         })(),
         "eon_qimen" => (|| {
             let format = a.format()?;
+            let question = match a.str("question") {
+                None => None,
+                Some(text) => Some(super::qimen::QuestionArg::parse(&text).ok_or_else(|| {
+                    anyhow!("Invalid question '{text}'. Expected general, wealth, career, marriage, health, travel, lawsuit or study")
+                })?),
+            };
             let cmd = QimenCommand {
                 birth: a.birth("", "m")?,
+                at: a.str("at"),
+                question,
                 format,
             };
             render(super::qimen::execute(&cmd)?, format)
