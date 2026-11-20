@@ -176,9 +176,17 @@ eon tier --birth "1990-05-15 10:30" --gender m -f text
 # and the year of the annual (Varshaphala / Tajika) chart
 eon vedic --birth "1990-05-15 10:30" --ayanamsa Raman --target-year 2027 -f text
 
-# Western: any of 10 house systems, and secondary progression to a date
+# Western: any of 10 house systems
 eon western --birth "1990-05-15 10:30" --house-system Porphyry -f text
-eon western --birth "1990-05-15 10:30" --progress-to 2027-03-01 -f text
+
+# Western timing techniques (use at most one per run)
+eon western --birth "1990-05-15 10:30" --progress-to 2027-03-01 -f text       # secondary progression
+eon western --birth "1990-05-15 10:30" --transit-at 2027-03-01 -f text        # transits over the natal chart
+eon western --birth "1990-05-15 10:30" --solar-arc-to 2027-03-01 -f text      # solar arc directions
+eon western --birth "1990-05-15 10:30" --profection-at 2027-03-01 -f text     # annual profection, lord of the year
+eon western --birth "1990-05-15 10:30" --solar-return 2027 -f text            # solar return chart
+eon western --birth "1990-05-15 10:30" --solar-return 2027 --return-city "New York" -f text   # relocated
+eon western --birth "1990-05-15 10:30" --lunar-return-after 2027-03-01 -f text
 
 # Zi Wei Dou Shu: annual palace and four transformations of a chosen year
 eon zwds --birth "1990-05-15 10:30" --target-year 2027 -f text
@@ -294,7 +302,7 @@ Single-engine and relationship tools. All take `birth` (plus the optional `gende
 | `eon_saju_luck` | Yearly/monthly/daily/hourly luck at a moment | `at`, `night_rat` |
 | `eon_report` | Themed markdown report | `theme`: `wealth`, `love`, `health` |
 | `eon_vedic` | Chart, dashas, yogas, Shadbala, Ashtakavarga, Bhava Bala, gochara, annual chart | `ayanamsa`, `target_year`, `year_type` |
-| `eon_western` | Planets, houses, aspects, patterns; optional secondary progression | `house_system`, `progress_to` |
+| `eon_western` | Planets, houses, aspects, patterns, dignities, antiscia, mutual receptions, midpoints; optionally one timing technique | `house_system`, and at most one of `progress_to`, `transit_at`, `solar_arc_to`, `profection_at`, `solar_return` (+ `return_city`), `lunar_return_after` |
 | `eon_zwds` | Palaces, stars, four transformations, annual palace | `target_year` |
 | `eon_human_design` | Type, authority, centers, channels, circuitry; optional transit or return overlay | `transit_at`, `return`, `year` |
 | `eon_human_design_penta` | Penta group dynamics | `members` (3 to 5), `city` |
