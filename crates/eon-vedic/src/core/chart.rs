@@ -48,6 +48,47 @@ pub struct VedicPosition {
 }
 
 impl VedicPosition {
+    /// Sidereal sign name for a 1..=12 rasi index (`"Unknown"` otherwise)
+    pub fn rasi_name(rasi: u8) -> &'static str {
+        const NAMES: [&str; 12] = [
+            "Aries",
+            "Taurus",
+            "Gemini",
+            "Cancer",
+            "Leo",
+            "Virgo",
+            "Libra",
+            "Scorpio",
+            "Sagittarius",
+            "Capricorn",
+            "Aquarius",
+            "Pisces",
+        ];
+        match rasi {
+            1..=12 => NAMES[rasi as usize - 1],
+            _ => "Unknown",
+        }
+    }
+
+    /// Compact human/LLM-readable form, e.g. `Cancer 12°34' (Pushya Pada 2)`
+    pub fn describe(&self) -> String {
+        let deg = if self.sidereal_deg.is_finite() {
+            self.sidereal_deg.rem_euclid(30.0)
+        } else {
+            0.0
+        };
+        let whole = deg.floor();
+        let minutes = ((deg - whole) * 60.0).floor();
+        format!(
+            "{} {:.0}°{:02.0}' ({} Pada {})",
+            Self::rasi_name(self.rasi),
+            whole,
+            minutes,
+            crate::analysis::nakshatra::NakshatraEngine::get_name(self.nakshatra),
+            self.pada
+        )
+    }
+
     /// Get rasi (1..12) for the given varga chart type
     pub fn varga_rasi(&self, vt: crate::calc::varga::VargaType) -> u8 {
         use crate::calc::varga::VargaType;
@@ -590,5 +631,18 @@ mod tests {
             .end_time;
 
         assert!(savana_end < gregorian_end);
+    }
+}
+
+#[cfg(test)]
+mod describe_tests {
+    use super::*;
+
+    #[test]
+    fn rasi_name_is_bounds_checked() {
+        assert_eq!(VedicPosition::rasi_name(1), "Aries");
+        assert_eq!(VedicPosition::rasi_name(12), "Pisces");
+        assert_eq!(VedicPosition::rasi_name(0), "Unknown");
+        assert_eq!(VedicPosition::rasi_name(13), "Unknown");
     }
 }

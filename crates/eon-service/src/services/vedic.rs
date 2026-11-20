@@ -152,9 +152,11 @@ fn apply_sign_entry_murti(
             .iter()
             .find(|position| position.planet == VedicPlanet::Moon)
         {
-            transit.murti = eon_vedic::analysis::gochara::GocharaEngine::calculate_murti(
-                natal_moon_rasi,
-                entry_moon.rasi,
+            transit.set_murti(
+                eon_vedic::analysis::gochara::GocharaEngine::calculate_murti(
+                    natal_moon_rasi,
+                    entry_moon.rasi,
+                ),
             );
         }
     }

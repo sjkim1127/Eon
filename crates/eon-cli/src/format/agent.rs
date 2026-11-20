@@ -172,8 +172,8 @@ Major Luck start age assumes a noon birth and may shift by a few months. Do not 
     if let Some(v) = vedic {
         out.push_str("## 3. Vedic Astrology (Jyotish)\n");
         out.push_str(&format!(
-            "- **Ascendant (Lagna)**: {:?}\n",
-            v.chart.ascendant
+            "- **Ascendant (Lagna)**: {}\n",
+            v.chart.ascendant.describe()
         ));
         out.push_str(&format!(
             "- **Moon Nakshatra**: {}\n",

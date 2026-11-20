@@ -1176,6 +1176,12 @@ impl SajuVM {
     }
 
     /// Life simulation
+    ///
+    /// `age` is the completed (international) age, the same convention as
+    /// `MajorLuck::start_age` and the service layer's `current_age`. Frame `age` covers the
+    /// span from that birthday to the next one. Both luck layers are looked up at the
+    /// midpoint of that span: the major luck cycle in force at that instant (cycles change
+    /// on an exact date, not on a birthday) and the saju year the instant falls in.
     pub fn simulate_life(&self, start_age: u32, end_age: u32) -> Vec<LifeFrame> {
         // 1. Calculate major luck flow
         let luck_analysis = MajorLuckAnalysis::calculate_astro(
@@ -1189,19 +1195,22 @@ impl SajuVM {
         )
         .ok();
 
-        // Birth year (reference for yearly luck)
-        let birth_year = self.natal.raw_input.year;
+        let birth_time = self.natal.birth_time;
 
         let mapper = |age: u32| {
-            // 2. Extract major luck for age
+            // Midpoint of the span between this birthday and the next
+            let midpoint = birth_time
+                + chrono::Duration::seconds(((age as f64 + 0.5) * 365.2425 * 86_400.0) as i64);
+
+            // 2. Extract major luck in force at the midpoint
             let major_ganzi = luck_analysis
                 .as_ref()
-                .and_then(|a| a.at_age(age))
+                .and_then(|a| a.cycle_at(midpoint))
                 .map(|m| m.ganzi)
                 .unwrap_or_else(|| GanZi::from_index(0));
 
-            // 3. Extract yearly luck for age
-            let target_year = birth_year + (age as i32) - 1;
+            // 3. Extract yearly luck of the saju year containing the midpoint
+            let target_year = saju_year_at(midpoint);
             let yearly_ganzi = YearlyLuck::calculate(target_year, &self.natal).ganzi;
 
             // 4. Execute precision step
@@ -1218,6 +1227,19 @@ impl SajuVM {
         {
             (start_age..=end_age).map(mapper).collect()
         }
+    }
+}
+
+/// Saju year label (the calendar year in which it starts at Ipchun) of an instant.
+///
+/// Ipchun falls on ~Feb 4 (day-of-year 35); a one-day error is irrelevant for the span
+/// midpoints this is used with.
+fn saju_year_at(instant: chrono::DateTime<chrono::Utc>) -> i32 {
+    use chrono::Datelike;
+    if instant.ordinal() < 35 {
+        instant.year() - 1
+    } else {
+        instant.year()
     }
 }
 
@@ -1240,5 +1262,36 @@ mod tests {
         // This requires detailed setup of DynamicLuckAnalysis which is complex.
         // For now, we will verify that the constants are correctly loaded.
         assert_eq!(vm.config.vm.stall_penalty, 0.5);
+    }
+
+    #[test]
+    fn simulate_life_uses_international_age_and_span_midpoint() {
+        use crate::core::branch::EarthlyBranch as B;
+        use crate::core::stem::HeavenlyStem as S;
+
+        // 2004-11-27 22:00 male: major luck starts 2007-12-27 (3y 1m), then every 10 years.
+        let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
+        let pillars = FourPillars::calculate(&input).unwrap();
+        assert_eq!(pillars.gender, eon_core::Gender::Male);
+        let vm = SajuVM::new(pillars);
+        let frames = vm.simulate_life(0, 30);
+        let frame = |age: u32| frames.iter().find(|f| f.age == age).unwrap();
+
+        // Age N spans Nov 27 of 2004+N to Nov 27 of 2005+N; its midpoint (late May) lies in
+        // saju year 2005 + N, i.e. age 21 (Nov 2025..Nov 2026) is the year 2026.
+        for age in [0u32, 3, 21, 22, 23] {
+            assert_eq!(
+                frame(age).ganzi,
+                GanZi::from_year(2005 + age as i32),
+                "age {age} yearly luck"
+            );
+        }
+
+        // 丁丑 runs 2017-12-27..2027-12-27; the age spans 22 (2026-11..2027-11) is still 丁丑,
+        // the age 23 span (2027-11..2028-11) is mostly 戊寅.
+        assert_eq!(frame(22).major_ganzi, GanZi::new(S::Ding, B::Chou));
+        assert_eq!(frame(23).major_ganzi, GanZi::new(S::Wu, B::Yin));
+        // First cycle (丙子) is in force for the span containing 2008.
+        assert_eq!(frame(3).major_ganzi, GanZi::new(S::Bing, B::Zi));
     }
 }

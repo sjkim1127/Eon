@@ -65,8 +65,16 @@ Example: a cycle starting 2027-12-27 first governs 2028; 2027 still belongs to t
 Years before the first cycle use the natal month pillar. The transition-period (交運期) flag and the
 volatility term still use the integer start age of the cycle.
 
-Not changed: `at_age` (integer-age lookup used by `periodic_luck`, the batch simulators and the
-`vm` precision path, which also uses a different year offset) is kept for those callers.
+The batch simulators (`BatchSimulator`) use the same year-based lookup. `SajuVM::simulate_life`
+(used by the transit analysis) works on completed (international) age, like `MajorLuck::start_age`
+and the service's `current_age`: frame age N spans birthday N to N+1, and both the major luck
+(`MajorLuckAnalysis::cycle_at`) and the saju year (Ipchun taken as ~Feb 4) are looked up at the
+midpoint of that span. Example: a Nov 27 birth in 2004 has age 21 = Nov 2025..Nov 2026, which is
+the year 2026 (earlier versions used 2024 for it).
+
+Not changed: `at_age` (integer-age lookup) remains for callers that really have an age, such as
+`LuckAnalysis::current_major_luck`; `LuckAnalysis::major_luck_for_year` is the year-based
+counterpart.
 
 ## 7. QiMen DunJia Conventions (轉盤 時家奇門, 拆補)
 

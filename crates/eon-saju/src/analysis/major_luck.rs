@@ -23,7 +23,7 @@ use crate::core::pillars::FourPillars;
 use crate::core::pillars::SajuError;
 use crate::core::stem::HeavenlyStem;
 use crate::core::ten_gods::TenGod;
-use chrono::{Datelike, TimeZone, Utc};
+use chrono::{DateTime, Datelike, TimeZone, Utc};
 use eon_core::Gender;
 use serde::{Deserialize, Serialize};
 
@@ -382,10 +382,20 @@ impl MajorLuckAnalysis {
     /// year. `None` means the year lies before the first cycle (the natal month pillar applies).
     pub fn cycle_index_for_year(&self, year: i32) -> Option<usize> {
         let reference = Utc.with_ymd_and_hms(year, 8, 4, 0, 0, 0).single()?;
+        self.cycle_index_at(reference)
+    }
+
+    /// Index of the major luck cycle in force at `instant` (`None` before the first cycle).
+    pub fn cycle_index_at(&self, instant: DateTime<Utc>) -> Option<usize> {
         // `cycles` is sorted ascending by `start_date`.
         self.cycles
-            .partition_point(|c| c.start_date <= reference)
+            .partition_point(|c| c.start_date <= instant)
             .checked_sub(1)
+    }
+
+    /// The major luck cycle in force at `instant`.
+    pub fn cycle_at(&self, instant: DateTime<Utc>) -> Option<&MajorLuck> {
+        self.cycle_index_at(instant).map(|i| &self.cycles[i])
     }
 
     /// The major luck cycle governing the saju year labelled `year`
@@ -523,6 +533,35 @@ mod tests {
 
         let current = luck.at_age(22);
         assert!(current.is_some());
+    }
+
+    #[test]
+    fn cycle_at_switches_exactly_on_start_date() {
+        let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
+        let pillars = FourPillars::calculate(&input).unwrap();
+        let luck = pillars
+            .major_luck(Gender::Male, 2004, 11, 27, 22, 0)
+            .unwrap();
+
+        let second = &luck.cycles[1];
+        let just_before = second.start_date - chrono::Duration::seconds(1);
+        assert_eq!(
+            luck.cycle_at(just_before).unwrap().ganzi,
+            luck.cycles[0].ganzi
+        );
+        assert_eq!(
+            luck.cycle_at(second.start_date).unwrap().ganzi,
+            second.ganzi
+        );
+        // Before the first cycle there is no major luck yet
+        assert!(luck
+            .cycle_at(luck.start_date - chrono::Duration::days(1))
+            .is_none());
+        assert_eq!(
+            luck.cycle_index_at(second.start_date),
+            Some(1),
+            "cycle_index_at must agree with cycle_at"
+        );
     }
 
     #[test]
