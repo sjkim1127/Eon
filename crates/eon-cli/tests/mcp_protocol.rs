@@ -191,6 +191,33 @@ fn compatibility_tool_runs_a_single_system_and_all() {
 }
 
 #[test]
+fn compatibility_tool_supports_zwds_and_zwds_tool_reports_the_new_data() {
+    let r = exchange(&[
+        &tool_call(
+            "eon_compatibility",
+            r#"{"birth":"2004-11-27 22:00","partner_birth":"1999-03-08 14:20","system":"zwds","format":"json"}"#,
+        ),
+        &tool_call(
+            "eon_zwds",
+            r#"{"birth":"2004-11-27 22:00","gender":"m","target_year":2026,"format":"json"}"#,
+        ),
+    ]);
+    let compat: Value = serde_json::from_str(text_of(&r[0])).expect("json");
+    assert!(
+        compat["zwds"]["result"]["harmonyScore"].is_number()
+            || compat["zwds"]["result"]["harmony_score"].is_number(),
+        "{compat}"
+    );
+    let zwds: Value = serde_json::from_str(text_of(&r[1])).expect("json");
+    assert!(
+        zwds["minorLimit"].is_object() || zwds["minor_limit"].is_object(),
+        "{zwds}"
+    );
+    let palaces = zwds["chart"]["palaces"].as_array().unwrap();
+    assert!(palaces.iter().all(|p| p["twelve_gods"].is_object()));
+}
+
+#[test]
 fn compatibility_skips_time_dependent_systems_without_a_birth_time() {
     let r = exchange(&[&tool_call(
         "eon_compatibility",

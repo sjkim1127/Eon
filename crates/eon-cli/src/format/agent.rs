@@ -244,6 +244,37 @@ Major Luck start age assumes a noon birth and may shift by a few months. Do not 
                 stars.join(", ")
             }
         ));
+        if let (Some(x), Some(d)) = (&z.minor_limit, &z.dou_jun) {
+            out.push_str(&format!(
+                "- **Annual markers ({})**: 小限 {}{} in {} (age {}) | 斗君 {} in {}\n",
+                x.year,
+                x.stem_hanja,
+                x.branch_hanja,
+                x.palace_name.english(),
+                x.age,
+                d.branch_hanja,
+                d.palace_name.english()
+            ));
+        }
+        if let Some(sh) = &z.daxian_si_hua {
+            let flights: Vec<String> = sh
+                .landings
+                .iter()
+                .map(|l| {
+                    format!(
+                        "{} {} -> {}",
+                        l.sihua_type.emoji(),
+                        l.star.hanja(),
+                        l.palace_name.english()
+                    )
+                })
+                .collect();
+            out.push_str(&format!(
+                "- **Current 大限 四化 (stem {})**: {}\n",
+                sh.stem_hanja,
+                flights.join(", ")
+            ));
+        }
         if !z.chart.destiny_patterns.is_empty() {
             let pats: Vec<String> = z
                 .chart

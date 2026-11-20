@@ -19,6 +19,14 @@ pub fn analyze_zwds(input: ZwdsAnalysisInput) -> Result<ZwdsAnalysisOutput, Serv
     crate::services::zwds::analyze(input)
 }
 
+/// Two-person Zi Wei Dou Shu 合盤 (cross-chart 四化 flights and star overlaps; heuristic score).
+pub fn analyze_zwds_compatibility(
+    a: ZwdsAnalysisInput,
+    b: ZwdsAnalysisInput,
+) -> Result<ZwdsCompatibilityOutput, ServiceError> {
+    crate::services::zwds::analyze_compatibility(a, b)
+}
+
 pub fn analyze_qimen(input: QimenAnalysisInput) -> Result<QimenAnalysisOutput, ServiceError> {
     crate::services::qimen::analyze_qimen(input)
 }

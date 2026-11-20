@@ -260,6 +260,27 @@ pub struct ZwdsAnalysisOutput {
     pub chart: eon_zwds::ZwdsChart,
     pub current_daxian: eon_zwds::types::DaXian,
     pub current_liu_nian: eon_zwds::types::LiuNian,
+    /// 小限 (annual minor limit) of the target year.
+    #[serde(default)]
+    pub minor_limit: Option<eon_zwds::XiaoXian>,
+    /// 斗君 of the target year.
+    #[serde(default)]
+    pub dou_jun: Option<eon_zwds::DouJun>,
+    /// 大限四化: transformations flown from the current 大限 palace stem.
+    #[serde(default)]
+    pub daxian_si_hua: Option<eon_zwds::PalaceSiHua>,
+    /// 三方四正 of the 命宮.
+    #[serde(default)]
+    pub soul_san_fang_si_zheng: Option<eon_zwds::SanFangSiZheng>,
+}
+
+/// Zi Wei Dou Shu two-chart comparison (合盤); the score is a heuristic.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ZwdsCompatibilityOutput {
+    pub meta_a: AnalysisMeta,
+    pub meta_b: AnalysisMeta,
+    pub result: eon_zwds::ZwdsCompatibility,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

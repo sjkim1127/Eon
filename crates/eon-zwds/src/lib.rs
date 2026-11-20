@@ -16,6 +16,7 @@ pub mod brightness;
 pub mod calendar;
 pub mod chart;
 pub mod collisions_zihua;
+pub mod compat;
 pub mod decadal;
 pub mod destiny_patterns;
 pub mod error;
@@ -29,6 +30,7 @@ pub mod twelve_gods;
 pub mod types;
 
 pub use chart::build_chart;
+pub use compat::{CrossSiHuaHit, StarOverlap, ZwdsCompatibility};
 pub use error::ZwdsError;
 pub use limits::{DouJun, XiaoXian};
 pub use query::{PalaceSiHua, SanFangSiZheng, SanFangStars, SiHuaLanding};
