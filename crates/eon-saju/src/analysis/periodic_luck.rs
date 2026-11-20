@@ -481,6 +481,12 @@ impl LuckAnalysis {
     pub fn current_major_luck(&self, age: u32) -> Option<&MajorLuck> {
         self.major_luck.at_age(age)
     }
+
+    /// Query the major luck governing the saju year labelled `year`
+    /// (the cycle in force for most of that year, see `MajorLuckAnalysis::cycle_for_year`)
+    pub fn major_luck_for_year(&self, year: i32) -> Option<&MajorLuck> {
+        self.major_luck.cycle_for_year(year)
+    }
 }
 
 impl std::fmt::Display for LuckAnalysis {

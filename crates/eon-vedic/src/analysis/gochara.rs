@@ -47,6 +47,44 @@ pub struct TransitPosition {
     pub reasons: Vec<String>,
 }
 
+const MURTI_REASON_PREFIX: &str = "Murti Status: ";
+
+fn murti_reason(murti: &MurtiType) -> String {
+    let desc = match murti {
+        MurtiType::Gold => "Suvarna (Gold) - Highly Auspicious",
+        MurtiType::Silver => "Rajata (Silver) - Auspicious",
+        MurtiType::Copper => "Tamra (Copper) - Moderate",
+        MurtiType::Iron => "Loha (Iron) - Challenging",
+        MurtiType::Unknown => "Stable",
+    };
+    format!("{MURTI_REASON_PREFIX}{desc}")
+}
+
+fn transit_description(planet: VedicPlanet, house_from_moon: u8, murti: &MurtiType) -> String {
+    format!(
+        "{:?} is transiting {} house from natal Moon in {:?} form.",
+        planet, house_from_moon, murti
+    )
+}
+
+impl TransitPosition {
+    /// Replaces the Murti and regenerates every text field that quotes it, so the
+    /// `murti` field, the "Murti Status" reason and the description never disagree.
+    pub fn set_murti(&mut self, murti: MurtiType) {
+        let reason = murti_reason(&murti);
+        match self
+            .reasons
+            .iter_mut()
+            .find(|r| r.starts_with(MURTI_REASON_PREFIX))
+        {
+            Some(existing) => *existing = reason,
+            None => self.reasons.push(reason),
+        }
+        self.description = transit_description(self.planet, self.house_from_moon, &murti);
+        self.murti = murti;
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GocharaSummary {
@@ -152,14 +190,7 @@ impl GocharaEngine {
                 reasons.push("This transit's influence is obstructed by Vedha.".to_string());
             }
 
-            let murti_desc = match murti {
-                MurtiType::Gold => "Suvarna (Gold) - Highly Auspicious",
-                MurtiType::Silver => "Rajata (Silver) - Auspicious",
-                MurtiType::Copper => "Tamra (Copper) - Moderate",
-                MurtiType::Iron => "Loha (Iron) - Challenging",
-                MurtiType::Unknown => "Stable",
-            };
-            reasons.push(format!("Murti Status: {}", murti_desc));
+            reasons.push(murti_reason(&murti));
 
             let summary = if is_benefic && !is_blocked {
                 format!("{:?} Auspicious Transit", pos.planet)
@@ -169,10 +200,7 @@ impl GocharaEngine {
                 format!("{:?} Challenging Transit", pos.planet)
             };
 
-            let description = format!(
-                "{:?} is transiting {} house from natal Moon in {:?} form.",
-                pos.planet, house_from_moon, murti
-            );
+            let description = transit_description(pos.planet, house_from_moon, &murti);
 
             // 5. Kakshya Analysis
             // Find Kakshya Lord based on degree in sign (0 to 30)
@@ -503,5 +531,50 @@ mod tests {
                 None
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod murti_text_tests {
+    use super::*;
+
+    fn transit_with(murti: MurtiType) -> TransitPosition {
+        TransitPosition {
+            planet: VedicPlanet::Jupiter,
+            current_rasi: 3,
+            house_from_moon: 5,
+            is_benefic_transit: true,
+            is_blocked: false,
+            murti: murti.clone(),
+            murti_entry_time: None,
+            kakshya: None,
+            summary: "Jupiter Auspicious Transit".to_string(),
+            description: transit_description(VedicPlanet::Jupiter, 5, &murti),
+            reasons: vec![
+                "first".to_string(),
+                murti_reason(&murti),
+                "last".to_string(),
+            ],
+        }
+    }
+
+    #[test]
+    fn set_murti_keeps_field_reason_and_description_consistent() {
+        let mut t = transit_with(MurtiType::Gold);
+        t.set_murti(MurtiType::Silver);
+
+        assert_eq!(t.murti, MurtiType::Silver);
+        assert!(t.description.contains("Silver"));
+        assert!(!t.description.contains("Gold"));
+        let murti_reasons: Vec<_> = t
+            .reasons
+            .iter()
+            .filter(|r| r.starts_with(MURTI_REASON_PREFIX))
+            .collect();
+        assert_eq!(murti_reasons.len(), 1);
+        assert!(murti_reasons[0].contains("Rajata (Silver)"));
+        // Other reasons and their order are untouched
+        assert_eq!(t.reasons[0], "first");
+        assert_eq!(t.reasons[2], "last");
     }
 }

@@ -138,6 +138,30 @@ mod tests {
             .transits
             .iter()
             .all(|transit| transit.murti_entry_time.is_some()));
+        // The text fields must quote the same (sign-entry) Murti as the `murti` field.
+        for transit in &result.gochara.transits {
+            let form = format!("in {:?} form", transit.murti);
+            assert!(
+                transit.description.contains(&form),
+                "{:?}: description {:?} disagrees with murti {:?}",
+                transit.planet,
+                transit.description,
+                transit.murti
+            );
+            let status = transit
+                .reasons
+                .iter()
+                .find(|r| r.starts_with("Murti Status: "))
+                .expect("Murti Status reason");
+            let expected = match transit.murti {
+                eon_vedic::analysis::gochara::MurtiType::Gold => "Gold",
+                eon_vedic::analysis::gochara::MurtiType::Silver => "Silver",
+                eon_vedic::analysis::gochara::MurtiType::Copper => "Copper",
+                eon_vedic::analysis::gochara::MurtiType::Iron => "Iron",
+                eon_vedic::analysis::gochara::MurtiType::Unknown => "Stable",
+            };
+            assert!(status.contains(expected), "{status} vs {expected}");
+        }
     }
 
     #[test]
