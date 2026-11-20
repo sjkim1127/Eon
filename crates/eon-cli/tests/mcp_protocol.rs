@@ -318,6 +318,32 @@ fn western_progression_and_hd_overlays_work_through_mcp() {
 }
 
 #[test]
+fn human_design_exposes_circuitry_and_lunar_authority_through_mcp() {
+    let r = exchange(&[
+        &tool_call(
+            "eon_human_design",
+            r#"{"birth":"1990-05-15 10:30","format":"text"}"#,
+        ),
+        &tool_call(
+            "eon_human_design",
+            r#"{"birth":"2000-02-23 16:00","tz":"UTC","format":"text"}"#,
+        ),
+        &tool_call(
+            "eon_human_design",
+            r#"{"birth":"1990-05-15 10:30","format":"json"}"#,
+        ),
+    ]);
+    let natal = text_of(&r[0]);
+    assert!(natal.contains("Circuit Groups:"), "{natal}");
+    assert!(natal.contains("Sensing"), "{natal}");
+    let reflector = text_of(&r[1]);
+    assert!(reflector.contains("Authority: Lunar"), "{reflector}");
+    let json = text_of(&r[2]);
+    assert!(json.contains("\"circuitry\""), "{json}");
+    assert!(json.contains("\"authority_ko\""), "{json}");
+}
+
+#[test]
 fn western_timing_techniques_work_through_mcp() {
     let r = exchange(&[
         &tool_call(

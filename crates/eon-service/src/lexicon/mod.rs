@@ -104,6 +104,12 @@ pub fn build_handbook(
         if let Some(interp) = human_design::interpret_profile(&h.result.profile) {
             symbols.push(interp);
         }
+        if let Some(interp) = human_design::interpret_authority(&h.result.authority) {
+            symbols.push(interp);
+        }
+        if let Some(circuit) = h.result.circuitry.dominant_circuit {
+            symbols.push(human_design::interpret_circuit(circuit));
+        }
     }
 
     // 6. QiMen DunJia symbols

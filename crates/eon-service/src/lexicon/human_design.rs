@@ -93,3 +93,55 @@ pub fn interpret_profile(profile: &str) -> Option<SymbolInterpretation> {
         None
     }
 }
+
+/// Reflector authority: Reflectors have no defined center, so decisions follow the Moon's cycle.
+pub fn interpret_authority(authority: &str) -> Option<SymbolInterpretation> {
+    if authority != "Lunar" {
+        return None;
+    }
+    Some(SymbolInterpretation {
+        engine: "Human Design System".to_string(),
+        symbol: "Authority: Lunar (달 권위, 28-day cycle)".to_string(),
+        classical_grounding: "Human Design: 'With no defined center, the Reflector samples the whole mandala; clarity is reached only after the Moon has transited all 64 gates in roughly 28 days.'".to_string(),
+        modern_translation: "Slow, high-fidelity decision cycle: major choices are talked through with trusted sounding boards and re-evaluated over a full lunar month before committing.".to_string(),
+        shadow_and_caution: "Committing under urgency or from a single day's mood, and absorbing other people's conditions as one's own.".to_string(),
+        tactical_remedy: "Log how the decision feels on each day of the cycle, discuss it with trusted people, and decide only when the picture is stable across the lunar month.".to_string(),
+    })
+}
+
+/// Dominant circuit of the chart's defined channels (see `eon_human_design::circuitry`).
+pub fn interpret_circuit(circuit: eon_human_design::Circuit) -> SymbolInterpretation {
+    use eon_human_design::Circuit;
+    let (grounding, translation, shadow, remedy) = match circuit {
+        Circuit::Tribal => (
+            "Human Design circuitry: 'The Tribal (Ego and Defense) circuits run on support, loyalty and material resources: the family and community that must be nurtured and defended.'",
+            "Relationship-and-resource oriented operator: builds trust networks, negotiates fair exchange and protects the people and assets of the group.",
+            "Transactional bonding, conditional loyalty and withholding support when the exchange feels unequal.",
+            "Make commitments explicit, give support freely where trust exists and state needs early instead of keeping silent score.",
+        ),
+        Circuit::Individual => (
+            "Human Design circuitry: 'The Individual circuit (Knowing, Centering, Integration) is the mutation channel: empowered to be different, it moves humanity through unique, non-repeatable expression.'",
+            "Original voice and independent thinker whose value is the unusual perspective, not conformity to a process.",
+            "Isolation, being misunderstood, and pressure to explain or justify one's uniqueness.",
+            "Protect time to follow your own process, share the results rather than the explanation, and choose collaborators who accept the difference.",
+        ),
+        Circuit::Collective => (
+            "Human Design circuitry: 'The Collective (Understanding and Sensing) circuits process shared experience: logic that tests patterns and abstraction that feels the cycle of past experience, both for the benefit of all.'",
+            "Pattern-driven contributor who shares lessons learned, improves shared systems and thinks in terms of what can help the many.",
+            "Overgeneralising from past experience and pushing the group to adopt what has not been proven for it.",
+            "Test ideas against real outcomes, share what works openly and let others adopt it at their own pace.",
+        ),
+    };
+    SymbolInterpretation {
+        engine: "Human Design System".to_string(),
+        symbol: format!(
+            "Dominant Circuit: {} ({})",
+            circuit.name_en(),
+            circuit.name_ko()
+        ),
+        classical_grounding: grounding.to_string(),
+        modern_translation: translation.to_string(),
+        shadow_and_caution: shadow.to_string(),
+        tactical_remedy: remedy.to_string(),
+    }
+}
