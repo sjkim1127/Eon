@@ -185,7 +185,7 @@ fn compatibility_tool_runs_a_single_system_and_all() {
     ]);
     assert!(text_of(&r[0]).contains("/ 36"), "{}", text_of(&r[0]));
     let all = text_of(&r[1]);
-    for section in ["Saju", "Vedic", "Western", "Human Design"] {
+    for section in ["Saju", "Vedic", "Western", "Human Design", "Numerology"] {
         assert!(all.contains(section), "missing {section} in:\n{all}");
     }
 }
