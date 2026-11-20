@@ -372,6 +372,27 @@ impl MajorLuckAnalysis {
     pub fn current(&self, current_age: u32) -> Option<&MajorLuck> {
         self.at_age(current_age)
     }
+
+    /// Index of the major luck cycle that governs the saju year labelled `year`.
+    ///
+    /// Cycles change on an exact instant (`start_date`), usually in the middle of a calendar
+    /// year, so looking a cycle up by integer age mislabels the year in which the change
+    /// happens. A saju year runs from one Ipchun (~Feb 4) to the next, so its midpoint is
+    /// ~Aug 4: the cycle in force at that instant is the one that covers the majority of the
+    /// year. `None` means the year lies before the first cycle (the natal month pillar applies).
+    pub fn cycle_index_for_year(&self, year: i32) -> Option<usize> {
+        let reference = Utc.with_ymd_and_hms(year, 8, 4, 0, 0, 0).single()?;
+        // `cycles` is sorted ascending by `start_date`.
+        self.cycles
+            .partition_point(|c| c.start_date <= reference)
+            .checked_sub(1)
+    }
+
+    /// The major luck cycle governing the saju year labelled `year`
+    /// (see [`Self::cycle_index_for_year`]).
+    pub fn cycle_for_year(&self, year: i32) -> Option<&MajorLuck> {
+        self.cycle_index_for_year(year).map(|i| &self.cycles[i])
+    }
 }
 
 impl std::fmt::Display for MajorLuckAnalysis {

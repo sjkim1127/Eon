@@ -156,7 +156,7 @@ impl DestinyFuzzer {
             let year = birth_year + age as i32;
             let yearly_ganzi = GanZi::from_year(year);
             let major_context = major_luck
-                .at_age(age)
+                .cycle_for_year(year)
                 .map(|m| m.ganzi)
                 .unwrap_or(yearly_ganzi);
 
