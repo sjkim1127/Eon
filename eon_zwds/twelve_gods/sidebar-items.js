@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BoShi","ChangSheng","JiangQian","SuiQian"],"fn":["chang_sheng_start","jiang_xing_start","place_twelve_gods"],"struct":["PalaceTwelveGods"]};

@@ -238,7 +238,7 @@
 <a href=#238 id=238 data-nosnippet>238</a>        ),
 <a href=#239 id=239 data-nosnippet>239</a>        tool(
 <a href=#240 id=240 data-nosnippet>240</a>            <span class="string">"eon_zwds"</span>,
-<a href=#241 id=241 data-nosnippet>241</a>            <span class="string">"Zi Wei Dou Shu (Purple Star): 12 palaces, stars, four transformations, current decade, annual palace, destiny patterns."</span>,
+<a href=#241 id=241 data-nosnippet>241</a>            <span class="string">"Zi Wei Dou Shu (Purple Star): 12 palaces, stars, twelve-god groups (長生/博士/將前/歲前), four transformations, current decade and its 四化, annual palace, 小限, 斗君, 三方四正, destiny patterns."</span>,
 <a href=#242 id=242 data-nosnippet>242</a>            with(single(), <span class="macro">vec!</span>[(<span class="string">"target_year"</span>, <span class="macro">json!</span>({ <span class="string">"type"</span>: <span class="string">"integer"</span>, <span class="string">"description"</span>: <span class="string">"Year for the annual palace; default the current year" </span>}))]),
 <a href=#243 id=243 data-nosnippet>243</a>            <span class="kw-2">&amp;</span>[<span class="string">"birth"</span>],
 <a href=#244 id=244 data-nosnippet>244</a>        ),
@@ -287,9 +287,9 @@
 <a href=#287 id=287 data-nosnippet>287</a>        ),
 <a href=#288 id=288 data-nosnippet>288</a>        tool(
 <a href=#289 id=289 data-nosnippet>289</a>            <span class="string">"eon_compatibility"</span>,
-<a href=#290 id=290 data-nosnippet>290</a>            <span class="string">"Two-person compatibility across Saju (stems/branches), Vedic (Ashtakoota 36 points, Mangal dosha), Western (synastry + composite) and Human Design (connection chart). Systems that cannot run (e.g. unknown birth time) are reported as skipped."</span>,
+<a href=#290 id=290 data-nosnippet>290</a>            <span class="string">"Two-person compatibility across Saju (stems/branches), Vedic (Ashtakoota 36 points, Mangal dosha), Western (synastry + composite), Human Design (connection chart) and Zi Wei Dou Shu (cross-chart 四化 flights, heuristic). Systems that cannot run (e.g. unknown birth time) are reported as skipped."</span>,
 <a href=#291 id=291 data-nosnippet>291</a>            with(partnered(), <span class="macro">vec!</span>[
-<a href=#292 id=292 data-nosnippet>292</a>                (<span class="string">"system"</span>, <span class="macro">json!</span>({ <span class="string">"type"</span>: <span class="string">"string"</span>, <span class="string">"enum"</span>: [<span class="string">"all"</span>, <span class="string">"saju"</span>, <span class="string">"vedic"</span>, <span class="string">"western"</span>, <span class="string">"hd"</span>], <span class="string">"default"</span>: <span class="string">"all" </span>})),
+<a href=#292 id=292 data-nosnippet>292</a>                (<span class="string">"system"</span>, <span class="macro">json!</span>({ <span class="string">"type"</span>: <span class="string">"string"</span>, <span class="string">"enum"</span>: [<span class="string">"all"</span>, <span class="string">"saju"</span>, <span class="string">"vedic"</span>, <span class="string">"western"</span>, <span class="string">"hd"</span>, <span class="string">"zwds"</span>], <span class="string">"default"</span>: <span class="string">"all" </span>})),
 <a href=#293 id=293 data-nosnippet>293</a>                (<span class="string">"house_system"</span>, <span class="macro">json!</span>({ <span class="string">"type"</span>: <span class="string">"string"</span>, <span class="string">"description"</span>: <span class="string">"House system for the Western charts (default Placidus)" </span>})),
 <a href=#294 id=294 data-nosnippet>294</a>            ]),
 <a href=#295 id=295 data-nosnippet>295</a>            <span class="kw-2">&amp;</span>[<span class="string">"birth"</span>, <span class="string">"partner_birth"</span>],
@@ -481,26 +481,27 @@
 <a href=#481 id=481 data-nosnippet>481</a>                <span class="prelude-val">Some</span>(<span class="string">"vedic"</span>) =&gt; CompatSystem::Vedic,
 <a href=#482 id=482 data-nosnippet>482</a>                <span class="prelude-val">Some</span>(<span class="string">"western"</span>) =&gt; CompatSystem::Western,
 <a href=#483 id=483 data-nosnippet>483</a>                <span class="prelude-val">Some</span>(<span class="string">"hd"</span>) =&gt; CompatSystem::Hd,
-<a href=#484 id=484 data-nosnippet>484</a>                <span class="prelude-val">Some</span>(other) =&gt; {
-<a href=#485 id=485 data-nosnippet>485</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
-<a href=#486 id=486 data-nosnippet>486</a>                        <span class="string">"Invalid system '{other}'. Expected all, saju, vedic, western or hd"
-<a href=#487 id=487 data-nosnippet>487</a>                    </span>))
-<a href=#488 id=488 data-nosnippet>488</a>                }
-<a href=#489 id=489 data-nosnippet>489</a>            };
-<a href=#490 id=490 data-nosnippet>490</a>            <span class="kw">let </span>cmd = CompatCommand {
-<a href=#491 id=491 data-nosnippet>491</a>                birth: a.birth(<span class="string">""</span>, <span class="string">"m"</span>)<span class="question-mark">?</span>,
-<a href=#492 id=492 data-nosnippet>492</a>                partner: a.partner()<span class="question-mark">?</span>,
-<a href=#493 id=493 data-nosnippet>493</a>                system,
-<a href=#494 id=494 data-nosnippet>494</a>                house_system: a
-<a href=#495 id=495 data-nosnippet>495</a>                    .str(<span class="string">"house_system"</span>)
-<a href=#496 id=496 data-nosnippet>496</a>                    .unwrap_or_else(|| <span class="string">"Placidus"</span>.to_string()),
-<a href=#497 id=497 data-nosnippet>497</a>                format,
-<a href=#498 id=498 data-nosnippet>498</a>            };
-<a href=#499 id=499 data-nosnippet>499</a>            render(<span class="kw">super</span>::compat::execute(<span class="kw-2">&amp;</span>cmd)<span class="question-mark">?</span>, format)
-<a href=#500 id=500 data-nosnippet>500</a>        })(),
-<a href=#501 id=501 data-nosnippet>501</a>        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
-<a href=#502 id=502 data-nosnippet>502</a>    };
-<a href=#503 id=503 data-nosnippet>503</a>
-<a href=#504 id=504 data-nosnippet>504</a>    <span class="prelude-val">Some</span>(result.map_err(|e| <span class="macro">format!</span>(<span class="string">"{e}"</span>)))
-<a href=#505 id=505 data-nosnippet>505</a>}
+<a href=#484 id=484 data-nosnippet>484</a>                <span class="prelude-val">Some</span>(<span class="string">"zwds"</span>) =&gt; CompatSystem::Zwds,
+<a href=#485 id=485 data-nosnippet>485</a>                <span class="prelude-val">Some</span>(other) =&gt; {
+<a href=#486 id=486 data-nosnippet>486</a>                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">anyhow!</span>(
+<a href=#487 id=487 data-nosnippet>487</a>                        <span class="string">"Invalid system '{other}'. Expected all, saju, vedic, western, hd or zwds"
+<a href=#488 id=488 data-nosnippet>488</a>                    </span>))
+<a href=#489 id=489 data-nosnippet>489</a>                }
+<a href=#490 id=490 data-nosnippet>490</a>            };
+<a href=#491 id=491 data-nosnippet>491</a>            <span class="kw">let </span>cmd = CompatCommand {
+<a href=#492 id=492 data-nosnippet>492</a>                birth: a.birth(<span class="string">""</span>, <span class="string">"m"</span>)<span class="question-mark">?</span>,
+<a href=#493 id=493 data-nosnippet>493</a>                partner: a.partner()<span class="question-mark">?</span>,
+<a href=#494 id=494 data-nosnippet>494</a>                system,
+<a href=#495 id=495 data-nosnippet>495</a>                house_system: a
+<a href=#496 id=496 data-nosnippet>496</a>                    .str(<span class="string">"house_system"</span>)
+<a href=#497 id=497 data-nosnippet>497</a>                    .unwrap_or_else(|| <span class="string">"Placidus"</span>.to_string()),
+<a href=#498 id=498 data-nosnippet>498</a>                format,
+<a href=#499 id=499 data-nosnippet>499</a>            };
+<a href=#500 id=500 data-nosnippet>500</a>            render(<span class="kw">super</span>::compat::execute(<span class="kw-2">&amp;</span>cmd)<span class="question-mark">?</span>, format)
+<a href=#501 id=501 data-nosnippet>501</a>        })(),
+<a href=#502 id=502 data-nosnippet>502</a>        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+<a href=#503 id=503 data-nosnippet>503</a>    };
+<a href=#504 id=504 data-nosnippet>504</a>
+<a href=#505 id=505 data-nosnippet>505</a>    <span class="prelude-val">Some</span>(result.map_err(|e| <span class="macro">format!</span>(<span class="string">"{e}"</span>)))
+<a href=#506 id=506 data-nosnippet>506</a>}
 </code></pre></div></section></main></body></html>

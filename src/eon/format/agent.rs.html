@@ -244,156 +244,187 @@
 <a href=#244 id=244 data-nosnippet>244</a>                stars.join(<span class="string">", "</span>)
 <a href=#245 id=245 data-nosnippet>245</a>            }
 <a href=#246 id=246 data-nosnippet>246</a>        ));
-<a href=#247 id=247 data-nosnippet>247</a>        <span class="kw">if </span>!z.chart.destiny_patterns.is_empty() {
-<a href=#248 id=248 data-nosnippet>248</a>            <span class="kw">let </span>pats: Vec&lt;String&gt; = z
-<a href=#249 id=249 data-nosnippet>249</a>                .chart
-<a href=#250 id=250 data-nosnippet>250</a>                .destiny_patterns
-<a href=#251 id=251 data-nosnippet>251</a>                .iter()
-<a href=#252 id=252 data-nosnippet>252</a>                .map(|p| p.name_english.clone())
-<a href=#253 id=253 data-nosnippet>253</a>                .collect();
-<a href=#254 id=254 data-nosnippet>254</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#255 id=255 data-nosnippet>255</a>                <span class="string">"- **Key Formations (Destiny Patterns)**: {}\n"</span>,
-<a href=#256 id=256 data-nosnippet>256</a>                pats.join(<span class="string">", "</span>)
+<a href=#247 id=247 data-nosnippet>247</a>        <span class="kw">if let </span>(<span class="prelude-val">Some</span>(x), <span class="prelude-val">Some</span>(d)) = (<span class="kw-2">&amp;</span>z.minor_limit, <span class="kw-2">&amp;</span>z.dou_jun) {
+<a href=#248 id=248 data-nosnippet>248</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#249 id=249 data-nosnippet>249</a>                <span class="string">"- **Annual markers ({})**: 小限 {}{} in {} (age {}) | 斗君 {} in {}\n"</span>,
+<a href=#250 id=250 data-nosnippet>250</a>                x.year,
+<a href=#251 id=251 data-nosnippet>251</a>                x.stem_hanja,
+<a href=#252 id=252 data-nosnippet>252</a>                x.branch_hanja,
+<a href=#253 id=253 data-nosnippet>253</a>                x.palace_name.english(),
+<a href=#254 id=254 data-nosnippet>254</a>                x.age,
+<a href=#255 id=255 data-nosnippet>255</a>                d.branch_hanja,
+<a href=#256 id=256 data-nosnippet>256</a>                d.palace_name.english()
 <a href=#257 id=257 data-nosnippet>257</a>            ));
 <a href=#258 id=258 data-nosnippet>258</a>        }
-<a href=#259 id=259 data-nosnippet>259</a>        out.push(<span class="string">'\n'</span>);
-<a href=#260 id=260 data-nosnippet>260</a>    }
-<a href=#261 id=261 data-nosnippet>261</a>
-<a href=#262 id=262 data-nosnippet>262</a>    <span class="comment">// 6. Human Design
-<a href=#263 id=263 data-nosnippet>263</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(h) = hd {
-<a href=#264 id=264 data-nosnippet>264</a>        out.push_str(<span class="string">"## 6. Human Design\n"</span>);
-<a href=#265 id=265 data-nosnippet>265</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#266 id=266 data-nosnippet>266</a>            <span class="string">"- **Type**: {} | **Profile**: {} | **Strategy**: {}\n"</span>,
-<a href=#267 id=267 data-nosnippet>267</a>            h.result.chart_type, h.result.profile, h.result.strategy
-<a href=#268 id=268 data-nosnippet>268</a>        ));
-<a href=#269 id=269 data-nosnippet>269</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#270 id=270 data-nosnippet>270</a>            <span class="string">"- **Defined Centers**: {} ({:?})\n"</span>,
-<a href=#271 id=271 data-nosnippet>271</a>            h.result.defined_centers.len(),
-<a href=#272 id=272 data-nosnippet>272</a>            h.result.defined_centers
-<a href=#273 id=273 data-nosnippet>273</a>        ));
-<a href=#274 id=274 data-nosnippet>274</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#275 id=275 data-nosnippet>275</a>            <span class="string">"- **Active Channels**: {}\n"</span>,
-<a href=#276 id=276 data-nosnippet>276</a>            h.result.active_channels.len()
-<a href=#277 id=277 data-nosnippet>277</a>        ));
-<a href=#278 id=278 data-nosnippet>278</a>        out.push(<span class="string">'\n'</span>);
-<a href=#279 id=279 data-nosnippet>279</a>    }
-<a href=#280 id=280 data-nosnippet>280</a>
-<a href=#281 id=281 data-nosnippet>281</a>    <span class="comment">// 7. QiMen DunJia
-<a href=#282 id=282 data-nosnippet>282</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(q) = qimen {
-<a href=#283 id=283 data-nosnippet>283</a>        out.push_str(<span class="string">"## 7. QiMen DunJia\n"</span>);
-<a href=#284 id=284 data-nosnippet>284</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#285 id=285 data-nosnippet>285</a>            <span class="string">"- **Structure (Ju)**: {} Ju {}\n"</span>,
-<a href=#286 id=286 data-nosnippet>286</a>            <span class="kw">if </span>q.report.pan.is_yin_ju {
-<a href=#287 id=287 data-nosnippet>287</a>                <span class="string">"Yin Dun (陰遁)"
-<a href=#288 id=288 data-nosnippet>288</a>            </span>} <span class="kw">else </span>{
-<a href=#289 id=289 data-nosnippet>289</a>                <span class="string">"Yang Dun (陽遁)"
-<a href=#290 id=290 data-nosnippet>290</a>            </span>},
-<a href=#291 id=291 data-nosnippet>291</a>            q.report.pan.ju_number
-<a href=#292 id=292 data-nosnippet>292</a>        ));
-<a href=#293 id=293 data-nosnippet>293</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(chief) = <span class="kw-2">&amp;</span>q.report.pan.value_chief_star {
-<a href=#294 id=294 data-nosnippet>294</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- **Chief Star (Zhi Fu)**: {:?}\n"</span>, chief));
-<a href=#295 id=295 data-nosnippet>295</a>        }
-<a href=#296 id=296 data-nosnippet>296</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(envoy) = <span class="kw-2">&amp;</span>q.report.pan.value_envoy_door {
-<a href=#297 id=297 data-nosnippet>297</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- **Envoy Door (Zhi Shi)**: {:?}\n"</span>, envoy));
-<a href=#298 id=298 data-nosnippet>298</a>        }
-<a href=#299 id=299 data-nosnippet>299</a>        out.push(<span class="string">'\n'</span>);
-<a href=#300 id=300 data-nosnippet>300</a>    }
-<a href=#301 id=301 data-nosnippet>301</a>
-<a href=#302 id=302 data-nosnippet>302</a>    <span class="comment">// 8. Pythagorean Numerology
-<a href=#303 id=303 data-nosnippet>303</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(n) = num {
-<a href=#304 id=304 data-nosnippet>304</a>        out.push_str(<span class="string">"## 8. Pythagorean Numerology\n"</span>);
-<a href=#305 id=305 data-nosnippet>305</a>        <span class="kw">let </span>core = <span class="kw-2">&amp;</span>n.result.core;
-<a href=#306 id=306 data-nosnippet>306</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#307 id=307 data-nosnippet>307</a>            <span class="string">"- **Life Path Number**: **{}**{}\n"</span>,
-<a href=#308 id=308 data-nosnippet>308</a>            core.life_path,
-<a href=#309 id=309 data-nosnippet>309</a>            <span class="kw">if </span>n.result.is_master_life_path {
-<a href=#310 id=310 data-nosnippet>310</a>                <span class="string">" (Master Number)"
-<a href=#311 id=311 data-nosnippet>311</a>            </span>} <span class="kw">else </span>{
-<a href=#312 id=312 data-nosnippet>312</a>                <span class="string">""
-<a href=#313 id=313 data-nosnippet>313</a>            </span>}
-<a href=#314 id=314 data-nosnippet>314</a>        ));
+<a href=#259 id=259 data-nosnippet>259</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(sh) = <span class="kw-2">&amp;</span>z.daxian_si_hua {
+<a href=#260 id=260 data-nosnippet>260</a>            <span class="kw">let </span>flights: Vec&lt;String&gt; = sh
+<a href=#261 id=261 data-nosnippet>261</a>                .landings
+<a href=#262 id=262 data-nosnippet>262</a>                .iter()
+<a href=#263 id=263 data-nosnippet>263</a>                .map(|l| {
+<a href=#264 id=264 data-nosnippet>264</a>                    <span class="macro">format!</span>(
+<a href=#265 id=265 data-nosnippet>265</a>                        <span class="string">"{} {} -&gt; {}"</span>,
+<a href=#266 id=266 data-nosnippet>266</a>                        l.sihua_type.emoji(),
+<a href=#267 id=267 data-nosnippet>267</a>                        l.star.hanja(),
+<a href=#268 id=268 data-nosnippet>268</a>                        l.palace_name.english()
+<a href=#269 id=269 data-nosnippet>269</a>                    )
+<a href=#270 id=270 data-nosnippet>270</a>                })
+<a href=#271 id=271 data-nosnippet>271</a>                .collect();
+<a href=#272 id=272 data-nosnippet>272</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#273 id=273 data-nosnippet>273</a>                <span class="string">"- **Current 大限 四化 (stem {})**: {}\n"</span>,
+<a href=#274 id=274 data-nosnippet>274</a>                sh.stem_hanja,
+<a href=#275 id=275 data-nosnippet>275</a>                flights.join(<span class="string">", "</span>)
+<a href=#276 id=276 data-nosnippet>276</a>            ));
+<a href=#277 id=277 data-nosnippet>277</a>        }
+<a href=#278 id=278 data-nosnippet>278</a>        <span class="kw">if </span>!z.chart.destiny_patterns.is_empty() {
+<a href=#279 id=279 data-nosnippet>279</a>            <span class="kw">let </span>pats: Vec&lt;String&gt; = z
+<a href=#280 id=280 data-nosnippet>280</a>                .chart
+<a href=#281 id=281 data-nosnippet>281</a>                .destiny_patterns
+<a href=#282 id=282 data-nosnippet>282</a>                .iter()
+<a href=#283 id=283 data-nosnippet>283</a>                .map(|p| p.name_english.clone())
+<a href=#284 id=284 data-nosnippet>284</a>                .collect();
+<a href=#285 id=285 data-nosnippet>285</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#286 id=286 data-nosnippet>286</a>                <span class="string">"- **Key Formations (Destiny Patterns)**: {}\n"</span>,
+<a href=#287 id=287 data-nosnippet>287</a>                pats.join(<span class="string">", "</span>)
+<a href=#288 id=288 data-nosnippet>288</a>            ));
+<a href=#289 id=289 data-nosnippet>289</a>        }
+<a href=#290 id=290 data-nosnippet>290</a>        out.push(<span class="string">'\n'</span>);
+<a href=#291 id=291 data-nosnippet>291</a>    }
+<a href=#292 id=292 data-nosnippet>292</a>
+<a href=#293 id=293 data-nosnippet>293</a>    <span class="comment">// 6. Human Design
+<a href=#294 id=294 data-nosnippet>294</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(h) = hd {
+<a href=#295 id=295 data-nosnippet>295</a>        out.push_str(<span class="string">"## 6. Human Design\n"</span>);
+<a href=#296 id=296 data-nosnippet>296</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#297 id=297 data-nosnippet>297</a>            <span class="string">"- **Type**: {} | **Profile**: {} | **Strategy**: {}\n"</span>,
+<a href=#298 id=298 data-nosnippet>298</a>            h.result.chart_type, h.result.profile, h.result.strategy
+<a href=#299 id=299 data-nosnippet>299</a>        ));
+<a href=#300 id=300 data-nosnippet>300</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#301 id=301 data-nosnippet>301</a>            <span class="string">"- **Defined Centers**: {} ({:?})\n"</span>,
+<a href=#302 id=302 data-nosnippet>302</a>            h.result.defined_centers.len(),
+<a href=#303 id=303 data-nosnippet>303</a>            h.result.defined_centers
+<a href=#304 id=304 data-nosnippet>304</a>        ));
+<a href=#305 id=305 data-nosnippet>305</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#306 id=306 data-nosnippet>306</a>            <span class="string">"- **Active Channels**: {}\n"</span>,
+<a href=#307 id=307 data-nosnippet>307</a>            h.result.active_channels.len()
+<a href=#308 id=308 data-nosnippet>308</a>        ));
+<a href=#309 id=309 data-nosnippet>309</a>        out.push(<span class="string">'\n'</span>);
+<a href=#310 id=310 data-nosnippet>310</a>    }
+<a href=#311 id=311 data-nosnippet>311</a>
+<a href=#312 id=312 data-nosnippet>312</a>    <span class="comment">// 7. QiMen DunJia
+<a href=#313 id=313 data-nosnippet>313</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(q) = qimen {
+<a href=#314 id=314 data-nosnippet>314</a>        out.push_str(<span class="string">"## 7. QiMen DunJia\n"</span>);
 <a href=#315 id=315 data-nosnippet>315</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#316 id=316 data-nosnippet>316</a>            <span class="string">"- **Core Numbers**: Expression: {}, Soul Urge: {}, Personality: {}, Birthday: {}\n"</span>,
-<a href=#317 id=317 data-nosnippet>317</a>            core.expression
-<a href=#318 id=318 data-nosnippet>318</a>                .map(|v| v.to_string())
-<a href=#319 id=319 data-nosnippet>319</a>                .unwrap_or_else(|| <span class="string">"N/A"</span>.to_string()),
-<a href=#320 id=320 data-nosnippet>320</a>            core.soul_urge
-<a href=#321 id=321 data-nosnippet>321</a>                .map(|v| v.to_string())
-<a href=#322 id=322 data-nosnippet>322</a>                .unwrap_or_else(|| <span class="string">"N/A"</span>.to_string()),
-<a href=#323 id=323 data-nosnippet>323</a>            core.personality
-<a href=#324 id=324 data-nosnippet>324</a>                .map(|v| v.to_string())
-<a href=#325 id=325 data-nosnippet>325</a>                .unwrap_or_else(|| <span class="string">"N/A"</span>.to_string()),
-<a href=#326 id=326 data-nosnippet>326</a>            core.birthday
-<a href=#327 id=327 data-nosnippet>327</a>        ));
-<a href=#328 id=328 data-nosnippet>328</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#329 id=329 data-nosnippet>329</a>            <span class="string">"- **Personal Year**: Cycle Vibration {}\n"</span>,
-<a href=#330 id=330 data-nosnippet>330</a>            n.result.personal_year
-<a href=#331 id=331 data-nosnippet>331</a>        ));
-<a href=#332 id=332 data-nosnippet>332</a>        out.push(<span class="string">'\n'</span>);
-<a href=#333 id=333 data-nosnippet>333</a>    }
-<a href=#334 id=334 data-nosnippet>334</a>
-<a href=#335 id=335 data-nosnippet>335</a>    <span class="comment">// 9. Domain Interpretation Handbook &amp; Archetypal Decoder
-<a href=#336 id=336 data-nosnippet>336</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(hb) = handbook {
-<a href=#337 id=337 data-nosnippet>337</a>        out.push_str(<span class="string">"## 9. Domain Interpretation Handbook &amp; Archetypal Decoder\n\n"</span>);
-<a href=#338 id=338 data-nosnippet>338</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#339 id=339 data-nosnippet>339</a>            <span class="string">"&gt; **Archetypal Persona**: {}\n"</span>,
-<a href=#340 id=340 data-nosnippet>340</a>            hb.archetypal_persona
-<a href=#341 id=341 data-nosnippet>341</a>        ));
-<a href=#342 id=342 data-nosnippet>342</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#343 id=343 data-nosnippet>343</a>            <span class="string">"&gt; **Core Essence**: {}\n\n"</span>,
-<a href=#344 id=344 data-nosnippet>344</a>            hb.core_essence_summary
+<a href=#316 id=316 data-nosnippet>316</a>            <span class="string">"- **Structure (Ju)**: {} Ju {}\n"</span>,
+<a href=#317 id=317 data-nosnippet>317</a>            <span class="kw">if </span>q.report.pan.is_yin_ju {
+<a href=#318 id=318 data-nosnippet>318</a>                <span class="string">"Yin Dun (陰遁)"
+<a href=#319 id=319 data-nosnippet>319</a>            </span>} <span class="kw">else </span>{
+<a href=#320 id=320 data-nosnippet>320</a>                <span class="string">"Yang Dun (陽遁)"
+<a href=#321 id=321 data-nosnippet>321</a>            </span>},
+<a href=#322 id=322 data-nosnippet>322</a>            q.report.pan.ju_number
+<a href=#323 id=323 data-nosnippet>323</a>        ));
+<a href=#324 id=324 data-nosnippet>324</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(chief) = <span class="kw-2">&amp;</span>q.report.pan.value_chief_star {
+<a href=#325 id=325 data-nosnippet>325</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- **Chief Star (Zhi Fu)**: {:?}\n"</span>, chief));
+<a href=#326 id=326 data-nosnippet>326</a>        }
+<a href=#327 id=327 data-nosnippet>327</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(envoy) = <span class="kw-2">&amp;</span>q.report.pan.value_envoy_door {
+<a href=#328 id=328 data-nosnippet>328</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- **Envoy Door (Zhi Shi)**: {:?}\n"</span>, envoy));
+<a href=#329 id=329 data-nosnippet>329</a>        }
+<a href=#330 id=330 data-nosnippet>330</a>        out.push(<span class="string">'\n'</span>);
+<a href=#331 id=331 data-nosnippet>331</a>    }
+<a href=#332 id=332 data-nosnippet>332</a>
+<a href=#333 id=333 data-nosnippet>333</a>    <span class="comment">// 8. Pythagorean Numerology
+<a href=#334 id=334 data-nosnippet>334</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(n) = num {
+<a href=#335 id=335 data-nosnippet>335</a>        out.push_str(<span class="string">"## 8. Pythagorean Numerology\n"</span>);
+<a href=#336 id=336 data-nosnippet>336</a>        <span class="kw">let </span>core = <span class="kw-2">&amp;</span>n.result.core;
+<a href=#337 id=337 data-nosnippet>337</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#338 id=338 data-nosnippet>338</a>            <span class="string">"- **Life Path Number**: **{}**{}\n"</span>,
+<a href=#339 id=339 data-nosnippet>339</a>            core.life_path,
+<a href=#340 id=340 data-nosnippet>340</a>            <span class="kw">if </span>n.result.is_master_life_path {
+<a href=#341 id=341 data-nosnippet>341</a>                <span class="string">" (Master Number)"
+<a href=#342 id=342 data-nosnippet>342</a>            </span>} <span class="kw">else </span>{
+<a href=#343 id=343 data-nosnippet>343</a>                <span class="string">""
+<a href=#344 id=344 data-nosnippet>344</a>            </span>}
 <a href=#345 id=345 data-nosnippet>345</a>        ));
-<a href=#346 id=346 data-nosnippet>346</a>
-<a href=#347 id=347 data-nosnippet>347</a>        <span class="kw">if </span>!hb.symbols.is_empty() {
-<a href=#348 id=348 data-nosnippet>348</a>            out.push_str(<span class="string">"### [A. Pinpoint Classical Symbol Decoders]\n"</span>);
-<a href=#349 id=349 data-nosnippet>349</a>            out.push_str(<span class="string">"*Verified classical grounding (ZiPing ZhenQuan, BPHS, ZWDS Treatises, QiMen Treatises, etc.) decoded into modern executive psychology:*\n\n"</span>);
-<a href=#350 id=350 data-nosnippet>350</a>            <span class="kw">for </span>s <span class="kw">in </span><span class="kw-2">&amp;</span>hb.symbols {
-<a href=#351 id=351 data-nosnippet>351</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"#### {} [{}]\n"</span>, s.symbol, s.engine));
-<a href=#352 id=352 data-nosnippet>352</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#353 id=353 data-nosnippet>353</a>                    <span class="string">"- **Classical Grounding**: {}\n"</span>,
-<a href=#354 id=354 data-nosnippet>354</a>                    s.classical_grounding
-<a href=#355 id=355 data-nosnippet>355</a>                ));
-<a href=#356 id=356 data-nosnippet>356</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#357 id=357 data-nosnippet>357</a>                    <span class="string">"- **Modern Translation**: {}\n"</span>,
-<a href=#358 id=358 data-nosnippet>358</a>                    s.modern_translation
-<a href=#359 id=359 data-nosnippet>359</a>                ));
-<a href=#360 id=360 data-nosnippet>360</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- **Shadow &amp; Risk**: {}\n"</span>, s.shadow_and_caution));
-<a href=#361 id=361 data-nosnippet>361</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- **Tactical Remedy**: {}\n\n"</span>, s.tactical_remedy));
-<a href=#362 id=362 data-nosnippet>362</a>            }
-<a href=#363 id=363 data-nosnippet>363</a>        }
-<a href=#364 id=364 data-nosnippet>364</a>
-<a href=#365 id=365 data-nosnippet>365</a>        <span class="kw">if </span>!hb.synthesis_guidelines.is_empty() {
-<a href=#366 id=366 data-nosnippet>366</a>            out.push_str(<span class="string">"### [B. Multi-Dimensional Synthesis Guidelines]\n"</span>);
-<a href=#367 id=367 data-nosnippet>367</a>            <span class="kw">for </span>g <span class="kw">in </span><span class="kw-2">&amp;</span>hb.synthesis_guidelines {
-<a href=#368 id=368 data-nosnippet>368</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"#### {}\n"</span>, g.domain));
-<a href=#369 id=369 data-nosnippet>369</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#370 id=370 data-nosnippet>370</a>                    <span class="string">"- **Cross-Engine Insight**: {}\n"</span>,
-<a href=#371 id=371 data-nosnippet>371</a>                    g.combined_insight
-<a href=#372 id=372 data-nosnippet>372</a>                ));
-<a href=#373 id=373 data-nosnippet>373</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#374 id=374 data-nosnippet>374</a>                    <span class="string">"- **Strategic Action**: {}\n\n"</span>,
-<a href=#375 id=375 data-nosnippet>375</a>                    g.strategic_action
-<a href=#376 id=376 data-nosnippet>376</a>                ));
-<a href=#377 id=377 data-nosnippet>377</a>            }
-<a href=#378 id=378 data-nosnippet>378</a>        }
-<a href=#379 id=379 data-nosnippet>379</a>
-<a href=#380 id=380 data-nosnippet>380</a>        out.push_str(<span class="string">"### [C. Tactical Directives]\n"</span>);
-<a href=#381 id=381 data-nosnippet>381</a>        out.push_str(<span class="string">"#### DO (Recommended Strategic Actions):\n"</span>);
-<a href=#382 id=382 data-nosnippet>382</a>        <span class="kw">for </span>d <span class="kw">in </span><span class="kw-2">&amp;</span>hb.tactical_dos {
-<a href=#383 id=383 data-nosnippet>383</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- [x] {}\n"</span>, d));
-<a href=#384 id=384 data-nosnippet>384</a>        }
-<a href=#385 id=385 data-nosnippet>385</a>        out.push(<span class="string">'\n'</span>);
-<a href=#386 id=386 data-nosnippet>386</a>
-<a href=#387 id=387 data-nosnippet>387</a>        out.push_str(<span class="string">"#### DON'T (Critical Hazards to Avoid):\n"</span>);
-<a href=#388 id=388 data-nosnippet>388</a>        <span class="kw">for </span>d <span class="kw">in </span><span class="kw-2">&amp;</span>hb.tactical_donts {
-<a href=#389 id=389 data-nosnippet>389</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- [ ] {}\n"</span>, d));
-<a href=#390 id=390 data-nosnippet>390</a>        }
-<a href=#391 id=391 data-nosnippet>391</a>        out.push(<span class="string">'\n'</span>);
-<a href=#392 id=392 data-nosnippet>392</a>    }
-<a href=#393 id=393 data-nosnippet>393</a>
-<a href=#394 id=394 data-nosnippet>394</a>    out.push_str(<span class="string">"---\n"</span>);
-<a href=#395 id=395 data-nosnippet>395</a>    out.push_str(<span class="string">"*Instructions for AI Agent: Ground your analysis strictly on the verified multi-disciplinary calculation data and the classical-to-modern decoders in Section 9. Interpret the detected symbols directly without hallucination, resolve engine nuances using the Cross-Engine Synthesis Guidelines, and deliver actionable counseling following the Tactical DOs &amp; DON'Ts.*\n"</span>);
-<a href=#396 id=396 data-nosnippet>396</a>
-<a href=#397 id=397 data-nosnippet>397</a>    out
-<a href=#398 id=398 data-nosnippet>398</a>}
+<a href=#346 id=346 data-nosnippet>346</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#347 id=347 data-nosnippet>347</a>            <span class="string">"- **Core Numbers**: Expression: {}, Soul Urge: {}, Personality: {}, Birthday: {}\n"</span>,
+<a href=#348 id=348 data-nosnippet>348</a>            core.expression
+<a href=#349 id=349 data-nosnippet>349</a>                .map(|v| v.to_string())
+<a href=#350 id=350 data-nosnippet>350</a>                .unwrap_or_else(|| <span class="string">"N/A"</span>.to_string()),
+<a href=#351 id=351 data-nosnippet>351</a>            core.soul_urge
+<a href=#352 id=352 data-nosnippet>352</a>                .map(|v| v.to_string())
+<a href=#353 id=353 data-nosnippet>353</a>                .unwrap_or_else(|| <span class="string">"N/A"</span>.to_string()),
+<a href=#354 id=354 data-nosnippet>354</a>            core.personality
+<a href=#355 id=355 data-nosnippet>355</a>                .map(|v| v.to_string())
+<a href=#356 id=356 data-nosnippet>356</a>                .unwrap_or_else(|| <span class="string">"N/A"</span>.to_string()),
+<a href=#357 id=357 data-nosnippet>357</a>            core.birthday
+<a href=#358 id=358 data-nosnippet>358</a>        ));
+<a href=#359 id=359 data-nosnippet>359</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#360 id=360 data-nosnippet>360</a>            <span class="string">"- **Personal Year**: Cycle Vibration {}\n"</span>,
+<a href=#361 id=361 data-nosnippet>361</a>            n.result.personal_year
+<a href=#362 id=362 data-nosnippet>362</a>        ));
+<a href=#363 id=363 data-nosnippet>363</a>        out.push(<span class="string">'\n'</span>);
+<a href=#364 id=364 data-nosnippet>364</a>    }
+<a href=#365 id=365 data-nosnippet>365</a>
+<a href=#366 id=366 data-nosnippet>366</a>    <span class="comment">// 9. Domain Interpretation Handbook &amp; Archetypal Decoder
+<a href=#367 id=367 data-nosnippet>367</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(hb) = handbook {
+<a href=#368 id=368 data-nosnippet>368</a>        out.push_str(<span class="string">"## 9. Domain Interpretation Handbook &amp; Archetypal Decoder\n\n"</span>);
+<a href=#369 id=369 data-nosnippet>369</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#370 id=370 data-nosnippet>370</a>            <span class="string">"&gt; **Archetypal Persona**: {}\n"</span>,
+<a href=#371 id=371 data-nosnippet>371</a>            hb.archetypal_persona
+<a href=#372 id=372 data-nosnippet>372</a>        ));
+<a href=#373 id=373 data-nosnippet>373</a>        out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#374 id=374 data-nosnippet>374</a>            <span class="string">"&gt; **Core Essence**: {}\n\n"</span>,
+<a href=#375 id=375 data-nosnippet>375</a>            hb.core_essence_summary
+<a href=#376 id=376 data-nosnippet>376</a>        ));
+<a href=#377 id=377 data-nosnippet>377</a>
+<a href=#378 id=378 data-nosnippet>378</a>        <span class="kw">if </span>!hb.symbols.is_empty() {
+<a href=#379 id=379 data-nosnippet>379</a>            out.push_str(<span class="string">"### [A. Pinpoint Classical Symbol Decoders]\n"</span>);
+<a href=#380 id=380 data-nosnippet>380</a>            out.push_str(<span class="string">"*Verified classical grounding (ZiPing ZhenQuan, BPHS, ZWDS Treatises, QiMen Treatises, etc.) decoded into modern executive psychology:*\n\n"</span>);
+<a href=#381 id=381 data-nosnippet>381</a>            <span class="kw">for </span>s <span class="kw">in </span><span class="kw-2">&amp;</span>hb.symbols {
+<a href=#382 id=382 data-nosnippet>382</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"#### {} [{}]\n"</span>, s.symbol, s.engine));
+<a href=#383 id=383 data-nosnippet>383</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#384 id=384 data-nosnippet>384</a>                    <span class="string">"- **Classical Grounding**: {}\n"</span>,
+<a href=#385 id=385 data-nosnippet>385</a>                    s.classical_grounding
+<a href=#386 id=386 data-nosnippet>386</a>                ));
+<a href=#387 id=387 data-nosnippet>387</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#388 id=388 data-nosnippet>388</a>                    <span class="string">"- **Modern Translation**: {}\n"</span>,
+<a href=#389 id=389 data-nosnippet>389</a>                    s.modern_translation
+<a href=#390 id=390 data-nosnippet>390</a>                ));
+<a href=#391 id=391 data-nosnippet>391</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- **Shadow &amp; Risk**: {}\n"</span>, s.shadow_and_caution));
+<a href=#392 id=392 data-nosnippet>392</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- **Tactical Remedy**: {}\n\n"</span>, s.tactical_remedy));
+<a href=#393 id=393 data-nosnippet>393</a>            }
+<a href=#394 id=394 data-nosnippet>394</a>        }
+<a href=#395 id=395 data-nosnippet>395</a>
+<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw">if </span>!hb.synthesis_guidelines.is_empty() {
+<a href=#397 id=397 data-nosnippet>397</a>            out.push_str(<span class="string">"### [B. Multi-Dimensional Synthesis Guidelines]\n"</span>);
+<a href=#398 id=398 data-nosnippet>398</a>            <span class="kw">for </span>g <span class="kw">in </span><span class="kw-2">&amp;</span>hb.synthesis_guidelines {
+<a href=#399 id=399 data-nosnippet>399</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"#### {}\n"</span>, g.domain));
+<a href=#400 id=400 data-nosnippet>400</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#401 id=401 data-nosnippet>401</a>                    <span class="string">"- **Cross-Engine Insight**: {}\n"</span>,
+<a href=#402 id=402 data-nosnippet>402</a>                    g.combined_insight
+<a href=#403 id=403 data-nosnippet>403</a>                ));
+<a href=#404 id=404 data-nosnippet>404</a>                out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+<a href=#405 id=405 data-nosnippet>405</a>                    <span class="string">"- **Strategic Action**: {}\n\n"</span>,
+<a href=#406 id=406 data-nosnippet>406</a>                    g.strategic_action
+<a href=#407 id=407 data-nosnippet>407</a>                ));
+<a href=#408 id=408 data-nosnippet>408</a>            }
+<a href=#409 id=409 data-nosnippet>409</a>        }
+<a href=#410 id=410 data-nosnippet>410</a>
+<a href=#411 id=411 data-nosnippet>411</a>        out.push_str(<span class="string">"### [C. Tactical Directives]\n"</span>);
+<a href=#412 id=412 data-nosnippet>412</a>        out.push_str(<span class="string">"#### DO (Recommended Strategic Actions):\n"</span>);
+<a href=#413 id=413 data-nosnippet>413</a>        <span class="kw">for </span>d <span class="kw">in </span><span class="kw-2">&amp;</span>hb.tactical_dos {
+<a href=#414 id=414 data-nosnippet>414</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- [x] {}\n"</span>, d));
+<a href=#415 id=415 data-nosnippet>415</a>        }
+<a href=#416 id=416 data-nosnippet>416</a>        out.push(<span class="string">'\n'</span>);
+<a href=#417 id=417 data-nosnippet>417</a>
+<a href=#418 id=418 data-nosnippet>418</a>        out.push_str(<span class="string">"#### DON'T (Critical Hazards to Avoid):\n"</span>);
+<a href=#419 id=419 data-nosnippet>419</a>        <span class="kw">for </span>d <span class="kw">in </span><span class="kw-2">&amp;</span>hb.tactical_donts {
+<a href=#420 id=420 data-nosnippet>420</a>            out.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- [ ] {}\n"</span>, d));
+<a href=#421 id=421 data-nosnippet>421</a>        }
+<a href=#422 id=422 data-nosnippet>422</a>        out.push(<span class="string">'\n'</span>);
+<a href=#423 id=423 data-nosnippet>423</a>    }
+<a href=#424 id=424 data-nosnippet>424</a>
+<a href=#425 id=425 data-nosnippet>425</a>    out.push_str(<span class="string">"---\n"</span>);
+<a href=#426 id=426 data-nosnippet>426</a>    out.push_str(<span class="string">"*Instructions for AI Agent: Ground your analysis strictly on the verified multi-disciplinary calculation data and the classical-to-modern decoders in Section 9. Interpret the detected symbols directly without hallucination, resolve engine nuances using the Cross-Engine Synthesis Guidelines, and deliver actionable counseling following the Tactical DOs &amp; DON'Ts.*\n"</span>);
+<a href=#427 id=427 data-nosnippet>427</a>
+<a href=#428 id=428 data-nosnippet>428</a>    out
+<a href=#429 id=429 data-nosnippet>429</a>}
 </code></pre></div></section></main></body></html>

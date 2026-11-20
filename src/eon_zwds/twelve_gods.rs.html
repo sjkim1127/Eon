@@ -1,0 +1,384 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-zwds/src/twelve_gods.rs`."><title>twelve_gods.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1f5a765c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="eon_zwds" data-themes="" data-resource-suffix="" data-rustdoc-version="1.102.0-nightly (6905905bb 2026-11-19)" data-channel="nightly" data-search-js="search-69faa2c4.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-9b351432.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-419f3a3f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-101b5a15.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_zwds/</div>twelve_gods.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! The four "twelve-god" star groups of Zi Wei Dou Shu (十二神煞).
+<a href=#2 id=2 data-nosnippet>2</a>//!
+<a href=#3 id=3 data-nosnippet>3</a>//! Each group occupies all twelve palaces, one god per palace:
+<a href=#4 id=4 data-nosnippet>4</a>//!
+<a href=#5 id=5 data-nosnippet>5</a>//! | Group | Starts at | Direction |
+<a href=#6 id=6 data-nosnippet>6</a>//! |-------|-----------|-----------|
+<a href=#7 id=7 data-nosnippet>7</a>//! | 長生十二神 | by five-element bureau (水二/土五 → 申, 木三 → 亥, 金四 → 巳, 火六 → 寅) | 陽男陰女 順行, 陰男陽女 逆行 |
+<a href=#8 id=8 data-nosnippet>8</a>//! | 博士十二神 | the palace of 祿存 | 陽男陰女 順行, 陰男陽女 逆行 |
+<a href=#9 id=9 data-nosnippet>9</a>//! | 將前十二神 | 將星 by year branch (寅午戌 → 午, 申子辰 → 子, 巳酉丑 → 酉, 亥卯未 → 卯) | always 順行 |
+<a href=#10 id=10 data-nosnippet>10</a>//! | 歲前十二神 | 歲建 in the palace of the year branch | always 順行 |
+<a href=#11 id=11 data-nosnippet>11</a>//!
+<a href=#12 id=12 data-nosnippet>12</a>//! 順行 means following the branch order (寅 → 卯 → 辰 ...), i.e. increasing [`PalaceIndex`].
+<a href=#13 id=13 data-nosnippet>13</a>//!
+<a href=#14 id=14 data-nosnippet>14</a>//! Sources: 《紫微斗數全書》 安長生十二神訣, 安博士十二神訣, 安將前諸星訣, 安歲前諸星訣; cross-checked
+<a href=#15 id=15 data-nosnippet>15</a>//! against iztro (`src/star/decorativeStar.ts`, `getchangsheng12`, `getBoShi12`, `getYearly12`).
+<a href=#16 id=16 data-nosnippet>16</a>//! Unlike the 14 major stars these gods are kept apart from [`crate::PalaceData::stars`]: they are a
+<a href=#17 id=17 data-nosnippet>17</a>//! per-palace annotation ([`PalaceTwelveGods`]) and never take part in formation or 四化 logic.
+<a href=#18 id=18 data-nosnippet>18</a>
+<a href=#19 id=19 data-nosnippet>19</a></span><span class="kw">use </span><span class="kw">crate</span>::palace::{fix_index, std_idx_to_zwds_idx};
+<a href=#20 id=20 data-nosnippet>20</a><span class="kw">use </span><span class="kw">crate</span>::types::{FiveElementsClass, PalaceIndex};
+<a href=#21 id=21 data-nosnippet>21</a><span class="kw">use </span>serde::{Deserialize, Serialize};
+<a href=#22 id=22 data-nosnippet>22</a>
+<a href=#23 id=23 data-nosnippet>23</a><span class="macro">macro_rules!</span> twelve_gods_enum {
+<a href=#24 id=24 data-nosnippet>24</a>    (
+<a href=#25 id=25 data-nosnippet>25</a>        $(<span class="attr">#[<span class="macro-nonterminal">$meta</span>:meta]</span>)*
+<a href=#26 id=26 data-nosnippet>26</a>        <span class="macro-nonterminal">$name</span>:ident { $( <span class="macro-nonterminal">$variant</span>:ident =&gt; (<span class="macro-nonterminal">$hanja</span>:literal, <span class="macro-nonterminal">$english</span>:literal) ),+ $(,)<span class="question-mark">? </span>}
+<a href=#27 id=27 data-nosnippet>27</a>    ) =&gt; {
+<a href=#28 id=28 data-nosnippet>28</a>        $(<span class="attr">#[<span class="macro-nonterminal">$meta</span>]</span>)*
+<a href=#29 id=29 data-nosnippet>29</a>        <span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+<a href=#30 id=30 data-nosnippet>30</a>        </span><span class="kw">pub enum </span><span class="macro-nonterminal">$name </span>{ $( <span class="macro-nonterminal">$variant </span>),+ }
+<a href=#31 id=31 data-nosnippet>31</a>
+<a href=#32 id=32 data-nosnippet>32</a>        <span class="kw">impl </span><span class="macro-nonterminal">$name </span>{
+<a href=#33 id=33 data-nosnippet>33</a>            <span class="doccomment">/// The twelve gods in their canonical order (the order they are laid out along the palaces).
+<a href=#34 id=34 data-nosnippet>34</a>            </span><span class="kw">pub const </span>ALL: [<span class="macro-nonterminal">$name</span>; <span class="number">12</span>] = [ $( <span class="macro-nonterminal">$name</span>::<span class="macro-nonterminal">$variant </span>),+ ];
+<a href=#35 id=35 data-nosnippet>35</a>
+<a href=#36 id=36 data-nosnippet>36</a>            <span class="doccomment">/// Chinese name.
+<a href=#37 id=37 data-nosnippet>37</a>            </span><span class="kw">pub fn </span>hanja(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+<a href=#38 id=38 data-nosnippet>38</a>                <span class="kw">match </span><span class="self">self </span>{ $( <span class="self">Self</span>::<span class="macro-nonterminal">$variant </span>=&gt; <span class="macro-nonterminal">$hanja </span>),+ }
+<a href=#39 id=39 data-nosnippet>39</a>            }
+<a href=#40 id=40 data-nosnippet>40</a>
+<a href=#41 id=41 data-nosnippet>41</a>            <span class="doccomment">/// Pinyin / English name.
+<a href=#42 id=42 data-nosnippet>42</a>            </span><span class="kw">pub fn </span>english(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+<a href=#43 id=43 data-nosnippet>43</a>                <span class="kw">match </span><span class="self">self </span>{ $( <span class="self">Self</span>::<span class="macro-nonterminal">$variant </span>=&gt; <span class="macro-nonterminal">$english </span>),+ }
+<a href=#44 id=44 data-nosnippet>44</a>            }
+<a href=#45 id=45 data-nosnippet>45</a>
+<a href=#46 id=46 data-nosnippet>46</a>            <span class="doccomment">/// Same as [`Self::english`] (the project convention for the `korean()` accessors).
+<a href=#47 id=47 data-nosnippet>47</a>            </span><span class="kw">pub fn </span>korean(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+<a href=#48 id=48 data-nosnippet>48</a>                <span class="self">self</span>.english()
+<a href=#49 id=49 data-nosnippet>49</a>            }
+<a href=#50 id=50 data-nosnippet>50</a>
+<a href=#51 id=51 data-nosnippet>51</a>            <span class="doccomment">/// Position of this god in the canonical order (0 = first god of the group).
+<a href=#52 id=52 data-nosnippet>52</a>            </span><span class="kw">pub fn </span>order(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+<a href=#53 id=53 data-nosnippet>53</a>                <span class="self">Self</span>::ALL.iter().position(|g| g == <span class="self">self</span>).unwrap_or(<span class="number">0</span>)
+<a href=#54 id=54 data-nosnippet>54</a>            }
+<a href=#55 id=55 data-nosnippet>55</a>        }
+<a href=#56 id=56 data-nosnippet>56</a>    };
+<a href=#57 id=57 data-nosnippet>57</a>}
+<a href=#58 id=58 data-nosnippet>58</a>
+<a href=#59 id=59 data-nosnippet>59</a><span class="macro">twelve_gods_enum!</span> {
+<a href=#60 id=60 data-nosnippet>60</a>    <span class="doccomment">/// 長生十二神: the twelve life stages.
+<a href=#61 id=61 data-nosnippet>61</a>    </span>ChangSheng {
+<a href=#62 id=62 data-nosnippet>62</a>        ChangSheng =&gt; (<span class="string">"長生"</span>, <span class="string">"Chang Sheng (Birth)"</span>),
+<a href=#63 id=63 data-nosnippet>63</a>        MuYu =&gt; (<span class="string">"沐浴"</span>, <span class="string">"Mu Yu (Bathing)"</span>),
+<a href=#64 id=64 data-nosnippet>64</a>        GuanDai =&gt; (<span class="string">"冠帶"</span>, <span class="string">"Guan Dai (Capping)"</span>),
+<a href=#65 id=65 data-nosnippet>65</a>        LinGuan =&gt; (<span class="string">"臨官"</span>, <span class="string">"Lin Guan (Office)"</span>),
+<a href=#66 id=66 data-nosnippet>66</a>        DiWang =&gt; (<span class="string">"帝旺"</span>, <span class="string">"Di Wang (Peak)"</span>),
+<a href=#67 id=67 data-nosnippet>67</a>        Shuai =&gt; (<span class="string">"衰"</span>, <span class="string">"Shuai (Decline)"</span>),
+<a href=#68 id=68 data-nosnippet>68</a>        Bing =&gt; (<span class="string">"病"</span>, <span class="string">"Bing (Sickness)"</span>),
+<a href=#69 id=69 data-nosnippet>69</a>        Si =&gt; (<span class="string">"死"</span>, <span class="string">"Si (Death)"</span>),
+<a href=#70 id=70 data-nosnippet>70</a>        Mu =&gt; (<span class="string">"墓"</span>, <span class="string">"Mu (Tomb)"</span>),
+<a href=#71 id=71 data-nosnippet>71</a>        Jue =&gt; (<span class="string">"絕"</span>, <span class="string">"Jue (Extinction)"</span>),
+<a href=#72 id=72 data-nosnippet>72</a>        Tai =&gt; (<span class="string">"胎"</span>, <span class="string">"Tai (Conception)"</span>),
+<a href=#73 id=73 data-nosnippet>73</a>        Yang =&gt; (<span class="string">"養"</span>, <span class="string">"Yang (Nurture)"</span>)
+<a href=#74 id=74 data-nosnippet>74</a>    }
+<a href=#75 id=75 data-nosnippet>75</a>}
+<a href=#76 id=76 data-nosnippet>76</a>
+<a href=#77 id=77 data-nosnippet>77</a><span class="macro">twelve_gods_enum!</span> {
+<a href=#78 id=78 data-nosnippet>78</a>    <span class="doccomment">/// 博士十二神: the twelve "scholar" gods, laid out from 祿存.
+<a href=#79 id=79 data-nosnippet>79</a>    </span>BoShi {
+<a href=#80 id=80 data-nosnippet>80</a>        BoShi =&gt; (<span class="string">"博士"</span>, <span class="string">"Bo Shi (Scholar)"</span>),
+<a href=#81 id=81 data-nosnippet>81</a>        LiShi =&gt; (<span class="string">"力士"</span>, <span class="string">"Li Shi (Strongman)"</span>),
+<a href=#82 id=82 data-nosnippet>82</a>        QingLong =&gt; (<span class="string">"青龍"</span>, <span class="string">"Qing Long (Azure Dragon)"</span>),
+<a href=#83 id=83 data-nosnippet>83</a>        XiaoHao =&gt; (<span class="string">"小耗"</span>, <span class="string">"Xiao Hao (Minor Loss)"</span>),
+<a href=#84 id=84 data-nosnippet>84</a>        JiangJun =&gt; (<span class="string">"將軍"</span>, <span class="string">"Jiang Jun (General)"</span>),
+<a href=#85 id=85 data-nosnippet>85</a>        ZouShu =&gt; (<span class="string">"奏書"</span>, <span class="string">"Zou Shu (Memorial)"</span>),
+<a href=#86 id=86 data-nosnippet>86</a>        FeiLian =&gt; (<span class="string">"飛廉"</span>, <span class="string">"Fei Lian (Flying Lian)"</span>),
+<a href=#87 id=87 data-nosnippet>87</a>        XiShen =&gt; (<span class="string">"喜神"</span>, <span class="string">"Xi Shen (Joy God)"</span>),
+<a href=#88 id=88 data-nosnippet>88</a>        BingFu =&gt; (<span class="string">"病符"</span>, <span class="string">"Bing Fu (Sickness Talisman)"</span>),
+<a href=#89 id=89 data-nosnippet>89</a>        DaHao =&gt; (<span class="string">"大耗"</span>, <span class="string">"Da Hao (Major Loss)"</span>),
+<a href=#90 id=90 data-nosnippet>90</a>        FuBing =&gt; (<span class="string">"伏兵"</span>, <span class="string">"Fu Bing (Ambush)"</span>),
+<a href=#91 id=91 data-nosnippet>91</a>        GuanFu =&gt; (<span class="string">"官府"</span>, <span class="string">"Guan Fu (Officialdom)"</span>)
+<a href=#92 id=92 data-nosnippet>92</a>    }
+<a href=#93 id=93 data-nosnippet>93</a>}
+<a href=#94 id=94 data-nosnippet>94</a>
+<a href=#95 id=95 data-nosnippet>95</a><span class="macro">twelve_gods_enum!</span> {
+<a href=#96 id=96 data-nosnippet>96</a>    <span class="doccomment">/// 將前十二神: the twelve "before the general" gods, laid out from 將星 by year branch.
+<a href=#97 id=97 data-nosnippet>97</a>    </span>JiangQian {
+<a href=#98 id=98 data-nosnippet>98</a>        JiangXing =&gt; (<span class="string">"將星"</span>, <span class="string">"Jiang Xing (General Star)"</span>),
+<a href=#99 id=99 data-nosnippet>99</a>        PanAn =&gt; (<span class="string">"攀鞍"</span>, <span class="string">"Pan An (Mounting the Saddle)"</span>),
+<a href=#100 id=100 data-nosnippet>100</a>        SuiYi =&gt; (<span class="string">"歲驛"</span>, <span class="string">"Sui Yi (Annual Post Horse)"</span>),
+<a href=#101 id=101 data-nosnippet>101</a>        XiShen =&gt; (<span class="string">"息神"</span>, <span class="string">"Xi Shen (Resting God)"</span>),
+<a href=#102 id=102 data-nosnippet>102</a>        HuaGai =&gt; (<span class="string">"華蓋"</span>, <span class="string">"Hua Gai (Canopy)"</span>),
+<a href=#103 id=103 data-nosnippet>103</a>        JieSha =&gt; (<span class="string">"劫煞"</span>, <span class="string">"Jie Sha (Robbery Sha)"</span>),
+<a href=#104 id=104 data-nosnippet>104</a>        ZaiSha =&gt; (<span class="string">"災煞"</span>, <span class="string">"Zai Sha (Calamity Sha)"</span>),
+<a href=#105 id=105 data-nosnippet>105</a>        TianSha =&gt; (<span class="string">"天煞"</span>, <span class="string">"Tian Sha (Heaven Sha)"</span>),
+<a href=#106 id=106 data-nosnippet>106</a>        ZhiBei =&gt; (<span class="string">"指背"</span>, <span class="string">"Zhi Bei (Pointing Back)"</span>),
+<a href=#107 id=107 data-nosnippet>107</a>        XianChi =&gt; (<span class="string">"咸池"</span>, <span class="string">"Xian Chi (Salty Pool)"</span>),
+<a href=#108 id=108 data-nosnippet>108</a>        YueSha =&gt; (<span class="string">"月煞"</span>, <span class="string">"Yue Sha (Moon Sha)"</span>),
+<a href=#109 id=109 data-nosnippet>109</a>        WangShen =&gt; (<span class="string">"亡神"</span>, <span class="string">"Wang Shen (Lost Spirit)"</span>)
+<a href=#110 id=110 data-nosnippet>110</a>    }
+<a href=#111 id=111 data-nosnippet>111</a>}
+<a href=#112 id=112 data-nosnippet>112</a>
+<a href=#113 id=113 data-nosnippet>113</a><span class="macro">twelve_gods_enum!</span> {
+<a href=#114 id=114 data-nosnippet>114</a>    <span class="doccomment">/// 歲前十二神: the twelve "before the year" gods, laid out from 歲建 (太歲).
+<a href=#115 id=115 data-nosnippet>115</a>    </span>SuiQian {
+<a href=#116 id=116 data-nosnippet>116</a>        SuiJian =&gt; (<span class="string">"歲建"</span>, <span class="string">"Sui Jian (Tai Sui)"</span>),
+<a href=#117 id=117 data-nosnippet>117</a>        HuiQi =&gt; (<span class="string">"晦氣"</span>, <span class="string">"Hui Qi (Gloom)"</span>),
+<a href=#118 id=118 data-nosnippet>118</a>        SangMen =&gt; (<span class="string">"喪門"</span>, <span class="string">"Sang Men (Mourning Gate)"</span>),
+<a href=#119 id=119 data-nosnippet>119</a>        GuanSuo =&gt; (<span class="string">"貫索"</span>, <span class="string">"Guan Suo (Shackles)"</span>),
+<a href=#120 id=120 data-nosnippet>120</a>        GuanFu =&gt; (<span class="string">"官符"</span>, <span class="string">"Guan Fu (Official Writ)"</span>),
+<a href=#121 id=121 data-nosnippet>121</a>        XiaoHao =&gt; (<span class="string">"小耗"</span>, <span class="string">"Xiao Hao (Minor Loss)"</span>),
+<a href=#122 id=122 data-nosnippet>122</a>        DaHao =&gt; (<span class="string">"大耗"</span>, <span class="string">"Da Hao (Major Loss)"</span>),
+<a href=#123 id=123 data-nosnippet>123</a>        LongDe =&gt; (<span class="string">"龍德"</span>, <span class="string">"Long De (Dragon Virtue)"</span>),
+<a href=#124 id=124 data-nosnippet>124</a>        BaiHu =&gt; (<span class="string">"白虎"</span>, <span class="string">"Bai Hu (White Tiger)"</span>),
+<a href=#125 id=125 data-nosnippet>125</a>        TianDe =&gt; (<span class="string">"天德"</span>, <span class="string">"Tian De (Heaven Virtue)"</span>),
+<a href=#126 id=126 data-nosnippet>126</a>        DiaoKe =&gt; (<span class="string">"弔客"</span>, <span class="string">"Diao Ke (Condolence Guest)"</span>),
+<a href=#127 id=127 data-nosnippet>127</a>        BingFu =&gt; (<span class="string">"病符"</span>, <span class="string">"Bing Fu (Sickness Talisman)"</span>)
+<a href=#128 id=128 data-nosnippet>128</a>    }
+<a href=#129 id=129 data-nosnippet>129</a>}
+<a href=#130 id=130 data-nosnippet>130</a>
+<a href=#131 id=131 data-nosnippet>131</a><span class="doccomment">/// The four twelve-god groups as they fall on one palace.
+<a href=#132 id=132 data-nosnippet>132</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+<a href=#133 id=133 data-nosnippet>133</a></span><span class="kw">pub struct </span>PalaceTwelveGods {
+<a href=#134 id=134 data-nosnippet>134</a>    <span class="doccomment">/// 長生十二神
+<a href=#135 id=135 data-nosnippet>135</a>    </span><span class="kw">pub </span>chang_sheng: ChangSheng,
+<a href=#136 id=136 data-nosnippet>136</a>    <span class="doccomment">/// 博士十二神
+<a href=#137 id=137 data-nosnippet>137</a>    </span><span class="kw">pub </span>bo_shi: BoShi,
+<a href=#138 id=138 data-nosnippet>138</a>    <span class="doccomment">/// 將前十二神
+<a href=#139 id=139 data-nosnippet>139</a>    </span><span class="kw">pub </span>jiang_qian: JiangQian,
+<a href=#140 id=140 data-nosnippet>140</a>    <span class="doccomment">/// 歲前十二神
+<a href=#141 id=141 data-nosnippet>141</a>    </span><span class="kw">pub </span>sui_qian: SuiQian,
+<a href=#142 id=142 data-nosnippet>142</a>}
+<a href=#143 id=143 data-nosnippet>143</a>
+<a href=#144 id=144 data-nosnippet>144</a><span class="doccomment">/// Palace (ZWDS index, 寅 = 0) where 長生 starts for a five-element bureau.
+<a href=#145 id=145 data-nosnippet>145</a>///
+<a href=#146 id=146 data-nosnippet>146</a>/// 水二局·土五局長生在申, 木三局長生在亥, 金四局長生在巳, 火六局長生在寅.
+<a href=#147 id=147 data-nosnippet>147</a></span><span class="kw">pub fn </span>chang_sheng_start(bureau: FiveElementsClass) -&gt; PalaceIndex {
+<a href=#148 id=148 data-nosnippet>148</a>    <span class="kw">match </span>bureau {
+<a href=#149 id=149 data-nosnippet>149</a>        FiveElementsClass::Water2 | FiveElementsClass::Earth5 =&gt; <span class="number">6</span>, <span class="comment">// 申
+<a href=#150 id=150 data-nosnippet>150</a>        </span>FiveElementsClass::Wood3 =&gt; <span class="number">9</span>,                              <span class="comment">// 亥
+<a href=#151 id=151 data-nosnippet>151</a>        </span>FiveElementsClass::Metal4 =&gt; <span class="number">3</span>,                             <span class="comment">// 巳
+<a href=#152 id=152 data-nosnippet>152</a>        </span>FiveElementsClass::Fire6 =&gt; <span class="number">0</span>,                              <span class="comment">// 寅
+<a href=#153 id=153 data-nosnippet>153</a>    </span>}
+<a href=#154 id=154 data-nosnippet>154</a>}
+<a href=#155 id=155 data-nosnippet>155</a>
+<a href=#156 id=156 data-nosnippet>156</a><span class="doccomment">/// Palace (ZWDS index) where 將星 sits for a year branch (standard index, 子 = 0).
+<a href=#157 id=157 data-nosnippet>157</a>///
+<a href=#158 id=158 data-nosnippet>158</a>/// 寅午戌年將星午, 申子辰年將星子, 巳酉丑年將星酉, 亥卯未年將星卯.
+<a href=#159 id=159 data-nosnippet>159</a></span><span class="kw">pub fn </span>jiang_xing_start(year_branch_std_idx: usize) -&gt; PalaceIndex {
+<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">let </span>branch_std = <span class="kw">match </span>year_branch_std_idx % <span class="number">12 </span>{
+<a href=#161 id=161 data-nosnippet>161</a>        <span class="number">2 </span>| <span class="number">6 </span>| <span class="number">10 </span>=&gt; <span class="number">6</span>, <span class="comment">// 寅午戌 → 午
+<a href=#162 id=162 data-nosnippet>162</a>        </span><span class="number">8 </span>| <span class="number">0 </span>| <span class="number">4 </span>=&gt; <span class="number">0</span>,  <span class="comment">// 申子辰 → 子
+<a href=#163 id=163 data-nosnippet>163</a>        </span><span class="number">5 </span>| <span class="number">9 </span>| <span class="number">1 </span>=&gt; <span class="number">9</span>,  <span class="comment">// 巳酉丑 → 酉
+<a href=#164 id=164 data-nosnippet>164</a>        </span><span class="kw">_ </span>=&gt; <span class="number">3</span>,          <span class="comment">// 亥卯未 → 卯
+<a href=#165 id=165 data-nosnippet>165</a>    </span>};
+<a href=#166 id=166 data-nosnippet>166</a>    std_idx_to_zwds_idx(branch_std)
+<a href=#167 id=167 data-nosnippet>167</a>}
+<a href=#168 id=168 data-nosnippet>168</a>
+<a href=#169 id=169 data-nosnippet>169</a><span class="doccomment">/// Lay the four groups over the twelve palaces.
+<a href=#170 id=170 data-nosnippet>170</a>///
+<a href=#171 id=171 data-nosnippet>171</a>/// * `bureau` - five-element bureau (decides where 長生 starts)
+<a href=#172 id=172 data-nosnippet>172</a>/// * `forward` - `true` for 陽男·陰女 (see [`crate::decadal::is_forward_direction`])
+<a href=#173 id=173 data-nosnippet>173</a>/// * `lucun_idx` - palace of 祿存 (博士 starts there)
+<a href=#174 id=174 data-nosnippet>174</a>/// * `year_branch_std_idx` - birth-year branch, standard index (子 = 0)
+<a href=#175 id=175 data-nosnippet>175</a>///
+<a href=#176 id=176 data-nosnippet>176</a>/// The returned array is indexed by palace (ZWDS index, 寅 = 0).
+<a href=#177 id=177 data-nosnippet>177</a></span><span class="kw">pub fn </span>place_twelve_gods(
+<a href=#178 id=178 data-nosnippet>178</a>    bureau: FiveElementsClass,
+<a href=#179 id=179 data-nosnippet>179</a>    forward: bool,
+<a href=#180 id=180 data-nosnippet>180</a>    lucun_idx: PalaceIndex,
+<a href=#181 id=181 data-nosnippet>181</a>    year_branch_std_idx: usize,
+<a href=#182 id=182 data-nosnippet>182</a>) -&gt; [PalaceTwelveGods; <span class="number">12</span>] {
+<a href=#183 id=183 data-nosnippet>183</a>    <span class="kw">let </span>dir: i32 = <span class="kw">if </span>forward { <span class="number">1 </span>} <span class="kw">else </span>{ -<span class="number">1 </span>};
+<a href=#184 id=184 data-nosnippet>184</a>    <span class="kw">let </span>cs_start = chang_sheng_start(bureau) <span class="kw">as </span>i32;
+<a href=#185 id=185 data-nosnippet>185</a>    <span class="kw">let </span>bs_start = lucun_idx <span class="kw">as </span>i32;
+<a href=#186 id=186 data-nosnippet>186</a>    <span class="kw">let </span>jq_start = jiang_xing_start(year_branch_std_idx) <span class="kw">as </span>i32;
+<a href=#187 id=187 data-nosnippet>187</a>    <span class="kw">let </span>sq_start = std_idx_to_zwds_idx(year_branch_std_idx % <span class="number">12</span>) <span class="kw">as </span>i32;
+<a href=#188 id=188 data-nosnippet>188</a>
+<a href=#189 id=189 data-nosnippet>189</a>    std::array::from_fn(|p| {
+<a href=#190 id=190 data-nosnippet>190</a>        <span class="kw">let </span>p = p <span class="kw">as </span>i32;
+<a href=#191 id=191 data-nosnippet>191</a>        <span class="comment">// Offset (in palaces, following `dir`) from the starting palace of each directional group.
+<a href=#192 id=192 data-nosnippet>192</a>        </span><span class="kw">let </span>along = |start: i32| (dir * (p - start)).rem_euclid(<span class="number">12</span>) <span class="kw">as </span>usize;
+<a href=#193 id=193 data-nosnippet>193</a>        <span class="comment">// 將前 / 歲前 always follow the branch order.
+<a href=#194 id=194 data-nosnippet>194</a>        </span><span class="kw">let </span>fixed = |start: i32| fix_index(p - start);
+<a href=#195 id=195 data-nosnippet>195</a>        PalaceTwelveGods {
+<a href=#196 id=196 data-nosnippet>196</a>            chang_sheng: ChangSheng::ALL[along(cs_start)],
+<a href=#197 id=197 data-nosnippet>197</a>            bo_shi: BoShi::ALL[along(bs_start)],
+<a href=#198 id=198 data-nosnippet>198</a>            jiang_qian: JiangQian::ALL[fixed(jq_start)],
+<a href=#199 id=199 data-nosnippet>199</a>            sui_qian: SuiQian::ALL[fixed(sq_start)],
+<a href=#200 id=200 data-nosnippet>200</a>        }
+<a href=#201 id=201 data-nosnippet>201</a>    })
+<a href=#202 id=202 data-nosnippet>202</a>}
+<a href=#203 id=203 data-nosnippet>203</a>
+<a href=#204 id=204 data-nosnippet>204</a><span class="attr">#[cfg(test)]
+<a href=#205 id=205 data-nosnippet>205</a></span><span class="kw">mod </span>tests {
+<a href=#206 id=206 data-nosnippet>206</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#207 id=207 data-nosnippet>207</a>
+<a href=#208 id=208 data-nosnippet>208</a>    <span class="doccomment">/// Palace indices (ZWDS, 寅 = 0) for readable branch names.
+<a href=#209 id=209 data-nosnippet>209</a>    </span><span class="kw">const </span>YIN: usize = <span class="number">0</span>;
+<a href=#210 id=210 data-nosnippet>210</a>    <span class="kw">const </span>MAO: usize = <span class="number">1</span>;
+<a href=#211 id=211 data-nosnippet>211</a>    <span class="kw">const </span>CHEN: usize = <span class="number">2</span>;
+<a href=#212 id=212 data-nosnippet>212</a>    <span class="kw">const </span>SI: usize = <span class="number">3</span>;
+<a href=#213 id=213 data-nosnippet>213</a>    <span class="kw">const </span>WU: usize = <span class="number">4</span>;
+<a href=#214 id=214 data-nosnippet>214</a>    <span class="kw">const </span>WEI: usize = <span class="number">5</span>;
+<a href=#215 id=215 data-nosnippet>215</a>    <span class="kw">const </span>SHEN: usize = <span class="number">6</span>;
+<a href=#216 id=216 data-nosnippet>216</a>    <span class="kw">const </span>YOU: usize = <span class="number">7</span>;
+<a href=#217 id=217 data-nosnippet>217</a>    <span class="kw">const </span>XU: usize = <span class="number">8</span>;
+<a href=#218 id=218 data-nosnippet>218</a>    <span class="kw">const </span>HAI: usize = <span class="number">9</span>;
+<a href=#219 id=219 data-nosnippet>219</a>    <span class="kw">const </span>ZI: usize = <span class="number">10</span>;
+<a href=#220 id=220 data-nosnippet>220</a>    <span class="kw">const </span>CHOU: usize = <span class="number">11</span>;
+<a href=#221 id=221 data-nosnippet>221</a>
+<a href=#222 id=222 data-nosnippet>222</a>    <span class="attr">#[test]
+<a href=#223 id=223 data-nosnippet>223</a>    </span><span class="kw">fn </span>lexicon_is_complete_and_bilingual() {
+<a href=#224 id=224 data-nosnippet>224</a>        <span class="kw">for </span>g <span class="kw">in </span>ChangSheng::ALL {
+<a href=#225 id=225 data-nosnippet>225</a>            <span class="macro">assert!</span>(!g.hanja().is_empty() &amp;&amp; !g.english().is_empty());
+<a href=#226 id=226 data-nosnippet>226</a>        }
+<a href=#227 id=227 data-nosnippet>227</a>        <span class="macro">assert_eq!</span>(ChangSheng::ALL.len(), <span class="number">12</span>);
+<a href=#228 id=228 data-nosnippet>228</a>        <span class="macro">assert_eq!</span>(BoShi::LiShi.hanja(), <span class="string">"力士"</span>);
+<a href=#229 id=229 data-nosnippet>229</a>        <span class="macro">assert_eq!</span>(JiangQian::JiangXing.hanja(), <span class="string">"將星"</span>);
+<a href=#230 id=230 data-nosnippet>230</a>        <span class="macro">assert_eq!</span>(SuiQian::SuiJian.hanja(), <span class="string">"歲建"</span>);
+<a href=#231 id=231 data-nosnippet>231</a>        <span class="macro">assert_eq!</span>(SuiQian::BingFu.order(), <span class="number">11</span>);
+<a href=#232 id=232 data-nosnippet>232</a>    }
+<a href=#233 id=233 data-nosnippet>233</a>
+<a href=#234 id=234 data-nosnippet>234</a>    <span class="attr">#[test]
+<a href=#235 id=235 data-nosnippet>235</a>    </span><span class="kw">fn </span>chang_sheng_start_by_bureau() {
+<a href=#236 id=236 data-nosnippet>236</a>        <span class="comment">// 《紫微斗數全書》: 水二局土五局長生在申, 木三局長生在亥, 金四局長生在巳, 火六局長生在寅.
+<a href=#237 id=237 data-nosnippet>237</a>        </span><span class="macro">assert_eq!</span>(chang_sheng_start(FiveElementsClass::Water2), SHEN);
+<a href=#238 id=238 data-nosnippet>238</a>        <span class="macro">assert_eq!</span>(chang_sheng_start(FiveElementsClass::Earth5), SHEN);
+<a href=#239 id=239 data-nosnippet>239</a>        <span class="macro">assert_eq!</span>(chang_sheng_start(FiveElementsClass::Wood3), HAI);
+<a href=#240 id=240 data-nosnippet>240</a>        <span class="macro">assert_eq!</span>(chang_sheng_start(FiveElementsClass::Metal4), SI);
+<a href=#241 id=241 data-nosnippet>241</a>        <span class="macro">assert_eq!</span>(chang_sheng_start(FiveElementsClass::Fire6), YIN);
+<a href=#242 id=242 data-nosnippet>242</a>    }
+<a href=#243 id=243 data-nosnippet>243</a>
+<a href=#244 id=244 data-nosnippet>244</a>    <span class="attr">#[test]
+<a href=#245 id=245 data-nosnippet>245</a>    </span><span class="kw">fn </span>jiang_xing_start_by_year_branch() {
+<a href=#246 id=246 data-nosnippet>246</a>        <span class="comment">// 寅午戌年將星午, 申子辰年將星子, 巳酉丑年將星酉, 亥卯未年將星卯.
+<a href=#247 id=247 data-nosnippet>247</a>        </span><span class="kw">for </span>std_idx <span class="kw">in </span>[<span class="number">2</span>, <span class="number">6</span>, <span class="number">10</span>] {
+<a href=#248 id=248 data-nosnippet>248</a>            <span class="macro">assert_eq!</span>(jiang_xing_start(std_idx), WU);
+<a href=#249 id=249 data-nosnippet>249</a>        }
+<a href=#250 id=250 data-nosnippet>250</a>        <span class="kw">for </span>std_idx <span class="kw">in </span>[<span class="number">8</span>, <span class="number">0</span>, <span class="number">4</span>] {
+<a href=#251 id=251 data-nosnippet>251</a>            <span class="macro">assert_eq!</span>(jiang_xing_start(std_idx), ZI);
+<a href=#252 id=252 data-nosnippet>252</a>        }
+<a href=#253 id=253 data-nosnippet>253</a>        <span class="kw">for </span>std_idx <span class="kw">in </span>[<span class="number">5</span>, <span class="number">9</span>, <span class="number">1</span>] {
+<a href=#254 id=254 data-nosnippet>254</a>            <span class="macro">assert_eq!</span>(jiang_xing_start(std_idx), YOU);
+<a href=#255 id=255 data-nosnippet>255</a>        }
+<a href=#256 id=256 data-nosnippet>256</a>        <span class="kw">for </span>std_idx <span class="kw">in </span>[<span class="number">11</span>, <span class="number">3</span>, <span class="number">7</span>] {
+<a href=#257 id=257 data-nosnippet>257</a>            <span class="macro">assert_eq!</span>(jiang_xing_start(std_idx), MAO);
+<a href=#258 id=258 data-nosnippet>258</a>        }
+<a href=#259 id=259 data-nosnippet>259</a>    }
+<a href=#260 id=260 data-nosnippet>260</a>
+<a href=#261 id=261 data-nosnippet>261</a>    <span class="comment">// ── Hand-checked reference charts ───────────────────────────────────────────
+<a href=#262 id=262 data-nosnippet>262</a>    // Every expected value below was derived by hand from the verse rules quoted in the module
+<a href=#263 id=263 data-nosnippet>263</a>    // docs (not by running the code), and the 將前 華蓋/咸池/劫煞 results were cross-checked against
+<a href=#264 id=264 data-nosnippet>264</a>    // the independent 華蓋/咸池/劫殺 placements in `stars::location::place_year_branch_stars`.
+<a href=#265 id=265 data-nosnippet>265</a>
+<a href=#266 id=266 data-nosnippet>266</a>    </span><span class="doccomment">/// Chart A: 庚午 year (陽), male → 順行, 火六局, 祿存 in 申.
+<a href=#267 id=267 data-nosnippet>267</a>    /// (E.g. 1990-05-15 10:30 in Seoul: Ming in 子.)
+<a href=#268 id=268 data-nosnippet>268</a>    </span><span class="attr">#[test]
+<a href=#269 id=269 data-nosnippet>269</a>    </span><span class="kw">fn </span>reference_chart_yang_male_fire6() {
+<a href=#270 id=270 data-nosnippet>270</a>        <span class="kw">let </span>gods = place_twelve_gods(FiveElementsClass::Fire6, <span class="bool-val">true</span>, SHEN, <span class="number">6 </span><span class="comment">/* 午 */</span>);
+<a href=#271 id=271 data-nosnippet>271</a>
+<a href=#272 id=272 data-nosnippet>272</a>        <span class="comment">// 長生: 寅 長生, 卯 沐浴, 辰 冠帶, 巳 臨官, 午 帝旺, 未 衰, 申 病, 酉 死, 戌 墓, 亥 絕, 子 胎, 丑 養
+<a href=#273 id=273 data-nosnippet>273</a>        </span><span class="kw">let </span>cs = [YIN, MAO, CHEN, SI, WU, WEI, SHEN, YOU, XU, HAI, ZI, CHOU];
+<a href=#274 id=274 data-nosnippet>274</a>        <span class="kw">for </span>(i, <span class="kw-2">&amp;</span>palace) <span class="kw">in </span>cs.iter().enumerate() {
+<a href=#275 id=275 data-nosnippet>275</a>            <span class="macro">assert_eq!</span>(gods[palace].chang_sheng, ChangSheng::ALL[i], <span class="string">"長生 #{i}"</span>);
+<a href=#276 id=276 data-nosnippet>276</a>        }
+<a href=#277 id=277 data-nosnippet>277</a>        <span class="comment">// 博士 from 祿存 (申), forward: 申 博士, 酉 力士, 戌 青龍, 亥 小耗, 子 將軍, 丑 奏書, 寅 飛廉,
+<a href=#278 id=278 data-nosnippet>278</a>        // 卯 喜神, 辰 病符, 巳 大耗, 午 伏兵, 未 官府
+<a href=#279 id=279 data-nosnippet>279</a>        </span><span class="macro">assert_eq!</span>(gods[SHEN].bo_shi, BoShi::BoShi);
+<a href=#280 id=280 data-nosnippet>280</a>        <span class="macro">assert_eq!</span>(gods[YOU].bo_shi, BoShi::LiShi);
+<a href=#281 id=281 data-nosnippet>281</a>        <span class="macro">assert_eq!</span>(gods[ZI].bo_shi, BoShi::JiangJun);
+<a href=#282 id=282 data-nosnippet>282</a>        <span class="macro">assert_eq!</span>(gods[YIN].bo_shi, BoShi::FeiLian);
+<a href=#283 id=283 data-nosnippet>283</a>        <span class="macro">assert_eq!</span>(gods[WEI].bo_shi, BoShi::GuanFu);
+<a href=#284 id=284 data-nosnippet>284</a>        <span class="comment">// 將前 (午年 → 將星 午): 午 將星, 未 攀鞍, 申 歲驛, 酉 息神, 戌 華蓋, 亥 劫煞, 子 災煞,
+<a href=#285 id=285 data-nosnippet>285</a>        // 丑 天煞, 寅 指背, 卯 咸池, 辰 月煞, 巳 亡神
+<a href=#286 id=286 data-nosnippet>286</a>        </span><span class="macro">assert_eq!</span>(gods[WU].jiang_qian, JiangQian::JiangXing);
+<a href=#287 id=287 data-nosnippet>287</a>        <span class="macro">assert_eq!</span>(gods[XU].jiang_qian, JiangQian::HuaGai);
+<a href=#288 id=288 data-nosnippet>288</a>        <span class="macro">assert_eq!</span>(gods[HAI].jiang_qian, JiangQian::JieSha);
+<a href=#289 id=289 data-nosnippet>289</a>        <span class="macro">assert_eq!</span>(gods[MAO].jiang_qian, JiangQian::XianChi);
+<a href=#290 id=290 data-nosnippet>290</a>        <span class="macro">assert_eq!</span>(gods[SI].jiang_qian, JiangQian::WangShen);
+<a href=#291 id=291 data-nosnippet>291</a>        <span class="comment">// 歲前 (午年 → 歲建 午): 午 歲建, 未 晦氣, 申 喪門, 酉 貫索, 戌 官符, 亥 小耗, 子 大耗,
+<a href=#292 id=292 data-nosnippet>292</a>        // 丑 龍德, 寅 白虎, 卯 天德, 辰 弔客, 巳 病符
+<a href=#293 id=293 data-nosnippet>293</a>        </span><span class="macro">assert_eq!</span>(gods[WU].sui_qian, SuiQian::SuiJian);
+<a href=#294 id=294 data-nosnippet>294</a>        <span class="macro">assert_eq!</span>(gods[HAI].sui_qian, SuiQian::XiaoHao);
+<a href=#295 id=295 data-nosnippet>295</a>        <span class="macro">assert_eq!</span>(gods[ZI].sui_qian, SuiQian::DaHao);
+<a href=#296 id=296 data-nosnippet>296</a>        <span class="macro">assert_eq!</span>(gods[YIN].sui_qian, SuiQian::BaiHu);
+<a href=#297 id=297 data-nosnippet>297</a>        <span class="macro">assert_eq!</span>(gods[SI].sui_qian, SuiQian::BingFu);
+<a href=#298 id=298 data-nosnippet>298</a>    }
+<a href=#299 id=299 data-nosnippet>299</a>
+<a href=#300 id=300 data-nosnippet>300</a>    <span class="doccomment">/// Chart B: 乙丑 year (陰), female → 順行, 土五局, 祿存 in 卯.
+<a href=#301 id=301 data-nosnippet>301</a>    </span><span class="attr">#[test]
+<a href=#302 id=302 data-nosnippet>302</a>    </span><span class="kw">fn </span>reference_chart_yin_female_earth5() {
+<a href=#303 id=303 data-nosnippet>303</a>        <span class="kw">let </span>gods = place_twelve_gods(FiveElementsClass::Earth5, <span class="bool-val">true</span>, MAO, <span class="number">1 </span><span class="comment">/* 丑 */</span>);
+<a href=#304 id=304 data-nosnippet>304</a>
+<a href=#305 id=305 data-nosnippet>305</a>        <span class="comment">// 長生 from 申: 申 長生, 酉 沐浴, 戌 冠帶, 亥 臨官, 子 帝旺, 丑 衰, 寅 病, 卯 死, 辰 墓,
+<a href=#306 id=306 data-nosnippet>306</a>        // 巳 絕, 午 胎, 未 養
+<a href=#307 id=307 data-nosnippet>307</a>        </span><span class="macro">assert_eq!</span>(gods[SHEN].chang_sheng, ChangSheng::ChangSheng);
+<a href=#308 id=308 data-nosnippet>308</a>        <span class="macro">assert_eq!</span>(gods[ZI].chang_sheng, ChangSheng::DiWang);
+<a href=#309 id=309 data-nosnippet>309</a>        <span class="macro">assert_eq!</span>(gods[MAO].chang_sheng, ChangSheng::Si);
+<a href=#310 id=310 data-nosnippet>310</a>        <span class="macro">assert_eq!</span>(gods[WEI].chang_sheng, ChangSheng::Yang);
+<a href=#311 id=311 data-nosnippet>311</a>        <span class="comment">// 博士 from 祿存 (卯), forward: 卯 博士, 辰 力士, 巳 青龍, 午 小耗, 未 將軍, 申 奏書, 酉 飛廉,
+<a href=#312 id=312 data-nosnippet>312</a>        // 戌 喜神, 亥 病符, 子 大耗, 丑 伏兵, 寅 官府
+<a href=#313 id=313 data-nosnippet>313</a>        </span><span class="macro">assert_eq!</span>(gods[MAO].bo_shi, BoShi::BoShi);
+<a href=#314 id=314 data-nosnippet>314</a>        <span class="macro">assert_eq!</span>(gods[WU].bo_shi, BoShi::XiaoHao);
+<a href=#315 id=315 data-nosnippet>315</a>        <span class="macro">assert_eq!</span>(gods[HAI].bo_shi, BoShi::BingFu);
+<a href=#316 id=316 data-nosnippet>316</a>        <span class="macro">assert_eq!</span>(gods[YIN].bo_shi, BoShi::GuanFu);
+<a href=#317 id=317 data-nosnippet>317</a>        <span class="comment">// 將前 (丑年, 巳酉丑 → 將星 酉): 酉 將星, 戌 攀鞍, 亥 歲驛, 子 息神, 丑 華蓋, 寅 劫煞,
+<a href=#318 id=318 data-nosnippet>318</a>        // 卯 災煞, 辰 天煞, 巳 指背, 午 咸池, 未 月煞, 申 亡神
+<a href=#319 id=319 data-nosnippet>319</a>        </span><span class="macro">assert_eq!</span>(gods[YOU].jiang_qian, JiangQian::JiangXing);
+<a href=#320 id=320 data-nosnippet>320</a>        <span class="macro">assert_eq!</span>(gods[CHOU].jiang_qian, JiangQian::HuaGai);
+<a href=#321 id=321 data-nosnippet>321</a>        <span class="macro">assert_eq!</span>(gods[YIN].jiang_qian, JiangQian::JieSha);
+<a href=#322 id=322 data-nosnippet>322</a>        <span class="macro">assert_eq!</span>(gods[WU].jiang_qian, JiangQian::XianChi);
+<a href=#323 id=323 data-nosnippet>323</a>        <span class="macro">assert_eq!</span>(gods[SHEN].jiang_qian, JiangQian::WangShen);
+<a href=#324 id=324 data-nosnippet>324</a>        <span class="comment">// 歲前 (丑年 → 歲建 丑): 丑 歲建, 寅 晦氣, 卯 喪門, ... 子 病符
+<a href=#325 id=325 data-nosnippet>325</a>        </span><span class="macro">assert_eq!</span>(gods[CHOU].sui_qian, SuiQian::SuiJian);
+<a href=#326 id=326 data-nosnippet>326</a>        <span class="macro">assert_eq!</span>(gods[YIN].sui_qian, SuiQian::HuiQi);
+<a href=#327 id=327 data-nosnippet>327</a>        <span class="macro">assert_eq!</span>(gods[MAO].sui_qian, SuiQian::SangMen);
+<a href=#328 id=328 data-nosnippet>328</a>        <span class="macro">assert_eq!</span>(gods[ZI].sui_qian, SuiQian::BingFu);
+<a href=#329 id=329 data-nosnippet>329</a>    }
+<a href=#330 id=330 data-nosnippet>330</a>
+<a href=#331 id=331 data-nosnippet>331</a>    <span class="doccomment">/// Chart C: 甲子 year (陽), female → 逆行, 金四局, 祿存 in 寅.
+<a href=#332 id=332 data-nosnippet>332</a>    </span><span class="attr">#[test]
+<a href=#333 id=333 data-nosnippet>333</a>    </span><span class="kw">fn </span>reference_chart_yang_female_metal4_reverse() {
+<a href=#334 id=334 data-nosnippet>334</a>        <span class="kw">let </span>gods = place_twelve_gods(FiveElementsClass::Metal4, <span class="bool-val">false</span>, YIN, <span class="number">0 </span><span class="comment">/* 子 */</span>);
+<a href=#335 id=335 data-nosnippet>335</a>
+<a href=#336 id=336 data-nosnippet>336</a>        <span class="comment">// 長生 from 巳 running backwards: 巳 長生, 辰 沐浴, 卯 冠帶, 寅 臨官, 丑 帝旺, 子 衰, 亥 病,
+<a href=#337 id=337 data-nosnippet>337</a>        // 戌 死, 酉 墓, 申 絕, 未 胎, 午 養
+<a href=#338 id=338 data-nosnippet>338</a>        </span><span class="macro">assert_eq!</span>(gods[SI].chang_sheng, ChangSheng::ChangSheng);
+<a href=#339 id=339 data-nosnippet>339</a>        <span class="macro">assert_eq!</span>(gods[CHEN].chang_sheng, ChangSheng::MuYu);
+<a href=#340 id=340 data-nosnippet>340</a>        <span class="macro">assert_eq!</span>(gods[YIN].chang_sheng, ChangSheng::LinGuan);
+<a href=#341 id=341 data-nosnippet>341</a>        <span class="macro">assert_eq!</span>(gods[CHOU].chang_sheng, ChangSheng::DiWang);
+<a href=#342 id=342 data-nosnippet>342</a>        <span class="macro">assert_eq!</span>(gods[YOU].chang_sheng, ChangSheng::Mu);
+<a href=#343 id=343 data-nosnippet>343</a>        <span class="macro">assert_eq!</span>(gods[WU].chang_sheng, ChangSheng::Yang);
+<a href=#344 id=344 data-nosnippet>344</a>        <span class="comment">// 博士 from 祿存 (寅) running backwards: 寅 博士, 丑 力士, 子 青龍, 亥 小耗, 戌 將軍, 酉 奏書,
+<a href=#345 id=345 data-nosnippet>345</a>        // 申 飛廉, 未 喜神, 午 病符, 巳 大耗, 辰 伏兵, 卯 官府
+<a href=#346 id=346 data-nosnippet>346</a>        </span><span class="macro">assert_eq!</span>(gods[YIN].bo_shi, BoShi::BoShi);
+<a href=#347 id=347 data-nosnippet>347</a>        <span class="macro">assert_eq!</span>(gods[CHOU].bo_shi, BoShi::LiShi);
+<a href=#348 id=348 data-nosnippet>348</a>        <span class="macro">assert_eq!</span>(gods[ZI].bo_shi, BoShi::QingLong);
+<a href=#349 id=349 data-nosnippet>349</a>        <span class="macro">assert_eq!</span>(gods[SHEN].bo_shi, BoShi::FeiLian);
+<a href=#350 id=350 data-nosnippet>350</a>        <span class="macro">assert_eq!</span>(gods[MAO].bo_shi, BoShi::GuanFu);
+<a href=#351 id=351 data-nosnippet>351</a>        <span class="comment">// 將前 / 歲前 ignore the direction (子年, 申子辰 → 將星 子; 歲建 子):
+<a href=#352 id=352 data-nosnippet>352</a>        // 子 將星, 丑 攀鞍, 寅 歲驛, 卯 息神, 辰 華蓋, 巳 劫煞, ... 亥 亡神
+<a href=#353 id=353 data-nosnippet>353</a>        </span><span class="macro">assert_eq!</span>(gods[ZI].jiang_qian, JiangQian::JiangXing);
+<a href=#354 id=354 data-nosnippet>354</a>        <span class="macro">assert_eq!</span>(gods[CHOU].jiang_qian, JiangQian::PanAn);
+<a href=#355 id=355 data-nosnippet>355</a>        <span class="macro">assert_eq!</span>(gods[CHEN].jiang_qian, JiangQian::HuaGai);
+<a href=#356 id=356 data-nosnippet>356</a>        <span class="macro">assert_eq!</span>(gods[SI].jiang_qian, JiangQian::JieSha);
+<a href=#357 id=357 data-nosnippet>357</a>        <span class="macro">assert_eq!</span>(gods[YOU].jiang_qian, JiangQian::XianChi);
+<a href=#358 id=358 data-nosnippet>358</a>        <span class="macro">assert_eq!</span>(gods[HAI].jiang_qian, JiangQian::WangShen);
+<a href=#359 id=359 data-nosnippet>359</a>        <span class="macro">assert_eq!</span>(gods[ZI].sui_qian, SuiQian::SuiJian);
+<a href=#360 id=360 data-nosnippet>360</a>        <span class="macro">assert_eq!</span>(gods[CHOU].sui_qian, SuiQian::HuiQi);
+<a href=#361 id=361 data-nosnippet>361</a>        <span class="macro">assert_eq!</span>(gods[HAI].sui_qian, SuiQian::BingFu);
+<a href=#362 id=362 data-nosnippet>362</a>    }
+<a href=#363 id=363 data-nosnippet>363</a>
+<a href=#364 id=364 data-nosnippet>364</a>    <span class="attr">#[test]
+<a href=#365 id=365 data-nosnippet>365</a>    </span><span class="kw">fn </span>every_group_covers_all_twelve_palaces_once() {
+<a href=#366 id=366 data-nosnippet>366</a>        <span class="kw">for </span>forward <span class="kw">in </span>[<span class="bool-val">true</span>, <span class="bool-val">false</span>] {
+<a href=#367 id=367 data-nosnippet>367</a>            <span class="kw">let </span>gods = place_twelve_gods(FiveElementsClass::Wood3, forward, ZI, <span class="number">5</span>);
+<a href=#368 id=368 data-nosnippet>368</a>            <span class="kw">for </span>group <span class="kw">in </span><span class="number">0</span>..<span class="number">4 </span>{
+<a href=#369 id=369 data-nosnippet>369</a>                <span class="kw">let </span><span class="kw-2">mut </span>seen = [<span class="bool-val">false</span>; <span class="number">12</span>];
+<a href=#370 id=370 data-nosnippet>370</a>                <span class="kw">for </span>g <span class="kw">in </span><span class="kw-2">&amp;</span>gods {
+<a href=#371 id=371 data-nosnippet>371</a>                    <span class="kw">let </span>order = <span class="kw">match </span>group {
+<a href=#372 id=372 data-nosnippet>372</a>                        <span class="number">0 </span>=&gt; g.chang_sheng.order(),
+<a href=#373 id=373 data-nosnippet>373</a>                        <span class="number">1 </span>=&gt; g.bo_shi.order(),
+<a href=#374 id=374 data-nosnippet>374</a>                        <span class="number">2 </span>=&gt; g.jiang_qian.order(),
+<a href=#375 id=375 data-nosnippet>375</a>                        <span class="kw">_ </span>=&gt; g.sui_qian.order(),
+<a href=#376 id=376 data-nosnippet>376</a>                    };
+<a href=#377 id=377 data-nosnippet>377</a>                    <span class="macro">assert!</span>(!seen[order], <span class="string">"duplicate god in group {group}"</span>);
+<a href=#378 id=378 data-nosnippet>378</a>                    seen[order] = <span class="bool-val">true</span>;
+<a href=#379 id=379 data-nosnippet>379</a>                }
+<a href=#380 id=380 data-nosnippet>380</a>            }
+<a href=#381 id=381 data-nosnippet>381</a>        }
+<a href=#382 id=382 data-nosnippet>382</a>    }
+<a href=#383 id=383 data-nosnippet>383</a>}
+</code></pre></div></section></main></body></html>

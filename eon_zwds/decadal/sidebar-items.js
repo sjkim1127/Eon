@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["calculate_daxian"]};
+window.SIDEBAR_ITEMS = {"fn":["calculate_daxian","is_forward_direction"]};

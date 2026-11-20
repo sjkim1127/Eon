@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["SOURCE_PALACES"],"enum":["Person"],"fn":["compare_charts","cross_si_hua"],"struct":["CrossSiHuaHit","StarOverlap","ZwdsCompatibility"]};

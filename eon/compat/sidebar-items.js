@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["CompatSystem"],"fn":["execute","hd_part","run","saju_part","vedic_part","western_part"],"struct":["CompatCommand","Part"]};
+window.SIDEBAR_ITEMS = {"enum":["CompatSystem"],"fn":["execute","hd_part","run","saju_part","vedic_part","western_part","zwds_part"],"struct":["CompatCommand","Part"]};

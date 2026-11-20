@@ -8,32 +8,32 @@
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>eon_saju::core::branch::EarthlyBranch;
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>eon_saju::core::stem::HeavenlyStem;
 <a href=#10 id=10 data-nosnippet>10</a>
-<a href=#11 id=11 data-nosnippet>11</a><span class="doccomment">/// Generate decadal luck periods list.
-<a href=#12 id=12 data-nosnippet>12</a>///
-<a href=#13 id=13 data-nosnippet>13</a>/// * `gender` - Gender (Male/Female)
-<a href=#14 id=14 data-nosnippet>14</a>/// * `year_stem` - Birth year Heavenly Stem
-<a href=#15 id=15 data-nosnippet>15</a>/// * `soul_idx` -  ZWDS  
-<a href=#16 id=16 data-nosnippet>16</a>/// * `five_elements` -
-<a href=#17 id=17 data-nosnippet>17</a></span><span class="kw">pub fn </span>calculate_daxian(
-<a href=#18 id=18 data-nosnippet>18</a>    gender: Gender,
-<a href=#19 id=19 data-nosnippet>19</a>    year_stem: HeavenlyStem,
-<a href=#20 id=20 data-nosnippet>20</a>    soul_idx: PalaceIndex,
-<a href=#21 id=21 data-nosnippet>21</a>    five_elements: FiveElementsClass,
-<a href=#22 id=22 data-nosnippet>22</a>) -&gt; Vec&lt;DaXian&gt; {
-<a href=#23 id=23 data-nosnippet>23</a>    <span class="kw">let </span><span class="kw-2">mut </span>daxian_list = Vec::new();
-<a href=#24 id=24 data-nosnippet>24</a>
-<a href=#25 id=25 data-nosnippet>25</a>    <span class="comment">// 1. /
-<a href=#26 id=26 data-nosnippet>26</a>    // (陽男陰女) -&gt; , (陰男陽女) -&gt;
-<a href=#27 id=27 data-nosnippet>27</a>    // : 甲, 丙, 戊, 庚, 壬 (index % 2 == 0)
-<a href=#28 id=28 data-nosnippet>28</a>    // : 乙, 丁, 己, 辛, 癸 (index % 2 == 1)
-<a href=#29 id=29 data-nosnippet>29</a>    </span><span class="kw">let </span>is_yang_stem = year_stem.index().is_multiple_of(<span class="number">2</span>);
-<a href=#30 id=30 data-nosnippet>30</a>    <span class="kw">let </span>is_male = <span class="macro">matches!</span>(gender, Gender::Male);
-<a href=#31 id=31 data-nosnippet>31</a>
-<a href=#32 id=32 data-nosnippet>32</a>    <span class="kw">let </span>is_forward = <span class="kw">if </span>is_male {
-<a href=#33 id=33 data-nosnippet>33</a>        is_yang_stem <span class="comment">// Yang Male -&gt; forward, Yin Male -&gt; reverse
-<a href=#34 id=34 data-nosnippet>34</a>    </span>} <span class="kw">else </span>{
-<a href=#35 id=35 data-nosnippet>35</a>        !is_yang_stem <span class="comment">// Yin Female -&gt; forward, Yang Female -&gt; reverse
-<a href=#36 id=36 data-nosnippet>36</a>    </span>};
+<a href=#11 id=11 data-nosnippet>11</a><span class="doccomment">/// Whether a chart runs 順行 (following the branch order) for 大限 and the 博士/長生 gods:
+<a href=#12 id=12 data-nosnippet>12</a>/// 陽男·陰女 forward, 陰男·陽女 backward. Yang stems are 甲丙戊庚壬 (even index).
+<a href=#13 id=13 data-nosnippet>13</a></span><span class="kw">pub fn </span>is_forward_direction(is_male: bool, year_stem: HeavenlyStem) -&gt; bool {
+<a href=#14 id=14 data-nosnippet>14</a>    <span class="kw">let </span>is_yang_stem = year_stem.index().is_multiple_of(<span class="number">2</span>);
+<a href=#15 id=15 data-nosnippet>15</a>    <span class="kw">if </span>is_male {
+<a href=#16 id=16 data-nosnippet>16</a>        is_yang_stem
+<a href=#17 id=17 data-nosnippet>17</a>    } <span class="kw">else </span>{
+<a href=#18 id=18 data-nosnippet>18</a>        !is_yang_stem
+<a href=#19 id=19 data-nosnippet>19</a>    }
+<a href=#20 id=20 data-nosnippet>20</a>}
+<a href=#21 id=21 data-nosnippet>21</a>
+<a href=#22 id=22 data-nosnippet>22</a><span class="doccomment">/// Generate decadal luck periods list.
+<a href=#23 id=23 data-nosnippet>23</a>///
+<a href=#24 id=24 data-nosnippet>24</a>/// * `gender` - Gender (Male/Female)
+<a href=#25 id=25 data-nosnippet>25</a>/// * `year_stem` - Birth year Heavenly Stem
+<a href=#26 id=26 data-nosnippet>26</a>/// * `soul_idx` -  ZWDS  
+<a href=#27 id=27 data-nosnippet>27</a>/// * `five_elements` -
+<a href=#28 id=28 data-nosnippet>28</a></span><span class="kw">pub fn </span>calculate_daxian(
+<a href=#29 id=29 data-nosnippet>29</a>    gender: Gender,
+<a href=#30 id=30 data-nosnippet>30</a>    year_stem: HeavenlyStem,
+<a href=#31 id=31 data-nosnippet>31</a>    soul_idx: PalaceIndex,
+<a href=#32 id=32 data-nosnippet>32</a>    five_elements: FiveElementsClass,
+<a href=#33 id=33 data-nosnippet>33</a>) -&gt; Vec&lt;DaXian&gt; {
+<a href=#34 id=34 data-nosnippet>34</a>    <span class="kw">let </span><span class="kw-2">mut </span>daxian_list = Vec::new();
+<a href=#35 id=35 data-nosnippet>35</a>
+<a href=#36 id=36 data-nosnippet>36</a>    <span class="kw">let </span>is_forward = is_forward_direction(<span class="macro">matches!</span>(gender, Gender::Male), year_stem);
 <a href=#37 id=37 data-nosnippet>37</a>
 <a href=#38 id=38 data-nosnippet>38</a>    <span class="kw">let </span>step = <span class="kw">if </span>is_forward { <span class="number">1 </span>} <span class="kw">else </span>{ -<span class="number">1 </span>};
 <a href=#39 id=39 data-nosnippet>39</a>    <span class="kw">let </span>start_age = five_elements.starting_age() <span class="kw">as </span>u32;

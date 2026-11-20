@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["annual","brightness","calendar","chart","collisions_zihua","decadal","destiny_patterns","error","monthly_daily","palace","stars","transformations","types"]};
+window.SIDEBAR_ITEMS = {"mod":["annual","brightness","calendar","chart","collisions_zihua","compat","decadal","destiny_patterns","error","limits","monthly_daily","palace","query","stars","transformations","twelve_gods","types"]};
