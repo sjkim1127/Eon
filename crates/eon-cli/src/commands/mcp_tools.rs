@@ -10,7 +10,7 @@ use serde_json::{json, Map, Value};
 use super::compat::{CompatCommand, CompatSystem};
 use super::hd::{HdCommand, HdReturn};
 use super::iching::IchingCommand;
-use super::numerology::NumerologyCommand;
+use super::numerology::{NumerologyCommand, NumerologySystemArg};
 use super::penta::PentaCommand;
 use super::qimen::QimenCommand;
 use super::report::{ReportCommand, ThemeArg};
@@ -70,11 +70,7 @@ impl Args<'_> {
             tz: self.str(&k("timezone")).or_else(|| self.str(&k("tz"))),
             lunar: self.bool(&k("lunar")),
             leap: self.bool(&k("leap")),
-            name: if prefix.is_empty() {
-                self.str("name")
-            } else {
-                None
-            },
+            name: self.str(&k("name")),
         })
     }
 
@@ -89,6 +85,7 @@ impl Args<'_> {
             tz: b.tz,
             lunar: b.lunar,
             leap: b.leap,
+            name: b.name,
         })
     }
 
@@ -184,8 +181,8 @@ fn with(mut base: Map<String, Value>, extra: Vec<(&str, Value)>) -> Map<String, 
 pub fn definitions() -> Vec<Value> {
     let single = || birth_props("", "Person's", true);
     let partnered = || {
-        let mut m = birth_props("", "First person's", false);
-        m.extend(birth_props("partner_", "Partner's", false));
+        let mut m = birth_props("", "First person's", true);
+        m.extend(birth_props("partner_", "Partner's", true));
         m
     };
 
@@ -269,8 +266,12 @@ pub fn definitions() -> Vec<Value> {
         ),
         tool(
             "eon_numerology",
-            "Pythagorean numerology: life path, birthday, expression/soul urge/personality (with a Latin name), pinnacles, personal year.",
-            with(single(), vec![("target_year", json!({ "type": "integer", "description": "Year for the Personal Year number; default the current year" }))]),
+            "Numerology (Pythagorean or Chaldean letters): life path, birthday, expression/soul urge/personality/maturity, hidden passion, balance, cornerstone/capstone, missing numbers (with a Latin name), karmic debts (13/14/16/19), pinnacles, personal year/month/day.",
+            with(single(), vec![
+                ("target_year", json!({ "type": "integer", "description": "Year for the Personal Year number (no Personal Month/Day); default today" })),
+                ("target_date", json!({ "type": "string", "description": "'YYYY-MM-DD' date for the Personal Year, Month and Day; default today. Takes precedence over target_year" })),
+                ("system", json!({ "type": "string", "enum": ["pythagorean", "chaldean"], "default": "pythagorean", "description": "Letter-to-number system for the name numbers" })),
+            ]),
             &["birth"],
         ),
         tool(
@@ -281,9 +282,9 @@ pub fn definitions() -> Vec<Value> {
         ),
         tool(
             "eon_compatibility",
-            "Two-person compatibility across Saju (stems/branches), Vedic (Ashtakoota 36 points, Mangal dosha), Western (synastry + composite) and Human Design (connection chart). Systems that cannot run (e.g. unknown birth time) are reported as skipped.",
+            "Two-person compatibility across Saju (stems/branches), Vedic (Ashtakoota 36 points, Mangal dosha), Western (synastry + composite) and Human Design (connection chart); system 'numerology' adds a heuristic Life Path / Expression / Soul Urge pair score (give name and partner_name for the name pairs; not part of 'all'). Systems that cannot run (e.g. unknown birth time) are reported as skipped.",
             with(partnered(), vec![
-                ("system", json!({ "type": "string", "enum": ["all", "saju", "vedic", "western", "hd"], "default": "all" })),
+                ("system", json!({ "type": "string", "enum": ["all", "saju", "vedic", "western", "hd", "numerology"], "default": "all" })),
                 ("house_system", json!({ "type": "string", "description": "House system for the Western charts (default Placidus)" })),
             ]),
             &["birth", "partner_birth"],
@@ -430,9 +431,26 @@ pub fn call(name: &str, args: &Value) -> Option<Result<String, String>> {
                 }
                 None => None,
             };
+            let system = match a.str("system").as_deref() {
+                None | Some("pythagorean") => NumerologySystemArg::Pythagorean,
+                Some("chaldean") => NumerologySystemArg::Chaldean,
+                Some(other) => {
+                    return Err(anyhow!(
+                        "Invalid system '{other}'. Expected pythagorean or chaldean"
+                    ))
+                }
+            };
+            let target_date = a.str("target_date");
             let cmd = NumerologyCommand {
                 birth: a.birth("", "m")?,
-                target_year,
+                // A target date wins over a bare target year (the CLI flags conflict).
+                target_year: if target_date.is_some() {
+                    None
+                } else {
+                    target_year
+                },
+                target_date,
+                system,
                 format,
             };
             render(super::numerology::execute(&cmd)?, format)
@@ -453,9 +471,10 @@ pub fn call(name: &str, args: &Value) -> Option<Result<String, String>> {
                 Some("vedic") => CompatSystem::Vedic,
                 Some("western") => CompatSystem::Western,
                 Some("hd") => CompatSystem::Hd,
+                Some("numerology") => CompatSystem::Numerology,
                 Some(other) => {
                     return Err(anyhow!(
-                        "Invalid system '{other}'. Expected all, saju, vedic, western or hd"
+                        "Invalid system '{other}'. Expected all, saju, vedic, western, hd or numerology"
                     ))
                 }
             };

@@ -366,6 +366,15 @@ pub struct NumerologyAnalysisInput {
     pub base: AnalysisInput,
     pub name_latin: Option<String>,
     pub target_year: Option<u32>,
+    /// Target month (1-12) for the Personal Month; set together with `target_day`.
+    #[serde(default)]
+    pub target_month: Option<u32>,
+    /// Target day (1-31) for the Personal Day; set together with `target_month`.
+    #[serde(default)]
+    pub target_day: Option<u32>,
+    /// Letter system for the name numbers (default: Pythagorean).
+    #[serde(default)]
+    pub system: eon_numerology::NumerologySystem,
 }
 
 impl NumerologyAnalysisInput {
@@ -374,7 +383,23 @@ impl NumerologyAnalysisInput {
             base,
             name_latin,
             target_year,
+            target_month: None,
+            target_day: None,
+            system: eon_numerology::NumerologySystem::default(),
         }
+    }
+
+    /// Calculates the Personal Year, Month and Day for this exact calendar date.
+    pub fn with_target_date(mut self, year: u32, month: u32, day: u32) -> Self {
+        self.target_year = Some(year);
+        self.target_month = Some(month);
+        self.target_day = Some(day);
+        self
+    }
+
+    pub fn with_system(mut self, system: eon_numerology::NumerologySystem) -> Self {
+        self.system = system;
+        self
     }
 }
 
@@ -383,6 +408,15 @@ impl NumerologyAnalysisInput {
 pub struct NumerologyAnalysisOutput {
     pub meta: AnalysisMeta,
     pub result: eon_numerology::NumerologyResult,
+}
+
+/// Two-person numerology compatibility (see `eon_numerology::compare_numerology`; heuristic).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NumerologyCompatibilityOutput {
+    pub person_a: NumerologyAnalysisOutput,
+    pub person_b: NumerologyAnalysisOutput,
+    pub compatibility: eon_numerology::NumerologyCompatibility,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

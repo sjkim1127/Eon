@@ -40,7 +40,7 @@ Engineered specifically for **Large Language Models (LLMs) and autonomous AI Age
   4. **Zi Wei Dou Shu (Purple Star Astrology)**: 12 Palaces, 14 Major Stars, Flying SiHua (Mutagenic Stars), and classic destiny configurations.
   5. **Human Design System**: Type, Profile, Inner Authority, 9 Energy Centers, 36 Channels, and 64 Gates.
   6. **QiMen DunJia**: Yin/Yang Dun 18 Ju formations, 9 Palaces, 8 Doors, 9 Stars, and 8 Deities with Value Chief and Envoy Door tracking.
-  7. **Pythagorean Numerology**: 5 Core Numbers (Life Path, Expression, Soul Urge, Personality, Birthday), 4 Pinnacle Cycles, and Personal Year vibrations.
+  7. **Numerology (Pythagorean / Chaldean)**: Core Numbers (Life Path, Expression, Soul Urge, Personality, Birthday, Maturity), karmic debts (13/14/16/19), hidden passion, balance, cornerstone/capstone, missing numbers, 4 Pinnacle Cycles, and Personal Year / Month / Day vibrations.
   8. **Omni Destiny Tier 7.0 Synthesis**: Multi-engine quantum cross-synergy matrix scoring potential, resilience, growth gap, and 15 weighted component factors.
 - **Ultra-Fast Native Performance**: Full 8-engine synthesis executes in **< 50 milliseconds**.
 - **Agent-First Output Formats**:
@@ -93,7 +93,7 @@ eon-core (Shared Primitives, Birth Info, Locations)
 | [`crates/eon-zwds`](file:///Users/sjkim1127/Eon/crates/eon-zwds) | ZWDS Engine | Zi Wei Dou Shu 12 palaces, 14 major stars, SiHua, and destiny patterns. |
 | [`crates/eon-human-design`](file:///Users/sjkim1127/Eon/crates/eon-human-design) | Human Design Engine | Type, authority, 9 centers, 36 channels, and 64 gates. |
 | [`crates/eon-qimen`](file:///Users/sjkim1127/Eon/crates/eon-qimen) | QiMen Engine | 9 Palaces, 8 Doors, 9 Stars, 8 Deities, and Value Chief/Envoy. |
-| [`crates/eon-numerology`](file:///Users/sjkim1127/Eon/crates/eon-numerology) | Numerology Engine | Life Path, Expression, Soul Urge, Birthday, and Pinnacle cycles. |
+| [`crates/eon-numerology`](file:///Users/sjkim1127/Eon/crates/eon-numerology) | Numerology Engine | Life Path, Expression, Soul Urge, Birthday, Maturity, karmic debts, name analysis (Pythagorean + Chaldean), Pinnacle cycles, personal cycles and a heuristic two-person compatibility. |
 
 ---
 
@@ -162,8 +162,9 @@ eon hd --birth "1990-05-15 10:30" -f text
 # QiMen DunJia
 eon qimen --birth "1990-05-15 10:30" --gender m -f text
 
-# Pythagorean Numerology
+# Numerology (Pythagorean by default; --system chaldean, --target-date for Personal Month/Day)
 eon numerology --birth "1990-05-15" --name "Sujin Kim" -f text
+eon numerology --birth "1990-05-15" --name "Sujin Kim" --system chaldean --target-date 2026-11-20 -f text
 
 # Destiny Tier 7.0 Synthesis
 eon tier --birth "1990-05-15 10:30" --gender m -f text
@@ -207,11 +208,18 @@ eon compat --birth "1990-05-15 10:30" --gender m --city seoul \
 
 # One system only
 eon compat --system vedic --birth "1990-05-15 10:30" --partner-birth "1992-08-20 18:45" -f text
+
+# Numerology pairs (Life Path, plus Expression / Soul Urge when both names are given)
+eon compat --system numerology --birth "1990-05-15" --name "Sujin Kim" \
+           --partner-birth "1992-08-20" --partner-name "Minho Park" -f text
 ```
+
+`--system numerology` is a heuristic (temperament groups 1-5-7 / 2-4-8 / 3-6-9, weights
+Life Path 50 / Expression 30 / Soul Urge 20) and is not part of `--system all`.
 
 The partner takes the same options as the first person with a `--partner-` prefix
 (`--partner-birth`, `--partner-gender`, `--partner-city`, `--partner-lat`, `--partner-lon`,
-`--partner-tz`, `--partner-lunar`, `--partner-leap`). With `--system all` (default) a system that
+`--partner-tz`, `--partner-lunar`, `--partner-leap`, `--partner-name`). With `--system all` (default) a system that
 cannot run, for example one that needs a birth time when only a date was given, is reported as
 `skipped` instead of failing the whole command.
 
@@ -299,9 +307,9 @@ Single-engine and relationship tools. All take `birth` (plus the optional `gende
 | `eon_human_design` | Type, authority, centers, channels; optional transit or return overlay | `transit_at`, `return`, `year` |
 | `eon_human_design_penta` | Penta group dynamics | `members` (3 to 5), `city` |
 | `eon_qimen` | QiMen DunJia birth chart | |
-| `eon_numerology` | Core numbers, pinnacles, personal year | `name`, `target_year` |
+| `eon_numerology` | Core numbers, karmic debts, name analysis, pinnacles, personal year/month/day | `name`, `target_year`, `target_date`, `system` (`pythagorean`/`chaldean`) |
 | `eon_iching` | HeLuo hexagrams and lifetime cycles | |
-| `eon_compatibility` | Saju, Vedic, Western and Human Design comparison of two people | `partner_birth` (required) and the other `partner_*` fields, `system`, `house_system` |
+| `eon_compatibility` | Saju, Vedic, Western and Human Design comparison of two people (`system: numerology` adds a heuristic numerology pair score) | `partner_birth` (required) and the other `partner_*` fields (`partner_name`), `system`, `house_system` |
 
 Date parameters (`at`, `transit_at`, `progress_to`) are `YYYY-MM-DD[ HH:MM]` in the birth timezone,
 or an RFC 3339 timestamp.

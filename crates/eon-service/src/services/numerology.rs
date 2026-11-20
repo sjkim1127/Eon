@@ -1,5 +1,6 @@
 use crate::dto::{
     AnalysisMeta, BirthTimePrecision, NumerologyAnalysisInput, NumerologyAnalysisOutput,
+    NumerologyCompatibilityOutput,
 };
 use crate::error::ServiceError;
 use chrono::{Datelike, NaiveDate};
@@ -36,16 +37,39 @@ pub fn analyze(input: NumerologyAnalysisInput) -> Result<NumerologyAnalysisOutpu
     let year = input.base.year as u32;
     let month = input.base.month;
     let day = input.base.day;
-    let target_year = input
-        .target_year
-        .unwrap_or_else(|| chrono::Utc::now().year() as u32);
+    // Target date: an explicit month/day gives Personal Month/Day; a bare year gives the
+    // Personal Year only; with neither, today's date is used.
+    let target = match (input.target_month, input.target_day) {
+        (Some(m), Some(d)) => {
+            let y = input
+                .target_year
+                .unwrap_or_else(|| chrono::Utc::now().year() as u32);
+            NaiveDate::from_ymd_opt(y as i32, m, d).ok_or_else(|| {
+                ServiceError::InvalidInput(format!("Invalid target date: {y:04}-{m:02}-{d:02}"))
+            })?;
+            eon_numerology::TargetDate::full(y, m, d)
+        }
+        (None, None) => match input.target_year {
+            Some(y) => eon_numerology::TargetDate::year_only(y),
+            None => {
+                let today = chrono::Utc::now().date_naive();
+                eon_numerology::TargetDate::full(today.year() as u32, today.month(), today.day())
+            }
+        },
+        _ => {
+            return Err(ServiceError::InvalidInput(
+                "Target month and day must be given together".to_string(),
+            ))
+        }
+    };
 
-    let res = eon_numerology::calculate_numerology(
+    let res = eon_numerology::calculate_numerology_ext(
         year,
         month,
         day,
         input.name_latin.as_deref(),
-        target_year,
+        target,
+        input.system,
     );
 
     let meta = AnalysisMeta {
@@ -58,6 +82,27 @@ pub fn analyze(input: NumerologyAnalysisInput) -> Result<NumerologyAnalysisOutpu
     };
 
     Ok(NumerologyAnalysisOutput { meta, result: res })
+}
+
+/// Numerology compatibility of two people. Both must use the same letter system.
+pub fn analyze_compatibility(
+    a: NumerologyAnalysisInput,
+    b: NumerologyAnalysisInput,
+) -> Result<NumerologyCompatibilityOutput, ServiceError> {
+    if a.system != b.system {
+        return Err(ServiceError::InvalidInput(format!(
+            "Both people must use the same numerology system (got {} and {})",
+            a.system, b.system
+        )));
+    }
+    let person_a = analyze(a)?;
+    let person_b = analyze(b)?;
+    let compatibility = eon_numerology::compare_numerology(&person_a.result, &person_b.result);
+    Ok(NumerologyCompatibilityOutput {
+        person_a,
+        person_b,
+        compatibility,
+    })
 }
 
 #[cfg(test)]
@@ -116,5 +161,72 @@ mod tests {
         let input = NumerologyAnalysisInput::new(base, None, Some(2026));
 
         assert!(matches!(analyze(input), Err(ServiceError::InvalidInput(_))));
+    }
+
+    #[test]
+    fn analyze_target_date_gives_personal_month_and_day() {
+        let base = AnalysisInput::new(1990, 5, 28, 0, 0, "UTC", 0.0, 0.0);
+        let input = NumerologyAnalysisInput::new(base, None, None).with_target_date(2026, 11, 20);
+        let out = analyze(input).unwrap();
+        assert_eq!(out.result.personal_year, 7);
+        assert_eq!(out.result.personal_month, Some(9));
+        assert_eq!(out.result.personal_day, Some(2));
+    }
+
+    #[test]
+    fn analyze_target_year_only_has_no_month_or_day() {
+        let base = AnalysisInput::new(1990, 5, 28, 0, 0, "UTC", 0.0, 0.0);
+        let out = analyze(NumerologyAnalysisInput::new(base, None, Some(2026))).unwrap();
+        assert_eq!(out.result.personal_month, None);
+        assert_eq!(out.result.personal_day, None);
+    }
+
+    #[test]
+    fn analyze_rejects_invalid_or_partial_target_date() {
+        let base = AnalysisInput::new(1990, 5, 28, 0, 0, "UTC", 0.0, 0.0);
+        let bad =
+            NumerologyAnalysisInput::new(base.clone(), None, None).with_target_date(2026, 2, 30);
+        assert!(matches!(analyze(bad), Err(ServiceError::InvalidInput(_))));
+
+        let mut partial = NumerologyAnalysisInput::new(base, None, Some(2026));
+        partial.target_month = Some(3);
+        assert!(matches!(
+            analyze(partial),
+            Err(ServiceError::InvalidInput(_))
+        ));
+    }
+
+    #[test]
+    fn analyze_uses_requested_letter_system() {
+        let base = AnalysisInput::new(1990, 5, 15, 0, 0, "UTC", 0.0, 0.0);
+        let input = NumerologyAnalysisInput::new(base, Some("Dave".to_string()), Some(2026))
+            .with_system(eon_numerology::NumerologySystem::Chaldean);
+        let out = analyze(input).unwrap();
+        assert_eq!(
+            out.result.system,
+            eon_numerology::NumerologySystem::Chaldean
+        );
+        assert_eq!(out.result.core.expression, Some(7));
+    }
+
+    #[test]
+    fn compatibility_combines_both_people() {
+        let mk = |name: &str| {
+            NumerologyAnalysisInput::new(
+                AnalysisInput::new(1990, 5, 15, 0, 0, "UTC", 0.0, 0.0),
+                Some(name.to_string()),
+                Some(2026),
+            )
+        };
+        let out = analyze_compatibility(mk("Dave"), mk("John Doe")).unwrap();
+        assert_eq!(out.compatibility.total_score, 69.5);
+        assert_eq!(out.person_a.result.core.expression, Some(5));
+        assert_eq!(out.person_b.result.core.expression, Some(8));
+
+        let chaldean = mk("Dave").with_system(eon_numerology::NumerologySystem::Chaldean);
+        assert!(matches!(
+            analyze_compatibility(chaldean, mk("John Doe")),
+            Err(ServiceError::InvalidInput(_))
+        ));
     }
 }

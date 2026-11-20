@@ -1,7 +1,8 @@
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
 use eon_service::dto::{
-    HumanDesignAnalysisInput, SajuAnalysisInput, VedicCompatibilityInput, WesternAnalysisInput,
+    HumanDesignAnalysisInput, NumerologyAnalysisInput, SajuAnalysisInput, VedicCompatibilityInput,
+    WesternAnalysisInput,
 };
 use eon_service::facade;
 use serde_json::{json, Map, Value};
@@ -16,6 +17,8 @@ pub enum CompatSystem {
     Vedic,
     Western,
     Hd,
+    /// Life Path / Expression / Soul Urge pairs (heuristic; not part of `all`)
+    Numerology,
     All,
 }
 
@@ -28,7 +31,8 @@ pub struct CompatCommand {
     pub partner: PartnerArgs,
 
     /// Which system to compare with: saju (stems/branches), vedic (Ashtakoota 36 points),
-    /// western (synastry + composite), hd (connection chart), or all
+    /// western (synastry + composite), hd (connection chart), numerology (heuristic number
+    /// pairs; use --name and --partner-name for Expression/Soul Urge; not part of `all`), or all
     #[arg(long, value_enum, default_value = "all")]
     pub system: CompatSystem,
 
@@ -175,6 +179,42 @@ fn hd_part(a: &BirthArgs, b: &BirthArgs) -> Result<Part> {
     })
 }
 
+fn numerology_part(a: &BirthArgs, b: &BirthArgs) -> Result<Part> {
+    let input = |p: &BirthArgs| -> Result<NumerologyAnalysisInput> {
+        Ok(NumerologyAnalysisInput::new(
+            p.to_analysis_input()?,
+            p.name.clone(),
+            None,
+        ))
+    };
+    let res = facade::analyze_numerology_compatibility(input(a)?, input(b)?)?;
+    let c = &res.compatibility;
+
+    let mut t = String::new();
+    writeln!(t, "-- Numerology (heuristic) --")?;
+    writeln!(t, "Total: {:.1} / 100", c.total_score)?;
+    let pair = |label: &str, p: &eon_numerology::NumberPairScore| {
+        format!(
+            "- {label}: {} & {} -> {} ({}) {}\n",
+            p.number_a, p.number_b, p.score, p.relation, p.description_en
+        )
+    };
+    t.push_str(&pair("Life Path", &c.life_path));
+    match &c.expression {
+        Some(p) => t.push_str(&pair("Expression", p)),
+        None => writeln!(t, "- Expression: N/A (pass --name and --partner-name)")?,
+    }
+    match &c.soul_urge {
+        Some(p) => t.push_str(&pair("Soul Urge", p)),
+        None => writeln!(t, "- Soul Urge: N/A (pass --name and --partner-name)")?,
+    }
+    writeln!(t, "{}", c.methodology)?;
+    Ok(Part {
+        json: serde_json::to_value(&res)?,
+        text: t,
+    })
+}
+
 pub fn execute(cmd: &CompatCommand) -> Result<Rendered> {
     let a = &cmd.birth;
     let b = cmd.partner.to_birth_args();
@@ -185,6 +225,7 @@ pub fn execute(cmd: &CompatCommand) -> Result<Rendered> {
             CompatSystem::Vedic => vedic_part(a, &b),
             CompatSystem::Western => western_part(a, &b, &cmd.house_system),
             CompatSystem::Hd => hd_part(a, &b),
+            CompatSystem::Numerology => numerology_part(a, &b),
             CompatSystem::All => Err(anyhow!("unreachable")),
         }
     };

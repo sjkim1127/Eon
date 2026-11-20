@@ -20,3 +20,4 @@ anyhow = { workspace = true }
 eon-core = { workspace = true }
 eon-service = { workspace = true }
 eon-human-design = { workspace = true }
+eon-numerology = { workspace = true }
