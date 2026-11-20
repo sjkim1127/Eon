@@ -8,6 +8,17 @@ use eon_core::birth::Gender;
 use eon_saju::core::branch::EarthlyBranch;
 use eon_saju::core::stem::HeavenlyStem;
 
+/// Whether a chart runs 順行 (following the branch order) for 大限 and the 博士/長生 gods:
+/// 陽男·陰女 forward, 陰男·陽女 backward. Yang stems are 甲丙戊庚壬 (even index).
+pub fn is_forward_direction(is_male: bool, year_stem: HeavenlyStem) -> bool {
+    let is_yang_stem = year_stem.index().is_multiple_of(2);
+    if is_male {
+        is_yang_stem
+    } else {
+        !is_yang_stem
+    }
+}
+
 /// Generate decadal luck periods list.
 ///
 /// * `gender` - Gender (Male/Female)
@@ -22,18 +33,7 @@ pub fn calculate_daxian(
 ) -> Vec<DaXian> {
     let mut daxian_list = Vec::new();
 
-    // 1. /
-    // (陽男陰女) -> , (陰男陽女) ->
-    // : 甲, 丙, 戊, 庚, 壬 (index % 2 == 0)
-    // : 乙, 丁, 己, 辛, 癸 (index % 2 == 1)
-    let is_yang_stem = year_stem.index().is_multiple_of(2);
-    let is_male = matches!(gender, Gender::Male);
-
-    let is_forward = if is_male {
-        is_yang_stem // Yang Male -> forward, Yin Male -> reverse
-    } else {
-        !is_yang_stem // Yin Female -> forward, Yang Female -> reverse
-    };
+    let is_forward = is_forward_direction(matches!(gender, Gender::Male), year_stem);
 
     let step = if is_forward { 1 } else { -1 };
     let start_age = five_elements.starting_age() as u32;

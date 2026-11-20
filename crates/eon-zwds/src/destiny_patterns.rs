@@ -17,13 +17,14 @@ pub fn analyze_destiny_patterns(
     // Identify three-party and four-direction (Life, Travel, Wealth, Career)
     // ZWDS coordinate system: 0=Yin, 1=Mao, ..., 11=Chou (counter-clockwise)
     // Ming = soul_idx
-    // Caibo = (soul_idx + 4) % 12 (Wealth)
+    // Palace names run counter-clockwise from Ming (see `palace::get_palace_name`):
+    // Caibo = (soul_idx + 8) % 12 (Wealth, 4 palaces against the branch order)
     // Qianyi = (soul_idx + 6) % 12 (Travel / Opposite)
-    // Guanlu = (soul_idx + 8) % 12 (Career)
+    // Guanlu = (soul_idx + 4) % 12 (Career, 8 palaces against the branch order)
     let ming_idx = soul_idx;
     let qianyi_idx = (soul_idx + 6) % 12;
-    let caibo_idx = (soul_idx + 4) % 12;
-    let guanlu_idx = (soul_idx + 8) % 12;
+    let caibo_idx = (soul_idx + 8) % 12;
+    let guanlu_idx = (soul_idx + 4) % 12;
 
     let three_four_directions = [ming_idx, qianyi_idx, caibo_idx, guanlu_idx];
 
@@ -506,6 +507,7 @@ mod tests {
                 stars,
                 daxian_range: None,
                 is_current_liu_nian: false,
+                twelve_gods: None,
             });
         }
         let palaces_arr: [PalaceData; 12] = palaces.try_into().unwrap();
@@ -533,6 +535,7 @@ mod tests {
                 stars: vec![],
                 daxian_range: None,
                 is_current_liu_nian: false,
+                twelve_gods: None,
             });
         }
         let palaces_arr: [PalaceData; 12] = palaces.try_into().unwrap();
@@ -560,6 +563,7 @@ mod tests {
                 stars: vec![],
                 daxian_range: None,
                 is_current_liu_nian: false,
+                twelve_gods: None,
             });
         }
         let palaces_arr: [PalaceData; 12] = palaces.try_into().unwrap();
@@ -588,6 +592,7 @@ mod tests {
                 stars: vec![],
                 daxian_range: None,
                 is_current_liu_nian: false,
+                twelve_gods: None,
             });
         }
         let palaces_arr: [PalaceData; 12] = palaces.try_into().unwrap();
@@ -614,6 +619,7 @@ mod tests {
                 stars: vec![],
                 daxian_range: None,
                 is_current_liu_nian: false,
+                twelve_gods: None,
             });
         }
         let palaces_arr: [PalaceData; 12] = palaces.try_into().unwrap();
@@ -639,6 +645,7 @@ mod tests {
                 stars: vec![],
                 daxian_range: None,
                 is_current_liu_nian: false,
+                twelve_gods: None,
             });
         }
         let palaces_arr: [PalaceData; 12] = palaces.try_into().unwrap();

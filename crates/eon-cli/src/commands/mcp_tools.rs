@@ -238,7 +238,7 @@ pub fn definitions() -> Vec<Value> {
         ),
         tool(
             "eon_zwds",
-            "Zi Wei Dou Shu (Purple Star): 12 palaces, stars, four transformations, current decade, annual palace, destiny patterns.",
+            "Zi Wei Dou Shu (Purple Star): 12 palaces, stars, twelve-god groups (長生/博士/將前/歲前), four transformations, current decade and its 四化, annual palace, 小限, 斗君, 三方四正, destiny patterns.",
             with(single(), vec![("target_year", json!({ "type": "integer", "description": "Year for the annual palace; default the current year" }))]),
             &["birth"],
         ),
@@ -287,9 +287,9 @@ pub fn definitions() -> Vec<Value> {
         ),
         tool(
             "eon_compatibility",
-            "Two-person compatibility across Saju (stems/branches), Vedic (Ashtakoota 36 points, Mangal dosha), Western (synastry + composite) and Human Design (connection chart). Systems that cannot run (e.g. unknown birth time) are reported as skipped.",
+            "Two-person compatibility across Saju (stems/branches), Vedic (Ashtakoota 36 points, Mangal dosha), Western (synastry + composite), Human Design (connection chart) and Zi Wei Dou Shu (cross-chart 四化 flights, heuristic). Systems that cannot run (e.g. unknown birth time) are reported as skipped.",
             with(partnered(), vec![
-                ("system", json!({ "type": "string", "enum": ["all", "saju", "vedic", "western", "hd"], "default": "all" })),
+                ("system", json!({ "type": "string", "enum": ["all", "saju", "vedic", "western", "hd", "zwds"], "default": "all" })),
                 ("house_system", json!({ "type": "string", "description": "House system for the Western charts (default Placidus)" })),
             ]),
             &["birth", "partner_birth"],
@@ -481,9 +481,10 @@ pub fn call(name: &str, args: &Value) -> Option<Result<String, String>> {
                 Some("vedic") => CompatSystem::Vedic,
                 Some("western") => CompatSystem::Western,
                 Some("hd") => CompatSystem::Hd,
+                Some("zwds") => CompatSystem::Zwds,
                 Some(other) => {
                     return Err(anyhow!(
-                        "Invalid system '{other}'. Expected all, saju, vedic, western or hd"
+                        "Invalid system '{other}'. Expected all, saju, vedic, western, hd or zwds"
                     ))
                 }
             };

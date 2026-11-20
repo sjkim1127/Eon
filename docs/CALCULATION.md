@@ -99,6 +99,25 @@ School-dependent choices the engine currently makes (not verified against a sing
 
 - Zi Wei Dou Shu: leap-month births use the lunar month number only; the 15-day rule (some schools move
   days 16+ to the next month) and a late-Zi (晚子時) day shift are not applied.
+- Zi Wei Dou Shu palace names run counter-clockwise from 命宮 (命宮 in 子 puts 兄弟 in 亥, 夫妻 in 戌,
+  ..., 父母 in 丑), whereas 大限 and the 十二神 run along the branch order for 陽男·陰女 (順行).
+  (Earlier versions mirrored the palace names; 財帛 and 官祿 were swapped.)
+- Zi Wei Dou Shu twelve-god groups (`PalaceData::twelve_gods`): 長生 starts at 申 for 水二局/土五局,
+  亥 for 木三局, 巳 for 金四局, 寅 for 火六局; 博士 starts at 祿存; both run 順行 for 陽男·陰女 and 逆行 for
+  陰男·陽女 (year-stem polarity × gender). 將前 starts at 將星 (寅午戌 → 午, 申子辰 → 子, 巳酉丑 → 酉,
+  亥卯未 → 卯) and 歲前 at 歲建 in the birth-year palace; both always run 順行. These are the natal
+  placements; the groups are an annotation and do not enter pattern or 合盤 logic. Some schools
+  (中州派) call the 歲前 大耗 "歲破"; the engine uses 大耗.
+- Zi Wei Dou Shu 小限: age 1 (虛歲, counted from the **lunar** birth year, so a January/February birth
+  before the lunar new year is already age 2 in the following Gregorian year) starts at 辰 for 寅午戌, 戌
+  for 申子辰, 未 for 巳酉丑, 丑 for 亥卯未; males advance along the branch order, females go backwards.
+  The same nominal age now selects the current 大限 (previously the Gregorian year difference).
+- Zi Wei Dou Shu 斗君: start at the 太歲 (target-year branch) palace as month 1, count backwards to the
+  lunar birth month, then forwards to the birth-hour branch (子 = 0). Leap months use their month number.
+  The engine does not re-anchor 流月 on the 斗君 (流月 still starts from the 流年 palace), which is the
+  other common school.
+- Zi Wei Dou Shu 大限四化 = the four transformations of the current 大限 palace stem, landing on the
+  palaces that hold the transformed stars in the natal chart (`ZwdsChart::daxian_si_hua`).
 - Vedic D6 (Shashtamsa): odd signs start from the sign itself, even signs from the 6th sign from it.
 
 ## 9. Two-Person Comparisons
@@ -111,6 +130,12 @@ School-dependent choices the engine currently makes (not verified against a sing
   balance, not a verdict. (Earlier versions added a flat +4/-3 per aspect and saturated at 0 or 100.)
 - **Vedic Ashtakoota**: scored as groom (male) versus bride (female). `compat` uses the stated
   genders when they differ, otherwise the first person is the groom.
+- **Zi Wei Dou Shu 合盤 (`eon_zwds::compat`)**: heuristic, no canonical score exists. The stems of each
+  person's 命宮 and 夫妻宮 fly their 四化 into the other person's chart (each star lands in the palace
+  that holds it there). Every flight scores `type × palace`: 化祿 +1.0, 化科 +0.75, 化權 +0.5 (supportive),
+  化忌 −1.5 (tense); landing in 命宮/夫妻宮 ×3, 福德宮 ×2, any other palace ×1. The score is
+  `50 + 50 × (supportive − tense) / (supportive + tense)` (50 when nothing lands). Stars shared by the
+  two 命宮/夫妻宮 pairs are listed but not scored.
 - **Saju compatibility**: `CompatibilityAuditor` compares stems and branches of the two charts
   (combinations, clashes, resource contention); the sync score is a heuristic.
 - **House systems**: names are matched exactly (Placidus, Koch, WholeSign, Equal, Porphyry,
