@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["HdReturn"],"fn":["connection_text","execute","overlay_text","run"],"struct":["HdCommand"]};
+window.SIDEBAR_ITEMS = {"enum":["HdReturn"],"fn":["connection_text","execute","overlay_text","run","write_circuitry","write_fixations"],"struct":["HdCommand"]};

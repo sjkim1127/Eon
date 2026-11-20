@@ -104,70 +104,76 @@
 <a href=#104 id=104 data-nosnippet>104</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(interp) = human_design::interpret_profile(<span class="kw-2">&amp;</span>h.result.profile) {
 <a href=#105 id=105 data-nosnippet>105</a>            symbols.push(interp);
 <a href=#106 id=106 data-nosnippet>106</a>        }
-<a href=#107 id=107 data-nosnippet>107</a>    }
-<a href=#108 id=108 data-nosnippet>108</a>
-<a href=#109 id=109 data-nosnippet>109</a>    <span class="comment">// 6. QiMen DunJia symbols
-<a href=#110 id=110 data-nosnippet>110</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(q) = qimen {
-<a href=#111 id=111 data-nosnippet>111</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(door) = q.report.pan.value_envoy_door {
-<a href=#112 id=112 data-nosnippet>112</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(interp) = qimen::interpret_door(door) {
-<a href=#113 id=113 data-nosnippet>113</a>                symbols.push(interp);
-<a href=#114 id=114 data-nosnippet>114</a>            }
-<a href=#115 id=115 data-nosnippet>115</a>        }
-<a href=#116 id=116 data-nosnippet>116</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(star) = q.report.pan.value_chief_star {
-<a href=#117 id=117 data-nosnippet>117</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(interp) = qimen::interpret_star(star) {
-<a href=#118 id=118 data-nosnippet>118</a>                symbols.push(interp);
-<a href=#119 id=119 data-nosnippet>119</a>            }
-<a href=#120 id=120 data-nosnippet>120</a>        }
-<a href=#121 id=121 data-nosnippet>121</a>    }
-<a href=#122 id=122 data-nosnippet>122</a>
-<a href=#123 id=123 data-nosnippet>123</a>    <span class="comment">// 7. Numerology symbols
-<a href=#124 id=124 data-nosnippet>124</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>lp_num = <span class="prelude-val">None</span>;
-<a href=#125 id=125 data-nosnippet>125</a>    <span class="kw">let </span><span class="kw-2">mut </span>py_num = <span class="prelude-val">None</span>;
-<a href=#126 id=126 data-nosnippet>126</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(n) = numerology {
-<a href=#127 id=127 data-nosnippet>127</a>        lp_num = <span class="prelude-val">Some</span>(n.result.core.life_path);
-<a href=#128 id=128 data-nosnippet>128</a>        py_num = <span class="prelude-val">Some</span>(n.result.personal_year);
-<a href=#129 id=129 data-nosnippet>129</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(interp) = numerology::interpret_life_path(n.result.core.life_path) {
-<a href=#130 id=130 data-nosnippet>130</a>            symbols.push(interp);
-<a href=#131 id=131 data-nosnippet>131</a>        }
-<a href=#132 id=132 data-nosnippet>132</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(interp) = numerology::interpret_personal_year(n.result.personal_year) {
-<a href=#133 id=133 data-nosnippet>133</a>            symbols.push(interp);
-<a href=#134 id=134 data-nosnippet>134</a>        }
-<a href=#135 id=135 data-nosnippet>135</a>    }
-<a href=#136 id=136 data-nosnippet>136</a>
-<a href=#137 id=137 data-nosnippet>137</a>    <span class="comment">// Synthesize
-<a href=#138 id=138 data-nosnippet>138</a>    </span><span class="kw">let </span>day_master_name = <span class="macro">format!</span>(<span class="string">"{:?}"</span>, saju.report.pillars.day.stem);
-<a href=#139 id=139 data-nosnippet>139</a>    <span class="kw">let </span>is_seven_killings_or_intense = struct_str.to_lowercase().contains(<span class="string">"pianguan"</span>)
-<a href=#140 id=140 data-nosnippet>140</a>        || symbols
-<a href=#141 id=141 data-nosnippet>141</a>            .iter()
-<a href=#142 id=142 data-nosnippet>142</a>            .any(|s| s.symbol.contains(<span class="string">"T-Square"</span>) || s.symbol.contains(<span class="string">"Seven Killing"</span>));
-<a href=#143 id=143 data-nosnippet>143</a>    <span class="kw">let </span>has_wealth_yoga_or_structure = struct_str.to_lowercase().contains(<span class="string">"cai"</span>)
-<a href=#144 id=144 data-nosnippet>144</a>        || symbols
-<a href=#145 id=145 data-nosnippet>145</a>            .iter()
-<a href=#146 id=146 data-nosnippet>146</a>            .any(|s| s.symbol.contains(<span class="string">"Dhana"</span>) || s.symbol.contains(<span class="string">"Raja"</span>));
-<a href=#147 id=147 data-nosnippet>147</a>
-<a href=#148 id=148 data-nosnippet>148</a>    <span class="kw">let </span>(
-<a href=#149 id=149 data-nosnippet>149</a>        archetypal_persona,
-<a href=#150 id=150 data-nosnippet>150</a>        core_essence_summary,
-<a href=#151 id=151 data-nosnippet>151</a>        synthesis_guidelines,
-<a href=#152 id=152 data-nosnippet>152</a>        tactical_dos,
-<a href=#153 id=153 data-nosnippet>153</a>        tactical_donts,
-<a href=#154 id=154 data-nosnippet>154</a>    ) = synthesis::generate_synthesis(
-<a href=#155 id=155 data-nosnippet>155</a>        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>day_master_name),
-<a href=#156 id=156 data-nosnippet>156</a>        sun_sign_name,
-<a href=#157 id=157 data-nosnippet>157</a>        hd_type_str,
-<a href=#158 id=158 data-nosnippet>158</a>        lp_num,
-<a href=#159 id=159 data-nosnippet>159</a>        py_num,
-<a href=#160 id=160 data-nosnippet>160</a>        is_seven_killings_or_intense,
-<a href=#161 id=161 data-nosnippet>161</a>        has_wealth_yoga_or_structure,
-<a href=#162 id=162 data-nosnippet>162</a>    );
-<a href=#163 id=163 data-nosnippet>163</a>
-<a href=#164 id=164 data-nosnippet>164</a>    InterpretationHandbook {
-<a href=#165 id=165 data-nosnippet>165</a>        archetypal_persona,
-<a href=#166 id=166 data-nosnippet>166</a>        core_essence_summary,
-<a href=#167 id=167 data-nosnippet>167</a>        symbols,
-<a href=#168 id=168 data-nosnippet>168</a>        synthesis_guidelines,
-<a href=#169 id=169 data-nosnippet>169</a>        tactical_dos,
-<a href=#170 id=170 data-nosnippet>170</a>        tactical_donts,
-<a href=#171 id=171 data-nosnippet>171</a>    }
-<a href=#172 id=172 data-nosnippet>172</a>}
+<a href=#107 id=107 data-nosnippet>107</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(interp) = human_design::interpret_authority(<span class="kw-2">&amp;</span>h.result.authority) {
+<a href=#108 id=108 data-nosnippet>108</a>            symbols.push(interp);
+<a href=#109 id=109 data-nosnippet>109</a>        }
+<a href=#110 id=110 data-nosnippet>110</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(circuit) = h.result.circuitry.dominant_circuit {
+<a href=#111 id=111 data-nosnippet>111</a>            symbols.push(human_design::interpret_circuit(circuit));
+<a href=#112 id=112 data-nosnippet>112</a>        }
+<a href=#113 id=113 data-nosnippet>113</a>    }
+<a href=#114 id=114 data-nosnippet>114</a>
+<a href=#115 id=115 data-nosnippet>115</a>    <span class="comment">// 6. QiMen DunJia symbols
+<a href=#116 id=116 data-nosnippet>116</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(q) = qimen {
+<a href=#117 id=117 data-nosnippet>117</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(door) = q.report.pan.value_envoy_door {
+<a href=#118 id=118 data-nosnippet>118</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(interp) = qimen::interpret_door(door) {
+<a href=#119 id=119 data-nosnippet>119</a>                symbols.push(interp);
+<a href=#120 id=120 data-nosnippet>120</a>            }
+<a href=#121 id=121 data-nosnippet>121</a>        }
+<a href=#122 id=122 data-nosnippet>122</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(star) = q.report.pan.value_chief_star {
+<a href=#123 id=123 data-nosnippet>123</a>            <span class="kw">if let </span><span class="prelude-val">Some</span>(interp) = qimen::interpret_star(star) {
+<a href=#124 id=124 data-nosnippet>124</a>                symbols.push(interp);
+<a href=#125 id=125 data-nosnippet>125</a>            }
+<a href=#126 id=126 data-nosnippet>126</a>        }
+<a href=#127 id=127 data-nosnippet>127</a>    }
+<a href=#128 id=128 data-nosnippet>128</a>
+<a href=#129 id=129 data-nosnippet>129</a>    <span class="comment">// 7. Numerology symbols
+<a href=#130 id=130 data-nosnippet>130</a>    </span><span class="kw">let </span><span class="kw-2">mut </span>lp_num = <span class="prelude-val">None</span>;
+<a href=#131 id=131 data-nosnippet>131</a>    <span class="kw">let </span><span class="kw-2">mut </span>py_num = <span class="prelude-val">None</span>;
+<a href=#132 id=132 data-nosnippet>132</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(n) = numerology {
+<a href=#133 id=133 data-nosnippet>133</a>        lp_num = <span class="prelude-val">Some</span>(n.result.core.life_path);
+<a href=#134 id=134 data-nosnippet>134</a>        py_num = <span class="prelude-val">Some</span>(n.result.personal_year);
+<a href=#135 id=135 data-nosnippet>135</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(interp) = numerology::interpret_life_path(n.result.core.life_path) {
+<a href=#136 id=136 data-nosnippet>136</a>            symbols.push(interp);
+<a href=#137 id=137 data-nosnippet>137</a>        }
+<a href=#138 id=138 data-nosnippet>138</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(interp) = numerology::interpret_personal_year(n.result.personal_year) {
+<a href=#139 id=139 data-nosnippet>139</a>            symbols.push(interp);
+<a href=#140 id=140 data-nosnippet>140</a>        }
+<a href=#141 id=141 data-nosnippet>141</a>    }
+<a href=#142 id=142 data-nosnippet>142</a>
+<a href=#143 id=143 data-nosnippet>143</a>    <span class="comment">// Synthesize
+<a href=#144 id=144 data-nosnippet>144</a>    </span><span class="kw">let </span>day_master_name = <span class="macro">format!</span>(<span class="string">"{:?}"</span>, saju.report.pillars.day.stem);
+<a href=#145 id=145 data-nosnippet>145</a>    <span class="kw">let </span>is_seven_killings_or_intense = struct_str.to_lowercase().contains(<span class="string">"pianguan"</span>)
+<a href=#146 id=146 data-nosnippet>146</a>        || symbols
+<a href=#147 id=147 data-nosnippet>147</a>            .iter()
+<a href=#148 id=148 data-nosnippet>148</a>            .any(|s| s.symbol.contains(<span class="string">"T-Square"</span>) || s.symbol.contains(<span class="string">"Seven Killing"</span>));
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="kw">let </span>has_wealth_yoga_or_structure = struct_str.to_lowercase().contains(<span class="string">"cai"</span>)
+<a href=#150 id=150 data-nosnippet>150</a>        || symbols
+<a href=#151 id=151 data-nosnippet>151</a>            .iter()
+<a href=#152 id=152 data-nosnippet>152</a>            .any(|s| s.symbol.contains(<span class="string">"Dhana"</span>) || s.symbol.contains(<span class="string">"Raja"</span>));
+<a href=#153 id=153 data-nosnippet>153</a>
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="kw">let </span>(
+<a href=#155 id=155 data-nosnippet>155</a>        archetypal_persona,
+<a href=#156 id=156 data-nosnippet>156</a>        core_essence_summary,
+<a href=#157 id=157 data-nosnippet>157</a>        synthesis_guidelines,
+<a href=#158 id=158 data-nosnippet>158</a>        tactical_dos,
+<a href=#159 id=159 data-nosnippet>159</a>        tactical_donts,
+<a href=#160 id=160 data-nosnippet>160</a>    ) = synthesis::generate_synthesis(
+<a href=#161 id=161 data-nosnippet>161</a>        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>day_master_name),
+<a href=#162 id=162 data-nosnippet>162</a>        sun_sign_name,
+<a href=#163 id=163 data-nosnippet>163</a>        hd_type_str,
+<a href=#164 id=164 data-nosnippet>164</a>        lp_num,
+<a href=#165 id=165 data-nosnippet>165</a>        py_num,
+<a href=#166 id=166 data-nosnippet>166</a>        is_seven_killings_or_intense,
+<a href=#167 id=167 data-nosnippet>167</a>        has_wealth_yoga_or_structure,
+<a href=#168 id=168 data-nosnippet>168</a>    );
+<a href=#169 id=169 data-nosnippet>169</a>
+<a href=#170 id=170 data-nosnippet>170</a>    InterpretationHandbook {
+<a href=#171 id=171 data-nosnippet>171</a>        archetypal_persona,
+<a href=#172 id=172 data-nosnippet>172</a>        core_essence_summary,
+<a href=#173 id=173 data-nosnippet>173</a>        symbols,
+<a href=#174 id=174 data-nosnippet>174</a>        synthesis_guidelines,
+<a href=#175 id=175 data-nosnippet>175</a>        tactical_dos,
+<a href=#176 id=176 data-nosnippet>176</a>        tactical_donts,
+<a href=#177 id=177 data-nosnippet>177</a>    }
+<a href=#178 id=178 data-nosnippet>178</a>}
 </code></pre></div></section></main></body></html>

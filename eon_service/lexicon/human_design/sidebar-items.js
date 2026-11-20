@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["interpret_profile","interpret_type_strategy"]};
+window.SIDEBAR_ITEMS = {"fn":["interpret_authority","interpret_circuit","interpret_profile","interpret_type_strategy"]};
