@@ -274,3 +274,73 @@ fn western_progression_and_hd_overlays_work_through_mcp() {
         text_of(&r[3])
     );
 }
+
+#[test]
+fn western_timing_techniques_work_through_mcp() {
+    let r = exchange(&[
+        &tool_call(
+            "eon_western",
+            r#"{"birth":"2004-11-27 22:00","transit_at":"2026-11-20"}"#,
+        ),
+        &tool_call(
+            "eon_western",
+            r#"{"birth":"2004-11-27 22:00","solar_return":2027,"return_city":"New York"}"#,
+        ),
+        &tool_call(
+            "eon_western",
+            r#"{"birth":"2004-11-27 22:00","lunar_return_after":"2026-11-20"}"#,
+        ),
+        &tool_call(
+            "eon_western",
+            r#"{"birth":"2004-11-27 22:00","solar_arc_to":"2027-03-01"}"#,
+        ),
+        &tool_call(
+            "eon_western",
+            r#"{"birth":"2004-11-27 22:00","profection_at":"2026-11-20"}"#,
+        ),
+    ]);
+    assert!(text_of(&r[0]).contains("Transits at"), "{}", text_of(&r[0]));
+    assert!(
+        text_of(&r[1]).contains("Solar Return 2027"),
+        "{}",
+        text_of(&r[1])
+    );
+    assert!(
+        text_of(&r[2]).contains("Lunar Return after"),
+        "{}",
+        text_of(&r[2])
+    );
+    assert!(text_of(&r[3]).contains("Solar Arc"), "{}", text_of(&r[3]));
+    assert!(
+        text_of(&r[4]).contains("Lord of the year"),
+        "{}",
+        text_of(&r[4])
+    );
+}
+
+#[test]
+fn western_techniques_are_mutually_exclusive_and_validated_through_mcp() {
+    let r = exchange(&[
+        &tool_call(
+            "eon_western",
+            r#"{"birth":"2004-11-27 22:00","transit_at":"2026-11-20","solar_return":2027}"#,
+        ),
+        &tool_call(
+            "eon_western",
+            r#"{"birth":"2004-11-27 22:00","solar_return":2004}"#,
+        ),
+        &tool_call(
+            "eon_western",
+            r#"{"birth":"2004-11-27 22:00","profection_at":"1990-01-01"}"#,
+        ),
+        &tool_call(
+            "eon_western",
+            r#"{"birth":"2004-11-27 22:00","solar_return":2027,"return_city":"Atlantis"}"#,
+        ),
+    ]);
+    for resp in &r {
+        assert!(resp.get("error").is_none(), "protocol error: {resp}");
+        assert_eq!(resp["result"]["isError"], true, "{resp}");
+    }
+    assert!(text_of(&r[0]).contains("only one"), "{}", text_of(&r[0]));
+}

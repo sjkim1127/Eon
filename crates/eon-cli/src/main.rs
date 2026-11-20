@@ -208,4 +208,29 @@ mod tests {
         .is_err());
         assert!(parse(&["hd", "--birth", "1990-05-15", "--return", "mars"]).is_err());
     }
+
+    #[test]
+    fn western_timing_techniques_are_mutually_exclusive() {
+        for flag in [
+            ["--transit-at", "2026-11-20"],
+            ["--progress-to", "2026-11-20"],
+            ["--solar-arc-to", "2026-11-20"],
+            ["--profection-at", "2026-11-20"],
+            ["--solar-return", "2027"],
+            ["--lunar-return-after", "2026-11-20"],
+        ] {
+            assert!(parse(&["western", "--birth", "1990-05-15 10:30", flag[0], flag[1]]).is_ok());
+        }
+        assert!(parse(&[
+            "western",
+            "--birth",
+            "1990-05-15 10:30",
+            "--transit-at",
+            "2026-11-20",
+            "--solar-return",
+            "2027"
+        ])
+        .is_err());
+        assert!(parse(&["western", "--birth", "1990-05-15", "--solar-return", "soon"]).is_err());
+    }
 }

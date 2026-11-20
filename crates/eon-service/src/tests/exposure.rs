@@ -138,3 +138,87 @@ fn saju_compatibility_audit_is_bounded() {
             || !out.audit.merged_esil_trace.is_empty()
     );
 }
+
+fn natal() -> WesternAnalysisInput {
+    WesternAnalysisInput::new(person_a(), "Placidus".into())
+}
+
+#[test]
+fn western_transit_overlays_the_sky_on_natal_houses() {
+    let target = Utc.with_ymd_and_hms(2026, 11, 20, 0, 0, 0).unwrap();
+    let out = facade::analyze_western_transit(natal(), target).expect("transit");
+
+    assert_eq!(out.result.target_time, target);
+    assert!(out.result.planets.iter().any(|p| p.name == "Saturn"));
+    assert!(out
+        .result
+        .planets
+        .iter()
+        .all(|p| (1..=12).contains(&p.natal_house)));
+    assert!(out
+        .result
+        .aspects
+        .iter()
+        .all(|a| a.body_a_name.starts_with("Transit ") && a.body_b_name.starts_with("Natal ")));
+}
+
+#[test]
+fn western_returns_are_found_and_validated() {
+    let solar = facade::analyze_western_solar_return(natal(), 2027, None).expect("solar return");
+    // Born 1985-11-27: the 2027 return is at the end of November 2027.
+    assert_eq!(
+        solar.result.exact_time.format("%Y-%m").to_string(),
+        "2027-11"
+    );
+
+    // Relocating changes the angles but not the moment.
+    let relocated =
+        facade::analyze_western_solar_return(natal(), 2027, Some((40.7128, -74.006))).unwrap();
+    assert_eq!(relocated.result.exact_time, solar.result.exact_time);
+    assert!(
+        (relocated.result.return_chart.ascendant - solar.result.return_chart.ascendant).abs() > 1.0
+    );
+
+    assert!(matches!(
+        facade::analyze_western_solar_return(natal(), 1985, None),
+        Err(ServiceError::InvalidInput(_))
+    ));
+
+    let after = Utc.with_ymd_and_hms(2026, 11, 20, 0, 0, 0).unwrap();
+    let lunar = facade::analyze_western_lunar_return(natal(), after, None).expect("lunar return");
+    assert!(lunar.result.exact_time >= after);
+    assert!((lunar.result.exact_time - after).num_days() <= 28);
+}
+
+#[test]
+fn western_solar_arc_and_profection() {
+    let target = Utc.with_ymd_and_hms(2026, 11, 20, 0, 0, 0).unwrap();
+    let arc = facade::analyze_western_solar_arc(natal(), target).expect("solar arc");
+    assert!(
+        (arc.result.arc_degrees - 41.0).abs() < 2.0,
+        "{}",
+        arc.result.arc_degrees
+    );
+    assert!(arc.result.directed.iter().any(|d| d.name == "Ascendant"));
+
+    let profection = facade::analyze_western_profection(natal(), target).expect("profection");
+    assert_eq!(profection.result.age, 40);
+    assert_eq!(profection.result.profected_house, 5); // 40 mod 12 = 4 -> 5th house
+    assert!(!profection.result.year_lord.is_empty());
+
+    let before_birth = Utc.with_ymd_and_hms(1980, 1, 1, 0, 0, 0).unwrap();
+    assert!(facade::analyze_western_solar_arc(natal(), before_birth).is_err());
+    assert!(facade::analyze_western_profection(natal(), before_birth).is_err());
+}
+
+#[test]
+fn natal_chart_carries_antiscia_receptions_and_midpoints() {
+    let chart = facade::analyze_western(natal()).unwrap().result;
+    // These are computed for every chart, so they must be well formed.
+    assert!(chart.midpoints.windows(2).all(|w| w[0].orb <= w[1].orb));
+    assert!(chart.antiscia.iter().all(|c| c.orb <= 1.0));
+    assert!(chart.midpoints.iter().all(|c| c.orb <= 1.0));
+    for r in &chart.mutual_receptions {
+        assert_ne!(r.planet_a, r.planet_b);
+    }
+}
