@@ -309,6 +309,38 @@ pub struct WesternProgressionOutput {
     pub result: eon_western::ProgressionResult,
 }
 
+/// Current sky laid over the natal chart (transits).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WesternTransitOutput {
+    pub meta: AnalysisMeta,
+    pub result: eon_western::TransitResult,
+}
+
+/// Solar or lunar return chart compared with the natal chart.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WesternReturnOutput {
+    pub meta: AnalysisMeta,
+    pub result: eon_western::ReturnResult,
+}
+
+/// Solar arc directions to a target date.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WesternSolarArcOutput {
+    pub meta: AnalysisMeta,
+    pub result: eon_western::SolarArcResult,
+}
+
+/// Annual profection (house and lord of the year).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WesternProfectionOutput {
+    pub meta: AnalysisMeta,
+    pub result: eon_western::ProfectionResult,
+}
+
 /// Saju two-person compatibility audit (stems, branches, luck interference).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

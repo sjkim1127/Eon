@@ -220,10 +220,16 @@ pub fn definitions() -> Vec<Value> {
         ),
         tool(
             "eon_western",
-            "Western astrology: planets, houses, aspects, patterns, dignities; optionally secondary progression to a date.",
+            "Western astrology: planets, houses, aspects, patterns, dignities, antiscia, mutual receptions, midpoints. Optionally one timing technique: secondary progression, transits, solar arc, annual profection, solar return or lunar return (pass at most one).",
             with(single(), vec![
                 ("house_system", json!({ "type": "string", "enum": ["Placidus", "Koch", "WholeSign", "Equal", "Porphyry", "Regiomontanus", "Campanus", "Alcabitius", "Morinus", "Topocentric"], "description": "Default Placidus" })),
                 ("progress_to", json!({ "type": "string", "description": "Secondary progression to this date: 'YYYY-MM-DD[ HH:MM]' in the birth timezone, or RFC 3339" })),
+                ("transit_at", json!({ "type": "string", "description": "Transits: the sky at this date over the natal chart (same date format)" })),
+                ("solar_arc_to", json!({ "type": "string", "description": "Solar arc directions to this date" })),
+                ("profection_at", json!({ "type": "string", "description": "Annual profection (house and lord of the year) at this date" })),
+                ("solar_return", json!({ "type": "integer", "description": "Solar return of this calendar year (after the birth year)" })),
+                ("lunar_return_after", json!({ "type": "string", "description": "First lunar return on or after this date" })),
+                ("return_city", json!({ "type": "string", "description": "Cast the return chart for this city (relocated return) instead of the birthplace" })),
             ]),
             &["birth"],
         ),
@@ -357,8 +363,30 @@ pub fn call(name: &str, args: &Value) -> Option<Result<String, String>> {
                     .str("house_system")
                     .unwrap_or_else(|| "Placidus".to_string()),
                 progress_to: a.str("progress_to"),
+                transit_at: a.str("transit_at"),
+                solar_arc_to: a.str("solar_arc_to"),
+                profection_at: a.str("profection_at"),
+                solar_return: a.i32("solar_return")?,
+                lunar_return_after: a.str("lunar_return_after"),
+                return_city: a.str("return_city"),
                 format,
             };
+            let chosen = [
+                cmd.progress_to.is_some(),
+                cmd.transit_at.is_some(),
+                cmd.solar_arc_to.is_some(),
+                cmd.profection_at.is_some(),
+                cmd.solar_return.is_some(),
+                cmd.lunar_return_after.is_some(),
+            ]
+            .iter()
+            .filter(|set| **set)
+            .count();
+            if chosen > 1 {
+                return Err(anyhow!(
+                    "Use only one of progress_to, transit_at, solar_arc_to, profection_at, solar_return, lunar_return_after"
+                ));
+            }
             render(super::western::execute(&cmd)?, format)
         })(),
         "eon_zwds" => (|| {
