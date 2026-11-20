@@ -127,7 +127,11 @@ pub fn execute(cmd: &HdCommand) -> Result<Rendered> {
     writeln!(t, "Type: {}", res.result.chart_type)?;
     writeln!(t, "Profile: {}", res.result.profile)?;
     writeln!(t, "Strategy: {}", res.result.strategy)?;
-    writeln!(t, "Authority: {}", res.result.authority)?;
+    writeln!(
+        t,
+        "Authority: {} ({})",
+        res.result.authority, res.result.authority_ko
+    )?;
     writeln!(
         t,
         "Defined Centers (Total {}): {:?}",
@@ -140,8 +144,73 @@ pub fn execute(cmd: &HdCommand) -> Result<Rendered> {
         res.result.active_channels.len(),
         res.result.active_channels
     )?;
+    write_circuitry(&mut t, &res.result)?;
+    write_fixations(&mut t, &res.result)?;
 
     Rendered::new(&res, t)
+}
+
+/// Circuit groups of the defined channels and the dominant circuit.
+fn write_circuitry(t: &mut String, r: &eon_human_design::HumanDesignResult) -> Result<()> {
+    let c = &r.circuitry;
+    if c.channels.is_empty() {
+        writeln!(t, "Circuitry: - (no defined channels)")?;
+        return Ok(());
+    }
+    let dominant = match c.dominant_circuit {
+        Some(d) => format!("{} / {}", d.name_en(), d.name_ko()),
+        None => "Mixed (tie)".to_string(),
+    };
+    writeln!(t, "Dominant Circuit: {dominant}")?;
+    for (circuit, n) in &c.circuit_counts {
+        writeln!(t, "  {} ({}): {n}", circuit.name_en(), circuit.name_ko())?;
+    }
+    writeln!(t, "Circuit Groups:")?;
+    for group in eon_human_design::CircuitGroup::ALL {
+        let members: Vec<String> = c
+            .channels
+            .iter()
+            .filter(|ch| ch.group == group)
+            .map(|ch| format!("{}-{}", ch.channel.0, ch.channel.1))
+            .collect();
+        if !members.is_empty() {
+            writeln!(
+                t,
+                "  {} / {} [{}]: {}",
+                group.name_en(),
+                group.name_ko(),
+                group.circuit().name_en(),
+                members.join(", ")
+            )?;
+        }
+    }
+    Ok(())
+}
+
+/// Line exaltation / detriment per activation; silent when the chart has none.
+fn write_fixations(t: &mut String, r: &eon_human_design::HumanDesignResult) -> Result<()> {
+    let mut rows = Vec::new();
+    for (side, planets) in [("Personality", &r.personality), ("Design", &r.design)] {
+        for (name, p) in planets {
+            if let Some(f) = &p.fixation {
+                rows.push(format!(
+                    "  {side} {name} {}.{}: exaltation {}, detriment {}",
+                    p.gate,
+                    p.line,
+                    f.exaltation_planet.as_deref().unwrap_or("-"),
+                    f.detriment_planet.as_deref().unwrap_or("-")
+                ));
+            }
+        }
+    }
+    if !rows.is_empty() {
+        rows.sort();
+        writeln!(t, "Line Fixation:")?;
+        for row in rows {
+            writeln!(t, "{row}")?;
+        }
+    }
+    Ok(())
 }
 
 pub fn run(cmd: HdCommand) -> Result<()> {

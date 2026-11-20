@@ -300,6 +300,7 @@ dependencies = [
  "chrono",
  "eon-astro",
  "serde",
+ "serde_json",
  "thiserror",
 ]
 
