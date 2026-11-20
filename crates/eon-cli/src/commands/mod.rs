@@ -113,6 +113,10 @@ pub struct PartnerArgs {
     /// Whether the partner lunar birth month is a leap month
     #[arg(id = "partner_leap", long = "partner-leap")]
     pub leap: bool,
+
+    /// Partner full name in English/Latin letters (Numerology compatibility)
+    #[arg(id = "partner_name", long = "partner-name")]
+    pub name: Option<String>,
 }
 
 impl PartnerArgs {
@@ -126,7 +130,7 @@ impl PartnerArgs {
             tz: self.tz.clone(),
             lunar: self.lunar,
             leap: self.leap,
-            name: None,
+            name: self.name.clone(),
         }
     }
 }

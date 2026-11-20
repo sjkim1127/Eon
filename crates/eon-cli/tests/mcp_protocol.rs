@@ -185,7 +185,7 @@ fn compatibility_tool_runs_a_single_system_and_all() {
     ]);
     assert!(text_of(&r[0]).contains("/ 36"), "{}", text_of(&r[0]));
     let all = text_of(&r[1]);
-    for section in ["Saju", "Vedic", "Western", "Human Design"] {
+    for section in ["Saju", "Vedic", "Western", "Human Design", "Numerology"] {
         assert!(all.contains(section), "missing {section} in:\n{all}");
     }
 }
@@ -230,6 +230,48 @@ fn compatibility_skips_time_dependent_systems_without_a_birth_time() {
         text.contains("Saju"),
         "saju does not need the hour:\n{text}"
     );
+}
+
+#[test]
+fn numerology_tool_supports_system_target_date_and_compatibility() {
+    let r = exchange(&[
+        &tool_call(
+            "eon_numerology",
+            r#"{"birth":"1994-04-04","name":"John Doe","system":"chaldean","target_date":"2026-11-20"}"#,
+        ),
+        &tool_call(
+            "eon_numerology",
+            r#"{"birth":"1990-05-28","target_date":"2026-11-20","format":"json"}"#,
+        ),
+        &tool_call(
+            "eon_numerology",
+            r#"{"birth":"1990-05-28","system":"bogus"}"#,
+        ),
+        &tool_call(
+            "eon_compatibility",
+            r#"{"birth":"1990-05-15","name":"Dave","partner_birth":"1994-04-04","partner_name":"John Doe","system":"numerology"}"#,
+        ),
+    ]);
+    let text = text_of(&r[0]);
+    // Hand-computed: Chaldean JOHN DOE = 34 -> 7; life path 13/4 karmic debt; PY 9, PM 2, PD 4.
+    assert!(text.contains("== Chaldean Numerology =="), "{text}");
+    assert!(text.contains("Expression Number: 7"), "{text}");
+    assert!(text.contains("13/4 in lifePath"), "{text}");
+    assert!(text.contains("Personal Month Vibration: 2"), "{text}");
+    assert!(text.contains("Personal Day Vibration: 4"), "{text}");
+
+    let json: Value = serde_json::from_str(text_of(&r[1])).unwrap();
+    assert_eq!(json["result"]["personalYear"], 7);
+    assert_eq!(json["result"]["personalMonth"], 9);
+    assert_eq!(json["result"]["personalDay"], 2);
+    assert_eq!(json["result"]["system"], "pythagorean");
+
+    assert_eq!(r[2]["result"]["isError"], true);
+    assert!(text_of(&r[2]).contains("pythagorean or chaldean"));
+
+    let compat = text_of(&r[3]);
+    assert!(compat.contains("Numerology (heuristic)"), "{compat}");
+    assert!(compat.contains("Total: 57.0 / 100"), "{compat}");
 }
 
 #[test]

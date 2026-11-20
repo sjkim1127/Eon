@@ -227,6 +227,14 @@ pub fn analyze_numerology(
     crate::services::numerology::analyze(input)
 }
 
+/// Two-person numerology compatibility (Life Path, Expression and Soul Urge pairs; heuristic).
+pub fn analyze_numerology_compatibility(
+    a: NumerologyAnalysisInput,
+    b: NumerologyAnalysisInput,
+) -> Result<NumerologyCompatibilityOutput, ServiceError> {
+    crate::services::numerology::analyze_compatibility(a, b)
+}
+
 /// Synastry and composite chart of two people (Western astrology).
 pub fn analyze_western_synastry(
     a: WesternAnalysisInput,
