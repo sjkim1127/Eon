@@ -1047,17 +1047,7 @@ pub fn calculate_synastry(
         }
     }
 
-    let mut harmony_score: f64 = 70.0;
-    for asp in &inter_aspects {
-        match asp.aspect_type {
-            AspectType::Trine | AspectType::Sextile | AspectType::Conjunction => {
-                harmony_score += 4.0
-            }
-            AspectType::Square | AspectType::Opposition => harmony_score -= 3.0,
-            _ => {}
-        }
-    }
-    harmony_score = harmony_score.clamp(0.0, 100.0);
+    let harmony_score = synastry_harmony(&inter_aspects);
 
     let summary = format!(
         "Synastry compatibility score between {} and {} is {:.1} / 100 with {} cross aspects.",
@@ -1074,6 +1064,58 @@ pub fn calculate_synastry(
         harmony_score,
         summary,
     }
+}
+
+/// Importance of a body in a synastry: luminaries and personal planets weigh the most.
+fn synastry_body_weight(name: &str) -> f64 {
+    match name {
+        "Sun" | "Moon" => 3.0,
+        "Mercury" | "Venus" | "Mars" | "Ascendant" => 2.0,
+        "Jupiter" | "Saturn" => 1.5,
+        _ => 1.0,
+    }
+}
+
+/// Bodies whose conjunction tends to bring friction rather than ease.
+fn is_challenging_body(name: &str) -> bool {
+    matches!(name, "Mars" | "Saturn" | "Pluto")
+}
+
+/// 0..=100 balance between supportive and tense inter-chart aspects.
+///
+/// Every aspect is weighted by how tight its orb is and by the importance of the two bodies, so
+/// a few tight Sun/Moon/Venus contacts count more than many loose outer-planet ones. Trines and
+/// sextiles are supportive, squares and oppositions tense; a conjunction is supportive unless it
+/// involves Mars, Saturn or Pluto. With no aspects the score is a neutral 50.
+fn synastry_harmony(inter_aspects: &[WesternAspectData]) -> f64 {
+    // `body_a_name` is "<person>'s <body>": strip the owner to recover the body name.
+    let body = |full: &str| -> String { full.rsplit("'s ").next().unwrap_or(full).to_string() };
+
+    let (mut supportive, mut tense) = (0.0_f64, 0.0_f64);
+    for asp in inter_aspects {
+        let (a, b) = (body(&asp.body_a_name), body(&asp.body_b_name));
+        let tightness = 1.0 - (asp.orb / asp.aspect_type.standard_orb()).clamp(0.0, 1.0);
+        let weight = (0.25 + tightness) * synastry_body_weight(&a) * synastry_body_weight(&b);
+
+        match asp.aspect_type {
+            AspectType::Trine | AspectType::Sextile => supportive += weight,
+            AspectType::Square | AspectType::Opposition => tense += weight,
+            AspectType::Conjunction => {
+                if is_challenging_body(&a) || is_challenging_body(&b) {
+                    tense += weight;
+                } else {
+                    supportive += weight;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let total = supportive + tense;
+    if total <= f64::EPSILON {
+        return 50.0;
+    }
+    (50.0 + 50.0 * (supportive - tense) / total).clamp(0.0, 100.0)
 }
 
 /// Composite Chart (Generates midpoint composite chart between two natal charts)
@@ -1346,5 +1388,64 @@ mod tests {
         assert_eq!(night[0].longitude, 340.0); // ASC + Sun - Moon
         assert_eq!(night[1].longitude, 0.0); // ASC + Moon - Sun
         assert_eq!(night[2].longitude, 320.0); // ASC + Spirit - Venus
+    }
+}
+
+#[cfg(test)]
+mod synastry_harmony_tests {
+    use super::*;
+
+    fn aspect(a: &str, b: &str, kind: AspectType, orb: f64) -> WesternAspectData {
+        WesternAspectData {
+            body_a_name: format!("A's {a}"),
+            body_b_name: format!("B's {b}"),
+            aspect_type: kind,
+            angle_diff: kind.angle() + orb,
+            orb,
+            dynamics: AspectDynamics::Exact,
+            is_major: kind.is_major(),
+        }
+    }
+
+    #[test]
+    fn no_aspects_is_neutral() {
+        assert_eq!(synastry_harmony(&[]), 50.0);
+    }
+
+    #[test]
+    fn supportive_and_tense_contacts_move_the_score_in_opposite_directions() {
+        let easy = [aspect("Sun", "Moon", AspectType::Trine, 0.5)];
+        let hard = [aspect("Sun", "Moon", AspectType::Square, 0.5)];
+        assert!(synastry_harmony(&easy) > 50.0);
+        assert!(synastry_harmony(&hard) < 50.0);
+    }
+
+    #[test]
+    fn many_loose_contacts_do_not_saturate_the_score() {
+        // The old +4/-3 per aspect rule hit the 0..100 clamp with a dozen aspects.
+        let mut aspects: Vec<_> = (0..20)
+            .map(|_| aspect("Uranus", "Neptune", AspectType::Trine, 7.5))
+            .collect();
+        aspects.push(aspect("Sun", "Saturn", AspectType::Square, 0.2));
+        aspects.push(aspect("Moon", "Mars", AspectType::Opposition, 0.3));
+        let score = synastry_harmony(&aspects);
+        assert!(score > 0.0 && score < 100.0, "score {score}");
+    }
+
+    #[test]
+    fn tight_personal_contacts_outweigh_loose_outer_ones() {
+        let aspects = [
+            aspect("Sun", "Moon", AspectType::Trine, 0.2),
+            aspect("Pluto", "Neptune", AspectType::Square, 7.5),
+        ];
+        assert!(synastry_harmony(&aspects) > 70.0);
+    }
+
+    #[test]
+    fn conjunction_with_a_challenging_planet_counts_as_tension() {
+        let ok = [aspect("Venus", "Moon", AspectType::Conjunction, 1.0)];
+        let rough = [aspect("Venus", "Saturn", AspectType::Conjunction, 1.0)];
+        assert!(synastry_harmony(&ok) > 50.0);
+        assert!(synastry_harmony(&rough) < 50.0);
     }
 }

@@ -218,3 +218,29 @@ pub fn analyze_numerology(
 ) -> Result<NumerologyAnalysisOutput, ServiceError> {
     crate::services::numerology::analyze(input)
 }
+
+/// Synastry and composite chart of two people (Western astrology).
+pub fn analyze_western_synastry(
+    a: WesternAnalysisInput,
+    b: WesternAnalysisInput,
+    name_a: &str,
+    name_b: &str,
+) -> Result<WesternSynastryOutput, ServiceError> {
+    crate::services::western::analyze_synastry(a, b, name_a, name_b)
+}
+
+/// Secondary progression of a natal chart to `target_time` (Western astrology).
+pub fn analyze_western_progression(
+    input: WesternAnalysisInput,
+    target_time: chrono::DateTime<chrono::Utc>,
+) -> Result<WesternProgressionOutput, ServiceError> {
+    crate::services::western::analyze_progression(input, target_time)
+}
+
+/// Two-person Saju compatibility audit.
+pub fn analyze_saju_compatibility(
+    a: SajuAnalysisInput,
+    b: SajuAnalysisInput,
+) -> Result<SajuCompatibilityOutput, ServiceError> {
+    crate::services::saju::analyze_compatibility(a, b)
+}

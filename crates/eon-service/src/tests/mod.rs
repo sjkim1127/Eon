@@ -2,6 +2,8 @@ pub mod contract;
 #[cfg(test)]
 mod destiny_tier_omni_tests;
 #[cfg(test)]
+mod exposure;
+#[cfg(test)]
 mod tuning;
 #[cfg(test)]
 mod unknown_time_tests;
@@ -52,6 +54,7 @@ mod tests {
             },
             target_year: None,
             year_type: None,
+            ayanamsa: None,
         };
 
         let vedic_res = facade::analyze_vedic(vedic_input).expect("Vedic analysis failed");
@@ -114,6 +117,7 @@ mod tests {
                 },
                 target_year: None,
                 year_type: None,
+                ayanamsa: None,
             };
             let vedic_res = facade::analyze_vedic(vedic_input)
                 .unwrap_or_else(|_| panic!("Vedic failed for {}", f.id));

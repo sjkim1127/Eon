@@ -265,6 +265,7 @@ dependencies = [
  "anyhow",
  "clap",
  "eon-core",
+ "eon-human-design",
  "eon-service",
  "serde",
  "serde_json",

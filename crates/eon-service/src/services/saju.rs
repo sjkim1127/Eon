@@ -1,5 +1,8 @@
-use crate::birth::prepare_birth_context;
-use crate::dto::{AnalysisMeta, BirthTimePrecision, SajuAnalysisInput, SajuAnalysisOutput};
+use crate::birth::{prepare_birth_context, PreparedBirthContext};
+use crate::dto::{
+    AnalysisMeta, BirthTimePrecision, SajuAnalysisInput, SajuAnalysisOutput,
+    SajuCompatibilityOutput,
+};
 use crate::error::ServiceError;
 use eon_core::Gender;
 use eon_saju::analysis::analytics::Analyzer;
@@ -9,13 +12,21 @@ use eon_saju::engine::complexity::DestinyComplexity;
 use eon_saju::engine::emulator::LifePathEmulator;
 use eon_saju::engine::entropy::DestinyEntropy;
 use eon_saju::engine::fuzzer::DestinyFuzzer;
+use eon_saju::engine::interprocess::CompatibilityAuditor;
 use eon_saju::engine::linter::DestinyLinter;
 use eon_saju::engine::load_balancer::KarmaLoadBalancer;
 use eon_saju::engine::topology::QiTopology;
 use eon_saju::engine::vm::SajuVM;
 use eon_saju::report::SajuReport;
 
-pub fn analyze(input: SajuAnalysisInput) -> Result<SajuAnalysisOutput, ServiceError> {
+/// Birth context and Four Pillars of one person, shared by the single and two-person analyses.
+struct NatalSaju {
+    gender: Gender,
+    birth_ctx: PreparedBirthContext,
+    pillars: FourPillars,
+}
+
+fn build_natal(input: &SajuAnalysisInput) -> Result<NatalSaju, ServiceError> {
     let gender = if input.is_male {
         Gender::Male
     } else {
@@ -45,6 +56,49 @@ pub fn analyze(input: SajuAnalysisInput) -> Result<SajuAnalysisOutput, ServiceEr
 
     let pillars = FourPillars::calculate(&saju_input)
         .map_err(|e| ServiceError::Saju(format!("Four Pillars calculation failed: {}", e)))?;
+
+    Ok(NatalSaju {
+        gender,
+        birth_ctx,
+        pillars,
+    })
+}
+
+/// Two-person compatibility audit: stem/branch combinations, clashes and resource contention.
+pub fn analyze_compatibility(
+    a: SajuAnalysisInput,
+    b: SajuAnalysisInput,
+) -> Result<SajuCompatibilityOutput, ServiceError> {
+    let natal_a = build_natal(&a)?;
+    let natal_b = build_natal(&b)?;
+
+    let audit = CompatibilityAuditor::audit(
+        &SajuVM::new(natal_a.pillars.clone()),
+        &SajuVM::new(natal_b.pillars.clone()),
+    );
+
+    let meta = |ctx: PreparedBirthContext, input: &SajuAnalysisInput| AnalysisMeta {
+        precision: input.precision,
+        input_time: ctx.input_time_string,
+        corrected_time: ctx.corrected_time_string,
+        is_dst: ctx.is_dst,
+        dst_offset_hours: ctx.dst_offset_hours,
+        analysis_timezone: input.base.timezone.clone(),
+    };
+
+    Ok(SajuCompatibilityOutput {
+        meta_a: meta(natal_a.birth_ctx, &a),
+        meta_b: meta(natal_b.birth_ctx, &b),
+        audit,
+    })
+}
+
+pub fn analyze(input: SajuAnalysisInput) -> Result<SajuAnalysisOutput, ServiceError> {
+    let NatalSaju {
+        gender,
+        birth_ctx,
+        pillars,
+    } = build_natal(&input)?;
 
     // Static engine calculations
     let lints = DestinyLinter::lint(&pillars);

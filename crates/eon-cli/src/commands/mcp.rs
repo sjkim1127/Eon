@@ -44,6 +44,14 @@ fn tool_error(id: Value, message: String) -> JsonRpcResponse {
     }
 }
 
+/// Appends the per-engine tools to the `tools/list` result that already holds `eon_analyze`.
+fn with_all_tools(mut list: Value) -> Value {
+    if let Some(tools) = list.get_mut("tools").and_then(Value::as_array_mut) {
+        tools.extend(crate::commands::mcp_tools::definitions());
+    }
+    list
+}
+
 pub fn run(_cmd: McpCommand) -> Result<()> {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
@@ -111,7 +119,7 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                 let res = JsonRpcResponse {
                     jsonrpc: "2.0",
                     id: req_id,
-                    result: Some(json!({
+                    result: Some(with_all_tools(json!({
                         "tools": [
                             {
                                 "name": "eon_analyze",
@@ -170,7 +178,7 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                                 }
                             }
                         ]
-                    })),
+                    }))),
                     error: None,
                 };
                 writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
@@ -299,6 +307,17 @@ pub fn run(_cmd: McpCommand) -> Result<()> {
                             writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
                         }
                     }
+                } else if let Some(outcome) = crate::commands::mcp_tools::call(tool_name, &args) {
+                    let res = match outcome {
+                        Ok(text) => JsonRpcResponse {
+                            jsonrpc: "2.0",
+                            id: req_id,
+                            result: Some(json!({ "content": [{ "type": "text", "text": text }] })),
+                            error: None,
+                        },
+                        Err(message) => tool_error(req_id, format!("Invalid request: {message}")),
+                    };
+                    writeln!(stdout, "{}", serde_json::to_string(&res)?)?;
                 } else {
                     let res = JsonRpcResponse {
                         jsonrpc: "2.0",

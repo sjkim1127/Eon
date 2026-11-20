@@ -63,6 +63,18 @@ enum Commands {
     /// Destiny Tier 7.0 (15 weighted components & 8D Quantum Synergies)
     Tier(tier::TierCommand),
 
+    /// Two-person compatibility: Saju, Vedic (Ashtakoota), Western (synastry/composite), Human Design
+    Compat(compat::CompatCommand),
+
+    /// Saju luck cycles (yearly, monthly, daily, hourly) at a given moment
+    Transit(transit::TransitCommand),
+
+    /// Themed Saju report: wealth & career, love & marriage, or health & vitality
+    Report(report::ReportCommand),
+
+    /// Human Design Penta for a group of 3 to 5 people
+    Penta(penta::PentaCommand),
+
     /// Run Model Context Protocol (MCP) stdio server for Claude, Cursor, and AI Agents
     Mcp(mcp::McpCommand),
 }
@@ -82,6 +94,10 @@ fn main() -> Result<()> {
         Commands::Iching(cmd) => iching::run(cmd),
         Commands::Numerology(cmd) => numerology::run(cmd),
         Commands::Tier(cmd) => tier::run(cmd),
+        Commands::Compat(cmd) => compat::run(cmd),
+        Commands::Transit(cmd) => transit::run(cmd),
+        Commands::Report(cmd) => report::run(cmd),
+        Commands::Penta(cmd) => penta::run(cmd),
         Commands::Mcp(cmd) => mcp::run(cmd),
     }
 }
@@ -134,5 +150,62 @@ mod tests {
             other => panic!("unexpected command: {other:?}"),
         };
         assert_eq!(fmt(agent), fmt(text));
+    }
+
+    #[test]
+    fn two_person_and_group_commands_parse() {
+        let cli = parse(&[
+            "compat",
+            "--birth",
+            "2004-11-27 22:00",
+            "--partner-birth",
+            "1999-03-08 14:20",
+            "--partner-lat",
+            "-33.87",
+            "--system",
+            "vedic",
+        ])
+        .expect("compat must parse");
+        match cli.command {
+            Commands::Compat(cmd) => {
+                assert_eq!(cmd.partner.birth, "1999-03-08 14:20");
+                assert_eq!(cmd.partner.lat, Some(-33.87));
+                assert_eq!(cmd.partner.gender, "f");
+                assert_eq!(cmd.system, compat::CompatSystem::Vedic);
+            }
+            other => panic!("unexpected command: {other:?}"),
+        }
+        // The partner's birth is mandatory.
+        assert!(parse(&["compat", "--birth", "2004-11-27 22:00"]).is_err());
+
+        let penta = parse(&[
+            "penta",
+            "--member",
+            "1990-05-15 10:30",
+            "--member",
+            "1988-01-02 08:00@Busan",
+        ])
+        .expect("penta must parse");
+        match penta.command {
+            Commands::Penta(cmd) => assert_eq!(cmd.members.len(), 2),
+            other => panic!("unexpected command: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn hd_overlay_flags_are_mutually_exclusive() {
+        assert!(parse(&["hd", "--birth", "1990-05-15", "--transit-at", "2027-01-01"]).is_ok());
+        assert!(parse(&["hd", "--birth", "1990-05-15", "--return", "saturn"]).is_ok());
+        assert!(parse(&[
+            "hd",
+            "--birth",
+            "1990-05-15",
+            "--transit-at",
+            "2027-01-01",
+            "--return",
+            "solar"
+        ])
+        .is_err());
+        assert!(parse(&["hd", "--birth", "1990-05-15", "--return", "mars"]).is_err());
     }
 }

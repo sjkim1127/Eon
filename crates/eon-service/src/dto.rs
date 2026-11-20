@@ -125,6 +125,9 @@ pub struct VedicAnalysisInput {
     pub target_year: Option<i32>,
     #[serde(default)]
     pub year_type: Option<String>,
+    /// Ayanamsa: Lahiri (default), FaganBradley, Raman, Krishnamurti
+    #[serde(default)]
+    pub ayanamsa: Option<String>,
 }
 
 impl VedicAnalysisInput {
@@ -151,6 +154,7 @@ impl VedicAnalysisInput {
             },
             target_year: None,
             year_type: None,
+            ayanamsa: None,
         }
     }
 }
@@ -284,6 +288,34 @@ impl WesternAnalysisInput {
 pub struct WesternAnalysisOutput {
     pub meta: AnalysisMeta,
     pub result: eon_western::WesternResult,
+}
+
+/// Two-person Western comparison: synastry (inter-chart aspects) and composite chart.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WesternSynastryOutput {
+    pub meta_a: AnalysisMeta,
+    pub meta_b: AnalysisMeta,
+    pub synastry: eon_western::SynastryResult,
+    pub composite: eon_western::CompositeResult,
+}
+
+/// Secondary progression (day-for-a-year) of a natal chart to a target date.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WesternProgressionOutput {
+    pub meta: AnalysisMeta,
+    pub target_time: DateTime<Utc>,
+    pub result: eon_western::ProgressionResult,
+}
+
+/// Saju two-person compatibility audit (stems, branches, luck interference).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SajuCompatibilityOutput {
+    pub meta_a: AnalysisMeta,
+    pub meta_b: AnalysisMeta,
+    pub audit: eon_saju::engine::interprocess::CompatibilityAudit,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -515,6 +547,8 @@ pub struct VedicAnalysisRequest {
     pub target_year: Option<i32>,
     #[serde(default)]
     pub year_type: Option<String>,
+    #[serde(default)]
+    pub ayanamsa: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -725,6 +759,7 @@ impl TryFrom<VedicAnalysisRequest> for VedicAnalysisInput {
             },
             target_year: req.target_year,
             year_type: req.year_type,
+            ayanamsa: req.ayanamsa,
         })
     }
 }

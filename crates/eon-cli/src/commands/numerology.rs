@@ -2,8 +2,9 @@ use anyhow::Result;
 use clap::Args;
 use eon_service::dto::NumerologyAnalysisInput;
 use eon_service::facade;
+use std::fmt::Write as _;
 
-use super::{BirthArgs, EngineFormat};
+use super::{BirthArgs, EngineFormat, Rendered};
 
 #[derive(Args, Debug)]
 pub struct NumerologyCommand {
@@ -19,53 +20,57 @@ pub struct NumerologyCommand {
     pub format: EngineFormat,
 }
 
-pub fn run(cmd: NumerologyCommand) -> Result<()> {
+pub fn execute(cmd: &NumerologyCommand) -> Result<Rendered> {
     let input = cmd.birth.to_analysis_input()?;
     let num_in = NumerologyAnalysisInput::new(input, cmd.birth.name.clone(), cmd.target_year);
     let res = facade::analyze_numerology(num_in)?;
 
-    match cmd.format {
-        EngineFormat::Json => {
-            println!("{}", serde_json::to_string_pretty(&res)?);
+    let needs_name = "N/A (pass --name with a Latin name)";
+    let core = &res.result.core;
+    let mut t = String::new();
+    writeln!(t, "== Pythagorean Numerology ==")?;
+    writeln!(
+        t,
+        "Life Path Number: {}{}",
+        core.life_path,
+        if res.result.is_master_life_path {
+            " (Master Number)"
+        } else {
+            ""
         }
-        _ => {
-            let core = &res.result.core;
-            println!("== Pythagorean Numerology ==");
-            println!(
-                "Life Path Number: {}{}",
-                core.life_path,
-                if res.result.is_master_life_path {
-                    " (Master Number)"
-                } else {
-                    ""
-                }
-            );
-            println!(
-                "Expression Number: {}",
-                core.expression
-                    .map(|v| v.to_string())
-                    .unwrap_or_else(|| "N/A (Requires Latin name)".to_string())
-            );
-            println!(
-                "Soul Urge Number: {}",
-                core.soul_urge
-                    .map(|v| v.to_string())
-                    .unwrap_or_else(|| "N/A (Requires Latin name)".to_string())
-            );
-            println!(
-                "Personality Number: {}",
-                core.personality
-                    .map(|v| v.to_string())
-                    .unwrap_or_else(|| "N/A (Requires Latin name)".to_string())
-            );
-            println!("Birthday Number: {}", core.birthday);
-            println!("Personal Year Vibration: {}", res.result.personal_year);
-            println!("Four Pinnacle Cycles:");
-            for p in &res.result.pinnacles {
-                println!("- {}", p.description_en);
-            }
-        }
+    )?;
+    writeln!(
+        t,
+        "Expression Number: {}",
+        core.expression
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| needs_name.to_string())
+    )?;
+    writeln!(
+        t,
+        "Soul Urge Number: {}",
+        core.soul_urge
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| needs_name.to_string())
+    )?;
+    writeln!(
+        t,
+        "Personality Number: {}",
+        core.personality
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| needs_name.to_string())
+    )?;
+    writeln!(t, "Birthday Number: {}", core.birthday)?;
+    writeln!(t, "Personal Year Vibration: {}", res.result.personal_year)?;
+    writeln!(t, "Four Pinnacle Cycles:")?;
+    for p in &res.result.pinnacles {
+        writeln!(t, "- {}", p.description_en)?;
     }
 
+    Rendered::new(&res, t)
+}
+
+pub fn run(cmd: NumerologyCommand) -> Result<()> {
+    println!("{}", execute(&cmd)?.render(cmd.format)?);
     Ok(())
 }

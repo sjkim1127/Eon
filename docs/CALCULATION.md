@@ -100,3 +100,19 @@ School-dependent choices the engine currently makes (not verified against a sing
 - Zi Wei Dou Shu: leap-month births use the lunar month number only; the 15-day rule (some schools move
   days 16+ to the next month) and a late-Zi (晚子時) day shift are not applied.
 - Vedic D6 (Shashtamsa): odd signs start from the sign itself, even signs from the 6th sign from it.
+
+## 9. Two-Person Comparisons
+
+- **Western synastry harmony (`SynastryResult::harmony_score`)**: 0-100 balance between supportive
+  (trine, sextile, conjunction) and tense (square, opposition, conjunction involving Mars, Saturn or
+  Pluto) inter-chart aspects. Each aspect is weighted by orb tightness and by the importance of the
+  two bodies (Sun/Moon 3, Mercury/Venus/Mars/Ascendant 2, Jupiter/Saturn 1.5, others 1); the score is
+  `50 + 50 * (supportive - tense) / (supportive + tense)`, or 50 with no aspects. It is a heuristic
+  balance, not a verdict. (Earlier versions added a flat +4/-3 per aspect and saturated at 0 or 100.)
+- **Vedic Ashtakoota**: scored as groom (male) versus bride (female). `compat` uses the stated
+  genders when they differ, otherwise the first person is the groom.
+- **Saju compatibility**: `CompatibilityAuditor` compares stems and branches of the two charts
+  (combinations, clashes, resource contention); the sync score is a heuristic.
+- **House systems**: names are matched exactly (Placidus, Koch, WholeSign, Equal, Porphyry,
+  Regiomontanus, Campanus, Alcabitius, Morinus, Topocentric, or the Swiss Ephemeris letter). Unknown
+  names are rejected rather than mapped to another system.

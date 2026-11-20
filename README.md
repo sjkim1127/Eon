@@ -169,6 +169,52 @@ eon numerology --birth "1990-05-15" --name "Sujin Kim" -f text
 eon tier --birth "1990-05-15 10:30" --gender m -f text
 ```
 
+### 4. Options That Go Beyond The Natal Chart
+
+```bash
+# Vedic: choose the ayanamsa (Lahiri default, FaganBradley, Raman, Krishnamurti)
+# and the year of the annual (Varshaphala / Tajika) chart
+eon vedic --birth "1990-05-15 10:30" --ayanamsa Raman --target-year 2027 -f text
+
+# Western: any of 10 house systems, and secondary progression to a date
+eon western --birth "1990-05-15 10:30" --house-system Porphyry -f text
+eon western --birth "1990-05-15 10:30" --progress-to 2027-03-01 -f text
+
+# Zi Wei Dou Shu: annual palace and four transformations of a chosen year
+eon zwds --birth "1990-05-15 10:30" --target-year 2027 -f text
+
+# Human Design: sky of a date on the natal chart, or a planetary return
+eon hd --birth "1990-05-15 10:30" --transit-at "2027-03-01 10:00" -f text
+eon hd --birth "1990-05-15 10:30" --return solar --year 2027 -f text
+eon hd --birth "1990-05-15 10:30" --return saturn -f text
+
+# Saju luck cycles (yearly / monthly / daily / hourly) at a moment (default: now)
+eon transit --birth "1990-05-15 10:30" --gender m --at "2027-03-01 10:00" -f text
+
+# Themed Saju report: wealth | love | health
+eon report --birth "1990-05-15 10:30" --gender m --theme wealth -f text
+
+# Human Design Penta for 3 to 5 people ('@city' is optional per member)
+eon penta --member "1990-05-15 10:30" --member "1988-01-02 08:00@Busan" --member "1995-09-30 21:15" -f text
+```
+
+### 5. Two-Person Compatibility (`compat`)
+
+```bash
+# Saju + Vedic (Ashtakoota, 36 points) + Western (synastry & composite) + Human Design (connection)
+eon compat --birth "1990-05-15 10:30" --gender m --city seoul \
+           --partner-birth "1992-08-20 18:45" --partner-gender f --partner-city busan -f text
+
+# One system only
+eon compat --system vedic --birth "1990-05-15 10:30" --partner-birth "1992-08-20 18:45" -f text
+```
+
+The partner takes the same options as the first person with a `--partner-` prefix
+(`--partner-birth`, `--partner-gender`, `--partner-city`, `--partner-lat`, `--partner-lon`,
+`--partner-tz`, `--partner-lunar`, `--partner-leap`). With `--system all` (default) a system that
+cannot run, for example one that needs a birth time when only a date was given, is reported as
+`skipped` instead of failing the whole command.
+
 ### Common Flags & Options
 - `--birth <YYYY-MM-DD [HH:MM]>`: Birth date and optional time (default time: `12:00`).
 - `-c, --city <NAME>`: Birth city for 100% offline resolution of coordinates and timezone (e.g. `seoul`, `busan`, `tokyo`, `new york`, `london`, `paris`).
@@ -215,7 +261,7 @@ Sample output snippet from `eon prompt`:
 
 ## Model Context Protocol (MCP) Setup
 
-Eon includes a stdio MCP server implementing JSON-RPC 2.0. AI coding environments (Claude Desktop, Cursor, Antigravity) can call `eon_analyze` as an active tool.
+Eon includes a stdio MCP server implementing JSON-RPC 2.0. AI coding environments (Claude Desktop, Cursor, Antigravity) can call `eon_analyze` for the full synthesis, or any single-engine tool below.
 
 ### Claude Desktop Configuration
 Add Eon to your `claude_desktop_config.json`:
@@ -232,12 +278,33 @@ Add Eon to your `claude_desktop_config.json`:
 ```
 
 ### Available MCP Tools
-- **`eon_analyze`**:
+- **`eon_analyze`**: all-engine synthesis plus Destiny Tier 7.0.
   - Parameters:
     - `birth` (string, required): e.g. `"1990-05-15 10:30"`
     - `gender` (string, optional): `"m"` or `"f"` (default: `"m"`)
     - `name` (string, optional): English name for Numerology
     - `format` (string, optional): `"agent"` (default), `"json"`, or `"markdown"`
+
+Single-engine and relationship tools. All take `birth` (plus the optional `gender`, `lunar`, `leap`,
+`city`, `lat`, `lon`, `timezone`) and a `format` of `"text"` (default, compact) or `"json"` (full):
+
+| Tool | What it returns | Extra parameters |
+|---|---|---|
+| `eon_saju` | Four Pillars, strength, structure, yongshin, major luck | `night_rat` |
+| `eon_saju_luck` | Yearly/monthly/daily/hourly luck at a moment | `at`, `night_rat` |
+| `eon_report` | Themed markdown report | `theme`: `wealth`, `love`, `health` |
+| `eon_vedic` | Chart, dashas, yogas, Shadbala, Ashtakavarga, Bhava Bala, gochara, annual chart | `ayanamsa`, `target_year`, `year_type` |
+| `eon_western` | Planets, houses, aspects, patterns; optional secondary progression | `house_system`, `progress_to` |
+| `eon_zwds` | Palaces, stars, four transformations, annual palace | `target_year` |
+| `eon_human_design` | Type, authority, centers, channels; optional transit or return overlay | `transit_at`, `return`, `year` |
+| `eon_human_design_penta` | Penta group dynamics | `members` (3 to 5), `city` |
+| `eon_qimen` | QiMen DunJia birth chart | |
+| `eon_numerology` | Core numbers, pinnacles, personal year | `name`, `target_year` |
+| `eon_iching` | HeLuo hexagrams and lifetime cycles | |
+| `eon_compatibility` | Saju, Vedic, Western and Human Design comparison of two people | `partner_birth` (required) and the other `partner_*` fields, `system`, `house_system` |
+
+Date parameters (`at`, `transit_at`, `progress_to`) are `YYYY-MM-DD[ HH:MM]` in the birth timezone,
+or an RFC 3339 timestamp.
 
 ---
 

@@ -3,14 +3,19 @@ use clap::{Args, ValueEnum};
 use eon_service::dto::AnalysisInput;
 
 pub mod analyze;
+pub mod compat;
 pub mod hd;
 pub mod iching;
 pub mod mcp;
+pub mod mcp_tools;
 pub mod numerology;
+pub mod penta;
 pub mod prompt;
 pub mod qimen;
+pub mod report;
 pub mod saju;
 pub mod tier;
+pub mod transit;
 pub mod vedic;
 pub mod western;
 pub mod zwds;
@@ -39,6 +44,91 @@ pub enum EngineFormat {
     Json,
     #[value(alias = "agent", alias = "markdown")]
     Text,
+}
+
+/// A command result that can be shown as a compact text summary or as the full JSON.
+///
+/// The CLI prints it; the MCP server returns it as tool output.
+pub struct Rendered {
+    json: serde_json::Value,
+    text: String,
+}
+
+impl Rendered {
+    pub fn new<T: serde::Serialize>(value: &T, text: String) -> Result<Self> {
+        Ok(Self {
+            json: serde_json::to_value(value)?,
+            text,
+        })
+    }
+
+    pub fn from_parts(json: serde_json::Value, text: String) -> Self {
+        Self { json, text }
+    }
+
+    pub fn render(&self, format: EngineFormat) -> Result<String> {
+        match format {
+            EngineFormat::Json => Ok(serde_json::to_string_pretty(&self.json)?),
+            EngineFormat::Text => Ok(self.text.trim_end().to_string()),
+        }
+    }
+}
+
+/// Second person of a two-person command (`--partner-*` flags).
+#[derive(Args, Debug, Clone)]
+pub struct PartnerArgs {
+    /// Partner birth datetime: 'YYYY-MM-DD HH:MM' or 'YYYY-MM-DD'
+    #[arg(id = "partner_birth", long = "partner-birth")]
+    pub birth: String,
+
+    /// Partner gender: 'm' or 'f' (default: female)
+    #[arg(id = "partner_gender", long = "partner-gender", default_value = "f")]
+    pub gender: String,
+
+    /// Partner birth city (resolves latitude, longitude and timezone)
+    #[arg(id = "partner_city", long = "partner-city")]
+    pub city: Option<String>,
+
+    #[arg(
+        id = "partner_lat",
+        long = "partner-lat",
+        allow_negative_numbers = true
+    )]
+    pub lat: Option<f64>,
+
+    #[arg(
+        id = "partner_lon",
+        long = "partner-lon",
+        allow_negative_numbers = true
+    )]
+    pub lon: Option<f64>,
+
+    #[arg(id = "partner_tz", long = "partner-tz")]
+    pub tz: Option<String>,
+
+    /// Whether the partner birth date is a lunar calendar date
+    #[arg(id = "partner_lunar", long = "partner-lunar")]
+    pub lunar: bool,
+
+    /// Whether the partner lunar birth month is a leap month
+    #[arg(id = "partner_leap", long = "partner-leap")]
+    pub leap: bool,
+}
+
+impl PartnerArgs {
+    pub fn to_birth_args(&self) -> BirthArgs {
+        BirthArgs {
+            birth: self.birth.clone(),
+            gender: self.gender.clone(),
+            city: self.city.clone(),
+            lat: self.lat,
+            lon: self.lon,
+            tz: self.tz.clone(),
+            lunar: self.lunar,
+            leap: self.leap,
+            name: None,
+        }
+    }
 }
 
 #[derive(Args, Debug, Clone)]

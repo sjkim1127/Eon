@@ -103,3 +103,174 @@ fn schema_advertises_lunar_and_leap() {
     assert!(props.get("lunar").is_some());
     assert!(props.get("leap").is_some());
 }
+
+fn tool_call(name: &str, args: &str) -> String {
+    format!(
+        r#"{{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{{"name":"{name}","arguments":{args}}}}}"#
+    )
+}
+
+fn text_of(resp: &Value) -> &str {
+    resp["result"]["content"][0]["text"].as_str().unwrap_or("")
+}
+
+#[test]
+fn tools_list_exposes_every_engine_and_the_two_person_tools() {
+    let r = exchange(&[r#"{"jsonrpc":"2.0","id":1,"method":"tools/list"}"#]);
+    let tools = r[0]["result"]["tools"].as_array().unwrap();
+    let names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
+
+    for expected in [
+        "eon_analyze",
+        "eon_saju",
+        "eon_saju_luck",
+        "eon_report",
+        "eon_vedic",
+        "eon_western",
+        "eon_zwds",
+        "eon_human_design",
+        "eon_human_design_penta",
+        "eon_qimen",
+        "eon_numerology",
+        "eon_iching",
+        "eon_compatibility",
+    ] {
+        assert!(
+            names.contains(&expected),
+            "missing tool {expected}: {names:?}"
+        );
+    }
+    for tool in tools {
+        assert_eq!(tool["inputSchema"]["type"], "object", "{}", tool["name"]);
+        assert!(tool["description"].as_str().unwrap().len() > 20);
+    }
+    let compat = tools
+        .iter()
+        .find(|t| t["name"] == "eon_compatibility")
+        .unwrap();
+    let required = compat["inputSchema"]["required"].as_array().unwrap();
+    assert!(required.iter().any(|v| v == "partner_birth"));
+}
+
+#[test]
+fn engine_tools_return_text_summaries_and_json_on_request() {
+    let r = exchange(&[
+        &tool_call("eon_saju", r#"{"birth":"2004-11-27 22:00","gender":"m"}"#),
+        &tool_call(
+            "eon_saju",
+            r#"{"birth":"2004-11-27 22:00","format":"json"}"#,
+        ),
+    ]);
+    assert!(
+        text_of(&r[0]).contains("Four Pillars"),
+        "{}",
+        text_of(&r[0])
+    );
+    assert!(r[0]["result"]["isError"].is_null());
+    let json: Value = serde_json::from_str(text_of(&r[1])).expect("json format is valid JSON");
+    assert!(json["report"]["pillars"].is_object());
+}
+
+#[test]
+fn compatibility_tool_runs_a_single_system_and_all() {
+    let r = exchange(&[
+        &tool_call(
+            "eon_compatibility",
+            r#"{"birth":"2004-11-27 22:00","partner_birth":"1999-03-08 14:20","system":"vedic"}"#,
+        ),
+        &tool_call(
+            "eon_compatibility",
+            r#"{"birth":"2004-11-27 22:00","partner_birth":"1999-03-08 14:20"}"#,
+        ),
+    ]);
+    assert!(text_of(&r[0]).contains("/ 36"), "{}", text_of(&r[0]));
+    let all = text_of(&r[1]);
+    for section in ["Saju", "Vedic", "Western", "Human Design"] {
+        assert!(all.contains(section), "missing {section} in:\n{all}");
+    }
+}
+
+#[test]
+fn compatibility_skips_time_dependent_systems_without_a_birth_time() {
+    let r = exchange(&[&tool_call(
+        "eon_compatibility",
+        r#"{"birth":"2004-11-27","partner_birth":"1999-03-08"}"#,
+    )]);
+    let text = text_of(&r[0]);
+    assert!(r[0]["result"]["isError"].is_null(), "{text}");
+    assert!(text.contains("skipped"), "{text}");
+    assert!(
+        text.contains("Saju"),
+        "saju does not need the hour:\n{text}"
+    );
+}
+
+#[test]
+fn engine_tool_argument_errors_are_tool_errors() {
+    let r = exchange(&[
+        &tool_call(
+            "eon_western",
+            r#"{"birth":"2004-11-27 22:00","house_system":"Bogus"}"#,
+        ),
+        &tool_call("eon_compatibility", r#"{"birth":"2004-11-27 22:00"}"#),
+        &tool_call(
+            "eon_report",
+            r#"{"birth":"2004-11-27 22:00","theme":"fame"}"#,
+        ),
+        &tool_call(
+            "eon_human_design_penta",
+            r#"{"members":["1990-05-15 10:30"]}"#,
+        ),
+        &tool_call(
+            "eon_human_design",
+            r#"{"birth":"2004-11-27 22:00","return":"solar"}"#,
+        ),
+        &tool_call("eon_saju", r#"{"birth":"2004-11-27 22:00","format":"xml"}"#),
+    ]);
+    assert_eq!(r.len(), 6);
+    for resp in &r {
+        assert!(resp.get("error").is_none(), "protocol error: {resp}");
+        assert_eq!(resp["result"]["isError"], true, "{resp}");
+    }
+    assert!(text_of(&r[0]).contains("house system"));
+    assert!(text_of(&r[1]).contains("partner_birth"));
+    assert!(text_of(&r[4]).contains("--year"), "{}", text_of(&r[4]));
+}
+
+#[test]
+fn western_progression_and_hd_overlays_work_through_mcp() {
+    let r = exchange(&[
+        &tool_call(
+            "eon_western",
+            r#"{"birth":"2004-11-27 22:00","progress_to":"2027-03-01"}"#,
+        ),
+        &tool_call(
+            "eon_human_design",
+            r#"{"birth":"2004-11-27 22:00","transit_at":"2027-03-01 10:00"}"#,
+        ),
+        &tool_call(
+            "eon_human_design",
+            r#"{"birth":"2004-11-27 22:00","return":"solar","year":2027}"#,
+        ),
+        &tool_call(
+            "eon_human_design_penta",
+            r#"{"members":["1990-05-15 10:30","1988-01-02 08:00@Busan","1995-09-30 21:15"]}"#,
+        ),
+    ]);
+    assert!(
+        text_of(&r[0]).contains("Secondary Progression"),
+        "{}",
+        text_of(&r[0])
+    );
+    assert!(text_of(&r[1]).contains("Transit"), "{}", text_of(&r[1]));
+    assert!(
+        text_of(&r[2]).contains("Solar Return"),
+        "{}",
+        text_of(&r[2])
+    );
+    assert!(
+        text_of(&r[3]).contains("Penta (3 members)"),
+        "{}",
+        text_of(&r[3])
+    );
+}
