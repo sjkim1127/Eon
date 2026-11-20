@@ -54,6 +54,19 @@ pub fn build_chart_from_lunar(
         five_elements,
     );
 
+    // 6b. Twelve-god groups (長生 / 博士 / 將前 / 歲前)
+    let is_male = !matches!(birth.gender, Some(Gender::Female));
+    let lucun_idx = star_positions
+        .get(&ZwdsStar::LuCun)
+        .copied()
+        .ok_or_else(|| ZwdsError::Internal("LuCun was not placed".to_string()))?;
+    let twelve_gods = crate::twelve_gods::place_twelve_gods(
+        five_elements,
+        crate::decadal::is_forward_direction(is_male, year_stem),
+        lucun_idx,
+        lunar.year_branch_idx,
+    );
+
     // 7. Assemble 12 palace data
     // PalaceIndex: 0=Yin .. 11=Chou
     let mut palaces_vec = Vec::new();
@@ -105,6 +118,7 @@ pub fn build_chart_from_lunar(
             stars: stars_in_palace,
             daxian_range,
             is_current_liu_nian: false, // Updated by service layer for specific target year
+            twelve_gods: Some(twelve_gods[p_idx]),
         });
     }
 
@@ -196,6 +210,8 @@ pub fn build_chart_from_lunar(
         zi_hua,
         collisions,
         borrowed_stars,
+        birth_lunar: lunar.clone(),
+        is_male,
     })
 }
 

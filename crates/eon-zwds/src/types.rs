@@ -519,13 +519,16 @@ pub struct PalaceData {
     pub daxian_range: Option<(u8, u8)>,
     /// Whether active in current annual flow
     pub is_current_liu_nian: bool,
+    /// 長生·博士·將前·歲前 twelve-god groups on this palace.
+    #[serde(default)]
+    pub twelve_gods: Option<crate::twelve_gods::PalaceTwelveGods>,
 }
 
 // ============================================================
 // Lunar calendar data
 // ============================================================
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct LunarBirthInfo {
     pub year: i32,
     pub month: u32,
@@ -647,4 +650,14 @@ pub struct ZwdsChart {
     pub collisions: Vec<TripleSihuaCollision>,
     #[serde(default)]
     pub borrowed_stars: Vec<BorrowedStarsInfo>,
+    /// Lunar birth data the chart was built from (needed for 小限 and 斗君).
+    #[serde(default)]
+    pub birth_lunar: LunarBirthInfo,
+    /// Gender the chart was built for (decides the direction of 大限, 長生, 博士 and 小限).
+    #[serde(default = "default_is_male")]
+    pub is_male: bool,
+}
+
+fn default_is_male() -> bool {
+    true
 }

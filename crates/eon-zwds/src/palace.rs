@@ -96,11 +96,25 @@ pub fn get_five_elements(soul_stem: HeavenlyStem, soul_zwds_idx: PalaceIndex) ->
 
 /// Determine PalaceName from Ming palace offset.
 ///
+/// The twelve palace names run **counter-clockwise** (逆行) from 命宮, i.e. against the branch
+/// order: with 命宮 in 寅, 兄弟 is in 丑, 夫妻 in 子, ... and 父母 in 卯 (《紫微斗數全書》安十二宮;
+/// the same convention as iztro, whose `PALACES` table lists the names in the reverse order
+/// 命宮, 父母, 福德, ... and is indexed by `palace - soul`).
+///
 /// * `soul_zwds_idx` - Ming palace ZWDS branch index
 /// * `palace_zwds_idx` - Target palace ZWDS branch index
 pub fn get_palace_name(soul_zwds_idx: PalaceIndex, palace_zwds_idx: PalaceIndex) -> PalaceName {
-    let offset = fix_index(palace_zwds_idx as i32 - soul_zwds_idx as i32);
+    let offset = fix_index(soul_zwds_idx as i32 - palace_zwds_idx as i32);
     PalaceName::ALL[offset]
+}
+
+/// Inverse of [`get_palace_name`]: the ZWDS branch index of the palace carrying `name`.
+pub fn palace_index_of_name(soul_zwds_idx: PalaceIndex, name: PalaceName) -> PalaceIndex {
+    let offset = PalaceName::ALL
+        .iter()
+        .position(|n| *n == name)
+        .unwrap_or_default();
+    fix_index(soul_zwds_idx as i32 - offset as i32)
 }
 
 #[cfg(test)]
@@ -122,6 +136,29 @@ mod tests {
         // Jia year, Yin (0) palace -> Bing
         assert_eq!(get_palace_stem(HeavenlyStem::Jia, 0), HeavenlyStem::Bing);
         assert_eq!(get_palace_stem(HeavenlyStem::Jia, 10), HeavenlyStem::Bing);
+    }
+
+    #[test]
+    fn test_palace_names_run_counter_clockwise() {
+        // Ming in 子 (idx 10): 兄弟 in 亥 (9), 夫妻 in 戌 (8), 子女 酉 (7), 財帛 申 (6),
+        // 疾厄 未 (5), 遷移 午 (4), 奴僕 巳 (3), 官祿 辰 (2), 田宅 卯 (1), 福德 寅 (0),
+        // 父母 丑 (11).
+        assert_eq!(get_palace_name(10, 10), PalaceName::Ming);
+        assert_eq!(get_palace_name(10, 9), PalaceName::Xiongdi);
+        assert_eq!(get_palace_name(10, 8), PalaceName::Fuqi);
+        assert_eq!(get_palace_name(10, 6), PalaceName::Caibo);
+        assert_eq!(get_palace_name(10, 4), PalaceName::Qianyi);
+        assert_eq!(get_palace_name(10, 2), PalaceName::Guanlu);
+        assert_eq!(get_palace_name(10, 0), PalaceName::Fude);
+        assert_eq!(get_palace_name(10, 11), PalaceName::Fumu);
+        for soul in 0..12 {
+            for name in PalaceName::ALL {
+                assert_eq!(
+                    get_palace_name(soul, palace_index_of_name(soul, name)),
+                    name
+                );
+            }
+        }
     }
 
     #[test]

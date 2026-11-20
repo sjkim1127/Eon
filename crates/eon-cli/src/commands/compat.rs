@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
 use eon_service::dto::{
     HumanDesignAnalysisInput, NumerologyAnalysisInput, SajuAnalysisInput, VedicCompatibilityInput,
-    WesternAnalysisInput,
+    WesternAnalysisInput, ZwdsAnalysisInput,
 };
 use eon_service::facade;
 use serde_json::{json, Map, Value};
@@ -17,8 +17,9 @@ pub enum CompatSystem {
     Vedic,
     Western,
     Hd,
-    /// Life Path / Expression / Soul Urge pairs (heuristic; not part of `all`)
+    /// Life Path / Expression / Soul Urge pairs (heuristic)
     Numerology,
+    Zwds,
     All,
 }
 
@@ -31,8 +32,9 @@ pub struct CompatCommand {
     pub partner: PartnerArgs,
 
     /// Which system to compare with: saju (stems/branches), vedic (Ashtakoota 36 points),
-    /// western (synastry + composite), hd (connection chart), numerology (heuristic number
-    /// pairs; use --name and --partner-name for Expression/Soul Urge; not part of `all`), or all
+    /// western (synastry + composite), hd (connection chart), zwds (Zi Wei Dou Shu 合盤,
+    /// heuristic), numerology (heuristic number pairs; use --name and --partner-name for
+    /// Expression/Soul Urge), or all
     #[arg(long, value_enum, default_value = "all")]
     pub system: CompatSystem,
 
@@ -215,6 +217,48 @@ fn numerology_part(a: &BirthArgs, b: &BirthArgs) -> Result<Part> {
     })
 }
 
+fn zwds_part(a: &BirthArgs, b: &BirthArgs) -> Result<Part> {
+    let res = facade::analyze_zwds_compatibility(
+        ZwdsAnalysisInput::new(a.to_analysis_input()?, a.is_male()?, None),
+        ZwdsAnalysisInput::new(b.to_analysis_input()?, b.is_male()?, None),
+    )?;
+    let r = &res.result;
+
+    let mut t = String::new();
+    writeln!(t, "-- Zi Wei Dou Shu (合盤, heuristic) --")?;
+    writeln!(t, "Harmony score: {:.1} / 100", r.harmony_score)?;
+    writeln!(t, "{}", r.summary)?;
+    for (label, hits) in [("A -> B", &r.a_to_b), ("B -> A", &r.b_to_a)] {
+        writeln!(t, "Flying 四化 {label}:")?;
+        for h in hits.iter() {
+            writeln!(
+                t,
+                "- {} stem {} {} {} -> {}",
+                h.from_palace.hanja(),
+                h.stem_hanja,
+                h.sihua_type.emoji(),
+                h.star.hanja(),
+                h.to_palace.hanja()
+            )?;
+        }
+    }
+    for o in r.overlaps.iter().filter(|o| !o.shared_stars.is_empty()) {
+        let stars: Vec<&str> = o.shared_stars.iter().map(|s| s.hanja()).collect();
+        writeln!(
+            t,
+            "Shared stars A {} / B {}: {}",
+            o.palace_a.hanja(),
+            o.palace_b.hanja(),
+            stars.join(", ")
+        )?;
+    }
+    writeln!(t, "{}", r.method_note)?;
+    Ok(Part {
+        json: serde_json::to_value(&res)?,
+        text: t,
+    })
+}
+
 pub fn execute(cmd: &CompatCommand) -> Result<Rendered> {
     let a = &cmd.birth;
     let b = cmd.partner.to_birth_args();
@@ -226,6 +270,7 @@ pub fn execute(cmd: &CompatCommand) -> Result<Rendered> {
             CompatSystem::Western => western_part(a, &b, &cmd.house_system),
             CompatSystem::Hd => hd_part(a, &b),
             CompatSystem::Numerology => numerology_part(a, &b),
+            CompatSystem::Zwds => zwds_part(a, &b),
             CompatSystem::All => Err(anyhow!("unreachable")),
         }
     };
@@ -245,6 +290,8 @@ pub fn execute(cmd: &CompatCommand) -> Result<Rendered> {
         ("vedic", CompatSystem::Vedic),
         ("western", CompatSystem::Western),
         ("hd", CompatSystem::Hd),
+        ("zwds", CompatSystem::Zwds),
+        ("numerology", CompatSystem::Numerology),
     ] {
         match run_one(system) {
             Ok(part) => {

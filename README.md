@@ -37,7 +37,7 @@ Engineered specifically for **Large Language Models (LLMs) and autonomous AI Age
   1. **Saju (Four Pillars of Destiny / BaZi)**: Stems, Branches, Hidden Stems, Strength diagnostics, Gyeokguk, Yongshin, Daewun (10-year luck), Shinsal, and Five Elements throughput.
   2. **Vedic Astrology (Jyotish)**: Sidereal planetary positions, Varga charts (D1..D60), Shadbala, Ashtakavarga, Vimshottari Dasha, Sade Sati, and 100+ classical Yogas.
   3. **Western Astrology**: Tropical positions, Placidus & Whole Sign houses, major and minor aspects, Arabian parts, and complex aspect patterns (Grand Trine, T-Square, Yod, etc.).
-  4. **Zi Wei Dou Shu (Purple Star Astrology)**: 12 Palaces, 14 Major Stars, Flying SiHua (Mutagenic Stars), and classic destiny configurations.
+  4. **Zi Wei Dou Shu (Purple Star Astrology)**: 12 Palaces, 14 Major Stars, the 長生/博士/將前/歲前 twelve-god groups, Flying SiHua (Mutagenic Stars) with 大限四化, 小限 and 斗君, 三方四正 queries, and classic destiny configurations.
   5. **Human Design System**: Type, Profile, Inner Authority (incl. Lunar for Reflectors), 9 Energy Centers, 36 Channels with circuitry (Tribal / Individual / Collective and their sub-circuits), and 64 Gates.
   6. **QiMen DunJia**: Yin/Yang Dun 18 Ju formations, 9 Palaces, 8 Doors, 9 Stars, and 8 Deities with Value Chief and Envoy Door tracking.
   7. **Numerology (Pythagorean / Chaldean)**: Core Numbers (Life Path, Expression, Soul Urge, Personality, Birthday, Maturity), karmic debts (13/14/16/19), hidden passion, balance, cornerstone/capstone, missing numbers, 4 Pinnacle Cycles, and Personal Year / Month / Day vibrations.
@@ -211,11 +211,15 @@ eon penta --member "1990-05-15 10:30" --member "1988-01-02 08:00@Busan" --member
 
 ```bash
 # Saju + Vedic (Ashtakoota, 36 points) + Western (synastry & composite) + Human Design (connection)
+# + Zi Wei Dou Shu (heuristic 合盤) + Numerology (heuristic number pairs)
 eon compat --birth "1990-05-15 10:30" --gender m --city seoul \
            --partner-birth "1992-08-20 18:45" --partner-gender f --partner-city busan -f text
 
 # One system only
 eon compat --system vedic --birth "1990-05-15 10:30" --partner-birth "1992-08-20 18:45" -f text
+
+# Zi Wei Dou Shu 合盤: cross-chart 四化 flights from each 命宮/夫妻宮 stem (heuristic score)
+eon compat --system zwds --birth "1990-05-15 10:30" --gender m --partner-birth "1992-08-20 18:45" -f text
 
 # Numerology pairs (Life Path, plus Expression / Soul Urge when both names are given)
 eon compat --system numerology --birth "1990-05-15" --name "Sujin Kim" \
@@ -223,7 +227,8 @@ eon compat --system numerology --birth "1990-05-15" --name "Sujin Kim" \
 ```
 
 `--system numerology` is a heuristic (temperament groups 1-5-7 / 2-4-8 / 3-6-9, weights
-Life Path 50 / Expression 30 / Soul Urge 20) and is not part of `--system all`.
+Life Path 50 / Expression 30 / Soul Urge 20). It is included in `--system all`; the
+Expression and Soul Urge pairs need `--name` and `--partner-name`, otherwise only the Life Path pair is scored.
 
 The partner takes the same options as the first person with a `--partner-` prefix
 (`--partner-birth`, `--partner-gender`, `--partner-city`, `--partner-lat`, `--partner-lon`,
@@ -311,13 +316,13 @@ Single-engine and relationship tools. All take `birth` (plus the optional `gende
 | `eon_report` | Themed markdown report | `theme`: `wealth`, `love`, `health` |
 | `eon_vedic` | Chart, dashas, yogas, Shadbala, Ashtakavarga, Bhava Bala, gochara, annual chart | `ayanamsa`, `target_year`, `year_type` |
 | `eon_western` | Planets, houses, aspects, patterns, dignities, antiscia, mutual receptions, midpoints; optionally one timing technique | `house_system`, and at most one of `progress_to`, `transit_at`, `solar_arc_to`, `profection_at`, `solar_return` (+ `return_city`), `lunar_return_after` |
-| `eon_zwds` | Palaces, stars, four transformations, annual palace | `target_year` |
+| `eon_zwds` | Palaces, stars, twelve gods, four transformations, current decade 四化, annual palace, 小限, 斗君 | `target_year` |
 | `eon_human_design` | Type, authority, centers, channels, circuitry; optional transit or return overlay | `transit_at`, `return`, `year` |
 | `eon_human_design_penta` | Penta group dynamics | `members` (3 to 5), `city` |
 | `eon_qimen` | QiMen DunJia birth chart | |
 | `eon_numerology` | Core numbers, karmic debts, name analysis, pinnacles, personal year/month/day | `name`, `target_year`, `target_date`, `system` (`pythagorean`/`chaldean`) |
 | `eon_iching` | HeLuo hexagrams and lifetime cycles | |
-| `eon_compatibility` | Saju, Vedic, Western and Human Design comparison of two people (`system: numerology` adds a heuristic numerology pair score) | `partner_birth` (required) and the other `partner_*` fields (`partner_name`), `system`, `house_system` |
+| `eon_compatibility` | Saju, Vedic, Western, Human Design, Zi Wei Dou Shu (heuristic 合盤) and Numerology (heuristic number pairs) comparison of two people | `partner_birth` (required) and the other `partner_*` fields (`partner_name`), `system`, `house_system` |
 
 Date parameters (`at`, `transit_at`, `progress_to`) are `YYYY-MM-DD[ HH:MM]` in the birth timezone,
 or an RFC 3339 timestamp.
