@@ -252,3 +252,45 @@ pub fn analyze_saju_compatibility(
 ) -> Result<SajuCompatibilityOutput, ServiceError> {
     crate::services::saju::analyze_compatibility(a, b)
 }
+
+/// Transits: the sky at `target_time` over the natal chart (Western astrology).
+pub fn analyze_western_transit(
+    input: WesternAnalysisInput,
+    target_time: chrono::DateTime<chrono::Utc>,
+) -> Result<WesternTransitOutput, ServiceError> {
+    crate::services::western::analyze_transit(input, target_time)
+}
+
+/// Solar return of calendar `year`; `relocation` is an optional (lat, lon) for the return chart.
+pub fn analyze_western_solar_return(
+    input: WesternAnalysisInput,
+    year: i32,
+    relocation: Option<(f64, f64)>,
+) -> Result<WesternReturnOutput, ServiceError> {
+    crate::services::western::analyze_solar_return(input, year, relocation)
+}
+
+/// First lunar return on or after `after`; `relocation` is an optional (lat, lon).
+pub fn analyze_western_lunar_return(
+    input: WesternAnalysisInput,
+    after: chrono::DateTime<chrono::Utc>,
+    relocation: Option<(f64, f64)>,
+) -> Result<WesternReturnOutput, ServiceError> {
+    crate::services::western::analyze_lunar_return(input, after, relocation)
+}
+
+/// Solar arc directions to `target_time`.
+pub fn analyze_western_solar_arc(
+    input: WesternAnalysisInput,
+    target_time: chrono::DateTime<chrono::Utc>,
+) -> Result<WesternSolarArcOutput, ServiceError> {
+    crate::services::western::analyze_solar_arc(input, target_time)
+}
+
+/// Annual profection at `target_time`.
+pub fn analyze_western_profection(
+    input: WesternAnalysisInput,
+    target_time: chrono::DateTime<chrono::Utc>,
+) -> Result<WesternProfectionOutput, ServiceError> {
+    crate::services::western::analyze_profection(input, target_time)
+}

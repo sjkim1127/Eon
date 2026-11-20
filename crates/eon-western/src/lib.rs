@@ -3,16 +3,34 @@
 //! Utilizes Swiss Ephemeris FFI from eon-astro to calculate 10 major planetary bodies, True Node, South Node,
 //! Black Moon Lilith, and House Cusps (Placidus, Koch, Whole Sign, Equal House, etc.),
 //! major/minor aspects (applying/separating), Essential Dignities, House Rulership networks, Arabian Parts (Lot of Fortune/Spirit/Eros),
-//! geometric aspect patterns (Grand Trine, T-Square, Grand Cross, Yod, Kite), Synastry, Composite, and Secondary Progressions.
+//! geometric aspect patterns (Grand Trine, T-Square, Grand Cross, Yod, Kite), Synastry, Composite, Secondary Progressions,
+//! transits, solar/lunar returns, solar arc directions, annual profections (`timing`), and antiscia, mutual receptions
+//! and midpoint contacts (`techniques`).
 
 use chrono::{DateTime, Utc};
 use eon_astro::{AstroEngine, AstroError};
 use serde::{Deserialize, Serialize};
 
+pub mod techniques;
+pub mod timing;
+
+pub use techniques::{
+    calculate_antiscia, calculate_midpoints, calculate_mutual_receptions, AntisciaContact,
+    AntisciaKind, MidpointContact, MutualReception,
+};
+pub use timing::{
+    calculate_lunar_return, calculate_profection, calculate_solar_arc, calculate_solar_return,
+    calculate_transits, DirectedPoint, ProfectionResult, ReturnKind, ReturnResult, SolarArcResult,
+    TransitPlanetData, TransitResult,
+};
+
 #[derive(Debug, thiserror::Error)]
 pub enum WesternError {
     #[error("Astronomical calculation error: {0}")]
     Astro(#[from] AstroError),
+
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -194,6 +212,15 @@ pub struct WesternResult {
     pub arabian_parts: Vec<ArabianPartData>,
     pub aspect_patterns: Vec<AspectPatternData>,
     pub is_day_birth: bool,
+    /// Antiscia and contra-antiscia contacts (orb 1 degree)
+    #[serde(default)]
+    pub antiscia: Vec<AntisciaContact>,
+    /// Pairs of classical planets placed in each other's domicile signs
+    #[serde(default)]
+    pub mutual_receptions: Vec<MutualReception>,
+    /// Planets and angles sitting on a midpoint (90-degree dial, orb 1 degree), tightest first
+    #[serde(default)]
+    pub midpoints: Vec<MidpointContact>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -264,6 +291,19 @@ pub fn get_sign_ruler(sign_idx: usize) -> &'static str {
         10 => "Uranus",  // Aquarius
         11 => "Neptune", // Pisces
         _ => "Mars",
+    }
+}
+
+/// Domicile ruler of a sign using the seven classical planets only (no Uranus, Neptune or Pluto).
+pub fn get_traditional_ruler(sign_idx: usize) -> &'static str {
+    match sign_idx % 12 {
+        0 | 7 => "Mars",
+        1 | 6 => "Venus",
+        2 | 5 => "Mercury",
+        3 => "Moon",
+        4 => "Sun",
+        8 | 11 => "Jupiter",
+        _ => "Saturn", // Capricorn, Aquarius
     }
 }
 
@@ -988,6 +1028,9 @@ pub fn calculate_western(
     let house_rulerships = calculate_house_rulerships(&houses, &planets);
     let arabian_parts = calculate_arabian_parts(asc, &planets, &houses, is_day_birth);
     let aspect_patterns = detect_aspect_patterns(&planets, &aspects);
+    let antiscia = calculate_antiscia(&planets, asc, mc);
+    let mutual_receptions = calculate_mutual_receptions(&planets);
+    let midpoints = calculate_midpoints(&planets, asc, mc);
 
     Ok(WesternResult {
         planets,
@@ -1005,6 +1048,9 @@ pub fn calculate_western(
         arabian_parts,
         aspect_patterns,
         is_day_birth,
+        antiscia,
+        mutual_receptions,
+        midpoints,
     })
 }
 
@@ -1239,6 +1285,9 @@ pub fn calculate_composite(
         arabian_parts,
         aspect_patterns,
         is_day_birth: true,
+        antiscia: Vec::new(),
+        mutual_receptions: Vec::new(),
+        midpoints: Vec::new(),
     };
 
     let summary = "Calculated 360-degree midpoint composite chart between both charts.".to_string();

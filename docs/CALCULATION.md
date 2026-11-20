@@ -141,3 +141,32 @@ School-dependent choices the engine currently makes (not verified against a sing
 - **House systems**: names are matched exactly (Placidus, Koch, WholeSign, Equal, Porphyry,
   Regiomontanus, Campanus, Alcabitius, Morinus, Topocentric, or the Swiss Ephemeris letter). Unknown
   names are rejected rather than mapped to another system.
+
+## 10. Western Timing Techniques and Natal Extras
+
+All techniques are tropical and use the Swiss Ephemeris (Moshier) positions of `eon-astro`.
+
+- **Transits**: the sky at the target instant over the *natal* chart (houses stay natal). Orbs
+  are school-dependent: Moon 1°, Sun/Mercury/Venus/Mars 2°, Jupiter to Pluto 3°, nodes/Lilith/Chiron
+  1.5°, sextiles 25% tighter. Only the five major aspects are used; the targets are the natal planets
+  (without the derived South Node), the Ascendant and the Midheaven.
+- **Solar / lunar return**: the instant the Sun (Moon) is back on its natal longitude, found by Newton
+  iteration. The solar return belongs to the calendar year given (the one that contains the birthday).
+  The lunar return is the first one on or after the date. The return chart can be cast for a
+  different place (relocation); the aspects to the natal chart use 5° orbs (4° sextile) because the
+  two charts are compared as static pictures.
+- **Solar arc**: arc = secondary-progressed Sun minus natal Sun, added to every natal point and to
+  the Ascendant and Midheaven. Aspects between directed and natal points use a 1° orb.
+- **Annual profection**: the Ascendant advances one sign (and one house) per completed year of life
+  (age = elapsed time / 365.2425 days). The lord of the year is the *traditional* ruler of the
+  profected sign (Mars for Scorpio, Saturn for Aquarius, Jupiter for Pisces).
+- **Antiscia**: mirror across the Cancer/Capricorn axis (180° - longitude); contra-antiscia across the
+  Aries/Libra axis (360° - longitude). Contacts within 1°, each pair listed once.
+- **Mutual reception**: two of the seven classical planets in each other's domicile signs
+  (traditional rulerships). Exaltation-based receptions are not reported.
+- **Midpoints**: the shorter-arc midpoint of every pair among Sun to Pluto, True Node, Ascendant and
+  Midheaven; a third body on it on the 90° dial (which merges the 0/45/90/135/180° contacts) within
+  1° is reported, tightest first, at most 40.
+
+Not implemented: harmonics, fixed stars, Davison chart, triplicity/terms/faces, eclipses, more
+Arabic lots, firdaria.

@@ -38,7 +38,7 @@ Engineered specifically for **Large Language Models (LLMs) and autonomous AI Age
   2. **Vedic Astrology (Jyotish)**: Sidereal planetary positions, Varga charts (D1..D60), Shadbala, Ashtakavarga, Vimshottari Dasha, Sade Sati, and 100+ classical Yogas.
   3. **Western Astrology**: Tropical positions, Placidus & Whole Sign houses, major and minor aspects, Arabian parts, and complex aspect patterns (Grand Trine, T-Square, Yod, etc.).
   4. **Zi Wei Dou Shu (Purple Star Astrology)**: 12 Palaces, 14 Major Stars, the 長生/博士/將前/歲前 twelve-god groups, Flying SiHua (Mutagenic Stars) with 大限四化, 小限 and 斗君, 三方四正 queries, and classic destiny configurations.
-  5. **Human Design System**: Type, Profile, Inner Authority, 9 Energy Centers, 36 Channels, and 64 Gates.
+  5. **Human Design System**: Type, Profile, Inner Authority (incl. Lunar for Reflectors), 9 Energy Centers, 36 Channels with circuitry (Tribal / Individual / Collective and their sub-circuits), and 64 Gates.
   6. **QiMen DunJia**: Yin/Yang Dun 18 Ju formations, 9 Palaces, 8 Doors, 9 Stars, and 8 Deities with Value Chief and Envoy Door tracking.
   7. **Pythagorean Numerology**: 5 Core Numbers (Life Path, Expression, Soul Urge, Personality, Birthday), 4 Pinnacle Cycles, and Personal Year vibrations.
   8. **Omni Destiny Tier 7.0 Synthesis**: Multi-engine quantum cross-synergy matrix scoring potential, resilience, growth gap, and 15 weighted component factors.
@@ -91,7 +91,7 @@ eon-core (Shared Primitives, Birth Info, Locations)
 | [`crates/eon-vedic`](file:///Users/sjkim1127/Eon/crates/eon-vedic) | Vedic Engine | Sidereal rasis, nakshatras, Shadbala, Ashtakavarga, and Yogas. |
 | [`crates/eon-western`](file:///Users/sjkim1127/Eon/crates/eon-western) | Western Engine | Tropical planets, houses (Placidus/Koch/Equal), and aspect configurations. |
 | [`crates/eon-zwds`](file:///Users/sjkim1127/Eon/crates/eon-zwds) | ZWDS Engine | Zi Wei Dou Shu 12 palaces, 14 major stars, SiHua, and destiny patterns. |
-| [`crates/eon-human-design`](file:///Users/sjkim1127/Eon/crates/eon-human-design) | Human Design Engine | Type, authority, 9 centers, 36 channels, and 64 gates. |
+| [`crates/eon-human-design`](file:///Users/sjkim1127/Eon/crates/eon-human-design) | Human Design Engine | Type, authority, 9 centers, 36 channels (with circuitry), and 64 gates. |
 | [`crates/eon-qimen`](file:///Users/sjkim1127/Eon/crates/eon-qimen) | QiMen Engine | 9 Palaces, 8 Doors, 9 Stars, 8 Deities, and Value Chief/Envoy. |
 | [`crates/eon-numerology`](file:///Users/sjkim1127/Eon/crates/eon-numerology) | Numerology Engine | Life Path, Expression, Soul Urge, Birthday, and Pinnacle cycles. |
 
@@ -176,9 +176,17 @@ eon tier --birth "1990-05-15 10:30" --gender m -f text
 # and the year of the annual (Varshaphala / Tajika) chart
 eon vedic --birth "1990-05-15 10:30" --ayanamsa Raman --target-year 2027 -f text
 
-# Western: any of 10 house systems, and secondary progression to a date
+# Western: any of 10 house systems
 eon western --birth "1990-05-15 10:30" --house-system Porphyry -f text
-eon western --birth "1990-05-15 10:30" --progress-to 2027-03-01 -f text
+
+# Western timing techniques (use at most one per run)
+eon western --birth "1990-05-15 10:30" --progress-to 2027-03-01 -f text       # secondary progression
+eon western --birth "1990-05-15 10:30" --transit-at 2027-03-01 -f text        # transits over the natal chart
+eon western --birth "1990-05-15 10:30" --solar-arc-to 2027-03-01 -f text      # solar arc directions
+eon western --birth "1990-05-15 10:30" --profection-at 2027-03-01 -f text     # annual profection, lord of the year
+eon western --birth "1990-05-15 10:30" --solar-return 2027 -f text            # solar return chart
+eon western --birth "1990-05-15 10:30" --solar-return 2027 --return-city "New York" -f text   # relocated
+eon western --birth "1990-05-15 10:30" --lunar-return-after 2027-03-01 -f text
 
 # Zi Wei Dou Shu: annual palace and four transformations of a chosen year
 eon zwds --birth "1990-05-15 10:30" --target-year 2027 -f text
@@ -298,9 +306,9 @@ Single-engine and relationship tools. All take `birth` (plus the optional `gende
 | `eon_saju_luck` | Yearly/monthly/daily/hourly luck at a moment | `at`, `night_rat` |
 | `eon_report` | Themed markdown report | `theme`: `wealth`, `love`, `health` |
 | `eon_vedic` | Chart, dashas, yogas, Shadbala, Ashtakavarga, Bhava Bala, gochara, annual chart | `ayanamsa`, `target_year`, `year_type` |
-| `eon_western` | Planets, houses, aspects, patterns; optional secondary progression | `house_system`, `progress_to` |
+| `eon_western` | Planets, houses, aspects, patterns, dignities, antiscia, mutual receptions, midpoints; optionally one timing technique | `house_system`, and at most one of `progress_to`, `transit_at`, `solar_arc_to`, `profection_at`, `solar_return` (+ `return_city`), `lunar_return_after` |
 | `eon_zwds` | Palaces, stars, twelve gods, four transformations, current decade 四化, annual palace, 小限, 斗君 | `target_year` |
-| `eon_human_design` | Type, authority, centers, channels; optional transit or return overlay | `transit_at`, `return`, `year` |
+| `eon_human_design` | Type, authority, centers, channels, circuitry; optional transit or return overlay | `transit_at`, `return`, `year` |
 | `eon_human_design_penta` | Penta group dynamics | `members` (3 to 5), `city` |
 | `eon_qimen` | QiMen DunJia birth chart | |
 | `eon_numerology` | Core numbers, pinnacles, personal year | `name`, `target_year` |

@@ -1,3 +1,4 @@
+pub mod circuitry;
 pub mod connection;
 pub mod db;
 pub mod dream_rave;
@@ -10,6 +11,10 @@ use eon_astro::{AstroEngine, AstroError};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 
+pub use circuitry::{
+    analyze_circuitry, channel_circuit, channel_circuit_group, ChannelCircuit, Circuit,
+    CircuitGroup, CircuitryResult,
+};
 pub use phs::{
     ArrowDirection, DigestionColor, DigestionVariable, EnvironmentColor, EnvironmentVariable,
     MotivationColor, MotivationVariable, PerspectiveColor, PerspectiveVariable, PhsVariablesResult,
@@ -62,6 +67,42 @@ pub struct HdPlanetData {
     pub color: u8,
     pub tone: u8,
     pub base: u8,
+    /// Line exaltation / detriment of this activation (`db::get_line_fixation`); only set when
+    /// the table holds a planet for the line.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fixation: Option<LineFixation>,
+}
+
+/// Exaltation and detriment planet of a line activation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct LineFixation {
+    pub exaltation_planet: Option<String>,
+    pub detriment_planet: Option<String>,
+}
+
+impl HdPlanetData {
+    /// Build the activation of `name` at ecliptic longitude `degree`.
+    pub fn from_degree(name: &str, degree: f64) -> Self {
+        let (gate, line, color, tone, base) = degree_to_gate_line(degree);
+        let fix = db::get_line_fixation(gate, line);
+        let fixation =
+            (fix.exaltation_planet.is_some() || fix.detriment_planet.is_some()).then(|| {
+                LineFixation {
+                    exaltation_planet: fix.exaltation_planet.map(str::to_string),
+                    detriment_planet: fix.detriment_planet.map(str::to_string),
+                }
+            });
+        HdPlanetData {
+            name: name.to_string(),
+            degree,
+            gate,
+            line,
+            color,
+            tone,
+            base,
+            fixation,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -83,6 +124,12 @@ pub struct HumanDesignResult {
     pub quarter: ZodiacQuarter,
     pub dream_rave: crate::dream_rave::DreamRaveResult,
     pub phs_variables: crate::phs::PhsVariablesResult,
+    /// Korean label of `authority`.
+    #[serde(default)]
+    pub authority_ko: String,
+    /// Circuit classification of the defined channels.
+    #[serde(default)]
+    pub circuitry: circuitry::CircuitryResult,
 }
 
 pub const GATE_SEQUENCE: [u8; 64] = [
@@ -219,65 +266,24 @@ pub fn get_planet_positions(
     // Flag: SEFLG_SWIEPH = 2, but get_sun_longitude uses FFI internally or we can use swe_calc_ut.
     // Let's use get_sun_longitude or swe_calc_ut.
     let sun_deg = engine.get_sun_longitude(datetime)?;
-    let (gate, line, color, tone, base) = degree_to_gate_line(sun_deg);
-    results.insert(
-        "Sun".to_string(),
-        HdPlanetData {
-            name: "Sun".to_string(),
-            degree: sun_deg,
-            gate,
-            line,
-            color,
-            tone,
-            base,
-        },
-    );
-
+    results.insert("Sun".to_string(), HdPlanetData::from_degree("Sun", sun_deg));
     let earth_deg = (sun_deg + 180.0) % 360.0;
-    let (gate, line, color, tone, base) = degree_to_gate_line(earth_deg);
     results.insert(
         "Earth".to_string(),
-        HdPlanetData {
-            name: "Earth".to_string(),
-            degree: earth_deg,
-            gate,
-            line,
-            color,
-            tone,
-            base,
-        },
+        HdPlanetData::from_degree("Earth", earth_deg),
     );
 
     // 2. Nodes (True Node)
     // Planet id: 11 is SE_TRUE_NODE
     let nn_deg = engine.get_planet_position(datetime, 11, 2)?; // SEFLG_SWIEPH = 2
-    let (gate, line, color, tone, base) = degree_to_gate_line(nn_deg);
     results.insert(
         "N.Node".to_string(),
-        HdPlanetData {
-            name: "N.Node".to_string(),
-            degree: nn_deg,
-            gate,
-            line,
-            color,
-            tone,
-            base,
-        },
+        HdPlanetData::from_degree("N.Node", nn_deg),
     );
-
     let sn_deg = (nn_deg + 180.0) % 360.0;
-    let (gate, line, color, tone, base) = degree_to_gate_line(sn_deg);
     results.insert(
         "S.Node".to_string(),
-        HdPlanetData {
-            name: "S.Node".to_string(),
-            degree: sn_deg,
-            gate,
-            line,
-            color,
-            tone,
-            base,
-        },
+        HdPlanetData::from_degree("S.Node", sn_deg),
     );
 
     // 3. Remaining Planets
@@ -300,19 +306,7 @@ pub fn get_planet_positions(
             Err(_) if planet_id == 15 => continue, // Skip Chiron if asteroid ephemeris is missing to avoid fake Gate 41 activation
             Err(e) => return Err(e),
         };
-        let (gate, line, color, tone, base) = degree_to_gate_line(pos);
-        results.insert(
-            name.to_string(),
-            HdPlanetData {
-                name: name.to_string(),
-                degree: pos,
-                gate,
-                line,
-                color,
-                tone,
-                base,
-            },
-        );
+        results.insert(name.to_string(), HdPlanetData::from_degree(name, pos));
     }
 
     Ok(results)
@@ -424,7 +418,15 @@ pub fn determine_type(defined_centers: &HashSet<HdCenter>, active_channels: &[(u
     }
 }
 
+/// Inner authority. A Reflector (no defined center) uses the Lunar authority (28-day cycle).
+///
+/// The Mental/Outer authority of Projectors with only Head, Ajna and/or Throat defined is not
+/// split further: the environmental and sounding-board variants are not derivable from the chart.
 pub fn determine_authority(defined_centers: &HashSet<HdCenter>) -> String {
+    if defined_centers.is_empty() {
+        return "Lunar".to_string();
+    }
+
     let priority = vec![
         (HdCenter::SolarPlexus, "Emotional"),
         (HdCenter::Sacral, "Sacral"),
@@ -446,6 +448,20 @@ pub fn determine_authority(defined_centers: &HashSet<HdCenter>) -> String {
         "Mental/Outer".to_string()
     } else {
         "None/Outer".to_string()
+    }
+}
+
+/// Korean label of an authority string returned by [`determine_authority`].
+pub fn authority_name_ko(authority: &str) -> &'static str {
+    match authority {
+        "Emotional" => "감정 권위",
+        "Sacral" => "천골 권위",
+        "Splenic" => "비장 권위",
+        "Ego" => "에고 권위",
+        "Self-Projected" => "자기 투사 권위",
+        "Mental/Outer" => "정신/외부 권위",
+        "Lunar" => "달 주기 권위",
+        _ => "외부 권위",
     }
 }
 
@@ -615,6 +631,8 @@ pub fn calculate_human_design(
     // 6. Type and Authority
     let chart_type = determine_type(&defined_set, &active_channels);
     let authority = determine_authority(&defined_set);
+    let authority_ko = authority_name_ko(&authority).to_string();
+    let circuitry = analyze_circuitry(&active_channels);
     let strategy = determine_strategy(&chart_type);
     let not_self_theme = determine_not_self_theme(&chart_type);
     let definition_type = determine_definition_type(&defined_set, &active_channels);
@@ -652,6 +670,8 @@ pub fn calculate_human_design(
         quarter,
         dream_rave: dream_rave_res,
         phs_variables,
+        authority_ko,
+        circuitry,
     })
 }
 
@@ -815,7 +835,7 @@ mod tests {
     fn type_authority_and_definition_follow_the_standard_rules() {
         // (activated gates, type, authority, definition)
         let cases: [(&[u8], &str, &str, &str); 10] = [
-            (&[], "Reflector", "None/Outer", "No Definition"),
+            (&[], "Reflector", "Lunar", "No Definition"),
             // Sacral-G only: a Generator; the Sacral is the authority.
             (&[5, 15], "Generator", "Sacral", "Single Definition"),
             // Sacral-Throat (20-34): Sacral motor reaches the Throat -> Manifesting Generator.
@@ -920,5 +940,89 @@ mod tests {
         let d = r.design["Sun"].degree;
         let arc = (p - d + 360.0) % 360.0;
         assert!((arc - 88.0).abs() < 1e-3, "solar arc was {arc}");
+    }
+
+    #[test]
+    fn golden_chart_circuitry() {
+        let engine = AstroEngine::new();
+        let birth = Utc.with_ymd_and_hms(1990, 5, 15, 1, 30, 0).unwrap();
+        let r = calculate_human_design(&engine, birth).unwrap();
+        let c = &r.circuitry;
+
+        // Channels 13-33, 23-43, 24-61, 30-41, 32-54.
+        assert_eq!(c.channels.len(), r.active_channels.len());
+        let group_of = |ch: (u8, u8)| c.channels.iter().find(|x| x.channel == ch).unwrap().group;
+        assert_eq!(group_of((13, 33)), CircuitGroup::Sensing);
+        assert_eq!(group_of((30, 41)), CircuitGroup::Sensing);
+        assert_eq!(group_of((23, 43)), CircuitGroup::Knowing);
+        assert_eq!(group_of((24, 61)), CircuitGroup::Knowing);
+        assert_eq!(group_of((32, 54)), CircuitGroup::Defense);
+        assert_eq!(c.circuit_counts[&Circuit::Collective], 2);
+        assert_eq!(c.circuit_counts[&Circuit::Individual], 2);
+        assert_eq!(c.circuit_counts[&Circuit::Tribal], 1);
+        assert_eq!(c.dominant_circuit, None);
+        assert_eq!(r.authority_ko, "감정 권위");
+    }
+
+    /// 2000-02-23 16:00 UTC has no defined center at all: a Reflector.
+    #[test]
+    fn reflector_chart_gets_lunar_authority() {
+        let engine = AstroEngine::new();
+        let birth = Utc.with_ymd_and_hms(2000, 2, 23, 16, 0, 0).unwrap();
+        let r = calculate_human_design(&engine, birth).unwrap();
+        assert_eq!(r.chart_type, "Reflector");
+        assert!(r.defined_centers.is_empty());
+        assert_eq!(r.authority, "Lunar");
+        assert_eq!(r.authority_ko, authority_name_ko("Lunar"));
+        assert!(r.circuitry.channels.is_empty());
+        assert_eq!(r.circuitry.dominant_circuit, None);
+    }
+
+    #[test]
+    fn non_reflector_authorities_are_unchanged() {
+        for (gates, auth) in [
+            (&[35u8, 36][..], "Emotional"),
+            (&[5, 15], "Sacral"),
+            (&[16, 48], "Splenic"),
+            (&[21, 45], "Ego"),
+            (&[7, 31], "Self-Projected"),
+            (&[64, 47], "Mental/Outer"),
+        ] {
+            assert_eq!(analyse(gates).1, auth, "gates {gates:?}");
+            assert_ne!(authority_name_ko(auth), "");
+        }
+    }
+
+    #[test]
+    fn line_fixation_is_surfaced_from_the_table() {
+        let engine = AstroEngine::new();
+        let birth = Utc.with_ymd_and_hms(1990, 5, 15, 1, 30, 0).unwrap();
+        let r = calculate_human_design(&engine, birth).unwrap();
+        for p in r.personality.values().chain(r.design.values()) {
+            let want = db::get_line_fixation(p.gate, p.line);
+            match &p.fixation {
+                Some(f) => {
+                    assert_eq!(f.exaltation_planet.as_deref(), want.exaltation_planet);
+                    assert_eq!(f.detriment_planet.as_deref(), want.detriment_planet);
+                }
+                None => {
+                    assert!(want.exaltation_planet.is_none() && want.detriment_planet.is_none())
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn old_json_without_new_fields_still_deserializes() {
+        let engine = AstroEngine::new();
+        let birth = Utc.with_ymd_and_hms(1990, 5, 15, 1, 30, 0).unwrap();
+        let r = calculate_human_design(&engine, birth).unwrap();
+        let mut v = serde_json::to_value(&r).unwrap();
+        let o = v.as_object_mut().unwrap();
+        o.remove("circuitry");
+        o.remove("authority_ko");
+        let back: HumanDesignResult = serde_json::from_value(v).unwrap();
+        assert!(back.circuitry.channels.is_empty());
+        assert_eq!(back.authority, r.authority);
     }
 }
