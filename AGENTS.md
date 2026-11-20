@@ -95,7 +95,7 @@ The CLI natively supports high-density outputs tailored for LLM reasoning and ag
 - `--format text`: Compact summary for single-engine commands (`saju`, `vedic`, ...); `agent` and `markdown` are accepted there as aliases.
 
 ### 3-3. Model Context Protocol (MCP) Standard
-The `eon mcp` command runs an MCP server over stdio using JSON-RPC 2.0. Any MCP-compatible host (Claude Desktop, Cursor, Antigravity, etc.) can discover and call `eon_analyze` directly as a native agent tool.
+The `eon mcp` command runs an MCP server over stdio using JSON-RPC 2.0. Any MCP-compatible host (Claude Desktop, Cursor, Antigravity, etc.) can discover and call `eon_analyze` (all-engine synthesis) and the per-engine tools (`eon_saju`, `eon_vedic`, `eon_western`, `eon_zwds`, `eon_human_design`, `eon_qimen`, `eon_numerology`, `eon_iching`, `eon_saju_luck`, `eon_report`, `eon_human_design_penta`, `eon_compatibility`) directly as native agent tools. Each tool wraps the matching CLI command's `execute` function (`crates/eon-cli/src/commands/mcp_tools.rs`), so a new CLI option should be added to the MCP tool as well.
 
 ---
 

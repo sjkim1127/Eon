@@ -4,7 +4,7 @@ use crate::error::ServiceError;
 use chrono::Datelike;
 use eon_vedic::analysis::report::VedicAnalysisReport;
 use eon_vedic::core::chart::VedicChartCalculator;
-use eon_vedic::core::config::{VedicConfig, VedicYearType};
+use eon_vedic::core::config::{AyanamsaSystem, VedicConfig, VedicYearType};
 use eon_vedic::core::planets::VedicPlanet;
 
 pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, ServiceError> {
@@ -24,10 +24,20 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
         })?),
         None => None,
     };
-    let calculator = if let Some(year_type) = year_type {
+    let ayanamsa = match input.ayanamsa.as_deref() {
+        Some(value) => Some(parse_ayanamsa(value).ok_or_else(|| {
+            ServiceError::InvalidInput(format!(
+                "Invalid Vedic ayanamsa: {value}. Expected Lahiri, FaganBradley, Raman, or Krishnamurti"
+            ))
+        })?),
+        None => None,
+    };
+    let calculator = if year_type.is_some() || ayanamsa.is_some() {
+        let defaults = VedicConfig::default();
         VedicChartCalculator::with_config(VedicConfig {
-            year_type,
-            ..VedicConfig::default()
+            year_type: year_type.unwrap_or(defaults.year_type),
+            ayanamsa: ayanamsa.unwrap_or(defaults.ayanamsa),
+            ..defaults
         })
     } else {
         VedicChartCalculator::new()
@@ -109,6 +119,18 @@ pub fn analyze(input: VedicAnalysisInput) -> Result<VedicAnalysisOutput, Service
         varga_nakshatra_reports,
         kp_analysis,
     })
+}
+
+fn parse_ayanamsa(value: &str) -> Option<AyanamsaSystem> {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "lahiri" | "chitrapaksha" => Some(AyanamsaSystem::Lahiri),
+        "faganbradley" | "fagan-bradley" | "fagan_bradley" | "fagan" => {
+            Some(AyanamsaSystem::FaganBradley)
+        }
+        "raman" => Some(AyanamsaSystem::Raman),
+        "krishnamurti" | "kp" => Some(AyanamsaSystem::Krishnamurti),
+        _ => None,
+    }
 }
 
 fn parse_year_type(value: &str) -> Option<VedicYearType> {
