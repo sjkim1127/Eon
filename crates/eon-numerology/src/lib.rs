@@ -255,7 +255,7 @@ pub fn chaldean_letter_value(ch: char) -> u8 {
         'C' | 'G' | 'L' | 'S' => 3,
         'D' | 'M' | 'T' => 4,
         'E' | 'H' | 'N' | 'X' => 5,
-        'U' | 'V' | 'W' => 6,
+        'U'..='W' => 6,
         'O' | 'Z' => 7,
         'F' | 'P' => 8,
         _ => 0,
