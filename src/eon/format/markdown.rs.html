@@ -155,8 +155,8 @@
 <a href=#155 id=155 data-nosnippet>155</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = vedic {
 <a href=#156 id=156 data-nosnippet>156</a>        md.push_str(<span class="string">"## 2. Vedic Astrology (Jyotish)\n"</span>);
 <a href=#157 id=157 data-nosnippet>157</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
-<a href=#158 id=158 data-nosnippet>158</a>            <span class="string">"- **Ascendant (Lagna)**: {:?}\n"</span>,
-<a href=#159 id=159 data-nosnippet>159</a>            v.chart.ascendant
+<a href=#158 id=158 data-nosnippet>158</a>            <span class="string">"- **Ascendant (Lagna)**: {}\n"</span>,
+<a href=#159 id=159 data-nosnippet>159</a>            v.chart.ascendant.describe()
 <a href=#160 id=160 data-nosnippet>160</a>        ));
 <a href=#161 id=161 data-nosnippet>161</a>        md.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
 <a href=#162 id=162 data-nosnippet>162</a>            <span class="string">"- **Moon Nakshatra**: {}\n"</span>,

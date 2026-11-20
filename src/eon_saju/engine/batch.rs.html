@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-saju/src/engine/batch.rs`."><title>batch.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1f5a765c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eon_saju" data-themes="" data-resource-suffix="" data-rustdoc-version="1.102.0-nightly (6905905bb 2026-11-19)" data-channel="nightly" data-search-js="search-69faa2c4.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-9b351432.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-419f3a3f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-101b5a15.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_saju/engine/</div>batch.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-2"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Hardware-accelerated batch simulator
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/eon-saju/src/engine/batch.rs`."><title>batch.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1f5a765c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="eon_saju" data-themes="" data-resource-suffix="" data-rustdoc-version="1.102.0-nightly (6905905bb 2026-11-19)" data-channel="nightly" data-search-js="search-69faa2c4.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-9b351432.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-419f3a3f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-101b5a15.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">eon_saju/engine/</div>batch.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Hardware-accelerated batch simulator
 <a href=#2 id=2 data-nosnippet>2</a>//!
 <a href=#3 id=3 data-nosnippet>3</a>//! Simulates hundreds of thousands of life frames in milliseconds via multi-core parallel processing.
 <a href=#4 id=4 data-nosnippet>4</a>//! Automatically falls back to sequential execution in WASM environments.
@@ -34,7 +34,7 @@
 <a href=#34 id=34 data-nosnippet>34</a>            <span class="kw">let </span>age = (year - start_year).unsigned_abs();
 <a href=#35 id=35 data-nosnippet>35</a>            <span class="kw">let </span>yearly_ganzi = GanZi::from_year(year);
 <a href=#36 id=36 data-nosnippet>36</a>            <span class="kw">let </span>major_ganzi = major_luck
-<a href=#37 id=37 data-nosnippet>37</a>                .at_age(age)
+<a href=#37 id=37 data-nosnippet>37</a>                .cycle_for_year(year)
 <a href=#38 id=38 data-nosnippet>38</a>                .map(|l| l.ganzi)
 <a href=#39 id=39 data-nosnippet>39</a>                .unwrap_or(yearly_ganzi);
 <a href=#40 id=40 data-nosnippet>40</a>            <span class="self">self</span>.vm
@@ -65,7 +65,7 @@
 <a href=#65 id=65 data-nosnippet>65</a>            <span class="kw">let </span>age = (year - start_year).unsigned_abs();
 <a href=#66 id=66 data-nosnippet>66</a>            <span class="kw">let </span>yearly_ganzi = GanZi::from_year(year);
 <a href=#67 id=67 data-nosnippet>67</a>            <span class="kw">let </span>major_ganzi = major_luck
-<a href=#68 id=68 data-nosnippet>68</a>                .at_age(age)
+<a href=#68 id=68 data-nosnippet>68</a>                .cycle_for_year(year)
 <a href=#69 id=69 data-nosnippet>69</a>                .map(|l| l.ganzi)
 <a href=#70 id=70 data-nosnippet>70</a>                .unwrap_or(yearly_ganzi);
 <a href=#71 id=71 data-nosnippet>71</a>            <span class="self">self</span>.vm
@@ -83,4 +83,30 @@
 <a href=#83 id=83 data-nosnippet>83</a>        }
 <a href=#84 id=84 data-nosnippet>84</a>    }
 <a href=#85 id=85 data-nosnippet>85</a>}
+<a href=#86 id=86 data-nosnippet>86</a>
+<a href=#87 id=87 data-nosnippet>87</a><span class="attr">#[cfg(test)]
+<a href=#88 id=88 data-nosnippet>88</a></span><span class="kw">mod </span>tests {
+<a href=#89 id=89 data-nosnippet>89</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#90 id=90 data-nosnippet>90</a>    <span class="kw">use </span><span class="kw">crate</span>::core::branch::EarthlyBranch <span class="kw">as </span>B;
+<a href=#91 id=91 data-nosnippet>91</a>    <span class="kw">use </span><span class="kw">crate</span>::core::pillars::SajuInput;
+<a href=#92 id=92 data-nosnippet>92</a>    <span class="kw">use </span><span class="kw">crate</span>::core::stem::HeavenlyStem <span class="kw">as </span>S;
+<a href=#93 id=93 data-nosnippet>93</a>    <span class="kw">use </span>eon_core::Gender;
+<a href=#94 id=94 data-nosnippet>94</a>
+<a href=#95 id=95 data-nosnippet>95</a>    <span class="attr">#[test]
+<a href=#96 id=96 data-nosnippet>96</a>    </span><span class="kw">fn </span>batch_major_luck_follows_cycle_start_date_not_age() {
+<a href=#97 id=97 data-nosnippet>97</a>        <span class="kw">let </span>input = SajuInput::new_solar(<span class="number">2004</span>, <span class="number">11</span>, <span class="number">27</span>, <span class="number">22</span>, <span class="number">0</span>);
+<a href=#98 id=98 data-nosnippet>98</a>        <span class="kw">let </span>pillars = FourPillars::calculate(<span class="kw-2">&amp;</span>input).unwrap();
+<a href=#99 id=99 data-nosnippet>99</a>        <span class="kw">let </span>major_luck = pillars
+<a href=#100 id=100 data-nosnippet>100</a>            .major_luck(Gender::Male, <span class="number">2004</span>, <span class="number">11</span>, <span class="number">27</span>, <span class="number">22</span>, <span class="number">0</span>)
+<a href=#101 id=101 data-nosnippet>101</a>            .unwrap();
+<a href=#102 id=102 data-nosnippet>102</a>        <span class="kw">let </span>sim = BatchSimulator::new(pillars);
+<a href=#103 id=103 data-nosnippet>103</a>        <span class="kw">let </span>frames = sim.simulate_range(<span class="number">2004</span>, <span class="number">2030</span>, <span class="kw-2">&amp;</span>major_luck);
+<a href=#104 id=104 data-nosnippet>104</a>        <span class="kw">let </span>major_at = |year: i32| frames[(year - <span class="number">2004</span>) <span class="kw">as </span>usize].major_ganzi;
+<a href=#105 id=105 data-nosnippet>105</a>
+<a href=#106 id=106 data-nosnippet>106</a>        <span class="comment">// 丁丑 runs 2017-12-27..2027-12-27: 2027 is still 丁丑, 2028 is 戊寅.
+<a href=#107 id=107 data-nosnippet>107</a>        </span><span class="macro">assert_eq!</span>(major_at(<span class="number">2018</span>), GanZi::new(S::Ding, B::Chou));
+<a href=#108 id=108 data-nosnippet>108</a>        <span class="macro">assert_eq!</span>(major_at(<span class="number">2027</span>), GanZi::new(S::Ding, B::Chou));
+<a href=#109 id=109 data-nosnippet>109</a>        <span class="macro">assert_eq!</span>(major_at(<span class="number">2028</span>), GanZi::new(S::Wu, B::Yin));
+<a href=#110 id=110 data-nosnippet>110</a>    }
+<a href=#111 id=111 data-nosnippet>111</a>}
 </code></pre></div></section></main></body></html>
