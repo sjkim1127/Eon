@@ -53,6 +53,21 @@ When only a date is supplied (`AnalysisInput.unknown_time`, set by the CLI/MCP f
   `skippedEngines`.
 - Tier 7.0 renormalises over the evaluated engines (see `docs/TIER.md`).
 
+## 6a. Major Luck (大運) in the Yearly Timeline
+
+Major luck cycles begin on an exact instant (`MajorLuck.start_date`: 3 days = 1 year from birth to
+the next/previous solar term, then every 10 × 365.2425 days). That instant usually falls in the
+middle of a calendar year, so the yearly timeline (`LifePathEmulator`) and the high-resolution
+fuzz audit assign each saju year the cycle that governs **the majority of that year**: the cycle in
+force at ~Aug 4, the midpoint between two Ipchun (`MajorLuckAnalysis::cycle_for_year`).
+
+Example: a cycle starting 2027-12-27 first governs 2028; 2027 still belongs to the previous cycle.
+Years before the first cycle use the natal month pillar. The transition-period (交運期) flag and the
+volatility term still use the integer start age of the cycle.
+
+Not changed: `at_age` (integer-age lookup used by `periodic_luck`, the batch simulators and the
+`vm` precision path, which also uses a different year offset) is kept for those callers.
+
 ## 7. QiMen DunJia Conventions (轉盤 時家奇門, 拆補)
 
 Verified by hand-derived reference pans in `crates/eon-qimen/src/builder/tests.rs`:

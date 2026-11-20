@@ -89,16 +89,13 @@ impl LifePathEmulator {
             let year = self.birth_year + age as i32;
             let yearly_ganzi = GanZi::from_year(year);
 
-            // Find current and adjacent major luck info
-            // Precondition: major_luck.cycles is non-empty and sorted ascending by start_age
-            // (guaranteed by MajorLuckAnalysis::calculate_astro). Using partition_point gives
-            // O(log n) lookup and lets us borrow cycles instead of cloning them.
-            let cycle_pos = major_luck.cycles.partition_point(|c| c.start_age <= age);
-            let current_major_cycle = if cycle_pos > 0 {
-                Some(&major_luck.cycles[cycle_pos - 1])
-            } else {
-                None
-            };
+            // Find current and adjacent major luck info.
+            // The cycle is chosen by its exact start instant, not by integer age: the cycle that
+            // governs the majority of this saju year applies (see `cycle_index_for_year`).
+            // Precondition: major_luck.cycles is sorted ascending (MajorLuckAnalysis::calculate_astro).
+            let cycle_idx = major_luck.cycle_index_for_year(year);
+            let cycle_pos = cycle_idx.map_or(0, |i| i + 1);
+            let current_major_cycle = cycle_idx.map(|i| &major_luck.cycles[i]);
             let start_age_of_major = current_major_cycle.map_or(0, |c| c.start_age);
             let major_ganzi = current_major_cycle
                 .map(|c| c.ganzi)
@@ -363,5 +360,32 @@ mod tests {
         assert!(yr.academic_score >= 0.0);
         assert!(yr.health_score >= 0.0);
         assert!(yr.volatility_index >= 0.0);
+    }
+
+    /// 2004-11-27 22:00 KST male: forward luck. 丙子 starts 2007-12-27, 丁丑 2017-12-27 and
+    /// 戊寅 2027-12-27. A cycle that begins in late December governs the *following* saju
+    /// year; the year in which it begins still belongs to the previous cycle.
+    #[test]
+    fn major_luck_switches_on_start_date_not_integer_age() {
+        use crate::core::branch::EarthlyBranch as B;
+        use crate::core::stem::HeavenlyStem as S;
+
+        let input = SajuInput::new_solar(2004, 11, 27, 22, 0);
+        let natal = FourPillars::calculate(&input).unwrap();
+        let natal_month = natal.month;
+        let report = LifePathEmulator::new(natal, Gender::Male, 2004)
+            .emulate()
+            .unwrap();
+        let major_at = |year: i32| report.frames[(year - 2004) as usize].major_ganzi;
+
+        // Before the first cycle starts (it begins Dec 2007) the natal month pillar applies.
+        assert_eq!(major_at(2007), natal_month);
+        assert_eq!(major_at(2008), GanZi::new(S::Bing, B::Zi));
+        assert_eq!(major_at(2017), GanZi::new(S::Bing, B::Zi));
+        assert_eq!(major_at(2018), GanZi::new(S::Ding, B::Chou));
+        assert_eq!(major_at(2026), GanZi::new(S::Ding, B::Chou));
+        // 戊寅 begins on 2027-12-27: 2027 is still 丁丑, 2028 is 戊寅.
+        assert_eq!(major_at(2027), GanZi::new(S::Ding, B::Chou));
+        assert_eq!(major_at(2028), GanZi::new(S::Wu, B::Yin));
     }
 }
