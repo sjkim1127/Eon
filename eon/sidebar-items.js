@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Commands","EngineFormat","OutputFormat"],"fn":["main"],"mod":["analyze","commands","format","hd","iching","mcp","numerology","prompt","qimen","saju","tier","vedic","western","zwds"],"struct":["BirthArgs","Cli"]};
+window.SIDEBAR_ITEMS = {"enum":["Commands","EngineFormat","OutputFormat"],"fn":["main"],"mod":["analyze","commands","compat","format","hd","iching","mcp","mcp_tools","numerology","penta","prompt","qimen","report","saju","tier","transit","vedic","western","zwds"],"struct":["BirthArgs","Cli","PartnerArgs","Rendered"]};

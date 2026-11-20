@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["NumerologyCommand"]};
+window.SIDEBAR_ITEMS = {"fn":["execute","run"],"struct":["NumerologyCommand"]};

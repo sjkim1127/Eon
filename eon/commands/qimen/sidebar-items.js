@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["QimenCommand"]};
+window.SIDEBAR_ITEMS = {"fn":["execute","run"],"struct":["QimenCommand"]};

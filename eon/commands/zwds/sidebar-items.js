@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["ZwdsCommand"]};
+window.SIDEBAR_ITEMS = {"fn":["execute","run"],"struct":["ZwdsCommand"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["WesternCommand"]};
+window.SIDEBAR_ITEMS = {"fn":["execute","run"],"struct":["WesternCommand"]};

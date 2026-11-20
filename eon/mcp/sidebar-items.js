@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run","tool_error"],"struct":["JsonRpcRequest","JsonRpcResponse","McpCommand"]};
+window.SIDEBAR_ITEMS = {"fn":["run","tool_error","with_all_tools"],"struct":["JsonRpcRequest","JsonRpcResponse","McpCommand"]};

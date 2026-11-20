@@ -218,4 +218,30 @@
 <a href=#218 id=218 data-nosnippet>218</a>) -&gt; <span class="prelude-ty">Result</span>&lt;NumerologyAnalysisOutput, ServiceError&gt; {
 <a href=#219 id=219 data-nosnippet>219</a>    <span class="kw">crate</span>::services::numerology::analyze(input)
 <a href=#220 id=220 data-nosnippet>220</a>}
+<a href=#221 id=221 data-nosnippet>221</a>
+<a href=#222 id=222 data-nosnippet>222</a><span class="doccomment">/// Synastry and composite chart of two people (Western astrology).
+<a href=#223 id=223 data-nosnippet>223</a></span><span class="kw">pub fn </span>analyze_western_synastry(
+<a href=#224 id=224 data-nosnippet>224</a>    a: WesternAnalysisInput,
+<a href=#225 id=225 data-nosnippet>225</a>    b: WesternAnalysisInput,
+<a href=#226 id=226 data-nosnippet>226</a>    name_a: <span class="kw-2">&amp;</span>str,
+<a href=#227 id=227 data-nosnippet>227</a>    name_b: <span class="kw-2">&amp;</span>str,
+<a href=#228 id=228 data-nosnippet>228</a>) -&gt; <span class="prelude-ty">Result</span>&lt;WesternSynastryOutput, ServiceError&gt; {
+<a href=#229 id=229 data-nosnippet>229</a>    <span class="kw">crate</span>::services::western::analyze_synastry(a, b, name_a, name_b)
+<a href=#230 id=230 data-nosnippet>230</a>}
+<a href=#231 id=231 data-nosnippet>231</a>
+<a href=#232 id=232 data-nosnippet>232</a><span class="doccomment">/// Secondary progression of a natal chart to `target_time` (Western astrology).
+<a href=#233 id=233 data-nosnippet>233</a></span><span class="kw">pub fn </span>analyze_western_progression(
+<a href=#234 id=234 data-nosnippet>234</a>    input: WesternAnalysisInput,
+<a href=#235 id=235 data-nosnippet>235</a>    target_time: chrono::DateTime&lt;chrono::Utc&gt;,
+<a href=#236 id=236 data-nosnippet>236</a>) -&gt; <span class="prelude-ty">Result</span>&lt;WesternProgressionOutput, ServiceError&gt; {
+<a href=#237 id=237 data-nosnippet>237</a>    <span class="kw">crate</span>::services::western::analyze_progression(input, target_time)
+<a href=#238 id=238 data-nosnippet>238</a>}
+<a href=#239 id=239 data-nosnippet>239</a>
+<a href=#240 id=240 data-nosnippet>240</a><span class="doccomment">/// Two-person Saju compatibility audit.
+<a href=#241 id=241 data-nosnippet>241</a></span><span class="kw">pub fn </span>analyze_saju_compatibility(
+<a href=#242 id=242 data-nosnippet>242</a>    a: SajuAnalysisInput,
+<a href=#243 id=243 data-nosnippet>243</a>    b: SajuAnalysisInput,
+<a href=#244 id=244 data-nosnippet>244</a>) -&gt; <span class="prelude-ty">Result</span>&lt;SajuCompatibilityOutput, ServiceError&gt; {
+<a href=#245 id=245 data-nosnippet>245</a>    <span class="kw">crate</span>::services::saju::analyze_compatibility(a, b)
+<a href=#246 id=246 data-nosnippet>246</a>}
 </code></pre></div></section></main></body></html>

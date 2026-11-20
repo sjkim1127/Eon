@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["birth_props","call","definitions","format_prop","render","tool","with"],"struct":["Args"]};
