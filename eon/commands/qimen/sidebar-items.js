@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["execute","run"],"struct":["QimenCommand"]};
+window.SIDEBAR_ITEMS = {"enum":["QuestionArg"],"fn":["execute","palace_line","run","verdict_text"],"struct":["QimenCommand"]};

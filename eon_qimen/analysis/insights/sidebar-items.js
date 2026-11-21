@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Verdict"],"fn":["analyze_plate","horse_branch","void_branches"],"struct":["PalaceReading","PatternHit","QimenInsights","VoidInfo"]};
