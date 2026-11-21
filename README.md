@@ -159,8 +159,11 @@ eon zwds --birth "1990-05-15 10:30" --gender m -f text
 # Human Design
 eon hd --birth "1990-05-15 10:30" -f text
 
-# QiMen DunJia
+# QiMen DunJia: plate, void palaces, horse star, formations, per-palace scores
 eon qimen --birth "1990-05-15 10:30" --gender m -f text
+# ... a divination chart for any moment, read for a question
+# (general | wealth | career | marriage | health | travel | lawsuit | study)
+eon qimen --birth "1990-05-15 10:30" --gender m --at "2027-03-01 09:00" --question career -f text
 
 # Numerology (Pythagorean by default; --system chaldean, --target-date for Personal Month/Day)
 eon numerology --birth "1990-05-15" --name "Sujin Kim" -f text
@@ -319,7 +322,7 @@ Single-engine and relationship tools. All take `birth` (plus the optional `gende
 | `eon_zwds` | Palaces, stars, twelve gods, four transformations, current decade 四化, annual palace, 小限, 斗君 | `target_year` |
 | `eon_human_design` | Type, authority, centers, channels, circuitry; optional transit or return overlay | `transit_at`, `return`, `year` |
 | `eon_human_design_penta` | Penta group dynamics | `members` (3 to 5), `city` |
-| `eon_qimen` | QiMen DunJia birth chart | |
+| `eon_qimen` | QiMen plate with void palaces, horse star, formations and palace scores; optional divination moment and question | `at`, `question` |
 | `eon_numerology` | Core numbers, karmic debts, name analysis, pinnacles, personal year/month/day | `name`, `target_year`, `target_date`, `system` (`pythagorean`/`chaldean`) |
 | `eon_iching` | HeLuo hexagrams and lifetime cycles | |
 | `eon_compatibility` | Saju, Vedic, Western, Human Design, Zi Wei Dou Shu (heuristic 合盤) and Numerology (heuristic number pairs) comparison of two people | `partner_birth` (required) and the other `partner_*` fields (`partner_name`), `system`, `house_system` |

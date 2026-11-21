@@ -330,6 +330,15 @@ pub struct WesternProgressionOutput {
     pub result: eon_western::ProgressionResult,
 }
 
+/// QiMen plate with a reading for a question (用神 palaces and an overall verdict).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QimenQuestionOutput {
+    pub meta: AnalysisMeta,
+    pub report: eon_qimen::analysis::report::QimenAnalysisReport,
+    pub reading: eon_qimen::analysis::question::QuestionReading,
+}
+
 /// Current sky laid over the natal chart (transits).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

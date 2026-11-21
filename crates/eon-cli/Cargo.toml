@@ -22,3 +22,5 @@ eon-service = { workspace = true }
 eon-human-design = { workspace = true }
 eon-numerology = { workspace = true }
 eon-western = { workspace = true }
+eon-qimen = { workspace = true }
+eon-saju = { workspace = true }

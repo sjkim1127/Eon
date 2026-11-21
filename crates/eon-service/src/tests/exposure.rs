@@ -222,3 +222,37 @@ fn natal_chart_carries_antiscia_receptions_and_midpoints() {
         assert_ne!(r.planet_a, r.planet_b);
     }
 }
+
+#[test]
+fn qimen_report_carries_insights_and_question_readings() {
+    use eon_qimen::analysis::question::QimenQuestion;
+
+    let input = QimenAnalysisInput::new(person_a(), true);
+    let plain = facade::analyze_qimen(input.clone()).expect("qimen");
+    let insights = &plain.report.insights;
+    assert_eq!(insights.palaces.len(), 9);
+    assert!(insights.horse_palace.is_some());
+    assert_eq!(insights.hour_void.branches.len(), 2);
+    assert!(insights.self_palace.is_some());
+    assert!(insights.palaces.iter().all(|p| p.patterns.len() <= 6));
+
+    let out = facade::analyze_qimen_question(input.clone(), QimenQuestion::Wealth).expect("wealth");
+    assert_eq!(out.reading.question, QimenQuestion::Wealth);
+    assert_eq!(out.report.pan.ju_number, plain.report.pan.ju_number);
+    assert!(!out.reading.advice_ko.is_empty());
+
+    // The same moment always gives the same plate and reading.
+    let again = facade::analyze_qimen_question(input, QimenQuestion::Wealth).unwrap();
+    assert_eq!(out.reading, again.reading);
+    assert_eq!(out.report.insights, again.report.insights);
+}
+
+#[test]
+fn qimen_still_needs_a_known_birth_time() {
+    let mut date_only = person_a();
+    date_only.unknown_time = true;
+    assert!(matches!(
+        facade::analyze_qimen(QimenAnalysisInput::new(date_only, true)),
+        Err(ServiceError::BirthTimeRequired(_))
+    ));
+}

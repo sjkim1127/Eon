@@ -267,6 +267,8 @@ dependencies = [
  "eon-core",
  "eon-human-design",
  "eon-numerology",
+ "eon-qimen",
+ "eon-saju",
  "eon-service",
  "eon-western",
  "serde",
