@@ -10,7 +10,7 @@ use commands::*;
 #[command(
     name = "eon",
     author = "SJKim <sjkim1127@github.com>",
-    version = "0.1.2",
+    version,
     about = "Eon: The Destiny Reversing Intelligence Engine (Native CLI & AI Agent Interface)",
     long_about = "High-performance native CLI that analyzes destiny across 8 ancient & modern metaphysical systems:\n\
                   - Saju (Four Pillars of Destiny)\n\
