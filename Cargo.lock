@@ -250,7 +250,7 @@ checksum = "0e9c71c2167ca323c882b99918929403426e2373ea17242ff5653e0d5e1058be"
 
 [[package]]
 name = "eon-astro"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "serde",
@@ -260,7 +260,7 @@ dependencies = [
 
 [[package]]
 name = "eon-cli"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -277,7 +277,7 @@ dependencies = [
 
 [[package]]
 name = "eon-core"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -287,7 +287,7 @@ dependencies = [
 
 [[package]]
 name = "eon-data"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "bincode",
  "chrono",
@@ -298,7 +298,7 @@ dependencies = [
 
 [[package]]
 name = "eon-human-design"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "eon-astro",
@@ -309,14 +309,14 @@ dependencies = [
 
 [[package]]
 name = "eon-numerology"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "eon-qimen"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "eon-astro",
@@ -326,7 +326,7 @@ dependencies = [
 
 [[package]]
 name = "eon-saju"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "eon-astro",
@@ -340,7 +340,7 @@ dependencies = [
 
 [[package]]
 name = "eon-service"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -361,7 +361,7 @@ dependencies = [
 
 [[package]]
 name = "eon-vedic"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -373,7 +373,7 @@ dependencies = [
 
 [[package]]
 name = "eon-western"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "eon-astro",
@@ -383,7 +383,7 @@ dependencies = [
 
 [[package]]
 name = "eon-zwds"
-version = "0.1.2"
+version = "1.0.0"
 dependencies = [
  "chrono",
  "eon-core",
